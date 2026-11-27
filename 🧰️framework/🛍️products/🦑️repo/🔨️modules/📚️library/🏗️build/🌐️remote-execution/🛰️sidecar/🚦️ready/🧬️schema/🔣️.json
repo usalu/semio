@@ -30,7 +30,7 @@
         "beatByState": {"running": 30000, "backoff": 30000, "waiting": 120000, "observing": 60000, "server": 120000, "ready": 120000},
         "heartbeatNames": ["pool.json", "attest.json", "head.json"],
         "leaseRenewMilliseconds": 10000,
-        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "source-transient", "interrupted", "spawn-failed", "loop-failed"],
+        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "source-transient", "interrupted", "memory-cancelled", "disk-guard", "spawn-failed", "loop-failed"],
         "humanFreshMilliseconds": 90000,
         "humanMaximumMilliseconds": 7200000,
         "graceMilliseconds": 10000,
@@ -79,8 +79,10 @@
         "loopStableMilliseconds": 60000,
         "sqliteOpenPattern": "unable to open database file",
         "diskDefaultRequirement": {"megabytes": 1024, "inodes": 20000},
+        "scopeDerivation": {"stage": "dependencies", "from": "workspace", "projectsPrefix": "--projects=", "projectFile": "📋️project.json", "nameKey": "name", "ownerManifest": "package.json", "ownerLockfile": "bun.lock", "rootOwner": ".", "flag": "--scope", "skip": ["node_modules", "target", "dist", "🗑️generated", "🤖️generated", "🎫️tickets", "🧪️tests", "🧫️fixtures", "bazel-out", "tmp", "temp", "test-results", "staged"], "maximumEntries": 600000},
         "diskDerivation": {"stage": "dependencies", "lockfile": "bun.lock", "entriesPerLockfileLine": 3.6},
         "diskGrowth": {"keptRuns": 5, "floorMegabytes": 1024, "consumerCount": 5, "ceilingPercent": 25, "measuredCeilingMegabytes": 16384},
+        "diskGuard": {"floorMegabytes": 2048, "floorBasisPoints": 100, "floorInodes": 15000, "floorInodeBasisPoints": 25, "checkMilliseconds": 5000},
         "noSpacePatterns": ["No space left on device", "os error 28", "ENOSPC", "There is not enough space on the disk"],
         "diskRequirements": {
           "native": {"megabytes": 1024, "inodes": 20000},
@@ -90,7 +92,7 @@
           "workspace": {"megabytes": 4096, "inodes": 100000}
         },
         "storeFullPattern": "No space left \\((EDQUOT|ENOSPC)\\) in (.+?): the disk",
-        "sourceTransientPatterns": ["ENOENT: no such file or directory, \\w+ '{root}[^']*'", "Private Nx engine import missing: ", "(?:refused|invalid|missing) process\\.source\\.", "BUILD_SOURCE_CONFLICT\\]: Conflicting inference observations", "(?:Cannot find module|Could not resolve)[: ]+[\"']?(?:\\.|{root})", "(?:SyntaxError|Unexpected|Expected|Unterminated|Invalid)\\b[^\\n]*{root}", "plan cannot continue[^\\n]*same text: [^\\n]*{root}", "^error: failed to write [`']{root}[^`']*[`']\\s*$", "unexpected failure \\(reference [0-9a-f]+\\): Error: (?:Complete retained closure publication required|Closure reference proof leaf changed)", "unexpected failure \\(reference [0-9a-f]+\\): Error: Slice worker exited with code null", "unexpected failure \\(reference [0-9a-f]+\\): (?:\\w+: )?(?:Closure index descriptor changed|Closure proof descriptor changed|Original retiring closure (?:descriptor|identity) changed|Original group retirement descriptor changed|Original terminal retirement intent changed)", "file changed while it was open / [^\\n]*Datei hat sich geändert, während sie offen war", "append-only file was replaced, linked again or shortened while it was open / [^\\n]*anhängbare Datei wurde ersetzt", "file was replaced again while it was opened by name / [^\\n]*Datei wurde beim Öffnen über den Namen erneut ersetzt", "Closure proof (?:leaf|authority|pack index) descriptor stamp mismatch"],
+        "sourceTransientPatterns": ["ENOENT: no such file or directory, \\w+ '{root}[^']*'", "Private Nx engine import missing: ", "(?:refused|invalid|missing) process\\.source\\.", "BUILD_SOURCE_CONFLICT\\]: Conflicting inference observations", "(?:Cannot find module|Could not resolve)[: ]+[\"']?(?:\\.|{root})", "(?:SyntaxError|Unexpected|Expected|Unterminated|Invalid)\\b[^\\n]*{root}", "plan cannot continue[^\\n]*same text: [^\\n]*{root}", "^error: failed to write [`']{root}[^`']*[`']\\s*$", "unexpected failure \\(reference [0-9a-f]+\\): Error: (?:Complete retained closure publication required|Closure reference proof leaf changed)", "unexpected failure \\(reference [0-9a-f]+\\): Error: Slice worker exited with code null", "unexpected failure \\(reference [0-9a-f]+\\): (?:\\w+: )?(?:Closure index descriptor changed|Closure proof descriptor changed|Original retiring closure (?:descriptor|identity) changed|Original group retirement descriptor changed|Original terminal retirement intent changed)", "file changed while it was open / [^\\n]*Datei hat sich geändert, während sie offen war", "append-only file was replaced, linked again or shortened while it was open / [^\\n]*anhängbare Datei wurde ersetzt", "file was replaced again while it was opened by name / [^\\n]*Datei wurde beim Öffnen über den Namen erneut ersetzt", "Closure proof (?:leaf|authority|pack index) descriptor stamp mismatch", "Authorizer sources changed while the \\w+ bundle was built", "^ReferenceError: \\w+ is not defined", "Bundle failed: No matching export in \"semio-captured-source:", "^\\s*error(?:\\[E0\\d+\\])?: cannot find (?:type|value|function|struct|trait|macro|module|crate|item)\\b"],
         "sourceTransientDebounceMilliseconds": 15000,
         "sourceTransientPollMilliseconds": 5000,
         "treeStampDirectory": "heads",
@@ -143,6 +145,7 @@
         "owner": {"$ref": "#/definitions/WatchdogDigest"},
         "peakMegabytes": {"$ref": "#/definitions/WatchdogInteger"},
         "progressAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "cpuSince": {"$ref": "#/definitions/WatchdogInteger", "description": "Since when the only sign of life of a Windows stage has been processor time (no new line, counter, process, slice movement or warden hold): `cpuOnlyStallMilliseconds` of that alone end the stage as stalled; absent while anything else moved."},
         "stallAt": {"$ref": "#/definitions/WatchdogInteger"},
         "watchedAt": {"$ref": "#/definitions/WatchdogInteger", "description": "When a supervisor last looked at the stage (written at most every `watchdogWriteMilliseconds` while something changed, at least every `watchdogIdleWriteMilliseconds` while nothing did, and at every detach). The time between it and the next adoption was watched by nobody: a supervisor restarted for new code, booting, or waiting before it adopts."},
         "unwatchedMilliseconds": {"$ref": "#/definitions/WatchdogInteger", "description": "Time since `stallAt` during which no supervisor watched the stage. It is not quiet time: the stall stop counts only watched time (now - stallAt - unwatchedMilliseconds), so a stage adopted after a supervisor restart is never stopped for the gap of the restart; any progress resets it to 0. The hard cap still counts from the start."},
@@ -275,6 +278,8 @@
           "loop-failed": "The readiness loop of this worker stopped with an error ({message}); it starts again in {seconds} seconds (try {count} in a row).",
           "spawn-failed": "Stage {stage} could not be started; retrying with back-off.",
           "interrupted": "Stage {stage} was stopped before it finished.",
+          "disk-guard": "Stage {stage} was stopped by the disk guard because the disk was nearly full (the tail names the volume and its numbers); a stopped stage cannot fill the disk. Collectors run, and the stage starts again once its need is free.",
+          "memory-cancelled": "Stage {stage} was ended by the host memory warden because the host was short of memory ({ending}); the work the caches hold is kept, and the stage starts again after the short back-off once enough memory is free.",
           "server": "The group server is never set up by this service."
         },
         "de": {
@@ -301,6 +306,8 @@
           "loop-failed": "Die Bereitschaftsschleife dieses Arbeiters ist mit einem Fehler beendet worden ({message}); sie startet in {seconds} Sekunden neu (Versuch {count} in Folge).",
           "spawn-failed": "Stufe {stage} konnte nicht gestartet werden; neuer Versuch mit Wartezeit.",
           "interrupted": "Stufe {stage} wurde vor dem Ende gestoppt.",
+          "disk-guard": "Stufe {stage} wurde vom Plattenwächter angehalten, weil die Platte fast voll war (der Ausschnitt nennt Datenträger und Zahlen); eine angehaltene Stufe kann die Platte nicht füllen. Sammler laufen, und die Stufe startet neu, sobald ihr Bedarf frei ist.",
+          "memory-cancelled": "Stufe {stage} wurde vom Speicherwächter des Hosts beendet, weil der Host zu wenig Speicher hatte ({ending}); was die Caches halten, bleibt erhalten, und die Stufe startet nach der kurzen Wartezeit neu, sobald genug Speicher frei ist.",
           "server": "Der Gruppenserver wird von diesem Dienst nie eingerichtet."
         }
       }
@@ -317,7 +324,7 @@
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "source-transient", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "disk-unfit", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "source-transient", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "disk-unfit", "loop-failed", "spawn-failed", "interrupted", "memory-cancelled", "disk-guard", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
       "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: newest last. A drained physical stage has no attempt count in this supervisor. A null digest means no verified launch digest was available. An observed end bounds the duration when the wrapper receipt is unavailable.",

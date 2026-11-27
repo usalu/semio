@@ -9,7 +9,8 @@
     "groups",
     "tools",
     "steps",
-    "messages"
+    "messages",
+    "provision"
   ],
   "properties": {
     "$schema": {
@@ -50,6 +51,19 @@
     },
     "messages": {
       "$ref": "#/definitions/Messages"
+    },
+    "provision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deadlineSeconds"
+      ],
+      "properties": {
+        "deadlineSeconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   },
   "definitions": {
@@ -380,7 +394,10 @@
           ],
           "properties": {
             "kind": {
-              "enum": ["hook", "bootstrap-node"]
+              "enum": [
+                "hook",
+                "bootstrap-node"
+              ]
             }
           }
         }
@@ -442,7 +459,7 @@
                 "dotnet",
                 "rust",
                 "bootstrap",
-            "bootstrap-node"
+                "bootstrap-node"
               ]
             }
           }
@@ -580,7 +597,8 @@
             "progress",
             "warm",
             "warmed",
-            "warmFailed"
+            "warmFailed",
+            "deadline"
           ],
           "properties": {
             "header": {
@@ -665,6 +683,9 @@
               "$ref": "#/definitions/Text"
             },
             "warmFailed": {
+              "$ref": "#/definitions/Text"
+            },
+            "deadline": {
               "$ref": "#/definitions/Text"
             }
           }

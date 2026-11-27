@@ -14,7 +14,7 @@ static WITNESSES: std::sync::LazyLock<[(&str, &str); 2]> = std::sync::LazyLock::
 /// 🧾️ The committed wire witness of one fixture case, decoded as the canonical Rust wire of its mutation.
 fn witness(row: &serde_json::Value) -> (serde_json::Value, RewritingWindowConfigMutation) {
     let text = (*WITNESSES).iter().find(|(leaf, _)| row["witness"] == *leaf).map(|(_, text)| *text).expect("case names a committed wire witness");
-    (serde_json::from_str(text).unwrap(), store::os_store::test_support::assert_wire_witness(text))
+    (serde_json::from_str(text).unwrap(), semio_os_store_test_support::assert_wire_witness(text))
 }
 
 /// 🧭 Finds a named semantic scene field in the independent serialized UI projection.

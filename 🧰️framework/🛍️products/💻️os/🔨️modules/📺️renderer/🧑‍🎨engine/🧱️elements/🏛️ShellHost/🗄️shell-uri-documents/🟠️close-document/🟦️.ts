@@ -195,6 +195,13 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
     return decision;
   }, [closeDocument]);
 
+  const trackRetirement = useCallback(<T,>(work: () => Promise<T>): Promise<T> => {
+    const inFlight = core.programRetirementsInFlightRef.current;
+    const running = work();
+    inFlight.add(running);
+    void running.then(() => inFlight.delete(running), () => inFlight.delete(running));
+    return running;
+  }, [core]);
   const requestProgramRetirement: ProgramRetirementRequestV1 = useCallback(async (requested, held, work) => {
     const owners = requested.filter((owner, index) => requested.findIndex(candidate => candidate.handle === owner.handle && candidate.session.instanceId === owner.session.instanceId) === index);
     if (owners.some(owner => retirementReservationsRef.current.get(owner.handle)?.has(owner.session.instanceId))) return null;
@@ -240,7 +247,7 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
       return {
         current: admission.current,
         release: () => { if (started && !settled) releaseRequested = true; else release(); },
-        retire: async () => {
+        retire: () => trackRetirement(async () => {
           if (started) return false;
           if (!admission.current()) { admission.release(); releaseReservations(); clear(); return false; }
           started = true;
@@ -262,14 +269,14 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
             settled = true;
             if (releaseRequested) release();
           }
-        },
+        }),
       };
     } catch (failure) {
       releaseReservations(); clear();
       console.warn("[os-shell] program retirement admission failed", failure);
       return null;
     }
-  }, [closeDocument]);
+  }, [closeDocument, trackRetirement]);
   core.admitProgramRetirementRef.current = requestProgramRetirement;
 
   /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */

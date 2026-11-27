@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
-use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
+use ::semio_os_store_test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
 use semio_framework_graph_manifest::PropertyValue;
 
 fn sample_rule_state() -> RewritingSnapshot {

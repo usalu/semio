@@ -5,12 +5,12 @@ use serde_json::json;
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
     let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_dsl_round_trips_empty_document() {
-    store::os_store::test_support::assert_dsl_round_trip(&GisMapSnapshot::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&GisMapSnapshot::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -45,5 +45,5 @@ async fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
         regions: vec![MapFeature { id: "g1".into(), data: dsl_of(json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] })) }],
         ..Default::default()
     };
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }

@@ -24,7 +24,7 @@ fn the_declaration_lists_the_ifc_export_and_import_between_the_bim_and_the_ifc_d
 #[test]
 fn the_export_entry_turns_a_packed_model_into_the_ifc_bytes() {
     let model = house();
-    let produced = (entry(IoEntryDirection::Export).run)(&IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
+    let produced = semio_framework_test_original_snapshot_owners::run_entry(entry(IoEntryDirection::Export).run, &IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
     assert_eq!(produced.value, IoPayload::Binary(export_ifc2x3(&model).expect("direct export").0));
 }
 
@@ -32,7 +32,7 @@ fn the_export_entry_turns_a_packed_model_into_the_ifc_bytes() {
 fn the_import_entry_turns_ifc_bytes_into_a_packed_model() {
     let model = house();
     let ifc = IoPayload::Binary(export_ifc2x3(&model).expect("direct export").0);
-    let produced = (entry(IoEntryDirection::Import).run)(&ifc).expect("the entry runs");
+    let produced = semio_framework_test_original_snapshot_owners::run_entry(entry(IoEntryDirection::Import).run, &ifc).expect("the entry runs");
     let IoPayload::Binary(bytes) = produced.value else { panic!("a packed model") };
     let imported = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::decode(&bytes).expect("the pack decodes");
     assert!(imported.walls.contains_key("w-south") && imported.storeys.len() == 4);
@@ -83,7 +83,7 @@ fn the_ifc4_entry_turns_a_packed_model_into_the_ifc4_bytes() {
     use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
     let model = house();
     let library = io().entries.iter().find(|entry| entry.direction == IoEntryDirection::Export && entry.into == IFC4_DIALECT).expect("the ifc4 entry");
-    let produced = (library.run)(&IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
+    let produced = semio_framework_test_original_snapshot_owners::run_entry(library.run, &IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
     assert_eq!(produced.value, IoPayload::Binary(export_ifc4(&model).expect("direct export").0));
 }
 

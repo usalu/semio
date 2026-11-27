@@ -12,11 +12,11 @@ use semio_os::WorkflowParameter;
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     use semio_hub_space_app::SpaceCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(semio_hub_space_commands_authoring::add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveParameter(semio_hub_space_commands_authoring::remove_parameter::RemoveParameter { parameter_id: "p1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::BindParameterField(semio_hub_space_commands_authoring::bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(semio_hub_space_commands_authoring::unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::AddParameter(semio_hub_space_commands_authoring::add_parameter::AddParameter { name: "Parameter".into(), kind: "numeric".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::RemoveParameter(semio_hub_space_commands_authoring::remove_parameter::RemoveParameter { parameter_id: "p1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::BindParameterField(semio_hub_space_commands_authoring::bind_parameter_field::BindParameterField { node_id: "n1".into(), field_path: "label".into(), parameter_id: "p1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(semio_hub_space_commands_authoring::unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
 }
 
 #[semio_framework_async_macros::async_test]

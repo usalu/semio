@@ -56,6 +56,7 @@ semio-s-artifact-stdio-tiff = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-raster-raster-io-media-bridge = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }

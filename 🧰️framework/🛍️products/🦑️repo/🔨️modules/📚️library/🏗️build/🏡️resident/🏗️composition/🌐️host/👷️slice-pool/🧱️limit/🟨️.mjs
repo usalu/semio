@@ -25,6 +25,12 @@ export function sliceBookingV1({declaredMegabytes,learnedMegabytes=0,unlearnedMe
  return{wantedMegabytes:wanted,minimumMegabytes:Math.min(minimumMegabytes,wanted)};
 }
 
+/** 🪶 The least a load of a measured booking starts with, derived from that measurement and not from a constant: `leanBasisPoints` of what it is booked at, never below `floorMegabytes` (the least a load starts with at all) and never above the booking. A host that cannot give the full booking admits the load at this size and the worker cuts its waves to the grant (`SEMIO_SLICE_WAVE_BASIS_POINTS`), so a 16 GB host reads the slice in smaller waves instead of waiting for the whole peak of a bigger machine.
+ * @see ../🟨️.mjs */
+export function sliceLeanMegabytesV1({bookedMegabytes,floorMegabytes=0,leanBasisPoints=10000}){
+ return Math.min(bookedMegabytes,Math.max(floorMegabytes,Math.ceil(bookedMegabytes*leanBasisPoints/10000)));
+}
+
 /** 🏔️ The most one load may take before the plan guard refuses it (`planGuardVerdictV1`): the larger of the ceiling share of the physical memory and the plan limit, 0 where the guard is off or the memory unknown, so the kernel limit of a load never lies below the point where the guard settles and judges it.
  * @see ../🟨️.mjs */
 export function slicePlanCeilingMegabytesV1({hostMegabytes=0,ceilingBasisPoints=0,planLimitMegabytes=Infinity}){

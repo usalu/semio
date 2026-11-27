@@ -62,8 +62,14 @@ def slots(policy, host):
     return {"jobs": jobs, "light": light, "local": max(1, min(wanted, jobs - light))}
 
 
+def serial(policy, host):
+    """The indexes of the observations a component final forecasts from: those whose CPU time stays within `serialFinalCpuRatio` times the wall time, or all of them when none does."""
+    kept = [at for at, row in enumerate(host["rows"]) if row["cpuMs"] <= row["wallMs"] * policy["serialFinalCpuRatio"]]
+    return kept or list(range(len(host["rows"])))
+
+
 if __name__ == "__main__":
     with open(sys.argv[1], encoding="utf8") as handle:
         policy = json.load(handle)["definitions"]["Policy"]["const"]
-    answers = {"plan": lambda host: plan(policy, host), "admit": admit, "slots": lambda host: slots(policy, host)}
+    answers = {"plan": lambda host: plan(policy, host), "admit": admit, "slots": lambda host: slots(policy, host), "serial": lambda host: serial(policy, host)}
     json.dump([answers[case["kind"]](case["host"]) for case in json.load(sys.stdin)], sys.stdout)

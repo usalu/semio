@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }

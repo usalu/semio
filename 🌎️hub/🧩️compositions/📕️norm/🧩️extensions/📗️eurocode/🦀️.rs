@@ -32,7 +32,7 @@ pub fn plugin() -> Result<Plugin<NormEurocodeApps>, PluginAssemblyError> {
     let en1997 = semio_s_artifact_norm_en1997::declaration(semio_s_artifact_norm_en1997::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let en1998 = semio_s_artifact_norm_en1998::declaration(semio_s_artifact_norm_en1998::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     PluginBuilder::<_, NormEurocodeApps>::new("norm-eurocode")
-        .label("Norm Eurocode")
+        .label(semio_plugin::LocalizedLabel::native("Norm Eurocode", "Norm Eurocode"))
         .version("0.1.0")
         .package_id("semio:norm-eurocode")
         .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))

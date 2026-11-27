@@ -427,8 +427,12 @@ export type PluginDependency = { pluginId: string, version: string, };"####,
         },
         SchemaMetadata {
             name: "PluginManifest",
-            version: 2,
-            typescript: r####"export type PluginManifest = { pluginId: string, label: string, version: string, apps: Array<AppDefinition>, examples: Array<ExampleDefinition>, capabilities: Array<CapabilityRequirement>,
+            version: 3,
+            typescript: r####"export type PluginManifest = { pluginId: string,
+/**
+ * 🏷️ The plugin name in every terminology and locale — no default language.
+ */
+label: LocalizedLabel, version: string, apps: Array<AppDefinition>, examples: Array<ExampleDefinition>, capabilities: Array<CapabilityRequirement>,
 /**
  * 🗂️ Open plugin contributions — see `TopicContribution`.
  */

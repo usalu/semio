@@ -44,6 +44,7 @@ semio-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/�
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
+semio-ui-contract-values = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }
 semio-framework-job = { workspace = true, features = ["testkit"] }

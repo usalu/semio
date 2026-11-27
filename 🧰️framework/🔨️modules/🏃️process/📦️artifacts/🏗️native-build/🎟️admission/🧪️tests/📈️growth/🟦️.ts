@@ -44,7 +44,7 @@ const scenario=async(options:Readonly<{peakMiB:number;parentMiB:number;local:Gro
 test("the vectors are valid and every case equals the law and the independent Python oracle",()=>{
  expect(new Ajv({strict:true}).validate(corpusSchema,corpus),"corpus schema").toBe(true);
  const law=corpus.cases.map(row=>decideGrantGrowthV1({needMegabytes:row.need,grantMegabytes:row.grant,local:row.local as GrowthHostV1,fleet:(row.fleet as GrowthHostV1[]|null)??undefined}));
- for(const [index,row] of corpus.cases.entries())expect(law[index]!.kind,row.name).toBe(row.expected.kind);
+ for(const [index,row] of corpus.cases.entries())expect<string>(law[index]!.kind,row.name).toBe(row.expected.kind);
  const result=spawnSync(requireTestToolV1("python"),["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url))],{encoding:"utf8"});
  expect(result.status,result.stderr).toBe(0);
  expect(law).toEqual(JSON.parse(result.stdout));

@@ -9,7 +9,7 @@ const labels = {
   cancel: { en: "Cancel", de: "Abbrechen" },
 } as const;
 
-/** 📂️ Reopens locally acknowledged generic artifacts through their owning surface. */
+/** 📂️ Reopens locally acknowledged generic artifacts through their owning surface. The list is a keyboard-focusable scroll region capped at 30% of the viewport height, so a device that keeps hundreds of documents never squeezes the open program's windows and their actions out of the canvas. */
 export function LocalFilesV1(props: Readonly<{
   documents: readonly LocalDocument[];
   locale: string;
@@ -43,7 +43,7 @@ export function LocalFilesV1(props: Readonly<{
     }
   };
   if (documents.length === 0) return null;
-  return <SharedBorderRow as="section" orientation="vertical" aria-label={text("title")} className={"pointer-events-auto px-double py-double text-sm"}>
+  return <SharedBorderRow as="section" orientation="vertical" aria-label={text("title")} tabIndex={0} data-semio-local-files-bounded="true" className={"pointer-events-auto max-h-[30vh] shrink-0 overflow-y-auto px-double py-double text-sm"}>
     <h2 className="font-semibold">{text("title")}</h2>
     <ul>{documents.map(document => <li key={document.documentId}>
       <button type="button" {...sharedBorderlessBoxProps} className="px-single py-single"

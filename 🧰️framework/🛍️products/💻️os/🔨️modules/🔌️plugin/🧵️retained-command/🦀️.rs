@@ -3,7 +3,6 @@ extern crate semio_os_kernel as protocol;
 use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
 use semio_plugin_decl_views::{AppOperationContext, InteractionHoverState};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
 use semio_plugin_decl_app::tool_contract::ArtifactToolCompletion;
 use semio_plugin_decl_media::ArtifactDownloadOutput;
 use semio_plugin_decl_emission::Emit;
@@ -56,12 +55,5 @@ mod raw_allocation_close_oracle;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use raw_allocation_close_oracle::test_raw_allocation_close;
 
-#[doc(hidden)]
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub mod tests;
-
 #[path = "🛬️lifted/🏛️reserved/🦀️.rs"]
 pub mod reserved_route_capacity_lift;
-#[path = "🔄️full-operation/🦀️.rs"]
-pub mod typed_operation;

@@ -85,6 +85,7 @@ semio-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust" }
 semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { path = "../../../🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }

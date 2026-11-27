@@ -51,6 +51,7 @@ semio-s-plugin-norm-app-surface = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-din18599-diff/test-support", "semio-s-artifact-norm-din18599-model/test-support", "semio-s-artifact-norm-din18599-mut-building/test-support", "semio-s-artifact-norm-din18599-mut-systems/test-support", "semio-s-artifact-norm-din18599-mut-zoning/test-support", "semio-s-artifact-norm-din18599-mut-zone-rows/test-support", "semio-s-artifact-norm-din18599-mut-zone-fields/test-support", "semio-s-artifact-norm-din18599-mut-element-rows/test-support", "semio-s-artifact-norm-din18599-mut-element-fields/test-support"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din18599-mutations = { path = ".", features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

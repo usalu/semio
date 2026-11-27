@@ -70,6 +70,7 @@ semio-ui-declaration = { path = "../../../../../../../../../../../../../../🧰�
 testkit = ["semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

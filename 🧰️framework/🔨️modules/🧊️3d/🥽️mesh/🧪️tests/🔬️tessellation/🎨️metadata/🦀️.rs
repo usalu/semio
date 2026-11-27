@@ -35,7 +35,7 @@ pub(super) fn authored_source(law:&serde_json::Value)->HalfedgeMesh{
 /// 🎨️ One original metadata slot captures an inline identity while original keys and sample allocations remain unchanged.
 #[test]
 fn original_mesh_tessellation_metadata_capture_borrows_exact_source_rows(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){

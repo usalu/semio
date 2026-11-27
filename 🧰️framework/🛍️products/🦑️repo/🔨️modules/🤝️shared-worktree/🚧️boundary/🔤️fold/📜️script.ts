@@ -1,6 +1,7 @@
 import {readFileSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 
+const runtimeVersion=(name:"unicode"|"icu"):string=>{const version=process.versions[name];if(version===undefined)throw Error(`the runtime reports no ${name} version`);return version;};
 const upperLower=(text:string):string=>text.toUpperCase().toLowerCase();
 
 /** 🧮️ Computes the fold table from the case mapping of the runtime's ICU: for every code point the fixpoint of "upper case, then lower case" per character (so `ß`, `ẞ` and `SS` meet at `ss`, the final and the medial sigma meet, `ı` and `ſ` meet `i` and `s` like NTFS' upper-case table does, ligatures expand), composed to NFC; only entries that differ from the code point itself are kept, ASCII included in the rule but never listed (its fold is the plain lower case). */
@@ -14,7 +15,7 @@ export function computeFoldTableV1():Readonly<{unicode:string;icu:string;map:rea
   folded=folded.normalize("NFC");
   if(folded!==own)map.push([point,folded]);
  }
- return {unicode:process.versions.unicode,icu:process.versions.icu,map};
+ return {unicode:runtimeVersion("unicode"),icu:runtimeVersion("icu"),map};
 }
 
 /** 📝️ Renders the table as the checked-in JSON text: the header, then eight entries per line. */

@@ -18,3 +18,9 @@ Over original-control + private-repository (183 files with importers): 2 errors,
 
 ## Checks
 dangling-imports exit 0 on storage tests, original-control, private-repository. Lock `landing.lock.testing` taken only for the helper write and released before any test. No git, no tickets, no sub-agents. One background shell (`&`) was started by mistake for a single test run and finished.
+
+## Addendum 15:5x: the 2 type errors in the cargo admission helper fixed (F97 released `process`)
+- `🏃️process/🧪️testing/🦀️cargo/🧪️tests/🗄️admission/🟦️.ts`: workspace and build mode are now read through `readNativeCallerAuthorityV1(actual.capabilities)` (`repositoryRoot`, `original.buildMode`); no cast.
+- Typing the real shape exposed the same family in two importers, fixed at their root, no casts: `🧪️tests/🟦️.ts` (2 reads of `capabilities.workspaceRoot`, one had `as string`) now use `readNativeCallerAuthorityV1(...).repositoryRoot`; `🔒️lease/🧪️tests/🟦️.ts` `artifactIn` only needs `root` (`Pick<LawStorageV1,"root">`; the store view's environment is `string|undefined`, the helper's type said `string`) and `request` accepts `Record<string,string|undefined>`.
+- `repo typecheck` on the three files: passed (6 files, 0 errors). dangling-imports exit 0. Lock `process` taken only for the write.
+- Tests: the admission file is a helper (run bare it fails with 0/2, no tests of its own). The two tests that use it: `🧪️tests/🟦️.ts` 0 pass / 1 fail file-level (`(unnamed)` x2), `🔒️lease/🧪️tests/🟦️.ts` 0 pass / 2 fail. Cause is not typing: `withAdmittedCompilerStoreV1` -> `loadScriptProviderV1` throws "Script provider designation required in SEMIO_SCRIPT_PROVIDERS" (the suite run does not give the test process that env; it is read from `process.env` by `scriptInvocationEnvironment`). Independent of this edit (it fails before the workspace read matters); not fixed, it needs the suite/project env declaration (manifest edit) or the provider designation written by the fixture. Open.

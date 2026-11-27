@@ -62,6 +62,7 @@ semio-s-artifact-stdio-semio-graph = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }

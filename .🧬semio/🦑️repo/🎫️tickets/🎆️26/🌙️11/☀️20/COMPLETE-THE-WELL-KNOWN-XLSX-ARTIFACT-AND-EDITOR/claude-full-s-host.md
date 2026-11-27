@@ -79,3 +79,37 @@ Run 2026-11-25 17:10 (`🗑️generated/claude-full-s/journey-en.log`, `journey-
 ## Files
 
 Created: `claude-fulls-inspect.ts`, `claude-fulls-session.ts`, `claude-fulls-publish.ts`, `claude-fulls-activate.ts`, `claude-fulls-serve.sh`, `claude-fulls-probe.ts`, `claude-fulls-journey.ts`, `claude-fulls-cargo.sh` (all in this ticket folder), this file. Source changed: the two Rust files above.
+
+
+## Final verdicts (2026-11-26, wasm: stdio 14:38, stdio-office 15:49; shell with the window-state leak fix; S on 6070 with `S_DATA_DIR`)
+
+Steps are the journey's (`claude-fulls-journey.ts`, genuine Strict fixture for Strict). Logs: `🗑️generated/claude-full-s/journey-en.log`, `journey-de.log`; earlier runs `journey-*-leakfix1.log`, `journey-de-run1..3.log`.
+
+| Step group | en | de |
+| --- | --- | --- |
+| boot, locale, catalog | pass | pass |
+| open via picker, Transitional and Strict (open, mount, edit A1, save name, save content, reopen) | pass (12 of 12) | pass (12 of 12) |
+| open via drop, Transitional | pass (6 of 6) | pass (6 of 6) |
+| open via drop, Strict | pass (6 of 6) | 5 of 6: `strict-drop:reopen` fails (see finding 1) |
+| refusals, picker and drop (foreign docx, not a zip, unknown extension) | pass (6 of 6) | pass (6 of 6) |
+| `kept-many:picker-open` (about 30 kept files seeded, reload every 8) | pass | pass |
+| `kept-many:one-session` (40 opens without reload, then spawn) | pass | pass |
+| faults | pass | pass |
+| Totals | 36 pass, 0 fail | 35 pass, 1 fail |
+
+The pane journey (6273) is fully green: 9 of 9 including the German decimal step.
+
+### Findings
+
+1. **Reopen of a kept document after its tab was closed (de: 1 failure, en: reproduced in a loop).** Not data loss: in all 10 repetitions of the Strict drop loop (5 de, 5 en) the saved file contained the edit (A1 read by the journey and, for the two failing English repetitions, the sheet XML unzipped: `<c r="A1" t="inlineStr"><is><t xml:space="preserve">Edited strict drop en</t></is></c>`). The failing repetition is the third in a session. A later 8-repetition English loop with the click error logged: `clickError=""`, notice `file-opened` shown, `A1="Edited strict drop en"` correct, but no new window ids (`windows=0`), and the next repetition then cannot find an A1 input (`mount A1=null`, then `fill` times out). Reading: clicking the kept file takes the existing-owner branch of the kept-file open (`openKeptFile`, `🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx`): the program instance of a closed tab is still alive, it is re-focused, and its windows are not shown again, leaving the shell without a usable editor. Root cause not yet fixed; it needs the shell agent (when the last window of a program closes, retire the instance so a reopen reloads from the folder, or re-show its windows). Reproduce: `REOPEN_LOOP=8 bun claude-fulls-journey.ts en http://127.0.0.1:6070/`.
+2. **Crowded kept-files list (fixed).** With 24 kept documents the unbounded list in `LocalFilesV1` squeezed the program windows to a sliver and Open File could not be clicked. The list is now a focusable scroll region capped at 30% of the viewport (`🗂️local-catalog/📂️files/🟦️.tsx`, test in `🧪️tests/📂️local-files/🟦️.tsx`); `kept-many:picker-open` covers it in both languages.
+3. **64-entry cap of `activeUtilityByWindowId` (fixed by the shell agent).** About 32 opens in one session made the shell refuse its own view context and no editor could be spawned. `kept-many:one-session` now passes in both languages.
+4. **`instance-sealed` refusals (observation).** Exact lines of the first full run (before any fix): `input #13 noteShellCommand refused: instance-sealed (user window=stdio-office-3::s.stdio.window.snapshot-details) - stdio-office#3`, `#14 noteShellCommand` (same window), `#15 commitCheckpoint` (same window), and the same triple for stdio-office-4 and later instances. After the first shell fix: en 145 and de 169 (including the 40-open step). After the second fix (chrome notes resolve live targets): en 21 (that run started before the fix), de 0. The journey prints them as an `OBSERVATION` line and no longer counts them as faults; a post-fix English run is still to be done.
+5. **Notice dedupe in the journey recorder (harness).** The drop refusal notice equals the preceding picker notice, so the repeat was not recorded; the harness now dismisses visible notices before each refusal case.
+6. **Descriptors of stdio and stdio-semio** are stale (split agent's caveat); not exercised by these journeys.
+
+### Not done
+
+- A post-fix English run to confirm zero sealed-instance lines.
+- Fix for finding 1.
+- Stdio artifact-acceptance browser gate and the hub I/O matrix `stdio-office/xlsx` (not run).

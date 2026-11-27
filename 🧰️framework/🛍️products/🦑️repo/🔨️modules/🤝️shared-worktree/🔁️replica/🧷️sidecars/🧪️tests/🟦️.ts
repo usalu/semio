@@ -37,7 +37,7 @@ test("an independent python implementation agrees with the back-off schedule and
  cases.forEach((value,index)=>{
   const row=value as {kind:string;failures:number;settings:{enabled:boolean;children:SidecarChildV1[]};server:boolean;peers:number;override?:string};
   const mine=row.kind==="backoff"?sidecarBackoffMillisecondsV1(restart,row.failures):wantedSidecarsV1(settings(row.settings.children,{enabled:row.settings.enabled}),row.server,row.peers,row.override).map(item=>item.name);
-  expect(mine,JSON.stringify(row)).toEqual(expected[index]);
+  expect<unknown>(mine,JSON.stringify(row)).toEqual(expected[index]);
  });
 });
 
@@ -145,7 +145,7 @@ function adoption(){
  const lines=():string[]=>existsSync(join(worktree,"starts.log"))?readFileSync(join(worktree,"starts.log"),"utf8").split("\n").filter(Boolean):[];
  const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch{return false;}};
  const daemon=(lease?:number)=>{
-  const supervisor=createSidecarsV1({settings:settings([child("role","role",{script:"launcher.ts",arguments:["role"]})]),facts,peers:async()=>3,environment:env,...lease===undefined?{}:{protocol:{leaseMilliseconds:lease}}});
+  const supervisor=createSidecarsV1({settings:settings([child("role","role",{script:"launcher.ts",arguments:["role"]})]),facts,peers:async()=>3,environment:env,protocol:lease===undefined?{}:{leaseMilliseconds:lease}});
   stoppers.push(()=>supervisor.stop());
   const timer=setInterval(()=>{supervisor.tick(true);},20);
   stoppers.push(async()=>{clearInterval(timer);});

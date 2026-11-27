@@ -26,4 +26,7 @@ pub mod set_exaggeration {
 //#endregion 🔖️SetExaggeration
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

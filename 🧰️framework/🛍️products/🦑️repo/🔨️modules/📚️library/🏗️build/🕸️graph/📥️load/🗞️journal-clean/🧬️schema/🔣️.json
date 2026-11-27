@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Journal attestation of an admission memo / Journal-Bestätigung eines Zulassungs-Memos",
+  "description": "Every row of the admission memo named by `memo` held at the journal cursor `epoch`:`seq` / Jede Zeile des Zulassungs-Memos `memo` galt am Journal-Cursor `epoch`:`seq`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "memo",
+    "epoch",
+    "seq"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "memo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "epoch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "links": {
+      "description": "Directories above the vouched paths that were probed: `checked` are no symbolic links, `linked` are / Verzeichnisse über den bestätigten Pfaden, die geprüft wurden: `checked` sind keine symbolischen Links, `linked` sind welche.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checked",
+        "linked"
+      ],
+      "properties": {
+        "checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "linked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

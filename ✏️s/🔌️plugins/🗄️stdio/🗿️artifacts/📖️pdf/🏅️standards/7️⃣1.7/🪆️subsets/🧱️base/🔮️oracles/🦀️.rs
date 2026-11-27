@@ -919,6 +919,12 @@ pub fn reference_stream_bodies(input:&[u8])->Result<Vec<Vec<u8>>,String> {
     document.objects.values().filter_map(|object|object.as_stream().ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
 }
 
+/// 🖼️ Counts the inline images (`BI` operations) the independent PDF grammar frames in a content stream and the operators around them; lopdf keeps a `BI` operation's dictionary and data to itself, so framing is what it can vouch for.
+pub fn reference_inline_image_operators(input: &[u8]) -> Result<Vec<String>, String> {
+    let content = lopdf::content::Content::decode(input).map_err(|error| error.to_string())?;
+    Ok(content.operations.into_iter().map(|operation| operation.operator).collect())
+}
+
 /// 📄️ Reads each native page's operator spelling through the independent PDF grammar.
 pub fn reference_page_operator_names(input:&[u8])->Result<Vec<Vec<String>>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;

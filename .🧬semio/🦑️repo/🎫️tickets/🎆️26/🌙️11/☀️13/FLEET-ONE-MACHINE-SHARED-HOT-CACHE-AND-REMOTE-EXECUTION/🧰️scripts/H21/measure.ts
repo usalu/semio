@@ -1,0 +1,24 @@
+import {join} from "node:path";
+const root="/Users/ueli/Documents/semio";
+const B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
+const {readAdmissionMemoV1}=await import(join(B,"🕸️graph/📥️load/🧠️admission-memo/🟦️.ts"));
+const {buildGraphSourceFactsHoldV1}=await import(join(B,"🕸️graph/📁️workspace/🟦️.ts"));
+const {journalCleanRowsV1,readJournalAttestationV1,writeJournalAttestationV1}=await import(join(B,"🕸️graph/📥️load/🗞️journal-clean/🟦️.ts"));
+const {connectChangeJournalV1}=await import(join(B,"🏡️resident/📜️journal/🟦️.ts"));
+const dir=join(root,".cache/b/g/m/selected"),file=process.argv[2],scope=file.replace(/\.admission\.json$/,"");
+const memoPath=join(dir,file);
+let t=performance.now();
+const lent=await readAdmissionMemoV1(memoPath,scope,()=>true);
+if(!lent){console.log("memo unreadable/format mismatch");process.exit(0);}
+const rows=lent.observations as any[];await lent.close();
+console.log("read",rows.length,"rows",Math.round(performance.now()-t),"ms");
+t=performance.now();const staleA:string[]=[];const full=await buildGraphSourceFactsHoldV1(rows,undefined,(r:any)=>staleA.push(r.kind+":"+r.path),undefined,false,true);console.log("full hold",full,"stale",staleA.length,Math.round(performance.now()-t),"ms");
+const att=join("/private/tmp/claude-501/h21/m","att.json");
+const feed=connectChangeJournalV1(root) as any;
+const ports={feed,root,read:()=>readJournalAttestationV1(att),write:(v:any)=>writeJournalAttestationV1(att,v)};
+t=performance.now();const j1=await journalCleanRowsV1(ports,"k",rows);console.log("cursor",Math.round(performance.now()-t),"ms");
+j1.seal("k");
+await Bun.sleep(3000);
+t=performance.now();const j2=await journalCleanRowsV1(ports,"k",rows);console.log("since+index",Math.round(performance.now()-t),"ms",JSON.stringify(j2.counts()));
+t=performance.now();const staleB:string[]=[];const part=await buildGraphSourceFactsHoldV1(rows,undefined,(r:any)=>staleB.push(r.kind+":"+r.path),undefined,false,true,j2.clean as never);console.log("journal hold",part,"stale",staleB.length,"sameStale",JSON.stringify([...staleA].sort())===JSON.stringify([...staleB].sort()),Math.round(performance.now()-t),"ms",JSON.stringify(j2.counts()));
+process.exit(0);

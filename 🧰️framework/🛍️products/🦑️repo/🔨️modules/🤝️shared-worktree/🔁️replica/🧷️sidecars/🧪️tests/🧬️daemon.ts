@@ -3,7 +3,7 @@ import {join} from "node:path";
 import {createSidecarsV1} from "../🟦️.ts";
 
 const worktree=process.argv[2]!,block=process.argv[3]==="block",lease=Number(process.env.SIDECAR_TEST_LEASE_MS);
-const supervisor=createSidecarsV1({settings:{enabled:true,startAfterSeconds:0,restart:{initialMilliseconds:60,maximumMilliseconds:240,stableMilliseconds:60_000},graceSeconds:1,children:[{name:"role",script:process.argv[4]!,arguments:["role"],roles:["member","server"],requires:"none",enabled:true}]},facts:{worktree,storeRoot:join(worktree,"store"),originId:"g1-m03",groupId:"g1",platform:"macos"},peers:async()=>3,environment:process.env,...lease>0?{protocol:{leaseMilliseconds:lease}}:{}});
+const supervisor=createSidecarsV1({settings:{enabled:true,startAfterSeconds:0,restart:{initialMilliseconds:60,maximumMilliseconds:240,stableMilliseconds:60_000},graceSeconds:1,children:[{name:"role",script:process.argv[4]!,arguments:["role"],roles:["member","server"],requires:"none",enabled:true}]},facts:{worktree,storeRoot:join(worktree,"store"),originId:"g1-m03",groupId:"g1",platform:"macos"},peers:async()=>3,environment:process.env,protocol:lease>0?{leaseMilliseconds:lease}:{}});
 const timer=setInterval(()=>{supervisor.tick(true);},20);
 const report=setInterval(()=>{writeFileSync(join(worktree,`report-${process.pid}.json`),JSON.stringify(supervisor.report()));},100);
 setTimeout(()=>{

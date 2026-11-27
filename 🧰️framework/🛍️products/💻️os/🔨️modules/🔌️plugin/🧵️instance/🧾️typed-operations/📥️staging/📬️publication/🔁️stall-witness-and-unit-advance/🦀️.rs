@@ -1,7 +1,7 @@
 //! 🔁️ Stall witness and unit advance of the typed operation publication: the stall streak and the interaction write check, the advance of one publication unit and the window config refresh of a published receipt. See [`super`].
 
 use super::*;
-use semio_plugin_retained_command::typed_operation::note_publication_wait;
+use semio_plugin_retained_command_operation::typed_operation::note_publication_wait;
 
 /// 🕹️ Whether this operation's next publication unit is its [`InteractionWrite`] lane: every
 /// durable store lane of its emit is already drained (a selection may only name ids the
@@ -168,7 +168,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut progress=mounted.identity_progress;
         let mut observer=|next:semio_framework_value::native_encoding::NativeEncodeProgress|{progress=next;!token.is_cancelled_now()&&!publication.is_cancelled()};
         let mut work=cx.native_encoder_work();
-        let mut owned_identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command::typed_operation::MountedIdentityWork(&mut work)));
+        let mut owned_identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command_operation::typed_operation::MountedIdentityWork(&mut work)));
         let result=self.as_render().revalidate_interaction_on_document_change(&mut owned_identity).await;
         mounted.identity=Some(owned_identity.pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);drop(observer);cx.consume_fuel(work.performed());mounted.identity_progress=progress;
         result?;mounted.interaction_revalidated=true;Ok(())

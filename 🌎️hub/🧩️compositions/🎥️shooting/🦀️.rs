@@ -24,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<ShootingApps>, PluginAssemblyError> {
     PluginBuilder::<_, ShootingApps>::new("shooting")
-        .label("Shooting")
+        .label(semio_plugin::LocalizedLabel::native("Shooting", "Shooting"))
         .version("0.1.0")
         .package_id("semio:shooting")
         .artifact(crate::artifacts::shooting::declaration().map_err(PluginAssemblyError::definition)?)

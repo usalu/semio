@@ -31,3 +31,6 @@ semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value
 
 [features]
 mesh-test-observation = ["semio-framework-3d-mesh-reconstruction/mesh-test-observation"]
+
+[dev-dependencies]
+semio-os-store-test-support = { path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }

@@ -435,7 +435,7 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
         &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️update-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
         &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-paragraph-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
-        store::os_store::test_support::assert_wire_witness::<LayoutMutation>(witness);
+        semio_os_store_test_support::assert_wire_witness::<LayoutMutation>(witness);
     }
 }
 //#endregion 🧾️WireWitnesses

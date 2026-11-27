@@ -7,7 +7,7 @@ import { javascriptDependencyGenerationDirectoryV1, javascriptDependencySourceOw
 import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {verifyJavascriptDependencyGenerationReceiptV1,writeJavascriptDependencyGenerationFilesV1} from "../../🧾️generation/💾️storage/🟦️.ts";
 import {generationCauseV1,generationSha256V1} from "../../🧾️generation/🟦️.ts";
-import {decodeInstalledLedgerV1,decodeOwnershipIndexV1,encodeInstalledLedgerV1,encodeOwnershipIndexV1,incrementalProtocolV1 as protocol,installedCountsV1,installedRowV1,installedStampV1,installedThresholdNsV1,lockConvergedV1,parseInstalledReceiptV1,parseLockReceiptV1,parseOwnershipReceiptV1,parseSyncReceiptV1,replayExecutionObservationsV1,sealInstalledReceiptV1,sealLockReceiptV1,sealOwnershipReceiptV1,sealSyncReceiptV1,verifyInstalledLedgerV1,type ExecutionObservationV1,type ExecutionReplayResultV1,type IncrementalControlV1,type InstalledChildV1,type InstalledPortsV1,type InstalledRowV1,type InstalledShapeV1,type LockReceiptV1,type OwnershipRecordV1,type StampSourceV1,type SyncReceiptV1} from "../🟦️.ts";
+import {decodeInstalledLedgerV1,decodeOwnershipIndexV1,encodeInstalledLedgerV1,encodeOwnershipIndexV1,incrementalProtocolV1 as protocol,installedCountsV1,installedRowV1,installedStampV1,installedThresholdNsV1,lockConvergedV1,mergeSyncScopesV1,syncRequestRowsV1,parseInstalledReceiptV1,parseLockReceiptV1,parseOwnershipReceiptV1,parseSyncReceiptV1,replayExecutionObservationsV1,sealInstalledReceiptV1,sealLockReceiptV1,sealOwnershipReceiptV1,sealSyncReceiptV1,verifyInstalledLedgerV1,type ExecutionObservationV1,type ExecutionReplayResultV1,type IncrementalControlV1,type InstalledChildV1,type InstalledPortsV1,type InstalledRowV1,type InstalledShapeV1,type LockReceiptV1,type OwnershipRecordV1,type StampSourceV1,type SyncReceiptV1,type SyncRequestV1} from "../🟦️.ts";
 
 const directory=(storeRoot:string)=>join(storeRoot,protocol.directory),keyOf=(label:string)=>generationSha256V1(label).slice(0,16);
 const bounded=(path:string,maximum:number):Buffer=>{const facts=lstatSync(path,{bigint:true});if(!facts.isFile()||facts.size>BigInt(maximum))throw Error("Sealed incremental file required");return readFileSync(path);};
@@ -106,16 +106,23 @@ export async function publishJavascriptDependencySyncReceiptV1(storeRoot:string,
  for(const other of names(storeRoot,keyOf(protocol.sync.keyLabel)+".",protocol.sync.receiptSuffix))if(other!==name)unlinkQuietly(storeRoot,other);
  return receipt.sha256;
 }
+/** 📖️ The newest well formed sealed synchronization receipt of the store, `undefined` when there is none. */
+export function readJavascriptDependencySyncReceiptV1(storeRoot:string):SyncReceiptV1|undefined{
+ for(const name of names(storeRoot,keyOf(protocol.sync.keyLabel)+".",protocol.sync.receiptSuffix))try{return parseSyncReceiptV1(bounded(join(directory(storeRoot),name),protocol.sync.maximumReceiptBytes));}catch{}
+ return undefined;
+}
 /** 🚪️ Answers whether the last complete synchronization still holds: every sealed scope read matches its generation receipt, every installed ledger matches its directories and no obsolete generation remains. */
-export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl):Promise<Readonly<{status:"current";scopes:number}>|Readonly<{status:"stale";reason:string;cause?:Readonly<{class:string;path?:string;detail?:string}>}>>{
+export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,request:SyncRequestV1={kind:"all"}):Promise<Readonly<{status:"current";scopes:number}>|Readonly<{status:"stale";reason:string;cause?:Readonly<{class:string;path?:string;detail?:string}>}>>{
  const stale=(reason:string,cause?:Readonly<{class:string;path?:string;detail?:string}>)=>Object.freeze({status:"stale"as const,reason,...(cause===undefined?{}:{cause})}),root=context.root;let sync:SyncReceiptV1|undefined;
- for(const name of names(root,keyOf(protocol.sync.keyLabel)+".",protocol.sync.receiptSuffix))try{sync=parseSyncReceiptV1(bounded(join(directory(root),name),protocol.sync.maximumReceiptBytes));break;}catch{}
+ sync=readJavascriptDependencySyncReceiptV1(root);
  if(!sync)return stale("absent");
+ const wanted=syncRequestRowsV1(sync,request);
+ if(wanted==="incomplete")return stale("scopes");
  if(sync.runtimeSha256!==javascriptDependencySourceOwnerRuntimeV1())return stale("runtime");
  let present:string[];try{present=readdirSync(join(root,javascriptDependencyGenerationDirectoryV1));}catch{return stale("generations");}
  if(selectObsoleteJavascriptDependencyGenerationsV1(present,sync.scopes.map(row=>row.generation.slice(0,20)),[]).length)return stale("obsolete-generations");
  const incremental=controlOf(context,control,"sync-gate"),repaired=new Map<string,string>();
- for(const row of sync.scopes){
+ for(const row of wanted){
   const read=await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,row.scope);
   if(read.status!=="match")return stale("generation:"+row.scope,generationCauseV1(read,row.scope));
   if(read.sha256!==row.read||read.receipts.find(receipt=>receipt.scope===row.scope)?.generation!==row.generation)return stale("generation:"+row.scope,{class:"sha-changed"});
@@ -129,12 +136,12 @@ export async function verifyJavascriptDependencySyncCurrentV1(workspace:string,c
  }
  if(repaired.size){
   try{
-   await publishJavascriptDependencySyncReceiptV1(root,{version:1,purpose:"dependency-sync-receipt",selection:"all",runtimeSha256:sync.runtimeSha256,scopes:sync.scopes.map(row=>({...row,installed:repaired.get(row.scope)??row.installed}))},()=>context.check(control),()=>control.yieldContinuation());
+   await publishJavascriptDependencySyncReceiptV1(root,{version:1,purpose:"dependency-sync-receipt",selection:sync.selection,runtimeSha256:sync.runtimeSha256,scopes:sync.scopes.map(row=>({...row,installed:repaired.get(row.scope)??row.installed}))},()=>context.check(control),()=>control.yieldContinuation());
    retireJavascriptDependencyInstalledReceiptsV1(root,sync.scopes.map(row=>row.generation));
   }catch(error){if(control.signal.aborted)throw error;return stale("installed-repair");}
   console.error("[DATA] Store dependency installed-paths evidence repaired "+JSON.stringify({version:1,purpose:"current-dependency-installed-evidence-repair",scopes:[...repaired.keys()]}));
  }
- return Object.freeze({status:"current",scopes:sync.scopes.length});
+ return Object.freeze({status:"current",scopes:wanted.length});
 }
 /** 🔎️ Names the sha of the installed-paths receipt that currently proves a generation, without verifying it. */
 export function newestJavascriptDependencyInstalledReceiptV1(storeRoot:string,generation:string):string|undefined{
@@ -143,11 +150,12 @@ export function newestJavascriptDependencyInstalledReceiptV1(storeRoot:string,ge
 }
 
 /** 🏁️ Seals the synchronization state from the scope reads this run just proved and published, or reports that a scope lacks its installed-paths ledger. */
-export async function publishJavascriptDependencySyncFromReadsV1(storeRoot:string,reads:readonly Readonly<{scope:string;generation:string;sha256:string}>[],checkpoint:()=>void,yieldContinuation:()=>Promise<void>):Promise<"published"|"incomplete">{
- const scopes:SyncReceiptV1["scopes"][number][]=[];
- for(const read of reads){const installed=newestJavascriptDependencyInstalledReceiptV1(storeRoot,read.generation);if(!installed)return"incomplete";scopes.push({scope:read.scope,generation:read.generation,read:read.sha256,installed});}
- await publishJavascriptDependencySyncReceiptV1(storeRoot,{version:1,purpose:"dependency-sync-receipt",selection:"all",runtimeSha256:javascriptDependencySourceOwnerRuntimeV1(),scopes},checkpoint,yieldContinuation);
- retireJavascriptDependencyInstalledReceiptsV1(storeRoot,reads.map(read=>read.generation));
+export async function publishJavascriptDependencySyncFromReadsV1(storeRoot:string,reads:readonly Readonly<{scope:string;generation:string;sha256:string}>[],checkpoint:()=>void,yieldContinuation:()=>Promise<void>,complete:boolean=true):Promise<"published"|"incomplete">{
+ const rows:SyncReceiptV1["scopes"][number][]=[];
+ for(const read of reads){const installed=newestJavascriptDependencyInstalledReceiptV1(storeRoot,read.generation);if(!installed)return"incomplete";rows.push({scope:read.scope,generation:read.generation,read:read.sha256,installed});}
+ const runtimeSha256=javascriptDependencySourceOwnerRuntimeV1(),previous=readJavascriptDependencySyncReceiptV1(storeRoot),merged=mergeSyncScopesV1(previous?.runtimeSha256===runtimeSha256?previous:undefined,rows,complete);
+ await publishJavascriptDependencySyncReceiptV1(storeRoot,{version:1,purpose:"dependency-sync-receipt",selection:merged.selection,runtimeSha256,scopes:merged.scopes},checkpoint,yieldContinuation);
+ retireJavascriptDependencyInstalledReceiptsV1(storeRoot,merged.scopes.map(row=>row.generation));
  return"published";
 }
 

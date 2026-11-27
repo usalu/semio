@@ -59,7 +59,7 @@ fn register_inference_factories() -> Result<(), PluginAssemblyError> {
 pub fn plugin() -> Result<Plugin<WfcApps>, PluginAssemblyError> {
     register_inference_factories()?;
     PluginBuilder::<_, WfcApps>::new("wfc")
-        .label("WFC")
+        .label(semio_plugin::LocalizedLabel::native("WFC", "WFC"))
         .version("0.1.0")
         .package_id("semio:wfc")
         .routed_inference(semio_s_artifact_wfc_grid2d::host::inferences::grid2d_inference_metadata())

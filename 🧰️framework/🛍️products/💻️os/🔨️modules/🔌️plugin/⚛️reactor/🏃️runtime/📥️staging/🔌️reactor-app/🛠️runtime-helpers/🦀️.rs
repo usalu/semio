@@ -26,6 +26,15 @@ use serde::Serialize;
 pub fn plugin_internal_fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
 }
+std::thread_local! { static MAINTENANCE_STARVED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
+/// 🥀️ Marks the current maintenance step as starved (yielded, unfunded or reserve-skipped) rather than fruitless.
+pub fn maintenance_starved_mark() {
+    MAINTENANCE_STARVED.with(|starved| starved.set(true));
+}
+/// 🫗️ Reads and clears the starvation mark the last maintenance step left on this thread.
+pub fn maintenance_starved_take() -> bool {
+    MAINTENANCE_STARVED.with(|starved| starved.replace(false))
+}
 #[doc(hidden)]
 pub fn debug_runtime_line(line: impl std::fmt::Display) {
     if semio_framework_trace::runtime_diagnostics_enabled() {

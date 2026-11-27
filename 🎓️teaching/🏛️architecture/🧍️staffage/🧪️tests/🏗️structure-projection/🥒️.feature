@@ -23,3 +23,8 @@ Feature: Three-dimensional statics and the projection of forces and moments
     Then its in-plane part, its component along the line of sight and its total satisfy |v|² = in-plane² + out-of-plane² in side elevation, front elevation and plan
     And a component along the line of sight is a dot (towards the viewer) or a cross (away) with its value in the label
     And the legends and the load case do not depend on the view
+
+  Scenario: An arrow keeps its shape wherever it stands on the sheet
+    Given a force arrow of one direction, length and width
+    When it is drawn at another place of the sheet, as the free body is behind a wider label column of another language
+    Then every point keeps its offset from the tip to the last bit, so the upper edge of the drawing and with it the place of every shape are the same in every language

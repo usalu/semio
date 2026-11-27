@@ -52,6 +52,14 @@ def heavy(subject):
     return ceiling is not None and ceiling["kind"] == "final" and ceiling["listed"]
 
 
+def sheltered(subject):
+    return subject.get("grantMegabytes") is not None and subject["megabytes"] <= subject["grantMegabytes"]
+
+
+def excess(subject):
+    return 0 if subject.get("grantMegabytes") is None else max(0, subject["megabytes"] - subject["grantMegabytes"])
+
+
 def order_key(subject):
     from fractions import Fraction
     return (1 if subject.get("capCritical") else 0, 1 if heavy(subject) else 0, Fraction(subject["elapsedSeconds"], max(1, subject["megabytes"])), subject["rank"], subject["pid"])
@@ -137,8 +145,10 @@ def decide(policy, host, subjects, previous):
                 trigger = source
             elif comp == 2:
                 trigger = "compressed"
-            else:
+            elif pressure == 2:
                 trigger = "pressure"
+            else:
+                trigger = "swapping"
         elif pressure == 1:
             trigger = "pressure"
         elif comp >= 1:
@@ -203,7 +213,7 @@ def decide(policy, host, subjects, previous):
     for s in overdue:
         shortage = page_in(s) > initial_room
         pressure_cancel = level != "calm" and not quiet and (not s.get("capCritical") or severe)
-        if s["canCancel"] and (shortage or pressure_cancel) and count("cancel") < policy["maximumCancelsPerTick"]:
+        if s["canCancel"] and (not sheltered(s) or (level == "danger" and severe)) and (shortage or pressure_cancel) and count("cancel") < policy["maximumCancelsPerTick"]:
             actions.append({"action": "cancel", "id": s["id"], "reason": "overdue"})
             acted.add(s["id"])
             cancelled.append(s)
@@ -222,8 +232,11 @@ def decide(policy, host, subjects, previous):
             return s["suspended"] and s["suspendedSeconds"] >= policy["pauseDeadlineSeconds"]
 
         pausing_failed = all(paused(s) for s in subjects if s["canSuspend"] and s["canCancel"])
-        candidates = [s for s in subjects if s["canCancel"] and s["id"] not in acted and (paused(s) if s["canSuspend"] else pausing_failed)]
-        candidates.sort(key=lambda s: (0 if s["suspended"] else 1,) + order_key(s))
+        def eligible(s):
+            return not s.get("held") and (paused(s) if s["canSuspend"] else pausing_failed)
+        unsheltered_waiting = any(not sheltered(s) and s["canCancel"] and s["id"] not in acted and not eligible(s) for s in subjects)
+        candidates = [s for s in subjects if s["canCancel"] and s["id"] not in acted and eligible(s) and not (sheltered(s) and unsheltered_waiting)]
+        candidates.sort(key=lambda s: (1 if s.get("lastResort") else 0, 1 if sheltered(s) else 0, -excess(s), 1 if heavy(s) else 0, -s["megabytes"], 0 if s["suspended"] else 1) + order_key(s))
         for s in candidates:
             if freed >= deficit or count("cancel") == policy["maximumCancelsPerTick"]:
                 break
@@ -233,7 +246,7 @@ def decide(policy, host, subjects, previous):
 
     if level in ("guard", "danger") and (not quiet or crossed):
         deficit = deficit_all
-        every_running = sorted([s for s in subjects if not s["suspended"] and not (quiet and s.get("capCritical"))], key=lambda s: (1 if s.get("capCritical") else 0,) + order_key(s))
+        every_running = sorted([s for s in subjects if not s["suspended"] and not (quiet and s.get("capCritical"))], key=lambda s: (1 if s.get("capCritical") else 0, 1 if sheltered(s) else 0) + order_key(s))
         keep = 0 if acute else policy["keepRunning"]
         kept = set(s["id"] for s in every_running[len(every_running) - keep:]) if keep > 0 else set()
         covered = sum(s["megabytes"] for s in subjects if s["suspended"] and s["id"] not in acted)
@@ -386,6 +399,8 @@ def classify(rows, tables, options):
             result[-1]["capMegabytes"] = kind["capMegabytes"]
         if kind.get("capCritical"):
             result[-1]["capCritical"] = True
+        if kind.get("lastResort"):
+            result[-1]["lastResort"] = True
         if kind.get("ceiling") == "unit":
             ceiling = ceiling_of(row["command"], options.get("ceilings"))
             if ceiling is not None:

@@ -60,7 +60,7 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
         crate::text("🧪️tests/🧫️fixtures/🧬️mutations/🧽️remove-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
         crate::text("🧪️tests/🧫️fixtures/🧬️mutations/🫥️remove-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
-        store::os_store::test_support::assert_wire_witness::<RunMutation>(witness);
+        semio_os_store_test_support::assert_wire_witness::<RunMutation>(witness);
     }
 }
 
@@ -107,13 +107,13 @@ async fn empty_run_document_matches_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn run_document_dsl_pack_round_trips() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document().await);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document().await);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample_run_document().await);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty_run_document().await);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn run_operation_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::StartRun(StartRun {
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::StartRun(StartRun {
         workflow_ref: "space.space".into(),
         workflow_checkpoint_id: "ck-1".into(),
         input_collection_ref: "collections/in".into(),
@@ -122,7 +122,7 @@ async fn run_operation_op_text_round_trips_every_variant() {
         output_collection_ref: "collections/out".into(),
         trigger: RunTrigger::Manual { actor: "dev".into() },
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::StartRun(StartRun {
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::StartRun(StartRun {
         workflow_ref: "space.space".into(),
         workflow_checkpoint_id: "ck-1".into(),
         input_collection_ref: "collections/in".into(),
@@ -131,11 +131,11 @@ async fn run_operation_op_text_round_trips_every_variant() {
         output_collection_ref: "collections/out".into(),
         trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::StartRunNode(StartRunNode { node_id: "a".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await, index: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunHeader(SetRunHeader {
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::StartRunNode(StartRunNode { node_id: "a".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await, index: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::SetRunHeader(SetRunHeader {
         workflow_ref: "space.space".into(),
         workflow_checkpoint_id: "ck-1".into(),
         input_collection_ref: "collections/in".into(),
@@ -146,9 +146,9 @@ async fn run_operation_op_text_round_trips_every_variant() {
         status: RunStatus::Pending,
         started_at: String::new(),
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunSeal(SetRunSeal { sealed: true, status: RunStatus::Succeeded, finished_at: Some("2026-09-30T12:00:00Z".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RemoveRunLog(RemoveRunLog { count: 2 }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RemoveRunNode(RemoveRunNode { node_id: "a".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::SetRunSeal(SetRunSeal { sealed: true, status: RunStatus::Succeeded, finished_at: Some("2026-09-30T12:00:00Z".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::RemoveRunLog(RemoveRunLog { count: 2 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RunMutation::RemoveRunNode(RemoveRunNode { node_id: "a".into() }));
 }
 
 #[test]
@@ -335,7 +335,7 @@ async fn run_node_record_dsl_pack_round_trips_nested_tables() {
     let record = sample_run_node_record("a", RunNodeStatus::Failed).await;
     let mut document = empty_run_document().await;
     document.node_records.push(record);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
 }
 
 #[semio_framework_async_macros::async_test]

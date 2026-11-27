@@ -276,6 +276,11 @@
       "fresh",
       "current"
      ]
+    },
+    "grant": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9_-]{8,32}$",
+     "description": "The machine-wide capacity grant the requesting command runs under (its `SEMIO_HOST_CAPACITY_GRANT`): the slice load the plan needs is charged to that grant and never queues behind it."
     }
    }
   },
@@ -1813,6 +1818,7 @@
     "sliceRestartSettleMilliseconds": 900000,
     "sliceRestartProgressMilliseconds": 60000,
     "sliceRestartTotalMaximum": 120,
+    "sliceGrantGrowth": {"minimumMegabytes": 256, "headroomBasisPoints": 12500, "triggerBasisPoints": 9000, "maximum": 6, "cutsBeforeReadmit": 2},
     "sliceRestartSameCauseMaximum": 3,
     "sliceRestartQuietMilliseconds": 60000,
     "sliceRestartQuietMaximumMilliseconds": 600000,
@@ -1825,7 +1831,9 @@
      "hostFloorMegabytes": 1536,
      "hostCapBasisPoints": 4000,
      "minimumMegabytes": 2048,
-     "learnedGrowthBasisPoints": 12500
+     "learnedGrowthBasisPoints": 12500,
+     "measuredBookingBasisPoints": 11500,
+     "leanBasisPoints": 4000
     }
    }
   },

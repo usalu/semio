@@ -57,8 +57,8 @@ const sample = (page: Page): Promise<Sample> =>
     const tasks = [...document.querySelectorAll("[data-semio-task-manager-task]")]
       .filter((row) => row.getAttribute("data-semio-task-manager-lane") === "toolRun")
       .map((row) => ({ id: row.getAttribute("data-semio-task-manager-task"), state: row.getAttribute("data-semio-task-manager-state"), progress: row.querySelector("[role='progressbar']")?.getAttribute("aria-valuetext") ?? null, buttons: [...row.querySelectorAll("button")].map((button) => `${button.id}${button.disabled ? "(disabled)" : ""}`) }));
-    const checkin = (document.querySelector("#s-checkin")?.textContent ?? "").trim();
-    const history = [...document.querySelectorAll('[id^="framework.history.entry."]')].filter((element) => !element.id.endsWith(".revert")).map((element) => ((element as HTMLElement).innerText ?? "").replace(/\s+/gu, " ").trim().slice(0, 60));
+    const checkin = ((document.querySelector("#s-checkin") ?? [...document.querySelectorAll('[id$="/framework.history.checkin"]')].find((element) => element instanceof HTMLElement && element.offsetParent !== null))?.textContent ?? "").trim();
+    const history = [...document.querySelectorAll('[id*="framework.history.entry."]')].filter((element) => !element.id.endsWith(".revert")).map((element) => ((element as HTMLElement).innerText ?? "").replace(/\s+/gu, " ").trim().slice(0, 60));
     const stall = [...document.querySelectorAll("[data-semio-command-stall-id]")].map((element) => (element.textContent ?? "").trim().slice(0, 120));
     return { runs, tasks, checkin, history, stall };
   });

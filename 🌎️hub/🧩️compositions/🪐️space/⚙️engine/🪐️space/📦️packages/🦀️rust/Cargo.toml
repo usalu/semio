@@ -37,6 +37,7 @@ semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/�
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
+semio-plugin-retained-command-operation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-space-core = { path = "../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
@@ -53,5 +54,6 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws"] }

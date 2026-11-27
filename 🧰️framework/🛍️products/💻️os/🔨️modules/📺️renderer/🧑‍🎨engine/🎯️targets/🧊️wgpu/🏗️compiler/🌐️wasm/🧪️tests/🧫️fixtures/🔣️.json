@@ -1745,6 +1745,10 @@
       "name": "semio-plugin-retained-command"
     },
     {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-retained-command-operation"
+    },
+    {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-plugin-child"
     },

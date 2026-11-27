@@ -9,13 +9,13 @@ use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
 
 #[semio_framework_async_macros::async_test]
 async fn selected_child_parent_dsl_round_trips() {
-    let document = <crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
-    ::store::os_store::test_support::assert_dsl_round_trip(&document);
+    let document = <semio_os_store_test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+    ::semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_document_dsl_round_trips() {
-    ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_snapshot::<crate::test_support::FixtureComposition>());
+    ::semio_os_store_test_support::assert_dsl_round_trip(&empty_trinity_graph_snapshot::<semio_os_store_test_support::FixtureComposition>());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -26,9 +26,9 @@ async fn parse_dsl_rejects_unknown_keyword() {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_selected_child_fixture() {
-    let nakagin = <crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
-    ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
-    ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
+    let nakagin = <semio_os_store_test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+    ::semio_os_store_test_support::assert_dsl_round_trip(&nakagin);
+    ::semio_os_store_test_support::assert_dsl_pack_equivalence(&nakagin);
 }
 
 /// 🧩️ A hand-built fixture (not one of the bundled `.trinity` examples) with a nested `Object`-shaped
@@ -41,7 +41,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(
+    let fixture = JackSnapshot::with_content::<semio_os_store_test_support::FixtureComposition>(
         JackSnapshot::SCHEMA.into(),
         "mini".into(),
         "nakagin".into(),
@@ -94,6 +94,6 @@ use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
         },
         Some("root".into()),
     );
-    ::store::os_store::test_support::assert_dsl_round_trip(&fixture);
-    ::store::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
+    ::semio_os_store_test_support::assert_dsl_round_trip(&fixture);
+    ::semio_os_store_test_support::assert_dsl_pack_equivalence(&fixture);
 }

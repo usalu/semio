@@ -28,8 +28,13 @@ semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
+semio-os-store-mutation-report = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust", optional = true }
+
+[features]
+sut = ["dep:semio-os-store-mutation-report"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 serde_json = { workspace = true }

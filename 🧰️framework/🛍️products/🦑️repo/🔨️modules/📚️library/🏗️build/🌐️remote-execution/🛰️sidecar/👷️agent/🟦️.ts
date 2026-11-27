@@ -71,6 +71,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
   mirror();
   const watch=setInterval(()=>{
    mirror();
+   void syncFleetIdentityV1({root:context.root}).then(result=>{if(result.published)say("fleet identity: registration re-published");else if(result.error!==undefined)say(`fleet identity: ${result.error}`);},()=>undefined);
    void refreshFleetCacheFactsV1({root:context.root,report:say,language}).catch(()=>undefined).then(()=>{
     const next=resolveRemoteExecutionEndpointV1(context)?.endpoint;
     if(next!==undefined&&next!==endpoint){say("the scheduler moved, joining the new one");controller.abort();}

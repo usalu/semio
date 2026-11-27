@@ -56,7 +56,7 @@ async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_co
 async fn contribution_onto_cad_requires_a_declared_dependency() {
     let result = std::panic::catch_unwind(|| {
         ::semio_framework_async::poll::resolve_ready(
-            ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
+            ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", semio_plugin::LocalizedLabel::native("Test Missing Dep", "Test fehlende Abhängigkeit"), "0.1.0")
                 .extends("cad")
                 .contributes(building_storey_contribution()),
         )

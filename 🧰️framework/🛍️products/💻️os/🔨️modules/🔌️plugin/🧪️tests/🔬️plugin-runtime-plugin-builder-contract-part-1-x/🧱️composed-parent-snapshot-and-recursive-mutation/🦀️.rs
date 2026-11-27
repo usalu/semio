@@ -109,6 +109,7 @@ impl protocol::OpBinary for RecursiveFixtureMutation {
 }
 
 semio_os_kernel::original_pack_value_operation_receiving!(RecursiveFixtureMutation);
+semio_os_kernel::artifact_persisted_pack_value_operation!(RecursiveFixtureMutation);
 
 const RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
     schema_version: 1,

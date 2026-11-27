@@ -7,7 +7,7 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_s_artifact_bim_model_gestures::editor::bim::commands::cursor_keys::{handle, CursorLeft, CursorRight, CursorUp, CursorDown, CursorLeftFar, CursorRightFar, CursorUpFar, CursorDownFar, CursorPlace};
+use semio_s_artifact_bim_model_gestures::editor::bim::commands::cursor_keys::{handle, Cursor, CursorLeft, CursorRight, CursorUp, CursorDown, CursorLeftFar, CursorRightFar, CursorUpFar, CursorDownFar, CursorPlace};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
 use semio_ui_locale::Locale;

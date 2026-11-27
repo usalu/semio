@@ -497,7 +497,21 @@ export function drawOptions(mode: View, denominator: number, textless = false, l
   return rest as DrawOptions;
 }
 
-const shapeGeometry = (scene: DrawingScene): string => JSON.stringify(scene.layers.flatMap((layer) => layer.items.flatMap((item) => (item.kind === "path" && item.id.startsWith("shape:") ? [[item.id, item.commands]] : []))));
+/** 📐️ The shape paths of a scene by id, each as its command ops and its model-space coordinates in metres (paper coordinates relative to `metadata.origin`, divided by `mmPerMetre`): a label that widens the sheet moves the origin and translates every path, never the geometry. */
+export const shapeGeometry = (scene: DrawingScene): [string, string, number[]][] => {
+  const { origin, mmPerMetre } = scene.metadata;
+  return scene.layers.flatMap((layer) =>
+    layer.items.flatMap((item): [string, string, number[]][] =>
+      item.kind === "path" && item.id.startsWith("shape:")
+        ? [[item.id, item.commands.map((c) => c.op).join(""), item.commands.flatMap((c) => (c.op === "Z" ? [] : c.op === "C" ? [c.x1, c.y1, c.x2, c.y2, c.x, c.y] : [c.x, c.y]).map((v, i) => (i % 2 === 0 ? v - origin.xMm : origin.yMm - v) / mmPerMetre))]]
+        : [],
+    ),
+  );
+};
+
+/** 🟰️ Whether two shape geometries ({@link shapeGeometry}) are the same shapes in the same order within a nanometre of model space. */
+export const sameShapeGeometry = (a: ReturnType<typeof shapeGeometry>, b: ReturnType<typeof shapeGeometry>): boolean =>
+  a.length === b.length && a.every(([id, ops, xs], i) => id === b[i]![0] && ops === b[i]![1] && xs.length === b[i]![2].length && xs.every((v, j) => Math.abs(v - b[i]![2][j]!) <= 1e-9));
 
 /** 🦓️ Whether a scene carries a colour-independent cue: a hatch pattern or a dashed stroke. */
 export const hasCue = (scene: DrawingScene): boolean => scene.layers.some((layer) => layer.items.some((item) => item.kind === "path" && (item.fill?.pattern !== undefined || (item.stroke?.dashMm?.length ?? 0) > 0)));
@@ -517,7 +531,7 @@ export function cueFinding(mode: View, scene: DrawingScene): { readonly check: "
 function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, collector: Collector, symbol?: SymbolRepresentation): void {
   let geometryDone = false;
   const compared = subject.languages.length > 1;
-  const english = new Map<string, string>();
+  const english = new Map<string, ReturnType<typeof shapeGeometry>>();
   for (const language of subject.languages)
     for (const mode of subject.modes) {
       let multi: MultiView;
@@ -546,7 +560,7 @@ function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, co
         if (cue !== undefined) collector.fail([view], [mode], cue.check, subject.id, cue.message);
         const key = `${view}|${mode}`;
         if (language === "en" && compared) english.set(key, shapeGeometry(drawing.scene));
-        else if (english.get(key) !== undefined && english.get(key) !== shapeGeometry(drawing.scene)) collector.fail([view], [mode], "language-geometry", subject.id, `the ${language} drawing has other shape geometry than the English one`);
+        else if (english.get(key) !== undefined && !sameShapeGeometry(english.get(key)!, shapeGeometry(drawing.scene))) collector.fail([view], [mode], "language-geometry", subject.id, `the ${language} drawing has other shape geometry than the English one`);
       }
     }
 }

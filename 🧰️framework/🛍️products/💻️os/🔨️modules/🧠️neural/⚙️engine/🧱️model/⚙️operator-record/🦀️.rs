@@ -147,6 +147,8 @@ pub trait Operator: Send + Sync {
     fn next_retire_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator capacity ownership is not declared"))}}
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator release ownership is not declared"))}}
     fn next_retire_depth_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator depth ownership is not declared"))}}
+    /// ⛽️ Quotes the work of the next [`Self::retire_step`]: a field handoff or shell release performs at most two units unless the operator drives a nested retirement and quotes that one.
+    fn next_retire_work_demand(&self,_maximum_copy_bytes:usize)->Result<u64,ValueError> {Ok(2)}
     /// 🧹️ Retires or transfers actual fields while preserving the original dynamic operator shell.
     fn retire_step(&mut self,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,_values:&mut ValueRetirement)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit> {
         if self.retirement_is_empty(){Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator retained ownership is not declared").into())}

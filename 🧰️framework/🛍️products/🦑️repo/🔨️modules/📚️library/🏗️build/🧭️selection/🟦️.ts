@@ -38,6 +38,14 @@ export function selectBuildProjectsV1(graph:BuildGraphV1,patterns:readonly strin
   return selectBuildNamesV1(Object.entries(graph.projects).map(([name,project])=>({name,root:project.root,tags:project.tags as string[]??[]})),patterns,exclude);
 }
 
+/** 🧬️ The roots of the projects that tasks run and of every project they transitively depend on (edges `source -> target` of the graph), sorted: what a task closure needs installed. @see ../🚀️bootstrap/🟦️.ts */
+export function buildTaskClosureRootsV1(graph:BuildGraphV1,tasks:readonly string[]):string[] {
+  const edges=new Map<string,string[]>();for(const edge of graph.dependencies)edges.set(edge.source,[...edges.get(edge.source)??[],edge.target]);
+  const seen=new Set<string>(),stack=tasks.map(task=>task.split(":")[0]!);
+  while(stack.length){const name=stack.pop()!;if(seen.has(name))continue;seen.add(name);stack.push(...edges.get(name)??[]);}
+  return [...seen].flatMap(name=>graph.projects[name]===undefined?[]:[graph.projects[name]!.root]).sort();
+}
+
 /** 🐚️ Quotes literal command arguments for the platform shell. */
 function shellArgument(value:string):string { return process.platform==="win32"?'"'+value.replaceAll('"','""')+'"':"'"+value.replaceAll("'","'\\''")+"'"; }
 

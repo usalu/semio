@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Local File Picker Callback",
+  "type": "object",
+  "required": ["payload"],
+  "properties": {
+    "payload": {"type": "string", "minLength": 1, "description": "Complete file text; its UTF-8 length is bounded by the importing command."},
+    "chunk": {"const": 0},
+    "chunkCount": {"const": 1}
+  }
+}

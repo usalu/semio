@@ -1,0 +1,11 @@
+{"name":"capabilities_describe","attempts":200,"interval":30,"until":"target.artifactRef","arguments":{"capabilityId":"framework.createAlternative"}}
+{"name":"artifact_create","as":"art","attempts":20,"interval":15,"arguments":{"artifactId":"flow-note-1","kind":"s.note.note"}}
+{"name":"capabilities_search","arguments":{"query":"note","owner":"note"}}
+{"name":"action_prepare","as":"fw","arguments":{"capabilityId":"framework.createAlternative","target":{"artifactRef":"flow-note-1"},"input":{"name":"alt1"},"context":{"locale":"en","terminology":"native"}}}
+{"name":"action_invoke","as":"fwi","arguments":{"preparedActionHandle":"${fw.preparedHandle}"}}
+{"name":"action_prepare","as":"fw2","arguments":{"capabilityId":"framework.createAlternative","target":{"artifactRef":"flow-note-1"},"input":{"name":"alt2"},"context":{"locale":"en","terminology":"native"}}}
+{"name":"action_prepare","as":"fw3","arguments":{"capabilityId":"framework.createAlternative","target":{"artifactRef":"flow-note-1"},"input":{"name":"alt3"},"context":{"locale":"en","terminology":"native"}}}
+{"name":"transaction_begin","as":"tx","arguments":{"preparedHandles":["${fw2.preparedHandle}","${fw3.preparedHandle}"]}}
+{"name":"transaction_rollback","arguments":{"transactionHandle":"${tx.transactionHandle}"}}
+{"name":"history_undo","arguments":{"undoToken":"${fwi.undoToken}"}}
+{"name":"history_redo","arguments":{"undoToken":"${fwi.undoToken}"}}

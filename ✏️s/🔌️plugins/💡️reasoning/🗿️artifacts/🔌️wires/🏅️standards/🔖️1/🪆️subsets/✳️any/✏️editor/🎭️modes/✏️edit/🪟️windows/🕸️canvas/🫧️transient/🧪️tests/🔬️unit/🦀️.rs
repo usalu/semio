@@ -242,15 +242,15 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
 #[semio_framework_async_macros::async_test]
 async fn wires_window_transient_dsl_pack_round_trip() {
     let config = WiresCanvasTransient { drag_node_id: Some("node-1".into()), drag_start_x: 1.5, drag_start_y: 2.5, drag_last_x: 12.5, drag_last_y: -7.25, drag_zoom: 2.0 };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&config);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&config);
 }
 //#endregion 🔖️ConfigTests
 
 //#region 🔖️ConfigOperationTests
 #[semio_framework_async_macros::async_test]
 async fn window_transient_drag_op_text_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-1".into()), start_x: 1.5, start_y: 2.5, last_x: 12.5, last_y: -7.25, zoom: 2.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: None, start_x: 0.0, start_y: 0.0, last_x: 0.0, last_y: 0.0, zoom: 1.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-1".into()), start_x: 1.5, start_y: 2.5, last_x: 12.5, last_y: -7.25, zoom: 2.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: None, start_x: 0.0, start_y: 0.0, last_x: 0.0, last_y: 0.0, zoom: 1.0 }));
 }
 
 /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,

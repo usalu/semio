@@ -18,6 +18,7 @@ import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
   CargoProvenanceStreamV1,
+  cargoCompilerIdentityV1,
   cargoDepInfoChecksumsV1,
   cargoCompilerDepInfoV1,
   cargoDepInfoResolvedChecksumsV1,
@@ -614,4 +615,27 @@ test("a failed native release seals a proven linked tree only while its observed
       }
     }
   } finally { db.close(); }
+});
+
+test("a partial compiler resource capture normalizes to null identities and still encodes to a schema-valid receipt", async () => {
+  const partial: any[] = [{ manifest: "/w/Cargo.toml" }, { source: "/w/lib.rs" }, { manifest: "/w/Cargo.toml", source: 7 }, [], "x", null, undefined, { manifest: "", source: "/w/lib.rs" }];
+  for (const value of partial) {
+    expect(cargoCompilerIdentityV1(value, false)).toBeNull();
+    expect(cargoCompilerIdentityV1(value, true)).toBeNull();
+  }
+  expect(cargoCompilerIdentityV1({ manifest: "/w/Cargo.toml", source: "/w/lib.rs" }, true)).toBeNull();
+  expect(cargoCompilerIdentityV1({ manifest: "/w/Cargo.toml", source: "/w/lib.rs", extra: 1 }, false)).toEqual({ manifest: "/w/Cargo.toml", source: "/w/lib.rs" });
+  expect(cargoCompilerIdentityV1({ manifest: "/w/Cargo.toml", crate: "c", source: "/w/lib.rs", extra: 1 }, true)).toEqual({ manifest: "/w/Cargo.toml", crate: "c", source: "/w/lib.rs" });
+  const chunks: string[] = [];
+  const stream = new CargoProvenanceStreamV1({ write: async (chunk) => void chunks.push(chunk) });
+  await stream.begin({ manifest: "/w/Cargo.toml", cwd: "/w", command: "cargo", args: [], buildDirectory: "/b", builtAtMs: 0, status: 1, cancelled: false });
+  await stream.buildScripts([]);
+  await stream.compilerResources("/b/r");
+  await stream.compilerResource({ path: "/b/r/o.json", sha256: null, observedAtMs: 0, producer: cargoCompilerIdentityV1({ manifest: "/w/Cargo.toml" }, false), caller: cargoCompilerIdentityV1({ manifest: "/w/Cargo.toml", source: "/w/lib.rs" }, true), producerUnit: null, callerUnit: null, resources: [] });
+  await stream.invocationInputs([]);
+  await stream.finish(0);
+  const decoded = decodeCargoProvenanceV1(chunks.join(""));
+  expect(decoded.compilerResources[0]!.producer).toBeNull();
+  expect(decoded.compilerResources[0]!.caller).toBeNull();
+  expect(admit(JSON.parse(chunks.join(""))), JSON.stringify(admit.errors)).toBe(true);
 });

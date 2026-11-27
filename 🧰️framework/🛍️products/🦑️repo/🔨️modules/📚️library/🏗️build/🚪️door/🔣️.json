@@ -14,6 +14,7 @@
   ],
   "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "fleet", "scheduler", "remote-execution"],
   "refusedExitCode": 2,
+  "quiet": [{ "command": "tools", "subcommand": "exec", "option": "--light" }],
   "liveness": {
     "delaysSeconds": [5, 10, 20],
     "repeatSeconds": 30,

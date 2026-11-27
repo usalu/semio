@@ -389,7 +389,7 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "draw", "Draw", "draw", &manifest_json);
     let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "draw", "Draw", "draw", &manifest_json);
-    let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0")
+    let bundle = ExtensionBundle::new("flow-extension-draw", semio_plugin::LocalizedLabel::native("Draw", "Zeichnen"), "0.1.0")
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)

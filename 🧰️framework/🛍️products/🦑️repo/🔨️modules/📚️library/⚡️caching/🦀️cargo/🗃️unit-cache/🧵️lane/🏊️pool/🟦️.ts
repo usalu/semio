@@ -69,7 +69,7 @@ export function readPoolV1(root:string,nowMs:number):PoolLaneV1[]{
 
 /** 🪪️ Names who holds the given lanes for a wait message: process id, agent and session of each claimed lane (at most `listedHolders`, the rest counted), `nobody readable` when no claim names a holder. */
 export function laneHoldersV1(root:string,ids:readonly string[],nowMs:number):string{
- const locks=join(root,layout.locks),named=ids.flatMap(id=>{const holder=claimHolderV1(locks,"lane-"+id);if(!holder)return[];const lane=readLaneV1(root,id);return[`${id}: pid ${holder.pid}${lane?.agent?`, agent ${lane.agent}`:""}${lane?.session?`, session ${lane.session}`:""}, ${Math.max(0,Math.round((nowMs-holder.atMs)/60000))} min`];});
+ const locks=join(root,layout.locks),named=ids.flatMap(id=>{const holder=claimHolderV1(locks,"lane-"+id);if(!holder)return[];const lane=readLaneV1(root,id);return[`${id}: pid ${holder.pid}${lane?.agent?`, agent ${lane.agent}`:""}${lane?.session?`, session ${lane.session}`:""}${holder.command?`, command ${holder.command.slice(0,120)}`:""}, ${Math.max(0,Math.round((nowMs-holder.atMs)/60000))} min`];});
  return named.length===0?"nobody readable":named.slice(0,rules.listedHolders).join("; ")+(named.length>rules.listedHolders?`; and ${named.length-rules.listedHolders} more`:"");
 }
 
@@ -84,7 +84,7 @@ export function trimPoolV1(root:string,bounds:PoolBoundsV1,nowMs:number,report?:
 }
 
 /** 📣️ What the pool tells its caller, to be rendered in the caller's language. */
-export type PoolReportV1=(kind:"overflow"|"trimmed"|"poolBusy"|"poolCannotHold"|"productLaneHeld"|"retentionConflict",parameters:Readonly<Record<string,string|number>>)=>void;
+export type PoolReportV1=(kind:"overflow"|"trimmed"|"poolBusy"|"poolCannotHold"|"productLaneHeld"|"productLaneQueued"|"productLaneWaiting"|"retentionConflict",parameters:Readonly<Record<string,string|number>>)=>void;
 /** 🎒️ A lane taken from the pool: its directories, how it was chosen and the release that frees it. */
 export type PooledLaneV1=Readonly<{paths:ReturnType<typeof lanePathsV1>;choice:"warm"|"lru"|"new";release():void}>;
 

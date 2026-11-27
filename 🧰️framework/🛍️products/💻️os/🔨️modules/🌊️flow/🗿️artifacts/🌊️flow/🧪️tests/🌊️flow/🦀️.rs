@@ -8,6 +8,6 @@ fn language_neutral_package_cases_match_serde_json() {
         let value: FlowHostSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(expected).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let encoded = semio_framework_pack_json::to_json_string(&value);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), *expected);
-        os_store::test_support::assert_dsl_pack_equivalence(&value);
+        semio_os_store_test_support::assert_dsl_pack_equivalence(&value);
     }
 }

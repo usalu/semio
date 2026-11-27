@@ -206,7 +206,7 @@ pub struct PcgJob {
     pub(super) publication: Option<PcgPublication>,
     pub(super) publication_fault: Option<NumericalCheckpointFault>,
     pub(super) terminal_published: bool,
-    pub(super) publish_checkpoints: bool,
+    pub(super) publishes: bool,
     pub(super) closing: bool,
     pub(super) desk: NumericalOutcomeDesk,
 }
@@ -222,7 +222,7 @@ pub struct PcgVisualScalar {
 
 impl PcgJob {
     pub(super) fn from_state(operation: Operation, state: PcgCheckpoint) -> Self {
-        Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, publish_checkpoints: true, closing: false, desk: NumericalOutcomeDesk::default() }
+        Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, publishes: true, closing: false, desk: NumericalOutcomeDesk::default() }
     }
 
     pub(super) fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, ValueError> {
@@ -275,7 +275,7 @@ impl PcgJob {
             publication: None,
             publication_fault: None,
             terminal_published: false,
-            publish_checkpoints: true,
+            publishes: true,
             closing: false,
             desk: NumericalOutcomeDesk::default(),
         }

@@ -67,7 +67,7 @@ pub trait SemanticEdit<P,M>:Send+'static{
 }
 /// 📤️ Preserves original inverse and diagnostic owners before independent output admission.
 pub enum SemanticEditStep<M>{CompleteSingle(RetainedCloneProgress,M),Progress(RetainedCloneProgress),Complete(RetainedCloneProgress,Vec<M>,Vec<semio_os_spr::MutationMessage>,bool),Refused(RetainedCloneProgress,Vec<semio_os_spr::MutationMessage>)}
-#[derive(Clone,Copy,PartialEq,Eq)]
+#[derive(Clone,Copy,PartialEq,Eq,Debug)]
 enum Stage{RefusalRows,RefusalCode,RefusalTextBirth,RefusalText,SourceCapture,Source,ProjectionBirth,Projection,TakeProjection,CloseProjection,EditBirth,PostCapture,Edit,CloseEdit,InverseBirth,Inverse,CloseInverse,Share,Ready}
 /// 🧳️ One retained producer owns every original lease and candidate through cancellation.
 pub struct NativeSemanticPreparation<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>>{
@@ -209,6 +209,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return if factory.terminal_is_empty(){Ok(header::<Option<semio_framework_value::FactoryAuthority>>())}else{factory.demands(body)};}
   Ok(Default::default())
  }
+ fn dbg_branch(&self)->&'static str{if !self.projection.terminal_is_empty(){return "projection"}if !self.edit.terminal_is_empty(){return "edit"}if !self.custody.terminal_is_empty(){return "custody"}if self.active.is_some(){return "active"}if !self.retirement.is_empty(){return "retirement"}if self.rows.is_some(){return "rows"}if !self.source.terminal_is_empty(){return if self.source.delegates(){"source-delegated"}else{"source"}}if let Some(i)=self.input.as_ref(){return if i.terminal_is_empty(){"input-empty"}else{"input"}}if self.base.is_some(){return "base"}if self.source_authority.is_some(){return "source_authority"}if self.post.is_some(){return "post"}if self.inverse.is_some(){return "inverse"}if self.pages.is_some(){return "pages"}if self.pending.is_some(){return "pending"}if self.messages.is_some(){return "messages"}if self.next.is_some(){return "next"}if self.snapshots.is_some(){return "snapshots"}if self.mutations.is_some(){return "mutations"}"factory_close"}
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
   if !self.closing||self.terminal_is_empty(){return Ok(0)}
   if !self.projection.terminal_is_empty(){return self.projection.close_work_demand(body)?.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"semantic projection has no original close work quote"))}
@@ -283,7 +284,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
 impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>> super::ArtifactReplayPreparation<P,M> for NativeSemanticPreparation<P,M,C,E>{
  fn advance_demands(&self,b:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.demands(b,maximum_work_units)}
  fn last_turn_work(&self)->u64{self.last_work}
- fn advance(&mut self,body:usize,g:semio_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{NativeSemanticPreparation::advance(self,body,g.retained_grant(),control)}
+ fn advance(&mut self,body:usize,g:semio_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{let st=self.stage;let r=NativeSemanticPreparation::advance(self,body,g.retained_grant(),control);if let Ok(x)=&r{dbg_add(format!("adv {st:?} b={}",x.progress().copied_bytes),x.progress().copied_bytes);}r}
  fn take_prepared(&mut self)->Option<ArtifactReplayPrepared<P,M>>{self.take()}
  fn cancel(&mut self){NativeSemanticPreparation::begin_close(self);}
  fn begin_close(&mut self){NativeSemanticPreparation::begin_close(self);}
@@ -293,10 +294,12 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
  fn next_close_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.close_demand(b)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.depth)}
- fn close_step(&mut self,effect:Effect<'_,'_>,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll{NativeSemanticPreparation::close_step(self,effect,receiving)}
+ fn close_step(&mut self,effect:Effect<'_,'_>,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll{let st=self.stage;let d=self.close_demand(effect.grant().maximum_copy_bytes).map(|d|d.copy_bytes).unwrap_or(0);dbg_add(format!("close {} d={d}",self.dbg_branch()),d);NativeSemanticPreparation::close_step(self,effect,receiving)}
  fn terminal_is_empty(&self)->bool{NativeSemanticPreparation::terminal_is_empty(self)}
 }
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+pub static DBG_MAP:std::sync::Mutex<std::collections::BTreeMap<String,(u64,u64)>>=std::sync::Mutex::new(std::collections::BTreeMap::new());
+pub fn dbg_add(k:String,b:usize){let mut m=DBG_MAP.lock().unwrap();let e=m.entry(k).or_insert((0,0));e.0+=1;e.1+=b as u64;}

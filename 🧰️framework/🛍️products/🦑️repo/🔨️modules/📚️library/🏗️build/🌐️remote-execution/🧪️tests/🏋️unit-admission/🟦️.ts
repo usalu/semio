@@ -6,7 +6,7 @@ import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛�
 import {buildRemoteExecutionLoadReportV1,evaluateRemoteExecutionAdmissionV1,remoteExecutionPressureGateV1,REMOTE_EXECUTION_ADMISSION_POLICY_V1 as A,type RemoteExecutionHeldUnitV1,type RemoteExecutionHostViewV1} from "../../🌡️load/🟦️.ts";
 import {withReadyStageV1,type ReadyStageClaimV1} from "../../🌡️load/🪑️stage-claim/🟦️.ts";
 import {offloadFamilyPeakMegabytesV1,offloadKilledPeakMegabytesV1,offloadLearnPeakMegabytesV1,offloadUnitPeakMegabytesV1} from "../../🚀️offload/📐️policy/🟦️.ts";
-import {localFinalPeakMegabytesV1,offloadDeclaredThreadsV1,offloadPeakAtThreadsMegabytesV1,readFamilyPeakV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
+import {localUnitPeakMegabytesV1,offloadDeclaredThreadsV1,offloadPeakAtThreadsMegabytesV1,readFamilyPeakV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
 import {UNIT_CEILING_POLICY_V1,unitBeyondHostV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 import {placementHasHeadroomV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
@@ -153,13 +153,20 @@ test("A running unit is charged once by the worker: the part of its peak it has 
  expect(one([{megabytes:5000,usedMegabytes:1000}],256).spareMegabytes).toBe(10000-2048-4000);
 });
 
-test("The host uses the managed serial compiler's measured peak and preserves the independent fleet estimate",()=>{
+test("The host uses the managed serial compiler's measured peak of a final, the one-thread peak of a library unit, and preserves the independent fleet estimate",()=>{
  for(const row of fixture.localFinals){
-  const samples=row.samples as Record<string,number>,peak=localFinalPeakMegabytesV1(samples,row.managed);
+  const samples=row.samples as Record<string,number>,peak=localUnitPeakMegabytesV1(samples,{linked:row.linked,serial:row.managed});
   expect(peak??null).toBe(row.localPeak);
   expect(offloadPeakAtThreadsMegabytesV1(samples,F,EXTRA)??null).toBe(row.fleetPeak);
   expect(unitBeyondHostV1(UNIT_CEILING_POLICY_V1,{crate:"semio_hub_draw_component",target:"wasm32-wasip2"},peak,16384)).toBe(row.beyond16g);
  }
+});
+
+test("A library unit that built on this host at 3335 MB is not beyond it: it is forecast at its one measured thread, not at the fair share of threads of a final",()=>{
+ const samples={"1":3335},peak=localUnitPeakMegabytesV1(samples,{linked:false,serial:false});
+ expect(peak).toBe(3335);
+ expect(unitBeyondHostV1(UNIT_CEILING_POLICY_V1,{crate:"semio_s_artifact_stdio_ifc2x3_catalog_entities_01",target:"host"},peak,16384,10240)).toBe(false);
+ expect(localUnitPeakMegabytesV1(samples,{linked:true,serial:false})).toBeGreaterThan(4096);
 });
 
 test("A remote action is charged once: the retained reservation of this worker leaves the host grants, the grants of other owners and operations stay",()=>{

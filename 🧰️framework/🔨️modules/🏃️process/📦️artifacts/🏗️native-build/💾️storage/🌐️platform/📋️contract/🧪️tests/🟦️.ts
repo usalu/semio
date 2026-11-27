@@ -7,7 +7,12 @@ import {readFileSync} from "node:fs";
 import ts from "typescript";
 import schema from "../../../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";
-import {readNativeImageMaintenanceRequestV1} from "../🟦️.ts";
+import {readNativeImageMaintenanceRequestV1,requireNativeStoragePathV1} from "../🟦️.ts";
+import {spawnSync as shardSpawnV1} from "node:child_process";
+import {mkdirSync as shardMkdirV1,mkdtempSync as shardMkdtempV1,realpathSync as shardRealpathV1,rmSync as shardRmV1,lstatSync as shardLstatV1} from "node:fs";
+import {join as shardJoinV1} from "node:path";
+import {testScratchRootV1 as shardScratchV1} from "../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
+import {appendNativeImageShardEventV1 as shardAppendV1} from "../../../🍎️image/🧩️shard/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../🔒️leases/🟦️.ts";
 import {findWorkspaceRoot,type ScriptInvocation} from "../../../../../../🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -61,7 +66,20 @@ test.skipIf(process.platform!=="darwin")("historical retirement binds queued exc
  });
 },30000);
 
-
-
-
-
+test.skipIf(process.platform!=="darwin")("a storage path may hand over to another image only at the mount point of a live shard of its partition, equal to the kernel device table",()=>{
+ const shell=(program:string,args:readonly string[])=>{const row=shardSpawnV1(program,[...args],{encoding:"utf8",env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr+row.stdout);return row.stdout;};
+ const directory=shardRealpathV1(shardMkdtempV1(shardJoinV1(shardScratchV1("shard"),"cross-"))),root=shardJoinV1(directory,"m"),mount=shardJoinV1(root,"u","w"),made:string[]=[];
+ const attach=(image:string,point:string,size:string)=>{const seed=shardJoinV1(directory,"seed-"+made.length);shardMkdirV1(seed);shell("/usr/bin/hdiutil",["create","-size",size,"-format","UDRW","-nospotlight","-fs","Case-sensitive APFS","-volname","semio","-srcfolder",seed,image]);shardRmV1(seed,{recursive:true});shardMkdirV1(point,{recursive:true});shell("/usr/sbin/diskutil",["image","attach","--nobrowse","--mountOptions","owners","--mountPoint",point,image]);made.push(point);};
+ try{
+  attach(shardJoinV1(directory,"fixed.dmg"),root,"64m");shardMkdirV1(shardJoinV1(directory,"s","w"),{recursive:true});attach(shardJoinV1(directory,"s","w","fixed.dmg"),mount,"32m");
+  const device=(path:string)=>Number(shell("/usr/bin/stat",["-f","%d",path]).trim());
+  expect(device(mount)).not.toBe(device(root));expect(shardLstatV1(mount).dev).toBe(device(mount));
+  const inside=shardJoinV1(mount,"t","x");shardMkdirV1(shardJoinV1(mount,"t"),{recursive:true});
+  expect(()=>requireNativeStoragePathV1(root,inside)).toThrow("Native storage path crosses filesystem boundary");
+  shardAppendV1(directory,{type:"born",id:"w",key:"w",root:0,path:"u/w",capacityBytes:1073741824,atMs:1});
+  expect(requireNativeStoragePathV1(root,inside)).toBe(inside);expect(requireNativeStoragePathV1(root,mount)).toBe(mount);
+  shardMkdirV1(shardJoinV1(root,"u","other"),{recursive:true});expect(requireNativeStoragePathV1(root,shardJoinV1(root,"u","other","y"))).toBe(shardJoinV1(root,"u","other","y"));
+  shardAppendV1(directory,{type:"retired",id:"w",atMs:2});
+  expect(()=>requireNativeStoragePathV1(root,inside)).toThrow("Native storage path crosses filesystem boundary");
+ }finally{for(const point of made.reverse())try{shell("/usr/bin/hdiutil",["detach","-force",point]);}catch{}shardRmV1(directory,{recursive:true,force:true});}
+});

@@ -89,7 +89,7 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
     }
 
     /// 📨️ Presents a real mounted page under its caller, returning when the current turn cannot advance.
-    pub fn present_fixture_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
+    pub fn present_fixture_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
         use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             let mut output=None;
@@ -109,7 +109,7 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
     }
 
     /// 📫️ Retires the acknowledged producer through its financed public port without renewing the caller's turn.
-    pub fn retire_fixture_acknowledged_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn retire_fixture_acknowledged_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if !mounted.result_page_retirement_pending(){return Ok(true)}
@@ -135,7 +135,7 @@ pub use fixture_dispatch_steps_and_document_loading::{
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, CallerIdentityWork, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
-    fixture_step_context_for,fixture_step_context_funded, load_document, join_document, load_document_text, settle_document_archive_load, plugin_load_document,
+    fixture_step_context_for,fixture_step_context_funded, load_document, join_document, load_document_text, settle_document_archive_load, plugin_load_document, plugin_admit_document_load, plugin_poll_document_load,
     plugin_load_document_text, plugin_settle_store_constructor, with_document_view,
     FixtureStepOutcome, KeyedCancellationFixture, LAW_DOCUMENT_LOAD_OPERATION,
 };

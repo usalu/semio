@@ -22,5 +22,10 @@
 - Fix in `⚛️reactor/🔄️turn/📥️receiving/📦️completed/🦀️.rs` (Nov 25 19:56): both completion outcomes now use the bounded Pack decoder; JSON stays only for the stored correlation request. Browser fault writer fixed with a 671-byte neutral fixture; TS suite red then green (29 assertions, SQLite and AJV cross-checks). Native tests exist in `🧪️tests/🦀️.rs` (Pack wire body, full fault zero-work paid close, parked future); their managed run was still pending.
 - Chromium capture was not repeated: the only staged Procedural module (`modules/🌀️procedural`, 129,960,119-byte core, Nov 24) and the Nov 25 site both predate the fix, so a run would only re-show the diagnosed mismatch. The real return tag will be visible once the queued Procedural build restages the guest; then run `verify-generator-overlay.py <🗑️generated/f> <modules/🌀️procedural>`.
 
+## Queue and native test status (end of 1126 session)
+- My `procedural` queue was stopped by the coordinator (it held ~45 shared-store claims while waiting for lane q53457c). Procedural and FEM will be run centrally after the snapshot-build fix; not re-queued by me. A first attempt exited 75 because a profile-policy source file changed mid-load.
+- `repo cargo test -p semio-plugin-reactor-receiving-completed` (log `🗑️generated/completed-receiver-native-1126.log`) compiled for ~1,100 s, then the host warden cancelled it for critically low memory; no test outcome. Re-run when the host is calm: `repo cargo --store=shared --configuration=prototype -- test -p semio-plugin-reactor-receiving-completed`.
+- After Procedural stages: `verify-generator-overlay.py <🗑️generated/f> <modules/🌀️procedural>`.
+
 ## Files changed
 - This note only.

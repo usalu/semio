@@ -132,7 +132,7 @@ export class TrustedStdioGisBundleCheckScript extends BundleScript {
       ["candidate stale plan", ordered(candidate, "if(stalePlan)await proveTrustedStdioGisStalePlanRejected","const plan=await proveTrustedStdioGisCandidatePlan")],
       ["stale receipt cleanup", /finally\s*\{\s*stalePlan\.receipt\s*=\s*"";\s*\}/u.test(stalePlan)],
       ["rotation descriptor", rotation.includes("verifySemanticDescriptorPairBytesV1(") && rotation.includes("trustedBootstrapProfileEncoding(")],
-      ["server-owned rotation", rotation.includes('value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`')],
+      ["server-owned rotation", rotation.includes('const rotationNonce = randomBytes(8).toString("hex");') && rotation.includes("value.manifest.label = { native: { en: `Stdio trusted rotation ${rotationNonce}`, de: `Stdio vertrauenswürdige Rotation ${rotationNonce}` }, reuse: { en: `Stdio trusted rotation ${rotationNonce}`, de: `Stdio vertrauenswürdige Rotation ${rotationNonce}` } };")],
       ["rotation publication", ordered(rotation, "renameSync(stageRoot, generationRoot)", "trustedBootstrapFsyncDirectory(generationsRoot)")],
       ["bootstrap candidate", ordered(bootstrap, "withMaterializedTrustedCatalogBundleV1", "validateAndPublishTrustedStdioGisCandidate")],
       ["development candidate", ordered(dev, "await withMaterializedTrustedCatalogBundleV1", "await validateAndPublishTrustedStdioGisCandidate")],

@@ -326,7 +326,7 @@ pub fn assert_inverse_sum(case: &Case) {
 #[semio_framework_async_macros::async_test]
 async fn every_kind_round_trips_through_text_and_binary() {
     for operation in super::wire_probes() {
-        store::os_store::test_support::assert_op_line_round_trip(&operation);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+        semio_os_store_test_support::assert_op_line_round_trip(&operation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     }
 }

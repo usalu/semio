@@ -33,12 +33,12 @@ fn every_mutation() -> Vec<En1996Mutation> {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_annex() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
+    semio_os_store_test_support::assert_op_line_round_trip(&En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn every_variant_op_text_round_trips() {
     for mutation in every_mutation() {
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
     }
 }

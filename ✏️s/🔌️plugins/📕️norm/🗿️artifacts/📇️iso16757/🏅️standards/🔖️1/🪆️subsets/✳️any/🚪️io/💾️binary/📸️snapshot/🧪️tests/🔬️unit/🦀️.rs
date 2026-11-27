@@ -8,7 +8,7 @@ use crate::binary::snapshot::*;
 // sub-field of that nested record (here: `Names.short_name`, `None` on many rows of this fixture's
 // `#[dsl(table)]` catalogue tables — `ProductGroup`/`ProductClass`/`Product`/`Subject` etc. all
 fn document_dsl_pack_equivalence_the_reference_fixture() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&Iso16757Snapshot::reference_fixture());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&Iso16757Snapshot::reference_fixture());
 }
 
 #[semio_framework_async_macros::async_test]

@@ -68,6 +68,7 @@
         "--dry-run",
         "--area",
         "--budget",
+        "--reclaim",
         "--json"
       ],
       "examples": [

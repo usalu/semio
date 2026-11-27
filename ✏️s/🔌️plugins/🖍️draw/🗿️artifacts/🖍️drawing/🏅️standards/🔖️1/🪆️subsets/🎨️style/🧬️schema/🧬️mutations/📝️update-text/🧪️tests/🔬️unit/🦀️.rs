@@ -10,8 +10,8 @@ fn text_edits_preserve_content_size_and_history_payload() {
     let before = semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for (index,edit) in fixture["edits"].as_array().unwrap().iter().enumerate() {
         let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap(),semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
         let outcome = mutation.diff(&before);
         assert!(outcome.messages().is_empty());
         if let Some(delta)=&outcome.diff().layers{let patch=&delta.modified[0].patch;assert_eq!(patch.text_content.as_deref(),fixture["patches"][index]["textContent"].as_str());assert_eq!(patch.text_size,fixture["patches"][index]["textSize"].as_f64());assert_eq!(patch.font_family.map(|family|family.as_str()),fixture["patches"][index]["fontFamily"].as_str());}else{assert_eq!(fixture["patches"][index],serde_json::json!({}));}

@@ -197,9 +197,10 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// installed owner catalog, so a default disposer over no catalog faulted every close with
     /// `artifact store has no owner-supplied bounded disposer`. `None` keeps both routes fail closed.
     fn document_store_owners_source_demands()->Result<RetirementDemand,ValueError>{store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Snapshot,Self::Mutation>()}
-    /// 🪪️ The one operation wire of every document Store of this app: live ingress and every replacement catalog install it, so persisted history replays through the vocabulary's own codec.
+    /// 🪪️ The one operation wire of every document Store of this app: live ingress and every replacement catalog install it, so persisted history replays through the vocabulary's own codec; a vocabulary's own conflict target stays, otherwise the whole document is the target.
     fn persisted_operation_wire() -> store::ArtifactOperationWire<Self::Mutation> {
-        <Self::Mutation as store::ArtifactPersistedOperation>::install_persisted_receiving(store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest()).with_original_target(store::whole_document_target::<Self::Mutation>)
+        let wire = <Self::Mutation as store::ArtifactPersistedOperation>::install_persisted_receiving(store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest());
+        if wire.original_target.is_some() { wire } else { wire.with_original_target(store::whole_document_target::<Self::Mutation>) }
     }
 
     /// 🏛️ Every document Store catalog of this app, live or replacement, carries the persisted operation wire: the catalog's wire source is authoritative when it installs.

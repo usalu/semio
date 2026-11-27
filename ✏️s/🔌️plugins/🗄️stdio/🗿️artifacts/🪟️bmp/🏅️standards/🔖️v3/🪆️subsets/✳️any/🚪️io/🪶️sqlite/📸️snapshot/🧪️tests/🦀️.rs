@@ -39,7 +39,7 @@ async fn sqlite_snapshot_typed_file_round_trip_preserves_owned_gap_samples_and_t
     use store::sqlite_snapshot::SnapshotEncoding;
 
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
-        .label("BMP canonical SQLite")
+        .label(semio_plugin::LocalizedLabel::native("BMP canonical SQLite", "Kanonisches BMP-SQLite"))
         .version("0.0.1")
         .package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap())

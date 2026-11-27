@@ -15,6 +15,25 @@
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "maxLength": 128
     },
+    "RegistryLocalizedLabel": {
+      "description": "🏷️ The plugin name in every terminology and locale (the `🖱️ui/🌐️locale/🧬️schema/🏷️localized-label` shape): no default language, no cell blank.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native", "reuse"],
+      "properties": {
+        "native": { "$ref": "#/$defs/RegistryLocalizedLabelRow" },
+        "reuse": { "$ref": "#/$defs/RegistryLocalizedLabelRow" }
+      }
+    },
+    "RegistryLocalizedLabelRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
     "PackageDescriptorV1": {
       "type": "object",
       "additionalProperties": false,
@@ -55,9 +74,7 @@
               "$ref": "#/$defs/RegistryPluginId"
             },
             "label": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4096
+              "$ref": "#/$defs/RegistryLocalizedLabel"
             },
             "version": {
               "type": "string",

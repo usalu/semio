@@ -18,6 +18,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
+name = "aes"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc0fc36d7440d015b45468ba08a21e80e056ebbd014c611c6298bb7503e04bd1"
+dependencies = [
+ "cipher",
+ "cpubits",
+ "cpufeatures 0.3.1",
+]
+
+[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -195,6 +206,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "block-buffer"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
+dependencies = [
+ "hybrid-array",
+]
+
+[[package]]
+name = "block-padding"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "710f1dd022ef4e93f8a438b4ba958de7f64308434fa6a87104481645cc30068b"
+dependencies = [
+ "hybrid-array",
+]
+
+[[package]]
 name = "block2"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -293,6 +322,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cbc"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce2dc9ee5f88d11e0beb842c88b33c8a5cf0d1329c4b19494af42b07dbfe8896"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
 name = "cc"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -328,6 +366,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cipher"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8cf2a2c93cd704877c0858356ed03480ff301ee950b43f1cbe4573b088bfa6c"
+dependencies = [
+ "crypto-common 0.2.2",
+ "inout",
+]
+
+[[package]]
 name = "cobs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -360,6 +408,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 
 [[package]]
+name = "const-oid"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be95d4a884358a21a199689323c29e9256b4a1b315e22f183d155422041d3a9a"
+
+[[package]]
 name = "core_detect"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -382,6 +436,12 @@ checksum = "0667304c32ea56cb4cd6d2d7c0cfe9a2f8041229db8c033af7f8d69492429def"
 dependencies = [
  "cfg-if",
 ]
+
+[[package]]
+name = "cpubits"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15b85f9c39137c3a891689859392b1bd49812121d0d61c9caf00d46ed5ce06ae"
 
 [[package]]
 name = "cpufeatures"
@@ -465,7 +525,7 @@ dependencies = [
  "rustc-hash 2.1.3",
  "serde",
  "serde_derive",
- "sha2",
+ "sha2 0.10.9",
  "smallvec",
  "target-lexicon",
  "wasmtime-internal-core",
@@ -598,6 +658,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto-common"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453"
+dependencies = [
+ "hybrid-array",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -624,8 +693,19 @@ version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
- "block-buffer",
- "crypto-common",
+ "block-buffer 0.10.4",
+ "crypto-common 0.1.7",
+]
+
+[[package]]
+name = "digest"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+dependencies = [
+ "block-buffer 0.12.1",
+ "const-oid",
+ "crypto-common 0.2.2",
 ]
 
 [[package]]
@@ -693,6 +773,15 @@ name = "dyn-clone"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
+
+[[package]]
+name = "ecb"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26f2a8b3e564eba0877223dc343703ad0385794e882e6d13f3a4dd5c6b1f41ac"
+dependencies = [
+ "cipher",
+]
 
 [[package]]
 name = "either"
@@ -1087,7 +1176,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159"
 dependencies = [
  "color_quant",
- "weezl",
+ "weezl 0.1.12",
 ]
 
 [[package]]
@@ -1296,6 +1385,15 @@ name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+
+[[package]]
+name = "hybrid-array"
+version = "0.4.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27f864f10dfb56725ce5ce5472bc52252c8f93a4ab86327122cebf62c5f59a17"
+dependencies = [
+ "typenum",
+]
 
 [[package]]
 name = "hyper"
@@ -1530,6 +1628,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "inout"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a580c13f0ffc335ef42dd3f6b1a41b726051c5e1656d9a3aa6fddb3c5dfbbf9"
+dependencies = [
+ "block-padding",
+ "hybrid-array",
+]
+
+[[package]]
 name = "io-extras"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1753,6 +1861,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
+name = "lopdf"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68"
+dependencies = [
+ "aes",
+ "bitflags",
+ "cbc",
+ "ecb",
+ "encoding_rs",
+ "flate2",
+ "getrandom 0.4.3",
+ "indexmap",
+ "itoa",
+ "log",
+ "md-5",
+ "nom",
+ "rand 0.10.3",
+ "rangemap",
+ "sha2 0.11.2",
+ "stringprep",
+ "thiserror 2.0.21",
+ "weezl 0.2.1",
+]
+
+[[package]]
 name = "mach2"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1780,6 +1914,16 @@ name = "maybe-owned"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4facc753ae494aeb6e3c22f839b158aebd4f9270f55cd3c79906c45476c47ab4"
+
+[[package]]
+name = "md-5"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69b6441f590336821bb897fb28fc622898ccceb1d6cea3fde5ea86b090c4de98"
+dependencies = [
+ "cfg-if",
+ "digest 0.11.3",
+]
 
 [[package]]
 name = "memchr"
@@ -1891,6 +2035,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys 0.3.1",
+]
+
+[[package]]
+name = "nom"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
@@ -2266,6 +2419,12 @@ name = "range-alloc"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
+
+[[package]]
+name = "rangemap"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2d43a8c8c74056248124068fde0df374d1ddf9039e747d190f01c36faeaab08"
 
 [[package]]
 name = "raw-window-handle"
@@ -3408,6 +3567,22 @@ dependencies = [
 
 [[package]]
 name = "semio-framework-job-context"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-context-step",
+ "semio-framework-job-receiving",
+ "semio-framework-job-return-budget",
+ "semio-framework-value",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-frame",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-context-step"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
@@ -5916,7 +6091,9 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-pack-json",
+ "semio-framework-value",
  "semio-os-semio",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -6137,6 +6314,7 @@ dependencies = [
  "semio-os-store-replay",
  "semio-os-store-replay-operation",
  "semio-os-store-retirement",
+ "semio-os-store-schema-exports",
  "semio-os-store-snapshot-clone",
  "semio-os-store-space",
  "semio-os-store-space-history",
@@ -6145,7 +6323,6 @@ dependencies = [
  "semio-os-store-sync",
  "semio-os-store-sync-native",
  "semio-os-store-sync-wasm",
- "semio-os-store-test-support",
  "semio-os-store-text-io",
  "semio-os-vcs",
  "semio-plugin-component-receipt",
@@ -7532,6 +7709,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-os-store-mutation-report"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-os-spr",
+ "semio-os-store-replay",
+]
+
+[[package]]
 name = "semio-os-store-one-item"
 version = "0.1.0"
 dependencies = [
@@ -7787,6 +7974,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-os-store-schema-exports"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-schema-registry",
+]
+
+[[package]]
 name = "semio-os-store-snapshot-clone"
 version = "0.1.0"
 dependencies = [
@@ -8001,7 +8195,6 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-pack",
  "semio-framework-pack-json",
- "semio-framework-schema-registry",
  "semio-framework-value",
  "semio-os-pack",
  "semio-os-spr",
@@ -8018,7 +8211,6 @@ dependencies = [
  "semio-os-store-one-item-publication",
  "semio-os-store-operation-wire",
  "semio-os-store-read",
- "semio-os-store-replay",
  "semio-os-store-space",
  "semio-os-store-space-member",
  "semio-os-store-space-schema",
@@ -8357,6 +8549,7 @@ dependencies = [
  "semio-plugin-reactor-wit-bridge",
  "semio-plugin-registration",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
@@ -8512,6 +8705,7 @@ dependencies = [
  "semio-plugin-registration",
  "semio-plugin-store-lifecycle",
  "semio-plugin-window-kits",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8913,6 +9107,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
+ "semio-ui-locale",
  "serde",
  "serde_json",
 ]
@@ -9236,6 +9431,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-test-fixtures",
  "semio-framework-tool-run",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-factory",
  "semio-framework-value-native-owned",
@@ -9276,6 +9472,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-jobs",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
@@ -9356,6 +9553,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-turns",
@@ -9428,6 +9626,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
@@ -9473,6 +9672,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-ui-contract",
@@ -9533,6 +9733,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-run",
@@ -9612,6 +9813,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-scrub-host",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
@@ -9721,6 +9923,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-jobs",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
@@ -9779,6 +9982,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-scrub-host",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
@@ -9822,6 +10026,7 @@ dependencies = [
  "semio-plugin-peer",
  "semio-plugin-reactor-app",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
@@ -9885,6 +10090,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-scrub-host",
  "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
@@ -10131,6 +10337,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-store-lifecycle",
  "semio-ui-contract",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10493,28 +10700,51 @@ name = "semio-plugin-retained-command"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-job-fault-publication",
  "semio-framework-job-publication",
- "semio-framework-job-worker",
- "semio-framework-job-worker-authority",
  "semio-framework-pack-json",
  "semio-framework-pack-json-source-sink",
  "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-os-kernel",
- "semio-os-store-engine-replay",
  "semio-plugin-abi",
- "semio-plugin-composition-publication",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-media",
  "semio-plugin-decl-surface",
  "semio-plugin-decl-tool-contract",
+ "semio-plugin-decl-views",
+ "semio-plugin-ownership",
+ "semio-plugin-retained-work",
+ "semio-plugin-store-lifecycle",
+ "semio-plugin-window-config",
+ "semio-plugin-window-kits",
+ "semio-plugin-window-transient",
+ "semio-ui-contract",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-retained-command-operation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-job-worker",
+ "semio-framework-job-worker-authority",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-os-store-engine-replay",
+ "semio-plugin-composition-publication",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
  "semio-plugin-decl-views",
  "semio-plugin-job",
  "semio-plugin-job-receiving",
@@ -10522,13 +10752,9 @@ dependencies = [
  "semio-plugin-operation",
  "semio-plugin-ownership",
  "semio-plugin-result-page",
- "semio-plugin-retained-work",
- "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-config-original",
- "semio-plugin-window-kits",
  "semio-plugin-window-transient",
- "semio-ui-contract",
  "serde_json",
 ]
 
@@ -10804,6 +11030,7 @@ dependencies = [
  "semio-plugin-job-receiving",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-ui-contract-values",
  "serde",
  "serde_json",
@@ -10856,6 +11083,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-ops",
  "semio-plugin-store-lifecycle",
@@ -10919,6 +11147,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-retained-command-operation",
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
@@ -11408,6 +11637,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-config",
  "semio-s-artifact-gis-gismap-demo-asset",
@@ -11477,6 +11707,7 @@ dependencies = [
  "semio-os-command",
  "semio-os-kernel",
  "semio-os-store-one-item",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-demo-asset",
  "semio-ui-contract",
@@ -11563,6 +11794,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-os-store-testing-doubles",
  "semio-os-store-testing-prelude",
  "semio-plugin",
@@ -11670,6 +11902,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-config",
  "semio-s-artifact-gis-gismap-demo-asset",
@@ -11829,6 +12062,7 @@ dependencies = [
  "semio-os-command",
  "semio-os-kernel",
  "semio-os-store-one-item",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-config",
  "semio-s-artifact-gis-gismap-demo-asset",
@@ -11846,6 +12080,20 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "semio-s-artifact-gis-gismap-pdf-export"
+version = "0.1.0"
+dependencies = [
+ "lopdf",
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-gis-gismap",
+ "semio-s-artifact-stdio-semio-drawing-pdf-export",
+ "serde_json",
 ]
 
 [[package]]
@@ -11936,6 +12184,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-demo-asset",
  "semio-s-artifact-stdio-semio-base",
@@ -12043,6 +12292,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-config",
  "semio-s-artifact-gis-gismap-demo-asset",
@@ -12098,6 +12348,7 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-surface",
  "semio-framework-test-original-snapshot-owners",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-demo-asset",
@@ -12145,6 +12396,7 @@ dependencies = [
  "semio-os-command",
  "semio-os-kernel",
  "semio-os-store-one-item",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-gis-gismap-demo-asset",
  "semio-s-artifact-gis-gismap-snapshot",
@@ -13930,6 +14182,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-save-cause",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-locale",
 ]
@@ -15368,6 +15621,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-stdio-pdf-save-cause",
  "semio-s-artifact-stdio-pdf-schema-4",
 ]
 
@@ -15562,6 +15816,7 @@ dependencies = [
  "semio-framework-value-snapshot-projection",
  "semio-os-command",
  "semio-os-kernel",
+ "semio-os-store-mutation-report",
  "semio-os-store-one-item",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
@@ -15571,6 +15826,10 @@ dependencies = [
  "semio-ui-locale",
  "serde_json",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-save-cause"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-schema"
@@ -16022,6 +16281,7 @@ dependencies = [
  "semio-framework-value-snapshot-projection",
  "semio-os-command",
  "semio-os-kernel",
+ "semio-os-store-mutation-report",
  "semio-os-store-one-item",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
@@ -17898,6 +18158,20 @@ dependencies = [
  "semio-ui-locale",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing-pdf-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-conformance-support",
+ "semio-s-artifact-stdio-pdf-lower",
+ "semio-s-artifact-stdio-semio-base",
+ "semio-s-artifact-stdio-semio-drawing",
 ]
 
 [[package]]
@@ -22283,7 +22557,7 @@ checksum = "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8"
 dependencies = [
  "cfg-if",
  "cpufeatures 0.2.17",
- "digest",
+ "digest 0.10.7",
 ]
 
 [[package]]
@@ -22294,7 +22568,18 @@ checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
 dependencies = [
  "cfg-if",
  "cpufeatures 0.2.17",
- "digest",
+ "digest 0.10.7",
+]
+
+[[package]]
+name = "sha2"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b0e5c7d67bc53f435386b2130fdc900488c5703770f6d8a4633060e34288a27"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.3.1",
+ "digest 0.11.3",
 ]
 
 [[package]]
@@ -22412,6 +22697,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
 dependencies = [
  "float-cmp",
+]
+
+[[package]]
+name = "stringprep"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b4df3d392d81bd458a8a621b8bffbd2302a12ffe288a9d931670948749463b1"
+dependencies = [
+ "unicode-bidi",
+ "unicode-normalization",
+ "unicode-properties",
 ]
 
 [[package]]
@@ -22811,6 +23107,15 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+
+[[package]]
+name = "unicode-normalization"
+version = "0.1.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75cd3fb03d5288b3ba9a1ee103ac7e9cbb59f0b03d64f8ddfcc04dd42758a85d"
+dependencies = [
+ "tinyvec",
+]
 
 [[package]]
 name = "unicode-properties"
@@ -23239,7 +23544,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_derive",
- "sha2",
+ "sha2 0.10.9",
  "smallvec",
  "target-lexicon",
  "wasm-encoder 0.252.0",
@@ -23262,7 +23567,7 @@ dependencies = [
  "rustix",
  "serde",
  "serde_derive",
- "sha2",
+ "sha2 0.10.9",
  "toml",
  "wasmtime-environ",
  "windows-sys 0.61.2",
@@ -23520,6 +23825,12 @@ name = "weezl"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
+
+[[package]]
+name = "weezl"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4ca08e5ef825b65b056d9efbd95c8750683f0a6d0466d02e96dc2e4e360f3d2"
 
 [[package]]
 name = "wgpu"

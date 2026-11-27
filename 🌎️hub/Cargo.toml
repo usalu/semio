@@ -407,9 +407,11 @@ semio-s-artifact-raster-raster-viewer = { path = "../✏️s/🔌️plugins/🖨
 semio-s-artifact-note-note = { path = "../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { path = "../✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-generation2d = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-generation2d-pdf-export = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-generation3d = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain = { path = "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap = { path = "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust" }
+semio-s-artifact-gis-gismap-pdf-export = { path = "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-mcp = { path = "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d = { path = "../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d = { path = "../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
@@ -424,6 +426,7 @@ semio-s-artifact-fem-3d-viewer = { path = "../✏️s/🔌️plugins/🏗️fem/
 semio-s-artifact-trinity-rewriting = { path = "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack = { path = "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d = { path = "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-pdf-export = { path = "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { path = "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d = { path = "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap = { path = "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust" }

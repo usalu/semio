@@ -252,20 +252,20 @@ async fn derived_op_text_refuses_every_token_outside_its_own_record() {
 #[semio_framework_async_macros::async_test]
 async fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
     let doc = DerivedDocument { category: "floor".to_string(), climate: ClimateZone::Temperate, airtightness_n50: 0.4, occupants: 3, note: None };
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&doc);
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_round_trip(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derived_op_satisfies_vcs_test_support_helpers() {
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
+    semio_os_store_test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derived_op_binary_round_trips_every_variant_and_matches_text() {
     let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
     for op in ops {
-        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&op);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&op);
         let encoded = variants_binary::encode_op(&op).unwrap();
         let decoded: DerivedMutation = variants_binary::decode_op(&encoded).unwrap();
         assert_eq!(serde_json::to_value(&decoded).unwrap(), serde_json::to_value(&op).unwrap());

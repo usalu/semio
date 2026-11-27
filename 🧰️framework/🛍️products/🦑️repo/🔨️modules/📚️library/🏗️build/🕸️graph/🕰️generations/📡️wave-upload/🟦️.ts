@@ -1,7 +1,7 @@
 import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {GENERATION_POLICY_V1,createNodeFilePortV1,readGenerationPointerV1,type GenerationFilePortV1} from "../🟨️.mjs";
-import {localGenerationIdentityV1,remoteGenerationExchangeV1,type GenerationCursorsV1,type GenerationExchangeOutcomeV1} from "../🌐️remote-exchange/🟦️.ts";
+import {localGenerationIdentityV1,remoteGenerationExchangeV1,type ClosurePortV1,type GenerationCursorsV1,type GenerationExchangeOutcomeV1} from "../🌐️remote-exchange/🟦️.ts";
 import {renderGenerationMessageV1} from "../🔌️load/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -70,7 +70,7 @@ export function createGenerationUploaderV1(input:Readonly<{source:GenerationUplo
 }
 
 /** 🗄️ The upload source of the machine that owns the generation store at `root`: the pointer is read from the store, every upload builds its own exchange (a failure of the cache disables an exchange for its lifetime, so the next attempt gets a fresh one) and publishes the generation from the files of the store. */
-export function localGenerationUploadSourceV1(input:Readonly<{workspace:string;root:string;environment:Readonly<Record<string,string|undefined>>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;files?:GenerationFilePortV1}>):GenerationUploadSourceV1{
+export function localGenerationUploadSourceV1(input:Readonly<{workspace:string;root:string;environment:Readonly<Record<string,string|undefined>>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;files?:GenerationFilePortV1;closures?:ClosurePortV1}>):GenerationUploadSourceV1{
  const files=input.files??createNodeFilePortV1();
  return Object.freeze({
   async pointer(){
@@ -78,7 +78,7 @@ export function localGenerationUploadSourceV1(input:Readonly<{workspace:string;r
    try{return readGenerationPointerV1(bytes).generation;}catch{return undefined;}
   },
   async upload({stale,signal}){
-   const exchange=remoteGenerationExchangeV1({environment:input.environment,workspace:input.workspace,identity:()=>localGenerationIdentityV1(input.root,files),platform:input.platform,cursors:input.cursors,origins:input.origins});
+   const exchange=remoteGenerationExchangeV1({environment:input.environment,workspace:input.workspace,identity:()=>localGenerationIdentityV1(input.root,files),platform:input.platform,cursors:input.cursors,origins:input.origins,...input.closures===undefined?{}:{closures:input.closures}});
    if(exchange===undefined||!exchange.upload)return{status:"absent"};
    return exchange.publish({root:input.root,fs:files,signal,stale});
   }

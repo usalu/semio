@@ -71,11 +71,11 @@ pub fn publish_original_escrow(cx:&mut StepContext<'_>,header:usize,expose:impl 
  let d=publication.demand;post_publisher(cx,P{copied_items:d.items,copied_bytes:d.copy_bytes,..Default::default()},d.work)?;let result={let b=cx.return_budget.as_ref().ok_or_else(||refused("Core Source absent"))?.get();if b.publication.is_none(){return Err(refused("Core extent absent").into())}expose(b.publisher().and_then(|p|p.borrowed()).ok_or_else(||refused("Core bytes absent"))?)};result?;Ok(true)
 }
 pub fn admit_original_return_table(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;if let Some(budget)=cx.return_budget.as_mut(){budget.get_mut().birth_requested=true}if cx.return_budget.as_ref().is_some_and(|budget|budget.get().table().is_some()){return Ok(false)}let bound=cx.return_budget.as_ref().is_some_and(|budget|budget.get().is_bound());let(copy,capacity,work)=OriginalReturnEscrowTable::birth_demand();let total=if bound{cx.return_budget.as_ref().ok_or_else(||refused("original return budget disappeared"))?.get().remaining()?.0}else{cx.original_total_retained_grant()};S(total,cx.original_total_fuel_remaining(),1+usize::from(!bound),copy,capacity,work+u64::from(!bound),K::Table)?;Ok(false)}
-pub fn claim_original_return(cx:&mut StepContext<'_>,output:&mut Option<OriginalReturnClaimCredit>)->Result<bool,OriginalTurnFailure>{let destination=output as *mut _ as usize;claim_original_sized_return(cx,output,destination,0,0)}
 thread_local!{static CLAIM_REASON:std::cell::Cell<&'static str>=const{std::cell::Cell::new("")};}
 /// 🔬️ Temporary: why the last sized return claim answered `false`.
 pub fn claim_reason()->&'static str{CLAIM_REASON.with(|reason|reason.get())}
 fn claim_why(reason:&'static str)->Result<bool,OriginalTurnFailure>{CLAIM_REASON.with(|slot|slot.set(reason));Ok(false)}
+pub fn claim_original_return(cx:&mut StepContext<'_>,output:&mut Option<OriginalReturnClaimCredit>)->Result<bool,OriginalTurnFailure>{let destination=output as *mut _ as usize;claim_original_sized_return(cx,output,destination,0,0)}
 fn claim_stop_reason(cx:&StepContext<'_>)->Option<&'static str>{
  if cx.original_retirement_active(){if cx.retirement_should_yield(){return Some("retirement_should_yield")}}else{if cx.is_cancelled(){return Some("cancelled")}if cx.should_yield(){return Some("should_yield")}}
  if !cx.retained_recipient_is_admitted(){return Some("recipient_not_admitted")}

@@ -32,4 +32,7 @@ pub mod open_source {
 //#endregion 🔖️OpenSource
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

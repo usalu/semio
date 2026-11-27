@@ -119,3 +119,10 @@ macro_rules! artifact_persisted_encoded_binary_operation{
   fn install_persisted_receiving(wire:$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>)->$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>{wire.with_original_encoded_binary_receiving()}
  }};
 }
+/// 🎒️ Declares a vocabulary whose persisted operations are its full Pack Value `OpBinary` encoding, which is also the typed projection replacement and edit comparison re-encode.
+#[macro_export]
+macro_rules! artifact_persisted_pack_value_operation{
+ ($operation:ty)=>{impl $crate::lifted_prepared_operation_wire::ArtifactPersistedOperation for $operation{
+  fn install_persisted_receiving(wire:$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>)->$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>{wire.with_original_pack_value_receiving()}
+ }};
+}

@@ -46,7 +46,7 @@ export const backend:BuildBackendV1=Object.freeze({
         return;
       }
       if(untouched){sayBuildV1("bazel.noAffected");return;}
-      {const {ensureBuildClosureScopesV1}=await import("../../../🚀️bootstrap/🟦️.ts");await ensureBuildClosureScopesV1(root,invocation,artifactPhase,()=>Object.values(adapter.planBazelTasksV1(graph,request).tasks).map(task=>task.root),process.env);}
+      {const {ensureBuildScopesV1}=await import("../../../🚀️bootstrap/🟦️.ts");await ensureBuildScopesV1(root,invocation,artifactPhase,()=>Object.values(adapter.planBazelTasksV1(graph,request).tasks).map(task=>task.root),process.env);}
       if(resolved.watch){
         const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("../../../📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("../../../📥️caller/📤️child/🟦️.ts");
         await withRequestedIssuedResourceControlV1(artifactPhase,0,async childPhase=>{let watching:Promise<void>|undefined;

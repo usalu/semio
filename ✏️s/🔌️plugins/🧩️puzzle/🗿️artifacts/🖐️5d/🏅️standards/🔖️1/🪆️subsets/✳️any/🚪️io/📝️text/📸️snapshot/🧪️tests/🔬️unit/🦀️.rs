@@ -17,8 +17,8 @@ use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::sc
 #[test]
 fn puzzle5d_projection_dsl_round_trips() {
     let empty = Puzzle5dSnapshot::default();
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_store_test_support::assert_dsl_round_trip(&empty);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty);
     let mut projection = Puzzle5dSnapshot { label: Some("Concrete Forest".into()), meta: Puzzle5dMeta { description: "Unified puzzle 5d source".into() }, ..Default::default() };
     projection.parts.push(Puzzle5dPart {
         id: "seed-left-001".into(),
@@ -54,8 +54,8 @@ fn puzzle5d_projection_dsl_round_trips() {
     });
     projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
     projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle5dCompatSpecificity::General });
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+    semio_os_store_test_support::assert_dsl_round_trip(&projection);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&projection);
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn export_concrete_forest_document_json_fixture() {
 fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
     for (name, dsl_text) in [("forest", PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT), ("tower", PUZZLE5D_NAKAGIN_EXAMPLE_TEXT)] {
         let projection = parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{name} example fixture parses as dsl: {error}"));
-        semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+        semio_os_store_test_support::assert_dsl_round_trip(&projection);
     }
 }
 
@@ -118,7 +118,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    (semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
+    (semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

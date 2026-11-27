@@ -198,12 +198,10 @@ where
     /// 🎟️ Steps the Report replay's one-item units back to back while the caller's grant, the work claim and the wall deadline allow; the unit receipts and preparation work sum into one turn receipt on `owner`, whose capacity and release are netted by the replay's own ledger so the stock it charges is the peak it holds at once, not the sum of every operation it prepared and retired.
     pub fn step_derived_report_replay_batched(&mut self, owner: &mut ArtifactDerivedReplay<P, Mutation>, grant:RetainedCloneGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, maximum_work:u64, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         const UNIT_WORK: u64 = 1024;
-        let dbg_start=std::time::Instant::now();let _dbg_guard=DbgTime(dbg_start);
         let (mut spent,mut prepared,mut work_left)=(RetainedCloneProgress::default(),0u64,maximum_work);
         loop{
             let remaining=RetainedCloneGrant{maximum_items:grant.maximum_items.saturating_sub(spent.copied_items),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(spent.released_bytes),..grant};
             let step=self.step_derived_report_replay(owner,remaining,control,work_left,deadline);
-            {let t=DBGN.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if t%3000==0{let (c,op)=owner.replay.as_ref().map_or((0,0),|r|(r.cursor,r.operation));eprintln!("[DEBUG] n={t} batched_ms={} wall_ms={} cursor={c} op={op} remaining_cap={} posted={} outstanding={} owed={} step={:?}",DBGT.load(std::sync::atomic::Ordering::Relaxed)/1_000_000,DBGW.get_or_init(std::time::Instant::now).elapsed().as_millis(),remaining.maximum_capacity_bytes,owner.capacity_ledger.posted(),owner.capacity_ledger.outstanding(),owner.capacity_ledger.owed(),step.as_ref().map(|_|()).map_err(|e|format!("{e:?}").chars().take(200).collect::<String>()));}}
             let own=owner.preparation_receipt;
             if matches!(step,Ok(ReplayStep::Pending(_)))&&own!=RetainedCloneProgress::default()&&remaining.maximum_items>own.copied_items&&work_left>=2*UNIT_WORK&&owner.replay.as_ref().is_some_and(|fold|!fold.finished){
                 spent=spent.saturating_add(owner.take_preparation_receipt());prepared=prepared.saturating_add(owner.take_preparation_work().unwrap_or(0));work_left-=UNIT_WORK;continue;
@@ -235,9 +233,3 @@ impl<P, Mutation> ArtifactStore<P, Mutation> where P: semio_os_spr::StoreState, 
 }
 
 pub use semio_os_store_engine_derived::{CheckpointSource, StoreDerived};
-
-static DBGN:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
-static DBGT:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
-static DBGW:std::sync::OnceLock<std::time::Instant>=std::sync::OnceLock::new();
-struct DbgTime(std::time::Instant);
-impl Drop for DbgTime{fn drop(&mut self){DBGT.fetch_add(self.0.elapsed().as_nanos() as u64,std::sync::atomic::Ordering::Relaxed);}}

@@ -15,7 +15,8 @@ use semio_s_artifact_sourcing_curation::editor::sourcing::{create_sourcing_curat
 use semio_s_artifact_sourcing_curation::viewer::sourcing::{create_sourcing_viewer, SourcingViewer};
 
 const PLUGIN_ID: &str = "demonstrator";
-const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
+/// 🏷️ The bundle name: English, then German.
+const PLUGIN_LABEL: [&str; 2] = ["Designing with Existing Stock", "Entwerfen mit Bestand"];
 /// 🔢️ The version this bundle and every foreign plugin it composes are built at: all of them are members of one
 /// workspace (`version.workspace = true`), and one tree is one catalog.
 const PLUGIN_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -74,7 +75,7 @@ impl From<ViewerSurfaceApp<Process3dViewer>> for DemonstratorApps {
 /// editor+viewer pairs.
 pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
     PluginBuilder::<_, DemonstratorApps>::new(PLUGIN_ID)
-        .label(PLUGIN_LABEL)
+        .label(semio_plugin::LocalizedLabel::native(PLUGIN_LABEL[0], PLUGIN_LABEL[1]))
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
         .depends_on("process", semio_framework::tree_pin!())

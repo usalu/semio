@@ -20,13 +20,14 @@ pub fn native_extension_install_root(modules_root: &Path) -> PathBuf {
 }
 
 /// 📇️ One installed extension exactly as the store records it (`InstalledExtensionRecord` of the TypeScript store and `ShellExtensionStoreRecord` of the shell).
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NativeExtensionRecord {
     pub extension_id: String,
     pub directory_name: String,
     pub version: String,
-    pub label: String,
+    /// 🏷️ The extension name in every terminology and locale — no default language.
+    pub label: semio_os_extension::LocalizedLabel,
     #[serde(rename = "extends")]
     pub extends_host: String,
     pub module_url: String,

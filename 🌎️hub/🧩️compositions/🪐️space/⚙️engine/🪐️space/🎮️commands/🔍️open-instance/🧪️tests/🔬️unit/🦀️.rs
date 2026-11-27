@@ -9,8 +9,8 @@ use semio_hub_space_commands_authoring::open_instance::OpenInstance;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(OpenInstance { node_id: Some("n1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(OpenInstance { node_id: Some("n1".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {}));
 }
 
 #[semio_framework_async_macros::async_test]

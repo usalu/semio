@@ -1,4 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {METRICS_CATALOGUE_V1} from "../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🟦️.ts";
 import {leaseMedianV1} from "../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/⏱️eta/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -13,7 +14,7 @@ export type FleetHolderFactV1=Readonly<{pid:number;resource:string;mode:FleetMod
 export type FleetWaiterFactV1=Readonly<{pid:number;resource:string;mode:FleetModeV1;class:string;waitedSeconds:number;blockers:readonly string[];position?:number;command?:string;session?:string;agent?:string;priority?:FleetPriorityV1;historyKey?:string}>;
 export type FleetGrantFactV1=Readonly<{id:string;operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;heldSeconds:number;phase?:string;lent?:boolean;session?:string;agent?:string}>;
 export type FleetCapacityWaiterFactV1=Readonly<{id:string;operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string;reasonText:string;position:number;session?:string;agent?:string}>;
-export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet"|"workers"|"memory"|"cas"|"offload";ok:boolean;milliseconds:number;error?:string}>;
+export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet"|"workers"|"memory"|"cas"|"offload"|"rates";ok:boolean;milliseconds:number;error?:string}>;
 export type FleetImageFactV1=Readonly<{id:string;kind:"partition"|"control";state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;capacityBytes:number|null;budgetBytes:number|null;source:"statfs"|"recorded"|"walked"|"unknown"}>;
 export type FleetMachineV1=Readonly<{totalBytes:number;effectiveTotalBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;source:"argument"|"environment"|"file"|"default"}>;
 export type FleetSealedEntryFactV1=Readonly<{entry:string;digest:string;files:number;bytes:number;promotedAtMs:number;fresh:boolean|null;changed:number;blocked?:Readonly<{atMs:number;rows:number;first?:string}>;last?:Readonly<{atMs:number;added:number;removed:number;changed:number}>}>;
@@ -36,6 +37,7 @@ export type FleetFactsV1=Readonly<{
  memory?:FleetMemoryFactV1;
  cas?:FleetCasFactV1;
  offload?:FleetOffloadFactV1;
+ rates?:FleetRatesFactV1;
  sources:readonly FleetSourceV1[];
 }>;
 export type FleetSchedulerJobFactV1=Readonly<{key:string;class:string;priority:string;depth:number;agents:readonly string[];tickets:number;reserveMegabytes:number;waitedSeconds:number;position?:number;runSeconds?:number;progress?:Readonly<{phase:string;done:number;total:number}>;stopping?:boolean}>;
@@ -46,6 +48,8 @@ export type FleetLoadFactV1=Readonly<{scheduler:string;expireSeconds:number;tree
 export type FleetCasFactV1=Readonly<{root:string;reserve?:Readonly<{reserveBytes:number;freeBytes:number}>;capBytes:number;effectiveCapBytes:number;highWatermarkBytes:number;lowWatermarkBytes:number;incrementBytes:number;leases:Readonly<{leased:number;expired:number;leasedBytes:number|null;expiredBytes:number|null}>;lastCollection:Readonly<{atMs:number;bytes:number}>|null}>;
 /** 🍂️ What the last staleness sweep of the fleet cache found, as the status endpoint of the cache server reports it. */
 export type FleetRetentionFactV1=Readonly<{version:1;mode:"off"|"dry-run"|"enforce";sweptAt:number;entries:number;declared:number;live:number;grace:number;stale:Readonly<Record<string,number>>;unreached:number;retired:number;refused:Readonly<Record<string,number>>;examples:readonly string[]}>;
+/** 🪟️ What the cumulative counters of every machine added up to inside each trailing window (`windowsSeconds`, one value per window in that order), by origin and metric id, from the metric rings the machines publish. */
+export type FleetRatesFactV1=Readonly<{windowsSeconds:readonly number[];origins:Readonly<Record<string,Readonly<Record<string,readonly number[]>>>>}>;
 /** 🚀️ Units of the builds of this machine in compile slots (local) and light slots (on the fleet), and the offload counters with every decline or fall-back reason. */
 export type FleetOffloadFactV1=Readonly<{local:number;fleet:number;builds:readonly Readonly<{pid:number;local:number;fleet:number}>[];out:number;refused:number;fellBack:number;reasons:Readonly<Record<string,number>>;spool?:Readonly<{depth:number;bound:number}>}>;
 /** 🩺️ One worker of the fleet: what its readiness record claims (`recorded`) next to what is really known (`liveness`, from the age of the record and of the heartbeats of its machine). */
@@ -64,8 +68,9 @@ export type FleetWorkerMemoryV1=Readonly<{origin:string;ageSeconds:number;absent
 /** 🗂️ The memory records by worker origin (null: nothing readable) and the record of the warden of this machine. */
 export type FleetMemoryFactV1=Readonly<{local:FleetWorkerMemoryV1|null;origins:Readonly<Record<string,FleetWorkerMemoryV1|null>>}>;
 export type FleetFindingV1=Readonly<{id:string;severity:"alert"|"warn"|"info";subject:string;values:Readonly<Record<string,string|number>>;text:string}>;
-export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;workers?:Row;cas?:Row;retention?:Row|null;offload?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
+export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;workers?:Row;cas?:Row;retention?:Row|null;offload?:Row;rates?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
 type Row=Record<string,any>;
+const metricLabelV1=(id:string,language:FleetLanguageV1):string=>(METRICS_CATALOGUE_V1.find(row=>row.id===id)?.label?.[language])??id;
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const as Readonly<Record<string,Readonly<Record<FleetLanguageV1,string>>>>,fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
 /** 🗣️ One text of the schema in the chosen language. */
@@ -187,6 +192,11 @@ const fleetSection=(fact:FleetLoadFactV1):Row=>({scheduler:fact.scheduler,...fac
 const casSection=(fact:FleetCasFactV1,atMs:number):Row=>{const used=fact.lastCollection?.bytes??null;return{root:fact.root,...fact.reserve===undefined?{}:{reserve:{reserveBytes:fact.reserve.reserveBytes,freeBytes:fact.reserve.freeBytes,distanceBytes:fact.reserve.freeBytes-fact.reserve.reserveBytes}},usedBytes:used,usedBasisPoints:used===null||fact.effectiveCapBytes===0?null:Math.floor(used*10000/fact.effectiveCapBytes),capBytes:fact.capBytes,effectiveCapBytes:fact.effectiveCapBytes,highWatermarkBytes:fact.highWatermarkBytes,lowWatermarkBytes:fact.lowWatermarkBytes,incrementBytes:fact.incrementBytes,leases:fact.leases,lastCollection:fact.lastCollection===null?null:{atMs:fact.lastCollection.atMs,ageSeconds:Math.max(0,Math.floor((atMs-fact.lastCollection.atMs)/1000)),bytes:fact.lastCollection.bytes}};};
 const retentionSection=(fact:FleetRetentionFactV1,atMs:number):Row=>({mode:fact.mode,sweptAt:fact.sweptAt,ageSeconds:fact.sweptAt===0?null:Math.max(0,Math.floor((atMs-fact.sweptAt)/1000)),entries:fact.entries,judged:fact.declared,live:fact.live,grace:fact.grace,stale:Object.values(fact.stale).reduce((sum,count)=>sum+count,0),staleByReason:fact.stale,unreached:fact.unreached,undeclared:Math.max(0,fact.entries-fact.declared),retired:fact.retired,refused:fact.refused});
 const offloadSection=(fact:FleetOffloadFactV1):Row=>({local:fact.local,fleet:fact.fleet,builds:[...fact.builds].sort((left,right)=>left.pid-right.pid),out:fact.out,refused:fact.refused,fellBack:fact.fellBack,...fact.spool===undefined?{}:{spool:fact.spool},deadline:fact.reasons.deadline??0,lost:fact.reasons["operation-lost"]??0,silent:fact.reasons.silent??0,reasons:fact.reasons});
+const ratesSection=(fact:FleetRatesFactV1):Row=>{
+ const origins:Record<string,Record<string,readonly number[]>>={},fleet:Record<string,number[]>={};
+ for(const origin of Object.keys(fact.origins).sort(compare)){origins[origin]=fact.origins[origin]!;for(const [id,values] of Object.entries(fact.origins[origin]!))fleet[id]=values.map((value,at)=>(fleet[id]?.[at]??0)+value);}
+ return{windowsSeconds:[...fact.windowsSeconds],origins,fleet};
+};
 const workersSection=(fact:FleetWorkersFactV1,memory:FleetMemoryFactV1|undefined):Row=>{const rows=[...fact.rows].sort((left,right)=>compare(left.origin,right.origin)).map(row=>({...row,memory:memory?.origins[row.origin]??null})),count=(state:string)=>rows.filter(row=>row.liveness===state).length;return{offlineSeconds:fact.offlineSeconds,counts:{ready:count("ready"),working:count("working"),idle:count("idle"),silent:count("silent"),offline:count("offline"),absent:count("absent")},rows};};
 
 const natural=(left:string,right:string):number=>{const a=/^([a-z]*)(\d+)$/u.exec(left),b=/^([a-z]*)(\d+)$/u.exec(right);return a&&b?compare(a[1]!,b[1]!)||Number(a[2])-Number(b[2]):compare(left,right);};
@@ -235,9 +245,9 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   else if(row.fresh===false)say("sealed-drifted","info",row.entry,{entry:row.entry,changed:row.changed});
  }
  for(const machine of facts.fleet?.machines??[]){
-  const reasons=machine.cacheSkipReasons??{},denied=reasons["upload-expired-denied"]??0,readOnly=reasons["read-only"]??0;
-  if(denied>0)say("unit-cache-denied","alert",machine.origin,{origin:machine.origin,count:denied});
-  if(readOnly>0)say("unit-cache-read-only","warn",machine.origin,{origin:machine.origin,count:readOnly});
+  const recent=(id:string):number=>facts.rates?.origins[machine.origin]?.[id]?.[0]??0,window=fleetDurationV1(language,facts.rates?.windowsSeconds[0]??0),denied=recent("cache.skip.upload-expired-denied"),readOnly=recent("cache.skip.read-only");
+  if(denied>0)say("unit-cache-denied","alert",machine.origin,{origin:machine.origin,count:denied,window});
+  if(readOnly>0)say("unit-cache-read-only","warn",machine.origin,{origin:machine.origin,count:readOnly,window});
  }
  for(const diff of facts.fleet?.keys?.diffs??[])if(diff.sameSource)say("unit-key-machine-dependent","warn",diff.crate,{crate:diff.crate,origins:diff.origins.join(","),components:diff.differs.join(",")});
  for(const worker of facts.workers?.rows??[]){
@@ -256,7 +266,8 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   const level=fleetTextV1(language,`workers.level.${row.level}`);
   if(row.level==="guard"||row.level==="danger")say("worker-memory-tight",row.level==="danger"?"alert":"warn",origin,{origin,level,available:row.availableMegabytes!,guard:row.guardMegabytes!,danger:row.dangerMegabytes!,swap:row.swapUsedMegabytes??"?",pressure:row.pressure!});
   const counters=row.counters!;
-  if(counters.suspended+counters.cancelled>0)say("worker-warden-intervened",counters.cancelled>0?"alert":"warn",origin,{origin,suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,alarm:row.lastAlarm===null?"-":row.lastAlarm.text[language]});
+  const recent=facts.rates?.origins[origin]?.["warden.cancelled"]?.[0]??0;
+  if(recent>0)say("worker-warden-intervened","alert",origin,{origin,recent,window:fleetDurationV1(language,facts.rates!.windowsSeconds[0]!),suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,alarm:row.lastAlarm===null?"-":row.lastAlarm.text[language]});
   if(row.mode==="observe")say("worker-warden-observing","info",origin,{origin,level});
   if(row.swapUsedMegabytes!==null&&row.totalMegabytes!==null&&row.swapUsedMegabytes*10000>row.totalMegabytes*policy.findings.workerSwapWarnBasisPoints)say("worker-swap-high","warn",origin,{origin,swap:row.swapUsedMegabytes,percent:Math.floor(row.swapUsedMegabytes*100/row.totalMegabytes),total:row.totalMegabytes});
   if(row.overhead!==null&&row.overhead.cpuBasisPoints>policy.findings.wardenOverheadBasisPoints)say("worker-warden-overhead","warn",origin,{origin,percent:Math.floor(row.overhead.cpuBasisPoints/100),tick:Math.floor(row.overhead.tickMillisecondsP95+0.5),resident:Math.floor(row.overhead.residentMegabytes+0.5)});
@@ -278,7 +289,7 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   bazel:{slots:servers.length,live:servers.filter(row=>row.live).length,held:servers.filter(row=>row.held).length,rssMegabytes:servers.reduce((sum,row)=>sum+(row.treeMegabytes??0),0),servers},
   storage:{hostFreeBytes:storage?.hostFreeBytes??null,hostFreeFloorBytes:storage?.hostFreeFloorBytes??0,machine:storage?.machine??{totalBytes:0,effectiveTotalBytes:0,usedBytes:0,footprintBytes:0,overBytes:0,evictBytes:0,blockedBytes:0,source:"default"},overAreas:[...storage?.overAreas??[]].sort(compare),images},
   sealed:{mode:facts.sealed?.mode??"live",drifted:sealedEntries.filter(row=>row.fresh===false).length,blocked:sealedEntries.filter(row=>row.blocked!==undefined).length,entries:sealedEntries},
-  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},...facts.workers===undefined?{}:{workers:workersSection(facts.workers,facts.memory)},...facts.cas===undefined?{}:{cas:casSection(facts.cas,atMs)},...facts.fleet===undefined?{}:{retention:facts.fleet.retention===undefined?null:retentionSection(facts.fleet.retention,atMs)},...facts.offload===undefined?{}:{offload:offloadSection(facts.offload)},findings:kept,sources:facts.sources,
+  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},...facts.workers===undefined?{}:{workers:workersSection(facts.workers,facts.memory)},...facts.cas===undefined?{}:{cas:casSection(facts.cas,atMs)},...facts.fleet===undefined?{}:{retention:facts.fleet.retention===undefined?null:retentionSection(facts.fleet.retention,atMs)},...facts.offload===undefined?{}:{offload:offloadSection(facts.offload)},...facts.rates===undefined?{}:{rates:ratesSection(facts.rates)},findings:kept,sources:facts.sources,
  }) as FleetReportV1;
 }
 
@@ -335,7 +346,6 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
  if(fleet!==undefined){
   lines.push(say("fleet",{machines:fleet.machines.length,queued:fleet.queued,executing:fleet.executing,offloadedIn:fleet.offloadedIn,offloadedOut:fleet.offloadedOut,refused:fleet.refused,declined:fleet.declined,retried:fleet.retried}));
   for(const machine of fleet.machines as Row[])lines.push(say("fleet.machine",{origin:machine.origin,platform:machine.platform,pressure:machine.pressure,load:machine.load===null?"?":machine.load,cores:machine.cores,running:machine.running,queued:machine.queued,worker:machine.worker,headroom:(machine.headroom?"":say("fleet.noheadroom"))+(machine.code===undefined?say("fleet.code.unknown"):fleet.treeCode===undefined?say("fleet.code.runs",{code:machine.code}):machine.code===fleet.treeCode?say("fleet.code.same",{code:machine.code}):say("fleet.code.differs",{code:machine.code,tree:fleet.treeCode})),offloadedIn:machine.offloadedIn,offloadedOut:machine.offloadedOut,refused:machine.refused,cacheHit:machine.cacheHit,cacheMiss:machine.cacheMiss,cacheSkipped:machine.cacheSkipped??0,age:duration(machine.ageSeconds)}));
-  for(const machine of fleet.machines as Row[]){const rows=Object.entries((machine.cacheSkipReasons??{}) as Record<string,number>).sort((left,right)=>right[1]-left[1]||compare(left[0],right[0]));if(rows.length>0)lines.push(say("fleet.skips",{origin:machine.origin,reasons:rows.map(([name,count])=>`${name} ${count}`).join(", ")}));}
   if(fleet.keys!==undefined){
    const diffs=fleet.keys.diffs as Row[],dependent=diffs.filter(row=>row.sameSource);
    lines.push(say("fleet.keys",{origins:fleet.keys.origins,units:fleet.keys.units,differing:diffs.length,dependent:dependent.length,components:Object.entries(fleet.keys.byComponent as Record<string,number>).sort((left,right)=>right[1]-left[1]||compare(left[0],right[0])).map(([name,count])=>`${name} ${count}`).join(", ")}));
@@ -380,6 +390,11 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
   lines.push(say("offload",{local:offload.local,fleet:offload.fleet,out:offload.out,refused:offload.refused,fellBack:offload.fellBack,deadline:offload.deadline,lost:offload.lost,silent:offload.silent}));
   if(offload.spool!==undefined)lines.push(say("offload.spool",{depth:(offload.spool as Row).depth,bound:(offload.spool as Row).bound}));
   for(const build of(offload.builds as Row[]).slice(0,policy.queues.maximumWaitersShown))lines.push(say("offload.build",build));
+ }
+ const rates=report.rates;
+ if(rates!==undefined&&Object.keys(rates.fleet).length>0){
+  lines.push(say("rates",{windows:(rates.windowsSeconds as number[]).map(duration).join(" / ")}));
+  for(const id of policy.rates.metrics)if(rates.fleet[id]!==undefined&&(rates.fleet[id] as number[]).some(value=>value>0))lines.push(say("rates.row",{label:metricLabelV1(id,language),values:(rates.fleet[id] as number[]).join(" / "),origins:Object.values(rates.origins as Row).filter((row:Row)=>row[id]!==undefined).length}));
  }
  const bazel=report.bazel;
  lines.push(say("bazel",{live:bazel.live,rss:bazel.rssMegabytes,held:bazel.held,slots:bazel.slots}));

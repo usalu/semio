@@ -213,6 +213,11 @@ where
         envelope_shell_is_empty && runtime_shell_is_empty && self.wire.durable_group_root.is_none() && self.log.dag.terminal_is_empty() && self.owners.displaced_retirements.terminal_is_empty()
     }
 
+    /// 🧭️ Names which owned root keeps `owned_roots_terminal_is_empty` false.
+    fn owned_roots_witness(&self) -> String {
+        format!("current_detached={} envelope_detached={} group_root_none={} tail_none={} prefix_empty={} leases_terminal={} structural={}", self.live.current_detached, self.log.envelope_detached, self.wire.durable_group_root.is_none(), self.live.tail_undo_cache.is_none(), self.live.prefix_ring.is_empty(), self.snapshot_read_leases_terminal_is_empty(), self.close_structural_owners_terminal_is_empty())
+    }
+
     fn owned_roots_terminal_is_empty(&self) -> bool {
         self.live.current_detached
             && self.log.envelope_detached

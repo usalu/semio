@@ -63,8 +63,8 @@ fn sample_document() -> Process3dSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn process3d_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&sample_document());
-    store::os_store::test_support::assert_dsl_round_trip(&empty_process3d_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&sample_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&empty_process3d_snapshot());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,19 +79,19 @@ async fn process3d_dsl_round_trips_imported_solid_shapes() {
         ],
     };
     let document = process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] });
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn timber_example_fixture_parses_and_round_trips() {
     let document = parse_dsl(PROCESS_3D_TIMBER_EXAMPLE_TEXT).expect("parse timber example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn drilled_plate_example_fixture_parses_and_round_trips() {
     let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 //#region 🔖️FixtureRegeneration
@@ -213,7 +213,7 @@ async fn concrete_forest_example_fixture_is_the_authored_scene() {
     let document = parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example");
     let authored = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop());
     assert_eq!(document, authored);
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 /// 🧱️ Every machine of the concrete catalog is the origin of exactly one step, and every step's

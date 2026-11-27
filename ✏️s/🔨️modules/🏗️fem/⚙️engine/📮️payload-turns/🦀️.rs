@@ -157,6 +157,9 @@ pub fn numerical_writer_demand(slot: &NumericalPayloadSlot) -> Option<Result<Ret
 }
 
 
+/// 🔁️ Most bounded units one interactive turn runs back to back across every numerical job and staged step; sized to the session's own `UNITS_PER_STEP` so a turn stays within a few milliseconds while its fuel, deadline and cancellation still stop it sooner.
+pub const NUMERICAL_UNITS_PER_TURN: usize = 65_536;
+
 /// 🦶️ A numerical job exposes its plain step outcome so contract tests and the claim-taking `InteractiveJob::step` share one body.
 pub trait NumericalStep: InteractiveJob {
     /// ▶️ Advances one original step and lends its borrowed outcome to the caller.

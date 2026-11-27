@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "schema://semio/repo-test-acceptance/v1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/test/acceptance/schema.json",
   "title": "🎯️ Repository acceptance: one check's result, the goal plan, and the goal gate's summary",
   "$defs": {
     "localizedText": {

@@ -128,6 +128,6 @@ fn ordered_diff_absorb_is_associative_at_boundaries() {
 #[doc(hidden)]
 #[test]
 pub fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<JobTestOp>(include_str!("../../🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<JobTestOp>(include_str!("../../🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️JobTestMutationLaws

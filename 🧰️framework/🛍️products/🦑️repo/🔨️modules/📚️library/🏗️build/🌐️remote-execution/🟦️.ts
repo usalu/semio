@@ -18,7 +18,7 @@ export type RemoteExecutionPolicyV1=Readonly<typeof buildPolicy.remoteExecution>
 export type RemoteExecutionSandboxV1="darwin-sandbox"|"linux-sandbox"|"isolated-root";
 
 /** 📡️ A worker's announcement when it joins (`POST /v1/workers`). */
-export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string;origin:string;capacity:Readonly<{cores:number;memoryMegabytes:number}>;resumed?:readonly Readonly<{task:string;instance:string;action:RemoteExecutionDigestV1}>[];confinement:RemoteExecutionConfinementV1;network:RemoteExecutionNetworkV1}>;
+export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string;origin:string;startedMs?:number;capacity:Readonly<{cores:number;memoryMegabytes:number}>;resumed?:readonly Readonly<{task:string;instance:string;action:RemoteExecutionDigestV1}>[];confinement:RemoteExecutionConfinementV1;network:RemoteExecutionNetworkV1}>;
 
 /** 🧱️ Whether a sandbox confines the file system of an action: `none` is the private input root alone. */
 export type RemoteExecutionConfinementV1="full"|"none";

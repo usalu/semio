@@ -138,7 +138,7 @@ fn missing_required_field_is_input_invalid_before_any_workspace_check() {
 
 #[test]
 fn missing_artifact_is_not_found_without_plugin_ownership() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
@@ -149,7 +149,7 @@ fn missing_artifact_is_not_found_without_plugin_ownership() {
 
 #[test]
 fn artifact_create_then_open_round_trips_without_any_plugin() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
@@ -177,7 +177,7 @@ fn artifact_create_then_open_round_trips_without_any_plugin() {
 
 #[test]
 fn artifact_validate_uses_the_owned_pair_decoder_without_a_plugin() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-2", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
@@ -193,7 +193,7 @@ fn artifact_validate_uses_the_owned_pair_decoder_without_a_plugin() {
 
 #[test]
 fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_stale_one() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-3", serde_json::json!({ "n": 7 }).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
@@ -211,7 +211,7 @@ fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_s
 
 #[test]
 fn artifact_export_never_fabricates_a_successful_export() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-4", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
@@ -262,7 +262,7 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗿️artifact/🧪️tests/🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
     let canary = law["canary"].as_str().expect("canary");
     let needles = canary_needles(canary);
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
@@ -303,7 +303,7 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
 #[test]
 fn artifact_create_commits_initial_as_the_first_journal_edit() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗿️artifact/🧪️tests/🧫️fixtures/🌱️create-initial-content-law.json")).expect("law fixture parses");
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
@@ -331,7 +331,7 @@ fn artifact_create_commits_initial_as_the_first_journal_edit() {
 
 #[test]
 fn artifact_create_hands_out_a_job_id_the_job_registry_can_read_and_open_names_the_probe_kind() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace"));
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace), full_principal());
@@ -345,7 +345,7 @@ fn artifact_create_hands_out_a_job_id_the_job_registry_can_read_and_open_names_t
 
 #[test]
 fn artifact_export_rejects_a_format_no_installed_kind_declares_before_resolving_any_plugin() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-5", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
@@ -358,7 +358,7 @@ fn artifact_export_rejects_a_format_no_installed_kind_declares_before_resolving_
 
 #[test]
 fn artifact_snapshot_refuses_a_partial_or_foreign_revision_stamp_at_once() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace");
     ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-6", serde_json::json!({}).into())).expect("seed");
     let mut registry = InMemoryToolRegistry::new();

@@ -63,6 +63,7 @@ semio_ui_contract = { path = "../../../../../../../../../../../../../../../🧰�
 semio-ui-declaration = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

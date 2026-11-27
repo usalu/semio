@@ -25,7 +25,7 @@ let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMu
         .unwrap_or_else(|rejected| panic!("batched admission: {}", rejected.reason));
     let grant = batch_turn_grant();
     for _ in 0..1_048_576 {
-        match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)) {
+        match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)) {
             Ok(ArtifactStoreOneItemAdvance::Published(receipt, _)) => return (publication, Ok(receipt)),
             Ok(ArtifactStoreOneItemAdvance::PreparationRefused) => {
                 let reason = publication.fault().unwrap_or("batched preparation refused").to_string();
@@ -266,10 +266,10 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
         .expect("a thirty-two item gesture admits");
     let grant = batch_turn_grant();
     while publication.staged_items() < 3 {
-        receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("bounded staging turn");
+        receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("bounded staging turn");
     }
     assert!(store.cancel_apply_batch(&mut publication));
-    assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Blocked)));
+    assert!(matches!(receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Blocked)));
     close_durable_publication(&mut publication);
     assert_eq!(store.generation_now(), generation, "a cancelled gesture never publishes");
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
@@ -293,7 +293,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
     let mut publication = store.begin_apply_batch(semio_framework_job::OperationId(93), store.generation_now(), revision, "fixture".into(), vec![DemoMutation::SetN(SetN { n: 97 })], HistoryLane::Document, Some(&factory), None).unwrap();
     let grant = fixture_one_item_grant(&fixture);
     for _ in 0..16_384 {
-        if matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)) {
+        if matches!(receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)) {
             break;
         }
     }
@@ -319,7 +319,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
         .expect("Store-minted immutable authority admits the domain owner");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     while publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
-        assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::PreparationProgress(..))));
+        assert!(matches!(receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::PreparationProgress(..))));
     }
     let authority = publication.authority.as_ref().expect("publication retains Store authority");
     let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).expect("domain prepared candidate");
@@ -332,7 +332,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
     assert_ne!(prepared.edit_digest(), canonical, "hostile domain altered only its exposed candidate digest");
     let mut rejected = false;
     for _ in 0..65_536 {
-        match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)) {
+        match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)) {
             Err(_) | Ok(ArtifactStoreOneItemAdvance::PreparationRefused) => { rejected = true; break; }
             Ok(ArtifactStoreOneItemAdvance::Published(_, _)) => panic!("a domain-forged digest published"),
             Ok(_) => {}
@@ -393,7 +393,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
         .expect("a stamped clock strictly ahead of the Store clock admits");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     let receipt = loop {
-        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded stamped step") {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded stamped step") {
             break receipt;
         }
     };
@@ -419,7 +419,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
         .begin_apply_batch(semio_framework_job::OperationId(13), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 7 })], HistoryLane::Document, Some(&tied), None)
         .expect("a second approval in the same millisecond carries the next logical tick and admits");
     let tied_receipt = loop {
-        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut tied_publication, 4096, grant,receiving)).expect("one bounded same-millisecond step") {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut tied_publication, 4096, grant,receiving)).expect("one bounded same-millisecond step") {
             break receipt;
         }
     };
@@ -449,7 +449,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
         .expect("a genesis document is after nothing, so the minted stamp admits");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     loop {
-        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded genesis step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded genesis step") {
             break;
         }
     }
@@ -490,7 +490,7 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
         .begin_apply_batch(semio_framework_job::OperationId(31), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], HistoryLane::Document, Some(&stamped), None)
         .expect("a stamped identity admits with its stamped clock");
     loop {
-        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded stamped-identity step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded stamped-identity step") {
             break;
         }
     }
@@ -506,7 +506,7 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
         .begin_apply_batch(semio_framework_job::OperationId(32), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 6 })], HistoryLane::Document, Some(&local), None)
         .expect("an unstamped local gesture admits unchanged");
     loop {
-        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut gesture, 4096, grant,receiving)).expect("one bounded unstamped step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut gesture, 4096, grant,receiving)).expect("one bounded unstamped step") {
             break;
         }
     }

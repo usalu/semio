@@ -83,7 +83,7 @@ pub fn command_page_authority_budget() -> Budget {
 
     #[doc(hidden)]
 pub async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAssemblyError> {
-        PluginBuilder::<_, TestRuntimeApps>::new("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
+        PluginBuilder::<_, TestRuntimeApps>::new("test").label(LocalizedLabel::native("Synthetic", "Synthetisch")).version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
     }
     //#endregion 🔖️EphemeralLaneTests
 

@@ -92,7 +92,7 @@ function consumersOf(spec:GenerationComputeSpecV1,owners:readonly Owner[],inferr
  return edgeConsumersOfPartV1({previousEnvironment:spec.previousEnv,previousParts:spec.previousParts,previousOwners:previousEnvironmentOwnersV1(spec.stubs),parts:environmentParts(owners),stubs:Object.fromEntries(Object.entries(spec.stubs).filter(([name])=>!spec.removed.includes(name))) as never,inferred,roots});
 }
 
-/** 🧪️ The compute port of the synthetic workspace: refreshes exactly the owners the store names and, when the environment moved, the edges of every other owner. */
+/** 🧪️ The compute port of the synthetic workspace: refreshes exactly the owners the store names and, when the environment moved, the edges of every other owner; the owners the spec names as `edgeStale` get their edges again also while the environment stays. */
 export function createCompute(dir:string,log:{full:string[];edges:string[];cold:boolean;envStale:boolean;calls:number}[],ownerDelayMs=0,stamps?:StampTableV1){
  return async(spec:GenerationComputeSpecV1,signal?:AbortSignal):Promise<GenerationComputeResultV1>=>{
   signal?.throwIfAborted();
@@ -101,10 +101,11 @@ export function createCompute(dir:string,log:{full:string[];edges:string[];cold:
   const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name)),results:GenerationComputeResultV1["owners"]=[],carried:string[]=[];
   const entry={full:full.map(owner=>owner.name).sort(),edges:[] as string[],cold:spec.cold,envStale:spec.envStale,calls:1};
   for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));const inferred=await inferOwner(dir,owner,owners,stamps);results.push(inferred.reads?{...inferred,reads:inferred.reads}:inferred);}
-  if(!spec.cold&&envDigest!==spec.previousEnv){
-   const consumers=consumersOf(spec,owners,fullNames,roots);
-   for(const owner of owners)if(!fullNames.has(owner.name)){
-    if(!owner.broken&&consumers!==undefined&&!consumers.has(owner.name)){carried.push(owner.name);continue;}
+  const forced=new Set(spec.edgeStale??[]),moved=envDigest!==spec.previousEnv;
+  if(!spec.cold&&(moved||forced.size)){
+   const consumers=moved?consumersOf(spec,owners,fullNames,roots):undefined;
+   for(const owner of owners)if(!fullNames.has(owner.name)&&(moved||forced.has(owner.name))){
+    if(!owner.broken&&consumers!==undefined&&!consumers.has(owner.name)&&!forced.has(owner.name)){carried.push(owner.name);continue;}
     signal?.throwIfAborted();const inferred=await inferOwner(dir,owner,owners,stamps);results.push({name:owner.name,partial:"edges",edges:inferred.edges,...(inferred.reads?{reads:inferred.reads}:{})});entry.edges.push(owner.name);
    }
   }

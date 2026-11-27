@@ -35,6 +35,7 @@ semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

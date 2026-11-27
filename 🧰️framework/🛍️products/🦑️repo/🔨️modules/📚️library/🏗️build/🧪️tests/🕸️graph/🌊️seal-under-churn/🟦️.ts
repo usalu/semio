@@ -1,4 +1,5 @@
 /** 🌊️ Contract: a read of a tree that changes while it is read seals in bounded time, with work proportional to the changes, and an owner whose file changed after its observation is stale in the NEXT read only (200 seeded worlds, the real `loadBuildGraphAttemptV1` and the real owner facts memo over a model tree whose files change on a logical clock). */
+import{createStringSharingV1}from"../../../🕸️graph/📥️load/🪢️string-sharing/🟦️.ts";
 import{decodeAuthorityObservationsV1,distinctObservationRowsV1,encodeAuthorityObservationsV1}from"../../../👁️observation/🔢️row-table/🟨️.mjs";
 import sliceReportSchema from "../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import{test,expect}from"bun:test";
@@ -68,7 +69,7 @@ const world=(seed:number)=>{
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{for(const name of names)await inspect({name},[],[]);return admitted();},
   buildGraphMembershipV1:async()=>{advance(INVENTORY);return"membership";},buildGraphMembersV1:(list:string[])=>list,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async(path:string)=>{const text=store.get(path);if(text===undefined)throw Object.assign(Error("absent"),{code:"ENOENT"});return text;},
-  createPassReuseV1:()=>({memo:undefined,carried:{recycles:0,round:0,passes:0,owners:0,heapMegabytes:0},boundary:()=>{}}),discoverBuildGraphV1:async()=>{
+  createStringSharingV1,memoryReleaseV1:{between:()=>undefined},createPassReuseV1:()=>({memo:undefined,carried:{recycles:0,round:0,passes:0,owners:0,heapMegabytes:0},boundary:()=>{}}),discoverBuildGraphV1:async()=>{
    counts.discovered++;
    for(const name of names){
     advance(LOOK);const held=records.get(name);

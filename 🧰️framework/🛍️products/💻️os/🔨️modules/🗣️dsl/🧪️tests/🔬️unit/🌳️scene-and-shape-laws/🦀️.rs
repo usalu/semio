@@ -95,7 +95,7 @@ async fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_
     let printed = <SceneDocument as pack::snapshot::ArtifactDsl>::print_dsl(&doc);
     let parsed = <SceneDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
@@ -189,5 +189,5 @@ async fn derived_newtype_tuple_variants_round_trip() {
     assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
     let parsed = <ShapeDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }

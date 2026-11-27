@@ -39,7 +39,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// honest choice now that this plugin carries real document apps).
 pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
     PluginBuilder::<NeedsLabel, EnergyApps>::new("energy")
-        .label("Energy")
+        .label(semio_plugin::LocalizedLabel::native("Energy", "Energie"))
         .version("0.1.0")
         .package_id("semio:energy")
         .artifact(semio_s_artifact_energy_model::declaration().map_err(PluginAssemblyError::definition)?)

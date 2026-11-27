@@ -48,7 +48,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // already sync (no bridge needed).
 pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
     PluginBuilder::<_, SpaceApps>::new("space")
-        .label("S Studio")
+        .label(semio_plugin::LocalizedLabel::native("S Studio", "S Studio"))
         .version("0.1.0")
         .package_id("semio:space")
         .local_backbone_storage()

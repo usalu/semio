@@ -251,8 +251,8 @@ impl_norm_artifact_record!(DemoDocument, extension = "demo-norm", envelope_id = 
 
 #[semio_framework_async_macros::async_test]
 async fn demo_document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
-    store::os_store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
+    semio_os_store_test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
 }
 
 fn dimensionless(value: f64) -> Quantity {

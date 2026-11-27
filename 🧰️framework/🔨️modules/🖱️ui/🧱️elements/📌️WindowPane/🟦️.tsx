@@ -151,6 +151,8 @@ export interface PaneProps {
   readonly onResizeActiveChange?: (active: boolean) => void;
   /** 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
+  /** 🧱️ CSS length kept free at the host's opposite block edge (e.g. the docked chip row), so a tall pane scrolls its body instead of painting under chrome that is a sibling overlay of the host. */
+  readonly blockEndReserve?: string;
   /** 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
   /** 🔗️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
@@ -219,6 +221,7 @@ export const Pane: React.FC<PaneProps> = ({
   onResizeActiveChange,
   order = 0,
   inlineEdgeReservePx = 0,
+  blockEndReserve,
   hostRef,
   chromePanelGapPx = -0.5,
   zIndex,
@@ -286,6 +289,7 @@ export const Pane: React.FC<PaneProps> = ({
     ? { position: "absolute", inset: 0, zIndex: zIndex, width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%" }
     : {
         ...anchorPositionStyle(anchor, "0px"),
+        ...(blockEndReserve ? { maxHeight: `calc(100% - (0px * 2) - ${blockEndReserve})` } : {}),
         order,
         ...(zIndex !== undefined ? { zIndex } : {}),
         width: !mobile && !effectiveFolded ? `${size}px` : undefined,

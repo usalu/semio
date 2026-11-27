@@ -11,7 +11,7 @@ import{resolveSealedImplementationV1}from"../../📤️promotion/🟦️.ts";
 import policyData from"../../🔣️.json";
 import kernelSchema from"../../../⌨️command/🧭️selection/🧬️schema/🔣️.json";
 import kernelFixture from"../../../⌨️command/🧭️selection/🔣️.json";
-import{repositoryCommandKernelV1,repositoryCommandReadsGraphV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
+import{repositoryCommandKernelV1,repositoryCommandMemoryCappedV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
 import{Database}from"bun:sqlite";
 import memoryPolicy from"../../../🧠️memory/🧬️schema/🔣️.json";
 import hostPolicy from"../../../🏡️resident/🧬️schema/🔣️.json";
@@ -174,14 +174,14 @@ test("explicit promotion: a light command whose aged self-healing promotion leav
  expect(broken,"a promoter that fails").toMatchObject({code:0,out:"DOOR A leases,status\n"});expect(broken.err).toContain("the promoter does not load");
 },300_000);
 
-test("the spawned front door carries the declared graph memory cap only for commands that read the graph: run, show and exec are capped by the memory policy and the host purge policy, tools, help, cache and light commands are not, and the table agrees with an independent SQLite model",async()=>{
+test("the spawned front door carries the declared memory cap only for commands that read the graph or keep a Cargo run alive: run, show, exec, cargo and the cache kernels are capped by the memory policy and the host purge policy, tools, help and light commands are not, and the table agrees with an independent SQLite model",async()=>{
  const root=await fresh();await promote(root);
  const environment={SEMIO_REPO_SEAL:"sealed",BUN_JSC_forceRAMSize:undefined,MIMALLOC_PURGE_DELAY:undefined},capped=`ENV ${memoryPolicy.definitions.Policy.const.childHeapMegabytes*1048576} ${hostPolicy.definitions.HostPolicy.const.memoryPurge.delayMilliseconds}\n`;
- const rows=[[["run","env"],true],[["show","env"],true],[["exec","env"],true],[["tools","env"],false],[["cache","env"],false],[["x","--help"],false],[["leases","env"],false]]as const,db=new Database(":memory:");
+ const rows=[[["run","env"],true],[["show","env"],true],[["exec","env"],true],[["tools","env"],false],[["cache","env"],true],[["cargo","env"],true],[["x","--help"],false],[["leases","env"],false]]as const,db=new Database(":memory:");
  try{
   for(const[args,reads]of rows){
-   const kind=repositoryCommandKernelV1(args,{}).kind,model=db.query("select ?1 in ('runtime','task') and ?2 not in ('tools','reset','remote-execution','leases','doctor','capacity','fleet','scheduler') as reads").get(kind,args[0])as{reads:number};
-   expect(repositoryCommandReadsGraphV1(args,{})).toBe(reads);expect(Boolean(model.reads)).toBe(reads);
+   const kind=repositoryCommandKernelV1(args,{}).kind,model=db.query("select (?1 in ('runtime','task') and ?2 not in ('tools','reset','remote-execution','leases','doctor','capacity','fleet','scheduler')) or ?1 in ('cargo','cache','cache-ledger') as reads").get(kind,args[0])as{reads:number};
+   expect(repositoryCommandMemoryCappedV1(args,{})).toBe(reads);expect(Boolean(model.reads)).toBe(reads);
    const result=await run(root,[...args],environment);
    if(reads)expect(result).toMatchObject({code:0,out:capped});else expect(result.out).toBe(args[1]==="env"?"ENV undefined undefined\n":result.out);
   }

@@ -21,8 +21,8 @@ pub(crate) mod testing_fixtures_unit_1 {
         #[doc(hidden)]
 #[test]
         pub fn committed_wire_witnesses_are_the_canonical_wire() {
-            ::store::os_store::test_support::assert_wire_witness::<PublicationPresenceMutation>(include_str!("../../../../🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-            ::store::os_store::test_support::assert_wire_witness::<PublicationTransientMutation>(include_str!("../../../../🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/📝️change-publication/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+            ::semio_os_store_test_support::assert_wire_witness::<PublicationPresenceMutation>(include_str!("../../../../🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+            ::semio_os_store_test_support::assert_wire_witness::<PublicationTransientMutation>(include_str!("../../../../🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/📝️change-publication/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
         }
     
         #[test]

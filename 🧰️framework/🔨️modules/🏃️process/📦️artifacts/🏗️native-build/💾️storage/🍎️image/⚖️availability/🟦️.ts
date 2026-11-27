@@ -1,4 +1,4 @@
-import{spawnSync}from"node:child_process";
+import{execFile,spawnSync}from"node:child_process";
 import{realpathSync}from"node:fs";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
@@ -50,6 +50,10 @@ export function nativeImageContainerFreeBytesSyncV1(mountPoint:string,platform:s
  if(platform!=="darwin")return undefined;
  const text=run(policy.infoProgram,[...policy.infoArguments,mountPoint]);return text===undefined?undefined:nativeImageContainerFreeBytesV1(text);
 }
+const usedOfV1=(text:string,mountPoint:string,capacity:number):number|undefined=>{
+ const facts=nativeImageInformationV1(text),used=facts[policy.volumeUsedKey];
+ return (facts[policy.mountPointKey]===mountPoint||facts[policy.mountPointKey]===realpathSync(mountPoint))&&facts[policy.filesystemTypeKey]===policy.darwinFilesystemType&&typeof used==="number"&&Number.isSafeInteger(used)&&used>0&&used<=capacity?used:undefined;
+};
 /** 🧮️ Measures occupied bytes independently of APFS availability clamped by the hosting filesystem. */
 export function nativeImageVolumeUsedBytesSyncV1(mountPoint:string,volume:Readonly<{blocks:number;bfree:number;bsize:number}>,platform:string=process.platform,run:ImageInformationRunV1=runImageInformationV1):number|undefined{
  const capacity=volume.blocks*volume.bsize;
@@ -60,9 +64,21 @@ export function nativeImageVolumeUsedBytesSyncV1(mountPoint:string,volume:Readon
  }
  try{
   const text=run(policy.infoProgram,[...policy.infoArguments,mountPoint]);
-  if(text===undefined)return undefined;
-  const facts=nativeImageInformationV1(text),used=facts[policy.volumeUsedKey];
-  return (facts[policy.mountPointKey]===mountPoint||facts[policy.mountPointKey]===realpathSync(mountPoint))&&facts[policy.filesystemTypeKey]===policy.darwinFilesystemType&&typeof used==="number"&&Number.isSafeInteger(used)&&used>0&&used<=capacity?used:undefined;
+  return text===undefined?undefined:usedOfV1(text,mountPoint,capacity);
+ }catch{return undefined;}
+}
+type ImageInformationRunAsyncV1=(program:string,args:readonly string[],signal?:AbortSignal)=>Promise<string|undefined>;
+const runImageInformationAsyncV1:ImageInformationRunAsyncV1=(program,args,signal)=>new Promise(resolve=>{
+ try{execFile(program,[...args],{windowsHide:true,encoding:"utf8",timeout:10000,signal,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}},(error,stdout)=>resolve(error===null?stdout:undefined));}catch{resolve(undefined);}
+});
+/** 🧮️ The same measurement without blocking the event loop: the volume tool runs as a child process, so a caller that asks for many volumes asks them at once and a deadline or a cancellation can still fire while the tool is slow. */
+export async function nativeImageVolumeUsedBytesV1(mountPoint:string,volume:Readonly<{blocks:number;bfree:number;bsize:number}>,platform:string=process.platform,run:ImageInformationRunAsyncV1=runImageInformationAsyncV1,signal?:AbortSignal):Promise<number|undefined>{
+ const capacity=volume.blocks*volume.bsize;
+ if(!Number.isSafeInteger(capacity)||capacity<=0)return undefined;
+ if(platform!=="darwin")return nativeImageVolumeUsedBytesSyncV1(mountPoint,volume,platform,()=>undefined);
+ try{
+  const text=await run(policy.infoProgram,[...policy.infoArguments,mountPoint],signal);
+  return text===undefined?undefined:usedOfV1(text,mountPoint,capacity);
  }catch{return undefined;}
 }
 /** ⏳️ Names how long a stale-figure correction stays valid before the container is asked again. */

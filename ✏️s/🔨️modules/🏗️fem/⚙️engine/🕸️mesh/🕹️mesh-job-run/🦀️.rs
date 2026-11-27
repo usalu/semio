@@ -3,9 +3,6 @@
 use super::*;
 
 // #region 🧵️IncrementalMeshJob
-/// 🔁️ Most bounded units one interactive turn runs back to back before the job yields to its host; the turn's fuel and deadline still stop it sooner.
-const MESH_UNITS_PER_TURN: usize = 4096;
-
 impl MeshJob {
     /// ⏭️ Runs one bounded unit; a finished publication payload is staged in the job, never lent from here.
     fn run(&mut self, context: &mut StepContext<'_>) -> MeshRun {
@@ -274,6 +271,18 @@ impl MeshJob {
                 }
                 MeshRun::Yield
             }
+            MeshJobStage::PublishPreview if !self.publishes => {
+                self.stage = MeshJobStage::Finalize;
+                MeshRun::Yield
+            }
+            MeshJobStage::PublishCheckpoint if !self.publishes => {
+                self.stage = MeshJobStage::Complete;
+                MeshRun::Yield
+            }
+            MeshJobStage::Complete if !self.publishes => {
+                self.stage = MeshJobStage::Published;
+                MeshRun::Complete
+            }
             MeshJobStage::PublishPreview => match self.advance_publication(context, MeshPublicationKind::Preview) {
                 Ok(true) => {
                     self.stage = MeshJobStage::Finalize;
@@ -386,7 +395,7 @@ impl NumericalStep for MeshJob {
             Some(run) => run,
             None => self.run(cx),
         };
-        for _ in 1..MESH_UNITS_PER_TURN {
+        for _ in 1..self.units_per_turn {
             if !matches!(run, MeshRun::Yield) || cx.should_yield() || cx.is_cancelled() { break; }
             run = self.run(cx);
         }

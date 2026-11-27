@@ -7,5 +7,5 @@ until mkdir "$L" 2>/dev/null; do if [ $(( $(date +%s) - $(stat -f %m "$L") )) -g
 echo terrain-lane > "$L/owner"
 trap 'rm -rf "$L"' EXIT
 cd /Users/ueli/Documents/semio
-repo cargo --lang=en --store=shared --configuration=prototype -- "$@" > "$T/🗑️generated/terrain-$N.log" 2>&1
+env -u SEMIO_REMOTE_CACHE_TOKEN -u SEMIO_REMOTE_CACHE_ENDPOINT SEMIO_OFFLOAD=distribute repo cargo --lang=en --store=shared --configuration=prototype -- "$@" > "$T/🗑️generated/terrain-$N.log" 2>&1
 echo "exit $?" >> "$T/🗑️generated/terrain-$N.log"

@@ -27,7 +27,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_job::TypedOperationCompletionWitness;
-use semio_plugin_retained_command::typed_operation::bounded_json_items;
+use semio_plugin_retained_command_operation::typed_operation::bounded_json_items;
 use semio_plugin_instance_dispatch::dispatch_emit;
 use semio_plugin_instance_render::render_history_view::history_command;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
@@ -167,7 +167,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut progress = commit.permit.identity_progress;
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
         let mut work = cx.native_encoder_work();
-        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command::typed_operation::MountedIdentityWork(&mut work)));
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command_operation::typed_operation::MountedIdentityWork(&mut work)));
         let result = match self.run_framework_reserved_commit_unit_admitted(commit, &mut identity,cx).await {
             Ok(output) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map(|_| output).map_err(Into::into),
             Err(fault) => Err(fault),

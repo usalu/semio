@@ -21,6 +21,24 @@ Server: `.mcp.json` → `semio` (`repo dev mcp stdio os --folder .🧬semio/🔗
 | Conversation | conversation_reply | ✅ (`shells: 0`) |
 | Resources | resources/list | ✅ |
 
+| Prompts | prompts/list, prompts/get ×5 (en, de) | ✅ |
+| Resources | resources/templates/list, semio://capability, semio://workspace/artifacts, ping | ✅ |
+
+## Fixes landed (source)
+
+- Component models: launcher now reports failed model builds truthfully (`model-build-failed` + reason) and retries; stray hardlinked `lb` copy that broke the Cargo single-link source check removed.
+- Framework capabilities (`framework.*`): route from `target.artifactRef`'s binding (headless + shell lane + guest address); catalog text says a target is required.
+- Inference payload contracts: `artifact-pack-bytes` binding + `pack_bound` contracts for 67 glTF leaves, gis gismap, cad aec-building; conformance test that every declared inference publishes a contract. Descriptor regeneration (`repo run workspace:components -- describe stdio gis cad-extension-aec-building`) still pending on host memory.
+- Resident build: `BUILD_SOURCE_CONFLICT` on hot global closures now compares the fact's answer, not its digest, so concurrent edits in the live worktree no longer fail long builds.
+- `StallWait` (archive wait law) restored/defined and re-exported; law test passes.
+- `semio-plugin-instance`: `semio-framework-trace` promoted from dev- to normal dependency (used by `[DEBUG]` heap marks in ingress).
+- Shell rendezvous: stale-offer tests added on the shell side.
+
+## Blockers observed (environment)
+
+- 16 GB host: graph slice workers (3–6 GB) repeatedly suspended/cancelled by the memory warden; graph reads serialize all builds.
+- Published `semio-os-mcp` is still the 2026-11-25 18:06 binary: every rebuild so far failed on concurrent in-flight refactors of other agents (`StallWait`, `semio_framework_trace`, job-context crate split, build-owner identity collision mid-write).
+
 ## Work streams
 
 - [🔎️artifact-create-budget.md](🔎️artifact-create-budget.md) — guest poll budget fault.

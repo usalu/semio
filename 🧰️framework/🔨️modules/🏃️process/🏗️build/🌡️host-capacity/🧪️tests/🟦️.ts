@@ -174,7 +174,7 @@ test("Every refusal has an English and a German message with the same placeholde
  const english=schema.definitions.Messages.const.en.errors,german=schema.definitions.Messages.const.de.errors,names=Object.keys(english) as (keyof typeof english)[];
  expect(Object.keys(german).sort()).toEqual([...names].sort());
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
- const values={id:"newerGrant1",definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)",minimum:2048,cores:4,reserved:1024,availablecores:2};
+ const values={id:"newerGrant1",definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)",minimum:2048,cores:4,reserved:1024,availablecores:2,held:3054,possible:2048,granted:3054,free:512};
  for(const name of names){
   expect(placeholders(german[name]),name).toEqual(placeholders(english[name]));
   for(const language of ["en","de"] as const)expect(formatHostCapacityErrorV1(language,name,values),`${language} ${name}`).not.toMatch(/\{[a-z]+\}/u);

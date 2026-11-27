@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:memory:wave-admission:v1",
+  "title": "Admission of project waves under memory pressure / Aufnahme von Projektwellen unter Speicherdruck",
+  "description": "EN: A graph read that stands above its grant, or on a host that is paging right now, must not start more work: every runtime trap of the whole-graph read came after a long phase far over the grant on a host with its swap busy. Two states hold the admission of new projects and of the start of a wave. OVER GRANT: the footprint of the process is at or above the over-grant share of its grant (policy of the footprint gate); no new project is admitted, running projects finish, and the process releases between waves (at most once per settleMinimumMilliseconds) with no cooldown. HOST BUSY: the LIVE pressure of the host, read through the host-capacity sampler (one cached reading per sampleTtlMilliseconds, never a spawn per look): the operating system pressure level at or above holdPressure (macOS memorystatus level, Linux PSI, Windows commit charge), the swap-out rate at or above swapOutMegabytesPerSecond, or the available memory under availableFloorMegabytes. The swap USED is only informational (macOS keeps it high long after the processes that filled it are gone), it never holds. A hold waits in steps of stepMilliseconds with a progress line every progressMilliseconds, at most overGrantMaxWaitMilliseconds (over grant) or hostMaxWaitMilliseconds (host busy); after that the admission goes on at the reduced width of reducedWidth projects at a time (never zero) until the state is gone. A reading older than sampleStaleMilliseconds counts as unknown (no hold). DE: Ein Graph-Lesen über seiner Zusage oder auf einem Rechner, der gerade auslagert, darf keine weitere Arbeit beginnen: jeder Laufzeitabsturz des Gesamtgraph-Lesens kam nach einer langen Phase weit über der Zusage bei ausgelasteter Auslagerung. Zwei Zustände halten die Aufnahme neuer Projekte und den Start einer Welle an. ÜBER DER ZUSAGE: der Fußabdruck des Prozesses liegt auf oder über dem Über-Zusage-Anteil seiner Zusage (Richtlinie der Fußabdruck-Schranke); kein neues Projekt wird aufgenommen, laufende Projekte enden, und der Prozess gibt zwischen den Wellen frei (höchstens einmal je settleMinimumMilliseconds), ohne Abkühlzeit. RECHNER BESETZT: der LIVE-Druck des Rechners, gelesen über den Host-Kapazitäts-Probennehmer (eine zwischengespeicherte Messung je sampleTtlMilliseconds, nie ein Prozessstart je Blick): die Druckstufe des Betriebssystems ab holdPressure (macOS memorystatus-Stufe, Linux PSI, Windows Commit-Last), die Auslagerungsrate ab swapOutMegabytesPerSecond oder der verfügbare Speicher unter availableFloorMegabytes. Die BELEGTE Auslagerung ist nur eine Information (macOS hält sie lange hoch, nachdem die Prozesse verschwunden sind, die sie gefüllt haben), sie hält nie an. Ein Halt wartet in Schritten von stepMilliseconds mit einer Fortschrittszeile alle progressMilliseconds, höchstens overGrantMaxWaitMilliseconds (über der Zusage) oder hostMaxWaitMilliseconds (Rechner besetzt); danach läuft die Aufnahme mit der verringerten Breite von reducedWidth Projekten gleichzeitig weiter (nie null), bis der Zustand vorbei ist. Eine Messung, die älter als sampleStaleMilliseconds ist, gilt als unbekannt (kein Halt).",
+  "definitions": {
+    "Policy": {
+      "description": "EN: The declared numbers of the wave admission. DE: Die deklarierten Zahlen der Wellenaufnahme.",
+      "const": {
+        "version": 1,
+        "holdPressure": "critical",
+        "swapOutMegabytesPerSecond": 32,
+        "availableFloorMegabytes": 1024,
+        "sampleTtlMilliseconds": 5000,
+        "sampleStaleMilliseconds": 30000,
+        "stepMilliseconds": 1000,
+        "progressMilliseconds": 15000,
+        "settleMinimumMilliseconds": 30000,
+        "overGrantMaxWaitMilliseconds": 300000,
+        "hostMaxWaitMilliseconds": 120000,
+        "reducedWidth": 1,
+        "languages": ["en", "de"]
+      }
+    },
+    "Messages": {
+      "description": "EN: The bilingual lines of the wave admission. DE: Die zweisprachigen Zeilen der Wellenaufnahme.",
+      "const": {
+        "en": {
+          "overGrant": "graph: no new project is admitted, the process holds {footprint} MB, {percent} % of its grant of {grant} MB (host swap-out {rate} MB/s, pressure {pressure}, available {available} MB, swap used {swapused} MB); released between waves, waited {seconds} s of at most {limit} s",
+          "hostBusy": "graph: no new project is admitted, the host is paging now: swap-out {rate} MB/s (hold from {ratelimit}), pressure {pressure} (hold from {holdlevel}), available {available} MB (floor {floor}), swap used {swapused} MB (information only); the process holds {footprint} MB of {grant} MB; waited {seconds} s of at most {limit} s",
+          "reduced": "graph: the wait of {seconds} s ended while {state}; going on at {width} project at a time until it is over",
+          "resumed": "graph: admission resumed after {seconds} s (host swap-out {rate} MB/s, pressure {pressure}, available {available} MB)"
+        },
+        "de": {
+          "overGrant": "Graph: kein neues Projekt wird aufgenommen, der Prozess hält {footprint} MB, {percent} % seiner Zusage von {grant} MB (Rechner Auslagerung {rate} MB/s, Druck {pressure}, verfügbar {available} MB, Auslagerung belegt {swapused} MB); zwischen den Wellen freigegeben, {seconds} s von höchstens {limit} s gewartet",
+          "hostBusy": "Graph: kein neues Projekt wird aufgenommen, der Rechner lagert gerade aus: Auslagerung {rate} MB/s (Halt ab {ratelimit}), Druck {pressure} (Halt ab {holdlevel}), verfügbar {available} MB (Untergrenze {floor}), Auslagerung belegt {swapused} MB (nur Information); der Prozess hält {footprint} MB von {grant} MB; {seconds} s von höchstens {limit} s gewartet",
+          "reduced": "Graph: das Warten von {seconds} s endete, während {state}; es geht mit {width} Projekt gleichzeitig weiter, bis es vorbei ist",
+          "resumed": "Graph: Aufnahme nach {seconds} s fortgesetzt (Rechner Auslagerung {rate} MB/s, Druck {pressure}, verfügbar {available} MB)"
+        }
+      }
+    },
+    "Decision": {
+      "description": "EN: admit, or the state that holds: overGrant, hostBusy. DE: Aufnahme, oder der haltende Zustand: overGrant, hostBusy.",
+      "enum": ["admit", "overGrant", "hostBusy"]
+    }
+  }
+}

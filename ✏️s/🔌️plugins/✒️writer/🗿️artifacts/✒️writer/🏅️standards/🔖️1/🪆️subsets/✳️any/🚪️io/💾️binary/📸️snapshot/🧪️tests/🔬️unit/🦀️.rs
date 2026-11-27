@@ -12,12 +12,12 @@ fn jack_snapshot() -> WriterSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn writer_projection_dsl_pack_equivalence() {
     let empty = schema::empty_writer_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty);
     let bytes = encode(&empty);
     assert_eq!(decode(&bytes).expect("decode"), empty);
 
     let jack = jack_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&jack);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&jack);
     let bytes = encode(&jack);
     assert_eq!(decode(&bytes).expect("decode"), jack);
 }
@@ -35,7 +35,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = crate::host::owned::new_writer_store(create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(schema::mutations::EditText { text: "hello".into() })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests
 

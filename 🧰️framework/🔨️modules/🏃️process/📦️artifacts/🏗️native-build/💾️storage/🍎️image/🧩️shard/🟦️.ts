@@ -6,6 +6,7 @@ import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️valid
 import{kickNativeImageV1,nativeImageKickDueV1,type NativeImageKickHooksV1,type NativeImageKickOutcomeV1,type NativeImageKickPortV1}from"../👟️kick/🟦️.ts";
 import type{NativeImageReclaimRuleV1}from"../♻️reclaim/🟦️.ts";
 import{nativeImageVolumeUsedBytesSyncV1}from"../⚖️availability/🟦️.ts";
+import{detachNativeImageWithRetryV1,createNativeImageDetachPortV1,nativeImageDetachSleepV1,nativeImageDetachBusyV1}from"../🔁️detach/🟦️.ts";
 const protocol=schema.definitions.Protocol.const,idPattern=new RegExp(protocol.idPattern,"u");
 type CommandRunnerV1=(program:string,args:readonly string[])=>Promise<string>;
 /** 🧩️ The authored protocol of image shards: per-platform maximum image size, layout names, lifecycle commands and messages.
@@ -19,8 +20,10 @@ export type NativeImageShardRuleV1=Readonly<{enabled:boolean;maximumImageBytes?:
 export type NativeImageShardRecordV1=Readonly<{id:string;key:string;root:number;path:string;capacityBytes:number}>;
 /** 🗂️ The live shards by id: the fold of the event log. */
 export type NativeImageShardStateV1=ReadonlyMap<string,NativeImageShardRecordV1>;
+/** 🐣️ The birth event of one shard. */
+export type NativeImageShardBornEventV1=Readonly<{type:"born";id:string;key:string;root:number;path:string;capacityBytes:number;atMs:number}>;
 /** 📜️ One event of the shard log. */
-export type NativeImageShardEventV1=Readonly<{type:"born";id:string;key:string;root:number;path:string;capacityBytes:number;atMs:number}|{type:"retired";id:string;atMs:number}>;
+export type NativeImageShardEventV1=NativeImageShardBornEventV1|Readonly<{type:"retired";id:string;atMs:number}>;
 const platformKey=(platform:string):"darwin"|"linux"|"windows"|undefined=>platform==="win32"?"windows":platform==="darwin"||platform==="linux"?platform:undefined;
 const alignUp=(value:number,unit:number)=>Math.ceil(value/unit)*unit,alignDown=(value:number,unit:number)=>Math.floor(value/unit)*unit;
 const segmentsOf=(path:string):string[]|undefined=>{const parts=path===""?[]:path.split("/");return parts.some(part=>part===""||part==="."||part===".."||/[\\\0]/u.test(part))?undefined:parts;};
@@ -28,14 +31,14 @@ const segmentsOf=(path:string):string[]|undefined=>{const parts=path===""?[]:pat
 export function nativeImageShardCapBytesV1(platform:string,rule?:Pick<NativeImageShardRuleV1,"maximumImageBytes">):number{const key=platformKey(platform);return key===undefined?0:Math.min(protocol.maximumImageBytes[key],rule?.maximumImageBytes??Infinity);}
 /** 🧭️ Whether the platform can create, mount and retire shards (`hdiutil` and `diskutil` on macOS); elsewhere the partition stays one image. */
 export function nativeImageShardSupportedV1(platform:string):boolean{const key=platformKey(platform);return key!==undefined&&protocol.lifecycle[key].kind!=="unsupported";}
-/** 🛑️ Refuses a rule whose roots overlap (a mount point could be claimed twice), whose patterns are not anchored regular expressions or that does not match its schema. */
+/** 🛑️ Refuses a rule whose roots overlap (a mount point could be claimed twice; a root below another is fine while the other's pattern does not match the segment that leads to it), whose patterns are not anchored regular expressions or that does not match its schema. */
 export function requireNativeImageShardRuleV1(value:unknown):NativeImageShardRuleV1{
  if(validateJsonSchemaSubset(schema.definitions.Rule,value,schema).length)throw Error("Closed image shard rule required");
  const rule=value as NativeImageShardRuleV1,prefixes=rule.roots.map(root=>root.prefix===""?[]:root.prefix.split("/"));
  for(const[index,root]of rule.roots.entries()){
   if(!root.pattern.startsWith("^")||!root.pattern.endsWith("$"))throw Error("Anchored shard key pattern required: "+root.pattern);
   new RegExp(root.pattern,"u");
-  for(const[other,theirs]of prefixes.entries())if(other!==index&&prefixes[index]!.length<=theirs.length&&prefixes[index]!.every((part,at)=>theirs[at]===part))throw Error("Disjoint shard roots required: "+root.prefix+" and "+rule.roots[other]!.prefix);
+  for(const[other,theirs]of prefixes.entries())if(other!==index&&prefixes[index]!.length<=theirs.length&&prefixes[index]!.every((part,at)=>theirs[at]===part)&&(prefixes[index]!.length===theirs.length||new RegExp(root.pattern,"u").test(theirs[prefixes[index]!.length]!)))throw Error("Disjoint shard roots required: "+root.prefix+" and "+rule.roots[other]!.prefix);
  }
  return rule;
 }
@@ -84,6 +87,12 @@ export function nativeImageShardLayoutV1(directory:string,record:Pick<NativeImag
 export function nativeImageShardPathV1(rule:Pick<NativeImageShardRuleV1,"roots">,root:number,key:string):string{const declared=rule.roots[root];if(declared===undefined)throw Error("Declared shard root required");return declared.prefix===""?key:declared.prefix+"/"+key;}
 /** 🗂️ Every image of a partition, home first, then the live shards by id. */
 export function nativeImageShardLayoutsV1(directory:string,live:NativeImageShardStateV1,flavor?:FlavorV1):readonly NativeImageShardLayoutV1[]{return Object.freeze([nativeImageShardHomeLayoutV1(directory,flavor),...[...live.values()].sort((a,b)=>a.id<b.id?-1:1).map(record=>nativeImageShardLayoutV1(directory,record,flavor))]);}
+/** 🧲️ The live shards of a partition directory as their layouts, read from its ledger; a partition without a ledger has none. */
+export function nativeImageShardLiveLayoutsV1(directory:string,flavor?:FlavorV1):readonly NativeImageShardLayoutV1[]{return nativeImageShardLayoutsV1(directory,nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory)),flavor).slice(1);}
+/** 🔗️ Tells whether a path below the home mount of a partition is exactly the mount point of one of its live shards: the only place where the home filesystem may legitimately hand over to another image. */
+export function nativeImageShardMountPointV1(directory:string,path:string):boolean{return nativeImageShardLiveLayoutsV1(directory).some(layout=>layout.mountPoint===path);}
+/** 🪪️ Tells whether an attached image is exactly the image of one live shard of the partition at its logical mount point. */
+export function nativeImageShardRowV1(directory:string,row:Readonly<{root:string;image:string}>):boolean{return nativeImageShardLiveLayoutsV1(directory).some(layout=>layout.mountPoint===row.root&&layout.image===row.image);}
 /** 📏️ The 256 character rule for the files a shard adds below the workspace: the longest of its backing, receipt and the ledger against the budget, and how long the partition directory may be at most. The files below a mount point need no new rule: the mount point is the logical path itself. Pure and language-agnostic. */
 export function nativeImageShardPathBudgetV1(directory:string,id:string,flavor?:FlavorV1):Readonly<{longest:number;maximumDirectoryCharacters:number;fits:boolean}>{
  const path=flavorOf(flavor),owned=[path.join(directory,protocol.directory,id,protocol.imageName),path.join(directory,protocol.directory,id,protocol.receiptName),path.join(directory,protocol.ledgerFile)],longest=Math.max(...owned.map(value=>value.length)),suffix=Math.max(...owned.slice(0,2).map(value=>path.join(protocol.directory,id,path.basename(value)).length),protocol.ledgerFile.length)+1;
@@ -100,7 +109,7 @@ export function nativeImageShardFoldV1(events:readonly NativeImageShardEventV1[]
  return live;
 }
 /** ✍️ Validates a birth against the live shards and the rule and answers the event: the id is the one of the key, the key matches its root, the capacity is aligned and lies within the minimum and the cap, the shard limit holds. */
-export function nativeImageShardBirthEventV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;key:string;root:number;capacityBytes:number;atMs:number}>):NativeImageShardEventV1{
+export function nativeImageShardBirthEventV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;key:string;root:number;capacityBytes:number;atMs:number}>):NativeImageShardBornEventV1{
  const root=input.rule.roots[input.root],id=nativeImageShardIdV1(input.key);
  if(root===undefined||!new RegExp(root.pattern,"u").test(input.key))throw Error("Shard key of a declared root required: "+input.key);
  if(input.live.has(id))throw Error("Image shard "+id+" is live already");
@@ -202,11 +211,13 @@ export function nativeImageShardVolumeFactsV1(aggregate:Pick<NativeImageShardAgg
 export function nativeImageShardMountedV1(mountPoint:string):boolean{try{return lstatSync(mountPoint).dev!==lstatSync(dirname(mountPoint)).dev;}catch{return false;}}
 const fill=(template:readonly string[],values:Readonly<Record<string,string>>):string[]=>template.map(part=>part.replace(/<([A-Za-z]+)>/gu,(_,name)=>values[name]??_));
 /** 🍎️ The effects of one shard's life on macOS: `hdiutil create` makes the case-sensitive APFS image like the home image, `diskutil image attach` mounts it through the UNMAP-capable stack at its logical mount point inside the home mount, `hdiutil detach` ends it, retiring removes its files. Every method is idempotent, so a crashed birth or retirement is finished by repeating it. See https://ss64.com/mac/hdiutil.html */
-export function createNativeImageShardDarwinLifecycleV1(given:Readonly<{run:CommandRunnerV1}>){
+export function createNativeImageShardDarwinLifecycleV1(given:Readonly<{run:CommandRunnerV1;check?:()=>void;say?:(line:string)=>void;sleep?:(milliseconds:number)=>Promise<void>}>){
  const mechanism=protocol.lifecycle.darwin;
  const detach=async(layout:NativeImageShardLayoutV1):Promise<void>=>{
   if(!nativeImageShardMountedV1(layout.mountPoint))return;
-  try{await given.run(mechanism.detachProgram,fill(mechanism.detachArguments,{mountPoint:layout.mountPoint}));}catch(error){await given.run(mechanism.detachProgram,fill(mechanism.forceDetachArguments,{mountPoint:layout.mountPoint})).catch(()=>{throw error;});}
+  const inner=given.check??(()=>{});let stopped=false;const check=()=>{try{inner();}catch(error){stopped=true;throw error;}};
+  try{await detachNativeImageWithRetryV1({port:createNativeImageDetachPortV1({cwd:layout.directory,run:given.run,sleep:given.sleep??nativeImageDetachSleepV1(check)}),mountPoint:layout.mountPoint,say:given.say??(line=>{console.error(line);}),check,ready:()=>!nativeImageShardMountedV1(layout.mountPoint)});}
+  catch(error){if(stopped||nativeImageDetachBusyV1(error))throw error;await given.run(mechanism.detachProgram,fill(mechanism.forceDetachArguments,{mountPoint:layout.mountPoint})).catch(()=>{throw error;});}
   if(nativeImageShardMountedV1(layout.mountPoint))throw Error("Shard "+layout.id+" is still mounted at "+layout.mountPoint);
  };
  return Object.freeze({

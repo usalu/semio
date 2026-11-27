@@ -36,8 +36,8 @@ function fakeClient(){
   async getResult(key:string){return results.get(key)??"miss";},
   async getBlob(hash:string,size:number){const bytes=blobs.get(hash);return bytes!==undefined&&bytes.length===size?bytes:undefined;},
   async hasBlob(hash:string){return blobs.has(hash);},
-  async putBlob(hash:string,bytes:Uint8Array){if(sha(bytes)!==hash)return false;blobs.set(hash,bytes);return true;},
-  async putResult(key:string,bytes:Uint8Array){if(results.has(key))return "diverged";results.set(key,bytes);return true;},
+  async storeBlob(hash:string,bytes:Uint8Array){if(sha(bytes)!==hash)return "refused";blobs.set(hash,bytes);return "stored";},
+  async storeResult(key:string,bytes:Uint8Array){if(results.has(key))return "diverged";results.set(key,bytes);return "stored";},
   async renew(){return "granted";},async release(){},async claimSlot(){return true;},
  } as unknown as FleetClientV1;
  return{client,results,blobs};

@@ -96,6 +96,7 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  /// 🍼️ Advances the same original failure birth without opening a second allocation effect.
  pub fn close_original_birth_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementPoll{
   if !self.requires_original_birth()||self.funding.is_some(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(invalid(ValueRefusalKind::InvariantViolated,"original recipient has no selected birth outside a general effect").into()),work:0})}
+  if let Err(error)=self.original.checkpoint(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(error.into()),work:0})}
   let mut lease=RetirementRecipientLease::new(&mut *self.original);let recipient=lease.recipient.as_deref_mut().expect("original retirement recipient remains installed");let previous_maximum=lease.original.maximum_bytes;
   let mut scope=RetirementFundingScope{loan:NativeRetirementDecodeControl{original:&mut *lease.original,funding:Some(&mut recipient.funding),capacity:self.capacity,spent:self.spent,previous_maximum},spent:&mut self.spent};
   match scope.loan.with_original_close(|original|Ok::<_,ValueError>(semio_framework_value_retirement::close_retirement_birth(recipient.owner.as_deref_mut(),grant.maximum_copy_bytes,original,grant))){Ok(poll)=>poll,Err(error)=>crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(error.into()),work:0})}

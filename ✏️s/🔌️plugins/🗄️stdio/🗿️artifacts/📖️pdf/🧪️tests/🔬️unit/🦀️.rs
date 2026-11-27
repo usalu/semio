@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::{fixture_bytes, fixture_path, fixture_text};
 
 pub(crate) fn register_sqlite_test_declaration() {
     static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-    REGISTERED.get_or_init(|| { semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("PDF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap(); });
+    REGISTERED.get_or_init(|| { semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label(semio_plugin::LocalizedLabel::native("PDF SQLite declaration", "PDF-SQLite-Deklaration")).version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap(); });
 }
 
 #[test]

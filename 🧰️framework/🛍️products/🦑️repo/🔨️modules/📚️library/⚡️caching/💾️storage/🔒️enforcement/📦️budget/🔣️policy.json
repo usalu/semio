@@ -33,10 +33,10 @@
       "reclaimRatioPercent": 300,
       "reclaimTightHostFreeBytes": 51539607552,
       "minimumBytes": 6442450944,
-      "maximumBytes": 42949672960
+      "maximumBytes": 34359738368
     },
     "rust": {
-      "needBytes": 34359738368,
+      "needBytes": 25769803776,
       "floorBytes": 17179869184,
       "headroomPercent": 25,
       "hostFreeReservePercent": 66,
@@ -48,8 +48,8 @@
       "reclaimFloorBytes": 8589934592,
       "reclaimRatioPercent": 300,
       "reclaimTightHostFreeBytes": 51539607552,
-      "minimumBytes": 34359738368,
-      "maximumBytes": 103080263680
+      "minimumBytes": 25769803776,
+      "maximumBytes": 34359738368
     }
   },
   "reclaim": {
@@ -63,13 +63,23 @@
       "capacityBytes": 103080263680,
       "maximumLogicalBytes": 103079215104,
       "imageShards": {
-        "enabled": false,
+        "enabled": true,
         "headroomPercent": 100,
         "hostFreeReservePercent": 66,
         "roots": [
           {
             "prefix": "u/l",
             "pattern": "^[a-z0-9]{1,12}$",
+            "needBytes": 8589934592
+          },
+          {
+            "prefix": "u",
+            "pattern": "^(sealed|w)$",
+            "needBytes": 4294967296
+          },
+          {
+            "prefix": "",
+            "pattern": "^(cargo|components)$",
             "needBytes": 8589934592
           }
         ]
@@ -88,8 +98,8 @@
     },
     "dependencies": {
       "directory": ".cache/b/d",
-      "capacityBytes": 38654705664,
-      "maximumLogicalBytes": 38653657088,
+      "capacityBytes": 34359738368,
+      "maximumLogicalBytes": 34358689792,
       "hostSharePercent": 20,
       "needBytes": {
         "darwin": 29177675776,

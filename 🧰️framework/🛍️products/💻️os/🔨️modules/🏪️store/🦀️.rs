@@ -424,7 +424,7 @@ mod prepared_operation_wire {
     pub use semio_os_store_operation_wire::*;
     pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::*;
 }
-pub use prepared_operation_wire::{artifact_persisted_binary_operation, artifact_persisted_encoded_binary_operation, ArtifactPersistedOperation, encoded_operation_source, whole_document_target, ArtifactCanonicalTreeSource, ArtifactOperationTargets, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
+pub use prepared_operation_wire::{artifact_persisted_binary_operation, artifact_persisted_encoded_binary_operation, artifact_persisted_pack_value_operation, ArtifactPersistedOperation, encoded_operation_source, whole_document_target, ArtifactCanonicalTreeSource, ArtifactOperationTargets, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
 
 pub use semio_os_store_one_item as one_item;
 use one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, mutation_inverse_rows_declaration_failures, validate_original_preparation_step};
@@ -528,14 +528,12 @@ pub(crate) use semio_os_store_engine_core::lifted_store::{MIRROR_ORACLE_EVERY_HI
 pub use semio_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationDigest, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationForward, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime, artifact_initial_digest, artifact_initial_digest_of_pack, bound_edit_messages};
 pub use semio_os_store_engine_live::lifted_store::{AppliedMutation, StoreLive, StoreParts, StorePartsRef, StoreReplay, transition_retraction_closure};
 pub(crate) use semio_os_store_engine_live::lifted_store::{ArtifactStoreDocumentRootCommitAuthority, document_backbone_batches, edit_actor_from_meta};
-pub(crate) use semio_os_store_test_support::lifted_store::{STORE_SCHEMA_EXPORTS};
-pub use semio_os_store_test_support::lifted_store::{register_store_schema_exports};
+pub use semio_os_store_schema_exports::{STORE_SCHEMA_EXPORTS, register_store_schema_exports};
 
 use semio_os_store_composition::composition_links;
 
 //#endregion 🔖️CompositionCoordinator
 //#region 🔖️TestSupport
-pub use semio_os_store_test_support as test_support;
 //#endregion 🧪️Tests
 //#endregion 🧪️Tests
 

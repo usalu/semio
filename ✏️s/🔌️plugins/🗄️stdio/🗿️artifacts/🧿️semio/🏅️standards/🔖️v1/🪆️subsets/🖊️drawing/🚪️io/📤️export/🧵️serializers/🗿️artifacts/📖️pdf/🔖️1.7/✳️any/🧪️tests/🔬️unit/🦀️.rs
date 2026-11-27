@@ -48,7 +48,7 @@ fn scene() -> SemioDrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn the_page_keeps_its_text_through_the_pdf_codec() {
     let pdf = SemioDrawingToPdf::serialize(&scene()).await.expect("serialize");
-    let bytes = crate::encode_drawing(&scene(), crate::SemioDrawingFormat::Pdf { version: "1.7" }).expect("write drawing");
+    let bytes = encode_drawing_pdf(&scene(), "1.7").expect("write drawing");
     assert_eq!(bytes, encode_pdf(&pdf).expect("reference encoding"));
     let decoded = decode_pdf(&bytes).expect("decode");
     assert_eq!(decoded.pages.len(), 1);
@@ -65,7 +65,7 @@ fn hayro_paints_the_same_geometry_the_rasterizer_paints() {
     if let DrawNode::Group { children, .. } = &mut drawing.layers[0].root {
         children.retain(|node| !matches!(node, DrawNode::Text { .. }));
     }
-    let bytes = crate::encode_drawing(&drawing, crate::SemioDrawingFormat::Pdf { version: "1.7" }).expect("write drawing");
+    let bytes = encode_drawing_pdf(&drawing, "1.7").expect("write drawing");
     let document = hayro::Pdf::new(std::sync::Arc::new(bytes)).expect("hayro opens the pdf leaf output");
     let pages = document.pages();
     assert_eq!(pages.len(), 1);

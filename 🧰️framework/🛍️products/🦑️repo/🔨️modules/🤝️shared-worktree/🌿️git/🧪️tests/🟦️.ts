@@ -90,10 +90,10 @@ gitTest("stage presence distinguishes the missing root from rejected Git without
   if(!warm)expect(await gitPresentV1(root),sample.root).toBe(sample.gitAccepts);
   const observed=await gitStateV1(root);
   expect(observed,sample.root).toMatchObject({present:false,head:null,commit:null,indexTree:null});
-  expect(observed.observation??null,sample.root).toBe(sample.observation);
+  expect<unknown>(observed.observation??null,sample.root).toBe(sample.observation);
   if(restore!==undefined){
    writeFileSync(config,restore);
-   expect(await gitStateV1(root)).toEqual(healthy);
+   expect<unknown>(await gitStateV1(root)).toEqual(healthy);
   }
  }
 });
@@ -1204,7 +1204,7 @@ for(const row of observedIndex)gitTest("git state observes a "+row.layout+" inde
  }
  const original=readFileSync(index),birth=statSync(index,{bigint:true}),observations:(string|undefined)[]=[];
  const state=await gitStateV1(root,undefined,(worktree,options)=>{
-  observations.push(options.index);
+  observations.push(options?.index);
   return writeTreeV1(worktree,options);
  });
  const after=statSync(index,{bigint:true});

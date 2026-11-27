@@ -72,13 +72,13 @@ mod store_replacement_admission_and_member_drive;
 
 #[path = "🧰️store-replacement-initializer-and-retirement/🦀️.rs"]
 mod store_replacement_initializer_and_retirement;
-pub use store_replacement_initializer_and_retirement::{AppProjectionCache, ArtifactStoreReplacementAdmissionTarget};
+pub use store_replacement_initializer_and_retirement::{AppProjectionCache, ArtifactStoreReplacementAdmissionTarget, STORE_INITIALIZER_WORKER_IDLE_CEILING_US};
 
 #[path = "🗄️document-archive-load/🦀️.rs"]
 mod document_archive_load;
 #[path = "🗄️document-archive-load/📥️paged-parent.rs"]
 mod paged_parent;
-pub use document_archive_load::{ArchiveWorkProducer, ArchiveWorkTurn, OriginalDocumentArchiveAdmission,document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
+pub use document_archive_load::{ArchiveWorkProducer, ArchiveWorkTurn, OriginalDocumentArchiveAdmission,document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember, StallWait};
 
 pub use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 

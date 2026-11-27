@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_jack_document_has_no_nodes_or_edges() {
-    let fixture = empty_jack_document::<crate::test_support::FixtureComposition>();
+    let fixture = empty_jack_document::<semio_os_store_test_support::FixtureComposition>();
     assert!(fixture.nodes().expect("valid retained Jack child").is_empty());
     assert!(fixture.edges().expect("valid retained Jack child").is_empty());
 }

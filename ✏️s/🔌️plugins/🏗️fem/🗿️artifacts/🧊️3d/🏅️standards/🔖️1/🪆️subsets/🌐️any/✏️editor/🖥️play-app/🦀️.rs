@@ -33,6 +33,13 @@ fn fem3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
             ("fem3d.solid.material-unknown", notice("'{material}' is not a material of this document. Add a material first or use the id of an existing one.", "'{material}' ist kein Material dieses Dokuments. Füge zuerst ein Material hinzu oder nutze die Kennung eines vorhandenen.")),
             ("fem3d.solid.extent", notice("A solid needs a positive width, depth and height.", "Ein Volumenkörper braucht positive Breite, Tiefe und Höhe.")),
         ]);
+        table.extend(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::fem_editor_fault_notices("fem3d", &[("node", "node", "Knoten"), ("element", "element", "Element"), ("material", "material", "Material"), ("section", "section", "Querschnitt"), ("support", "support", "Lager"), ("solid", "solid", "Volumenkörper"), ("load", "load", "Last"), ("load-case", "load case", "Lastfall"), ("combination", "combination", "Kombination")]));
+        table.extend([
+            ("fem3d.remove-selection.empty", notice("Nothing is selected to remove. Select something in the model first.", "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus.")),
+            ("fem3d.remove-selection.identity-refused", notice("Nothing was removed: the selection no longer matches the document. Select again.", "Nichts wurde entfernt: Die Auswahl passt nicht mehr zum Dokument. Wähle erneut.")),
+            ("fem3d.interaction.identity-refused", notice("The selection no longer matches the document. Select again.", "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut.")),
+            ("fem3d.gumball.identity-refused", notice("The gumball no longer matches the document. Select again.", "Der Transformationsgriff passt nicht mehr zum Dokument. Wähle erneut.")),
+        ]);
         table
     });
     &NOTICES

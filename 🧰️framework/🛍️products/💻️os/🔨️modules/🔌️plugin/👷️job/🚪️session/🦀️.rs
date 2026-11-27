@@ -10,6 +10,8 @@ impl<J:InteractiveJob+'static> RefusedWorkerSource<J>{
  /// 🎒️ Retains the exact dispatched producer before the initiating turn admits its worker storage.
  pub fn pending(job:J,operation:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
  pub fn admission_pending(&self)->bool{self.pending&&!self.closing}
+ /// 🔭️ Which retained phase the mounted and batch admissions are parked in, read without spending a turn.
+ pub fn admission_phases(&self)->(&'static str,&'static str){(self.mounted.phase(),self.batch.phase())}
  /// 📏️ Quotes the largest single physical allocation one admission turn reserves, so the lending caller funds the capacity its worker birth needs instead of idling on a grant that can never fit.
  pub fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{Ok(RetirementDemand{capacity_bytes:WorkerJobSessionAdmission::<J,MountedWorkerJobSession<J>>::birth_capacity_bytes(),depth:1,..Default::default()})}
  /// 🚪️ Admits the original parameter alias and session on distinct funded caller events.

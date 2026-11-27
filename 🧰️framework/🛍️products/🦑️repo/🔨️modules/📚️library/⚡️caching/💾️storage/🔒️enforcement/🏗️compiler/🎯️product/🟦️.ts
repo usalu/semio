@@ -1,4 +1,6 @@
 import {createHash} from "node:crypto";
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
 import {setImmediate} from "node:timers/promises";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -18,4 +20,9 @@ export async function compilerProductKeyV1(intent:CompilerProductIntentV1,contro
  const hash=createHash("sha256");hash.update("semio.cargo.product/v1\n");
  for(const value of[captured.version,captured.root,captured.manifest,captured.mode,captured.command,captured.producer,captured.toolchain,...productArguments]){checkResourceLeaseControl(control);hash.update(JSON.stringify(value));hash.update("\n");await setImmediate();}
  checkResourceLeaseControl(control);return hash.digest("hex");
+}
+
+/** 🧬️ The toolchain identity of a product lane, derived from the pinned `rust-toolchain.toml` and the host alone, so the lane is known before any store, image or toolchain generation is open. Like the product key it selects a path and issues no authority. */
+export function compilerProductToolchainDigestV1(workspace:string):string{
+ return createHash("sha256").update("semio.cargo.product-toolchain/v1\n").update(readFileSync(join(workspace,"rust-toolchain.toml"))).update("\n"+process.platform+"\n"+process.arch).digest("hex");
 }

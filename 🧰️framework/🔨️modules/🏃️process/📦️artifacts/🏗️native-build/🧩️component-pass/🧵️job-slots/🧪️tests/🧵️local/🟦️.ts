@@ -3,7 +3,7 @@ import Ajv from"ajv";
 import {spawnSync}from"node:child_process";
 import {fileURLToPath}from"node:url";
 import {testPythonV1}from"../../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import {admitLocalComponentJobV1,componentPassPeakMegabytesV1,describeLocalComponentJobsV1,planComponentJobSlotsV1,planLocalComponentJobsV1,runPassesInJobSlotsV1,type LocalJobAdmitHostV1,type LocalJobPressureV1,type LocalJobSampleV1,type LocalJobsHostV1,type PassJobSlotV1,type ComponentJobSlotsHostV1}from"../../🟦️.ts";
+import {admitLocalComponentJobV1,componentPassPeakMegabytesV1,serialFinalHistoryV1,describeLocalComponentJobsV1,planComponentJobSlotsV1,planLocalComponentJobsV1,runPassesInJobSlotsV1,type LocalJobAdmitHostV1,type LocalJobPressureV1,type LocalJobSampleV1,type LocalJobsHostV1,type PassJobSlotV1,type ComponentJobSlotsHostV1}from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import fixture from"./🧫️fixtures/🔣️.json";
 const oracle=fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url)),schemaPath=fileURLToPath(new URL("../../🧬️schema/🔣️.json",import.meta.url));
@@ -51,6 +51,20 @@ test("component finals are reserved at the recorded peak of their crate, an unse
  expect(componentPassPeakMegabytesV1(new Map(),pass("z-component"),4)).toBe(6144);
  expect(componentPassPeakMegabytesV1(history,pass("a-component","c-component"),4)).toBeGreaterThan(componentPassPeakMegabytesV1(history,pass("c-component"),4));
  expect(componentPassPeakMegabytesV1(history,pass("a-component","c-component"),1)).toBe(componentPassPeakMegabytesV1(history,pass("c-component"),1));
+});
+test("a final is forecast from the serial runs the scheduler now makes: threaded-linker observations are dropped as the Python oracle drops them, and a crate with none keeps all of its rows",()=>{
+ const key="semio_hub_norm_component@semio_hub_norm_component|wasm32-wasip2|prototype|cdylib",other="semio_hub_norm_note_component@semio_hub_norm_note_component|wasm32-wasip2|prototype|cdylib";
+ const row=(mb:number,wallMs:number,cpuMs:number,at:number)=>({v:1 as const,key,peakRssBytes:mb*1048576,outputBytes:0,wallMs,cpuMs,remainingMs:0,atMs:at});
+ const rows=[row(2973,385000,285000,1),row(2141,1624000,1494000,2),row(2966,468000,2091000,3),row(2936,1169000,1115000,4),row(4774,295000,1947000,5),row(3000,1000,1500,6),row(3100,1000,1501,7)];
+ const history=new Map([[key,rows],[other,rows.slice(2,3).concat(rows.slice(4,5))]]);
+ const expected=(python([{kind:"serial",host:{rows}}]) as number[][])[0]!;
+ expect(expected).toEqual([0,1,3,5]);
+ expect(serialFinalHistoryV1(history,"prototype").get(key)).toEqual(expected.map(at=>rows[at]));
+ expect(serialFinalHistoryV1(history,"prototype").get(other)).toEqual(history.get(other));
+ expect(serialFinalHistoryV1(new Map([["x@lib|host|prototype|lib",rows]]),"prototype").get("x@lib|host|prototype|lib")).toEqual(rows);
+ const pass={profile:"prototype",packages:[{name:"semio-hub-norm-component"}]};
+ const forecast=componentPassPeakMegabytesV1(history,pass,1),kept=componentPassPeakMegabytesV1(new Map([[key,expected.map(at=>rows[at]!)]]),pass,1);
+ expect(forecast,"the threaded 4,774 MiB observation does not inflate the forecast").toBe(kept);expect(forecast).toBeLessThan(4000);
 });
 test("the events are described in English and German on one line",()=>{
  const line=describeLocalComponentJobsV1("waiting",{pass:"release-w2",running:2,peak:3300,free:1200,floor:4000,reason:"local-memory"});

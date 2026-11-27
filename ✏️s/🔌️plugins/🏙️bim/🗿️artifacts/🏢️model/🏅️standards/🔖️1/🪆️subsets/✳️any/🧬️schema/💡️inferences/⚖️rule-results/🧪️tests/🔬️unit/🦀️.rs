@@ -64,7 +64,7 @@ fn a_rule_measures_the_members_its_kind_and_scope_name() {
 #[test]
 fn the_scope_filter_names_the_usage_of_the_spaces_without_regard_to_case() {
     let mut model = house();
-    let mut ids = model.spaces.keys().cloned();
+    let mut ids = model.spaces.keys().cloned().collect::<Vec<_>>().into_iter();
     let (corridor, room_id) = (ids.next().expect("a space"), ids.next().expect("another space"));
     model.spaces.get_mut(&corridor).expect("space").usage = "Corridor".into();
     model.spaces.get_mut(&room_id).expect("space").usage = "Office".into();

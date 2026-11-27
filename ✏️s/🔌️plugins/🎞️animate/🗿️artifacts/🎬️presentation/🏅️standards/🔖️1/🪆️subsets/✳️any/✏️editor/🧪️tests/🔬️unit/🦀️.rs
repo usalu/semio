@@ -515,7 +515,7 @@ async fn command_ids_are_unique() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -559,13 +559,13 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let without_crop = PresentationCommand::AddTile(add_tile::AddTile { crop: None });
     assert!(OpText::print_op(&with_crop).starts_with("add-tile"));
     assert!(OpText::print_op(&without_crop).starts_with("add-tile"));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&with_crop);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&without_crop);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&with_crop);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&without_crop);
 
     let with_layer = PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) });
     let without_layer = PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: None });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&with_layer);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&without_layer);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&with_layer);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&without_layer);
 }
 
 /// 🔢️ The declared `PresentationCommand` row count. It was 18 while a `setLocale` row existed; the

@@ -6599,6 +6599,7 @@
       "https://semio.dev/schemas/testing/sandbox-image-sweep.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/agent-sessions/v1": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/build-mode/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/process/build/checkout-snapshot/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/📸️checkout-snapshot/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/cargo-grant/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🦀️cargo-grant/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/cargo-workspace/lock/closure/v1": "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🔒️lock/📐️closure/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/cargo-workspace/lock/v1": "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🔒️lock/🧬️schema/🔣️.json",
@@ -7551,6 +7552,7 @@
       "semio:graph:slice-sampler:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🔬️sampler/🧬️schema/🔣️.json",
       "semio:laws/direct-tool-declarations": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-declarations/🧬️schema/🔣️.json",
       "semio:laws/direct-tool-spawn/ledger": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🧬️schema/🔣️.json",
+      "semio:laws/image-lease-readers/policy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/👓️image-lease-readers/🧬️schema/🔣️.json",
       "semio:laws/json-duplicate-key/fixtures": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔑️json-duplicate-keys/🧬️schema/🔣️.json",
       "semio:laws/raw-process-spawn/allowlist": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧬️schema/🔣️.json",
       "semio:laws/test-store-isolation/rules": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧫️test-store-isolation/🧬️schema/🔣️.json",
@@ -7663,12 +7665,14 @@
       "https://json.schemas.assets.semio-tech.com/repo/providers.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": {
+      "https://json.schemas.assets.semio-tech.com/repo/test/acceptance/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/test/inventory/providers/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/test/inventory/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/test/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/test/storage/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🧬️schema/🔣️.json",
-      "schema://semio/repo-test-acceptance/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧬️schema/🔣️.json",
       "semio.repo.fault-notice/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️fault-notices-gate/🔣️.json",
       "semio.repo.mutation-input-declaration/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-input-declarations/🔣️.json",
-      "semio.repo.mutation-leaf-bounds/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps/🔣️.json",
-      "urn:semio:repository:mutation-inventory-provider:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧬️schema/🔣️.json"
+      "semio.repo.mutation-leaf-bounds/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml": {
       "https://json.schemas.assets.semio-tech.com/repo/yaml/1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/🧬️schema/🔣️.json"

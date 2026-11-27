@@ -79,7 +79,7 @@ export function isLeaseMediumV1(policy:LeaseOrderPolicyV1,held:HeldLeaseV1,reque
 const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string,held:HeldLeaseV1,request:Request):boolean=>policy.allowed.some(edge=>{if(edge.from!==from||edge.to!==to)return false;const binding=edge.binding;if(!binding)return true;if(binding.kind==="held-prefix")return held.resource.startsWith(binding.fromPrefix);return held.directory===request.directory&&held.resource.startsWith(binding.fromPrefix)&&request.resource.startsWith(binding.toPrefix)&&held.resource.length>binding.fromPrefix.length&&held.resource.slice(binding.fromPrefix.length)===request.resource.slice(binding.toPrefix.length);});
 
 type Request=Readonly<{directory:string;resource:string;mode:LeaseModeV1;nonblocking:boolean;bounded?:boolean}>;
-type Blocker=Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>;
+type Blocker=Readonly<{pid:number;heldSeconds:number;command?:string;session?:string;self?:true}>;
 let waitScale:()=>number=()=>1;
 /** 🐢️ Registers the machine speed factor the ground wait bound is scaled by; the layer that knows the machine (the build library) supplies it, so this module stays free of it. A factor below 1 or not finite counts as 1. */
 export function registerLeaseWaitScaleV1(scale:()=>number):void{waitScale=scale;}
@@ -134,7 +134,7 @@ export function checkHoldAndWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldL
  return hold?violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,...blockerFields(blocker)}):undefined;
 }
 
-const blockerFields=(blocker?:Blocker):Partial<LeaseViolationV1>=>blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds,...blocker.command?{blockerCommand:blocker.command}:{},...blocker.self?{blockerSelf:true}:{}}:{};
+const blockerFields=(blocker?:Blocker):Partial<LeaseViolationV1>=>blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds,...blocker.command?{blockerCommand:blocker.session?`${blocker.command}; session ${blocker.session}`.slice(0,240):blocker.command}:{},...blocker.self?{blockerSelf:true}:{}}:{};
 
 /** 🕰️ Decides whether a request for a ground class (the mapping of a native image) that has already waited `waitedMilliseconds` has outlived the declared bound scaled by the machine speed factor: the wait is legal by order and holds nothing against anybody, so it is never a hold-and-wait, but it ends in a typed refusal that names the holder (process, command, age) instead of waiting for ever. Requests that cannot wait are exempt; the oldest hold of this task is named in `held`, or the request itself when it holds nothing. */
 export function checkGroundWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Blocker):LeaseViolationV1|undefined{
@@ -199,11 +199,17 @@ export function formatLeaseViolationV1(language:"en"|"de",row:LeaseViolationV1):
 /** 🧾️ The facts of a lease wait that ran out: the resource, the mode asked for, the seconds waited and the holder the lease registry names (pid, command, age, or another task of this process). */
 export type LeaseTimeoutRowV1=Readonly<{resource:string;mode:string;seconds:number;blockerPid?:number;blockerCommand?:string;blockerHeldSeconds?:number;blockerSelf?:true}>;
 /** 🔍️ The holder that blocks a request for `resource` in `mode`, from the lease registry of this process and of the others; a registry that cannot be read names nobody. */
-export function leaseHolderOfV1(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>|undefined{try{return leaseRegistryV1.holderOf(directory,resource,mode);}catch{return undefined;}}
+export function leaseHolderOfV1(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number;command?:string;session?:string;self?:true}>|undefined{try{return leaseRegistryV1.holderOf(directory,resource,mode);}catch{return undefined;}}
 /** ⌛️ Renders a lease wait that ran out as a diagnostic in the chosen language: what was waited for, in which mode, for how long and who held it. */
 export function formatLeaseTimeoutV1(language:"en"|"de",row:LeaseTimeoutRowV1):string{
  const catalogue=schema.definitions.Messages.const,mode=row.mode==="shared"?catalogue.modeShared[language]:row.mode==="exclusive"?catalogue.modeExclusive[language]:row.mode;
  return fill(catalogue.timeout[language],{resource:shortLeaseResourceV1(row.resource),mode,seconds:row.seconds,blocker:blockerText(language,{...row.blockerPid===undefined?{}:{blockerPid:row.blockerPid},...row.blockerCommand===undefined?{}:{blockerCommand:row.blockerCommand},...row.blockerHeldSeconds===undefined?{}:{blockerHeldSeconds:row.blockerHeldSeconds},...row.blockerSelf===true?{blockerSelf:true as const}:{},boundMilliseconds:0})});
+}
+
+/** 📣️ Renders the periodic notice of a lease wait in progress: what is waited for, how long and who holds it. */
+export function formatLeaseWaitNoticeV1(language:"en"|"de",row:LeaseTimeoutRowV1):string{
+ const catalogue=schema.definitions.Messages.const,mode=row.mode==="shared"?catalogue.modeShared[language]:row.mode==="exclusive"?catalogue.modeExclusive[language]:row.mode;
+ return fill(catalogue.waiting[language],{resource:shortLeaseResourceV1(row.resource),mode,seconds:row.seconds,blocker:blockerText(language,{...row.blockerPid===undefined?{}:{blockerPid:row.blockerPid},...row.blockerCommand===undefined?{}:{blockerCommand:row.blockerCommand},...row.blockerHeldSeconds===undefined?{}:{blockerHeldSeconds:row.blockerHeldSeconds},...row.blockerSelf===true?{blockerSelf:true as const}:{},boundMilliseconds:0})});
 }
 
 const taskIds=new WeakMap<object,number>();
@@ -270,7 +276,7 @@ export function beginLeaseOrderV1(request:Request&Readonly<{task:number;ancestor
  const policy=leaseOrderPolicyV1(environment),started=Date.now(),held=heldLeasesV1(request.task,request.ancestors),early=checkLeaseOrderV1(policy,held,request);
  if(request.ancestors?.length)ancestors.set(request.task,request.ancestors);
  if(early&&!(request.mode==="shared"&&held.some(row=>row.mode==="shared"&&row.directory===request.directory&&row.resource===request.resource)))react(policy,policy.rules.outOfOrder,early,request.directory);
- let waitId:number|undefined,lastCycle=0,finished=false;
+ let waitId:number|undefined,lastCycle=0,lastNotice=0,finished=false;
  const finish=():void=>{if(finished)return;finished=true;if(waitId!==undefined){waits.delete(waitId);waitId=undefined;leaseRegistryV1.changed(request.directory,policy);}};
  const contention=async(waitedMilliseconds:number):Promise<void>=>{
   if(finished||request.nonblocking)return;
@@ -287,6 +293,7 @@ export function beginLeaseOrderV1(request:Request&Readonly<{task:number;ancestor
    }
   }
   const blocker=waitedMilliseconds>=Math.min(policy.holdAndWait.graceMilliseconds,groundWaitBoundV1(policy)?.boundMilliseconds??Infinity)?leaseRegistryV1.holderOf(request.directory,request.resource,request.mode,request.task):undefined;
+  if(blocker&&waitedMilliseconds>=(policy.holdAndWait.noticeMilliseconds??30000)&&now-lastNotice>=(policy.holdAndWait.noticeMilliseconds??30000)){lastNotice=now;try{process.stderr.write(noticeLanguagesV1(["en","de"] as const).map(language=>formatLeaseWaitNoticeV1(language,{resource:request.resource,mode:request.mode,seconds:Math.floor(waitedMilliseconds/1000),...blocker.self?{blockerSelf:true as const}:{},blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds,...blocker.command?{blockerCommand:blocker.session?`${blocker.command}; session ${blocker.session}`:blocker.command}:{}})).join("\n")+"\n");}catch{}}
   const refusal=checkHoldAndWaitV1(policy,current,request,waitedMilliseconds,blocker)??checkGroundWaitV1(policy,current,request,waitedMilliseconds,blocker);
   if(refusal)react(policy,policy.rules.holdAndWait,refusal,request.directory);
   const strict=checkStrictWaitV1(policy,current,request,waitedMilliseconds);

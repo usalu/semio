@@ -41,6 +41,19 @@ describe("view synchrony", () => {
       }
     });
   }
+  for (const denominator of [500, 50])
+   for (const viewpoint of PLANAR_VIEWPOINTS)
+    it(`shares fill geometry between English and German in the ${viewpoint} viewpoint at 1:${denominator}`, () => {
+      const state = sampleState("carry-bag", denominator);
+      const en = depictAll(state, { ...plainOptions("light-line", "en", denominator, viewpoint) });
+      const de = depictAll(state, { ...plainOptions("light-line", "de", denominator, viewpoint) });
+      for (const view of VIEWS) {
+        const a = modelGeometry(en[view]);
+        const b = modelGeometry(de[view]);
+        expect([...b.keys()]).toEqual([...a.keys()]);
+        for (const [id, coords] of a) coords.forEach((v, i) => expect(b.get(id)![i]).toBeCloseTo(v, 6));
+      }
+    });
   for (const viewpoint of PLANAR_VIEWPOINTS)
    it(`keeps label text from overlapping and from reading raw floats in the ${viewpoint} viewpoint`, () => {
     const scenes = depictAll(sampleState("carry-bag", 50), { ...plainOptions("forces", "en", 50, viewpoint) });

@@ -1,0 +1,8 @@
+{
+  "schema": "semio.repo.unit-cache.watchless-waiter.cases/v1",
+  "cases": [
+    { "platform": "darwin", "directories": 2, "watchesOpened": 0, "waitsAtMostWatchlessPoll": true },
+    { "platform": "linux", "directories": 2, "watchesOpened": 2, "waitsAtMostWatchlessPoll": false },
+    { "platform": "win32", "directories": 2, "watchesOpened": 2, "waitsAtMostWatchlessPoll": false }
+  ]
+}

@@ -1,0 +1,7 @@
+{"round":0,"live":0,"rss":3673,"releaseMs":199}
+{"round":1,"live":0,"rss":3673,"releaseMs":1}
+{"round":2,"live":0,"rss":3673,"releaseMs":1}
+{"round":3,"live":0,"rss":3673,"releaseMs":11}
+{"round":4,"live":0,"rss":3673,"releaseMs":1}
+{"round":5,"live":0,"rss":3673,"releaseMs":2}
+DONE

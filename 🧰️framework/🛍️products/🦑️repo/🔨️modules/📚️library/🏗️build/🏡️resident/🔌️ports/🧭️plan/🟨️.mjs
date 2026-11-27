@@ -31,7 +31,7 @@ export function estimatedGraphBytesV1(graph){
  return Math.round(bytes/count*names.length)*2;
 }
 
-/** 🧭 Builds the port. `loadGraph({root,signal})` returns the neutral graph; `identify` may return a cheap content key, else the loaded graph's digest is the key. `taskState({root,workspace})` answers `{graph,recorder}` (the workspace graph and the task recorder): the keys of the planned tasks are computed on the graph and a task whose recorded key matches is not stale, the reply carries every key. `capture({root,workspace,agent,parent,dirty,cursor,signal}, body)` runs the slice load of one plan with its reads captured and answers `{result,pinned}`: the pinned revision is the plan's pin and replaces the `pin` hook. With `loadSlice({root,workspace,arguments,tool,graphPolicy,signal})` the index is only the workspace key and each plan is computed from, and returns, the graph slice the invocation selects (`{graph,generationPin}`): the loader is the single owner of the fact index of the host. */
+/** 🧭 Builds the port. `loadGraph({root,signal})` returns the neutral graph; `identify` may return a cheap content key, else the loaded graph's digest is the key. `taskState({root,workspace})` answers `{graph,recorder,leased?}` (the workspace graph and the task recorder; `leased(body)` runs the whole keying section under the shared lease of the image the graph is cached in, absent where nothing is leased): the keys of the planned tasks are computed on the graph and a task whose recorded key matches is not stale, the reply carries every key. `capture({root,workspace,agent,parent,dirty,cursor,signal}, body)` runs the slice load of one plan with its reads captured and answers `{result,pinned}`: the pinned revision is the plan's pin and replaces the `pin` hook. With `loadSlice({root,workspace,arguments,tool,graphPolicy,signal})` the index is only the workspace key and each plan is computed from, and returns, the graph slice the invocation selects (`{graph,generationPin}`): the loader is the single owner of the fact index of the host. */
 export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=estimatedGraphBytesV1,stale=()=>true,pin,capture,taskState}){
  const indexOf=graph=>{
   const configuration=stateConfigurationFromBuildGraphV1(graph),tasks=new Map();
@@ -46,8 +46,8 @@ export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=e
    const tasks=indexOf(graph);
    return{key:graphDigestV1(graph),value:{tasks},bytes:bytesOf(graph)};
   },
-  async plan({index,targets,revision,parent,dirty,cursor,agent,priority,signal,workspace,root,arguments:invocation,tool,graphPolicy,progress,wantsReport}){
-   const sliceLoad=()=>loadSlice({root,workspace,arguments:invocation,tool,graphPolicy,priority,signal,onProgress:progress,wantsReport}),captured=loadSlice&&invocation&&capture?await capture({root,workspace,agent,parent,dirty,cursor,signal},sliceLoad):undefined,slice=captured?captured.result:loadSlice&&invocation?await sliceLoad():undefined,tasks=slice?indexOf(slice.graph):index.value.tasks,order=[],seen=new Set(),visiting=new Set();
+  async plan({index,targets,revision,parent,dirty,cursor,agent,priority,signal,workspace,root,arguments:invocation,tool,graphPolicy,grant,progress,wantsReport}){
+   const sliceLoad=()=>loadSlice({root,workspace,arguments:invocation,tool,graphPolicy,grant,priority,signal,onProgress:progress,wantsReport}),captured=loadSlice&&invocation&&capture?await capture({root,workspace,agent,parent,dirty,cursor,signal},sliceLoad):undefined,slice=captured?captured.result:loadSlice&&invocation?await sliceLoad():undefined,tasks=slice?indexOf(slice.graph):index.value.tasks,order=[],seen=new Set(),visiting=new Set();
    if(slice&&targets.includes(ALL_TARGETS_V1))targets=rosterTaskIdsV1(slice.graph.admission?.selection,tasks);
    for(const target of targets)if(!tasks.has(target))throw new UnknownTargetErrorV1(target);
    const visit=id=>{
@@ -62,11 +62,14 @@ export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=e
    revision=pinned?.revision??revision;
    let keys,staleSet;
    if(taskState){
-    const state=await taskState({root,workspace});await state.graph.verify?.({signal});
-    const boundary=invocation?.indexOf("--")??-1,forwarded=boundary<0?[]:invocation.slice(boundary+1);
-    keys=await taskKeysV1({graph:state.graph,tasks,order,forwarded,signal});
-    const fresh=await state.recorder.upToDate(workspace,new Map([...keys].filter(([id])=>tasks.get(id).cacheable)));
-    staleSet=new Set(order.filter(id=>!fresh.has(id)||!tasks.get(id).outputs.every(output=>existsSync(join(root,output)))));
+    const state=await taskState({root,workspace}),section=async()=>{
+     await state.graph.verify?.({signal});
+     const boundary=invocation?.indexOf("--")??-1,forwarded=boundary<0?[]:invocation.slice(boundary+1);
+     keys=await taskKeysV1({graph:state.graph,tasks,order,forwarded,signal});
+     const fresh=await state.recorder.upToDate(workspace,new Map([...keys].filter(([id])=>tasks.get(id).cacheable)));
+     staleSet=new Set(order.filter(id=>!fresh.has(id)||!tasks.get(id).outputs.every(output=>existsSync(join(root,output)))));
+    };
+    await(state.leased===undefined?section():state.leased(section));
    }else{
     const stales=await stale({workspace,ids:order,revision,signal});
     staleSet=new Set(stales===true?order:stales||[]);

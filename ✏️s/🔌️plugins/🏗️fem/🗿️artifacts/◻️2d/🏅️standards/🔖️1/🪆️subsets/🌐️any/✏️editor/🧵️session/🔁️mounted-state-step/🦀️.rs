@@ -7,6 +7,9 @@ use super::*;
 //#region 🧰️FixedArena
 impl MountedState {
     pub(super) fn step(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        if self.snapshot.as_ref().is_some_and(|snapshot| !snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision)) {
+            self.cancel.cancel_now();
+        }
         if self.cancel.is_cancelled_now() {
             self.stage = MountedStage::Closing;
             return Ok(self.fail(b"fem2d.session-cancelled".to_vec()));

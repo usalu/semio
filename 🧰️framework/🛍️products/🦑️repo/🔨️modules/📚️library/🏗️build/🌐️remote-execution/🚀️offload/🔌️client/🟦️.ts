@@ -76,6 +76,7 @@ export async function executeOffloadV1(input:Readonly<{endpoint:string;token:str
    if(lost!==undefined){
     outageSince??=Date.now();
     if(Date.now()-outageSince>ride)return declined("infrastructure",`the server stayed away for ${Math.round((Date.now()-outageSince)/1000)} s: ${lost}`);
+    if(Date.now()>=submitted+limits.execute)return declined("infrastructure",`the action budget of ${limits.execute} ms is spent while the server stayed away: ${lost}`);
     if(timer)clearTimeout(timer);
     await pause(Math.min(2000,250*2**Math.min(outages++,5))*(0.5+Math.random()),controller.signal);
     if(input.signal?.aborted)return declined("cancelled","");

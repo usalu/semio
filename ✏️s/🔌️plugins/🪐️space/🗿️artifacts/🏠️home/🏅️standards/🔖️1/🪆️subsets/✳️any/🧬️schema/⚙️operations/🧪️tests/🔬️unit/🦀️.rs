@@ -7,7 +7,7 @@ use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mu
 
 #[semio_framework_async_macros::async_test]
 async fn home_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&change_catalog_generation(7));
+    semio_os_store_test_support::assert_op_line_round_trip(&change_catalog_generation(7));
 }
 
 #[semio_framework_async_macros::async_test]

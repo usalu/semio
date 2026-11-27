@@ -290,7 +290,7 @@ impl ArtifactViewer for GisMapViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             map::BODY_KEY => map::render(doc.snapshot, map::config::current(cfg), view_state.locale).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(semio_ui_locale::LocalizedLabel::native(&format!("Unknown body: {body_key}"), &format!("Unbekannter Body: {body_key}")).resolve(view_state.terminology, view_state.locale))),
         }
     }
 }

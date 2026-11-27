@@ -1,0 +1,20 @@
+[
+ {
+  "lens": "j-.*",
+  "list": "structure",
+  "scales": [
+   50
+  ],
+  "points": 5
+ },
+ {
+  "decision": {
+   "en": "Structure at 1:50 (70 solids): the woody rib skeleton itself, 18 rods of 3 cm on a circle of 15 cm in every trunk bone and 14 rods of 2.2 cm on half the arm radius in every arm bone (each a slender capsule repeated about the bone axis), a tie disc at every bone that joins the rods of neighbouring bones (a lens of revolution with a meridian of five points inside the ellipsoid it idealises), the root plate, the support pad and the root mass.",
+   "de": "Tragwerk bei 1:50 (70 Körper): das Skelett der Holzrippen selbst, 18 Stäbe von 3 cm auf einem Kreis von 15 cm in jedem Stammknochen und 14 Stäbe von 2,2 cm auf dem halben Armradius in jedem Armknochen (jeder eine schlanke Kapsel, um die Knochenachse wiederholt), eine Verbindungsscheibe an jedem Knochen, die die Stäbe benachbarter Knochen verbindet (eine Rotationslinse mit einem Meridian aus fünf Punkten innerhalb des Ellipsoids, das sie idealisiert), der Wurzelteller, das Auflager und die Wurzelmasse."
+  },
+  "scales": [
+   50
+  ],
+  "instead": "Structure at 1:50"
+ }
+]

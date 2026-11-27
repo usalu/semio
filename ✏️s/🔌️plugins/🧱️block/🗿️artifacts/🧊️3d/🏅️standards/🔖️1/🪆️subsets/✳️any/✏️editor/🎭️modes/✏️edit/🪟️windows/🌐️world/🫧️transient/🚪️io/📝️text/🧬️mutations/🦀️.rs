@@ -39,9 +39,9 @@ use crate::edit::windows::world::transient::mutations::set_brush_preview::SetBru
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`protocol::apply_diff`) and the mutation's own inverse over `Block3dWorldWindowTransient`.
 ///
-/// @see store::os_store::test_support::mutation_report_json
+/// @see semio_os_store_mutation_report::mutation_report_json
 pub fn block3d_world_window_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    store::os_store::test_support::mutation_report_json::<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation>(base_json, mutation_json, after_json)
+    semio_os_store_mutation_report::mutation_report_json::<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation>(base_json, mutation_json, after_json)
 }
 }
 pub use crate::edit::windows::world::transient::io::text::mutations::mutations_wire_codec::*;

@@ -39,7 +39,6 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
   if self.commit_publisher.as_ref().is_some_and(|owner|!owner.matches_caller(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native finalization requires its same original caller and decoder recipient").into())}
   let result=(||->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
    if !self.finalizing(){return Ok(TimeTravelCommit::Pending)}if cx.is_cancelled(){self.commit_closing=true;}
-   {let t=DBGC.fetch_add(1,std::sync::atomic::Ordering::Relaxed);let ph=self.commit_publisher.as_ref().map_or(255,|p|p.preparation_phase());let st=(self.commit_stage,self.commit_closing,ph);if t%2000==0||DBGCS.lock().unwrap().replace(st)!=Some(st){eprintln!("[DEBUG] commit t={t} ms={} stage={} closing={} phase={} grant={:?}",DBGCW.get_or_init(std::time::Instant::now).elapsed().as_millis(),self.commit_stage,self.commit_closing,ph,cx.retained_grant());}}
    if self.commit_closing{
     let turns=cx.retained_grant().maximum_items.min(64);let mut outcome=TimeTravelCommit::Pending;
     for _ in 0..turns{
@@ -79,7 +78,3 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
   let d=RetirementDemand{copy_bytes:std::mem::size_of::<TimeTravelCommit>()+std::mem::size_of::<bool>(),depth:1,..Default::default()};let mut outcome=TimeTravelCommit::Pending;close_original_retained_step(cx,d,|_|{outcome=self.commit_receipt.take().map_or_else(||self.commit_outcome.take().unwrap_or(TimeTravelCommit::Failed),|receipt|TimeTravelCommit::Finalized{receipt});self.commit_outcome=None;self.commit_closing=false;self.commit_stage=0;work(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))})?;Ok(outcome)
  }
 }
-
-static DBGC:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
-static DBGCW:std::sync::OnceLock<std::time::Instant>=std::sync::OnceLock::new();
-static DBGCS:std::sync::Mutex<Option<(u8,bool,u8)>>=std::sync::Mutex::new(None);

@@ -5,7 +5,8 @@ use semio_framework_value_testing_allocator as _;
 use semio_framework_test_typed_input_law as typed_input_law;
 
 use semio_framework_artifact_space_collection::{empty_collection_snapshot, CollectionFolder, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
-use semio_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};
+use semio_os_kernel as store;
+use semio_os_store_test_support::{close_plain_test_store, dispatch_test_command};
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};
 
 fn demo_collection() -> CollectionSnapshot {

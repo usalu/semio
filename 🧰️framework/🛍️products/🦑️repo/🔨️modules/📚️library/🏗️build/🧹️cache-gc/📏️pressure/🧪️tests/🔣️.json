@@ -1,0 +1,9 @@
+{
+  "description": "Language-agnostic table of the cheap trigger of the ledger collector: a collectable area with a byte budget is over when its recorded size is above that budget; an area never measured, a budget-less area and an unreadable size ledger are never over. `usedFactor` is the recorded size as a multiple of the area budget.",
+  "cases": [
+    {"name": "below-budget", "usedFactor": 0.5, "over": false},
+    {"name": "at-budget", "usedFactor": 1, "over": false},
+    {"name": "above-budget", "usedFactor": 1.5, "over": true},
+    {"name": "never-measured", "usedFactor": null, "over": false}
+  ]
+}

@@ -9,9 +9,11 @@ async fn set_filter_min_availability_clamps_to_zero() {
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None })).await;
     dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(0.0), value: None })).await;
-    let scene = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, pool::SOURCING_CURATION_BODY_POOL, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| {
+    let mut scene = None;
+    crate::editor_unit_tests::context::observe(&mut app, pool::SOURCING_CURATION_BODY_POOL, &mut |root| { scene = Some({
         let surface = root.children.iter().find(|child| matches!(child.component, semio_plugin::Component::Surface(_))).expect("pool table surface");
         crate::editor_unit_tests::context::table_scene_of(surface).expect("complete retained table scene")
-    }).await.expect("render");
+    }); }).await;
+    let scene = scene.expect("render");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.rows_json).unwrap().as_array().unwrap().len(), crate::stock_of(&app.snapshot().expect("snapshot")).len());
 }

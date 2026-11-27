@@ -11,19 +11,21 @@ const policy=UNIT_CACHE_POLICY_V1;
 /** ⏳️ Cancellable pause that counts as a declared wait for the process watchdog: a process that sleeps here for a lane, a claim or a slot is waiting, not stalled (bounded by the watchdog's wait ceiling). */
 export const sleepV1=async(milliseconds:number,signal?:AbortSignal):Promise<void>=>{const leave=enterScriptProcessWaitV1();try{await new Promise<void>((done,fail)=>{if(signal?.aborted){fail(signal.reason);return;}const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});});}finally{leave();}};
 
-/** 👂️ A waiter that sleeps on directory events instead of a poll: `wait` returns at once when a file was created or removed in one of the directories since the last `wait` (heartbeat touches are `change` events and ignored), else after `milliseconds` (a jittered fallback that reaps dead holders), and blocks without CPU in between. A directory that cannot be watched is covered by the fallback alone. Create it BEFORE inspecting the state, so no event between inspection and sleep is lost. */
-export function watchChangesV1(directories:readonly string[]):Readonly<{wait(milliseconds:number,signal?:AbortSignal):Promise<void>;close():void}>{
+/** 👂️ A waiter that sleeps on directory events instead of a poll: `wait` returns at once when a file was created or removed in one of the directories since the last `wait` (heartbeat touches are `change` events and ignored), else after `milliseconds` (a jittered fallback that reaps dead holders), and blocks without CPU in between. A directory that cannot be watched is covered by the fallback alone. Create it BEFORE inspecting the state, so no event between inspection and sleep is lost. On macOS no directory is watched at all: a directory watch there is a FSEvents stream, `fseventsd` keeps about 12 KiB of every stream for good (a host that compiles thousands of units an hour grows it by gigabytes in days and starves the build host of memory), so the waiter sleeps at most `watchlessPollMilliseconds` and the caller inspects again.
+ * @see https://developer.apple.com/documentation/coreservices/file_system_events */
+export function watchChangesV1(directories:readonly string[],world:Readonly<{platform?:string;watch?:typeof watch}>={}):Readonly<{wait(milliseconds:number,signal?:AbortSignal):Promise<void>;close():void}>{
+ const native=(world.platform??process.platform)!=="darwin",observe=world.watch??watch;
  let pending=false,wake:(()=>void)|undefined;const watchers:FSWatcher[]=[];
- for(const directory of directories)try{const watcher=watch(directory,type=>{if(type!=="rename")return;pending=true;wake?.();});watcher.on("error",()=>undefined);watchers.push(watcher);}catch{}
+ if(native)for(const directory of directories)try{const watcher=observe(directory,type=>{if(type!=="rename")return;pending=true;wake?.();});watcher.on("error",()=>undefined);watchers.push(watcher);}catch{}
  return Object.freeze({
   async wait(milliseconds,signal){
    if(pending){pending=false;return;}
-   const leave=enterScriptProcessWaitV1();
+   const leave=enterScriptProcessWaitV1(),bound=native?milliseconds:Math.min(milliseconds,policy.lock.watchlessPollMilliseconds);
    try{await new Promise<void>((done,fail)=>{
     if(signal?.aborted){fail(signal.reason);return;}
     const finish=()=>{clearTimeout(timer);signal?.removeEventListener("abort",abort);wake=undefined;pending=false;};
     const abort=()=>{finish();fail(signal!.reason);};
-    const timer=setTimeout(()=>{finish();done();},Math.ceil(milliseconds*(0.8+Math.random()*0.4)));
+    const timer=setTimeout(()=>{finish();done();},Math.ceil(bound*(0.8+Math.random()*0.4)));
     wake=()=>{finish();done();};signal?.addEventListener("abort",abort,{once:true});
    });}finally{leave();}
   },
@@ -83,7 +85,7 @@ export function openClaimFileV1(path:string,world:Readonly<{platform?:string;sle
 
 function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
  const token=randomBytes(8).toString("hex");const fd=openClaimFileV1(path);if(fd===undefined)return undefined;
- try{writeSync(fd,JSON.stringify({...ownProcessIdentityV1(),token,atMs:Date.now()}));}finally{closeSync(fd);}
+ try{writeSync(fd,JSON.stringify({...ownProcessIdentityV1(),token,atMs:Date.now(),command:process.argv.slice(1).join(" ").slice(0,240)}));}finally{closeSync(fd);}
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(path,now,now);}catch{}},heartbeatMs);beat.unref?.();
  let released=false;
  return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)removeClaimFileV1(path);}});
@@ -108,9 +110,9 @@ export function claimHeldV1(directory:string,name:string):boolean{
 }
 
 /** 🪪️ Who holds the claim `name` right now (pid, creation time and claim time), `undefined` when it is free or its holder is unreadable; reads only. */
-export function claimHolderV1(directory:string,name:string):Readonly<{pid:number;startMs:number;atMs:number}>|undefined{
- const path=join(directory,name+".lock"),holder=holderOf(path);
- return holder===undefined||!claimHeldV1(directory,name)?undefined:Object.freeze({pid:holder.pid,startMs:holder.startMs,atMs:holder.atMs});
+export function claimHolderV1(directory:string,name:string):Readonly<{pid:number;startMs:number;atMs:number;command?:string}>|undefined{
+ const path=join(directory,name+".lock"),holder=holderOf(path) as (Holder&{command?:unknown})|undefined;
+ return holder===undefined||!claimHeldV1(directory,name)?undefined:Object.freeze({pid:holder.pid,startMs:holder.startMs,atMs:holder.atMs,...typeof holder.command==="string"&&holder.command?{command:holder.command}:{}});
 }
 
 /** 🔐️ Takes the per-unit claim named `name` inside `directory`. Waiting is bounded: `undefined` after the maximum wait means "compile anyway", so no wait chain can become a deadlock. A holder that died or stopped beating is replaced atomically. */
@@ -131,7 +133,7 @@ export async function acquireUnitClaimV1(directory:string,name:string,options:Re
 }
 
 /** 🪶️ A light slot of a unit that only ships its inputs to a worker and waits for the answer: it holds no compile slot, so it is not charged against the local CPU and memory grant, and is bounded by its own count (`count` files `light-<n>.lock` beside the compile slots, the first free one wins, no ticket queue because a light slot is rarely contended). Waits while all are taken, so a unit never fails for want of one. */
-export async function acquireLightSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void}>={}):Promise<ClaimV1>{
+export async function acquireLightSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void;maximumWaitMilliseconds?:number}>={}):Promise<ClaimV1>{
  if(!Number.isSafeInteger(count)||count<1)throw Error("Positive light slot count required");
  const slots=join(root,policy.layout.slots);mkdirSync(slots,{recursive:true});
  const started=Date.now(),listener=watchChangesV1([slots]);let reported=false;
@@ -145,9 +147,19 @@ export async function acquireLightSlotV1(root:string,count:number,options:Readon
     if(claim)return Object.freeze({...claim,waitedMs:Date.now()-started});
    }
    if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
-   await listener.wait(policy.slot.fallbackMilliseconds,options.signal);
+   const left=options.maximumWaitMilliseconds===undefined?Infinity:options.maximumWaitMilliseconds-(Date.now()-started);
+   if(left<=0)throw new SlotWaitTimeoutV1(Date.now()-started);
+   await listener.wait(Math.max(1,Math.min(policy.slot.fallbackMilliseconds,left)),options.signal);
   }
  }finally{listener.close();}
+}
+
+/** 🪑️ Takes one of `count` places of units that wait for other machines to finish a unit (`await-<n>` claims beside the compile slots) and never waits: `undefined` when all are taken, so the caller compiles here instead of idling. A machine whose every job waits for a remote claim holder compiles nothing and never looks at its own free CPU. */
+export function tryAcquireRemoteWaitV1(root:string,count:number):ClaimV1|undefined{
+ if(!Number.isSafeInteger(count)||count<1)return undefined;
+ const slots=join(root,policy.layout.slots);
+ for(let index=0;index<count;index++){const claim=tryClaimV1(slots,"await-"+String(index));if(claim)return claim;}
+ return undefined;
 }
 
 /** 🔢️ How many light slots (`acquireLightSlotV1`) live units hold right now: counted from the claim files, reads only; the number of units that are running on a worker for this machine. */
@@ -203,4 +215,17 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
    await listener.wait(options.maximumWaitMilliseconds===undefined?policy.slot.fallbackMilliseconds:Math.max(1,Math.min(policy.slot.fallbackMilliseconds,options.maximumWaitMilliseconds-(Date.now()-started))),options.signal);
   }
  }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}finally{listener.close();}
+}
+
+/** 🧍️ Takes the whole host for one unit: every compile slot, serialised by one claim so two such units never wait for each other's slots, and released together. It waits for the running units to finish, reports the wait through `onWait`, and honours the abort signal at once, leaving no claim or ticket behind.
+ * @see ../🧪️tests/🧍️alone/🟦️.ts */
+export async function acquireAloneV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void;since?:number;maximumWaitMilliseconds?:number}>={}):Promise<ClaimV1>{
+ if(!Number.isSafeInteger(count)||count<1)throw Error("Positive compile slot count required");
+ const started=Date.now(),limit=options.maximumWaitMilliseconds,guard=await acquireUnitClaimV1(join(root,policy.layout.locks),"alone",{maximumWaitMs:limit??Number.MAX_SAFE_INTEGER,...options.signal?{signal:options.signal}:{},...options.onWait?{onWait:options.onWait}:{}});
+ if(guard===undefined)throw limit===undefined?Error("alone claim not granted"):new SlotWaitTimeoutV1(Date.now()-started);
+ const held:ClaimV1[]=[],release=():void=>{for(const claim of held.splice(0).reverse())claim.release();guard.release();};
+ try{
+  for(let index=0;index<count;index++){options.signal?.throwIfAborted();held.push(await acquireSlotV1(root,count,{...limit===undefined?{}:{maximumWaitMilliseconds:Math.max(1,limit-(Date.now()-started))},...options.signal?{signal:options.signal}:{},...options.onWait?{onWait:options.onWait}:{},...options.since===undefined?{}:{since:options.since}}));}
+ }catch(error){release();throw error;}
+ return Object.freeze({path:guard.path,waitedMs:Date.now()-started,release});
 }

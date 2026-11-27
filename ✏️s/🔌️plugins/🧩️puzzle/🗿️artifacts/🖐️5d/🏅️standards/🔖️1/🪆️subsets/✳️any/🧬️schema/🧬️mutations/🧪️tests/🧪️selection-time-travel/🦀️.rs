@@ -159,7 +159,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
         }
         let envelope = store.envelope();
         for edit in envelope.vcs.edits.iter() {
-            store::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).await;
+            semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).await;
         }
         crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }

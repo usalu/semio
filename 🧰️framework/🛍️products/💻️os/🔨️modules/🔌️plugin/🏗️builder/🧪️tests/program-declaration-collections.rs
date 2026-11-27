@@ -5,7 +5,7 @@ use semio_ui_locale::LocalizedLabel;
 #[test]
 fn plugin_manifest_keeps_authored_command_order() {
     let fixture: Value = serde_json::from_str(include_str!("🧫️fixtures/declaration-collections.json")).unwrap();
-    let mut plugin = Plugin::<NoPluginApp>::new("declarations", "Declarations", "0.1.0");
+    let mut plugin = Plugin::<NoPluginApp>::new("declarations", LocalizedLabel::native("Declarations", "Deklarationen"), "0.1.0");
     for value in fixture["commands"].as_array().unwrap() {
         let id = value.as_str().unwrap();
         let command = CommandDefinition::new(id, LocalizedLabel::data(id), "fixture", "pencil", ActionKind::View);

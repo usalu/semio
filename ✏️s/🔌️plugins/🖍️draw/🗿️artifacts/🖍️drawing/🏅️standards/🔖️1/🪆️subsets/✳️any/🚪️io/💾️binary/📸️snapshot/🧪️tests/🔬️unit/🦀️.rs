@@ -68,14 +68,14 @@ fn representative_drawing_document() -> DrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = dsl::parse_dsl(semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT).expect("parse semio example");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_representative_document() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&representative_drawing_document());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&representative_drawing_document());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -84,7 +84,7 @@ async fn pack_round_trips_document_without_assets_or_artboard() {
     doc.assets = Default::default();
     doc.artboard = None;
     doc.title = None;
-    store::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -105,7 +105,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, layer)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_style::set_layer_opacity::mutation::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
     let edit: &Edit<DrawingMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
-    store::os_store::test_support::close_plain_test_store(&mut doc_store);
+    semio_os_store_test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
+    semio_os_store_test_support::close_plain_test_store(&mut doc_store);
 }
 //#endregion 🔖️CommandEnvelopeTests

@@ -505,11 +505,12 @@ fn the_gis_policy_declares_its_layer_toggles_overlays_and_style_presets() {
 fn the_overlays_value_carries_every_document_feature() {
     let document = default_document();
     let overlays = gis_map_overlays_value(&document);
-    let ids = |layer: &str| -> Vec<String> { overlays[layer].as_array().expect("overlay rows").iter().map(|row| row["id"].as_str().expect("id").to_owned()).collect() };
+    let rows = |layer: &str| overlays.get(layer).and_then(semio_framework_value::DslValue::as_array).expect("overlay rows");
+    let ids = |layer: &str| -> Vec<String> { rows(layer).iter().map(|row| row.get("id").and_then(semio_framework_value::DslValue::as_str).expect("id").to_owned()).collect() };
     assert_eq!(ids("positions"), document.positions.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>());
     assert_eq!(ids("routes"), document.routes.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>());
     assert_eq!(ids("regions"), document.regions.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>());
-    assert!(overlays["positions"].as_array().expect("positions").iter().all(|row| row["coordinates"].as_array().is_some_and(|points| points.len() == 1)), "a position is one coordinate");
+    assert!(rows("positions").iter().all(|row| row.get("coordinates").and_then(semio_framework_value::DslValue::as_array).is_some_and(|points| points.len() == 1)), "a position is one coordinate");
 }
 
 #[test]

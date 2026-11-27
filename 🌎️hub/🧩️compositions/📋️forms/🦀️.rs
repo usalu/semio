@@ -34,7 +34,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// persists question/field edits back to the open document.
 pub fn plugin() -> Result<Plugin<FormsApps>, PluginAssemblyError> {
     PluginBuilder::<_, FormsApps>::new("forms")
-        .label("Forms")
+        .label(semio_plugin::LocalizedLabel::native("Forms", "Formen"))
         .version("0.1.0")
         .package_id("semio:forms")
         .declare_artifact(crate::artifacts::forms::artifact())

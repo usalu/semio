@@ -24,6 +24,11 @@
       "reason": "measured peak 1240 MB: the oversize cases write, read, parse and serialise a result above the retained image bound (32 MB) twice each in one process; the allocator keeps those pages (heap 75 MB after collection)"
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️typecheck/🧪️tests/🟦️.ts",
+      "megabytes": 3600,
+      "reason": "measured peak about 3.3 GB: the ambient law lists the files of each typecheck program with one node compiler process at a time (up to 3 GB for the library program) beside the test process"
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts",
       "megabytes": 2200,
       "reason": "measured peak 1929 MB (was 3782 MB): the script-input closure of the course targets (1.4 GB, the inference itself) plus one TypeScript program of the course"
@@ -32,6 +37,11 @@
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔌️providers/🟦️.ts",
       "megabytes": 1300,
       "reason": "measured peak 1040 MB: esbuild bundles the designated provider modules (650 MB in the esbuild process) beside the closure inference"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+      "megabytes": 4600,
+      "reason": "measured process-tree peak 3411 MB and 3641 MB (loaded host): 62 concurrent cases, spawned crash-driver children and fixture git trees; 4600 MB = 3641 MB plus 25 percent headroom"
     }
   ]
 }

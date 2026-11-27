@@ -124,7 +124,7 @@ test("the priority deadline can admit a shrinkable minimum under a soft stop, wh
  expect(ask(swapping,batchDeadline)).toMatchObject({verdict:"wait",reason:"swap",reservedMegabytes:0});
  const saturated=machine(16384,5000,{swapUsedMegabytes:0,swapOutMegabytesPerSecond:103});
  expect(ask(saturated,batchDeadline)).toMatchObject({verdict:"wait",reason:"swap-activity",reservedMegabytes:0});
- expect(ask(critical,real.wait.starvedMilliseconds!)).toMatchObject({verdict:"wait",reason:"starved",reservedMegabytes:0});
+ expect(ask(critical,real.wait.starvedMilliseconds!)).toMatchObject({verdict:"wait",reason:"pressure-critical",reservedMegabytes:0});
 });
 
 test("a request past its deadline under a stop says so in both languages, naming the stop, the limit and what it waited",async()=>{

@@ -84,6 +84,11 @@ export function spawnedIdOfWindowInstanceV1(windowId: string, spawnedIds: readon
   return best;
 }
 
+/** 🪦️ True when `windowId` is namespaced under a spawned program (`${id}::kind`) that is no longer in the live roster: the window belongs to a program that is gone, so nothing may be addressed through it. */
+export function windowProgramGoneV1(windowId: string, spawnedIds: readonly string[]): boolean {
+  return windowId.includes(SPAWNED_WINDOW_SEPARATOR) && spawnedIdOfWindowInstanceV1(windowId, spawnedIds) === null;
+}
+
 /** 🪟️ The guest's own window instance id a shell window id names within its spawned instance — a window
  * kind id, or an instance the program's default layout declares — or `null` when the id belongs to no
  * spawned instance. */

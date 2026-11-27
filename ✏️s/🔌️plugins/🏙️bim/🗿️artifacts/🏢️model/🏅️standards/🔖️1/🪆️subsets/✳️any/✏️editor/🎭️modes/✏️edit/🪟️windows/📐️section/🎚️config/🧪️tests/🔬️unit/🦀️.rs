@@ -5,7 +5,7 @@ use protocol::{OpBinary, OpText};
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn pinned() -> BimSectionWindowConfig {
-    BimSectionWindowConfig { view: "v-section".into(), framed: true, viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }
+    BimSectionWindowConfig { view: "v-section".into(), framed: true, selected_options: Vec::new(), workset_visibility: Vec::new(), viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }
 }
 
 fn replace(config: BimSectionWindowConfig) -> BimSectionWindowConfigMutation {

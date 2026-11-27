@@ -1,0 +1,3 @@
+#!/bin/zsh
+# 🪶️ The light proofs of several trial copies, one after the other inside the grant of its caller: lights.sh <id>…
+for a in "$@"; do zsh "${0:A:h}/light.sh" "$a"; tail -1 "$(source "${0:A:h}/env.sh"; echo "$GEN")/light/$a.txt"; done

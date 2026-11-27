@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/test/schema.json",
+  "title": "Repository test platform gate schemas",
+  "description": "🧬️ Scope identity of the repository test platform's gate schemas: the fault-notice, mutation-leaf-bounds and mutation-input-declaration documents beside this one are read by their gates through this module."
+}

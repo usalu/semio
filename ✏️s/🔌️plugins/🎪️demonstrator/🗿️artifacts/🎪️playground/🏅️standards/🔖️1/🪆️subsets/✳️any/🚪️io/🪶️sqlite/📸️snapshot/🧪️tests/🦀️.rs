@@ -17,7 +17,7 @@ async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directi
     use store::io::io_mechanism::io_route;use original_owners::io_run;
     use {semio_framework_artifact_reference::ArtifactDialect,store::io_schema::IoPayload,store::io_schema::SQLITE_SNAPSHOT};
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("demonstrator")
-        .label("Playground SQLite Declaration")
+        .label(semio_plugin::LocalizedLabel::native("Playground SQLite Declaration", "Spielwiese-SQLite-Deklaration"))
         .version("0.0.1")
         .package_id("semio:demonstrator")
         .artifact(crate::declaration().unwrap())
@@ -187,7 +187,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
         os_store::serialization::ArtifactSqliteSnapshotHost,
     };
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("demonstrator")
-        .label("Playground Typed SQLite Declaration")
+        .label(semio_plugin::LocalizedLabel::native("Playground Typed SQLite Declaration", "Typisierte Spielwiese-SQLite-Deklaration"))
         .version("0.0.1")
         .package_id("semio:demonstrator")
         .artifact(crate::declaration().unwrap())

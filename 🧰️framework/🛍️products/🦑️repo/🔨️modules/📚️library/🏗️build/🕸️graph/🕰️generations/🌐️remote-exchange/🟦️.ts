@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {constants,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {open,type FileHandle} from "node:fs/promises";
 import {totalmem} from "node:os";
+import type {NativeImageSharedReaderV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {GENERATION_POLICY_V1 as P,readGenerationManifestV1,readGenerationPointerV1,type GenerationFilePortV1} from "../🟨️.mjs";
@@ -27,12 +28,16 @@ export type GenerationHeadEvidenceV1=Readonly<{manifest:string;origin:string;gen
 export type GenerationHeadCandidateV1=GenerationHeadEvidenceV1&Readonly<{identity:string;platform:string;implementation:string}>;
 /** 🧾️ What one exchange did; a refusal or a failure never fails the graph load that asked. */
 export type GenerationExchangeOutcomeV1=Readonly<{status:"restored"|"uploaded"|"local"|"absent"|"foreign"|"empty"|"current"|"remote-better"|"incomplete"|"oversized"|"failed";generation?:number;localManifest?:string;owners?:number;documents?:number;sent?:number;bytes?:number;ageSeconds?:number;stale?:number;reason?:string;closures?:GenerationClosuresV1;head?:GenerationHeadEvidenceV1}>;
+/** 📏️ The size of one leaf, asked through the leased `sizeLeased` when the port has one and through the plain `size` otherwise. */
+async function closureSizeV1(port:ClosurePortV1,namespace:ClosureNamespaceV1,key:string):Promise<number|undefined>{return port.sizeLeased===undefined?port.size(namespace,key):port.sizeLeased(namespace,key);}
 /** 🧲️ What an exchange did with the build input closure leaves a generation names: how many it names, how many were uploaded or fetched, and the leaves it could not obtain with the owners that name them (those owners are stale, the generation is not complete). */
 export type GenerationClosuresV1=Readonly<{named:number;sent:number;fetched:number;missing:readonly Readonly<{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}>[]}>;
 /** 🗄️ Where the closure leaves of this machine live and how they are read and written: the graph store of the workspace by default. */
 export interface ClosurePortV1{
  directory(namespace:ClosureNamespaceV1):string;
  size(namespace:ClosureNamespaceV1,key:string):number|undefined;
+ /** 🔒️ The same size taken under the shared lease of the image: only a port of a process that does not hold the image itself (it has a shared reader) answers it, and the exchange then prefers it over the plain `size`. */
+ sizeLeased?(namespace:ClosureNamespaceV1,key:string):Promise<number|undefined>;
  /** 📏️ Reads one leaf, bounding allocation to the supplied maximum when present. */
  read(namespace:ClosureNamespaceV1,key:string,maximumBytes?:number):Promise<Uint8Array|undefined>;
  verify?(namespace:ClosureNamespaceV1,key:string,signal?:AbortSignal):Promise<boolean|undefined>;
@@ -266,7 +271,7 @@ async function uploadClosuresV1(location:Location,manifest:ReturnType<typeof rea
  for(const[,{key,namespace}]of named){
   if(held.length===policy.maximumClosures)break;
   signal?.throwIfAborted();
-  const size=closures?.size(namespace,key);
+  const size=closures===undefined?undefined:await closureSizeV1(closures,namespace,key);
   if(size!==undefined&&Number.isSafeInteger(size)&&size>0&&size<=CLOSURE_POLICY_V1.maximumLeafBytes)held.push({key,namespace,size});
  }
  const sentFile=root+".closures-sent.json",before=readSentClosuresV1(sentFile,instance);
@@ -320,7 +325,7 @@ async function restoreClosuresV1(location:Location,manifest:ReturnType<typeof re
  if(!closures)return named.size===0?{named:0,sent:0,fetched:0,missing:[]}:undefined;
  const verify=requireComplete?async(namespace:ClosureNamespaceV1,key:string):Promise<boolean>=>{
   signal?.throwIfAborted();
-  const size=closures.size(namespace,key),maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
+  const size=await closureSizeV1(closures,namespace,key),maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
   if(size===undefined||size<1||size>maximum||size!==inventory.get(closureEntryV1(namespace,key))?.size)return false;
   const verified=await closures.verify?.(namespace,key,signal);
   if(verified!==undefined)return verified;
@@ -329,7 +334,7 @@ async function restoreClosuresV1(location:Location,manifest:ReturnType<typeof re
  }:undefined;
  const rows=[...named],absent:typeof rows=[];
  if(verify)await each(rows,async row=>{if(!await verify(row[1].namespace,row[1].key))absent.push(row);});
- else for(const row of rows)if(closures.size(row[1].namespace,row[1].key)===undefined)absent.push(row);
+ else for(const row of rows)if(await closureSizeV1(closures,row[1].namespace,row[1].key)===undefined)absent.push(row);
  const recovered=new Set<string>();let got=0;
  await each(absent.slice(0,policy.maximumClosures),async([entry,{namespace,key}])=>{
   const state=await obtainClosureLeafV1({directory:closures.directory,namespace,key,fetch:()=>readRemoteClosureLeafV1(location,key,inventory.get(entry)?.size),put:closures.put,signal,verify});
@@ -559,24 +564,29 @@ async function verifyBoundedClosureLeafV1(path:string,key:string,signal?:AbortSi
  return digest===key;
 }
 
-/** 🗄️ The closure leaves of the graph store of a workspace (`<graph partition>/m/<namespace>`), read with the storage budget of the workspace; `undefined` stays out of the exchange when the store cannot be located. */
-export function workspaceClosurePortV1(workspace:string):ClosurePortV1|undefined{
+/** 🗄️ The closure leaves of the graph store of a workspace (`<graph partition>/m/<namespace>`), read with the storage budget of the workspace; `undefined` stays out of the exchange when the store cannot be located. A process that does not hold the graph image itself (the sidecar uploader) passes a shared `reader`: every read, verification and put of a leaf then runs under the shared lease of the image and a refused lease fails the operation instead of answering "absent"; `size` stats a path and holds no file, `sizeLeased` (present with a reader) stats it under the lease, and `directory` only composes a path.
+ * @see ../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts */
+export function workspaceClosurePortV1(workspace:string,reader?:NativeImageSharedReaderV1):ClosurePortV1|undefined{
  try{
+  const held=<T>(body:()=>Promise<T>):Promise<T>=>reader===undefined?body():reader.run(body);
   const base=join(repositoryCacheBudgetV1(workspace).partitions.graph.directory,"m"),directory=(namespace:ClosureNamespaceV1)=>join(base,namespace);
   const path=(namespace:ClosureNamespaceV1,key:string)=>join(directory(namespace),key+".json");
   return{
    directory,
    size:(namespace,key)=>{try{const row=statSync(path(namespace,key));return row.isFile()?row.size:undefined;}catch{return undefined;}},
-   read:async(namespace,key,maximumBytes)=>{try{return maximumBytes===undefined?readFileSync(path(namespace,key)):await readBoundedClosureLeafV1(path(namespace,key),maximumBytes);}catch{return undefined;}},
+   ...reader===undefined?{}:{sizeLeased:(namespace:ClosureNamespaceV1,key:string)=>held(async()=>{try{const row=statSync(path(namespace,key));return row.isFile()?row.size:undefined;}catch{return undefined;}})},
+   read:(namespace,key,maximumBytes)=>held(async()=>{try{return maximumBytes===undefined?readFileSync(path(namespace,key)):await readBoundedClosureLeafV1(path(namespace,key),maximumBytes);}catch{return undefined;}}),
    verify:async(namespace,key,signal)=>{
     signal?.throwIfAborted();
     if((namespace!=="build-input-closures"&&namespace!=="build-lock-closures")||!/^[0-9a-f]{64}$/u.test(key))return undefined;
-    try{
-     return await verifyBoundedClosureLeafV1(path(namespace,key),key,signal);
-    }catch(error){return (error as NodeJS.ErrnoException).code==="ENOENT"?false:undefined;}
-    finally{signal?.throwIfAborted();}
+    return held(async()=>{
+     try{
+      return await verifyBoundedClosureLeafV1(path(namespace,key),key,signal);
+     }catch(error){return (error as NodeJS.ErrnoException).code==="ENOENT"?false:undefined;}
+     finally{signal?.throwIfAborted();}
+    });
    },
-   put:closureLeafPutterV1(workspace)
+   put:reader===undefined?closureLeafPutterV1(workspace):(namespace,key,bytes)=>held(()=>closureLeafPutterV1(workspace)(namespace,key,bytes))
   };
  }catch{return undefined;}
 }

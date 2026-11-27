@@ -46,6 +46,7 @@
   "peakSamples": 8,
   "peakCeilingMegabytes": 4608,
   "stopCollectMinimumMilliseconds": 1000,
+  "collectYieldMilliseconds": 0,
   "waitBoundMilliseconds": 60000,
   "fleetFallbackMilliseconds": 180000,
   "fleetAskMilliseconds": 10000,

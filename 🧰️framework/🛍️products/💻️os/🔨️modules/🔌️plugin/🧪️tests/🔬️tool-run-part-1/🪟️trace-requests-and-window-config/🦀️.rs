@@ -263,9 +263,9 @@ assert!(semio_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledge
 //#endregion 🎯️RetargetAndSettings
 
 /// 🪟️ Returns each publication receipt to the original window fixture caller once.
-fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
  cx.with_retained_loan(grant,|same|{
-  let waiting_for_window_result = |operation: &semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>| {
+  let waiting_for_window_result = |operation: &semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>| {
    operation.pending_artifact_publication.as_ref().is_some_and(|owner| {
     owner.lane().0 == TypedOperationResultLane::WindowConfig && owner.accepted_receipt().is_none()
    })

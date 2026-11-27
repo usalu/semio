@@ -10,7 +10,7 @@
         "maximumPackBytes": 2097152,
         "maximumHeaderBytes": 16384,
         "maximumRecords": 32,
-        "flushMilliseconds": 180000
+        "flushMilliseconds": 15000
       }
     },
     "Digest": {

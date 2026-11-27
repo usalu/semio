@@ -273,7 +273,7 @@ async fn the_store_folds_a_transform_like_the_leaf() {
     retire(projected);
     retire(expected);
     retire(before);
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🏪️Store
 

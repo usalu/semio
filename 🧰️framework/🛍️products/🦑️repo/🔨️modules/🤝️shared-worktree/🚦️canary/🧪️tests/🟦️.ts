@@ -16,24 +16,26 @@ const temp=(label:string):string=>{const path=mkdtempSync(join(tmpdir(),`canary-
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const D="d".repeat(64),E="e".repeat(64);
 
+function assertInput(value:unknown):asserts value is CanaryInputV1{requireCanaryShapeV1("Input",value,"input");}
+
 test("the fixture satisfies the closed schema and the Python oracle agrees with every vector",()=>{
  const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Fixture"});
  expect(validate(fixture),JSON.stringify(validate.errors?.[0])).toBe(true);
  requireCanaryShapeV1("Fixture",fixture,"fixture");
- if(python===undefined)return;
+ if(python===null)return;
  const result=Bun.spawnSync([python,"-I",join(import.meta.dirname,"🐍️.py")],{stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stdout.toString()+result.stderr.toString()).toBe(0);
 });
 
 test("every decision of the language-agnostic fixture is reproduced",()=>{
  expect(fixture.decisions.length).toBeGreaterThan(30);
- for(const item of fixture.decisions)expect(decideCanaryV1(item.input as CanaryInputV1),item.name).toEqual(item.expected as CanaryVerdictV1);
+ for(const item of fixture.decisions){const value:unknown=item.input;assertInput(value);expect<unknown>(decideCanaryV1(value),item.name).toEqual(item.expected);}
 });
 
 test("every tracker sequence of the language-agnostic fixture is reproduced",()=>{
  for(const item of fixture.trackers){
   const tracker=createCanaryTrackerV1(item.freshMs);
-  for(const [index,step] of item.steps.entries())expect(tracker.observe(item.digest,item.originId,step.peers as CanaryPeerV1[],step.now),`${item.name} #${index}`).toEqual(step.expected);
+  for(const [index,step] of item.steps.entries())expect<unknown>(tracker.observe(item.digest,item.originId,step.peers as CanaryPeerV1[],step.now),`${item.name} #${index}`).toEqual(step.expected);
  }
 });
 
@@ -99,7 +101,7 @@ test("a refusal is published once to the own record, read back from every origin
  mkdirSync(join(store,"v1","origins","g1-m04"),{recursive:true});writeFileSync(refusalsPathV1(store,"g1-m04"),JSON.stringify({version:1,originId:"g1-m04",refused:[{digest:D,reason:"r",wallMs:1,extra:true}]}));
  mkdirSync(join(store,"v1","origins","g1-m05"),{recursive:true});writeFileSync(refusalsPathV1(store,"g1-m05"),JSON.stringify({version:1,originId:"g1-m01",refused:[{digest:D,reason:"r",wallMs:1}]}));
  expect((await readRefusalsV1(store)).map(item=>item.originId).sort()).toEqual(["g1-m01","g1-m02"]);
- for(let n=0;n<70;n++)await publishRefusalV1(store,"g1-m06",{digest:n.toString(16).padStart(64,"0"),reason:"r",wallMs:0},n);
+ for(let n=0;n<70;n++)await publishRefusalV1(store,"g1-m06",{digest:n.toString(16).padStart(64,"0"),reason:"r"},n);
  const kept=await readRefusalsOfV1(store,"g1-m06");
  expect(kept!.length).toBe(64);expect(kept![0]!.wallMs).toBe(6);expect(kept!.at(-1)!.wallMs).toBe(69);
 });

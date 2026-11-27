@@ -11,6 +11,7 @@
     "task": "🏃️task/🟦️.ts"
   },
   "graph": {"kinds": ["runtime", "task"], "freeVerbs": ["tools", "reset", "remote-execution", "leases", "doctor", "capacity", "fleet", "scheduler", "test-file", "typecheck"]},
+  "capped": {"kinds": ["cargo", "cache", "cache-ledger"]},
   "cases": [
     {"args": ["incremental", "list"], "kind": "utility"},
     {"args": ["service", "status"], "kind": "utility"},

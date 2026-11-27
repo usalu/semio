@@ -9,7 +9,8 @@
   },
   "holdAndWait": {
     "graceMilliseconds": 15000,
-    "pollMilliseconds": 250
+    "pollMilliseconds": 250,
+    "noticeMilliseconds": 30000
   },
   "groundWait": {
     "boundMilliseconds": 1800000

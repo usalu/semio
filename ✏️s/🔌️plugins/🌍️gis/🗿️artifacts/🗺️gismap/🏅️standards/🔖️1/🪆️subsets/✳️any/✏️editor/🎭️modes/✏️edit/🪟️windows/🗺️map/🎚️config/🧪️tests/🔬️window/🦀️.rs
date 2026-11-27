@@ -233,7 +233,6 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 if addressed(&wrong, MapWindowConfigMutation::SetCamera(map_config_mutations::SetCamera { camera_json: "{}".into() })).is_ok() { return Err("GIS Map accepted the wrong concrete window kind".into()); }
                 Ok(())
             }.await;
-            if let Err(error) = &outcome { eprintln!("[TRACE] GIS Map exact-window runtime failure before close: {error}"); }
             artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
             outcome.expect("GIS Map exact-window runtime law");
         }))

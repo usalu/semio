@@ -27,7 +27,7 @@ import {retireCompiledCacheV1} from "../🧺️bounds/📦️compiled-cache/🟦
 import {applyBoundV1,boundedBytesV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 
 /** 🔌️ Where the real writers live and what they may touch: the workspace, the home of the user, the temporary directory, the user id, the clock, the liveness of a process and the one spawn of the product's own collector; tests replace every one of them. */
-export type RealDiskContextV1=Readonly<{workspace:string;home:string;tmp:string;uid:number;environment:Readonly<Record<string,string|undefined>>;now?:()=>number;alive?:(pid:number)=>boolean;dryRun?:boolean;ledger?:(signal?:AbortSignal,reclaimBytes?:number,areas?:string)=>Promise<void>;imageBacked?:boolean;language?:DiskLanguageV1;report?:(line:string)=>void;pressure?:ImagePressureV1;reclaimPressure?:ImagePressureV1&Readonly<{freeBytes:()=>number|undefined}>;retire?:(partition:string,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1)=>Promise<ImageOutcomeV1>;reclaim?:(partition:string,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1)=>Promise<ImageReclaimOutcomeV1>;compact?:(storeRoot:string,originId:string,signal?:AbortSignal)=>Promise<ReplicaCompactionV1>;free?:()=>number|undefined}>;
+export type RealDiskContextV1=Readonly<{workspace:string;home:string;tmp:string;uid:number;environment:Readonly<Record<string,string|undefined>>;now?:()=>number;alive?:(pid:number)=>boolean;dryRun?:boolean;background?:boolean;ledger?:(signal?:AbortSignal,reclaimBytes?:number,areas?:string)=>Promise<void>;imageBacked?:boolean;language?:DiskLanguageV1;report?:(line:string)=>void;pressure?:ImagePressureV1;reclaimPressure?:ImagePressureV1&Readonly<{freeBytes:()=>number|undefined}>;retire?:(partition:string,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1)=>Promise<ImageOutcomeV1>;reclaim?:(partition:string,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1)=>Promise<ImageReclaimOutcomeV1>;compact?:(storeRoot:string,originId:string,signal?:AbortSignal)=>Promise<ReplicaCompactionV1>;free?:()=>number|undefined}>;
 
 /** 💽️ The path whose measured host pressure selects the image volume and target bytes. */
 type ImagePressureV1=Readonly<{path:string;requiredFreeBytes:number}>;
@@ -36,10 +36,10 @@ const expand=(template:string,context:RealDiskContextV1):string=>template.replac
 const aliveByDefault=(pid:number):boolean=>processRecordAliveV1(pid);
 
 /** 🚀️ Runs `repo cache gc` of this workspace as the product's own collector and waits for it, in a clean environment that marks it as a child of the recovery so that it never starts a recovery itself. */
-export async function runLedgerCollectorV1(workspace:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal,reclaimBytes?:number,areas?:string):Promise<void>{
+export async function runLedgerCollectorV1(workspace:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal,reclaimBytes?:number,areas?:string,marks:Readonly<Record<string,string>>={}):Promise<void>{
  const{graphCollectorEnvironmentV1}=await import("../../../🧹️cache-gc/🚀️launch/🟦️.ts"),script=fileURLToPath(new URL("../../../📜️script.ts",import.meta.url));
  await new Promise<void>((accept,reject)=>{
-  const child=spawn(process.execPath,[script,"repo","cache","gc",...areas===undefined?[]:["--area="+areas],...reclaimBytes!==undefined&&reclaimBytes>0?["--reclaim="+Math.ceil(reclaimBytes)]:[]],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1"},stdio:"ignore",windowsHide:true,signal});
+  const child=spawn(process.execPath,[script,"repo","cache","gc",...areas===undefined?[]:["--area="+areas],...reclaimBytes!==undefined&&reclaimBytes>0?["--reclaim="+Math.ceil(reclaimBytes)]:[]],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1",...marks},stdio:"ignore",windowsHide:true,signal});
   child.on("error",reject);child.on("exit",code=>code===0?accept():reject(Error("repo cache gc exited with "+code)));
  });
 }
@@ -101,7 +101,7 @@ export async function compactReplicaStoreV1(storeRoot:string,originId:string,sig
 export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWriterRowV1[]=requireDiskWritersV1(DISK_WRITERS_V1)):readonly DiskWriterV1[]{
  const now=context.now??Date.now,alive=context.alive??aliveByDefault,dryRun=context.dryRun===true,limit=DISK_RECOVERY_POLICY_V1.measureEntryLimit,bounds=DISK_BOUNDS_V1;
  const ledgerRan=new Set<string>();
- const ledger=async(signal?:AbortSignal,reclaimBytes?:number,areas?:string):Promise<number>=>{const key=areas??"*";if(ledgerRan.has(key))return 0;ledgerRan.add(key);await(context.ledger??((abort,need,only)=>runLedgerCollectorV1(context.workspace,context.environment,abort,need,only)))(signal,reclaimBytes,areas);return 0;};
+ const ledger=async(signal?:AbortSignal,reclaimBytes?:number,requested?:string):Promise<number>=>{let areas=requested;if(context.background===true){const{ledgerOverBudgetAreasV1}=await import("../../../🧹️cache-gc/📏️pressure/🟦️.ts"),over=await ledgerOverBudgetAreasV1(context.workspace),wanted=requested===undefined?over:requested.split(",").filter(area=>over.includes(area));if(!wanted.length)return 0;areas=wanted.join(",");}const key=areas??"*";if(ledgerRan.has(key))return 0;ledgerRan.add(key);await(context.ledger??((abort,need,only)=>runLedgerCollectorV1(context.workspace,context.environment,abort,need,only)))(signal,reclaimBytes,areas);return 0;};
  const imageBacked=context.imageBacked??process.platform==="darwin";
  const tree=(root:string)=>async(signal?:AbortSignal)=>(await boundedBytesV1(root,limit,signal)).bytes;
  const temporaryRoot=context.tmp;
@@ -161,6 +161,11 @@ export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWr
     await collectReplicaStoreV1({role,compact:context.compact??compactReplicaStoreV1,language:context.language??"en",report:context.report,signal});
     return Math.max(0,(free()??before)-before);
    }};}
+   case "bun-cache":return{...base,collect:async({signal})=>{
+    if(dryRun)return 0;
+    await runLedgerCollectorV1(context.workspace,context.environment,signal,undefined,"dependencies",{[DISK_RECOVERY_POLICY_V1.environmentBunCache]:"1"});
+    return 0;
+   }};
    default:return row.collector==="ledger"&&(row.relief==="host"||row.relief==="image")?{...base,collect:({needBytes,signal})=>ledger(signal,needBytes,/--area=([a-z0-9,-]+)/u.exec(row.command)?.[1])}:base;
   }
  };

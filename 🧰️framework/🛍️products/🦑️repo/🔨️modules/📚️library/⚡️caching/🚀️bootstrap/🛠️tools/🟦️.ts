@@ -39,7 +39,8 @@ import{nxSdkDerivativeDispositionV1}from"./📦️sdk/📥️source/🔗️deriv
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync,lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import {toolPatchReceipt,assertToolingPatchV1,toolPatchAdditions,applyToolingPatchImagesV1} from "./🩹️patch/🟦️.ts";
-import {captureNxAuthorizerSourcesV1} from "./🔏️authorizers/🟦️.ts";
+import {captureNxAuthorizerSourcesV1,nxAuthorizerSourcesHoldV1} from "./🔏️authorizers/🟦️.ts";
+import {concurrentEditV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "./🔏️authorizers/📦️snapshot/🟦️.ts";
 import {nxAuthorizerDigestManifestPolicyV1,nxAuthorizerReceiptHoldsV1} from "./🔏️authorizers/📤️receipt/🟦️.ts";
 import {nxAuthorizerBundleHoldsV1,nxAuthorizerBundlePolicyV1,touchNxAuthorizerBundleV1} from "./🔏️authorizers/📦️bundle/🟦️.ts";
@@ -233,6 +234,22 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
   });
 }
 
+/** 🔬️ Names, for every captured module a failed bundle message points at, the digest it was captured with and the digest on disk now, so a stale or divergent capture shows in the log instead of staying a bare bundler error. */
+export function authorizerBundleEvidenceV1(message:string,root:string,sources:ReadonlyMap<string,string>,observed:(path:string)=>string|null):string{
+  const paths=[...new Set([...message.matchAll(/semio-captured-source:([^"\s]+)/gu)].map(row=>relative(root,row[1]!).replaceAll("\\","/")))].slice(0,4);
+  return paths.map(path=>path+" captured sha256 "+(sources.get(path)??"absent")+", on disk "+(observed(path)??"absent")).join("; ");
+}
+/** 🧯️ A bundler failure over captured sources is a concurrent edit when either capture no longer holds against the tree, otherwise it keeps its message plus the digest evidence of the modules it names. */
+async function authorizerBundleFailureV1(root:string,sources:readonly(readonly[Awaited<ReturnType<typeof captureNxAuthorizerSourcesV1>>,string])[],error:unknown,signal:AbortSignal):Promise<unknown>{
+  const message=String((error as Error)?.message??error);
+  if(!/Bundle failed|compilation refused/u.test(message)||signal.aborted)return error;
+  try{
+    for(const[captured,name]of sources)if(!await nxAuthorizerSourcesHoldV1(root,captured,signal))return concurrentEditV1("bytes",captured.manifest.entry,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");
+    const known=new Map(sources.flatMap(([captured])=>captured.manifest.sources.map(row=>[row.path,row.sha256] as const)));
+    const evidence=authorizerBundleEvidenceV1(message,root,known,path=>{try{return createHash("sha256").update(readFileSync(join(root,path))).digest("hex");}catch{return null;}});
+    return evidence===""?error:new Error(message+" [captured against disk: "+evidence+"]",{cause:error});
+  }catch{return error;}
+}
 /** 🔖️ Provisions the compiled authorizer bundle beside one dependency generation as its own content-addressed directory, verified and published separately from the generation: a library edit costs one compile of the bundle and never a new installation. */
 async function ensureNxAuthorizerBundleV1(root:string,store:RepositoryToolingStoreV1,publisher:ManagedToolingPublisherV1,control:ResourceLeaseControl,bun:string,dependencies:string,authorizer:Awaited<ReturnType<typeof captureNxAuthorizerSourcesV1>>,compiler:Awaited<ReturnType<typeof captureNxAuthorizerSourcesV1>>,files:ReadonlyMap<string,Buffer>):Promise<string|ToolingHeadroomRefusalV1>{
   const signal=control.signal,identity=nxAuthorizerBundleIdentityV1(dependencies,files),policy=nxAuthorizerBundlePolicyV1,bundles=requireNativeStoragePathV1(store.root,join(store.root,policy.directory)),destination=join(bundles,identity),leases=machinePathV1(root,".cache/b/l/m/data");
@@ -253,10 +270,11 @@ async function ensureNxAuthorizerBundleV1(root:string,store:RepositoryToolingSto
     writeFileSync(join(staging,policy.marker),JSON.stringify({version:1,digest:identity,deps:dependencies,authorizers:receipt}),{flag:"wx",mode:0o444});
     if(!nxAuthorizerReceiptHoldsV1(staging,receipt))throw new Error("Nx immutable authorizer receipt changed");
     await preflightNxAuthorizersV1(staging,control,store.environment);await store.recheck();
+    for(const[sources,name]of[[authorizer,"authorizer"],[compiler,"compiler"]]as const)if(!await nxAuthorizerSourcesHoldV1(root,sources,signal))throw concurrentEditV1("bytes",sources.manifest.entry,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");
     try { renameSync(staging, destination); }
     catch (error) { if (!["EEXIST", "ENOTEMPTY", "EPERM"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error; }
     return await withResourceLeases({directory:leases,resources:[{resource:policy.lease+identity,mode:"shared"}],control,signal},()=>verified(destination));
-  } catch(error){stagingFailed=true;throw error;}
+  } catch(error){stagingFailed=true;throw await authorizerBundleFailureV1(root,[[authorizer,"authorizer"],[compiler,"compiler"]],error,signal);}
   finally {try{rmSync(staging,{recursive:true,force:true});}catch(error){if(!stagingFailed)throw error;try{console.error("[nx] Authorizer staging cleanup failed after publication refusal",error);}catch{}}}
   });
 }

@@ -1,4 +1,4 @@
-"""🔢️ Independent Python oracle of the front-end thread bound (standard library only): for each case, the arguments rustc must receive when the run was admitted `tokens` parallel jobs. A `threads` count of 0 becomes `tokens`, a larger count is capped to it, a smaller or non-numeric one stays; both spellings (`-Z threads=N`, `-Zthreads=N`) are read; without a grant (no tokens, or 0) nothing changes; a `cdylib` final (a plugin component, whose work is codegen and link-time optimisation of its dependency closure) always gets one front-end thread, and a serial LLVM back end (`-Z no-parallel-backend` appended) whatever the grant, because every extra codegen or ThinLTO worker adds a module's memory on top of the closure the final already holds. usage: 🐍️.py <corpus.json> prints the expected arguments of every case as JSON."""
+"""🔢️ Independent Python oracle of the front-end thread bound (standard library only): for each case, the arguments rustc must receive when the run was admitted `tokens` parallel jobs. A `threads` count of 0 becomes `tokens`, a larger count is capped to it, a smaller or non-numeric one stays; both spellings (`-Z threads=N`, `-Zthreads=N`) are read; without a grant (no tokens, or 0) nothing changes; a `cdylib` final (a plugin component, whose work is codegen and link-time optimisation of its dependency closure) always gets one front-end thread, and a serial LLVM back end (`-Z no-parallel-backend` appended) whatever the grant, because every extra codegen or ThinLTO worker adds a module's memory on top of the closure the final already holds; a wasm final (`--target wasm32-*`) also links on one wasm-ld thread (`-C link-arg=--threads=1` appended last), because lld threads every section pass and its peak grows with the thread count. usage: 🐍️.py <corpus.json> prints the expected arguments of every case as JSON."""
 import json, re, sys
 
 
@@ -13,7 +13,8 @@ def bounded(args, tokens):
                 return args[i + 1]
         return ""
     bounded_decoder = (option("--crate-name"), option("--target")) == ("semio_plugin_actor_input_decoder", "wasm32-wasip2")
-    single = "cdylib" in option("--crate-type").split(",") or bounded_decoder
+    final = "cdylib" in option("--crate-type").split(",")
+    single = final or bounded_decoder
     serial = granted and tokens == 1 or single and (granted or any(value.startswith("-Z") for value in args))
     if single:
         tokens = 1
@@ -31,7 +32,8 @@ def bounded(args, tokens):
         else:
             out.append(arg)
         i += 1
-    return out + ["-Z", "no-parallel-backend"] if serial else out
+    out = out + ["-Z", "no-parallel-backend"] if serial else out
+    return out + ["-C", "link-arg=--threads=1"] if final and option("--target").startswith("wasm32-") else out
 
 
 if __name__ == "__main__":

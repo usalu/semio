@@ -1,0 +1,44 @@
+{
+  "$comment": "Handcrafted language-agnostic cases; the expected values are also produced by the independent Python model in the test, not only by the TypeScript code.",
+  "bounds": [
+    {"id": "declared policy", "path": [], "value": null, "valid": true},
+    {"id": "dependencies at its old 36 GiB image", "path": ["partitions", "dependencies", "capacityBytes"], "value": 38654705664, "valid": false},
+    {"id": "dependencies at 36 GiB are fine once split", "path": ["partitions", "dependencies", "imageShards", "enabled"], "value": true, "extra": {"path": ["partitions", "dependencies", "capacityBytes"], "value": 38654705664}, "valid": true},
+    {"id": "rust unsplit at its old 96 GiB image", "path": ["partitions", "rust", "imageShards", "enabled"], "value": false, "valid": false},
+    {"id": "tools one byte above the cap", "path": ["partitions", "tools", "capacityBytes"], "value": 34359738369, "valid": false},
+    {"id": "elastic rust maximum at its old 96 GiB", "path": ["elastic", "rust", "maximumBytes"], "value": 103080263680, "valid": false},
+    {"id": "elastic graph minimum one byte above the cap", "path": ["elastic", "graph", "minimumBytes"], "value": 34359738369, "valid": false},
+    {"id": "elastic products floor one byte above the cap", "path": ["elastic", "products", "floorBytes"], "value": 34359738369, "valid": false},
+    {"id": "shard maximum twice the cap", "path": ["partitions", "rust", "imageShards", "maximumImageBytes"], "value": 68719476736, "valid": false},
+    {"id": "shard maximum exactly the cap", "path": ["partitions", "rust", "imageShards", "maximumImageBytes"], "value": 34359738368, "valid": true},
+    {"id": "shard root working set above the cap", "path": ["partitions", "rust", "imageShards", "roots", 0, "needBytes"], "value": 34359738369, "valid": false}
+  ],
+  "plans": [
+    {
+      "id": "first layout of a live tree",
+      "children": {"u/l": ["p4fa76d", "pdf7c0a", "UPPER"], "u": ["sealed", "w", "a", "l", "ballast"], "": ["b", "cargo", "components", "u", "published"]},
+      "live": ["pdf7c0a"],
+      "steps": [
+        {"id": "p4fa76d", "key": "p4fa76d", "root": 0, "path": "u/l/p4fa76d", "action": "migrate"},
+        {"id": "pdf7c0a", "key": "pdf7c0a", "root": 0, "path": "u/l/pdf7c0a", "action": "attach"},
+        {"id": "sealed", "key": "sealed", "root": 1, "path": "u/sealed", "action": "migrate"},
+        {"id": "w", "key": "w", "root": 1, "path": "u/w", "action": "migrate"},
+        {"id": "cargo", "key": "cargo", "root": 2, "path": "cargo", "action": "migrate"},
+        {"id": "components", "key": "components", "root": 2, "path": "components", "action": "migrate"}
+      ]
+    },
+    {
+      "id": "an interrupted move resumes even for a live image",
+      "children": {"u/l": [".relayout-pdf7c0a", "pdf7c0a"], "u": [], "": []},
+      "live": ["pdf7c0a"],
+      "steps": [{"id": "pdf7c0a", "key": "pdf7c0a", "root": 0, "path": "u/l/pdf7c0a", "action": "migrate"}]
+    },
+    {
+      "id": "an aside of a key no root claims is ignored",
+      "children": {"u/l": [".relayout-UPPER"], "u": [".relayout-ballast"], "": []},
+      "live": [],
+      "steps": []
+    },
+    {"id": "nothing present", "children": {}, "live": [], "steps": []}
+  ]
+}

@@ -1,4 +1,4 @@
-//! 🧬️ schema of `semio-s-artifact-bim-model` — a path-preserving carve of the artifact root mounts.
+//! 🧬️ schema of `semio-s-artifact-bim-model` — the artifact schema descriptor; the snapshot value types are carved into the `*-values` crates and re-exported here.
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_framework_schema as schema;
@@ -35,22 +35,10 @@ pub mod standards {
                     pub use component::*;
                     #[path = "."]
                     pub mod snapshot {
-                        #[path = "../../📸️snapshot/💠️values/🦀️.rs"]
-                        pub mod values;
-                        #[path = "../../📸️snapshot/🧮️phases-values/🦀️.rs"]
-                        pub mod phases_values;
-                        #[path = "../../📸️snapshot/🔩️schedule-kit-values/🦀️.rs"]
-                        pub mod schedule_kit_values;
-                        #[path = "../../📸️snapshot/🧲️anchors-values/🦀️.rs"]
-                        pub mod anchors_values;
-                        #[path = "../../📸️snapshot/🪛️property-kit-values/🦀️.rs"]
-                        pub mod property_kit_values;
-                        #[path = "../../📸️snapshot/🧷️views-values/🦀️.rs"]
-                        pub mod views_values;
-                        #[path = "../../📸️snapshot/🔧️sheets-values/🦀️.rs"]
-                        pub mod sheets_values;
-                        #[path = "../../📸️snapshot/⚙️coordination-values/🦀️.rs"]
-                        pub mod coordination_values;
+                        pub use semio_s_artifact_bim_model_geometry_values::standards::v1::subsets::any::schema::snapshot::anchors_values;
+                        pub use semio_s_artifact_bim_model_properties_values::standards::v1::subsets::any::schema::snapshot::{phases_values, property_kit_values, schedule_kit_values};
+                        pub use semio_s_artifact_bim_model_issues_values::standards::v1::subsets::any::schema::snapshot::coordination_values;
+                        pub use semio_s_artifact_bim_model_values::standards::v1::subsets::any::schema::snapshot::{sheets_values, values, views_values};
                     }
                     #[path = "."]
                     pub mod inferences {

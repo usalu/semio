@@ -1,80 +1,46 @@
-import {test,expect} from "bun:test";
-import {Database} from "bun:sqlite";
+/** 🌡️ Contract: an emitter built from one checkout snapshot is judged against the files of the generation it is compared with, never against paths that no longer exist and never as falsely fresh. */
+import {expect,test} from "bun:test";
 import {createHash} from "node:crypto";
-import {mkdtempSync,mkdirSync,rmSync,writeFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {staleDescriptorEmitterCargoInputsV1,staleDescriptorEmitterInputsV1} from "../🟦️.ts";
-import fixture from "./🔣️.json" with {type:"json"};
+import {checkoutSnapshotRelativeV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/📸️checkout-snapshot/🟦️.ts";
+import {descriptorEmitterRecordedPathV1,staleDescriptorEmitterCargoInputsV1,staleDescriptorEmitterInputsV1} from "../🟦️.ts";
 
-const ABC="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",EMPTY="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 
-/** 🧪️ Known-answer SHA-256 vectors (FIPS 180-4) stand in for the recorded compiler receipt, so the oracle shares no hashing code with the implementation. */
-async function withWorkspace<T>(body:(root:string,receipt:(rows:readonly [string,string][])=>string)=>Promise<T>):Promise<T>{
- const root=mkdtempSync(join(tmpdir(),"emitter-fresh-"));
+test("a path recorded below any snapshot root is named by its workspace-relative part, every other path is not",()=>{
+ expect(checkoutSnapshotRelativeV1("/m/.cache/s/0123456789ab/a/b.rs")).toBe("a/b.rs");
+ expect(checkoutSnapshotRelativeV1("C:\\m\\.cache\\s\\0123456789ab\\a\\b.rs")).toBe("a/b.rs");
+ expect(checkoutSnapshotRelativeV1("/m/a/s/0123456789/b.rs")).toBeUndefined();
+ expect(checkoutSnapshotRelativeV1("/m/a/b.rs")).toBeUndefined();
+ expect(descriptorEmitterRecordedPathV1("/live","/live/a.rs")).toBe("/live/a.rs");
+ expect(descriptorEmitterRecordedPathV1("/live","/x/.cache/s/0123456789ab/a/b.rs")).toBe("/live/a/b.rs");
+ expect(descriptorEmitterRecordedPathV1("/live","/elsewhere/c.rs")).toBe("/elsewhere/c.rs");
+ expect(descriptorEmitterRecordedPathV1("/live","/live/.cache/s/0123456789ab/a/b.rs")).toBe("/live/a/b.rs");
+ expect(descriptorEmitterRecordedPathV1("/live/.cache/s/fedcba987654","/live/.cache/s/0123456789ab/a/b.rs")).toBe("/live/.cache/s/fedcba987654/a/b.rs");
+ expect(descriptorEmitterRecordedPathV1("/snap","/live/a/b.rs","/live")).toBe("/snap/a/b.rs");
+ expect(descriptorEmitterRecordedPathV1("/snap","/live/.cache/b/c","/live")).toBe("/live/.cache/b/c");
+ expect(descriptorEmitterRecordedPathV1("/snap","/other/x","/live")).toBe("/other/x");
+});
+
+test("an emitter recorded from an older snapshot is fresh for a generation whose files are equal and stale for the files that differ",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"fr-")));
  try{
-  mkdirSync(join(root,"src"),{recursive:true});mkdirSync(join(root,".cache","registry"),{recursive:true});
-  return await body(root,rows=>JSON.stringify({strings:rows.map(([path])=>path),inputs:rows.map(([,sha256],index)=>[index,"file",sha256])}));
+  mkdirSync(join(root,"a"),{recursive:true});writeFileSync(join(root,"a","same.rs"),"same");writeFileSync(join(root,"a","moved.rs"),"new");
+  const old="/state/.cache/s/0123456789ab",receipt=JSON.stringify({strings:[old+"/a/same.rs",old+"/a/moved.rs",old+"/gone.rs"],inputs:[[0,"file",sha("same")],[1,"file",sha("old")],[2,"file",sha("x")]]});
+  expect(await staleDescriptorEmitterInputsV1(receipt,root)).toEqual({checked:3,stale:["a/moved.rs","gone.rs"]});
  }finally{rmSync(root,{recursive:true,force:true});}
-}
-
-test("a receipt whose recorded hashes match the sources is fresh",async()=>{
- await withWorkspace(async(root,receipt)=>{
-  writeFileSync(join(root,"src","a.rs"),"abc");writeFileSync(join(root,"src","b.rs"),"");
-  expect(await staleDescriptorEmitterInputsV1(receipt([[join(root,"src","a.rs"),ABC],[join(root,"src","b.rs"),EMPTY]]),root)).toEqual({checked:2,stale:[]});
- });
 });
 
-test("an edited or deleted source is stale, in sorted relative posix form",async()=>{
- await withWorkspace(async(root,receipt)=>{
-  writeFileSync(join(root,"src","a.rs"),"abd");writeFileSync(join(root,"src","c.rs"),"abc");
-  const outcome=await staleDescriptorEmitterInputsV1(receipt([[join(root,"src","c.rs"),ABC],[join(root,"src","a.rs"),ABC],[join(root,"src","gone.rs"),ABC]]),root);
-  expect(outcome).toEqual({checked:3,stale:["src/a.rs","src/gone.rs"]});
- });
-});
-
-test("dependency sources under .cache and files outside the workspace are not authored inputs",async()=>{
- await withWorkspace(async(root,receipt)=>{
-  const outside=mkdtempSync(join(tmpdir(),"emitter-outside-"));
-  try{expect(await staleDescriptorEmitterInputsV1(receipt([[join(root,".cache","registry","dep.rs"),ABC],[join(outside,"x.rs"),ABC]]),root)).toEqual({checked:0,stale:[]});}
-  finally{rmSync(outside,{recursive:true,force:true});}
- });
-});
-
-test("a receipt without hashed inputs is refused",async()=>{
- await expect(staleDescriptorEmitterInputsV1("{}",tmpdir())).rejects.toThrow("without hashed inputs");
-});
-
-test("emitter reuse accepts unrelated lock edits and refuses changed consumed Cargo inputs",async()=>{
- await withWorkspace(async root=>{
-  const lock=join(root,"Cargo.lock"),manifest=join(root,"emitter","Cargo.toml"),config=join(root,".cargo","config.toml");
-  const cargoHome=join(root,".cache","registry"),homeConfig=join(cargoHome,"config.toml");
-  const manifestText=`[package]\nname = "emitter"\nversion = "${fixture.versions.emitter}"\n`;
-  const lockText=(dependency:string,unrelated:string)=>`version = 4\n\n[[package]]\nname = "emitter"\nversion = "${fixture.versions.emitter}"\ndependencies = [\n "dependency",\n]\n\n[[package]]\nname = "dependency"\nversion = "${dependency}"\n\n[[package]]\nname = "unrelated"\nversion = "${unrelated}"\n`;
-  const sha=(bytes:string)=>createHash("sha256").update(bytes).digest("hex");
-  const oldLock=lockText(fixture.versions.dependency,fixture.versions.unrelated),lockDigest=sha(oldLock);
-  const retained=join(root,"retained");
-  writeFileSync(retained,oldLock);
-  mkdirSync(join(root,"emitter"));mkdirSync(join(root,".cargo"));
-  const observation={manifest,args:["build"],units:[],invocationInputs:[
-   {path:lock,sha256:lockDigest},{path:manifest,sha256:sha(manifestText)},{path:config,sha256:sha("original")},{path:homeConfig,sha256:sha("original")},
-  ]};
-  const files=new Map([["blobs/"+lockDigest,{path:retained}]]);
-  const oracle=new Database(":memory:");
-  try{
-   const expected=oracle.query<{path:string},[string]>("select value as path from json_each(?) order by key");
-   for(const row of fixture.cases){
-    writeFileSync(lock,lockText(row.dependency,row.unrelated));
-    writeFileSync(manifest,manifestText+(row.manifest==="edited"?"edition = \"2024\"\n":""));
-    writeFileSync(config,row.config);
-    writeFileSync(homeConfig,row.homeConfig);
-    const pinned=join(root,"retired","Cargo.lock");
-    const alternate={...observation,args:["build","--config","resolver.lockfile-path="+JSON.stringify(pinned)],invocationInputs:observation.invocationInputs.map(row=>row.path===lock?{...row,path:pinned}:row)};
-    for(const selected of [observation,alternate]){
-      const result=await staleDescriptorEmitterCargoInputsV1(selected,root,{origin:{cargoHome},files});
-      expect(result.stale,row.description).toEqual(expected.all(JSON.stringify(row.stale)).map(row=>row.path));
-    }
-   }
-  }finally{oracle.close();}
- });
+test("the Cargo lock and manifest of an emitter built in the live tree or in an earlier snapshot are found in the snapshot being compared",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"fc-")));
+ try{
+  writeFileSync(join(root,"Cargo.lock"),"lock");writeFileSync(join(root,"Cargo.toml"),"[package]\nname=\"e\"\nversion=\"0.1.0\"\n");
+  for(const recorded of ["/live/m",  "/state/.cache/s/0123456789ab"]){
+   const observation={manifest:recorded+"/Cargo.toml",args:["build","--manifest-path",recorded+"/Cargo.toml"],units:[],invocationInputs:[{path:recorded+"/Cargo.lock",kind:"file",sha256:sha("lock")},{path:recorded+"/Cargo.toml",kind:"file",sha256:sha("[package]\nname=\"e\"\nversion=\"0.1.0\"\n")}]} as never;
+   const retained={origin:{cargoHome:"/home"},files:new Map()};
+   expect(await staleDescriptorEmitterCargoInputsV1(observation,root,retained,undefined,"/live/m")).toEqual({stale:[]});
+  }
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

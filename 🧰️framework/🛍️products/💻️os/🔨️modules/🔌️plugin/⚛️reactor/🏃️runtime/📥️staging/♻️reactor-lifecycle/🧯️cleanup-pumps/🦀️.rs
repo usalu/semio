@@ -140,11 +140,13 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
     pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{instance_id,cell,progress,contended,..}=self;let Some(original)=cell.as_ref()else{return CleanupTurn::Cancelled};
         let turn=match cx.with_original_native_weak_source(original,|cell,cx|Ok(Self::advance_source(cell,*instance_id,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)};
-        if runtime_cleanup_reading_is_starved(*progress,runtime_live_pass_budget_spent(cx)){*contended=true}
+        let ladder_starved=semio_plugin_reactor_app::maintenance_starved_take();
+        if runtime_cleanup_reading_is_starved(*progress,ladder_starved||runtime_live_pass_budget_spent(cx)){*contended=true}
         turn
     }
     pub fn advance_source(cell:&RuntimeAppCell<PA>,instance_id:u32,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         cx.set_stage("plugin-runtime-live-cleanup");
+        semio_plugin_reactor_app::maintenance_starved_take();
         *outcome_progress = None;
         *contended = false;
         if cx.is_cancelled(){return CleanupTurn::Cancelled;}
@@ -275,6 +277,31 @@ pub fn runtime_drain_maintenance_source<PA:PluginApp>(cell:&RuntimeAppCell<PA>,c
 #[doc(hidden)]
 pub fn runtime_cleanup_reading_is_starved(progress: Option<PluginLifecycleStep>, budget_spent: bool) -> bool {
     budget_spent && matches!(progress, Some(PluginLifecycleStep::Progress(receipt)) if receipt == RetainedCloneProgress::default())
+}
+/// 🩻️ Why one live maintenance reading moved or did not move: the cause the stall verdict judges instead of an empty receipt that means four different things.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeMaintenanceReading {
+    /// 📈️ A unit released something, the ladder completed, or nothing was read: the stall run is over.
+    Progress,
+    /// 🌫️ The turn could not fund a unit (yield, empty stock, archive reserve, repeated pressure pump): scheduling latency that earns no debt and does not clear it.
+    Starved,
+    /// ⏳️ An external owner (host, worker, replacement, media) holds the next move, as the close verdict already reads `Blocked` and `AwaitingInput`: the stall run is over.
+    Waiting,
+    /// 🧱️ A funded runnable step moved nothing: the only reading that buys stall debt.
+    Fruitless,
+}
+
+/// 🩻️ Classifies one live maintenance reading by its cause; `starved` is the job's scheduling-latency witness.
+#[doc(hidden)]
+pub fn runtime_maintenance_reading(starved: bool, progress: Option<PluginLifecycleStep>) -> RuntimeMaintenanceReading {
+    let empty = progress.is_none_or(|step| matches!(step, PluginLifecycleStep::Progress(receipt) if receipt == RetainedCloneProgress::default()));
+    match progress {
+        Some(PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. }) => RuntimeMaintenanceReading::Waiting,
+        _ if starved && empty => RuntimeMaintenanceReading::Starved,
+        Some(PluginLifecycleStep::Progress(_)) if empty => RuntimeMaintenanceReading::Fruitless,
+        _ => RuntimeMaintenanceReading::Progress,
+    }
 }
 /// 🪫️ True when the turn can no longer fund a live maintenance unit: its deadline or fuel is spent, or its retained item or depth stock is empty.
 ///

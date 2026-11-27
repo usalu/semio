@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// 🎯️ Goal-gate laws: the acceptance schema interpreter agrees with Ajv (the third-party JSON Schema 2020-12 oracle) on
+// 🎯️ Goal-gate laws: the acceptance schema interpreter agrees with Ajv (the third-party JSON Schema oracle, class selected by the document's `$schema`: draft-07 or 2020-12) on
 // every fixture record, the repository goal plan validates under both, and scripted runs reproduce the fixture's gating,
 // requirement, record-precedence, browser-budget, per-outcome verdict and zero-touch provider outcomes.
 
@@ -15,6 +15,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import { ACCEPTANCE_SCHEMA_REL_PATH, GOAL_PLAN_REL_PATH, acceptanceCheckResult, acceptanceSchemaViolations, readGoalPlan, type AcceptanceStatus, type GoalPlan, type ProvidedRequirement } from "../../📋️orchestration/🟦️.ts";
 import { runGoalGate, type GoalGateExecutor, type GoalGateProvisioner } from "../../📋️orchestration/🚦️goal-gate/🟦️.ts";
@@ -35,7 +36,7 @@ const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixt
   }[];
 };
 const schema = JSON.parse(readFileSync(join(repoRoot, ACCEPTANCE_SCHEMA_REL_PATH), "utf8"));
-const ajv = new Ajv2020({ allErrors: true, strict: false });
+const ajv = new (String(schema.$schema).includes("2020-12") ? Ajv2020 : Ajv)({ allErrors: true, strict: false });
 ajv.addSchema(schema);
 const oracle = (definition: string) => ajv.getSchema(`${schema.$id}#/$defs/${definition}`)!;
 

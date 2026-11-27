@@ -14,6 +14,7 @@ import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import generationSchemaV1 from "../🕰️generations/🧬️schema/🔣️.json" with{type:"json"};
 import {declareFormatStampV1} from "../../🧷️format-stamps/🟨️.mjs";
+import inferenceProtocolSchemaV1 from "../📥️inference/🔖️stamps/🧬️schema/🔣️.json" with{type:"json"};
 
 export const javascriptManagerV1=selectPackageManagerV1("javascript");
 
@@ -47,12 +48,16 @@ const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSour
 
 export const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 
-/** 🧾️ The modules that define what a remembered owner admission means: the discovery of an owner, the closure of the admission, the roster and the schemas of the admission. An edit of any other graph module leaves a remembered admission valid, because every remembered row revalidates its own observations.
+/** 🧾️ The modules that define what a remembered owner admission means: the closure of the admission, the roster and the schemas of the admission. The discovery of an owner is named by the declared stamps of the inferrers (`graphAdmissionStampsV1`), not by its bytes: an edit of any other graph module leaves a remembered admission valid, because every remembered row revalidates its own observations.
  * @see ../📥️load/🧠️admission-memo/🟦️.ts */
-export const graphAdmissionFormatUrlsV1=():URL[]=>{const origin=physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL);return ["../📥️inference/🔎️owner-discovery/🟨️.mjs","../📥️inference/🔎️owner-discovery/🕸️wasm-outputs/🟦️.ts","../🚪️admission/🟦️.ts","../🧭️roster/🟨️.mjs","../🧭️file-owner/🟨️.mjs","../../🧬️schema/🚪️admission.json","../../🧬️schema/📋️owners.json","../../🧬️schema/🚪️selection.json"].map(path=>new URL(path,origin));};
+export const graphAdmissionFormatUrlsV1=():URL[]=>{const origin=physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL);return ["../🚪️admission/🟦️.ts","../🧭️roster/🟨️.mjs","../🧭️file-owner/🟨️.mjs","../../🧬️schema/🚪️admission.json","../../🧬️schema/📋️owners.json","../../🧬️schema/🚪️selection.json"].map(path=>new URL(path,origin));};
 
-/** 🔖️ The hash of `graphAdmissionFormatUrlsV1`: a remembered admission and the remembered facts of its owners are keyed by it instead of by the whole graph implementation. */
-export const graphAdmissionFormatHashV1=(capture:(path:string)=>string=path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256):string=>{const hash=createHash("sha256");for(const url of graphAdmissionFormatUrlsV1())hash.update(capture(fileURLToPath(url)));return hash.digest("hex");};
+/** 🏷️ The declared stamp of every graph inferrer by id, sorted: the protocol versions of the code that derives an owner's facts (discovery, source analyses, script inputs, target policy, ...). A changed result of discovery moves the stamp of its inferrer, so an edit that keeps every stamp (a refactor, an instrument, a comment) keeps every remembered owner fact.
+ * @see ../📥️inference/🔖️stamps/🟨️.mjs */
+export const graphAdmissionStampsV1=():string[]=>Object.entries(inferenceProtocolSchemaV1.definitions.Protocol.const.inferrers as Record<string,{stamp:string}>).map(([id,row])=>id+"="+row.stamp).sort();
+
+/** 🔖️ The hash of `graphAdmissionFormatUrlsV1` and `graphAdmissionStampsV1`: a remembered admission and the remembered facts of its owners are keyed by it instead of by the whole graph implementation. */
+export const graphAdmissionFormatHashV1=(capture:(path:string)=>string=path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256,stamps:readonly string[]=graphAdmissionStampsV1()):string=>{const hash=createHash("sha256");for(const url of graphAdmissionFormatUrlsV1())hash.update(capture(fileURLToPath(url)));hash.update(JSON.stringify(stamps));return hash.digest("hex");};
 
 export const loadedGraphAdmissionFormatV1=graphAdmissionFormatHashV1();
 

@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:laws/image-lease-readers/policy",
+  "title": "Image lease readers policy",
+  "description": "Language-agnostic data of the image-lease-readers law: which source files compose a path below the mount of a cache image (`.cache/b/<partition>/m`), which calls open a file, which callee callbacks and which parameters mean that the read runs under the shared lease of the image, and the documented call sites that open such a path outside a lease (the caller holds the image through its read custody, a metadata probe, test support).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "roots",
+    "skipDirectories",
+    "extensions",
+    "skipSuffixes",
+    "mountPatterns",
+    "rootPatterns",
+    "rootTypes",
+    "openers",
+    "leaseCallees",
+    "leasedParameters",
+    "leasedArguments",
+    "carrierMethods",
+    "classes",
+    "entries"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "skipDirectories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^\\.[a-z]+$"
+      }
+    },
+    "skipSuffixes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "mountPatterns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "site",
+          "class",
+          "reason"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "site": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A fragment of the call without whitespace, for example `statSync(path(namespace,key))`; the entry documents every unleased call of the file whose text contains it."
+          },
+          "class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "de"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "de": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "openers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "leaseCallees": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "leasedParameters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rootPatterns": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Regular expressions over the text of an expression: a match means the expression is a path below the image of a cache partition (a call of a helper that resolves an area directory, the declared partition table). Names declared from such an expression carry the path on, through variables, parameters, assignments, loop bindings and calls of functions of the same file, whatever the shape of the expression.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rootTypes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Regular expressions over a type annotation: a name declared with a matching type (a partition table, a request that carries the directory to walk) carries a path below the image of a cache partition.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "carrierMethods": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Names of methods that store their arguments in their receiver (`candidates.push(path)`, `known.set(key, path)`): when an argument carries a path below an image, the receiver carries it on.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "leasedArguments": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Regular expressions over the argument text of an opener call: a match means the call hands a reader of the image to its callee, which runs every read inside the reader (the callee file is judged by the same law).",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

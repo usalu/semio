@@ -16,7 +16,7 @@ fn retire_note_window_mutation(mutation: NoteCompositeWindowTransientMutation) {
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<NoteCompositeWindowTransientMutation>(), maximum_depth: 4, ..Default::default() };
     let (mut retirement, birth) = semio_framework_value::retirement::admit_owned_retirement(mutation, grant).map_err(|(error, _)| error).expect("Note transient owner admission");
     assert!(birth.fits(grant));
-    store::test_support::drive_retirement(retirement.as_mut()).expect("Note transient owner retirement");
+    semio_os_store_test_support::drive_retirement(retirement.as_mut()).expect("Note transient owner retirement");
     assert!(retirement.terminal_is_empty());
 }
 
@@ -90,11 +90,11 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
         let transient: NoteCompositeWindowTransient = serde_json::from_value(case.transient.clone()).expect("independent transient oracle");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&config)).expect("config JSON"), case.config);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&transient)).expect("transient JSON"), case.transient);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
+        semio_os_store_test_support::assert_dsl_pack_equivalence(&config);
+        semio_os_store_test_support::assert_dsl_pack_equivalence(&transient);
         let mutation = NoteCompositeWindowConfigMutation::SetCamera(config.camera);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
         protocol::os_dsl::original_receiving::check_receiving_round_trip(&[mutation]).expect("bounded camera receiving matches the independently decoded fixture");
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
     }
 }

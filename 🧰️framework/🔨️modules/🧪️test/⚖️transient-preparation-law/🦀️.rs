@@ -57,7 +57,7 @@ fn retire<T: Send + 'static>(label: &str, factory: &Arc<dyn store::ArtifactOwned
         Ok(admitted) => admitted,
         Err((error, _)) => panic!("{label}: the bundle's controlled retirement admits the owner: {error}"),
     };
-    store::test_support::drive_retirement(owner.as_mut()).unwrap_or_else(|error| panic!("{label}: the owner retires to its terminal-empty witness: {error}"));
+    semio_os_store_test_support::drive_retirement(owner.as_mut()).unwrap_or_else(|error| panic!("{label}: the owner retires to its terminal-empty witness: {error}"));
 }
 
 /// 🔁️ Applies `mutation` to `base`, undoes it through its inverse rows, redoes it, and retires every owner through the bundle.

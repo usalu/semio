@@ -146,9 +146,9 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
     }
 
     #[test]
-    fn permanently_blocked_live_cleanup_faults_after_its_stall_credit_without_claiming_released_ownership() {
+    fn permanently_fruitless_live_cleanup_faults_after_its_stall_credit_without_claiming_released_ownership() {
         let (stalled, since) = live_stall_state();
-        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" });
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         for step in 1..u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(1 + step), 0, &std::sync::atomic::AtomicU64::new(0)).0, RuntimeMaintenanceStatus::Ready);
         }
@@ -162,7 +162,7 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
     #[test]
     fn cancelled_live_cleanup_outcomes_clear_the_stall_run_and_never_fault() {
         let (stalled, since) = live_stall_state();
-        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected wait" });
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         for step in 1..u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
             runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(1 + step), 0, &std::sync::atomic::AtomicU64::new(0));
         }
@@ -175,8 +175,8 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
 
     /// 🛬️ LAW (boot): a live cleanup Blocked behind a whole-document load that keeps advancing its instance epoch never faults, however many turns and however much wall time pass; the same cleanup with a frozen instance epoch faults after its stall credit.
     #[test]
-    fn live_cleanup_blocked_behind_a_progressing_load_never_faults_but_a_frozen_instance_does() {
-        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
+    fn live_cleanup_fruitless_behind_a_progressing_load_never_faults_but_a_frozen_instance_does() {
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         let (stalled, since) = live_stall_state();
         let seen = AtomicU64::new(0);
         for turn in 1..=4 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
@@ -192,12 +192,18 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
         assert_eq!(verdict, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
     }
 
+    /// 🔎️ LAW: a live zero-progress fault names the last maintenance reading and the last progressing owner, so a browser console line says what the cleanup waited behind.
+    #[test]
+    fn a_live_zero_progress_fault_names_its_blocking_reading_and_last_owner() {
+        let fault = semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault_with_reading("live", RuntimeCleanupFault::ZeroProgress, 1, 64_000, "blocked: snapshot retirement waits for its exact live media owner; last progressing owner: host-crossing");
+        assert!(fault.to_string().contains("(last reading: blocked: snapshot retirement waits for its exact live media owner; last progressing owner: host-crossing)"), "{fault}");
+    }
+
     /// ⏱️ LAW: the live pump's zero-progress verdict is priced in BOTH currencies, like the close ladder's. An ingress-free reactor turn repeats the live pump up to 32 times while a funded document archive is runnable, so a booting natural-file import read 256 fruitless steps inside the same microsecond and faulted with `plugin.internal.zero-progress (elapsed 0us, ceiling 8000us)`. Reproduced with a virtual clock.
     #[test]
     fn live_zero_progress_cannot_fault_before_its_stall_credit_elapses() {
         let zero = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
-        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
-        for progress in [zero, blocked] {
+        for progress in [zero] {
             let (stalled, since) = live_stall_state();
             for _ in 0..4 * RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
                 assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &stalled, &since, Some(1), 0, &std::sync::atomic::AtomicU64::new(0)).0, RuntimeMaintenanceStatus::Ready);
@@ -226,6 +232,40 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
         }
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
         assert_eq!(since.load(Ordering::SeqCst), 0);
+    }
+
+    fn fixture_step(name: &str) -> Option<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep> {
+        use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep as Step;
+        match name {
+            "empty" => Some(Step::Progress(RetainedCloneProgress::default())),
+            "progress" => Some(Step::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })),
+            "complete" => Some(Step::Complete(RetainedCloneProgress::default())),
+            "blocked" => Some(Step::Blocked { reason: "waits for another owner" }),
+            "awaiting" => Some(Step::AwaitingInput { reason: "waits for its original host" }),
+            _ => None,
+        }
+    }
+
+    /// 🩻️ LAW (vectors `🩻️live-stall-reading`): the live reading is judged by its cause. Starved readings buy no debt, waiting on an external owner (a stage 14 or 24 archive or replacement phase, `Blocked`) never faults however many readings and microseconds pass, and only a funded fruitless step faults after the limit and credit.
+    #[test]
+    fn live_readings_are_judged_by_their_cause_over_language_agnostic_vectors() {
+        use semio_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeMaintenanceReading as Reading, runtime_maintenance_reading};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🩻️live-stall-reading/🔣️.json")).unwrap();
+        assert_eq!(fixture["zeroProgressLimit"].as_u64().unwrap(), u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT));
+        for case in fixture["cases"].as_array().unwrap() {
+            let expected = match case["reading"].as_str().unwrap() { "fruitless" => Reading::Fruitless, "starved" => Reading::Starved, "waiting" => Reading::Waiting, _ => Reading::Progress };
+            assert_eq!(runtime_maintenance_reading(case["starved"].as_bool().unwrap(), fixture_step(case["step"].as_str().unwrap())), expected, "{case}");
+        }
+        for sequence in fixture["sequences"].as_array().unwrap() {
+            let (stalled, since, seen) = (AtomicU32::new(0), AtomicU64::new(0), AtomicU64::new(0));
+            let (count, span) = (sequence["count"].as_u64().unwrap(), sequence["spanUs"].as_u64().unwrap());
+            let mut faulted = false;
+            for index in 0..count {
+                let verdict = runtime_live_cleanup_nonterminal_status(sequence["starved"].as_bool().unwrap(), fixture_step(sequence["step"].as_str().unwrap()), &stalled, &since, Some(1 + index * span / count), 0, &seen);
+                faulted |= verdict.0 == RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress);
+            }
+            assert_eq!(faulted, sequence["faults"].as_bool().unwrap(), "{sequence}");
+        }
     }
 
     #[test]

@@ -736,6 +736,32 @@
       ]
     },
     {
+      "id": "schema-catalog-fresh",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🔍️discovery/🧾️schema-scope-catalog/🧪️tests/🧮️catalog-freshness/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "schema-twins-fresh",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🎛️commands/🧬️schema/🧬️twin-projection/🧪️tests/🧮️twins-freshness/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "import-edges",
       "budgetMs": 300000,
       "typecheck": "none",

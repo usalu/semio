@@ -10,6 +10,7 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_cell;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::recalculation::xlsx_with_recalculated_caches;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_cell;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
@@ -417,7 +418,7 @@ pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row:
         if render_xlsx_cell_value(&cell.value, &workbook.shared_strings, locale) == value {
             return Ok(Emit::default());
         }
-        return Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value, locale), node: None })], ..Default::default() });
+        return Ok(Emit { artifact_mutations: xlsx_with_recalculated_caches(snapshot, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value, locale), node: None })]), ..Default::default() });
     }
     let address = xlsx_cell_vacancy_address(snapshot, sheet_name, row, column).map_err(|message| fault("cell-stale", message))?;
     if address.worksheet.revision != revision {
@@ -426,7 +427,7 @@ pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row:
     if value.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: parse_xlsx_cell_value(value, locale), node: None })], ..Default::default() })
+    Ok(Emit { artifact_mutations: xlsx_with_recalculated_caches(snapshot, vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: parse_xlsx_cell_value(value, locale), node: None })]), ..Default::default() })
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEditor {
@@ -442,7 +443,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEdi
     }
 
     fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
-        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
+        edit_rules::special(event, snapshot).map(|mutations| mutations.map(|mutations| xlsx_with_recalculated_caches(snapshot, mutations))).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

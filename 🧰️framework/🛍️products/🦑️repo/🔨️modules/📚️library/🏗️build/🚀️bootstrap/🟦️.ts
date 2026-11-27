@@ -70,12 +70,15 @@ export function javascriptScopeOwnersV1(scopes:readonly string[],roots:readonly 
  return [...owners].sort();
 }
 
-/** 🪜️ Installs the owners of a planned task closure after the graph exists; a no-op unless closure mode is selected. */
-export async function ensureBuildClosureScopesV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,projectRoots:()=>readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<readonly string[]>{
- if(javascriptInstallModeV1(environment)!=="closure")return [];
+/** 🪜️ Installs, on demand and with the progress and cancellation of the dependency storage hold, the scopes a planned task closure needs after the graph exists, whatever the install mode: a worker that installed only the scopes of its stages gets any other scope the moment a command needs it, and a scope whose receipt is current costs one receipt check. */
+export async function ensureBuildScopesV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,projectRoots:()=>readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<readonly string[]>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const manifest=JSON.parse(readFileSync(join(root,"package.json"),"utf8")) as {workspaces?:string[]},owners=javascriptScopeOwnersV1([".",...(manifest.workspaces??[])],[...projectRoots(),...buildPolicy.javascriptInstallRoots]);
  if(!owners.length)return owners;
+ try{
+  const {cacheAreaHomeV1}=await import("../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts"),{readJavascriptDependencySyncReceiptV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts"),{syncRequestRowsV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🟦️.ts"),receipt=readJavascriptDependencySyncReceiptV1(join(cacheAreaHomeV1(root,"dependencies").directory,"m"));
+  if(receipt!==undefined&&syncRequestRowsV1(receipt,{kind:"scopes",owners})!=="incomplete")return owners;
+ }catch{}
  const {prepareJavascriptDependencies,withJavascriptDependencyStorageV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");
  await withJavascriptDependencyStorageV1(root,invocation,phaseControl,(store,control)=>prepareJavascriptDependencies("sync",root,store,control,{kind:"scopes",owners}));checkResourceLeaseControl(phaseControl);return owners;
 }

@@ -304,28 +304,34 @@ it("uses both inverse bind transforms for a weighted cloth profile and its drawi
   expect(projected.min.y).toBeCloseTo(expected.min.y,6);
 });
 
-it("retains the measured horn stations at print scales and detects deformed substitutes", () => {
+it("judges the goat horns at 1:500 on their own and finds each one thinned below the bone limit", () => {
   const goat = JSON.parse(readFileSync(new URL("../../🗂️catalog/🐕️animals/goat/🔣️.json", import.meta.url), "utf8")).asset;
-  const fine = goat.volumes[50].body.find((s: VolumeSolid) => s.id === "horn-n");
-  const coarse = goat.volumes[500].body.find((s: VolumeSolid) => s.id === "horn-n");
-  const index = goat.volumes[500].body.indexOf(coarse);
-  const findings = () => featureRule(goat,[500]).findings.filter(f => f.path === `volumes.500.body[${index}]`);
-  const point = (xyz: [number,number,number]) => new Vector3(...xyz);
-  expect(point(coarse.sections[0].at).distanceTo(point(fine.sections[0].at))).toBe(0);
-  expect(point(coarse.sections.at(-1).at).distanceTo(point(fine.sections.at(-1).at))).toBe(0);
-  expect(coarse.sections.length).toBeLessThan(fine.sections.length);
-  coarse.id = "near-horn";
-  expect(findings()).toHaveLength(0);
-  const station = coarse.sections[1];
-  const radius = station.rx;
-  station.rx *= 0.5;
-  expect(findings()).toHaveLength(1);
-  station.rx = radius;
-  coarse.transform = { translation: [0.01,0,0] };
-  expect(findings()).toHaveLength(1);
-  delete coarse.transform;
-  coarse.material = "short-coat";
-  expect(findings()).toHaveLength(1);
+  const body: VolumeSolid[] = goat.volumes[500].body;
+  const limit = Math.min(0.075, thinnestDrawn(goat, 500).get("head")!);
+  expect(limit).toBeCloseTo(0.02642, 5);
+  const horns = body.filter(s => s.id.startsWith("horn-"));
+  expect(horns.map(s => s.id)).toEqual(["horn-n", "horn-f"]);
+  const findings = (horn: VolumeSolid) => featureRule(goat, [500]).findings.filter(f => f.path === `volumes.500.body[${body.indexOf(horn)}]`);
+  const smallest = (horn: VolumeSolid) => 2 * Math.min(Math.max(...horn.sections!.map(s => s.rx)), Math.max(...horn.sections!.map(s => s.ry)));
+  for (const horn of horns) {
+    expect(smallest(horn)).toBeGreaterThan(limit);
+    expect(findings(horn)).toHaveLength(0);
+  }
+  expect(featureRule(goat, [500]).findings).toHaveLength(0);
+  for (const horn of horns) {
+    const original = horn.sections!.map(s => ({ rx: s.rx, ry: s.ry }));
+    for (const s of horn.sections!) { s.rx *= 0.5; s.ry *= 0.5; }
+    const found = findings(horn);
+    expect(found).toHaveLength(1);
+    expect(found[0]!.message.en).toContain(`Solid "${horn.id}" of body is 13.8 mm thin, below 26.4 mm`);
+    expect(found[0]!.message.en).toContain('the thinnest drawing of bone "head"');
+    horn.sections!.forEach((s, i) => { s.rx = original[i]!.rx; s.ry = original[i]!.ry; });
+    expect(findings(horn)).toHaveLength(0);
+  }
+  const [near] = horns;
+  near!.transform = { translation: [0.01, 0, 0] };
+  near!.material = "short-coat";
+  expect(findings(near!)).toHaveLength(0);
 });
 
 it("measures the load-bearing and working sections of the household models at every scale", () => {

@@ -8,11 +8,9 @@ fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(),
     let mut born = 0;
     let mut released = 0;
     for _ in 0..10_000 {
-        let grant = physical_test_close_grant();
-        assert!(owner.next_close_copy_byte_demand().expect("current completed record copy demand") <= grant.maximum_copy_bytes);
-        assert!(owner.next_close_capacity_byte_demand(grant.maximum_copy_bytes).expect("current completed record capacity demand") <= grant.maximum_capacity_bytes);
-        assert!(owner.next_close_release_byte_demand().expect("current completed record release demand") <= grant.maximum_release_bytes);
-        assert!(owner.next_close_depth_demand().expect("current completed record depth demand") <= grant.maximum_depth);
+        let floor = physical_test_close_grant();
+        let copy = owner.next_close_copy_byte_demand().expect("current completed record copy demand").max(floor.maximum_copy_bytes);
+        let grant = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_close_capacity_byte_demand(copy).expect("current completed record capacity demand").max(floor.maximum_capacity_bytes), maximum_release_bytes: owner.next_close_release_byte_demand().expect("current completed record release demand").max(floor.maximum_release_bytes), maximum_depth: owner.next_close_depth_demand().expect("current completed record depth demand").max(floor.maximum_depth), ..floor };
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result);
         let step = step.expect("completed record bounded close");
         let progress = step.progress();

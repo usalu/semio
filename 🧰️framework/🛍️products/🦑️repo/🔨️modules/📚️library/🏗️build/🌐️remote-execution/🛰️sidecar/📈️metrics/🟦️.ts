@@ -10,7 +10,8 @@ import{readBuildCountersV1}from"../../../../⚡️caching/🦀️cargo/🗃️un
 import{parseCounterLedgerV1,readEventCountsV1}from"../../../📈️counter-ledger/🟦️.ts";
 import{casCensusPathV1,casCounterDirectoryV1,casRootV1}from"../../../🗄️cas/🗃️store/🟦️.ts";
 import{NX_CACHE_POLICY_V1}from"../../../../⚡️caching/🚀️bootstrap/📊️nx-cache/🟦️.ts";
-import{readOffloadCountersV1}from"../../🚀️offload/📊️counters/🟦️.ts";
+import{readOffloadCountersV1,readOffloadReasonCountersV1}from"../../🚀️offload/📊️counters/🟦️.ts";
+import{readRemoteCacheClientGroupsV1}from"../../../🌐️remote-cache/🛰️fleet/🧮️client-counters/🟦️.ts";
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 
 export{metricsScratchPathV1};
@@ -36,14 +37,6 @@ export function fleetMetricsSourcesV1(input:Readonly<{root:string;environment:Re
  const now=input.now??Date.now,store=input.environment.SEMIO_FLEET_STORE_ROOT,own=store===undefined||store===""?undefined:join(store,"v1","origins",input.origin);
  const read=(name:string):(()=>Json|null)=>own===undefined?()=>null:jsonByStamp(join(own,name));
  const pool=read("pool.json"),slice=read("slice-memory.json"),ready=read("ready.json"),head=read("head.json"),census=jsonByStamp(casCensusPath(input.environment));
- const cacheFile=store===undefined||store===""?undefined:jsonByStamp(join(store,"v1","fleet","cache.json"));
- let ledgerPath:string|undefined,ledger:(()=>string|null)|undefined;
- const ledgerText=():string|null=>{
-  const publisher=(cacheFile?.()?.publisher??null) as Json|null,directory=publisher!==null&&publisher.origin===input.origin&&typeof publisher.directory==="string"?join(publisher.directory,"v1","counters.json"):undefined;
-  if(directory===undefined)return null;
-  if(directory!==ledgerPath){ledgerPath=directory;let stamp=-1,text:string|null=null;ledger=()=>{try{const at=statSync(directory).mtimeMs;if(at!==stamp){stamp=at;text=readFileSync(directory,"utf8");}return text;}catch{stamp=-1;text=null;return null;}};}
-  return ledger!();
- };
  const cache=machinePathV1(input.root,".cache"),nxDirectory=machinePathV1(input.root,".cache",...NX_CACHE_POLICY_V1.directory);
  return {
   ...hostMetricsSourcesV1({volumes:()=>metricsVolumePathsV1(input.root,cache,tmpdir()),...input.directory===undefined?{}:{directory:input.directory},now}),
@@ -54,7 +47,9 @@ export function fleetMetricsSourcesV1(input:Readonly<{root:string;environment:Re
    const size=whole(census()?.bytes);
    return {localHit:counted.counts.localHit!+nx.counts.nxLocalHit!,localMiss:counted.counts.localMiss!+nx.counts.nxExecuted!,...size===undefined?{}:{bytes:size}};
   },
-  remoteCache:()=>{const text=ledgerText(),document=text===null?undefined:parseCounterLedgerV1(text);return document===undefined?null:{groups:document.groups};},
+  remoteCache:()=>({groups:readRemoteCacheClientGroupsV1(input.root)}),
+  skipReasons:()=>readBuildCountersV1(input.root).skipReasons,
+  offloadReasons:()=>readOffloadReasonCountersV1(input.root),
   pool:()=>{
    const row=pool();if(row===null||!fresh(row.updatedMs,now()))return null;
    return {units:whole(row.units)??0,claimed:whole(row.claimed)??0,published:whole(row.published)??0,failed:whole(row.failed)??0,rssMegabytes:whole(row.rssMegabytes)??0};

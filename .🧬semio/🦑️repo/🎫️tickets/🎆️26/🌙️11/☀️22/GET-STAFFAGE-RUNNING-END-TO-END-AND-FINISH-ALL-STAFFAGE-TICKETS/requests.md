@@ -902,6 +902,8 @@ Measured 2026-11-26 01:39 to 01:47 with `T/📊️matrix.ts --assets <id>` (reco
 - `used-timpani-pair`, `500:band-max` (requested 1:1000), side elevation, pose `stored`, all seven modes: `paper-height`, "drawn height 0.91 mm but 0.928·1.000 = 0.93 mm", 18.6 mm. At 1:500 itself the same geometry passes (scan and matrix), so the 1:1000 drawing loses its topmost part; the mallets that lie on the heads are 13 mm thick (0.013 mm at 1:1000). Not established in this lane: whether the resolver drops them or the paper box leaves them out. Asked of the owner of `T/📊️matrix.ts` (MM): should `paper-height` at a range end measure against `dimensions` when the band end cannot print the part that sets the height, or is the asset to raise a printable part to 0.928 m?
 - `used-bentwood-dining-chairs`, `500:band-max`, side elevation, mode `forces`, pose `in-use`: `language-geometry`, "the de drawing has other shape geometry than the English one", 1 cell, in two matrix runs (01:2x and 01:47). The 1:500 band of this asset is untouched (see the request above about the slender solids); the cell will be measured again when that band is repaired. Asked of MM: which shape differs (the record names none).
 
+CL-B rewrote `S/🔨️modules/🎨️depiction/📐️geometry/🟦️.ts` (`arrowOutline`: head, unit direction and length instead of tail and head) with its three callers `🎨️depiction/🏗️structural-view/🟦️.ts`, `🎨️depiction/✂️section/🟦️.ts` and `🎨️depiction/🟦️.ts` at 2026-11-26 19:12, and added one case to `S/🧪️tests/🏗️structure-projection` at 19:20: the cure of the second item (`used-bentwood-dining-chairs` `language-geometry`); no catalog asset was written. Cause and proofs: `U/closing-CL-B.md`.
+
 ## multiview MV-L1 — recipe ready
 
 2026-11-26 03:17. The recipe for foliage masses with depth plates is in `multiview-MV-L1.md`, section "Recipe" (tool `🧰️matrix/MV-L1/loft.ts`, chain `make.sh`, proof `batch.sh a|b`), proven on `hawthorn`: gate 0 hard, scan clean, guard OK, validator 0, sweep 0, check CLI ✓, matrix 252 cells 0 fail, six suites as before. For the follow-up lane of `norway-maple`, `multi-stem-birch`, `pampas-grass`, `miscanthus-grass`: the tool converts a foliage bone only when it has `ellipsoid` solids in `volumes.<scale>.body` and exactly one closed flat body outline per view; check that first (the grasses may not meet it, then their plates stay and the report says so). It needs the engine of 2026-11-25 23:15 (D66). Nothing is asked of anyone.
@@ -1019,20 +1021,22 @@ CL-O rewrote city-bicycle at 2026-11-26 14:10
 
 CL-O rewrote scissor-lift at 2026-11-26 14:14
 
-CL-A rewrote goat at 2026-11-26 14:15
+CL-A rewrote goat at 2026-11-26 14:15 (first trial, digest `a56de165dd669448`; replaced at 15:19)
 
 CL-O rewrote excavator at 2026-11-26 14:16
 
 CL-O did not rewrite cargo-bike (14:20): its file is unchanged (`cb5eaa4508bdb5ec`) and its nipples pass at the four scales (`🧰️matrix/CL-O/pins.ts`: `PINS cargo-bike: OK`, 36 spokes per wheel, nipple length 0.012 m, every bore open); the case "laces both bicycle wheels through open nipple seats" was red through `city-bicycle` alone (`Missing nipple` at 1:200 and 1:500, 16 spoke families).
 
-CL-A rewrote red-squirrel at 2026-11-26 14:37
+CL-A rewrote red-squirrel at 2026-11-26 14:37 (final, digest `5929104548bbe3fd`)
 
 CL-H rewrote `person-on-crutches` at 2026-11-26 14:54:11
 CL-H rewrote `tour-guide` at 2026-11-26 14:55:55
 CL-H rewrote `parent-with-stroller` at 2026-11-26 14:59:04
 CL-H rewrote `parent-carrying-toddler` at 2026-11-26 15:06:16
 
-CL-A rewrote goat at 2026-11-26 15:19
+CL-A rewrote goat at 2026-11-26 15:19 (final, digest `5a0aec3d2f9d90c1`: the same solids, the drawings as before the lane)
+
+CL-A rewrote goat at 2026-11-26 15:32 (the proof run wrote the same bytes as 15:19 again; nothing new to re-run)
 
 ## closing CL-A — the memory queue admits nothing while two grants reserve 8600 MB and hold under 1 GB (2026-11-26 13:57, measured; for the coordinator and MZ)
 
@@ -1040,4 +1044,32 @@ Since about 13:35 `repo capacity status` shows two running grants of this sessio
 
 ## closing CL-O — one grant holds 8 to 9 GB against its 2500 MB reservation; a 4000 MB request at the head keeps every smaller one waiting (2026-11-26 14:50, measured; for the coordinator and MZ)
 
-`repo capacity status` from 14:27 to 14:48: the running grant `PjYlTpaszrbgqBv-_SPEbA` (pid 52027, `timeout 10900 bash …/🧰️closing/run.sh step modelcat`, the whole `🧊️model-catalog`) reserved 2500 MB and was observed at 6381, 4729, 3740, 8082, 9333 and 8409 MB (pressure `warn` once, swap 1.2 → 2.2 GB). Behind it the oldest waiting request asks 4000 MB (pid 66879, since 14:19), and the requests behind that one (2500, 2500, 2500, 1200 MB) were not admitted while the spare stood at 1.8 to 2.4 GB: the queue keeps the head's 4000 MB free first. So nothing moves until `modelcat` ends (its `timeout` allows three hours). What waits of CL-O: the pinned cases of `🧊️model-skeleton` and `📐️plan-dimension` and the suites on the four written files (two requests of 2500 MB); the four assets themselves are written and proven by gate, scan, guard, check CLI and matrix (`closing-CL-O.md`). Nothing is asked of the queue; a `modelcat` reservation that states its real peak (about 9.5 GB) or a run of it per asset (`SEMIO_STAFFAGE_MODEL_ASSETS`) would keep the rest moving.
+`repo capacity status` from 14:27 to 14:48: the running grant `PjYlTpaszrbgqBv-_SPEbA` (pid 52027, `timeout 10900 bash …/🧰️closing/run.sh step modelcat`, the whole `🧊️model-catalog`) reserved 2500 MB and was observed at 6381, 4729, 3740, 8082, 9333 and 8409 MB (pressure `warn` once, swap 1.2 → 2.2 GB). Behind it the oldest waiting request asks 4000 MB (pid 66879, since 14:19), and the requests behind that one (2500, 2500, 2500, 1200 MB) were not admitted while the spare stood at 1.8 to 2.4 GB: the queue keeps the head's 4000 MB free first. So nothing moves until `modelcat` ends (its `timeout` allows three hours). What waits of CL-O: the pinned cases of `🧊️model-skeleton` and `📐️plan-dimension` and the suites on the four written files (two requests of 2500 MB); the four assets themselves are written and proven by gate, scan, guard, check CLI and matrix (`closing-CL-O.md`). Nothing is asked of the queue; a `modelcat` reservation that states its real peak (about 9.5 GB) or a run of it per asset (`SEMIO_STAFFAGE_MODEL_ASSETS`) would keep the rest moving. Addendum 16:05: the same grant was observed at 12,003 MB at 16:04 (available 4184 MB, spare −5528 MB); it is still running after 110 minutes.
+
+CL-H rewrote the horn case to the current volumes-feature rule at 2026-11-26 17:02 (model-silhouette and volumes-rules green, 152/152; see closing-horn-case.md)
+
+CL-T1 rewrote norway-maple at 2026-11-27 00:53:23
+
+CL-T2 rewrote shower-head at 2026-11-27 01:17
+
+CL-T2 rewrote solid-brick-wall-1960 at 2026-11-27 01:17
+
+CL-T2 rewrote ceiling-diffuser at 2026-11-27 01:17
+
+CL-T2 rewrote kitchen-extractor-hood at 2026-11-27 01:18
+
+CL-T2 rewrote used-chess-table at 2026-11-27 01:18
+
+CL-T2 rewrote used-writing-desk at 2026-11-27 01:18
+
+CL-T1 rewrote walking-toddler at 2026-11-27 01:19:26
+
+CL-T1 rewrote person-with-umbrella at 2026-11-27 01:23:52
+
+CL-T2 rewrote used-forced-draught-oil-burner at 2026-11-27 01:32
+
+CL-T2 rewrote gas-boiler at 2026-11-27 01:33
+
+CL-T2 rewrote height-adjustable-desk at 2026-11-27 01:33
+
+CL-T2 rewrote used-baby-grand-piano at 2026-11-27 01:34

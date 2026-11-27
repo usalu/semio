@@ -75,18 +75,22 @@ fn session_reset_preserves_original_lease_and_restores_every_owner_on_refusal() 
         assert!(!session.owns_eval_json(&lease));assert_eq!(lease.as_str(),"原🌊".repeat(4097));
         assert!(session.extension_evaluate_fault.is_none());assert_eq!(session.window_tick_latches.len(),1);
         let (_,alias)=observe(||lease.retire_shared_alias().unwrap_or_else(|_|panic!("original lease is a counted alias")));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
-        let quote=session.next_retirement_reserve_demands().unwrap();let reserve=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1),};
-        let (receipt,reserved)=observed(reserve,|effect|session.reserve_retirement_step(effect).unwrap());
-        assert_eq!((reserved.requested_bytes,reserved.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(receipt.fits(reserve));
+        let mut reserved_bytes=0;
+        for _ in 0..16{
+            let quote=session.next_retirement_reserve_demands().unwrap();if quote==RetirementDemand::default(){break;}
+            let reserve=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1),};
+            let (receipt,reserved)=observed(reserve,|effect|session.reserve_retirement_step(effect).unwrap());
+            assert_eq!((reserved.requested_bytes,reserved.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(receipt.fits(reserve));assert_ne!(receipt,RetainedCloneProgress::default());reserved_bytes+=reserved.requested_bytes;
+        }
         let demand=session.next_retirement_admission_demands().unwrap();assert!(demand.capacity_bytes>0);
-        let funded=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
+        let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
         let current=session.lease_eval_json().unwrap();
         let narrowed=RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..funded};let (result,denied)=observed(narrowed,|effect|session.set_eval_json(&mut second,effect));
         assert!(!matches!(result,Ok(Some(_))));assert!(second.is_some());assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));assert!(session.owns_eval_json(&current));
         let (receipt,admitted)=observed(funded,|effect|session.set_eval_json(&mut second,effect).unwrap_or_else(|_|panic!("funded original queue reset refused")).expect("funded original queue reset admitted"));
         assert_eq!((admitted.requested_bytes,admitted.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(receipt.fits(funded));
-        let (_,alias)=observe(||drop(current));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
-        close(session,copy,original+reserved.requested_bytes+admitted.requested_bytes);
+        let (_,alias)=observe(||current.retire_shared_alias().unwrap_or_else(|_|panic!("original lease is a counted alias")));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
+        close(session,copy,original+reserved_bytes+admitted.requested_bytes);
     }
 }
 
@@ -257,7 +261,7 @@ fn original_baseline_publication_admits_arc_headers_and_leases_same_payload(){
         }
         let (step,heap)=observed(grant,|effect|host.baseline_publication_step(effect).unwrap());
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
-        born+=heap.requested_bytes;
+        born=born+heap.requested_bytes-heap.released_bytes;
     }
     assert!(host.baseline_publication_terminal_is_empty());
     assert!(host.current_channels.as_ref().unwrap().same_original(host.previous_channels.as_ref().unwrap()));
@@ -269,7 +273,7 @@ fn original_baseline_publication_admits_arc_headers_and_leases_same_payload(){
     assert_eq!(match channels.as_ref().unwrap().outputs.get("out").unwrap().get("payload").unwrap(){NeuralValue::Atom(Atom::String(text))=>text.as_ptr(),_=>unreachable!()},payload);
     observed(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},|effect|session.receive_eval_baseline_sources(&mut snapshot,&mut channels,session.flow_extension_generation,effect)).0.unwrap_or_else(|_|panic!("original baseline admission refused")).expect("original baseline admission funded");
     let (_,alias)=observe(||{if let Some(lease)=host.previous_snapshot.take(){lease.retire_shared_alias().unwrap_or_else(|_|panic!("original snapshot alias is shared with the session"));}if let Some(lease)=host.previous_channels.take(){lease.retire_shared_alias().unwrap_or_else(|_|panic!("original channels alias is shared with the session"));}});
-    assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));let published_text=host.last_eval_json.capacity();eprintln!("[DEBUG] baseline born={born} text={published_text} source={}",source.requested_bytes-source.released_bytes);host.retire_cold();
+    assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));let published_text=host.last_eval_json.capacity();host.retire_cold();
     close(session,1,source.requested_bytes-source.released_bytes+born-published_text);
 }
 

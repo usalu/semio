@@ -336,9 +336,9 @@ posixTest("two concurrent commits from one parent end as one linear history with
   }
   const events=linearised(machines);
   expect(events).toHaveLength(1);
-  expect(forks).toContain(events[0]!.loser);expect(forks).toContain(events[0]!.winner);
+  expect<unknown>(forks).toContain(events[0]!.loser);expect<unknown>(forks).toContain(events[0]!.winner);
   expect(events[0]!.result).toBe(head(c));
-  expect(cli(a,["rev-parse","HEAD~1"]).trim()).toBe(events[0]!.winner);
+  expect<unknown>(cli(a,["rev-parse","HEAD~1"]).trim()).toBe(events[0]!.winner);
   expect(c.events.filter(event=>event.event==="linearised")).toEqual([]);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
@@ -917,7 +917,7 @@ posixTest("one intake round only materialises the final winner across consecutiv
   worker.events.length=0;
   const result=await followOnceV1(worker.replica!);
   const oracle=database.query("SELECT count(DISTINCT ?1) AS applications, sum(json_extract(value, '$.count')) AS events FROM json_each(?2)").get(path,JSON.stringify(spans));
-  expect({applications:result.applied,events:result.events}).toEqual(oracle);
+  expect<unknown>({applications:result.applied,events:result.events}).toEqual(oracle);
   expect(readFileSync(at(worker,path),"utf8")).toBe(readFileSync(at(worker,spans.at(-1)!.target),"utf8"));
  }finally{database.close();for(const machine of machines)await shut(machine);}
 },20000);
@@ -966,7 +966,7 @@ test.skipIf(!gitAvailable)("certifies equal stage semantics after its original i
     after=tree(who);const stamp=statSync(index);utimesSync(index,stamp.atime,new Date(stamp.mtimeMs+2000));
     return true;
    });
-   const expected=sql.query("select ?1=?2 allowed").get(prior,after) as {allowed:number};
+   const expected=sql.query("select ?1=?2 allowed").get(prior,after??null) as {allowed:number};
    expect(Boolean(expected.allowed)).toBe(row.published);
    expect(result).toMatchObject({published:expected.allowed,waiting:!expected.allowed});
    expect(events).toEqual(row.published?[INDEX_PREFIX_V1+file.path]:[]);
@@ -1049,7 +1049,7 @@ test.skipIf(!gitAvailable)("observes the current index while another writer hold
    try{
     expect(()=>cli(who,["--no-optional-locks","write-tree"])).toThrow("index.lock");
     observed=(await gitStateV1(who.options.worktree)).indexTree;
-    expect(Number(observed!==null)).toBe(expected[position]![0]);
+    expect<unknown>(Number(observed!==null)).toBe(expected[position]![0]);
     expect(readFileSync(lock,"utf8")).toBe(owned);
     expect(readFileSync(index)).toEqual(original);
     const working=at(who,".cache/f/tmp");

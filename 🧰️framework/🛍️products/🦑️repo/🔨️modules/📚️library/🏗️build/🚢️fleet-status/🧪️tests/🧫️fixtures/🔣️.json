@@ -9947,6 +9947,63 @@
      "refused": 30,
      "fellBack": 53,
      "reasons": {}
+    },
+    "rates": {
+     "windowsSeconds": [
+      900,
+      3600,
+      86400
+     ],
+     "origins": {
+      "g1-m04": {
+       "warden.cancelled": [
+        1,
+        2,
+        3
+       ],
+       "build.units.skipped": [
+        10,
+        50,
+        400
+       ]
+      },
+      "g1-m09": {
+       "warden.cancelled": [
+        0,
+        0,
+        1
+       ],
+       "build.units.skipped": [
+        0,
+        5,
+        90
+       ]
+      },
+      "g1-m20": {
+       "warden.cancelled": [
+        2,
+        2,
+        5
+       ],
+       "build.units.skipped": [
+        7,
+        7,
+        700
+       ]
+      },
+      "g1-server": {
+       "cache.skip.upload-dropped": [
+        1,
+        1,
+        1
+       ],
+       "cache.skip.read-only": [
+        1,
+        1,
+        1
+       ]
+      }
+     }
     }
    },
    "report": {
@@ -9957,8 +10014,8 @@
      "running": 5,
      "blocked": 1,
      "waiting": 0,
-     "alerts": 1,
-     "warnings": 15
+     "alerts": 3,
+     "warnings": 13
     },
     "memory": {
      "totalMegabytes": 16384,
@@ -10302,6 +10359,36 @@
       "text": "pid 355 hält bazel-slot-s1 seit 78 min ohne Fortschritt"
      },
      {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m04",
+      "values": {
+       "origin": "g1-m04",
+       "recent": 1,
+       "window": "15 min",
+       "suspended": 1,
+       "resumed": 1,
+       "cancelled": 0,
+       "alarm": "resume PID 3 (Agent) bei 9 MB"
+      },
+      "text": "Worker g1-m04: sein Wächter hat in den letzten 15 min 1 Vorgänge abgebrochen (1 angehalten, 1 fortgesetzt, 0 abgebrochen seit dem Start); zuletzt: resume PID 3 (Agent) bei 9 MB"
+     },
+     {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m20",
+      "values": {
+       "origin": "g1-m20",
+       "recent": 2,
+       "window": "15 min",
+       "suspended": 3,
+       "resumed": 3,
+       "cancelled": 0,
+       "alarm": "report PID 7 (Agent) bei 8 MB"
+      },
+      "text": "Worker g1-m20: sein Wächter hat in den letzten 15 min 2 Vorgänge abgebrochen (3 angehalten, 3 fortgesetzt, 0 abgebrochen seit dem Start); zuletzt: report PID 7 (Agent) bei 8 MB"
+     },
+     {
       "id": "capacity-wait",
       "severity": "warn",
       "subject": "pid 109",
@@ -10375,9 +10462,10 @@
       "subject": "g1-server",
       "values": {
        "origin": "g1-server",
-       "count": 11
+       "count": 1,
+       "window": "15 min"
       },
-      "text": "g1-server darf den Flotten-Cache nur lesen (11 Einheit(en) ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
+      "text": "g1-server darf den Flotten-Cache nur lesen (1 Einheit(en) in den letzten 15 min ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
      },
      {
       "id": "unit-key-machine-dependent",
@@ -10443,32 +10531,6 @@
        "stage": "dependencies"
       },
       "text": "Worker g1-m09 lebt, aber sein Bereitschaftsschlag ist veraltet: 10 min lang kein Bereitschaftseintrag, obwohl er running in Stufe dependencies ist"
-     },
-     {
-      "id": "worker-warden-intervened",
-      "severity": "warn",
-      "subject": "g1-m04",
-      "values": {
-       "origin": "g1-m04",
-       "suspended": 1,
-       "resumed": 1,
-       "cancelled": 0,
-       "alarm": "resume PID 3 (Agent) bei 9 MB"
-      },
-      "text": "Worker g1-m04: sein Wächter hat eingegriffen (1 angehalten, 1 fortgesetzt, 0 abgebrochen); zuletzt: resume PID 3 (Agent) bei 9 MB"
-     },
-     {
-      "id": "worker-warden-intervened",
-      "severity": "warn",
-      "subject": "g1-m20",
-      "values": {
-       "origin": "g1-m20",
-       "suspended": 3,
-       "resumed": 3,
-       "cancelled": 0,
-       "alarm": "report PID 7 (Agent) bei 8 MB"
-      },
-      "text": "Worker g1-m20: sein Wächter hat eingegriffen (3 angehalten, 3 fortgesetzt, 0 abgebrochen); zuletzt: report PID 7 (Agent) bei 8 MB"
      },
      {
       "id": "worker-warden-overhead",
@@ -10758,6 +10820,85 @@
      "lost": 0,
      "silent": 0,
      "reasons": {}
+    },
+    "rates": {
+     "windowsSeconds": [
+      900,
+      3600,
+      86400
+     ],
+     "origins": {
+      "g1-m04": {
+       "warden.cancelled": [
+        1,
+        2,
+        3
+       ],
+       "build.units.skipped": [
+        10,
+        50,
+        400
+       ]
+      },
+      "g1-m09": {
+       "warden.cancelled": [
+        0,
+        0,
+        1
+       ],
+       "build.units.skipped": [
+        0,
+        5,
+        90
+       ]
+      },
+      "g1-m20": {
+       "warden.cancelled": [
+        2,
+        2,
+        5
+       ],
+       "build.units.skipped": [
+        7,
+        7,
+        700
+       ]
+      },
+      "g1-server": {
+       "cache.skip.upload-dropped": [
+        1,
+        1,
+        1
+       ],
+       "cache.skip.read-only": [
+        1,
+        1,
+        1
+       ]
+      }
+     },
+     "fleet": {
+      "warden.cancelled": [
+       3,
+       4,
+       9
+      ],
+      "build.units.skipped": [
+       17,
+       62,
+       1190
+      ],
+      "cache.skip.upload-dropped": [
+       1,
+       1,
+       1
+      ],
+      "cache.skip.read-only": [
+       1,
+       1,
+       1
+      ]
+     }
     }
    }
   }

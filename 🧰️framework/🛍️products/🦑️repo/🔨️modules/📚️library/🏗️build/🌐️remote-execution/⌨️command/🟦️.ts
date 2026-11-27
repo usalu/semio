@@ -133,7 +133,7 @@ export async function serveRemoteExecutionV1(args:readonly string[],context:Remo
    host,grpcPort:flags["--grpc-port"]===undefined?server.port:whole("--grpc-port",flags["--grpc-port"],0,65535),workerPort:flags["--worker-port"]===undefined?server.workerPort:whole("--worker-port",flags["--worker-port"],0,65535),
    content,cacheUrl,tokens:{read,write,worker},tls,maximumMessageBytes:server.maximumMessageBytes,maximumBatchBytes:server.maximumBatchBytes,advertise:flags["--advertise"],
    scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,language:languages.length===1?languages[0]!:"none"},
-   onEvent:event=>{if(event.stage==="worker-joined"||event.stage==="worker-left"||event.stage==="worker-lost"||event.stage==="unmatched")say("serve.event",{event:event.stage,detail:event.detail});},
+   onEvent:event=>{if(event.stage==="worker-joined"||event.stage==="worker-left"||event.stage==="worker-lost"||event.stage==="worker-replaced"||event.stage==="unmatched")say("serve.event",{event:event.stage,detail:event.detail});},
   });
  }catch(error){await embedded?.stop();throw error;}
  const children:Awaited<ReturnType<typeof context.spawnWorker>>[]=[];

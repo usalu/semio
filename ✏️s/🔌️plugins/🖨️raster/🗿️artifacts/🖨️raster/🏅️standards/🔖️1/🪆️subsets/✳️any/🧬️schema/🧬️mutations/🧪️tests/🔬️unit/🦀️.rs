@@ -168,7 +168,7 @@ async fn store_applies_layer_create() {
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 
 //#region 🔖️OpText
@@ -241,7 +241,7 @@ fn representative_raster_document() -> RasterSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn raster_op_text_round_trips_every_variant() {
     for mutation in every_mutation() {
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
         protocol::Mutation::retire_cold(mutation);
     }
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(representative_raster_document());

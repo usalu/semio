@@ -293,7 +293,7 @@ async fn command_ids_are_unique_across_every_row() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -340,10 +340,10 @@ pub(crate) fn every_command() -> Vec<NoteCommand> {
 /// copied from the pre-migration `🧪️wire-baseline-before.txt` dump.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("stream".into()), reason: None, gesture_json: Some("{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":1,\"dy\":2}".into()), select_ids: None }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("stream".into()), reason: None, gesture_json: Some("{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":1,\"dy\":2}".into()), select_ids: None }));
 }
 //#endregion 🔖️CommandSurface
 

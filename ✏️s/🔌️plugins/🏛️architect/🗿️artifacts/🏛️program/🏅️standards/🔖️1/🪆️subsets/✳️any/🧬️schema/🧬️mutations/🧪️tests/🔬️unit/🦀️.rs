@@ -204,12 +204,12 @@ async fn connect_and_disconnect_trace_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn program_mutation_op_text_round_trips_a_sample_of_variants() {
     let stakeholder = sample_plugin().stakeholders[0].clone();
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateRegisterRow(crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(stakeholder.clone()), index: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteRegisterRow(crate::standards::v1::subsets::any::schema::mutations::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameRegisterRow(crate::standards::v1::subsets::any::schema::mutations::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone(), new_name: "X".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceRegisterRow(crate::standards::v1::subsets::any::schema::mutations::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(stakeholder) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameMeta(crate::standards::v1::subsets::any::schema::mutations::rename_meta::RenameMeta { new_title: "Clinic".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DisconnectAdjacency(crate::standards::v1::subsets::any::schema::mutations::disconnect_adjacency::DisconnectAdjacency { id: EntityId("a1".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::CreateRegisterRow(crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(stakeholder.clone()), index: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::DeleteRegisterRow(crate::standards::v1::subsets::any::schema::mutations::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::RenameRegisterRow(crate::standards::v1::subsets::any::schema::mutations::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone(), new_name: "X".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceRegisterRow(crate::standards::v1::subsets::any::schema::mutations::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(stakeholder) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::RenameMeta(crate::standards::v1::subsets::any::schema::mutations::rename_meta::RenameMeta { new_title: "Clinic".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ProgramMutation::DisconnectAdjacency(crate::standards::v1::subsets::any::schema::mutations::disconnect_adjacency::DisconnectAdjacency { id: EntityId("a1".into()) }));
 }
 //#endregion 🗣️OpText
 

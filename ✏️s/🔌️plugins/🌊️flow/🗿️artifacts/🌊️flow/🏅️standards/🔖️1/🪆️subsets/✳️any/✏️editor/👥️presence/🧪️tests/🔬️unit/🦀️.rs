@@ -28,8 +28,8 @@ async fn every_set_obeys_the_inverse_sum_law_including_removing_a_middle_row() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_and_operations_round_trip_text_and_binary() {
-    store::os_store::test_support::assert_dsl_round_trip(&busy());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&busy());
-    store::os_store::test_support::assert_op_line_round_trip(&FlowPresenceMutation::SetPreviewOffNodeIds(vec!["a".into()]));
-    store::os_store::test_support::assert_op_line_round_trip(&FlowPresenceMutation::SetCamera(CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }));
+    semio_os_store_test_support::assert_dsl_round_trip(&busy());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&busy());
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowPresenceMutation::SetPreviewOffNodeIds(vec!["a".into()]));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowPresenceMutation::SetCamera(CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }));
 }

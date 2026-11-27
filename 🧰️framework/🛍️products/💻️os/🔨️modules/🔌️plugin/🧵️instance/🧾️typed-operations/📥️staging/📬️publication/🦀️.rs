@@ -25,7 +25,7 @@ use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_instance_stores::stores_components::InstanceStores;
 use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
-use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use semio_plugin_retained_command_operation::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
 use protocol::OpText;
 use semio_plugin_composition_publication::group::private_publication_group::owner::PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN;
 use semio_plugin_reactor_app::PluginApp;

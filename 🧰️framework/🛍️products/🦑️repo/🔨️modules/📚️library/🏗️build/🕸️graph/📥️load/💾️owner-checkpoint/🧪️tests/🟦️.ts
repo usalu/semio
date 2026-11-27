@@ -187,3 +187,17 @@ test("large owner facts and quota refusal do not publish bytes",()=>fixture(asyn
  expect(requested).toBe(1);
  expect(await readdir(directory)).toEqual([]);
 }));
+
+test("a worker killed mid-discovery loses at most the declared flush interval of owners, so a restart resumes instead of starting from zero",()=>fixture(async directory=>{
+ expect(schema.$defs.Limits.const.flushMilliseconds).toBeLessThanOrEqual(15000);
+ const realNow=Date.now;let clock=realNow();Date.now=()=>clock;
+ try{
+  const writer=await openOwnerCheckpointV1(directory,cases.scope,cases.format,port());
+  writer.save(suffix(0),result(0,1));
+  clock+=schema.$defs.Limits.const.flushMilliseconds;
+  writer.save(suffix(1),result(1,1));
+  const resumed=await openOwnerCheckpointV1(directory,cases.scope,cases.format,port());
+  expect(await resumed.read(suffix(0))).toEqual(result(0,1));
+  expect(await resumed.read(suffix(1))).toEqual(result(1,1));
+ }finally{Date.now=realNow;}
+}));

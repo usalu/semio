@@ -1,0 +1,10 @@
+{"name":"capabilities_search","as":"notecaps","arguments":{"query":"note","owner":"note","limit":5}}
+{"name":"inference_list","arguments":{"artifactId":"e2e-probe-1"}}
+{"name":"inference_run","as":"run","arguments":{"artifactId":"e2e-probe-1","artifactKind":"s.gis.gismap","inferenceSchema":"s.gis.gismap.inference","documentGeneration":0,"revision":0,"cancellationId":"e2e-run-1","workUnits":100000,"maximumElapsedMilliseconds":60000,"retainedPolicy":{"maximumItems":100000,"maximumCopyBytes":50000000,"maximumCapacityBytes":50000000,"maximumReleaseBytes":50000000,"maximumDepth":64}}}
+{"name":"inference_get","arguments":{"artifactId":"e2e-probe-1","inferenceSchema":"s.gis.gismap.inference"}}
+{"name":"inference_submit","as":"sub","arguments":{"documentId":"e2e-probe-1","inferenceSchema":"s.gis.gismap.inference","documentGeneration":0,"revision":0,"cancellationId":"e2e-sub-1","workUnits":100000,"maximumElapsedMilliseconds":60000,"retainedPolicy":{"maximumItems":100000,"maximumCopyBytes":50000000,"maximumCapacityBytes":50000000,"maximumReleaseBytes":50000000,"maximumDepth":64}}}
+{"name":"inference_events","arguments":{"jobHandle":"${sub.jobHandle}"}}
+{"name":"inference_cancel","arguments":{"jobHandle":"${sub.jobHandle}"}}
+{"name":"conversation_reply","arguments":{"text":"e2e flow done","complete":true}}
+{"method":"resources/read","params":{"uri":"semio://workspace"}}
+{"name":"artifact_create","arguments":{"artifactId":"e2e-txt-2","kind":"s.stdio.txt"}}

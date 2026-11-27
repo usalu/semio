@@ -120,11 +120,11 @@ async fn the_finish_schedule_shows_the_surface_and_the_material_name_of_every_fi
 #[semio_framework_async_macros::async_test]
 async fn the_window_renders_the_list_the_table_and_the_editor_in_both_languages() {
     let (snapshot, inference) = house();
-    for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
-        assert!(render(&snapshot, &inference, &config("", false), labels).is_ok(), "the list");
-        assert!(render(&snapshot, &inference, &config("sch-room", false), labels).is_ok(), "the table");
-        assert!(render(&snapshot, &inference, &config("sch-finish", true), labels).is_ok(), "the definition editor");
-        assert!(render(&snapshot, &inference, &config("sch-vanished", false), labels).is_ok(), "an unknown schedule falls back to the list");
+    for (labels, locale) in [(&BimLabels::NATIVE_EN, semio_plugin::Locale::En), (&BimLabels::NATIVE_DE, semio_plugin::Locale::De)] {
+        assert!(render(&snapshot, &inference, &config("", false), labels, locale).is_ok(), "the list");
+        assert!(render(&snapshot, &inference, &config("sch-room", false), labels, locale).is_ok(), "the table");
+        assert!(render(&snapshot, &inference, &config("sch-finish", true), labels, locale).is_ok(), "the definition editor");
+        assert!(render(&snapshot, &inference, &config("sch-vanished", false), labels, locale).is_ok(), "an unknown schedule falls back to the list");
     }
     assert!(matches!(definition().surface_kind, SurfaceKind::Table));
     assert!(render(&ModelSnapshot::default(), &ModelInference::default(), &BimScheduleWindowConfig::default(), &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());

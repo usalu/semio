@@ -13,15 +13,16 @@ use semio_framework_value::retained_clone::RetainedCloneClose;
   for canceled in [false,true]{
    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:128};
    let mut caller=OriginalJobFixtureCaller::admit(OperationId(983),Generation(68),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<26,maximum_capacity_bytes:1<<26,maximum_release_bytes:1<<26,maximum_depth:128},semio_framework_job::default_now_us,u64::MAX,1<<20);
+   let(scope_items,scope_copy,_)=semio_framework_job::original_receiving_scope_headroom();let funded=RetainedCloneGrant{maximum_items:grant.maximum_items+2*scope_items,maximum_copy_bytes:grant.maximum_copy_bytes+2*scope_copy,..grant};
    let mut decoder=OriginalJobDecodeOwner::empty();turn(&mut caller,&mut decoder,grant,|_|Ok(()));
    let(mut field,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(JsonField::<semio_framework_artifact_flow_flow::FlowHostSnapshot>::new);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    let mut output=None;
    for index in 0..200_000{
     if canceled&&index==17{caller.cancel().cancel_now();break}
     if field.ready(){turn(&mut caller,&mut decoder,grant,|cx|{let taken=field.take(cx.retained_grant())?;if let Some((value,progress))=taken{output=Some(value);cx.consume_retained(progress)?;cx.consume_fuel(1);}Ok(())});break}
-    let demand=field.demands(wire.as_str(),4096,1<<20).unwrap();if index<6||index%50000==0{eprintln!("[DEBUG] json idx={index} demand={demand:?} receipt={:?} fuel={}",caller.receipt(),caller.fuel_remaining());}
+    let demand=field.demands(wire.as_str(),4096,1<<20).unwrap();
     turn(&mut caller,&mut decoder,RetainedCloneGrant{maximum_items:0,..grant},|cx|field.step(wire.as_str(),cx));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert_eq!(field.demands(wire.as_str(),4096,1<<20).unwrap(),demand);
-    turn(&mut caller,&mut decoder,grant,|cx|field.step(wire.as_str(),cx));
+    turn(&mut caller,&mut decoder,funded,|cx|field.step(wire.as_str(),cx));if index<12||index%50000==0{eprintln!("[DEBUG] json index={index} d={demand:?} ready={} receipt={:?} fuel={}",field.ready(),caller.receipt(),caller.fuel_remaining());}
     assert!(index+1<200_000,"original JSON field did not finish its bounded source");
    }
    if !canceled{assert_eq!(output.as_ref(),Some(&original))}

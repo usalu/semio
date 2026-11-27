@@ -10,8 +10,8 @@ use semio_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(semio_hub_space_commands_media::disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(semio_hub_space_commands_media::disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
 }
 
 #[semio_framework_async_macros::async_test]

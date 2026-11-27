@@ -13,7 +13,7 @@ pub(super) struct MountedJob {
 }
 
 impl BoundedJob for MountedJob {
-    /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
+    /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses (or, without a clock, the turn's fuel and `UNITS_PER_STEP` run out), a unit
     /// publishes output, or the session leaves `Running`.
     fn step(&mut self, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)); };
@@ -25,7 +25,7 @@ impl BoundedJob for MountedJob {
             if cx.should_yield() { break; }
             if let Some(deadline) = deadline { if semio_framework_job::default_now_us().unwrap_or(deadline) >= deadline { break; } }
             step = state.step(cx)?;
-            if deadline.is_none() || !matches!(step, JobStep::Running(None)) { break; }
+            if !matches!(step, JobStep::Running(None)) { break; }
         }
         if matches!(&step, JobStep::Done(_)) {
             record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated);

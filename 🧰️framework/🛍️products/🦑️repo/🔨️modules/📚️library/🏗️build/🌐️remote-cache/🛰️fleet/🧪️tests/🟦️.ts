@@ -339,3 +339,18 @@ test("a probe that misses the scheduler once never erases the endpoint that answ
  const moved=await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
  expect(moved.copy?.selectedExecution,"a moved scheduler does not keep the old endpoint").toBeNull();
 });
+
+test("client counts: every answer of the cache server is counted where it was seen (hit, miss, put, conflict, refusal by kind), other requests are not, and the counts read back grouped like the server ledger",async()=>{
+ const {classifyRemoteCacheRequestV1,readRemoteCacheClientGroupsV1}=await import("../🧮️client-counters/🟦️.ts");
+ const root=mkdtempSync(join(tmpdir(),"cache-client-counts-"));
+ try{
+  const answers:number[]=[];const base=(async()=>new Response("",{status:answers.shift()!})) as unknown as typeof fetch;
+  const call=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:root},{root,base}),digest="a".repeat(64),host="http://c.example:6094";
+  const ask=async(path:string,method:string,status:number)=>{answers.push(status);await call(host+path,{method});};
+  await ask(`/main/ac/${digest}`,"GET",200);await ask(`/main/ac/${digest}`,"GET",404);await ask(`/main/cas/${digest}`,"PUT",201);await ask(`/main/cas/${digest}`,"PUT",409);
+  await ask("/v1/cache/abc123","GET",200);await ask("/v1/cache/abc123","PUT",403);await ask("/status","GET",200);await ask(`/ac/${digest}`,"HEAD",404);await ask("/v1/slots","GET",200);
+  const groups=readRemoteCacheClientGroupsV1(root);
+  expect(groups.ac).toEqual({hits:1,misses:2,puts:0,conflicts:0,refused:0});expect(groups.cas).toEqual({hits:0,misses:0,puts:1,conflicts:1,refused:0});expect(groups.nx).toEqual({hits:1,misses:0,puts:0,conflicts:0,refused:1});
+  expect(classifyRemoteCacheRequestV1(`${host}/status`,"GET",200)).toBeUndefined();expect(classifyRemoteCacheRequestV1(`${host}/main/ac/x/y`,"GET",200)).toBeUndefined();expect(classifyRemoteCacheRequestV1("not a url","GET",200)).toBeUndefined();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

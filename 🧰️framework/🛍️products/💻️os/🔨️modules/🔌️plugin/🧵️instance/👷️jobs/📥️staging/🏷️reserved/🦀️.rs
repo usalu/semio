@@ -134,7 +134,7 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
  pub fn begin_action(&mut self,args:&mut Option<DslValue>,maximum_items:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(self.revision,cx)?;if self.action_wire.is_some()||self.action_returned.is_some(){return Ok(true)}if !self.metadata_bound[1]||self.metadata.as_ref().unwrap()[1].len()!=self.metadata_sources[1].iter().map(|(_,length)|*length).sum::<usize>(){return Err(ValueError::invariant("reserved action verb is not completely admitted").into())}
   let bytes=size_of::<ActionWire>()+size_of::<Option<DslValue>>()+size_of::<usize>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
-  let decoded_items=semio_plugin_retained_command::typed_operation::bounded_json_items(args.as_ref(),maximum_items)?;
+  let decoded_items=semio_plugin_retained_command_operation::typed_operation::bounded_json_items(args.as_ref(),maximum_items)?;
   let action=std::mem::take(&mut self.metadata.as_mut().unwrap()[1]);let action=unsafe{String::from_utf8_unchecked(action)};self.metadata_transferred[1]=true;*self.action_wire=Some(ActionWire::new((action,args.take())));self.admission_decoded=decoded_items;cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(true)
  }
  pub fn advance_action_wire(&mut self,maximum:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

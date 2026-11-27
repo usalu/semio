@@ -36,6 +36,8 @@ pub mod remove_content_type;
 use canonical_edit::XlsxPlan;
 #[path = "🧭️cell-address/🦀️.rs"]
 pub mod cell_address;
+#[path = "🧮️recalculation/🦀️.rs"]
+pub mod recalculation;
 #[path = "➕️insert-cell/🦀️.rs"]
 pub mod insert_cell;
 #[path = "📥️insert-shared-string/🦀️.rs"]

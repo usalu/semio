@@ -1,0 +1,27 @@
+# F128: workers g1-m08 and g1-m14, readiness stage `workspace` ended by SIGTERM
+
+## Verdict
+The SIGTERM is sent by the host warden in `enforce` mode, not by the slice-worker cap (6144 MB), not by the readiness supervisor and not by a capacity-grant revocation. The warden took the **stage wrapper itself** (kind `stage`, rank 90, signal SIGTERM, scope tree) as a danger victim during a swap-out spike; that kind frees next to nothing (71 MB) and kills the whole stage. The stage and its slice worker were cancelled in the same tick.
+
+## Evidence chain (read only, S/origins/g1-m14, g1-m08)
+1. `g1-m14/ready-timings.json`, last run: 19:20:06 to 19:23:09.572, 183 s, `outcome stage-failed`, `signal SIGTERM`, `endEvidence exit-receipt`. The supervisor marks its own kills as `stalled`, `stage-timeout` or `interrupted`; this one carries none of those, so the SIGTERM came from outside the supervisor.
+2. `g1-m14/memory.json` (`mode: enforce`) `lastAlarms`: 19:23:09.566 `cancel` of kind `stage` pid 84494, owner `.../remote-execution/.../🚦️ready/🏃️wrapper`, 71 MB; 19:23:09.569 `cancel` of kind `slice-worker` pid 67115, 3665 MB. The stage ended 6 ms after the stage cancel. Same tick, trigger `swapping` (host 4418 MB available, above the 1638 MB guard; swap-out 20.33 MB/s; pressure warn).
+3. The alarm text of the slice worker says it "held 3665 MB, within its grant of 3829 MB, and was taken only because the host was in danger". The cap alarm (`reason cap`, 6144 MB) never appears in the retained alarms of either worker. `peakMegabytes 6047` in `ready.json` is the whole stage tree summed (stage plus slice workers plus cargo), not one slice worker over the cap.
+4. g1-m08: 8 `stage-failed`/SIGTERM runs (last 19:05:38 to 19:17:30) plus 9 `stalled`/SIGTERM runs. The `stalled` and `stage-timeout` ones are supervisor kills of silent stages (1400 to 1900 s each), an older and separate class. m08's retained alarms (19:20 to 19:23: suspends, resumes, cargo cancels at 2865 MB available, 146 MB/s swap-out) are the same pressure pattern, 6 cancels, 9 suspends; the alarm ring (8 entries) no longer holds 19:17:30, so for m08 the attribution is by outcome class and pressure pattern, not by a stored cancel row.
+5. Not the supervisor on input churn: zero `interrupted` outcomes and no `restart` kills in 40 + 40 retained runs of either worker. 36 of m14's 39 attempts are plain exit failures (`stage-failed`, no signal), mostly the earlier admission failures; only 1 of its runs is a warden SIGTERM. No debounce change is therefore warranted by this evidence.
+6. Why the stage was picked: in `decideHostWardenV1` the danger victims are sorted by `dearer`: not sheltered first. The stage has no grant, so it counted as unsheltered and went first, ahead of the worker within its grant, although its cancel frees 71 MB and costs the entire stage.
+
+## Fix
+- Warden (schema first): new kind flag `lastResort` (kind `stage`) and subject field `lastResort`; `dearer` takes a last-resort subject after every other candidate. Python oracle, JSON fixture (new case "last resort: ...", stage classification expectations) and TS updated together. Files: `🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/` (`🟦️.ts`, `🧬️schema/🔣️.json`, `🧪️tests/🐍️.py`, `🧪️tests/🧫️fixtures/🔣️.json`).
+- Supervisor: when the stage exits on its own SIGTERM and the warden's cancel record exists for the stage pid, the run result carries `wardenCancel`; the failure code is the new `memory-cancelled`, with a bilingual refusal (English and German text in the schema), the warden's own two cancel lines in the `tail`, kept on refresh (`refreshKeepingFailureCodes`), and a retry after the initial back-off (not the doubling one); the next turn then waits at the existing `memory-low` gate. Work already stored by the caches is kept, so the retry resumes it (checkpoint is the unit and read caches). Files: `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/` (`🟦️.ts`, `🌲️process-tree/🟦️.ts` helper `readyWardenCancelOfStageV1`, `🧬️schema/🔣️.json`, new test folder `🧪️tests/🧯️warden-cancel/` with TS and Python oracle).
+- Cap question: the 6144 MB cap is not what fired. The sheltered slice worker is still cancelled at a severe danger, but it is requeued by its owner (existing `retryAfterHostWardenCancelV1` path); the stage is no longer cancelled before it.
+
+## Verification
+- `repo test-file` warden `🧪️tests/🟦️.ts`: 60 pass (oracle equals TS for the new fixture; classification expectations updated).
+- `repo test-file` ready `🧪️tests/🟦️.ts`: 58 pass. `repo test-file` new `🧪️tests/🧯️warden-cancel/🟦️.ts`: 3 pass.
+- `repo typecheck` of the touched ready files: passed. Including the warden `🟦️.ts` it reports 7 errors in the warden tests (`🧪️tests/🟦️.ts` lines 388 to 564, `🚨️swap-churn/🟦️.test.ts` line 23) about `mode: string` / mirror types: those files are edited concurrently by peers (git diff shows +102 lines in the tests and +73 in the loop that are not mine) and none involve `lastResort`.
+- `dangling-imports.py` on both touched folders: exit 0.
+
+## Not done / open
+- Workers pick the change up only after the replica; the real proof is a worker whose `ready.json` shows `memory-cancelled` instead of a bare SIGTERM, or whose stage survives the swap spike.
+- The underlying pressure (16 GB workers swapping at 20 to 146 MB/s while a 3.6 GB slice worker and cargo run together) is not removed; this fix makes the stage back-pressure-safe, not smaller.

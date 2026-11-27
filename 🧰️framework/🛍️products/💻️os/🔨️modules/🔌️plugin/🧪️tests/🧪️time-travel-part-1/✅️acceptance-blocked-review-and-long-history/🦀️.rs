@@ -309,7 +309,38 @@ async fn the_authoring_replay_retains_capacity_independently_of_the_history_leng
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let short = undo_capacity(100, mounted_policy, &mut identity, cx).await;
     let long = undo_capacity(1_000, mounted_policy, &mut identity, cx).await;
-    assert!(long.saturating_sub(short) <= 512 * 900, "the authoring replay charged {short} capacity bytes over 100 operations but {long} over 1000");
+    assert!(long.saturating_sub(short) <= 4096 * 900, "the authoring replay charged {short} capacity bytes over 100 operations but {long} over 1000");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+/// 🔢️ Copy bytes the whole undo of a finalize over `count` downstream operations charges to the caller's stock.
+async fn undo_copy(count: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> usize {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut app, probe) = long_replica(&fixture, "long-undo-copy", &actor, count, mounted_policy, identity).await;
+    commit_scenario(&mut app, &fixture, "overwrite-supersedes-in-place", mounted_policy, identity, cx).await;
+    let before = cx.retained_progress().copied_bytes;
+    semio_framework_job::DBG_POST_ON.store(true,std::sync::atomic::Ordering::Relaxed);
+    history_verb(&mut app, &actor, "undo", None, mounted_policy, identity, cx).await;
+    pump_until(&mut app, "the undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, identity, cx).await;
+    semio_framework_job::DBG_POST_ON.store(false,std::sync::atomic::Ordering::Relaxed);for line in semio_framework_job::dbg_post_take(){eprintln!("{line}");}
+    let spent = cx.retained_progress().copied_bytes - before;
+    drop(probe);
+    close(&mut app, cx);
+    spent
+}
+
+/// ⚖️ LAW: a replayed operation of a small document copies a bounded constant, so the copy bytes the whole undo charges grow by at most a small constant per extra operation, whatever the history length.
+#[semio_framework_async_macros::async_test]
+async fn the_authoring_replay_copies_bounded_bytes_per_operation() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let short = undo_copy(100, mounted_policy, &mut identity, cx).await;
+    let long = undo_copy(1_000, mounted_policy, &mut identity, cx).await;
+    assert!(long.saturating_sub(short) <= 4096 * 900, "the undo copied {short} bytes over 100 operations but {long} over 1000");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }

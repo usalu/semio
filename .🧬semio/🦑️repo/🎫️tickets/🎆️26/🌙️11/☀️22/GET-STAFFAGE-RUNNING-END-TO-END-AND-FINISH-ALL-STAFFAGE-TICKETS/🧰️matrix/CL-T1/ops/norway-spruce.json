@@ -1,0 +1,23 @@
+[
+ {
+  "facet": "(tier|crown)-.*",
+  "list": "body",
+  "kinds": [
+   "capsule",
+   "revolve"
+  ]
+ },
+ {
+  "facet": "outlet-.*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ]
+ },
+ {
+  "decision": {
+   "en": "Budget: every needle mass (skirt, spray, tip, crown solid) and every transpiration outlet is a faceted lobe, a polyhedron with the facets of its solid of revolution at 24 to 64 segments around (the surface every check of the volumes measures), so it keeps these facets at every scale instead of a smooth surface of up to 64 segments.",
+   "de": "Budget: Jede Nadelmasse (Schürze, Zweigfächer, Spitze, Kronenkörper) und jeder Transpirationsauslass ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Rotationskörpers bei 24 bis 64 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst), und behält diese Facetten in jedem Maßstab statt einer glatten Fläche mit bis zu 64 Segmenten."
+  }
+ }
+]

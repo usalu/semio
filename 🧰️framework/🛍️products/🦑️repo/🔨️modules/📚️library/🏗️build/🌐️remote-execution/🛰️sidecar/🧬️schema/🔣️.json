@@ -15,7 +15,7 @@
         "minimumIntervalMilliseconds": 1800000,
         "pool": {"watchMilliseconds": 5000, "quietMilliseconds": 90000, "maximumDeferralMilliseconds": 600000, "serveDeferralMilliseconds": 600000, "minimumIntervalMilliseconds": 600000},
         "ready": {"quietMilliseconds": 90000, "maximumDeferralMilliseconds": 600000, "serveDeferralMilliseconds": 0, "minimumIntervalMilliseconds": 0},
-        "cache": {"serveDeferralMilliseconds": 0},
+        "cache": {"quietMilliseconds": 900000, "maximumDeferralMilliseconds": 10800000, "serveDeferralMilliseconds": 0, "minimumIntervalMilliseconds": 10800000},
         "agent": {"drainMaximumMilliseconds": 7200000, "drainPollMilliseconds": 5000}
       }
     },

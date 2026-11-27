@@ -12,18 +12,22 @@ pub struct Graft<'a> {
     pub trailer: Vec<PdfDictEntry>,
     pub next: u32,
     displaced: Vec<PdfObject>,
+    bound: HashMap<(Category, String), ObjRef>,
 }
 impl<'a> Graft<'a> {
     pub fn new(typed: &'a PdfSnapshot) -> Self {
         let graph: BTreeMap<u32, PdfIndirectObject> = typed.objects.iter().map(|object| (object.id.num, object.clone())).collect();
         let next = graph.keys().next_back().copied().unwrap_or(0) + 1;
-        Self { typed, graph, trailer: typed.trailer.clone(), next, displaced: Vec::new() }
+        Self { typed, graph, trailer: typed.trailer.clone(), next, displaced: Vec::new(), bound: HashMap::new() }
     }
 
     /// 🧵 A graft over only the objects one patch reads: `graph` seeds the page, its tree ancestors and its resource dictionaries, `next` is the document's first free object number, and every other object stays with the caller.
     pub fn sparse(typed: &'a PdfSnapshot, graph: BTreeMap<u32, PdfIndirectObject>, trailer: Vec<PdfDictEntry>, next: u32) -> Self {
-        Self { typed, graph, trailer, next, displaced: Vec::new() }
+        Self { typed, graph, trailer, next, displaced: Vec::new(), bound: HashMap::new() }
     }
+
+    /// 🔗 Resource objects the graph already holds that a patched page binds by reference although its own reading does not see them (an edit that uses another page's font): the page's resources name the existing object and no copy is lowered.
+    pub fn bind_existing(&mut self, bound: HashMap<(Category, String), ObjRef>) { self.bound = bound; }
 
     pub fn read(&self) -> PResult<Reading> {
         Reading::of(GraphView(&self.graph), &self.trailer, &self.typed.declared_version)
@@ -202,7 +206,8 @@ impl<'a> Graft<'a> {
             }
         }
         let removed: Vec<ObjRef> = (0..read.len()).filter(|slot| !used[*slot]).map(|slot| reading.page_refs[slot]).collect();
-        let targets = reading.targets(&pages);
+        let mut targets = reading.targets(&pages);
+        for (key, target) in &self.bound { targets.entry(key.clone()).or_insert(*target); }
         for index in patched {
             if !self.patch_page(index, &read[index], pages[index], &targets)? {
                 return Ok(None);

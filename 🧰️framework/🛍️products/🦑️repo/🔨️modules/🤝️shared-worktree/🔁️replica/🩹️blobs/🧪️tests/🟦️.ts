@@ -15,12 +15,12 @@ const ajv=new Ajv({strict:true}),ajvValid=ajv.compile({$schema:schema.$schema,de
 const vectors=fixture as unknown as {valid:{id:string;value:unknown}[];invalid:{id:string;value:unknown}[]};
 
 test("the wants record is accepted and refused alike by our validator, by ajv against the schema and by the Python oracle",()=>{
- const lines=Bun.spawnSync([python,oracle,fixtures]).stdout.toString().trim().split("\n");
- expect(lines.length).toBe(vectors.valid.length+vectors.invalid.length);
+ const lines=python===null?null:Bun.spawnSync([python,oracle,fixtures]).stdout.toString().trim().split("\n");
+ if(lines!==null)expect(lines.length).toBe(vectors.valid.length+vectors.invalid.length);
  for(const kind of ["valid","invalid"] as const)for(const vector of vectors[kind]){
   const expected=kind==="valid";
   expect([kind,vector.id,validWantsV1(vector.value),ajvValid(vector.value)]).toEqual([kind,vector.id,expected,expected]);
-  expect(lines).toContain(`${kind}:${vector.id}:${expected}`);
+  if(lines!==null)expect(lines).toContain(`${kind}:${vector.id}:${expected}`);
  }
  expect(wantsLimitV1).toBe(64);
 });

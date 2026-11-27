@@ -47,6 +47,31 @@
               "pattern": "^[^\\u0000]+$"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "owners"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scopes"
+            },
+            "owners": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]+$"
+              }
+            }
+          }
         }
       ]
     }

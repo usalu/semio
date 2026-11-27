@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
 serde.workspace = true

@@ -27,8 +27,23 @@ export function buildRepairCommandV1(id:string):string{
  return row.command;
 }
 
-/** 🧭️ Projects operation arguments after global selections are consumed, preserving help and the opaque child tail. */
+/** 🎯️ Moves the one task identity of `run` directly behind the command, so options may stand before or after it; a value taking option keeps its separate value, `--graph` never takes one here, and everything after `--` stays opaque. */
+export function hoistBuildRunTaskV1(args:readonly string[],catalog:BuildOptionCatalogV1=catalogue as BuildOptionCatalogV1):string[]{
+ const boundary=args.indexOf("--"),head=boundary<0?[...args]:args.slice(0,boundary),tail=boundary<0?[]:args.slice(boundary);
+ if(head[0]!=="run")return [...args];
+ const valued=new Set(catalog.flags.filter(flag=>flag.value==="required").flatMap(flag=>[flag.name,...(flag.aliases??[])]));
+ for(let index=1;index<head.length;index++){
+  const argument=head[index]!;
+  if(valued.has(argument)){index++;continue;}
+  if(argument.startsWith("-"))continue;
+  if(!argument.includes(":"))return [...args];
+  return ["run",argument,...head.slice(1,index),...head.slice(index+1),...tail];
+ }
+ return [...args];
+}
+
+/** 🧭️ Projects operation arguments after global selections are consumed, preserving help and the opaque child tail; the task identity of `run` always comes first. */
 export function buildOperationArgumentsV1(args:readonly string[],catalog:BuildOptionCatalogV1=catalogue as BuildOptionCatalogV1):string[]{
  const flags=catalog.flags.filter(flag=>flag.operations===undefined&&flag.value==="required"),globals=new Set(flags.flatMap(flag=>[flag.name,...(flag.aliases??[])])),normalized=normalizeBuildOptionsV1(args,{flags}),boundary=normalized.indexOf("--"),head=normalized.slice(0,boundary<0?undefined:boundary);
- return [...head.filter(argument=>!globals.has(argument.split("=",1)[0]!)),...(boundary<0?[]:normalized.slice(boundary))];
+ return hoistBuildRunTaskV1([...head.filter(argument=>!globals.has(argument.split("=",1)[0]!)),...(boundary<0?[]:normalized.slice(boundary))],catalog);
 }

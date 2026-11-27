@@ -66,7 +66,7 @@ async fn sample_fixture_dsl_round_trips() {
     assert_eq!(doc.schema, LAYOUT_DOCUMENT_SCHEMA);
     assert_eq!(doc.pages.len(), 2);
     assert_eq!(doc.pages[0].name, "Page 1");
-    store::os_store::test_support::assert_dsl_round_trip(&doc);
+    semio_os_store_test_support::assert_dsl_round_trip(&doc);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,12 +88,12 @@ async fn example_fixture_matches_engine_demo() {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_minimal_document_with_character_style() {
-    store::os_store::test_support::assert_dsl_round_trip(&minimal_document_with_character_style());
+    semio_os_store_test_support::assert_dsl_round_trip(&minimal_document_with_character_style());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
-    store::os_store::test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
 }
 
 /// 🧪️ The derived spec-driven grammar's real failure modes.

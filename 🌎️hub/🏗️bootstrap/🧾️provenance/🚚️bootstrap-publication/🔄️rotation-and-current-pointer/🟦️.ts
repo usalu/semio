@@ -78,7 +78,8 @@ export async function materializeTrustedStdioGisRotation(invocation:ScriptInvoca
           const value = decodePackValue(descriptor) as unknown as Record<string, any>;
           if (value.packageId !== record.packageId || value.manifest?.pluginId !== plugin || value.manifest?.version !== record.version || value.role !== record.role || value.execution !== "isolated" || "hashes" in value)
             throw new Error("trusted rotation Stdio descriptor identity changed");
-          value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`;
+          const rotationNonce = randomBytes(8).toString("hex");
+          value.manifest.label = { native: { en: `Stdio trusted rotation ${rotationNonce}`, de: `Stdio vertrauenswürdige Rotation ${rotationNonce}` }, reuse: { en: `Stdio trusted rotation ${rotationNonce}`, de: `Stdio vertrauenswürdige Rotation ${rotationNonce}` } };
           const updatedDescriptor = Buffer.from(encodePackValue(value));
           descriptor.fill(0);
           descriptor = updatedDescriptor;

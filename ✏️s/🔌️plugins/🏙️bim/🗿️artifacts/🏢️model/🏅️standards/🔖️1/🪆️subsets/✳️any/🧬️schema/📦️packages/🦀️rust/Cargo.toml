@@ -57,8 +57,13 @@ semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }
 
+semio-s-artifact-bim-model-geometry-values = { path = "../../📸️snapshot/📐️geometry-values/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-properties-values = { path = "../../📸️snapshot/🔍️properties-values/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-issues-values = { path = "../../📸️snapshot/🚨️issues-values/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-values = { path = "../../📸️snapshot/💠️values/📦️packages/🦀️rust" }
+
 [features]
-testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing"]
+testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing", "semio-s-artifact-bim-model-geometry-values/testkit", "semio-s-artifact-bim-model-properties-values/testkit", "semio-s-artifact-bim-model-issues-values/testkit", "semio-s-artifact-bim-model-values/testkit"]
 
 [dev-dependencies]
 serde.workspace = true

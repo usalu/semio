@@ -27,7 +27,7 @@ fn settle(doc: Doc, request: Fem3dResultRequest, budget: usize) -> (bool, usize,
     (terminal, turns, stages, failure)
 }
 
-/// ⏱️ LAW: the browser's default Add Solid slab (4 × 2 × 0.5, mesh 0.5, one layer) and the demo document each reach a terminal static and modal solve within an interactive turn budget, so the results caption never sticks at "Preparing analysis" or "Computing modes".
+/// ⏱️ LAW: the browser's default Add Solid slab (4 × 2 × 0.5, mesh 0.5, one layer) and the demo document each reach a terminal static and modal solve within an interactive turn budget, so the results caption never sticks at "Preparing analysis" or "Computing modes". Measured at 232, 43 and 900 turns; the budgets leave headroom but fail on any stage that falls back to one bounded unit, one payload scalar or one retained item per turn.
 #[test]
 fn a_default_slab_and_the_demo_settle_within_an_interactive_turn_budget() {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::{FemAxis, FemDof, FemLoadCase, FemSolid, FemSupport};
@@ -43,9 +43,9 @@ fn a_default_slab_and_the_demo_settle_within_an_interactive_turn_budget() {
     };
     let slab = Doc::new(Fem3dSnapshot::from_reference(slab).expect("sealed slab"));
     let demo = || Doc::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo"));
-    for (name, doc, request) in [("slab", slab, Fem3dResultRequest::default()), ("demo", demo(), Fem3dResultRequest::default()), ("demo-modal", demo(), Fem3dResultRequest { mode: Some(0), ..Fem3dResultRequest::default() })] {
-        let (terminal, turns, stages, failure) = settle(doc, request, 60_000);
+    for (name, doc, request, budget) in [("slab", slab, Fem3dResultRequest::default(), 400), ("demo", demo(), Fem3dResultRequest::default(), 100), ("demo-modal", demo(), Fem3dResultRequest { mode: Some(0), ..Fem3dResultRequest::default() }, 1_500)] {
+        let (terminal, turns, stages, failure) = settle(doc, request, budget);
         let busiest = stages.iter().max_by_key(|(_, count)| **count).map(|(stage, count)| format!("{stage}×{count}"));
-        assert!(failure.is_none() && terminal, "{name} did not settle in {turns} turns, busiest stage {busiest:?}, stages {stages:?}: {failure:?}");
+        assert!(failure.is_none() && terminal, "{name} did not settle within {budget} turns (spent {turns}), busiest stage {busiest:?}, stages {stages:?}: {failure:?}");
     }
 }

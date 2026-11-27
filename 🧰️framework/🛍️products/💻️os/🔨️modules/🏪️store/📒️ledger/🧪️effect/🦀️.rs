@@ -2,9 +2,11 @@
 use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,ValueError};
 use semio_framework_value_clone_source_testing::drive::drive;
 pub const UNITS:u64=1<<20;
-pub fn poll(grant:RetainedCloneGrant,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{drive(grant,UNITS,call)}
+const STOCK_DEPTH:usize=1024;
+fn stocked(mut grant:RetainedCloneGrant)->RetainedCloneGrant{grant.maximum_depth=grant.maximum_depth.min(STOCK_DEPTH);grant}
+pub fn poll(grant:RetainedCloneGrant,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{drive(stocked(grant),UNITS,call)}
 pub fn advance(grant:RetainedCloneGrant,mut call:impl FnMut(&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalRetirementFailure>{
- let outcome=drive(grant,UNITS,|effect|{let result=call(effect).map(RetainedCloneStep::Progress).map_err(OriginalRetirementFailure::from);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})});
+ let outcome=drive(stocked(grant),UNITS,|effect|{let result=call(effect).map(RetainedCloneStep::Progress).map_err(OriginalRetirementFailure::from);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})});
  RetainedWorkOutcome{result:outcome.result.map(|step|step.progress()),work:outcome.work}
 }
 pub fn close_owned<T:semio_framework_value::retirement::RetireOwned>(owner:&mut semio_framework_value::retained_clone::RetainedCloneClose,value:&mut Option<T>,body:usize,grant:RetainedCloneGrant)->RetainedCloneStep{

@@ -56,7 +56,7 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "CAD config mutation exceeds its neutral inline budget");
     let restored = protocol::apply_diff_cold(backwards[0].diff(&next).diff(), &next).unwrap();
     assert_eq!(restored, base);
-    store::os_store::test_support::assert_op_line_round_trip(&operation);
+    semio_os_store_test_support::assert_op_line_round_trip(&operation);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +66,7 @@ async fn cad_config_set_contributions_round_trips() {
     let operation = CadConfigMutation::SetContributions(SetContributionsEdit { json: json.into() });
     let next = protocol::apply_diff_cold(operation.diff(&base).diff(), &base).unwrap();
     assert_eq!(next.contributions_json, json);
-    store::os_store::test_support::assert_op_line_round_trip(&operation);
+    semio_os_store_test_support::assert_op_line_round_trip(&operation);
 }
 
 #[semio_framework_async_macros::async_test]

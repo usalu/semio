@@ -2,6 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {createHash} from "node:crypto";
+import {resolve} from "node:path";
 import {buildSliceReportV1,describeSliceReadStepV1,sliceReadMovedAtV1,sliceReadStepV1} from "../../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import schema from "../../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import cases from "./🔣️.json" with {type:"json"};
@@ -31,7 +32,7 @@ for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
   calls.push(phase);samples.push(report!);
  };
  const owner={name:"fixture owner"},invocation={control:{signal:signals.signal}},ports={
-  selected:!whole,scope:whole?undefined:"s",options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation,phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>"s",registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
+  selected:!whole,scope:whole?undefined:"s",options:{selection:{}},root:resolve("fixture-workspace"),memoPath:"private",registry:{},invocation,phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>"s",registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async()=>({})},
   readForgottenPathsV1:()=>({paths:new Map(),listings:new Map()}),rowsForgottenV1:()=>false,forgetPersistedPathsV1:async()=>true,readAdmissionMemoV1:async()=>{sample("memo-read");return{admission,observations:[1,2],owners:[],close:async()=>{}};},
   selectedAdmissionFactsV1:{entries:()=>[],suffixes:()=>[],seed:()=>undefined},ownersOfAdmissionMemoV1:()=>[],
@@ -79,7 +80,7 @@ for(const vector of owners)test("active admission lookup "+vector.mode,async()=>
  };
  const read=()=>(buildSliceReportV1({reason:"interval"}).sources as {inventory?:Report}).inventory;
  const ports={
-  selected:true,scope,options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation:{control:{signal:signal.signal}},phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>scope,registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
+  selected:true,scope,options:{selection:{}},root:resolve("fixture-workspace"),memoPath:"private",registry:{},invocation:{control:{signal:signal.signal}},phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>scope,registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async(_owner:unknown,_targets:unknown,_registry:unknown,context:{onOwnerDiscoveryPhase:(operation:string)=>void})=>{sample("discovery",vector.discoveryAt,vector.discoverySampleAt);
    const moved=sliceReadMovedAtV1(),prior=read()?.active;
    for(const operation of vector.operations??[]){

@@ -139,6 +139,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
                   }
                 clearPendingWorldProjection(windowId);
                 world3dWindowViewRegistry.retireWindow(windowId);
+                dispatch({ type: "WINDOWS_RETIRED", windowIds: [windowId], programIds: [] });
                 dispatch({
                   type: "SET_EXTRA_WINDOW_INSTANCES",
                   value: (current) => {

@@ -30,7 +30,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<PlaybookApps>, PluginAssemblyError> {
     PluginBuilder::<_, PlaybookApps>::new("playbook")
-        .label("Playbook")
+        .label(semio_plugin::LocalizedLabel::native("Playbook", "Playbook"))
         .version("0.1.0")
         .package_id("semio:playbook")
         .declare_artifact(crate::artifacts::playbook::artifact())

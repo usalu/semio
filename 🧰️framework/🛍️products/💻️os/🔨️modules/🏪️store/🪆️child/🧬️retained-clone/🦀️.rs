@@ -78,7 +78,7 @@ impl<S> Default for ArtifactChildCloneCursor<S> {
 }
 
 fn invariant(reason: &'static str) -> ValueError {
-    ValueError::new(ValueRefusalKind::InvariantViolated, reason)
+    ValueError::invariant(reason)
 }
 
 fn field_finish_demand() -> semio_framework_value::RetirementDemand {

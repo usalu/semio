@@ -19,7 +19,7 @@ impl PluginState {
 
     /// 👁️✏️ `(dialect, role, pinned value, options)` per opening pairing the loaded manifests declare —
     /// React's `defaultAppsRows` memo over `AppRouter.entriesFor` plus the persisted `OpeningPreferences`.
-    pub fn default_app_rows(&self) -> Vec<(String, String, String, Vec<(String, String)>)> {
+    pub fn default_app_rows(&self, terminology: Terminology, locale: Locale) -> Vec<(String, String, String, Vec<(String, String)>)> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let mut dialects: Vec<String> = Vec::new();
@@ -39,7 +39,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     .plugins
                     .iter()
                     .flat_map(|entry| {
-                        entry.manifest.apps.iter().filter(|app| app.dialect.to_coordinate() == dialect && app.role.as_str() == role).map(|app| (format!("{} {}", entry.plugin_id, app.id), format!("{} · {}", entry.manifest.label, app.id)))
+                        entry.manifest.apps.iter().filter(|app| app.dialect.to_coordinate() == dialect && app.role.as_str() == role).map(|app| (format!("{} {}", entry.plugin_id, app.id), format!("{} · {}", entry.manifest.label.resolve(terminology, locale), app.id)))
                     })
                     .collect();
                 if options.is_empty() {

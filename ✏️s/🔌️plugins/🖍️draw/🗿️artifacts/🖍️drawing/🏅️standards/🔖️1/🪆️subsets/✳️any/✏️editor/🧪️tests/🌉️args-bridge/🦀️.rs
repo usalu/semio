@@ -41,8 +41,8 @@ fn path_conversion_actions_round_trip_the_typed_command() {
         let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
         let command = command_from_action("editPath",Some(&args)).unwrap();
         assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath { layer_id:"path".into(),edit:Box::new(PathEdit::Convert { index:1,target }) }));
-        store::os_store::test_support::assert_op_line_round_trip(&command);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_line_round_trip(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -52,8 +52,8 @@ fn path_join_action_round_trips_the_typed_command() {
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"join","index":1,"other":2}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath { layer_id:"path".into(),edit:Box::new(PathEdit::Join { index:1,other:2 }) }));
-    store::os_store::test_support::assert_op_line_round_trip(&command);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+    semio_os_store_test_support::assert_op_line_round_trip(&command);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
 }
 
 #[test]
@@ -75,8 +75,8 @@ fn path_position_action_round_trips_one_two_axis_edit() {
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"position","index":1,"point":"anchor","to":[15,5]}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]})}));
-    store::os_store::test_support::assert_op_line_round_trip(&command);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+    semio_os_store_test_support::assert_op_line_round_trip(&command);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
 }
 
 #[test]
@@ -85,8 +85,8 @@ fn path_translation_action_round_trips_the_typed_point_set() {
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"translate","points":[{"index":0,"point":"anchor"},{"index":1,"point":"control2"}],"delta":[3,-2]}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Translate {points:vec![PathPointRef {index:0,point:PathPoint::Anchor},PathPointRef {index:1,point:PathPoint::Control2}],delta:[3.0,-2.0]})}));
-    store::os_store::test_support::assert_op_line_round_trip(&command);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+    semio_os_store_test_support::assert_op_line_round_trip(&command);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
 }
 
 #[test]

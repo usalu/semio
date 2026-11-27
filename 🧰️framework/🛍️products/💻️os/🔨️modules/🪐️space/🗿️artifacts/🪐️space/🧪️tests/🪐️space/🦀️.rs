@@ -33,8 +33,8 @@ fn space_document_example_matches_codec_and_pack_contract() {
     let parsed = SpaceSnapshot::parse_dsl(include_str!("../../📚️examples/🪐️demo.space")).expect("parse space example");
     assert_eq!(SpaceSnapshot::envelope_id(), S_SPACE_SCHEMA);
     assert_eq!(parsed.schema, "s.space");
-    store::os_store::test_support::assert_dsl_round_trip(&parsed);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&demo_space());
+    semio_os_store_test_support::assert_dsl_round_trip(&parsed);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&demo_space());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -45,8 +45,8 @@ async fn space_mutation_inventory_and_round_trip_are_owned_by_the_package() {
         assert!(descriptor.owner.starts_with("🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/🧬️mutations/"));
     }
     let rename = SpaceMutation::SetName { name: "Renamed".into() };
-    store::os_store::test_support::assert_op_line_round_trip(&rename);
-    store::os_store::test_support::assert_operation_round_trip(&demo_space(), rename).await;
+    semio_os_store_test_support::assert_op_line_round_trip(&rename);
+    semio_os_store_test_support::assert_operation_round_trip(&demo_space(), rename).await;
 }
 
 #[test]

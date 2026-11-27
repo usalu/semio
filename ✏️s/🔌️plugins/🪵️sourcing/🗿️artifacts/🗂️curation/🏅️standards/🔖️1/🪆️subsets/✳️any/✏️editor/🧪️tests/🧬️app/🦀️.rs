@@ -13,6 +13,7 @@ use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::{SOURCING_CURATION_BOUNDED_TOOL_IDS, SOURCING_CURATION_CONFIG_GRANT_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS, SOURCING_CURATION_RETAINED_RAW_BYTES, SourcingCurationApp, SourcingCurationBoundedCommandJobFactory, SourcingCurationCommand, create_sourcing_curation_app, prepare_sourcing_curation_config, sourcing_curation_config_mutation_retained_bytes};
 use crate::editor::sourcing::editor_vocabulary::{sourcing_curation_io, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
 use semio_plugin::plugin_app_close_prelude::TypedOperationResultLane;
+use crate::editor_unit_tests::context::drain_live_cleanup_to_idle;
 
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
@@ -21,10 +22,10 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        let live = PluginApp::document_archive(&*app).await.expect("live document archive");
+        let live = crate::editor_unit_tests::context::document_archive(&app).await;
         let live_id = protocol::os_spr::decode_history(&live.parent_spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap().doc_id;
-        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("complete instance7 example settlement");
+        crate::editor_unit_tests::context::dispatch_meta(&mut app, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }).await;
+        let receipt = crate::editor_unit_tests::context::settle_instance(&mut app, 7).await;
         let terminal = receipt.lanes.contains(&TypedOperationResultLane::Terminal);
         let mut document = None;
         for effect in receipt.effects {
@@ -58,12 +59,11 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example settlement");
+    crate::editor_unit_tests::context::dispatch_meta(&mut app, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }).await;
+    let receipt = crate::editor_unit_tests::context::settle_instance(&mut app, 7).await;
     let loaded = receipt.effects.into_iter().find_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some((pack, spr)), _ => None });
     let (parent_pack, parent_spr) = loaded.expect("example publishes a document load");
-    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
-    semio_plugin::artifact_app_laws::settle_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive load settles Ready");
+    crate::editor_unit_tests::context::load_archive(&mut app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).await;
     assert_eq!(crate::stock_of(&app.snapshot().expect("loaded snapshot")), oracle);
 }
 
@@ -78,11 +78,10 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     assert_eq!(catalog_id, crate::catalog_child_handle(&crate::stock_of(&snapshot)).child_id, "the boot document declares the handle its own stock derives");
     let object_id = crate::stock_of(&snapshot)[0].id.clone();
     dispatch(&mut app, SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.clone() })).await;
-    let archive = PluginApp::document_archive(&*app).await.expect("document archive");
+    let archive = crate::editor_unit_tests::context::document_archive(&app).await;
     assert_eq!(archive.members.len(), 1, "boot genesis opened exactly the catalog member");
     assert_eq!((archive.members[0].owner.slot.as_str(), archive.members[0].reference.artifact_id.as_str(), archive.members[0].reference.subset.as_str()), (crate::CATALOG_CHILD_SLOT, catalog_id.as_str(), "kit"));
-    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, 92, archive, app.1.cx()).expect("archive admission");
-    semio_plugin::artifact_app_laws::settle_document_archive_load(&mut app.0, 92, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive reload settles Ready");
+    crate::editor_unit_tests::context::load_archive(&mut app, 92, archive).await;
     let reloaded = app.snapshot().expect("reloaded snapshot");
     assert_eq!(reloaded.catalog.child_id, catalog_id);
     assert_eq!(reloaded.curated.iter().map(|item| (item.object_id.as_str(), item.count)).collect::<Vec<_>>(), vec![(object_id.as_str(), 1)]);
@@ -219,26 +218,6 @@ async fn the_real_demonstrator_pack_settles_under_the_browser_grant() {
 /// 🧹️ Drives the runtime's live-cleanup clock the way the browser host does after every actor turn: one item and one page of bytes per maintenance unit, every unit required not to fault, and the ladder required to reach `Complete` (an `AwaitingInput` wait is not idle) before `RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT` (256) consecutive zero-progress steps — the rule the browser actor applies in `runtime_live_cleanup_nonterminal_status` and faults with `plugin.internal.zero-progress`.
 ///
 /// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 4 fix".
-fn drain_live_cleanup_to_idle(app: &mut crate::editor_unit_tests::context::SourcingTestApp) {
-    use semio_plugin::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1, PluginLifecycleStep};
-    const ZERO_PROGRESS_LIMIT: usize = 256;
-    let mut stalled = 0usize;
-    loop {
-        let cx = app.1.cx();
-        let identity = MountedOwnerIdentityV1 { instance_id: 1, operation: cx.operation(), generation: cx.generation() };
-        let phase = app.0.mounted_owner_maintenance_phase().expect("maintenance phase");
-        let mut policy = semio_plugin::artifact_app_laws::fixture_mounted_policy();
-        let loan = match phase { MountedOwnerPhaseV1::Preparation => &mut policy.preparation, MountedOwnerPhaseV1::Maintenance => &mut policy.maintenance, MountedOwnerPhaseV1::Close => &mut policy.close };
-        loan.maximum_items = loan.maximum_items.min(1);
-        loan.maximum_copy_bytes = loan.maximum_copy_bytes.min(4096);
-        let Some(mut turn) = MountedOwnerTurnV1::admit(1, identity, phase, policy, cx).expect("maintenance admission") else { stalled += 1; assert!(stalled < ZERO_PROGRESS_LIMIT, "live cleanup admitted no turn for {ZERO_PROGRESS_LIMIT} consecutive steps"); continue };
-        match app.0.mounted_owner_maintenance_step(&mut turn).expect("a live-cleanup maintenance unit never faults") {
-            PluginLifecycleStep::Complete(_) => return,
-            PluginLifecycleStep::Progress(receipt) if receipt != semio_framework_value::retained_clone::RetainedCloneProgress::default() => stalled = 0,
-            step @ (PluginLifecycleStep::Progress(_) | PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. }) => { stalled += 1; assert!(stalled < ZERO_PROGRESS_LIMIT, "live cleanup made no progress for {ZERO_PROGRESS_LIMIT} consecutive steps, last {step:?} (browser: plugin.internal.zero-progress)"); }
-        }
-    }
-}
 
 /// 🎚️ LAW: the minimum-availability filter, typed or stepped, settles under the browser host's per-turn grant, applies, and its retired owners clean up without faulting the instance.
 #[semio_framework_async_macros::async_test]
@@ -366,3 +345,26 @@ async fn browser_press_wire(app: &mut crate::editor_unit_tests::context::Sourcin
 
 
 //#endregion 🧪️RetainedConfigOracle
+
+//#region 🧮️StockQueryFixture
+/// 🧮️ Every pool query of the committed language-agnostic stock fixture, filter AND sort, answers the committed ids in the committed order.
+#[test]
+fn pool_queries_match_the_committed_language_agnostic_fixture() {
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️stock-curation-1/🔣️.json")).unwrap();
+    let stock: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let document = crate::curation_snapshot_from_stock(&stock, Vec::new());
+    for case in law["filters"].as_array().unwrap() {
+        let value = &case["filters"];
+        let strings = |key: &str| value[key].as_array().map(|rows| rows.iter().map(|row| row.as_str().unwrap().to_owned()).collect()).unwrap_or_default();
+        let filters = crate::Filters {
+            query: value["query"].as_str().unwrap_or_default().into(),
+            module_ids: strings("moduleIds"),
+            typology_path: strings("typologyPath"),
+            min_availability: value["minAvailability"].as_u64().unwrap_or(0) as u32,
+            sort: value.get("sort").map(|sort| crate::TableSort { column_id: sort["columnId"].as_str().unwrap().into(), direction: if sort["direction"] == "desc" { crate::SortDirection::Desc } else { crate::SortDirection::Asc } }),
+        };
+        let ids: Vec<String> = pool::pool_kinds(&document, &SourcingCurationConfig { filters, ..Default::default() }).into_iter().map(|kind| kind.id).collect();
+        assert_eq!(serde_json::json!(ids), case["ids"], "{}", case["id"]);
+    }
+}
+//#endregion 🧮️StockQueryFixture

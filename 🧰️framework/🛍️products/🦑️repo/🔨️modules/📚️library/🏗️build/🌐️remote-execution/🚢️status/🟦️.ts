@@ -3,6 +3,9 @@ import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../🟦
 import fleetStatusSchema from "../../🚢️fleet-status/🧬️schema/🔣️.json" with {type:"json"};
 import type {FleetRetentionFactV1} from "../../🚢️fleet-status/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {machinePathV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import {mkdirSync,readFileSync,renameSync,writeFileSync} from "node:fs";
+import {dirname} from "node:path";
 import {readKeyComparisonV1,type KeyComparisonV1,type KeySamplesRefV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🔑️key-samples/🟦️.ts";
 
 /** 🚢️ One machine of the fleet as `repo fleet status` shows it. */
@@ -41,6 +44,10 @@ export async function readRemoteExecutionFleetFactsV1(context:Readonly<{root:str
   keys=await readKeyComparisonV1(refs,async blob=>{try{const answer=await cacheCall(base+blob,{signal:signal()});if(!answer.ok){await answer.body?.cancel();return undefined;}return new Uint8Array(await answer.arrayBuffer());}catch{return undefined;}});
  }
  let treeCode:string|undefined;
- try{treeCode=(await import("../🛰️sidecar/🟦️.ts")).remoteExecutionSidecarWatchV1("agent").closure().digest.slice(0,16);}catch{}
+ try{
+  const file=machinePathV1(context.root,".cache","f","fleet-sidecar-closure.json");
+  const memory={read:()=>{try{return JSON.parse(readFileSync(file,"utf8"));}catch{return undefined;}},write:(records:object)=>{mkdirSync(dirname(file),{recursive:true});const temporary=`${file}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify(records));renameSync(temporary,file);}};
+  treeCode=(await import("../🛰️sidecar/🟦️.ts")).remoteExecutionSidecarWatchV1("agent",memory).baseline.slice(0,16);
+ }catch{}
  return {scheduler,expireSeconds:whole((table as unknown as {expireSeconds:number}).expireSeconds),machines:table.machines.map(row=>({origin:row.origin,platform:row.platform.key,pressure:row.pressure,load:row.load,cores:row.capacity.cores,running:row.running,queued:row.queued,headroom:row.headroom,ageSeconds:row.ageSeconds,...row.code===undefined?{}:{code:row.code},worker:row.worker.state,...row.worker.why===undefined?{}:{why:row.worker.why},offloadedIn:row.offloadedIn,offloadedOut:row.offloadedOut,refused:row.refused,cacheHit:row.counters.unit.localHit+row.counters.unit.remoteHit,cacheMiss:row.counters.unit.miss,cacheSkipped:row.counters.unit.skipped??0,cacheSkipReasons:Object.fromEntries(Object.entries(row.counters.skipReasons??{}).map(([name,value])=>[name,whole(value)]).filter(([,value])=>(value as number)>0))})),queued:table.queued,executing:table.executing,offloadRejected:table.counters.offloadRejected,refused:table.counters.refused,retried:table.counters.retried,...cache===undefined?{}:{cache},...claims===undefined?{}:{claims},...keys===undefined?{}:{keys},...retention===undefined?{}:{retention},...treeCode===undefined?{}:{treeCode}};
 }

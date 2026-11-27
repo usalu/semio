@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = ["semio-s-artifact-wfc-2d-inferences/testkit"]
 
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 pack = { workspace = true }
 semio-framework = { workspace = true }

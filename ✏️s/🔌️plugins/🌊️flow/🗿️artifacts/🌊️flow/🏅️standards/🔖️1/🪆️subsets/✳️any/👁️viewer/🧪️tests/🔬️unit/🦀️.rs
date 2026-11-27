@@ -57,7 +57,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
     assert_eq!(fixture["role"].as_str().unwrap(), "viewer");
     let id = definition.id.clone();
     let plugin = PluginBuilder::<_, FlowViewerTestApps>::new("flow-viewer-lifecycle")
-        .label("Flow Viewer Lifecycle")
+        .label(semio_plugin::LocalizedLabel::native("Flow Viewer Lifecycle", "Flow-Betrachter-Lebenszyklus"))
         .version("0.1.0")
         .package_id("semio:flow-viewer-lifecycle")
         .depends_on("flow", semio_framework::tree_pin!())

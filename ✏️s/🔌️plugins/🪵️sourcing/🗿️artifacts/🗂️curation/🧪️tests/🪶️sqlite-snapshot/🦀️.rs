@@ -1,6 +1,7 @@
 //! 🪶️ The SQLite snapshot laws of the sourcing curation artifact: the owned snapshot encodes, imports and exports through the mounted editor and viewer apps.
 #![allow(unused_imports)]
 extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as pack;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;

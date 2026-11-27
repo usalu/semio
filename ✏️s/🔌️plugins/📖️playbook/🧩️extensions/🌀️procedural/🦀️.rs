@@ -563,7 +563,7 @@ fn solid_format_arg() -> ActionArgDef {
 
 pub fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
     PluginBuilder::<_, ProceduralModuleApps>::new(MODULE_PLUGIN_ID)
-        .label("Playbook Module Procedural")
+        .label(LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:playbook-module-procedural")
         .depends_on("playbook", semio_framework::tree_pin!())
@@ -573,7 +573,7 @@ pub fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAsse
 }
 
 pub fn module_extension_bundle() -> ExtensionBundle {
-    let mut bundle = ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", env!("CARGO_PKG_VERSION"))
+    let mut bundle = ExtensionBundle::new(MODULE_PLUGIN_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"), env!("CARGO_PKG_VERSION"))
         .extends("playbook").depends_on("playbook", semio_framework::tree_pin!()).mode(ExecutionMode::Isolated);
     for (topic, kind_key) in [("playbook.blockKind", "blockKind"), ("forms.questionKind", "questionKind")] {
         bundle = bundle.contributes_topic(topic, DslValue::object([

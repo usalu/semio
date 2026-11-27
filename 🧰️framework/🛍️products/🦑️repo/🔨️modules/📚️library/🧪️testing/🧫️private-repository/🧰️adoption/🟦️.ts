@@ -3,6 +3,7 @@ import {copyFileSync,constants,existsSync,mkdirSync,readdirSync,readFileSync,rea
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {adoptMaterializedReadOnlyDirectoriesV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {createOwnerRegistryTextV1} from "../../../🏗️build/🕸️graph/🧾️registry-consistency/🔏️writer/🟦️.ts";
 import {captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {adoptRustToolchainReadOnlyV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧰️adoption/🟦️.ts";
 const policy=schema.definitions.Policy.const;
@@ -47,9 +48,9 @@ export function adoptInstalledNxToolkitIdentityV1(checkout:string,environment:No
 export function adoptAuthoredNxConfigurationForV1(workspace:string,checkout:string):void{
  try{copyFileSync(join(resolve(checkout),"nx.json"),join(resolve(workspace),"nx.json"),constants.COPYFILE_EXCL);}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code!=="EEXIST"&&code!=="ENOENT")throw error;}
 }
-/** 🗂️ Gives one private repository the checkout's build owner registry, which every build invocation read inside it resolves before it admits a grant; an existing file or a checkout without one is left as it is. */
+/** 🗂️ Gives one private repository the checkout's build owner registry, which every build invocation read inside it resolves before it admits a grant; an existing file or a checkout without one is left as it is, and a registry that `readBuildOwnerRegistryV1` refuses is refused here instead of copied. */
 export function adoptBuildOwnerRegistryForV1(workspace:string,checkout:string):void{
- try{copyFileSync(join(resolve(checkout),"📋️build-owners.json"),join(resolve(workspace),"📋️build-owners.json"),constants.COPYFILE_EXCL);}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code!=="EEXIST"&&code!=="ENOENT")throw error;}
+ try{createOwnerRegistryTextV1(join(resolve(workspace),"📋️build-owners.json"),readFileSync(join(resolve(checkout),"📋️build-owners.json"),"utf8"));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
 }
 /** 📦️ Gives one private repository the captured Source closure of one authorizer entry (the compiler code a sealed Rust generation is built from), byte for byte as the checkout holds it, so the private repository seals the same code inside its own store; an existing file is left as it is and the number of written files is returned. */
 export async function adoptAuthorizerSourcesForV1(workspace:string,checkout:string,entry:string,signal:AbortSignal=new AbortController().signal):Promise<number>{

@@ -78,7 +78,9 @@ async fn renders_via_the_app() {
     let mut app = new_app().await;
     let object_id = "beam-glulam-gl24h";
     dispatch(&mut app, SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.into() })).await;
-    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_GRID, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| semio_plugin::artifact_app_laws::built_surface_scene(root).expect("assemble world3d scene")).await.expect("render");
+    let mut scene = None;
+    crate::editor_unit_tests::context::observe(&mut app, SOURCING_CURATION_BODY_GRID, &mut |root| scene = Some(semio_plugin::artifact_app_laws::built_surface_scene(root).expect("assemble world3d scene"))).await;
+    let scene: semio_ui_scene::World3dScene = scene.expect("render");
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID));
     assert!(scene.instances_json.contains(object_id));
 }

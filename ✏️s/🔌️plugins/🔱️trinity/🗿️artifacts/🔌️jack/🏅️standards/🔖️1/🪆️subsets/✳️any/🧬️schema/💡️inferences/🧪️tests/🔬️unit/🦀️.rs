@@ -29,7 +29,7 @@ fn edge(id: &str, source: &str, target: &str) -> Edge {
 }
 
 fn chain_snapshot() -> JackSnapshot {
-    JackSnapshot::with_content::<crate::test_support::FixtureComposition>("trinity.graph".into(), "chain".into(), "nakagin".into(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
+    JackSnapshot::with_content::<semio_os_store_test_support::FixtureComposition>("trinity.graph".into(), "chain".into(), "nakagin".into(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures
 
@@ -57,14 +57,14 @@ async fn inference_matches_compute_flat_position_directly() {
 
 #[test]
 fn inference_default_law(){
- let projection=<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+ let projection=<semio_os_store_test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
  assert_eq!(JackInference::infer(&projection).expect("retained fixture"),JackInference::default());
  crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(projection).expect("fixture close");
 }
 
 #[test]
 fn inference_determinism_law(){
- let projection=<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+ let projection=<semio_os_store_test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
  assert_eq!(JackInference::infer(&projection).expect("retained fixture"),JackInference::infer(&projection).expect("retained fixture"));
  crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(projection).expect("fixture close");
 }

@@ -34,6 +34,7 @@ semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-artifact-fem-2d-viewer = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-trace = { workspace = true }
 # 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the node table export.

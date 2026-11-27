@@ -129,7 +129,10 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
             )? { break; }
         }
         cx.consume_fuel(1);
-        if !cleanup::plugin_step_live_cleanup(runtime, cx)? { break; }
+        cleanup::plugin_mark_live_cleanup_repeat(runtime, pump != 0);
+        let stepped = cleanup::plugin_step_live_cleanup(runtime, cx);
+        cleanup::plugin_mark_live_cleanup_repeat(runtime, false);
+        if !stepped? { break; }
     }
     Ok(close_cleanup_work)
     })

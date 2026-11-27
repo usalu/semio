@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 #[test]
 fn pack_round_trips_representative_document() {
     let document = Puzzle5dSnapshot::default();
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
@@ -37,7 +37,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    (semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
+    (semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

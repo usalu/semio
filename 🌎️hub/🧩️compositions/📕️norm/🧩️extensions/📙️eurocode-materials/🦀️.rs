@@ -29,7 +29,7 @@ pub fn plugin() -> Result<Plugin<NormEurocodeMaterialsApps>, PluginAssemblyError
     let en1996 = semio_s_artifact_norm_en1996::declaration(semio_s_artifact_norm_en1996::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let en1999 = semio_s_artifact_norm_en1999::declaration(semio_s_artifact_norm_en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     PluginBuilder::<_, NormEurocodeMaterialsApps>::new("norm-eurocode-materials")
-        .label("Norm Eurocode Materials")
+        .label(semio_plugin::LocalizedLabel::native("Norm Eurocode Materials", "Norm Eurocode Werkstoffe"))
         .version("0.1.0")
         .package_id("semio:norm-eurocode-materials")
         .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))

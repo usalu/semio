@@ -1,0 +1,13 @@
+{
+  "bounds": {"minimum": 0.5, "maximum": 5, "staged": 2.5, "absent": 1},
+  "heightsMillimetres": [-32000, 0, 1500, 48000],
+  "cases": [
+    {"name": "minimum", "action": {"value": 0.5}, "exaggeration": 0.5, "scaledMillimetres": [-16000, 0, 750, 24000]},
+    {"name": "unity", "action": {"value": 1}, "exaggeration": 1, "scaledMillimetres": [-32000, 0, 1500, 48000]},
+    {"name": "staged", "action": {"value": 2.5}, "exaggeration": 2.5, "scaledMillimetres": [-80000, 0, 3750, 120000]},
+    {"name": "maximum", "action": {"value": 5}, "exaggeration": 5, "scaledMillimetres": [-160000, 0, 7500, 240000]},
+    {"name": "absent", "action": {}, "exaggeration": 1, "scaledMillimetres": [-32000, 0, 1500, 48000]}
+  ],
+  "outOfRange": [{"value": 0.49}, {"value": 5.01}, {"value": -1}, {"value": 0}],
+  "unknownMembers": [{"value": 2, "extra": true}]
+}

@@ -1,6 +1,7 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
 import {existsSync,readdirSync,statSync} from "node:fs";
+import {createNodeFilePortV1} from "../../../🕸️graph/🕰️generations/🟨️.mjs";
 import {readdir} from "node:fs/promises";
 import {homedir} from "node:os";
 import {join} from "node:path";
@@ -15,12 +16,15 @@ import {graphPlatformV1} from "../../../🪪️graph-state/🟦️.ts";
 import {ownerCostContextV1,ownerCostPathV1,readOwnerCostFileV1} from "../../../🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts";
 import {wantedTextV1} from "../../../🪪️graph-state/🙋️wanted/🟦️.ts";
 import {runWantedServerV1,serveStateFileV1,wantedServerPolicyV1,type WantedInferV1} from "../../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts";
+import {workspaceClosurePortV1} from "../../../🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts";
+import {leasedGenerationFilePortV1} from "../../../🕸️graph/🕰️generations/🤲️leased-files/🟦️.ts";
 import {createGenerationUploaderV1,localGenerationUploadSourceV1,WAVE_UPLOAD_POLICY_V1} from "../../../🕸️graph/🕰️generations/📡️wave-upload/🟦️.ts";
 import {journalCursorStoreV1} from "../../../🏡️resident/🕰️graph-hooks/📖️direct/🟦️.ts";
 import {snapshotStoreV1} from "../../../🪪️graph-state/📍️cursor/🟦️.ts";
 import {readRemoteExecutionHostViewV1,remoteExecutionOriginV1} from "../../🌡️load/🟦️.ts";
 import {sleep,type RemoteExecutionSidecarContextV1} from "../🧰️shared/🟦️.ts";
-import {awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,graphRefreshCustodyHeldV1,readGraphLeaseEntriesV1} from "./🔬️stall/🟦️.ts";
+import {createNativeImageSharedReaderV1,createNativeImageSharedSampleV1,NATIVE_IMAGE_SHARED_READ_POLICY_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
+import {awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,graphRefreshDeferredV1,readGraphLeaseEntriesV1} from "./🔬️stall/🟦️.ts";
 import {measureReadTreeV1,memoryOverrunV1} from "./🔬️stall/🌳️tree/🟦️.ts";
 import {readyForegroundBusyOfStoreV1} from "../🚦️ready/🟦️.ts";
 
@@ -63,17 +67,19 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
  };
  const adopt=(signal:AbortSignal|undefined)=>adoptGraphReadV1(readInput("refresh",signal));
  const serving=(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes;
+ const{repositoryCacheBudgetV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),graphDirectory=repositoryCacheBudgetV1(context.root).partitions.graph.directory,generations=join(graphDirectory,"m","generations"),leaseDirectory=machinePathV1(context.root,".cache/b/l/m/data");
+ const reader=createNativeImageSharedReaderV1({leaseDirectory,imageDirectory:graphDirectory,signal:context.signal}),peek=createNativeImageSharedReaderV1({leaseDirectory,imageDirectory:graphDirectory,signal:context.signal,timeoutMs:NATIVE_IMAGE_SHARED_READ_POLICY_V1.sampleWaitMilliseconds});
  let uploader:ReturnType<typeof createGenerationUploaderV1>|undefined,tickTimer:ReturnType<typeof setInterval>|undefined,generationsRoot:string|undefined;
  if(serving){
-  const{repositoryCacheBudgetV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),generations=join(repositoryCacheBudgetV1(context.root).partitions.graph.directory,"m","generations"),snapshots=snapshotStoreV1(context.root),cursorStore=journalCursorStoreV1(context.root,environment);
+  const snapshots=snapshotStoreV1(context.root),cursorStore=journalCursorStoreV1(context.root,environment);
    generationsRoot=generations;
   uploader=createGenerationUploaderV1({language,say:context.write,statePath:join(steerDirectory,WAVE_UPLOAD_POLICY_V1.stateFile),
-   source:localGenerationUploadSourceV1({workspace:context.root,root:generations,environment,cursors:{snapshotFor:async generation=>{const entry=cursorStore.get("g"+generation);if(!entry||entry.carry)return undefined;const bytes=await snapshots.bytes(entry.instance);return bytes?{instance:entry.instance,bytes}:undefined;},install:async()=>undefined}}),
+   source:localGenerationUploadSourceV1({workspace:context.root,root:generations,environment,files:leasedGenerationFilePortV1(createNodeFilePortV1(),reader),closures:workspaceClosurePortV1(context.root,reader),cursors:{snapshotFor:async generation=>{const entry=cursorStore.get("g"+generation);if(!entry||entry.carry)return undefined;const bytes=await snapshots.bytes(entry.instance);return bytes?{instance:entry.instance,bytes}:undefined;},install:async()=>undefined}}),
    async may(){const host=(await readRemoteExecutionHostViewV1(environment)).host;return host.pressure==="normal"&&host.availableMegabytes>=WAVE_UPLOAD_POLICY_V1.minimumFreeMegabytes;}});
   tickTimer=setInterval(()=>uploader?.tick(),policy.roundMilliseconds);tickTimer.unref?.();
  }
  const work=context.work,adoptionStop=new AbortController();
- if(work!==undefined){const{repositoryCacheBudgetV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts");work.progressAtMs=()=>{const directory=join(repositoryCacheBudgetV1(context.root).partitions.graph.directory,"m","generations","s");try{let newest:number|null=null;for(const name of readdirSync(directory))if(name.endsWith(".progress.json"))newest=Math.max(newest??0,Math.floor(statSync(join(directory,name)).mtimeMs));return newest;}catch{return null;}};}
+ if(work!==undefined){const progress=createNativeImageSharedSampleV1<number|null>({reader:peek,initial:null,read:()=>{const directory=join(generations,"s");try{let newest:number|null=null;for(const name of readdirSync(directory))if(name.endsWith(".progress.json"))newest=Math.max(newest??0,Math.floor(statSync(join(directory,name)).mtimeMs));return newest;}catch{return null;}}});work.progressAtMs=()=>progress.value();}
  const adoption=serving?undefined:import("./📥️adoption/🟦️.ts").then(({runHeadAdoptionLaneV1})=>runHeadAdoptionLaneV1({...context,signal:AbortSignal.any([context.signal,adoptionStop.signal,...context.drain?[context.drain]:[]])},{environment,store,origin,serveTotalMegabytes:policy.serveTotalMegabytes,steerDirectory})).catch(error=>{
   if(!adoptionStop.signal.aborted&&!context.signal.aborted)context.write("graph-head lane / Graphstand-Dienst "+String(error instanceof Error?error.message:error).slice(0,200));
  });
@@ -85,10 +91,10 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
   },
   async headroom(){return graphServerHeadroomV1((await readRemoteExecutionHostViewV1(environment)).host,policy.serveTotalMegabytes);},
   async mayServe(){return(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes&&!readyForegroundBusyOfStoreV1(store,origin);},
-   refreshDeferred:()=>generationsRoot!==undefined&&graphRefreshCustodyHeldV1({generationsRoot,leaseDirectory:machinePathV1(context.root,".cache/b/l/m/data"),environment,signal:context.signal}),
+   refreshDeferred:()=>generationsRoot!==undefined&&graphRefreshDeferredV1(peek,{generationsRoot,leaseDirectory,environment,signal:context.signal}),
   async mayRefresh(){if(readyForegroundBusyOfStoreV1(store,origin))return false;const key=createHash("sha256").update(JSON.stringify(["graph-refresh",graphPlatformV1()])).digest("hex");return(await client.claim(key,origin,policy.refreshIntervalMilliseconds).catch(()=>({state:"fault"}))).state==="granted";},
   async quietMilliseconds(){try{return Math.max(0,Date.now()-statSync(machinePathV1(context.root,".cache","f","state.wal")).mtimeMs);}catch{return 0;}}});}
- finally{adoptionStop.abort();if(tickTimer!==undefined)clearInterval(tickTimer);uploader?.stop();await uploader?.idle();await adoption;}
+ finally{adoptionStop.abort();if(tickTimer!==undefined)clearInterval(tickTimer);uploader?.stop();await uploader?.idle();await adoption;await Promise.all([reader.close(),peek.close()]);}
 }
 
 /** 🛡️ Runs the graph server beside another role of the same process (the build agent, which every machine runs): a failure or a missing fleet cache only schedules another start after `pauseMilliseconds`, it never reaches the role it runs beside, and `SEMIO_GRAPH_SERVER=off` keeps the machine from serving. */

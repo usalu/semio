@@ -426,7 +426,7 @@ fn observed_validation_turn(
     grant: ValidationGrant,
     run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(ValidationReceipt, usize),semio_framework_value::ValueError>,
 ) -> ((ValidationReceipt, usize), (usize, usize)) {
-    caller.with_effect(grant, |effect| crate::test_support::observe_tessellation_system(|| run(effect).unwrap()))
+    caller.with_effect(grant, |effect| semio_os_store_test_support::observe_tessellation_system(|| run(effect).unwrap()))
         .unwrap_or_else(|_| ((Default::default(),0),(0,0)))
 }
 
@@ -444,7 +444,7 @@ fn validation_close_turn(
 #[test]
 fn original_validation_planning_quotes_actual_backing_before_entity_copy() {
     let mut fixture_caller = validation_fixture_caller();
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedPlanning"];
     assert_eq!(std::mem::size_of::<EdgeId>(),law["entityCopyBytes"].as_u64().unwrap()as usize);
@@ -480,7 +480,7 @@ fn original_validation_planning_quotes_actual_backing_before_entity_copy() {
 #[test]
 fn original_validation_loop_frontier_quotes_source_and_diagnostic_events() {
     let mut fixture_caller = validation_fixture_caller();
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedLoops"];
     for count in law["sourceTetrahedra"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;for broken in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
@@ -508,7 +508,7 @@ fn original_validation_loop_frontier_quotes_source_and_diagnostic_events() {
 #[test]
 fn original_validation_topology_frontier_quotes_each_probe_and_utf8_finding() {
     let mut fixture_caller = validation_fixture_caller();
- use crate::test_support::observe_tessellation_system as observe;
+ use semio_os_store_test_support::observe_tessellation_system as observe;
  use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedTopology"];
  for malformed in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
@@ -533,7 +533,7 @@ fn original_validation_topology_frontier_quotes_each_probe_and_utf8_finding() {
 
 #[test]
 fn original_validation_same_parameter_retains_scratch_samples_and_one_original_caller(){
- use crate::test_support::observe_tessellation_system as observe;
+ use semio_os_store_test_support::observe_tessellation_system as observe;
  use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,OperationId,Generation};
  use semio_framework_value::{retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress},retirement::controlled::ControlledRetirement};
  fn clock()->Option<u64>{Some(1000)}

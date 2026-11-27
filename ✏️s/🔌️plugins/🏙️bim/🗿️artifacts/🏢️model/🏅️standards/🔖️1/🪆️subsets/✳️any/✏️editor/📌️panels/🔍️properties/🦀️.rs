@@ -192,7 +192,7 @@ fn conditions_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -
 
 //#region 🔖️PropertySets
 /// 🏷️ Compact display captions preserve complete source names in action arguments.
-fn property_caption(value: &str) -> String {
+pub(crate) fn property_caption(value: &str) -> String {
     if value.len() <= 160 { return value.to_owned(); }
     let mut end = 157;
     while !value.is_char_boundary(end) { end -= 1; }

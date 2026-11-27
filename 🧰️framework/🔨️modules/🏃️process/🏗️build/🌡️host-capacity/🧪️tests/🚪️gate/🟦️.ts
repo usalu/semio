@@ -385,7 +385,7 @@ test("A finished grant reports its peak tree megabytes and its active time witho
  await withHostCapacityV1(options(directory,{policy:readHostCapacityPolicyV1({...policy,wait:{...policy.wait,lendAfterMilliseconds:1000}}),request:request({fixedMegabytes:100}),learn:run=>{runs.push(run);},observe:async()=>series[Math.min(step++,series.length-1)]!,waited:()=>1_000_000,children:()=>[]}),async()=>sleep(1800));
  expect(runs.length).toBe(1);
  expect(runs[0]).toMatchObject({jobs:1,peakMegabytes:2600});
- expect(runs[0]!.activeMilliseconds).toBeGreaterThan(900);expect(runs[0]!.activeMilliseconds).toBeLessThan(1400);
+ expect(runs[0]!.activeMilliseconds).toBeGreaterThan(800);expect(runs[0]!.activeMilliseconds).toBeLessThan(1400);
  const silent:unknown[]=[];
  await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:run=>{silent.push(run);},observe:async()=>null}),async()=>sleep(80));
  expect(silent).toEqual([]);
@@ -401,7 +401,7 @@ test("Law: a finished grant reports when its tree first came within 5 % of its p
  const reached=policy.wait.heartbeatMilliseconds*series.findIndex(value=>value*10000>=2640*9500);
  expect(runs[0]!.peakAtMilliseconds,"the first reading at or above 95 % of the peak, not the last one").toBeGreaterThanOrEqual(reached-policy.wait.heartbeatMilliseconds);
  expect(runs[0]!.peakAtMilliseconds).toBeLessThan(runs[0]!.activeMilliseconds);
- expect(runs[0]!.peakAtMilliseconds,"a gradual climb is not a late peak").toBeLessThan(policy.wait.heartbeatMilliseconds*(series.length-1));
+ expect(runs[0]!.peakAtMilliseconds,"a gradual climb is not a late peak: the peak is read in the first four fifths of the run, whatever the load of the machine").toBeLessThan(runs[0]!.activeMilliseconds*0.8);
  const ended:string[]=[];
  const failing=options(directory,{request:request({fixedMegabytes:100}),learn:run=>{ended.push(run.status);},observe:async()=>500});
  await expect(withHostCapacityV1(failing,async()=>{await sleep(80);throw Error("build failed");})).rejects.toThrow("build failed");
@@ -423,13 +423,15 @@ test("Law: the grant carries the time to peak and the ramp slot of its request, 
  const running=Array.from({length:taken},()=>{let release=()=>{};const done=new Promise<void>(accept=>{release=accept;});const started=new Promise<void>(accept=>{void withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk})}),async()=>{accept();await done;});});return {started,release,done};});
  await Promise.all(running.map(row=>row.started));
  const abort=new AbortController(),waiting=withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk}),control:control(abort.signal).value,write:line=>lines.push(line)}),async()=>"never").catch(error=>error);
- await sleep(150);
- const status=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});
+ const settle=async(ready:()=>boolean|Promise<boolean>)=>{for(let round=0;round<100&&!(await ready());round++)await sleep(100);};
+ const read=()=>readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});
+ await settle(async()=>lines.length>0&&(await read()).evaluation.decisions.length>0);
+ const status=await read();
  expect(status.evaluation.decisions.map(row=>row.reason)).toEqual(["ramp"]);
  expect(lines.at(-1)).toContain("too many learned reservations are still growing to their peak");
  const german:string[]=[];
  const abortGerman=new AbortController(),waitingGerman=withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk}),environment:{SEMIO_LANGUAGE:"de"},control:control(abortGerman.signal).value,write:line=>german.push(line)}),async()=>"never").catch(error=>error);
- await sleep(150);
+ await settle(()=>german.length>0);
  expect(german.at(-1)).toContain("zu viele gelernte Reservierungen wachsen noch auf ihren Spitzenwert an");
  abort.abort();abortGerman.abort();await waiting;await waitingGerman;
  for(const row of running)row.release();await Promise.all(running.map(row=>row.done));

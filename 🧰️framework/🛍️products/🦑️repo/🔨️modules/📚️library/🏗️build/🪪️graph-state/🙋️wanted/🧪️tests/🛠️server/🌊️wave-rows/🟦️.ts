@@ -22,3 +22,13 @@ test("a callback that throws never breaks the watch, a broken row is ignored",()
  const watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>0,()=>{throw new Error("log full");});
  watch.feed(row(3)+"\n[graph-wave] {\n");expect(watch.generation()).toBe(3);
 });
+
+test("a later wave of the same generation restarts the phase counters and renews the stall clock",()=>{
+ let clock=0;const watch=createGraphReadWatchV1({...wantedServerPolicyV1,inferStallMilliseconds:1000},()=>clock);
+ const owners=(done:number)=>`[owners] owners ${done} of 48 done: ${done} present, 0 fetched from the fleet, 0 inferred here (0 running), 0 wanted from the fleet, 0 stale in the fleet\n`;
+ clock=100;watch.feed(owners(48));clock=200;watch.feed(row(5)+"\n");clock=900;watch.feed(row(5)+"\n");
+ expect(watch.silentMilliseconds()).toBe(0);
+ clock=1000;watch.feed(owners(2));expect(watch.silentMilliseconds()).toBe(0);
+ clock=1500;watch.feed(owners(2));expect(watch.silentMilliseconds()).toBe(500);
+ clock=1600;watch.feed(owners(3));expect(watch.silentMilliseconds()).toBe(0);
+});

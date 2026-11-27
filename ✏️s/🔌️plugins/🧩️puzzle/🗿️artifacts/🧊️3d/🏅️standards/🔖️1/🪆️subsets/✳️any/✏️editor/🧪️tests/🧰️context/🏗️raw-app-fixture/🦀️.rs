@@ -453,6 +453,7 @@ pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> P
 /// into `settled`.
 pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mut Puzzle3dSettled) {
     settled.turns += 1;
+    let debug_before = semio_plugin::app::typed_operation_unit_census();
     let policy = artifact_app_laws::fixture_mounted_policy();
     let maintenance_items = maximum_items.max(policy.maintenance.maximum_items);
     let (publication_grant, caller_grant) = (policy.maintenance, app.parts().1.retained_grant());
@@ -485,4 +486,5 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
         }
     }
     acknowledge_local_interaction_pages(app);
+    if std::env::var_os("L3D_TRACE").is_some() { eprintln!("[DEBUG] turn {} census [{}] diag {}", settled.turns, semio_plugin::app::typed_operation_unit_census() - debug_before, app.parts().0.typed_operation_diagnostic()); }
 }

@@ -33,6 +33,12 @@ impl ReplayMessageAccumulator {
     }
     pub fn next_close_copy_byte_demand(&self) -> usize { if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){return size_of::<Option<MutationMessageRetirement>>()} self.active.as_ref().map_or_else(|| if self.rows.is_empty() { self.rows.next_release_copy_byte_demand().unwrap_or(0) } else { size_of::<MutationMessage>() }, MutationMessageRetirement::next_copy_byte_demand) }
     pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){return Ok(0)} self.active.as_ref().map_or_else(|| if self.rows.is_empty() { self.rows.next_release_allocation_bytes().map_err(ValueError::from) } else { Ok(0) }, |active| Ok(active.next_release_byte_demand())) }
+    pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        if self.terminal_is_empty() { return Ok(0); }
+        if let Some(active) = self.active.as_ref() { return if active.terminal_is_empty() { Ok(1) } else { active.next_depth_demand().map(|depth| depth.max(1)) }; }
+        if !self.rows.is_empty() { return Ok(1); }
+        self.rows.next_release_depth_demand().map(|depth| depth.max(1)).map_err(ValueError::from)
+    }
     pub fn last_close_work(&self)->u128{self.last_close_work}
     pub fn next_close_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
     pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {

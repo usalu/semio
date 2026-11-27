@@ -262,16 +262,13 @@ export function arcCommands(c: Vec, r: number, from: number, sweep: number): Pat
   return [{ op: "M", x: c.x + r * portable.cos(from), y: c.y + r * portable.sin(from) }, ...arcSegments(c, r, from, sweep)];
 }
 
-/** ➡️ The filled outline of an arrow from tail to head: a thin shaft and a triangular head whose tip is the head point. */
-export function arrowOutline(tail: Vec, head: Vec, shaft: number, headLength: number, headWidth: number): Vec[] {
-  const d = sub(head, tail);
-  const l = length(d);
-  const u = unit(d);
-  const n = perp(u);
-  const hl = Math.min(headLength, l * 0.6);
-  const base = sub(head, scale(u, hl));
+/** ➡️ The filled outline of an arrow of length `reach` whose tip is `head` and that points along the unit vector `direction`: a thin shaft and a triangular head. Every point is the head plus an offset that `direction`, `reach` and the widths alone decide, so an arrow moved across the sheet keeps its shape to the last bit (a direction taken back from two sheet points would round with their position). */
+export function arrowOutline(head: Vec, direction: Vec, reach: number, shaft: number, headLength: number, headWidth: number): Vec[] {
+  const n = perp(direction);
+  const hl = Math.min(headLength, reach * 0.6);
   const hw = headWidth * (hl / headLength);
-  return [add(tail, scale(n, shaft / 2)), add(base, scale(n, shaft / 2)), add(base, scale(n, hw / 2)), head, sub(base, scale(n, hw / 2)), sub(base, scale(n, shaft / 2)), sub(tail, scale(n, shaft / 2))];
+  const at = (back: number, side: number): Vec => ({ x: head.x - direction.x * back + n.x * side, y: head.y - direction.y * back + n.y * side });
+  return [at(reach, shaft / 2), at(hl, shaft / 2), at(hl, hw / 2), head, at(hl, -hw / 2), at(hl, -shaft / 2), at(reach, -shaft / 2)];
 }
 
 /** 🔺️ A triangular arrow head with its tip at `tip` pointing along `direction`. */

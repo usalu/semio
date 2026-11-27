@@ -30,6 +30,8 @@ vt() {
   (cd "$ROOT" && timeout "$limit" "$BUN" node_modules/vitest/vitest.mjs run --configLoader native --maxWorkers=1 --reporter=default --reporter=json --outputFile.json="$json" --config "$S/🧪️tests/🎚️config/🟦️.ts" "$@") > "$G/$label.log" 2>&1
   local code=$?
   echo "$label exit $code $(count "$json") seconds $(( $(date +%s) - started ))" | tee -a "$G/summary.txt"
+  [ "$code" -ne 0 ] && echo "$label" >> "$G/${CLOSING_STEP:-misc}.red"
+  return 0
 }
 
 step_light() {
@@ -46,7 +48,10 @@ step_light() {
 check_one() {
   local c="$1" started; started=$(date +%s)
   (cd "$S" && timeout 7200 "$BUN" 🔨️modules/🗂️catalog/🩺️check/🟦️.ts --category "$c") > "$G/check/$c.txt" 2>&1
-  echo "check-$c exit $? seconds $(( $(date +%s) - started )) :: $(tail -1 "$G/check/$c.txt" | cut -c1-160)" | tee -a "$G/summary.txt"
+  local code=$?
+  echo "check-$c exit $code seconds $(( $(date +%s) - started )) :: $(tail -1 "$G/check/$c.txt" | cut -c1-160)" | tee -a "$G/summary.txt"
+  [ "$code" -ne 0 ] && echo "check-$c" >> "$G/${CLOSING_STEP:-misc}.red"
+  return 0
 }
 
 step_check() {
@@ -72,12 +77,50 @@ step_tv_tc() {
     p="$(basename "$(dirname "$(dirname "$project")")")"
     local started; started=$(date +%s)
     (cd "$ROOT" && node --max-old-space-size=2000 node_modules/typescript/lib/tsc.js --noEmit --incremental false --pretty false -p "$project/tsconfig.json") > "$G/tsc-$p.txt" 2>&1
-    echo "tsc-$p exit $? errors $(grep -c 'error TS' "$G/tsc-$p.txt") seconds $(( $(date +%s) - started ))" | tee -a "$G/summary.txt"
+    local code=$?
+    echo "tsc-$p exit $code errors $(grep -c 'error TS' "$G/tsc-$p.txt") seconds $(( $(date +%s) - started ))" | tee -a "$G/summary.txt"
+    [ "$code" -ne 0 ] && echo "tsc-$p" >> "$G/${CLOSING_STEP:-misc}.red"
   done
   wait
 }
 
-step_modelcat() { vt model-catalog 10800 /🧊️model-catalog/ --testTimeout=3600000 --hookTimeout=3600000; }
+modelcat_chain() {
+  local parity="$1" n=0 shard
+  for shard in "$G"/modelcat-shards/*; do
+    n=$((n + 1))
+    [ $((n % 2)) -eq "$parity" ] || continue
+    [ -f "$G/model-catalog-$(basename "$shard").json" ] && continue
+    SEMIO_STAFFAGE_MODEL_ASSETS="$(cat "$shard")" vt "model-catalog-$(basename "$shard")" 5400 /🧊️model-catalog/ --testTimeout=3600000 --hookTimeout=3600000
+  done
+}
+
+step_modelcat_a() { modelcat_chain 0; }
+
+step_modelcat_b() { modelcat_chain 1; }
+
+step_modelcat() {
+  rm -rf "$G/modelcat-shards"; mkdir -p "$G/modelcat-shards"
+  python3 - "$S" "$G/modelcat-shards" <<'PY'
+import os, sys
+root, out = sys.argv[1], sys.argv[2]
+ids = sorted(d for c in os.listdir(root + "/🗂️catalog") if c not in ("🌤️environments", "🖨️print-profiles") and os.path.isdir(f"{root}/🗂️catalog/{c}") for d in os.listdir(f"{root}/🗂️catalog/{c}") if os.path.isdir(f"{root}/🗂️catalog/{c}/{d}"))
+shards = [ids[i::15] for i in range(15)]
+for i, shard in enumerate(shards):
+    open(f"{out}/{i:02d}", "w").write(",".join(shard))
+print(len(ids), "assets in", len(shards), "shards")
+PY
+  modelcat_chain 0 &
+  modelcat_chain 1 &
+  wait
+}
+
+REWRITTEN="person-on-crutches|tour-guide|parent-carrying-toddler|parent-with-stroller|person-queuing|gas-hob|city-bicycle|scissor-lift|excavator|goat|red-squirrel"
+
+step_rewritten() {
+  local f
+  for f in /🧊️model-skeleton/ /🧊️model-silhouette/ /🧊️volumes-rules/ /📐️plan-dimension/ /🧬️schema-conformance/ /✅️asset-validation/ /⚡️asset-power/ /🌡️catalog-physics/ /🫁️breathing-catalog/ /🧍️plan-projection/ /🧊️model-bounds/ /🧊️chain-state/ /🔭️multiview-coverage/ /🧊️three-views/; do vt "rewritten-$(echo "$f" | tr -d "/")" 3600 "$f" --testTimeout=900000; done
+  vt rewritten-catalog-silhouette 7200 /🧊️catalog-silhouette/ -t "its volume ($REWRITTEN) fills" --testTimeout=900000
+}
 
 step_reds() { local f; for f in $REDS; do vt "reds-$(echo "$f" | tr -d "/")" 3600 "$f" --testTimeout=900000; done; }
 
@@ -124,7 +167,9 @@ lane_o() {
   grant sil 4600 14700 cap 4600 14700 bash "$SELF" step sil
   grant tv_tc 4600 5700 cap 4600 5700 bash "$SELF" step tv_tc
   grant check 3500 14700 cap 3500 14700 bash "$SELF" step check
-  grant modelcat 2500 10900 cap 2500 10900 bash "$SELF" step modelcat
+  grant modelcat 7000 21700 cap 7000 21700 bash "$SELF" step modelcat
+  grant modelcat_a 3600 21700 cap 3600 21700 bash "$SELF" step modelcat_a
+  grant modelcat_b 3600 21700 cap 3600 21700 bash "$SELF" step modelcat_b
   grant coverage 3600 5700 cap 3600 5700 bash "$SELF" step coverage
   grant reactsite 2500 3600 cap 2500 3600 "$MAC/chain-suites.sh" closing-suites
   grant split 0 0 env SEMIO_TEST_LEVEL=long TEST_MEMORY_MB=3500 TEST_TIMEOUT_S=3600 "$MAC/test.sh" site /🧊️model-split/ --testTimeout=3000000
@@ -132,7 +177,12 @@ lane_o() {
 }
 
 main() {
-  if [ "${1:-}" = step ]; then mkdir -p "$G"; "step_$2"; exit $?; fi
+  if [ "${1:-}" = step ]; then
+    mkdir -p "$G"; CLOSING_STEP="$2"; export CLOSING_STEP; rm -f "$G/$2.red"
+    "step_$2"; local code=$?
+    [ -s "$G/$2.red" ] && { echo "RED in $2: $(tr '\n' ' ' < "$G/$2.red")" | tee -a "$G/summary.txt"; code=1; }
+    exit $code
+  fi
   FORCE=0; ONLY=()
   while [ $# -gt 0 ]; do case "$1" in --force) FORCE=1 ;; dry) ONLY=(dry) ;; *) ONLY+=("$1") ;; esac; shift; done
   mkdir -p "$G" "$K/🖨️sheets"

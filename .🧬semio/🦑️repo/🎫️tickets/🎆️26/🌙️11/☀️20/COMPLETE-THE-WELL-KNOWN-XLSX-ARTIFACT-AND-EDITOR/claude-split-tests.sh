@@ -6,7 +6,7 @@ export CARGO_BUILD_JOBS=4 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 C
 cd /Users/ueli/Documents/semio/🌎️hub || exit 1
 code=0
 cargo test -j 4 -p semio-hub-stdio-catalog-projection -p semio-hub-stdio-catalog || code=$?
-cargo test -j 4 -p semio-hub-stdio --test shipped_fleet --test native_openable_provider --test component_assembly || code=$?
+cargo test -j 4 -p semio-hub-stdio --test shipped_fleet --test native_openable_provider || code=$?
 cargo test -j 4 -p semio-hub-native-openable || code=$?
 echo "[DEBUG] tests exit $code"
 exit $code

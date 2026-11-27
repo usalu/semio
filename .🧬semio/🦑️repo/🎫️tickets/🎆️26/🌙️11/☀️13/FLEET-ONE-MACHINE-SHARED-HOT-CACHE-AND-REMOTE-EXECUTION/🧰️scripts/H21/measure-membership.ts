@@ -1,0 +1,15 @@
+import {join,relative} from "node:path";import {existsSync,rmSync} from "node:fs";
+const root="/Users/ueli/Documents/semio",B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
+const {buildGraphMembershipV1}=await import(join(B,"🕸️graph/📁️workspace/🟦️.ts"));
+const {journalMembershipRecordsV1}=await import(join(B,"🕸️graph/📥️load/🗞️journal-clean/🟦️.ts"));
+const {connectChangeJournalV1}=await import(join(B,"🏡️resident/📜️journal/🟦️.ts"));
+const {workspaceBuildFilesV1,buildGraphMembersV1}=await import(join(B,"🕸️graph/📁️workspace/🟦️.ts"));
+let w=performance.now();const files=buildGraphMembersV1(await workspaceBuildFilesV1(root));console.log("walk",Math.round(performance.now()-w),"ms");
+console.log("entries",files.length);
+const file="/private/tmp/claude-501/h21/membership-measure.json";rmSync(file,{force:true});
+const feed:any=connectChangeJournalV1(root);
+let t=performance.now();const d0=await buildGraphMembershipV1(root,files);const full=Math.round(performance.now()-t);console.log("plain hash",full,"ms");
+t=performance.now();const first=await journalMembershipRecordsV1({feed,root,file});const d1=await buildGraphMembershipV1(root,files,undefined,new Set(),undefined,first);first.done();console.log("first (seal)",Math.round(performance.now()-t),"ms",JSON.stringify(first.counts()));
+await Bun.sleep(3000);
+t=performance.now();const second=await journalMembershipRecordsV1({feed,root,file});const d2=await buildGraphMembershipV1(root,files,undefined,new Set(),undefined,second);console.log("vouched hash",Math.round(performance.now()-t),"ms",JSON.stringify(second.counts()),"same",d0===d1&&d1===d2);
+process.exit(0);

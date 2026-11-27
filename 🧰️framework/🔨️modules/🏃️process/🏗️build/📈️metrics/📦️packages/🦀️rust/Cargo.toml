@@ -1,6 +1,7 @@
 cargo-features = ["trim-paths"]
 
 [package]
+workspace = "../../../../../../.."
 name = "semio-framework-process-metrics"
 version = "0.1.0"
 edition = "2021"
@@ -13,8 +14,6 @@ id = "process-metrics"
 
 [lints.rust]
 unsafe_code = "forbid"
-
-[workspace]
 
 [lib]
 path = "../../🦀️.rs"

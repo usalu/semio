@@ -89,8 +89,11 @@ test("while the cache is unreachable a queued unit waits untouched and is not co
  expect(spoolLengthV1(root),"the job waits").toBe(1);
  expect(readBuildCountersV1(workspace).unit.skipped,"waiting is no skip").toBe(0);
  const waiting=join(root,fleet.layout.state,fleet.layout.spool),row=readdirSync(waiting).filter(name=>name.endsWith(".json"))[0]!,held=JSON.parse(readFileSync(join(waiting,row),"utf8")) as SpoolJobV1;
- expect(held.notBeforeMs!,"it is due again after the retry delay").toBeGreaterThan(Date.now());expect(held.attempts,"waiting uses no attempt").toBeUndefined();
- writeFileSync(join(waiting,row),JSON.stringify({...held,notBeforeMs:0}));rmSync(downFile,{force:true});
+ expect(held.notBeforeMs,"an outage rewrites no job: the drainer waits as a whole").toBeUndefined();expect(held.attempts,"waiting uses no attempt").toBeUndefined();
+ const before=readFileSync(join(waiting,row),"utf8"),stop=new AbortController();setTimeout(()=>stop.abort(),1500);
+ await drainUploadsV1(root,environment,{idleMilliseconds:60000,signal:stop.signal});
+ expect(readFileSync(join(waiting,row),"utf8"),"a long outage leaves the job file untouched").toBe(before);
+ rmSync(downFile,{force:true});
  expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:1,failed:0});
  expect(spoolLengthV1(root)).toBe(0);expect(await createFleetClientV1(readFleetSettingsV1(root,environment)!).hasResult(key)).toBe(true);
  expect(enqueueUploadV1(root,job({key:"b".repeat(64),localKey,cwd:out,queuedMs:Date.now()-fleet.uploader.maximumJobAgeMilliseconds-1,claimed:false}))).toBe(true);
@@ -271,7 +274,7 @@ test("a process that names the endpoint but not the access (or names it empty) g
  const environment={SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace};
  expect(readFleetSettingsV1(root,{...environment,SEMIO_REMOTE_CACHE_ACCESS:""})!.upload,"no facts, empty access").toBe(false);
  const path=fleetCacheLocalPathV1(workspace);mkdirSync(join(path,".."),{recursive:true});
- writeFileSync(path,JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:"http://127.0.0.1:1",facts:{version:1,group:"g1",generation:1,publishedAtMs:Date.now(),publisher:{directory:"/x",port:1,host:"h"},cache:{endpoints:["http://127.0.0.1:1"],instance:"main",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1,transport:"trusted-lan"},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}}}));
+ writeFileSync(path,JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:"http://127.0.0.1:1",candidates:["http://127.0.0.1:1"],selectedExecution:null,facts:{version:1,group:"g1",generation:1,publishedAtMs:Date.now(),publisher:{origin:"m01",directory:"/x",port:1},cache:{instance:"main",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1,transport:"trusted-lan"},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}}}));
  expect(readFleetSettingsV1(root,{...environment,SEMIO_REMOTE_CACHE_ACCESS:""})!.upload,"empty access, facts grant read-write").toBe(true);
  expect(readFleetSettingsV1(root,environment)!.upload).toBe(true);
  expect(readFleetSettingsV1(root,{...environment,SEMIO_REMOTE_CACHE_ACCESS:"read-only"})!.upload,"an explicit access wins").toBe(false);

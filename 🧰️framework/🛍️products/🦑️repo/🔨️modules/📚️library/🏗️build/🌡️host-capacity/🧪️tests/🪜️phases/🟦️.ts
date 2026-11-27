@@ -47,7 +47,7 @@ test("repo capacity status names the phase a grant is in, in English, in German 
   const file=join(directory,"grants",readdirSync(join(directory,"grants")).find(name=>name.endsWith(".json"))!);writeFileSync(file,JSON.stringify({...JSON.parse(readFileSync(file,"utf8")),phase:"rebuild"}));
   await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)));
  },{directory,policy:learning,strip,sample,pid:process.pid});
- expect(english[1]).toMatch(/pid \d+, since \d+s \[rebuild\]$/u);expect(german[1]).toMatch(/\[rebuild\]$/u);expect(JSON.parse(json.join("\n")).grants[0].phase).toBe("rebuild");
+ expect(english[1]).toBe("Memory guard: no warden is running on this machine");expect(german[1]).toBe("Speicherwächter: auf diesem Rechner läuft kein Wächter");expect(english[2]).toMatch(/pid \d+, since \d+s \[rebuild\]$/u);expect(german[2]).toMatch(/\[rebuild\]$/u);expect(JSON.parse(json.join("\n")).grants[0].phase).toBe("rebuild");
 });
 
 test("The compute slots of a rebuild follow the learned rebuild size, a forced count is not touched by it, and a missing marks switch costs nothing",async()=>{

@@ -10,7 +10,7 @@
         };
         let calls = Arc::new(AtomicUsize::new(0));
         let handler_calls = calls.clone();
-        let plugin: Plugin = Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+        let plugin: Plugin = Plugin::new("fixture", LocalizedLabel::native("Fixture", "Testvorlage"), "0.1.0").plugin_command(
             CommandDefinition::bounded_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell),
             Box::new(move |_, meta| {
                 handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);

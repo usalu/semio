@@ -275,6 +275,37 @@ where
     pub work: semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority<ArchiveWorkProducer>,
 }
 
+
+/// ⏳️ How long an owner has waited while its witness of progress stayed unchanged; the pure rule behind the whole-document wait ceiling of the maintenance ladder.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug)]
+pub struct StallWait<W> {
+    since: Option<(u64, W)>,
+}
+
+impl<W> Default for StallWait<W> {
+    fn default() -> Self {
+        Self { since: None }
+    }
+}
+
+impl<W: Copy + PartialEq> StallWait<W> {
+    pub fn observe(&mut self, now_us: Option<u64>, witness: W) -> Option<u64> {
+        let now_us = now_us?;
+        match self.since {
+            Some((since_us, seen)) if seen == witness => Some(now_us.saturating_sub(since_us)),
+            _ => {
+                self.since = Some((now_us, witness));
+                Some(0)
+            }
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.since = None;
+    }
+}
+
 /// 📊️ The operations done of a whole-document load: the settled count plus the fold, the replacement stages, the member passes and the records its replacement decoded so far.
 pub fn document_archive_load_completed(settled: u64, fold: u64, stage: u64, members_done: u64, decoded: u64) -> u64 {
     settled.saturating_add(fold).saturating_add(stage).saturating_add(members_done).saturating_add(decoded)
@@ -621,5 +652,31 @@ mod progress_laws {
         let walk = [(1, 127, 3, 0, 0), (1, 127, 4, 2, 0), (1, 127, 4, 5, 9), (1, 127, 4, 5, 90_000), (1, 127, 8, 8, 90_000)].map(|(a, b, c, d, e)| document_archive_load_completed(a, b, c, d, e));
         assert!(walk.windows(2).all(|pair| pair[0] <= pair[1]), "{walk:?}");
         assert_eq!(document_archive_load_completed(u64::MAX, 1, 1, 1, 1), u64::MAX);
+    }
+}
+
+#[cfg(test)]
+mod stall_wait_laws {
+    use super::StallWait;
+
+    /// ⏳️ LAW (vectors `⏳️archive-wait`): a wait ends as expired exactly when its witness stayed unchanged for the ceiling; any witness change or clear restarts it; no clock never expires.
+    #[test]
+    fn a_wait_expires_only_while_its_witness_stays_unchanged() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/⏳️archive-wait/🔣️.json")).unwrap();
+        let ceiling = fixture["ceilingUs"].as_u64().unwrap();
+        for sequence in fixture["sequences"].as_array().unwrap() {
+            let mut wait = StallWait::<u64>::default();
+            let mut expired = false;
+            for step in sequence["steps"].as_array().unwrap() {
+                if step["clear"].as_bool().unwrap_or(false) {
+                    wait.clear();
+                    continue;
+                }
+                let waited = wait.observe(step["nowUs"].as_u64(), step["witness"].as_u64().unwrap());
+                assert_eq!(waited, step["waitedUs"].as_u64(), "{sequence}");
+                expired |= waited.is_some_and(|waited| waited >= ceiling);
+            }
+            assert_eq!(expired, sequence["expires"].as_bool().unwrap(), "{sequence}");
+        }
     }
 }

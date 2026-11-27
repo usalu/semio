@@ -19,6 +19,8 @@ impl<'a,'b> ReceivingSettlement<'a,'b>{
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
  /// 📤️ Adopts body effects before any owned frame status or output leaves receiving custody.
  pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);if let Some(cause)=self.cause.borrow_mut().take(){return Err(cause)}Ok(())}
+ /// 🛑️ Re-observes the original scope once the successful body is adopted so a cancel raised after it still precedes publication.
+ pub fn confirm(&self)->Result<()>{self.control.borrow_mut().checkpoint(self.phase,0,0)}
  /// 👁️ Posts later native close and publication effects through that same scope and callback.
  pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if self.cause.borrow().is_some(){return false}if self.lent.get(){let event=(owned,completed,total);if self.first.get().is_none(){self.first.set(Some(event))}self.last.set(Some(event));return true}if !self.post_body.get(){return self.observe_body(completed,total)}self.post(owned,completed,total)}
  /// 🔭️ Forwards a native body stage event (its real completed and total units) to the caller's progress and cancellation without settling allocation effects, which the body adopts once at its end; an event raised while the scope is lent to the body is queued in order and replayed through the real control when the loan ends, and the first refusal fails the body at `finish_body`.
@@ -63,9 +65,9 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
  pub fn text(&mut self,text:&str,output:&mut String,depth:usize)->Result<()>{if !output.is_empty()||output.capacity()!=0{return Err(error(ValueRefusalKind::InvariantViolated,"SQLite text receiving slot must be empty"))}
   self.admit(text.len())?;let phase=self.phase();self.control.checkpoint(phase,0,text.len())?;let before=self.owned();self.body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_depth:depth,..Default::default()})?;match &mut self.native{Direction::Decode(native)=>native.checkpoint()?,Direction::Encode(native)=>native.checkpoint()?}self.control.record_performed_work(1)?;let control=&mut *self.control;let body=&mut *self.body;let mut cause=None;
   let result=match &mut self.native{
-   Direction::Decode(native)=>{let mut observe=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_text_into(native,text,output,depth))},
-   Direction::Encode(native)=>{let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_encode_text_into(native,text,output,depth))}
-  };self.receipt(before)?;result.map_err(|error|cause.unwrap_or(error))
+   Direction::Decode(native)=>{let mut observe=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|{body.copy_text_into(native,text,output,depth)?;native.checkpoint()})},
+   Direction::Encode(native)=>{let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|{body.copy_encode_text_into(native,text,output,depth)?;native.checkpoint()})}
+  };self.receipt(before)?;match(result,cause){(_,Some(cause))=>Err(cause),(result,None)=>result}
  }
 }
 impl Port<'_,'_,'_,semio_framework_io_control::NativeSnapshotBodyWallet>{

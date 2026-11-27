@@ -1,0 +1,67 @@
+{
+ "version": 1,
+ "tree": {
+  "files": [
+   {
+    "path": "Cargo.toml",
+    "text": "[package]\nname=\"fx\"\nversion=\"0.1.0\"\n"
+   },
+   {
+    "path": "🧩️é/lib.rs",
+    "text": "pub const X:&str=include_str!(\"../data/ü.txt\");\n"
+   },
+   {
+    "path": "🧩️é/run.sh",
+    "text": "#!/bin/sh\necho ok\n",
+    "executable": true
+   },
+   {
+    "path": "data/ü.txt",
+    "text": "grüezi\n"
+   },
+   {
+    "path": "data/empty.txt",
+    "text": ""
+   },
+   {
+    "path": "z.bin",
+    "base64": "AAEC//4="
+   },
+   {
+    "path": "ab/c.txt",
+    "text": "c\n"
+   },
+   {
+    "path": "a/bc.txt",
+    "text": "bc\n"
+   },
+   {
+    "path": "a+/x.txt",
+    "text": "x\n"
+   }
+  ],
+  "links": [
+   {
+    "path": "alias.txt",
+    "target": "data/ü.txt"
+   }
+  ],
+  "excluded": [
+   ".git/config",
+   "target/debug/x",
+   "🗑️generated/out.txt",
+   "pkg/target/y",
+   ".DS_Store",
+   ".cache/s/x",
+   "🎓️teaching/lesson.md"
+  ]
+ },
+ "expected": {
+  "text": "f\tCargo.toml\t2e835a0c7c97231700e2773656150fe88c65b143b4b1b46e2113ddcc5f426464\t-\nf\ta+/x.txt\t73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac\t-\nf\ta/bc.txt\tbc18cd878fc136926875bcb4bddc7f3badfaf4298f5dd1a9fd4c1b9692b624fc\t-\nf\tab/c.txt\ta3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478\t-\nl\talias.txt\tdata/ü.txt\nf\tdata/empty.txt\te3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\t-\nf\tdata/ü.txt\tb336e15db9cf033cb511a429e18e543790ef2ad0ee170147a818d96e05fb594f\t-\nf\tz.bin\taa5cd9acfab25f643fb1cedb67f8770417ac9ce0b02cfe72a62fa1ec20e9f60a\t-\nf\t🧩️é/lib.rs\t55b0b72f3a251f69effa7c2badc37e2d5d3b10b9bea9d84feb302e49befbf505\t-\nf\t🧩️é/run.sh\tb4d644d4279594903f1a9911956432d9473041f2984fc6014c14d7402c7d126c\tx\n",
+  "digest": "ed570e0409139cc161918e3e64dcece8c922511b5ffcf2dd0c71ab31b53228bc",
+  "id": "ed570e040913",
+  "files": 9,
+  "links": 1,
+  "bytes": 123
+ }
+}

@@ -49,7 +49,7 @@ pub(crate) fn fixture_json(relative: &str) -> serde_json::Value {
 /// 🪴️ Original reconstruction membership pages require authority before a source corner advances.
 #[test]
 fn original_modeling_reconstruction_membership_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["reconstructionMembership"];let source=&law[policy["deniedSource"].as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
     while !matches!(job.inspection(),Work::Orient(work)if work.phase==6){let demand=job.orientation_corners_demands().or(job.orientation_components_demands().unwrap()).or(job.orientation_adjacency_demands().unwrap()).or(job.orientation_incidence_demands(84).unwrap()).or(job.orientation_initialization_demands().unwrap()).or(job.snapshot_demands().unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:3,..Default::default()});funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:84,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|job.step(1,effect,&mut RetainedCloneProgress::default())).unwrap();}
     let original=match job.inspection(){Work::Orient(work)=>(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr()),_=>unreachable!()};let before=job.progress();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=RetainedCloneProgress::default();let(step,heap)=observe(||funded(grant,|effect|job.step(1,effect,&mut receipt)).unwrap());assert!(matches!(step,MeshModelingStep::Working(_)));assert_eq!(heap,(0,0),"original membership page birth must use original capacity authority");assert_eq!(receipt,Default::default());assert_eq!(job.progress(),before);assert!(matches!(job.inspection(),Work::Orient(work)if work.build.as_ref().is_some_and(|build|build.state().phase==0&&build.state().face==0&&build.state().corner==0&&build.state().admitted_corners==0&&build.state().used_empty)&&(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr())==original));
@@ -58,7 +58,7 @@ fn original_modeling_reconstruction_membership_requires_original_authority(){
 /// 🔁️ Original winding swaps require both native corner writes before source mutation.
 #[test]
 fn original_modeling_orientation_corners_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationCorners"];let source=&law[policy["deniedSource"].as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
     while !matches!(job.inspection(),Work::Orient(work)if work.phase==5&&work.face==1){let demand=job.orientation_components_demands().unwrap().or(job.orientation_adjacency_demands().unwrap()).or(job.orientation_incidence_demands(84).unwrap()).or(job.orientation_initialization_demands().unwrap()).or(job.snapshot_demands().unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:3,..Default::default()});funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:84,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|job.step(1,effect,&mut RetainedCloneProgress::default())).unwrap();}
     let original=match job.inspection(){Work::Orient(work)=>(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr()),_=>unreachable!()};let before=job.progress();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:policy["swapCopyBytes"].as_u64().unwrap()as usize-1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=RetainedCloneProgress::default();let(step,heap)=observe(||funded(grant,|effect|job.step(1,effect,&mut receipt)).unwrap());assert!(matches!(step,MeshModelingStep::Working(_)));assert_eq!(heap,(0,0));assert_eq!(receipt,Default::default());assert_eq!(job.progress(),before,"original winding swap must not progress under its two-corner atom");assert!(matches!(job.inspection(),Work::Orient(work)if work.face==1&&work.reversing==0&&work.snapshot.soup.faces[1]==faces[1]&&(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr())==original));
@@ -67,7 +67,7 @@ fn original_modeling_orientation_corners_requires_original_authority(){
 /// 🌐️ The original component stack requires normal backing authority before a face becomes visited.
 #[test]
 fn original_modeling_orientation_components_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationComponents"];let source=&law[policy["deniedSource"].as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
     while !matches!(job.inspection(),Work::Orient(work)if work.phase==4){let demand=job.orientation_adjacency_demands().unwrap().or(job.orientation_incidence_demands(84).unwrap()).or(job.orientation_initialization_demands().unwrap()).or(job.snapshot_demands().unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:3,..Default::default()});funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:84,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|job.step(1,effect,&mut RetainedCloneProgress::default())).unwrap();}
     let original=match job.inspection(){Work::Orient(work)=>(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr()),_=>unreachable!()};let before=job.progress();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=RetainedCloneProgress::default();let(step,heap)=observe(||funded(grant,|effect|job.step(1,effect,&mut receipt)).unwrap());assert!(matches!(step,MeshModelingStep::Working(_)));assert_eq!(heap,(0,0),"original orientation traversal requires stack backing authority before visited flags change");assert_eq!(receipt,Default::default());assert_eq!(job.progress(),before);assert!(matches!(job.inspection(),Work::Orient(work)if work.cursor==0&&work.stack.is_empty()&&work.active.is_none()&&work.component.iter().all(|value|*value==usize::MAX)&&work.flipped.iter().all(|value|!*value)&&(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr())==original));
@@ -76,7 +76,7 @@ fn original_modeling_orientation_components_requires_original_authority(){
 /// 🧷️ The original reciprocal adjacency backing cannot grow before a normal capacity grant.
 #[test]
 fn original_modeling_orientation_adjacency_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationAdjacency"];let source=&law[policy["deniedSource"].as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
     while !matches!(job.inspection(),Work::Orient(work)if work.phase==3){let demand=job.orientation_incidence_demands(84).unwrap().or(job.orientation_initialization_demands().unwrap()).or(job.snapshot_demands().unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:3,..Default::default()});funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:84,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|job.step(1,effect,&mut RetainedCloneProgress::default())).unwrap();}
     let original=match job.inspection(){Work::Orient(work)=>(work.snapshot.source.vertices.as_ptr(),work.snapshot.source.halfedges.as_ptr(),work.snapshot.source.faces.as_ptr()),_=>unreachable!()};let before=job.progress();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=RetainedCloneProgress::default();
@@ -86,7 +86,7 @@ fn original_modeling_orientation_adjacency_requires_original_authority(){
 /// 🌳️ Original component visits retain winding parity, exact currencies and complete physical close.
 #[test]
 fn original_modeling_orientation_components_preserves_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket,RetirementDemand};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationComponents"];
     for name in policy["sources"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -120,7 +120,7 @@ fn original_modeling_orientation_components_preserves_fullgrant_and_custody(){
 /// 🔄️ Original winding swaps preserve source custody, exact body atoms and complete close.
 #[test]
 fn original_modeling_orientation_corners_preserves_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket,RetirementDemand};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationCorners"];
     for name in policy["sources"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -145,7 +145,7 @@ fn original_modeling_orientation_corners_preserves_fullgrant_and_custody(){
 /// 🕸️ Original reciprocal neighbors retain source order, exact currencies and complete physical close.
 #[test]
 fn original_modeling_orientation_adjacency_preserves_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket,RetirementDemand};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationAdjacency"];
     for name in policy["sources"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -170,7 +170,7 @@ fn original_modeling_orientation_adjacency_preserves_fullgrant_and_custody(){
 /// 🪙️ The original incidence page, key roster and owner row require caller capacity before any normal effect.
 #[test]
 fn original_modeling_orientation_incidence_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationIncidence"];
     for name in policy["sources"].as_array().unwrap(){let source=&law[name.as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
         while !matches!(job.inspection(),Work::Orient(work)if work.phase==2){let demand=job.orientation_initialization_demands().unwrap().or(job.snapshot_demands().unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:3,..Default::default()});funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:84,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|job.step(1,effect,&mut RetainedCloneProgress::default())).unwrap();}
@@ -183,7 +183,7 @@ fn original_modeling_orientation_incidence_requires_original_authority(){
 /// 🧮️ The defining incidence preserves exact owner directions, original source pointers and every granted normal/close currency.
 #[test]
 fn original_modeling_orientation_incidence_preserves_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket,RetirementDemand};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationIncidence"];
     for name in policy["sources"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -204,7 +204,7 @@ fn original_modeling_orientation_incidence_preserves_fullgrant_and_custody(){
 /// 🧭️ The original orientation source cannot birth normal adjacency and flag backings without caller capacity.
 #[test]
 fn original_modeling_orientation_initialization_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationInitialization"];
     for source in policy["sources"].as_array().unwrap(){
         let source=&law[source.as_str().unwrap()];let positions=serde_json::from_value::<Vec<[f32;3]>>(source["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(source["faces"].clone()).unwrap();let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();
@@ -217,7 +217,7 @@ fn original_modeling_orientation_initialization_requires_original_authority(){
 /// 🪆️ The original orientation initialization pays each selected backing and row through genuine cancellation and Drop0.
 #[test]
 fn original_modeling_orientation_initialization_preserves_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket,RetirementDemand};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["orientationInitialization"];
     for name in policy["sources"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
@@ -238,7 +238,7 @@ fn original_modeling_orientation_initialization_preserves_fullgrant_and_custody(
 /// 🪢️ Original modeling callers fund the defining tessellation step and keep its work-buffer custody after the same source returns.
 #[test]
 fn original_modeling_tessellation_callers_preserve_actual_child_receipts(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🧩️tessellation/🎟️owners.json");let policy=&law["modelingTessellation"];let polygon=law["polygons"].as_array().unwrap().iter().find(|polygon|polygon["id"]==policy["polygon"]).unwrap();
     for kind in policy["kinds"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in policy["handoffCuts"].as_array().unwrap(){
@@ -258,7 +258,7 @@ fn original_modeling_tessellation_callers_preserve_actual_child_receipts(){
 /// 🧺️ The original snapshot cannot allocate its source projection under denied authority.
 #[test]
 fn original_modeling_snapshot_preparation_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["snapshotPreparation"];
     let positions=serde_json::from_value::<Vec<[f32;3]>>(policy["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(policy["faces"].clone()).unwrap();
     let mut job=HalfedgeMesh::from_faces(&positions,&faces).unwrap().orient_faces_job_owned().unwrap();let original=match job.inspection(){Work::Orient(work)=>work.snapshot.source.vertices.as_ptr(),_=>unreachable!()};
@@ -270,7 +270,7 @@ fn original_modeling_snapshot_preparation_requires_original_authority(){
 /// 🧭️ Every original public Snapshot caller retains its source and funds the same preparation frontier and boxed closure.
 #[test]
 fn original_modeling_snapshot_callers_preserve_original_fullgrant_and_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["snapshotCallers"];let control=&law["snapshotPreparation"];let setup=&policy["setupGrant"];
     let setup_grant=RetainedCloneGrant {maximum_items:setup["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:setup["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:setup["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:setup["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:setup["maximumDepth"].as_u64().unwrap()as usize};
@@ -296,7 +296,7 @@ fn original_modeling_snapshot_callers_preserve_original_fullgrant_and_custody(){
 /// ↔️ Original translation writes, completion, cancellation and closure require independent caller authority.
 #[test]
 fn original_modeling_translation_preserves_fullgrant_and_original_custody(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     use semio_framework_value::{factory_ticket_demands,close_factory_ticket};
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["translation"];let projection=&law["snapshotPreparation"];
@@ -320,7 +320,7 @@ fn original_modeling_translation_preserves_fullgrant_and_original_custody(){
 /// 📥️ The original translation input pays the defining frame and keeps cold, faulted and cancelled source custody.
 #[test]
 fn original_modeling_translation_start_requires_original_authority(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");let policy=&law["translationStart"];let positions=serde_json::from_value::<Vec<[f32;3]>>(law["snapshotPreparation"]["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["snapshotPreparation"]["faces"].clone()).unwrap();let offset=serde_json::from_value::<[f32;3]>(law["translation"]["offset"].clone()).unwrap();assert!(policy["retainInputOnFault"].as_bool().unwrap());
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for stage in policy["cancelStages"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).chain(["fault"]){
         let(mesh,heap)=observe(||HalfedgeMesh::from_faces(&positions,&faces).unwrap());let(mut born,mut freed)=(heap.0,heap.1);let original=(mesh.vertices.as_ptr(),mesh.halfedges.as_ptr(),mesh.faces.as_ptr());let delta=if stage=="fault"{Vec3([f32::NAN,offset[1],offset[2]])}else{Vec3(offset)};let(mut input,heap)=observe(||mesh.translation_input_owned(delta));assert_eq!(heap,(0,0));let demand=input.start_demands().unwrap();assert_eq!(demand.copy_bytes,policy["rootTransferCopyBytes"].as_u64().unwrap()as usize);assert!(demand.capacity_bytes>0);assert_eq!(demand.release_bytes,policy["maximumReleaseBytes"].as_u64().unwrap()as usize);assert_eq!(demand.depth,policy["depth"].as_u64().unwrap()as usize);let grant=RetainedCloneGrant {maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let mut job=None;
@@ -337,7 +337,7 @@ fn original_modeling_translation_start_requires_original_authority(){
 }
 
 fn original_modeling_close_input_ticket(ticket:Box<dyn semio_framework_value::ErasedSnapshotRetirement>,copy:usize,born:&mut usize,freed:&mut usize){
-    use crate::test_support::observe_tessellation_system as observe;use semio_framework_value::{factory_ticket_demands,close_factory_ticket};
+    use semio_os_store_test_support::observe_tessellation_system as observe;use semio_framework_value::{factory_ticket_demands,close_factory_ticket};
     let mut owner=Some(ticket);let mut turns=0;while let Some(ticket)=owner.as_ref(){let demand=factory_ticket_demands(ticket,copy).unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};if demand.release_bytes>8{let(step,heap)=observe(||settled(funded(RetainedCloneGrant {maximum_release_bytes:8,..grant},|effect|close_factory_ticket(&mut owner,effect))).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}let(step,heap)=observe(||settled(funded(grant,|effect|close_factory_ticket(&mut owner,effect))).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(grant));*born+=heap.0;*freed+=heap.1;turns+=1;if turns>143&&step.progress()==RetainedCloneProgress::default(){panic!("Original translation input closure stalled copy={copy} demand={demand:?}");}assert!(turns<100000);}let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
 }
 
@@ -792,7 +792,7 @@ fn retained_primitives_generate_bounded_corners_and_reconstruction() {
 /// 🎟️ Each original modeling Work keeps its source arrays until exact physical closure grants.
 #[test]
 fn original_modeling_scratch_owners_preserve_all_physical_allocations(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,factory_ticket_demands,close_factory_ticket};
     let cases:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🔣️.json");
     let law:serde_json::Value=crate::fixture_json("../🧫️fixtures/🛠️modeling/🎟️owners.json");

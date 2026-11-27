@@ -4,7 +4,7 @@ use crate::empty_wires_snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_empty_document() {
-    store::os_store::test_support::assert_dsl_round_trip(&empty_wires_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&empty_wires_snapshot());
 }
 
 /// ⚖️ LAW: the committed demo parent carries its seven identities and names its board child; the board itself (and the

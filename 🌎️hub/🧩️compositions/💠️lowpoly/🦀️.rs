@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// for why it is not a thin wrapper around the editor.
 pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
     PluginBuilder::<_, LowpolyApps>::new("lowpoly")
-        .label("Lowpoly")
+        .label(semio_plugin::LocalizedLabel::native("Lowpoly", "Lowpoly"))
         .version("0.1.0")
         .package_id("semio:lowpoly")
         .artifact(crate::artifacts::lowpoly::declaration().map_err(PluginAssemblyError::definition)?)

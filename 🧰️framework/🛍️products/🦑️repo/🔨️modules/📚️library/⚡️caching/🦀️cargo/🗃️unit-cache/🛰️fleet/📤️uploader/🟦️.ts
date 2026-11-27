@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {claimHeldV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {dropSpillObjectsV1,newestBuildRunV1,newestEntryV1,emitUnitEventV1,readSpilledEntryV1,readSpillObjectV1} from "../../💾️store/🟦️.ts";
 import {packRunV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
+import {canonicalDepInfoV1} from "../../🔏️key/🔗️sources/🟦️.ts";
 import {casRootV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {readCasObjectSyncV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 import {pinCasV1,releaseCasPinsV1} from "../../../../../🏗️build/🗄️cas/📌️pins/🟦️.ts";
@@ -139,9 +140,9 @@ export async function uploadUnitV1(client:FleetClientV1,root:string,job:SpoolJob
 async function sendEntryV1(client:FleetClientV1,root:string,job:SpoolJobV1,entry:NonNullable<ReturnType<typeof newestEntryV1>>,roots:ReturnType<typeof portableRootsV1>,cas:string):Promise<UploadOutcomeV1>{
  const contents=new Map<string,Uint8Array>();
  let total=0,missing=false;
- const convert=(sha256:string,text:boolean):string|undefined=>{
+ const convert=(sha256:string,text:boolean,name=""):string|undefined=>{
   const bytes=readCasObjectSyncV1(cas,sha256)??readSpillObjectV1(root,sha256);if(!bytes){missing=true;return undefined;}
-  const out=text?encoder.encode(portableTextV1(decoder.decode(bytes),roots)):new Uint8Array(bytes);total+=out.length;
+  const out=text?encoder.encode(portableTextV1(name.endsWith(".d")?canonicalDepInfoV1(decoder.decode(bytes)):decoder.decode(bytes),roots)):new Uint8Array(bytes);total+=out.length;
   if(out.length>limits.maximumBlobBytes||total>limits.maximumEntryBytes)return undefined;
   const hash=sha(out);contents.set(hash,out);return hash;
  };
@@ -149,7 +150,7 @@ async function sendEntryV1(client:FleetClientV1,root:string,job:SpoolJobV1,entry
  try{
   const outputs:RemoteUnitV1["outputs"]=[];
   for(const output of entry.outputs){
-   const hash=convert(output.sha256,output.template===true);if(hash===undefined)return failed();
+   const hash=convert(output.sha256,output.template===true,output.name);if(hash===undefined)return failed();
    outputs.push({name:output.name,sha256:hash,bytes:contents.get(hash)!.length,executable:output.executable,...(output.template?{template:true}:{})});
   }
   const stream=(value:string|null|undefined):string|null|undefined=>value==null?null:convert(value,true);
@@ -266,6 +267,7 @@ async function drainPassV1(root:string,environment:Environment,options:Readonly<
    else if(outcome==="refused"){countSkipV1(workspace,"upload-refused");event("remote-skip","upload-refused: the fleet cache will never take these bytes");}
    else if(outcome==="oversize"){countSkipV1(workspace,"upload-oversize");event("remote-skip","upload-oversize: the unit is larger than the largest entry the fleet cache admits");}
    else if(outcome==="gone"){countSkipV1(workspace,"upload-entry-gone");event("remote-skip","upload-entry-gone: the local entry or one of its objects was removed before the upload");}
+   else if(outcome===false){countSkipV1(workspace,"upload-unshareable");event("remote-skip","upload-unshareable: an incremental session or a run that names a directory of this machine is never shared");}
    else{countSkipV1(workspace,"upload-failed");event("remote-skip","upload-failed");}
    return false;
   })().catch(()=>false);
@@ -275,6 +277,7 @@ async function drainPassV1(root:string,environment:Environment,options:Readonly<
   for(;;){
    if(options.signal?.aborted)break;
    if(options.idleMilliseconds!==0){const named=identity();if(named!==undefined&&named!==settings.identity)break;}
+   if(running.size===0&&client.state()==="down"){if(idle===0){result.deferred=(result.deferred??0)+spoolLengthV1(root);break;}quietSince=Date.now();await pause(policy.waitingPollMilliseconds);continue;}
    while(running.size<limits.maximumUploadJobs&&queue.length>0){const name=queue.shift()!;queued.delete(name);start(name);}
    if(running.size>=limits.maximumUploadJobs){await Promise.race([...running]);continue;}
    if(queue.length===0&&Date.now()-listedAt>=(running.size>0?policy.pollMilliseconds*5:0)){

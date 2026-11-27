@@ -3,7 +3,7 @@ use super::*;
 /// 🔺️ One actual triangle index row is atomic, fully priced, and never grows its admitted original buffers.
 #[test]
 fn original_mesh_tessellation_triangle_emission_prices_exact_atomic_output(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");let indices:[u32;3]=serde_json::from_value(law["triangleEmission"]["indices"].clone()).unwrap();
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){

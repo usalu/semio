@@ -34,6 +34,8 @@ pub struct MaintenanceCursors {
     pub maintenance_document_archive_cursor: usize,
     pub maintenance_envelope_field_decoder_cursor: usize,
     pub maintenance_envelope_completed_record_cursor: usize,
+    /// ⏳️ How long the ladder has read only waits on the host, a worker or a replacement owner of a whole-document load while no rung moved.
+    pub archive_wait: semio_plugin_document_media::StallWait<()>,
 }
 
 impl MaintenanceCursors {
@@ -58,6 +60,7 @@ impl MaintenanceCursors {
             maintenance_document_archive_cursor: 0,
             maintenance_envelope_field_decoder_cursor: 0,
             maintenance_envelope_completed_record_cursor: 0,
+            archive_wait: Default::default(),
         }
     }
 }

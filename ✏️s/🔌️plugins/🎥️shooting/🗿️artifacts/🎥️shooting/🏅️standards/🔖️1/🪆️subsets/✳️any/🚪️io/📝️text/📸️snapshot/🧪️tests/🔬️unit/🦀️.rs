@@ -30,18 +30,18 @@ fn representative_snapshot() -> ShootingSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_dsl_round_trips_representative_fixture() {
-    store::os_store::test_support::assert_dsl_round_trip(&representative_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&representative_snapshot());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_dsl_round_trips_empty_fixture() {
-    store::os_store::test_support::assert_dsl_round_trip(&crate::empty_shooting_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&crate::empty_shooting_snapshot());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_dsl_round_trips_base_icon_example() {
     let snapshot = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
-    store::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_store_test_support::assert_dsl_round_trip(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]

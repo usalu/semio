@@ -366,7 +366,7 @@
         "requirePersistedUuid": true
       },
       "sample": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-cell-applied/➡️after.xlsx",
-      "ownerApp": "s.stdio.xlsx@ecma-376/*#editor"
+      "ownerApp": "s.stdio.xlsx@ecma-376/transitional#editor"
     },
     {
       "batch": "C",

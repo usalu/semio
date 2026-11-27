@@ -6,12 +6,12 @@ fn sample() -> NormViewportWindowConfig {
 
 #[semio_framework_async_macros::async_test]
 async fn norm_config_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&NormViewportWindowConfig::default());
-    store::os_store::test_support::assert_dsl_round_trip(&sample());
+    semio_os_store_test_support::assert_dsl_round_trip(&NormViewportWindowConfig::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&sample());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn norm_config_dsl_pack_equivalence() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&NormViewportWindowConfig::default());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&sample());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&NormViewportWindowConfig::default());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample());
 }

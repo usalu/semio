@@ -103,19 +103,19 @@ export function pinHostFreeBytesForSizingV1(bytes:number|undefined):void{
 export function hostFreeForSizingV1(directory:string):{availableBytes:number}|undefined{
  return pinnedHostFreeBytesV1===undefined?nativeFreeSpaceSyncV1(dirname(directory)):{availableBytes:pinnedHostFreeBytesV1};
 }
-/** 🪪️ The capacity of an elastic image: the one its receipt pins (clamped down to the rule's maximum, never snapped up to the declared minimum) when an image exists, else the elastic size a new image would get, raised to the grown size a pressed predecessor recorded as far as the host allows; an unreadable receipt keeps the declared capacity. */
+/** 🪪️ The capacity of an elastic image: the one its receipt pins (never clamped to the rule's maximum nor snapped up to the declared minimum: a published image keeps its exact envelope, also when it exceeds the image cap, until a governed recreation births its successor) when an image exists, else the elastic size a new image would get, raised to the grown size a pressed predecessor recorded as far as the host allows; an unreadable receipt keeps the declared capacity. */
 export function effectiveCapacityV1(directory:string,minimumBytes:number,rule:ElasticRuleV1):number{
  const receipt=readImageReceiptBytesV1(directory);
  if(receipt===null)return minimumBytes;
- if(receipt!=="missing")return Math.min(receipt,rule.maximumBytes);
+ if(receipt!=="missing")return receipt;
  const host=hostFreeForSizingV1(directory);if(!host)return minimumBytes;
  const base=elasticCapacityV1(rule,elasticMinimumV1(rule,minimumBytes,host.availableBytes),host.availableBytes),grown=readElasticGrowthV1(directory);
  return Math.max(base,Math.min(grown,rule.maximumBytes,imageCapBytesV1(),Math.floor(elasticGrowthCeilingV1(rule,host.availableBytes)/rule.alignBytes)*rule.alignBytes));
 }
-/** 📌️ The capacity of a partition without an elastic rule: the one its receipt pins when an image exists and fits the declared capacity (an image keeps the size it was born with, a larger declaration takes effect only through the explicit reset that births a new image), else the declared capacity cut down to the host share of a fixed partition (`hostSharePercent`) when the image is not born yet; a larger or unreadable receipt keeps the declared capacity so the receiver refuses it as before. */
+/** 📌️ The capacity of a partition without an elastic rule: the one its receipt pins when an image exists and fits the declared capacity (an image keeps the size it was born with, larger or smaller than the declaration, and a changed declaration takes effect only through the explicit reset that births a new image), else the declared capacity cut down to the host share of a fixed partition (`hostSharePercent`) when the image is not born yet; an unreadable receipt keeps the declared capacity. */
 export function pinnedCapacityV1(directory:string,declaredBytes:number,hostSharePercent?:number,needBytes:number=0):number{
  const receipt=readImageReceiptBytesV1(directory);
- if(typeof receipt==="number"&&receipt<=declaredBytes)return receipt;
+ if(typeof receipt==="number")return receipt;
  const born=receipt==="missing"?Math.floor(Math.min(declaredBytes,imageCapBytesV1())/1048576)*1048576:declaredBytes;
  if(receipt!=="missing"||hostSharePercent===undefined)return born;
  const host=hostFreeForSizingV1(directory);

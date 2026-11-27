@@ -175,6 +175,9 @@ pub struct MeshJob {
     publication_sequence: u64,
     pub(super) lent: Option<MeshLent>,
     pub(super) lent_delivered: bool,
+    pub(super) publishes: bool,
+    /// 🔁️ Most bounded units one interactive turn runs back to back before the job yields to its host; the turn's fuel and deadline still stop it sooner.
+    pub(super) units_per_turn: usize,
     pub(super) pending_run: Option<MeshRun>,
     pub(super) markers: MeshOutcomeMarkers,
     pub(super) close_lane: u8,
@@ -268,6 +271,8 @@ impl MeshJob {
             publication_sequence: 0,
             lent: None,
             lent_delivered: false,
+            publishes: true,
+            units_per_turn: semio_s_fem_payload_turns::NUMERICAL_UNITS_PER_TURN,
             pending_run: None,
             markers: MeshOutcomeMarkers::default(),
             close_lane: 0,
@@ -292,6 +297,9 @@ impl MeshJob {
         job.maximum_triangles = maximum_triangles;
         job
     }
+
+    /// 🤐 Keeps the mesh with its mounted owner, which reads the completed points and triangles in place: the job publishes no preview, checkpoint or output payload.
+    pub fn without_publication(mut self) -> Self { self.publishes = false; self }
 
     /// 🔭 Borrows one completed point without transferring the mesh backing.
     pub fn completed_point(&self, index: usize) -> Option<[f64; 2]> {

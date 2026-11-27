@@ -37,7 +37,7 @@ async fn table_row_projects_the_seven_worker_brief_columns_in_the_viewers_langua
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_default_and_populated_documents() {
-    store::os_store::test_support::assert_dsl_round_trip(&SSpaceSnapshot::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&SSpaceSnapshot::default());
     let mut populated = empty_space_index_snapshot("space-2");
     populated.artifacts.push(SpaceArtifactRow {
         id: "artifact-1".into(),
@@ -50,5 +50,5 @@ async fn dsl_round_trips_default_and_populated_documents() {
         updated_at_ms: 1,
         updated_by: "user:1".into(),
     });
-    store::os_store::test_support::assert_dsl_round_trip(&populated);
+    semio_os_store_test_support::assert_dsl_round_trip(&populated);
 }

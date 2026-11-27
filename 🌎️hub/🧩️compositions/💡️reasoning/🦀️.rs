@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// is honest.
 pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
     PluginBuilder::<_, ReasoningApps>::new("reasoning")
-        .label("Mindmap")
+        .label(semio_plugin::LocalizedLabel::native("Mindmap", "Mindmap"))
         .version("0.1.0")
         .package_id("semio:reasoning")
         .declare_artifact(crate::artifacts::wires::artifact())

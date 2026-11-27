@@ -45,3 +45,17 @@ test("a read arms its own scope: the flows it started are refused while the farm
  await withReadParentScopeV1(async scope=>{scope.arm(()=>true);await Bun.sleep(60);});
  await other;expect(started).toBe(true);
 });
+
+test("the scope of a read does not keep the body or its inputs alive once the read is over",async()=>{
+ let freed=0,kept=0;
+ for(let attempt=0;attempt<5&&freed===0;attempt++){
+  const state:{ref?:WeakRef<object>;kept?:unknown}={};
+  const start=()=>{const inputs={rows:Array.from({length:1000},(_,at)=>"row-"+at+Math.random())};state.ref=new WeakRef(inputs);return withReadParentScopeV1(async scope=>{state.kept=scope;return inputs.rows.length;});};
+  expect(await start()).toBe(1000);
+  for(let round=0;round<8&&state.ref!.deref()!==undefined;round++){await new Promise(resolve=>setTimeout(resolve,5));globalThis.Bun.gc(true);}
+  if(state.kept!==undefined)kept++;
+  if(state.ref!.deref()===undefined)freed++;
+ }
+ expect(kept).toBeGreaterThan(0);
+ expect(freed).toBeGreaterThan(0);
+});

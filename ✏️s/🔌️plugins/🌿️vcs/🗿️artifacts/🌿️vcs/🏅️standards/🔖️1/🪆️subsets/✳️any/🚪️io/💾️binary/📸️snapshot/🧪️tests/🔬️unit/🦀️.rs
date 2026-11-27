@@ -8,7 +8,7 @@ use crate::VCS_DOCUMENT_SCHEMA;
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_projection_dsl_pack_equivalence() {
     let projection = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&projection);
     let bytes = encode(&projection);
     assert_eq!(decode(&bytes).expect("decode"), projection);
 }
@@ -27,6 +27,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = new_vcs_store(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::rename_vcs("Renamed".into())], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests

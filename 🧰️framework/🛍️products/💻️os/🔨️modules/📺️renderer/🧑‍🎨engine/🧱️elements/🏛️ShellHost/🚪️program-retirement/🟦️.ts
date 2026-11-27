@@ -88,3 +88,8 @@ export function sameProgramRetirementOwnersV1(captured: readonly ProgramRetireme
 export function programRetirementKeepsDocumentV1(localDataDir: string | undefined, parentDocumentId: string | null): boolean {
   return Boolean(localDataDir) && parentDocumentId !== null;
 }
+
+/** 🪦️ Resolves once no program retirement is running: a document open must not start while the previous program of the same document is still retiring, or it re-focuses or races the retiring instance. Bounded so a stuck retirement cannot hold an open forever. */
+export async function settleProgramRetirementsV1(inFlight: ReadonlySet<Promise<unknown>>, maximumRounds = 64): Promise<void> {
+  for (let round = 0; round < maximumRounds && inFlight.size > 0; round++) await Promise.allSettled([...inFlight]);
+}

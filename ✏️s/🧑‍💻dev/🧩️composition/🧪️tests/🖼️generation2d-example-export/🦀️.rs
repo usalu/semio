@@ -3,7 +3,7 @@
 //! as a host contribution instead). Its own test binary: a linked operator pack is process-wide, and
 //! the lib tests pin the bare host, where the demo's operators are unknown.
 use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::dxf::v_r12::any as dxf_out;
-use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::pdf::v1_4::any as pdf_out;
+use semio_s_artifact_procedural_generation2d_pdf_export as pdf_out;
 use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::png::v1_2::any as png_out;
 use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::svg::v1_1::any as svg_out;
 use semio_s_artifact_procedural_2d_io::generation2d_drawing;

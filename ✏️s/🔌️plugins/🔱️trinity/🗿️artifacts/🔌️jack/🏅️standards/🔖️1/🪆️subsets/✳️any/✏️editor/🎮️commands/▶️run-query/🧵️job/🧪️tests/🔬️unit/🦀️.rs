@@ -32,14 +32,14 @@ use semio_plugin::app::ChildEmitPreparation;
 use crate::editor::jack::commands::query::job::{Owner, QUERY_CHECKPOINT_BYTES, QUERY_REPLAY_MAXIMUM_STEPS, JackQueryWork};
 use crate::editor::jack::commands::query::job::*;
 
-type Work = JackQueryWork<crate::test_support::FixtureComposition>;
+type Work = JackQueryWork<semio_os_store_test_support::FixtureComposition>;
 
     fn checkpoint(work: &Work) -> [u8; QUERY_CHECKPOINT_BYTES] {
         let mut bytes = [0_u8; QUERY_CHECKPOINT_BYTES];
         for (index, byte) in bytes.iter_mut().enumerate() {
-            *byte = <Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::checkpoint_byte(work, index).expect("query checkpoint byte");
+            *byte = <Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::checkpoint_byte(work, index).expect("query checkpoint byte");
         }
-        assert_eq!(<Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::checkpoint_byte(work, QUERY_CHECKPOINT_BYTES), None);
+        assert_eq!(<Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::checkpoint_byte(work, QUERY_CHECKPOINT_BYTES), None);
         bytes
     }
 
@@ -49,11 +49,11 @@ type Work = JackQueryWork<crate::test_support::FixtureComposition>;
         first.progress = 37;
         let bytes = checkpoint(&first);
         let mut exact = Work::new("runQuery", "RETURN 1".into(), false, "editor".into(), "results".into(), 501, 12);
-        <Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::restore(&mut exact, &bytes).expect("exact owner restores");
+        <Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::restore(&mut exact, &bytes).expect("exact owner restores");
         assert_eq!(exact.replay_target, Some(37));
         let mut xor_collision = Work::new("runQuery", "RETURN 1".into(), false, "editor".into(), "results".into(), 4_194_805, 13);
         assert_eq!(first.identity(), xor_collision.identity(), "fixture reproduces the old XOR collision");
-        assert!(<Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::restore(&mut xor_collision, &bytes).is_err());
+        assert!(<Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::restore(&mut xor_collision, &bytes).is_err());
     }
 
     #[test]
@@ -62,10 +62,10 @@ type Work = JackQueryWork<crate::test_support::FixtureComposition>;
         source.progress = 1_000_001;
         let bytes = checkpoint(&source);
         let mut restored = Work::new("runQuery", "RETURN 1".into(), false, "editor".into(), "results".into(), 700, 21);
-        <Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::restore(&mut restored, &bytes).expect("legal long scan restores");
+        <Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::restore(&mut restored, &bytes).expect("legal long scan restores");
         assert_eq!(restored.replay_target, Some(1_000_001));
         source.progress = QUERY_REPLAY_MAXIMUM_STEPS + 1;
         let rejected = checkpoint(&source);
         let mut target = Work::new("runQuery", "RETURN 1".into(), false, "editor".into(), "results".into(), 700, 21);
-        assert!(<Work as ArtifactCommandWork<Owner<crate::test_support::FixtureComposition>>>::restore(&mut target, &rejected).is_err());
+        assert!(<Work as ArtifactCommandWork<Owner<semio_os_store_test_support::FixtureComposition>>>::restore(&mut target, &rejected).is_err());
     }

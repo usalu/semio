@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { Asset, Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DrawingItem, DrawingScene, EvaluatedState, StructuralResult, Vec3 } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
+import { arrowOutline } from "../../🔨️modules/🎨️depiction/📐️geometry/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { buildState, loadCase, near } from "../../🔨️modules/🏗️structure/🧰️harness/🟦️.ts";
 import { solveStructure, worldForce } from "../../🔨️modules/🏗️structure/🟦️.ts";
@@ -396,5 +397,16 @@ describe("one load case, three views", () => {
     const active = result.reactions.filter((r) => r.active);
     expect(active.length).toBeGreaterThan(0);
     for (const viewpoint of VIEWPOINTS) for (const r of active) expect(itemsOf(by[viewpoint]).some((i) => i.id === `force:reaction:${r.anchor}` || i.id === `force:reaction:${r.anchor}:out`)).toBe(true);
+  });
+
+  it("keeps the shape of a force arrow to the last bit wherever it stands on the sheet, so the wider label column of another language moves the free body and not the upper edge of the drawing", () => {
+    for (const direction of [{ x: 0.6, y: 0.8 }, { x: -0.28, y: 0.96 }, { x: 5 / 13, y: -12 / 13 }, { x: -0.8, y: -0.6 }]) {
+      const heights = (x: number): number[] => arrowOutline({ x, y: 16.2 }, direction, 11.3, 0.3, 1.8, 1.3).map((p) => p.y);
+      const widths = (y: number): number[] => arrowOutline({ x: 61.7, y }, direction, 11.3, 0.3, 1.8, 1.3).map((p) => p.x);
+      for (const moved of [61.7, 66.765, 212.4031, 1e4 / 3]) {
+        expect(heights(moved)).toEqual(heights(0));
+        expect(widths(moved)).toEqual(widths(0));
+      }
+    }
   });
 });

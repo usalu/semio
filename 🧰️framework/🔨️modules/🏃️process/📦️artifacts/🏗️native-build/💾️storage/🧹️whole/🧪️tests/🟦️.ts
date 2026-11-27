@@ -6,6 +6,8 @@ import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🔣️.json"with{type:"json"};
 import{nativeRecomputableRetirementVerdictV1,nativeRecomputableRetirementAllocationV1,nativeRecomputableRetirementSubsetV1,nativeRecomputableRetirementBindingV1,nativeRecomputableRetirementEvidenceV1,nativeRecomputableRetirementProjectedPathV1,readNativeRecomputableRetirementV1,requireNativeRecomputableRetirementStateV1,rescanNativeRecomputableRetirementRecordV1}from"../🟦️.ts";
+import{appendNativeImageShardEventV1}from"../../🍎️image/🧩️shard/🟦️.ts";
+import{nativeRecomputableRetirementCrossingV1}from"../🟦️.ts";
 import{readNativeImageRetirementFileV1}from"../../📄️retirement-file/🟦️.ts";
 import{mkdtempSync,writeFileSync,utimesSync,chmodSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -26,5 +28,17 @@ test("Native terminal record rescans adopt metadata-only churn, refuse changed b
   expect(settled.stamp).not.toBe(held.stamp);expect(settled.bytes.equals(held.bytes)).toBe(true);expect(seen).toEqual([]);
   writeFileSync(path,"{\"a\":2}\n");
   expect(()=>rescanNativeRecomputableRetirementRecordV1(path,held)).toThrow("Original Native terminal record changed");
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test("Native whole retirement names a live shard mount point as the reason a terminal inventory may not cross, any other crossing stays foreign",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"semio-crossing-"));
+ try{
+  const mount=join(directory,"m","u","w");
+  expect(nativeRecomputableRetirementCrossingV1(directory,mount)).toBe("Terminal capsule crosses filesystem boundary");
+  appendNativeImageShardEventV1(directory,{type:"born",id:"w",key:"w",root:0,path:"u/w",capacityBytes:1073741824,atMs:1});
+  expect(nativeRecomputableRetirementCrossingV1(directory,mount)).toBe("Live image shard must be retired before its partition: "+mount);
+  expect(nativeRecomputableRetirementCrossingV1(directory,join(directory,"m","u"))).toBe("Terminal capsule crosses filesystem boundary");
+  appendNativeImageShardEventV1(directory,{type:"retired",id:"w",atMs:2});
+  expect(nativeRecomputableRetirementCrossingV1(directory,mount)).toBe("Terminal capsule crosses filesystem boundary");
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

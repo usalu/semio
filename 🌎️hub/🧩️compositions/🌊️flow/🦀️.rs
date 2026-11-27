@@ -39,7 +39,7 @@ impl From<VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_art
 /// `bundle()`), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<FlowApps>, PluginAssemblyError> {
     PluginBuilder::<_, FlowApps>::new("flow")
-        .label("Flow")
+        .label(semio_plugin::LocalizedLabel::native("Flow", "Flow"))
         .version("0.1.0")
         .package_id("semio:flow")
         .artifact(crate::artifacts::flow::declaration().map_err(PluginAssemblyError::definition)?)

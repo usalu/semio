@@ -10,11 +10,12 @@ import{acquireResourceLease}from"../../../../../../🔒️leases/🟦️.ts";
 import{createNativeImageDarwinKickPortV1,type NativeImageKickPortV1}from"../../👟️kick/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
-import{appendNativeImageShardEventV1,createNativeImageShardDarwinLifecycleV1,ensureNativeImageShardV1,measureNativeImageShardFreeV1,measureNativeImageShardRootV1,measureNativeImageShardV1,nativeImageShardPartitionOfV1,nativeImageShardPathV1,nativeImageShardVolumeFactsV1,nativeImageShardAdmissionV1,nativeImageShardAggregateV1,nativeImageShardBirthEventV1,nativeImageShardCapBytesV1,nativeImageShardCapacityV1,nativeImageShardFoldV1,nativeImageShardHomeLayoutV1,nativeImageShardIdV1,nativeImageShardKeyV1,nativeImageShardLayoutV1,nativeImageShardLayoutsV1,nativeImageShardMountedV1,nativeImageShardPathBudgetV1,nativeImageShardPartialTextV1,nativeImageShardReclaimDueV1,nativeImageShardRefusedTextV1,nativeImageShardSelectV1,nativeImageShardSupportedV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,repairNativeImageShardsV1,requireNativeImageShardRuleV1,retireNativeImageShardV1,NATIVE_IMAGE_SHARD_V1,type NativeImageShardEventV1,type NativeImageShardLayoutV1,type NativeImageShardRuleV1,type NativeImageShardStateV1}from"../🟦️.ts";
+import{appendNativeImageShardEventV1,createNativeImageShardDarwinLifecycleV1,ensureNativeImageShardV1,measureNativeImageShardFreeV1,measureNativeImageShardRootV1,measureNativeImageShardV1,nativeImageShardPartitionOfV1,nativeImageShardPathV1,nativeImageShardVolumeFactsV1,nativeImageShardAdmissionV1,nativeImageShardAggregateV1,nativeImageShardBirthEventV1,nativeImageShardCapBytesV1,nativeImageShardCapacityV1,nativeImageShardFoldV1,nativeImageShardHomeLayoutV1,nativeImageShardIdV1,nativeImageShardKeyV1,nativeImageShardLayoutV1,nativeImageShardLayoutsV1,nativeImageShardMountedV1,nativeImageShardMountPointV1,nativeImageShardRowV1,nativeImageShardPathBudgetV1,nativeImageShardPartialTextV1,nativeImageShardReclaimDueV1,nativeImageShardRefusedTextV1,nativeImageShardSelectV1,nativeImageShardSupportedV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,repairNativeImageShardsV1,requireNativeImageShardRuleV1,retireNativeImageShardV1,NATIVE_IMAGE_SHARD_V1,type NativeImageShardBornEventV1,type NativeImageShardEventV1,type NativeImageShardLayoutV1,type NativeImageShardRuleV1,type NativeImageShardStateV1}from"../🟦️.ts";
 const MiB=1048576,GiB=1073741824,env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const rule=corpus.rule as NativeImageShardRuleV1;
+const same=(actual:unknown,expected:unknown)=>expect(actual).toEqual(expected);
 const oracle=(...args:string[])=>{
- const python=testPythonV1();if(python===undefined)throw Error("Python required by the shard oracle");
+ const python=testPythonV1();if(python===null)throw Error("Python required by the shard oracle");
  const result=spawnSync(python,["-I",join(import.meta.dir,"🐍️.py"),...args],{encoding:"utf8"});
  if(result.status!==0)throw result.error??Error(result.stderr);return result.stdout.trim();
 };
@@ -47,7 +48,7 @@ test("the macOS cap is the measured limit of the trim: no image of any declared 
 });
 test("shard selection equals the oracle on every case: disabled rules and unsupported platforms stay home, a live key is reused, a new key is born, collisions and host shortage are refused",()=>{
  const ours=corpus.selection.map(row=>nativeImageShardSelectV1({rule:{...rule,enabled:row.enabled},platform:row.platform,live:stateOf(row.live),path:row.path,hostFreeBytes:row.hostFreeBytes}));
- expect(ours).toEqual(answers.selection);expect(ours).toEqual(corpus.selection.map(row=>row.decision));
+ expect(ours).toEqual(answers.selection);same(ours,corpus.selection.map(row=>row.decision));
  expect(ours.map(row=>row.kind)).toEqual(["existing","birth","refused","home","home","home","refused","home","birth"]);
  expect(nativeImageShardSupportedV1("darwin")).toBe(true);expect(nativeImageShardSupportedV1("linux")).toBe(false);expect(nativeImageShardSupportedV1("win32")).toBe(false);
  const full=stateOf(Array.from({length:256},(_,index)=>({id:"a"+index.toString(36).padStart(3,"0"),key:"a"+index.toString(36).padStart(3,"0"),root:0,capacityBytes:GiB})));
@@ -67,6 +68,7 @@ test("a rule with overlapping roots or an unanchored pattern is refused",()=>{
  expect(()=>requireNativeImageShardRuleV1(make([root("u/l"),root("u")]))).toThrow("Disjoint shard roots");
  expect(()=>requireNativeImageShardRuleV1(make([root(""),root("j")]))).toThrow("Disjoint shard roots");
  expect(()=>requireNativeImageShardRuleV1(make([root("u/l","[a-z]+")]))).toThrow("Anchored shard key pattern");
+ expect(requireNativeImageShardRuleV1(make([root("u/l"),root("u","^(sealed|w)$"),root("","^(cargo|components)$")])).roots.length).toBe(3);
  expect(()=>requireNativeImageShardRuleV1({...make([root("u/l")]),extra:1})).toThrow("Closed image shard rule");
  expect(requireNativeImageShardRuleV1(make([root("u/l"),root("j")])).roots.length).toBe(2);
 });
@@ -98,13 +100,13 @@ test("aggregation adds the images up and counts the free bytes of one host volum
 });
 test("the upfront admission over all images equals the oracle: slack is credited, a new shard adds its birth allocation, volumes are judged separately",()=>{
  const ours=corpus.admission.map(row=>{const made=nativeImageShardAdmissionV1(row.rows,row.reserveBytes,row.slackCreditBasisPoints);return{volumes:made.volumes,shortfallBytes:made.shortfallBytes};});
- expect(ours).toEqual(answers.admission);expect(ours).toEqual(corpus.admission.map(row=>({volumes:row.volumes,shortfallBytes:row.shortfallBytes})));
+ expect(ours).toEqual(answers.admission);same(ours,corpus.admission.map(row=>({volumes:row.volumes,shortfallBytes:row.shortfallBytes})));
  expect(corpus.admission[0]!.shortfallBytes).toBe(0);expect(corpus.admission[2]!.shortfallBytes).toBe(NATIVE_IMAGE_SHARD_V1.birthAllocationBytes);expect(corpus.admission[3]!.shortfallBytes).toBe(9*GiB);expect(corpus.admission[4]!.shortfallBytes).toBe(0);
 });
 test("the due decision of a reclaim pass equals the oracle for every image",()=>{
  const ours=corpus.reclaim.map(row=>nativeImageShardReclaimDueV1(row.rule,row.facts));expect(ours).toEqual(answers.reclaim);expect(ours).toEqual(corpus.reclaim.map(row=>row.due));
 });
-const born=(key:string,at=1,root=0,capacityBytes=GiB):NativeImageShardEventV1=>({type:"born",id:nativeImageShardIdV1(key),key,root,path:"u/l/"+key,capacityBytes,atMs:at});
+const born=(key:string,at=1,root=0,capacityBytes=GiB):NativeImageShardBornEventV1=>({type:"born",id:nativeImageShardIdV1(key),key,root,path:"u/l/"+key,capacityBytes,atMs:at});
 test("the event log folds into the live shards: births are idempotent, a foreign key under a live id and the retirement of an unknown shard are errors",()=>{
  expect([...nativeImageShardFoldV1([born("abc"),born("def"),{type:"retired",id:"abc",atMs:3}]).keys()]).toEqual(["def"]);
  expect(nativeImageShardFoldV1([born("abc"),born("abc",2)]).size).toBe(1);
@@ -177,6 +179,19 @@ test("the leases of different images are independent: an exclusive cycle of one 
    await expect(acquireResourceLease({directory,resource:layouts[1]!.leaseResource,mode:"shared",signal,timeoutMs:0})).rejects.toThrow();
   }finally{hold.release();}
   const again=await acquireResourceLease({directory,resource:layouts[1]!.leaseResource,mode:"shared",signal,timeoutMs:0});again.release();
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test("a live shard is recognised by its logical mount point and its own backing alone, a retired, foreign or misplaced image never is, equal to an independent path replay",()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("shard"),"rows-"));
+ try{
+  const born=(id:string,path:string):NativeImageShardBornEventV1=>({type:"born",id,key:id,root:0,path,capacityBytes:GiB,atMs:1});
+  appendNativeImageShardEventV1(directory,born("cargo","cargo"));appendNativeImageShardEventV1(directory,born("w","u/w"));
+  const mount=(...parts:string[])=>[directory,"m",...parts].join("/"),image=(id:string)=>[directory,"s",id,"fixed.dmg"].join("/");
+  const rows=[{root:mount("cargo"),image:image("cargo"),live:true},{root:mount("u","w"),image:image("w"),live:true},{root:mount("u","w"),image:image("cargo"),live:false},{root:mount("u"),image:image("w"),live:false},{root:mount("cargo","x"),image:image("cargo"),live:false},{root:mount("other"),image:[directory,"fixed.dmg"].join("/"),live:false}];
+  for(const row of rows){expect(nativeImageShardRowV1(directory,row),row.root).toBe(row.live);expect(nativeImageShardMountPointV1(directory,row.root),row.root).toBe(row.live||row.root===mount("u","w")||row.root===mount("cargo"));}
+  appendNativeImageShardEventV1(directory,{type:"retired",id:"w",atMs:2});
+  expect(nativeImageShardRowV1(directory,rows[1]!)).toBe(false);expect(nativeImageShardMountPointV1(directory,mount("u","w"))).toBe(false);expect(nativeImageShardRowV1(directory,rows[0]!)).toBe(true);
+  expect(nativeImageShardRowV1(mkdtempSync(join(directory,"none-")),rows[0]!)).toBe(false);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr+row.stdout);return row.stdout;};

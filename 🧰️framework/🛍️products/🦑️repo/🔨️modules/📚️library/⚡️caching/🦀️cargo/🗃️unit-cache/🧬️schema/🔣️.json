@@ -37,13 +37,17 @@
           "pollMinimumMilliseconds": 10,
           "pollMaximumMilliseconds": 200,
           "pollBackoffBasisPoints": 15000,
+          "watchlessPollMilliseconds": 100,
           "maximumWaitMilliseconds": 1800000
         },
         "slot": {
           "heartbeatMilliseconds": 2000,
           "staleMilliseconds": 20000,
           "fallbackMilliseconds": 500,
-          "maximumWaitMilliseconds": 600000
+          "maximumWaitMilliseconds": 600000,
+          "aloneMaximumWaitMilliseconds": 900000,
+          "lightMaximumWaitMilliseconds": 600000,
+          "parkAfterMilliseconds": 3000
         },
         "key": {
           "outputRootScanVersion": "1",
@@ -220,7 +224,9 @@
             "digestDigits": 6,
             "receipt": "product.json",
             "maximumReceiptBytes": 512,
-            "retainMilliseconds": 43200000
+            "retainMilliseconds": 43200000,
+            "waitBoundMilliseconds": 1800000,
+            "waitNoticeMilliseconds": 60000
           },
           "recentMilliseconds": 43200000,
           "flavourPattern": "^[a-z0-9-]{1,16}$",
@@ -257,6 +263,18 @@
           "en": "[repo cargo] all {live} live lanes are claimed (maximum {maximum}); held by {holders}; waiting for a free lane",
           "de": "[repo cargo] Alle {live} aktiven Lanes sind beansprucht (Maximum {maximum}); gehalten von {holders}; warte auf eine freie Lane"
         },
+        "productLaneWaiting": {
+          "en": "[repo cargo] waiting {seconds} s for the product lane {lane}, held by {holders}; this process holds leases while it waits (limit {bound} s)",
+          "de": "[repo cargo] warte seit {seconds} s auf die Produkt-Lane {lane}, gehalten von {holders}; dieser Prozess hält während des Wartens Leases (Grenze {bound} s)"
+        },
+        "productLaneQueued": {
+          "en": "[repo cargo] waiting {seconds} s for the product lane {lane}, held by {holders}; this process holds nothing while it waits",
+          "de": "[repo cargo] warte seit {seconds} s auf die Produkt-Lane {lane}, gehalten von {holders}; dieser Prozess hält während des Wartens nichts"
+        },
+        "productLaneBound": {
+          "en": "[repo cargo] the product lane {lane} stayed held by {holders} for {seconds} s, longer than the {bound} s allowed. Run the command again once the holder has finished",
+          "de": "[repo cargo] Die Produkt-Lane {lane} blieb {seconds} s von {holders} gehalten, länger als die erlaubten {bound} s. Den Befehl erneut ausführen, sobald der Halter fertig ist"
+        },
         "productLaneHeld": {
           "en": "[repo cargo] the product lane {lane} is exclusive and held by {holders} ({live} of at most {maximum} lanes are in use, so the limit is this one lane and not the pool); waiting for its holder",
           "de": "[repo cargo] Die Produkt-Lane {lane} ist exklusiv und gehalten von {holders} ({live} von höchstens {maximum} Lanes sind belegt, die Grenze ist also diese eine Lane und nicht der Pool); warte auf ihren Halter"
@@ -272,6 +290,30 @@
         "collectorFailed": {
           "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
           "de": "[repo cargo] Der Unit-Cache-Sammler im Hintergrund konnte nicht gestartet werden: {reason}"
+        },
+        "slotTimeout": {
+          "en": "[unit-cache] {crate}: the compile slot stayed taken for {seconds} s (limit {bound} s); compiling without it, the memory broker still admits the unit",
+          "de": "[unit-cache] {crate}: der Compile-Slot blieb {seconds} s belegt (Grenze {bound} s); es wird ohne ihn kompiliert, der Speicher-Broker lässt die Einheit weiterhin zu"
+        },
+        "aloneTimeout": {
+          "en": "[unit-cache] {crate}: the host stayed busy for {seconds} s (limit {bound} s) before this unit could run alone; compiling without waiting any longer",
+          "de": "[unit-cache] {crate}: der Host blieb {seconds} s ausgelastet (Grenze {bound} s), bevor diese Einheit allein laufen konnte; es wird ohne weiteres Warten kompiliert"
+        },
+        "lightTimeout": {
+          "en": "[unit-cache] {crate}: no offload slot became free within {bound} s; compiling on this machine instead",
+          "de": "[unit-cache] {crate}: innerhalb von {bound} s wurde kein Offload-Slot frei; es wird stattdessen auf dieser Maschine kompiliert"
+        },
+        "headroomTimeout": {
+          "en": "[unit-cache] {crate}: the memory broker did not admit the unit within {bound} s; taking the compile slot, the broker's own bounds end the wait",
+          "de": "[unit-cache] {crate}: der Speicher-Broker hat die Einheit innerhalb von {bound} s nicht zugelassen; der Compile-Slot wird genommen, die eigenen Grenzen des Brokers beenden das Warten"
+        },
+        "claimParked": {
+          "en": "[unit-cache] {crate}: waiting for the compile slot, the fleet claim is given back so that an idle machine may compile the unit meanwhile",
+          "de": "[unit-cache] {crate}: beim Warten auf den Compile-Slot wird der Flotten-Claim zurückgegeben, damit eine freie Maschine die Einheit inzwischen kompilieren kann"
+        },
+        "claimLostAfterPark": {
+          "en": "[unit-cache] {crate}: another machine took the fleet claim while this unit waited for the compile slot; compiling anyway, the first stored result wins",
+          "de": "[unit-cache] {crate}: eine andere Maschine hat den Flotten-Claim übernommen, während diese Einheit auf den Compile-Slot wartete; es wird trotzdem kompiliert, das zuerst gespeicherte Ergebnis gilt"
         },
         "missNearest": {
           "en": "[units] miss {crate} nearest:{key} differs in {differs}",

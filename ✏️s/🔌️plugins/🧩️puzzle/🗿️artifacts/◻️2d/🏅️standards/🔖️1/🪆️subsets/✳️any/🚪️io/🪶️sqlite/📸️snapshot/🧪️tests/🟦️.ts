@@ -124,7 +124,7 @@ test("Puzzle2d scalar preparation preserves RFC6902 forward and inverse semantic
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before=row.nodes.map(node=>({...node,id:text(node.id)})),after=row.after.map(node=>({...node,id:text(node.id)}));const index=before.findIndex(node=>node.id===text(row.mutation.id));expect(index<0?null:index).toEqual(row.index);expect(index<0?null:{id:row.nodes[index]!.id,newX:before[index]!.x,newY:before[index]!.y}).toEqual(row.inverse);
  const patch=row.status==="changed"?[{op:"replace" as const,path:`/${index}/x`,value:row.mutation.newX},{op:"replace" as const,path:`/${index}/y`,value:row.mutation.newY}]:[];expect(applyPatch(structuredClone(before),patch).newDocument).toEqual(after);const inverse=row.inverse?[{op:"replace" as const,path:`/${index}/x`,value:row.inverse.newX},{op:"replace" as const,path:`/${index}/y`,value:row.inverse.newY}]:[];expect(applyPatch(structuredClone(after),inverse).newDocument).toEqual(before)}
- const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodePreparationCursor");expect(source).toContain("Puzzle2dLookupCursor");expect(source).toContain("RetainedCloneBinding::close_one");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|\.iter\(\)\.find/);
+ const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodePreparationCursor");expect(source).toContain("BorrowedNodeLookup");expect(source).toContain("BorrowedIdentity");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|\.iter\(\)\.find/);
 });
 
 test("Puzzle2d owned inverse admits literal ids and preserves independent RFC6902 restoration",async()=>{
@@ -133,7 +133,7 @@ test("Puzzle2d owned inverse admits literal ids and preserves independent RFC690
  expect(corpus.inverseOwnership.journeys).toEqual(["inverseBeforeRefusal","noOpInverse","targetMissingEmptyInverse","borrowedIdOnly","largeUtf8","zeroGrant","cancelDuringIdCopy","takeOnce","controlledRetirement"]);
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const inverse=row.inverse?[{mutation:"move-node",payload:{...row.inverse,id:text(row.inverse.id)}}]:[];expect(inverse.length).toBe(row.index===null?0:1);const before=row.nodes.map(node=>({...node,id:text(node.id)})),after=row.after.map(node=>({...node,id:text(node.id)}));const patch=inverse.flatMap(op=>[{op:"replace" as const,path:`/${row.index}/x`,value:op.payload.newX},{op:"replace" as const,path:`/${row.index}/y`,value:op.payload.newY}]);expect(applyPatch(structuredClone(after),patch).newDocument).toEqual(before)}
- const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/↩️inverse/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodeInverseCursor");expect(source).toContain("ControlledRetirement");expect(source).toContain("PagedList<Puzzle2dMutation");expect(source).toContain("mutation.project(1, |payload| &payload.id)");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/↩️inverse/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodeInverseCursor");expect(source).toContain("RetirementPollExit");expect(source).toContain("PagedList<Puzzle2dMutation");expect(source).toContain("&mutation.get().id");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 test("Puzzle2d native forward ownership agrees with independent RFC6902 first-match edits",async()=>{
@@ -141,7 +141,7 @@ test("Puzzle2d native forward ownership agrees with independent RFC6902 first-ma
  expect(corpus.forwardOwnership).toEqual({maximumItems:1,maximumTurnBytes:4096,cancelAfterBodyBytes:128,changedOwner:"nativePagedSnapshot",unchangedOwner:"retainedOriginal",journeys:["changedCandidate","firstDuplicateOnly","noOpRetainsOriginal","refusalRetainsOriginal","borrowedPayload","allUntouchedOwners","zeroGrant","cancelDuringSnapshotCopy","takeOnce","controlledRetirement"]});
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before={nodes:row.nodes.map(node=>({...node,id:text(node.id)})),untouched:{tags:["😀","\u0000","same"],camera:{x:-0,y:3,zoom:1}}};const patch=row.status==="changed"?[{op:"replace" as const,path:`/nodes/${row.index}/x`,value:row.mutation.newX},{op:"replace" as const,path:`/nodes/${row.index}/y`,value:row.mutation.newY}]:[];const expected={...structuredClone(before),nodes:row.after.map(node=>({...node,id:text(node.id)}))};expect(applyPatch(structuredClone(before),patch).newDocument).toEqual(expected);expect(before.nodes).toEqual(row.nodes.map(node=>({...node,id:text(node.id)})));expect(patch.length).toBe(row.status==="changed"?2:0)}
- const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/📸️candidate/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodeCandidateCursor");expect(source).toContain("Puzzle2dSnapshot::retained_clone_cursor()");expect(source).toContain("ControlledRetirement");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/📸️candidate/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub struct Puzzle2dMoveNodeCandidateCursor");expect(source).toContain("RetainedFieldCursor<Puzzle2dSnapshot>");expect(source).toContain("RetirementPollExit");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 
@@ -160,7 +160,7 @@ test("Puzzle2d borrowed create preparation retains native invariant priority and
   const patch=row.status==="changed"?[{op:"add" as const,path:`/${row.position}`,value:id}]:[];expect(applyPatch(structuredClone(before),patch).newDocument).toEqual(row.after.map(text));if(row.status==="changed")expect(applyPatch(row.after.map(text),[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(before);
   expect(row.inverse).toEqual({mutation:"delete-node",payload:{id:row.mutation.node.id}});
  }
- const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dCreateNodePreparationCursor");expect(source).toContain("Puzzle2dLookupCursor");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|\.iter\(\)\.find/);
+ const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dCreateNodePreparationCursor");expect(source).toContain("BorrowedNodeLookup");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|\.iter\(\)\.find/);
 });
 
 
@@ -180,7 +180,7 @@ test("Puzzle2d create candidate preserves independent ordered insertion and ever
  expect(corpus.forwardOwnership).toEqual({maximumItems:1,maximumTurnBytes:4096,cancelAfterBodyBytes:128,changedOwner:"nativePagedSnapshot",unchangedOwner:"retainedOriginal",journeys:["append","indexedInsertion","clampedInsertion","refusalRetainsOriginal","borrowedNodeOnly","nestedHandles","allUntouchedOwners","zeroGrant","cancelDuringSnapshotCopy","cancelDuringNodeCopy","cancelDuringInsertion","takeOnce","controlledRetirement"]});
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before={nodes:row.nodes.map((id:string)=>({id:text(id),text:"retained",handles:[]})),untouched:{camera:{x:-0,y:3,zoom:1},edges:[{id:"edge",label:"😀\u0000"}],tags:["original"]}};const patch=row.status==="changed"?[{op:"add" as const,path:`/nodes/${row.position}`,value:row.mutation.node}]:[];const after=applyPatch(structuredClone(before),patch).newDocument;expect(after.nodes.map((node:any)=>text(node.id))).toEqual(row.after.map(text));expect(after.untouched).toEqual(before.untouched);expect(before.nodes.map((node:{id:string})=>node.id)).toEqual(row.nodes.map(text));if(row.status==="changed"){expect(after.nodes[row.position]).toEqual(row.mutation.node);expect(applyPatch(after,[{op:"remove",path:`/nodes/${row.position}`}]).newDocument).toEqual(before)}}
- const source=await Bun.file(new URL("📸️candidate/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dCreateNodeCandidateCursor");expect(source).toContain("RetainedFieldCursor::<Puzzle2dSnapshot>::default()");expect(source).toContain("RetainedFieldCursor::<Puzzle2dNode>::default()");expect(source).toContain("PagedListEditCursor::insert");expect(source).toContain("mutation.project(1, |payload| &payload.node)");expect(source).toContain("ControlledRetirement");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("📸️candidate/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dCreateNodeCandidateCursor");expect(source).toContain("RetainedFieldCursor<Puzzle2dSnapshot>");expect(source).toContain("RetainedFieldCursor<Puzzle2dNode>");expect(source).toContain("PagedListEditCursor::insert");expect(source).toContain("mutation.project(1, |payload| &payload.node)");expect(source).toContain("RetirementPollExit");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 test("Puzzle2d borrowed delete cascade streams exact first-node and ordered edge descriptors",async()=>{
@@ -200,7 +200,7 @@ test("Puzzle2d borrowed delete cascade streams exact first-node and ordered edge
   const inverse=row.node===null?[]:[{op:"add" as const,path:`/nodes/${row.node}`,value:before.nodes[row.node]},...row.severedEdges.map((index:number)=>({op:"add" as const,path:`/edges/${index}`,value:before.edges[index]}))];
   expect(applyPatch(structuredClone(after),inverse).newDocument).toEqual(before);
  }finally{db.close()}}
- const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodePreparationCursor");expect(source).toContain("PagedUtf8BoundedOrdCursor");expect(source).toContain("Puzzle2dLookupCursor");expect(source).toContain("RetainedCloneBinding::close_one");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|Vec<|\.iter\(\)\.find/);
+ const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodePreparationCursor");expect(source).toContain("BorrowedComparison");expect(source).toContain("BorrowedNodeLookup");expect(source).toContain("BorrowedIdentity");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|Vec<|\.iter\(\)\.find/);
 });
 
 
@@ -225,7 +225,7 @@ test("Puzzle2d owned delete inverse preserves complete original cascade records"
   const patch=[...row.severedEdges].reverse().map((index:number)=>({op:"remove" as const,path:`/edges/${index}`}));if(row.node!==null)patch.push({op:"remove",path:`/nodes/${row.node}`});const after=applyPatch(structuredClone(before),patch).newDocument;
   const inverse=row.node===null?[]:[{op:"add" as const,path:`/nodes/${row.node}`,value:before.nodes[row.node]},...row.severedEdges.map((index:number)=>({op:"add" as const,path:`/edges/${index}`,value:before.edges[index]}))];expect(applyPatch(structuredClone(after),inverse).newDocument).toEqual(before);
  }
- const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodeInverseCursor");expect(source).toContain("Puzzle2dDeleteNodePreparationCursor");expect(source).toContain("RetainedFieldCursor::<Puzzle2dNode>::default()");expect(source).toContain("RetainedFieldCursor::<Puzzle2dEdge>::default()");expect(source).toContain("ControlledRetirement");expect(source).toContain("PagedList<Puzzle2dMutation");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodeInverseCursor");expect(source).toContain("Puzzle2dDeleteNodePreparationCursor");expect(source).toContain("RetainedFieldCursor<Puzzle2dNode>");expect(source).toContain("RetainedFieldCursor<Puzzle2dEdge>");expect(source).toContain("RetirementPollExit");expect(source).toContain("PagedList<Puzzle2dMutation");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 test("Puzzle2d delete candidate preserves first matching edge IDs and refuses repeated targets",async()=>{
@@ -244,7 +244,7 @@ test("Puzzle2d delete candidate preserves first matching edge IDs and refuses re
   expect(after.nodes.map((node:any)=>node.id)).toEqual(row.afterNodes);expect(after.edges.map((edge:any)=>edge.id)).toEqual(row.afterEdges);expect(after.untouched).toEqual(before.untouched);
   if(status!=="changed")expect(after).toEqual(before);
  }finally{db.close()}}
- const source=await Bun.file(new URL("📸️candidate/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodeCandidateCursor");expect(source).toContain("RetainedFieldCursor::<Puzzle2dSnapshot>::default()");expect(source).toContain("PagedListEditCursor::remove");expect(source).toContain("PagedListEditCursor::insert");expect(source).toContain("PagedUtf8BoundedOrdCursor");expect(source).toContain("ControlledRetirement");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("📸️candidate/🦀️.rs",root)).text();expect(source).toContain("pub struct Puzzle2dDeleteNodeCandidateCursor");expect(source).toContain("RetainedFieldCursor<Puzzle2dSnapshot>");expect(source).toContain("PagedListEditCursor::remove");expect(source).toContain("PagedListEditCursor::insert");expect(source).toContain("BorrowedComparison");expect(source).toContain("RetirementPollExit");expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 
@@ -356,9 +356,9 @@ test("Puzzle2d child preparation owns exact granted native birth and terminal re
   db.run("CREATE TABLE turns(birth INTEGER,free INTEGER)");
   let born=false;
   for(const turn of corpus.turns){
-   const birth=!born&&turn.capacity>=corpus.nativeChildBytes?corpus.nativeChildBytes:0;
+   const birth=!born&&turn.copy>=corpus.nativeChildBytes?corpus.nativeChildBytes:0;
    if(birth)born=true;
-   const free=born&&turn.terminal&&turn.release>=corpus.nativeChildBytes?corpus.nativeChildBytes:0;
+   const free=born&&turn.terminal&&turn.copy>=corpus.nativeChildBytes?corpus.nativeChildBytes:0;
    expect({birth,free}).toEqual({birth:turn.birth,free:turn.free});
    db.run("INSERT INTO turns VALUES(?,?)",[birth,free]);
    expect(birth+free).toBeLessThanOrEqual(corpus.maximumTurnBytes);
@@ -366,7 +366,7 @@ test("Puzzle2d child preparation owns exact granted native birth and terminal re
   }
   expect(db.query("SELECT SUM(birth) AS birth,SUM(free) AS free FROM turns").get()).toEqual({birth:64,free:64});
   const native=readFileSync(resolve(base,"🦀️.rs"),"utf8");
-  expect(native).toContain("maximum_capacity_bytes < bytes");expect(native).toContain("maximum_release_bytes < bytes");expect(native).toContain("owner.terminal_is_empty()");
+  expect(native).toContain("maximum_copy_bytes < bytes");expect(native).toContain("owner.terminal_is_empty()");
  }finally{db.close();}
 });
 

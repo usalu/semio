@@ -9,8 +9,8 @@ export type TypeScriptProgramReuseV1 = Readonly<{
 /** 🏭️ A fresh reuse store. */
 export function createTypeScriptProgramReuseV1(): TypeScriptProgramReuseV1;
 /** 🤝️ The shared parsed source files of the programs of every owner. */
-export type SharedSourceFilesV1 = Readonly<{ shared: true; sourceFile: TypeScriptProgramReuseV1["sourceFile"]; oldProgram(config: string): undefined; keep(): void; clear(): void; size(): number; textBytes(): number }>;
-export function createSharedSourceFilesV1(options?: { maximumFiles?: number }): SharedSourceFilesV1;
+export type SharedSourceFilesV1 = Readonly<{ shared: true; sourceFile: TypeScriptProgramReuseV1["sourceFile"]; oldProgram(config: string): undefined; keep(): void; clear(): void; size(): number; characters(): number; textBytes(): number }>;
+export function createSharedSourceFilesV1(options?: { maximumFiles?: number; maximumCharacters?: number }): SharedSourceFilesV1;
 export const sharedSourceFilesV1: SharedSourceFilesV1;
 /** 🔌️ Installs the store the program questions of this process use. */
 export function useTypeScriptProgramReuseV1(store: TypeScriptProgramReuseV1 | undefined): void;

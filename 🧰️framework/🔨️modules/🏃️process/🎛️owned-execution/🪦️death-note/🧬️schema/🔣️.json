@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Death note of an owned child",
+  "description": "EN: The words and limits of the note an owned command leaves when its child dies from a signal nobody here sent. DE: Die Worte und Grenzen der Notiz, die ein eigener Befehl hinterlässt, wenn sein Kind an einem Signal stirbt, das hier niemand gesendet hat.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "tailLines": 12,
+        "tailBytes": 8192,
+        "reportMaximumAgeMilliseconds": 300000,
+        "reportWaitMilliseconds": 8000,
+        "reportPollMilliseconds": 500,
+        "reportMaximumBytes": 4194304,
+        "windowsStatuses": {
+          "-1073741819": "STATUS_ACCESS_VIOLATION",
+          "-1073740791": "STATUS_STACK_BUFFER_OVERRUN",
+          "-1073740940": "STATUS_HEAP_CORRUPTION",
+          "-1073741571": "STATUS_STACK_OVERFLOW",
+          "-1073741510": "STATUS_CONTROL_C_EXIT",
+          "-1073741502": "STATUS_DLL_INIT_FAILED",
+          "-1073740771": "STATUS_FATAL_USER_CALLBACK_EXCEPTION",
+          "-1073741515": "STATUS_DLL_NOT_FOUND",
+          "-1073741801": "STATUS_NO_MEMORY",
+          "-1073741818": "STATUS_IN_PAGE_ERROR"
+        },
+        "windowsDumpDirectory": "CrashDumps"
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "died": "{label}: process {pid} died from {signal} (status {status}) and nobody here stopped it. Its last stderr: {tail}. {report}",
+          "silent": "it wrote no output (the runtime ended without a panic message)",
+          "report": "Crash report: {path} ({exception}).",
+          "noReport": "No crash report found for this pid."
+        },
+        "de": {
+          "died": "{label}: Prozess {pid} starb an {signal} (Status {status}) und niemand hier hat ihn beendet. Seine letzte Fehlerausgabe: {tail}. {report}",
+          "silent": "er schrieb keine Ausgabe (die Laufzeit endete ohne Panikmeldung)",
+          "report": "Absturzbericht: {path} ({exception}).",
+          "noReport": "Kein Absturzbericht für diese pid gefunden."
+        }
+      }
+    }
+  }
+}

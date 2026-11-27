@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// is honest.
 pub fn plugin() -> Result<Plugin<WriterApps>, PluginAssemblyError> {
     PluginBuilder::<_, WriterApps>::new("writer")
-        .label("Writer")
+        .label(semio_plugin::LocalizedLabel::native("Writer", "Writer"))
         .version("0.1.0")
         .package_id("semio:writer")
         .declare_artifact(crate::artifacts::writer::artifact())

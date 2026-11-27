@@ -46,7 +46,7 @@ fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'s
 
 //#endregion 🔖️ArtifactKind
 
-pub use semio_s_artifact_puzzle_2d_v1::{ArtifactApps, artifact, definition, pilot_languages};
+pub use semio_s_artifact_puzzle_2d_v1::{ArtifactApps, artifact, artifact_with, definition, pilot_languages};
 
 pub use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
@@ -376,7 +376,6 @@ pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema:
                             pub mod artifacts {
                                 pub use semio_s_artifact_puzzle_2d_text_inverse::standards::v1::subsets::any::io::export::serializers::artifacts::svg;
                                 pub use semio_s_artifact_puzzle_2d_snapshot::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
-                                pub use semio_s_artifact_puzzle_2d_text_inverse::standards::v1::subsets::any::io::export::serializers::artifacts::pdf;
                                 pub use semio_s_artifact_puzzle_2d_text_inverse::standards::v1::subsets::any::io::export::serializers::artifacts::png;
                                 pub use semio_s_artifact_puzzle_2d_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                                 pub use semio_s_artifact_puzzle_2d_text_inverse::standards::v1::subsets::any::io::export::serializers::artifacts::dwg;

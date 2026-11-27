@@ -1099,6 +1099,32 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-context-step",
+ "semio-framework-job-payload",
+ "semio-framework-job-receiving",
+ "semio-framework-job-return-budget",
+ "semio-framework-job-testing-caller",
+ "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-frame",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-shared-issuance",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-job-context-step"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-job-clock",
  "semio-framework-job-failure",
@@ -1111,6 +1137,7 @@ dependencies = [
  "semio-framework-job-return-budget",
  "semio-framework-job-return-escrow-publication",
  "semio-framework-job-work-grant",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-call",
@@ -1121,6 +1148,9 @@ dependencies = [
  "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
 ]
 
 [[package]]
@@ -3706,12 +3736,12 @@ dependencies = [
  "semio-os-store-replay",
  "semio-os-store-replay-operation",
  "semio-os-store-retirement",
+ "semio-os-store-schema-exports",
  "semio-os-store-snapshot-clone",
  "semio-os-store-space",
  "semio-os-store-space-history",
  "semio-os-store-space-member",
  "semio-os-store-space-schema",
- "semio-os-store-test-support",
  "semio-os-store-text-io",
  "semio-os-vcs",
  "semio-plugin-component-receipt",
@@ -4905,6 +4935,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-os-store-schema-exports"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-schema-registry",
+]
+
+[[package]]
 name = "semio-os-store-snapshot-clone"
 version = "0.1.0"
 dependencies = [
@@ -5034,42 +5071,6 @@ dependencies = [
  "semio-os-vcs",
  "semio-ui-locale",
  "serde",
-]
-
-[[package]]
-name = "semio-os-store-test-support"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-job",
- "semio-framework-job-payload",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema-registry",
- "semio-framework-value",
- "semio-os-pack",
- "semio-os-spr",
- "semio-os-store-canonical-json",
- "semio-os-store-command",
- "semio-os-store-config",
- "semio-os-store-document",
- "semio-os-store-engine",
- "semio-os-store-engine-core",
- "semio-os-store-engine-owners",
- "semio-os-store-ephemeral",
- "semio-os-store-initialization-runtime",
- "semio-os-store-one-item",
- "semio-os-store-one-item-publication",
- "semio-os-store-operation-wire",
- "semio-os-store-read",
- "semio-os-store-replay",
- "semio-os-store-space",
- "semio-os-store-space-member",
- "semio-os-store-space-schema",
- "semio-os-store-text-io",
- "semio-os-vcs",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5766,6 +5767,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
@@ -7476,6 +7478,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
+ "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
  "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",

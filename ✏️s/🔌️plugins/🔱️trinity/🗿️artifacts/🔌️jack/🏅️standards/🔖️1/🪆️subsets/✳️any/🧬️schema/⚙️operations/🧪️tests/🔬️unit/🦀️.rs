@@ -20,7 +20,7 @@ use semio_framework_graph_manifest::PortDirection;
 use store::os_store::store_schema::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<semio_os_store_test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -152,8 +152,8 @@ async fn document_text_round_trip_graph_store() {
     let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("apply");
-    ::store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    ::store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    ::semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    ::semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,9 @@
+{
+  "vertexCount": 402,
+  "positions": [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1]],
+  "normals": [[0, 0, 1], [0.6, 0, 0.8], [0, 0.6, 0.8], [0.57735026, 0.57735026, 0.57735026], [-1, 0, 0], [0, -0.28, 0.96]],
+  "toleranceRadians": 0.012,
+  "normalByteStride": 4,
+  "normalComponentType": 5120,
+  "extension": "KHR_mesh_quantization"
+}

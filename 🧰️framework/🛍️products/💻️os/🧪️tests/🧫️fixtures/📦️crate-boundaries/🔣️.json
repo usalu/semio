@@ -1617,6 +1617,28 @@
       ]
     },
     {
+      "package": "semio-os-store-mutation-report",
+      "manifest": "🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/📑️mutation-report/🦀️.rs",
+      "maximumActiveLines": 1500,
+      "forbiddenDependencies": [
+        "semio-os-kernel",
+        "semio-plugin",
+        "semio-framework"
+      ]
+    },
+    {
+      "package": "semio-os-store-schema-exports",
+      "manifest": "🔨️modules/🏪️store/🗂️schema-exports/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/🗂️schema-exports/🦀️.rs",
+      "maximumActiveLines": 1500,
+      "forbiddenDependencies": [
+        "semio-os-kernel",
+        "semio-plugin",
+        "semio-framework"
+      ]
+    },
+    {
       "package": "semio-os-store-test-support",
       "manifest": "🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🔨️modules/🏪️store/🧰️test-support/🦀️.rs",

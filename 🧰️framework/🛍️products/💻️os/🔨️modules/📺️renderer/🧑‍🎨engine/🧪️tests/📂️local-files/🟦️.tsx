@@ -48,3 +48,14 @@ it("shows opening failures and permits retry", async () => {
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "a.txt" })));
   expect(onOpen).toHaveBeenCalledTimes(2);
 });
+
+it("bounds a long list of kept files in a focusable scroll region so it cannot squeeze the program windows", () => {
+  const many = Array.from({ length: 200 }, (_, index) => doc("kept-" + index, index));
+  render(<LocalFilesV1 {...props()} documents={many} />);
+  const region = screen.getByRole("region");
+  expect(region.getAttribute("tabindex")).toBe("0");
+  expect(region.className).toContain("max-h-[30vh]");
+  expect(region.className).toContain("overflow-y-auto");
+  expect(region.className).toContain("shrink-0");
+  expect(screen.getAllByRole("button")).toHaveLength(200);
+});

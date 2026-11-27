@@ -17,6 +17,7 @@
     "./generated/ui-axes": "./🤖️generated/🎚️ui-axes/🟦️.ts",
     "./generated/ui-contract": "./🤖️generated/📜️ui-contract/🟦️.ts",
     "./host-effects-choices-and-fault-notices": "./🔁️host-effects-choices-and-fault-notices/🟦️.ts",
+    "./localized-labels": "./🏷️localized-labels/🟦️.ts",
     "./media": "./🎞️media/🟦️.ts",
     "./mutation-input-schema": "./📥️mutation-input-schema/🟦️.ts",
     "./schema": "./🧬️schema/🟦️.ts",

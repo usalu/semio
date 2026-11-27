@@ -50,10 +50,10 @@ async fn config_mutations_round_trip_every_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "kvh".into() }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["beams".into(), "slabs".into()] }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path: vec!["beams".into(), "steel".into()] }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: 7 }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: None }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "kvh".into() }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["beams".into(), "slabs".into()] }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path: vec!["beams".into(), "steel".into()] }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: 7 }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: None }));
 }

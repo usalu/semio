@@ -10,9 +10,9 @@ use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into(), document_json: "{\"schema\":\"draw.document\"}".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(semio_hub_space_commands_media::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(semio_hub_space_commands_media::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into(), document_json: "{\"schema\":\"draw.document\"}".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(semio_hub_space_commands_media::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(semio_hub_space_commands_media::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
 }
 
 /// 🪪️ A neutral format id keeps this command law about typed effects rather than linking an

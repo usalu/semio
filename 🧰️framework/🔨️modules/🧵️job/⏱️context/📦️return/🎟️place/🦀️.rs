@@ -1,7 +1,7 @@
 //! 🎟️ One original source prepays fixed return capture and receiving without a context-free callback.
 use crate::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
 use crate::original_job_continuation::source::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness,reserve_original_return_rows};
-use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
+use semio_framework_value_retained_clone::ValueError;
 
 pub use semio_framework_job_return_budget::OriginalSizedClaimReserve;
 /// 🪙️ See `README.md`.

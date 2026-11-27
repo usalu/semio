@@ -15,7 +15,7 @@ pub struct ArtifactTextFiles {
 #[derive(Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Mutation> {
     pub envelope: ArtifactEnvelope<P, Mutation>,
-    pub snapshot: P,
+    pub snapshot: Arc<P>,
 }
 
 impl<P, Mutation: super::Mutation<P>> ParsedDocumentText<P, Mutation> {
@@ -27,7 +27,7 @@ impl<P, Mutation: super::Mutation<P>> ParsedDocumentText<P, Mutation> {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn into_envelope(self) -> ArtifactEnvelope<P, Mutation> {
         let Self { envelope, snapshot } = self;
-        retire_replayed_projection::<P, Mutation>(snapshot);
+        retire_shared_projection::<P, Mutation>(snapshot);
         envelope
     }
 
@@ -37,10 +37,13 @@ impl<P, Mutation: super::Mutation<P>> ParsedDocumentText<P, Mutation> {
     /// artifact a caller named, which owns no store to put an envelope in — and which must not let
     /// the envelope fall out of scope, because every terminal shell below it asserts in `Drop` that
     /// its owners were retired first.
-    pub fn into_snapshot(self) -> P {
+    pub fn into_snapshot(self) -> P
+    where
+        P: Clone,
+    {
         let Self { envelope, snapshot } = self;
         discard_parsed_envelope::<P, Mutation>(envelope);
-        snapshot
+        Arc::try_unwrap(snapshot).unwrap_or_else(|shared| (*shared).clone())
     }
 }
 
@@ -199,7 +202,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// them with one Report replay from the genesis — an operation that no longer applies is recorded as a `Fatal` no-op
 /// whether or not supersessions exist — and every supersession envelope regains the conflict target its record does not
 /// persist. Answers the replayed head projection.
-pub fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
+pub fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<Arc<P>, VcsError>
 where
     P: Clone + 'static,
     Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + 'static,
@@ -207,8 +210,7 @@ where
     S: AsRef<str>,
 {
     let result = loaded_history_replay(envelope, applied, supersessions)?.run(&envelope.vcs.edits)?;
-    let state = adopt_loaded_replay(envelope, result)?;
-    Ok(Arc::try_unwrap(state).unwrap_or_else(|shared| (*shared).clone()))
+    adopt_loaded_replay(envelope, result)
 }
 
 /// ⏪️ The Report replay every load settles its applied history with ([`replay_loaded_history`]): from the genesis, under

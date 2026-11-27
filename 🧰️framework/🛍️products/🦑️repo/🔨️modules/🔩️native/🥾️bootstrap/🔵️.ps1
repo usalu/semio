@@ -258,12 +258,27 @@ function Get-InstalledVersion {
     return $null
 }
 
+$script:DownloadTimeoutSeconds = 900
+$script:InstallerTimeoutSeconds = 3300
+
+function Start-BoundedProcess {
+    param([string]$FilePath, [string[]]$ArgumentList, [string]$WorkingDirectory)
+
+    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -PassThru -WindowStyle Hidden
+    $null = $process.Handle
+    if (-not $process.WaitForExit($script:InstallerTimeoutSeconds * 1000)) {
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        throw "The installer $FilePath was still running after $($script:InstallerTimeoutSeconds) s and was stopped; it waits for something that never comes / Das Installationsprogramm $FilePath lief nach $($script:InstallerTimeoutSeconds) s noch und wurde gestoppt; es wartet auf etwas, das nicht kommt"
+    }
+    return $process
+}
+
 function Save-VerifiedDownload {
     param([string]$Url, [string]$Sha256, [string]$Destination)
 
     $ProgressPreference = "SilentlyContinue"
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing
+    Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing -TimeoutSec $script:DownloadTimeoutSeconds
     $algorithm = [Security.Cryptography.SHA256]::Create()
     $stream = [IO.File]::OpenRead($Destination)
     try {
@@ -460,7 +475,7 @@ function Install-CppBuildTools {
         $installer = Join-Path $scratch $plan.file
         Save-VerifiedDownload -Url $plan.url -Sha256 $plan.sha256 -Destination $installer
         Write-Step "Installing C++ Build Tools bootstrapper release $($plan.release)..."
-        $result = Start-Process -FilePath $installer -ArgumentList @("--wait", "--quiet", "--norestart", "--add", $plan.workload, "--includeRecommended") -WorkingDirectory $repoRoot -Wait -PassThru -WindowStyle Hidden
+        $result = Start-BoundedProcess -FilePath $installer -ArgumentList @("--wait", "--quiet", "--norestart", "--add", $plan.workload, "--includeRecommended") -WorkingDirectory $repoRoot
         if ($result.ExitCode -ne 0 -and $result.ExitCode -ne 3010) { throw "C++ Build Tools bootstrapper failed with exit code $($result.ExitCode)" }
     } finally {
         Remove-ScratchDirectory -Path $scratch
@@ -474,7 +489,7 @@ function Ensure-CppBuildTools {
     if ($installation) {
         $installer = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\setup.exe"
         if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw "Visual Studio Installer is missing for $installation" }
-        $result = Start-Process -FilePath $installer -ArgumentList @("modify", "--installPath", ('"' + $installation + '"'), "--add", $plan.workload, "--includeRecommended", "--quiet", "--norestart") -Wait -PassThru -WindowStyle Hidden
+        $result = Start-BoundedProcess -FilePath $installer -ArgumentList @("modify", "--installPath", ('"' + $installation + '"'), "--add", $plan.workload, "--includeRecommended", "--quiet", "--norestart") -WorkingDirectory $repoRoot
         if ($result.ExitCode -ne 0 -and $result.ExitCode -ne 3010) { throw "C++ Build Tools workload installation failed with exit code $($result.ExitCode)" }
     } else {
         Install-CppBuildTools

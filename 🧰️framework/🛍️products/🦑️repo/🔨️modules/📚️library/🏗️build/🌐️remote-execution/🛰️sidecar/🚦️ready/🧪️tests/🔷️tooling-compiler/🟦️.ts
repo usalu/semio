@@ -11,7 +11,7 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 const stage=(name:string):ReadyStageV1=>({name,kind:"repo",arguments:[name],timeoutMilliseconds:1000,inputs:[],bootstrapInput:false});
 const wrong={en:"Compiler EN: resolved /x/node_modules/typescript, found 7.0.2, wanted 5.9.3.",de:"Compiler DE: aufgelöst /x/node_modules/typescript, gefunden 7.0.2, verlangt 5.9.3."};
 
-function world(options:Readonly<{names:readonly string[];compiler?:()=>typeof wrong|null;done?:readonly string[];discard?:()=>{receipts:number;generations:number}}>){
+function world(options:Readonly<{names:readonly string[];compiler?:()=>typeof wrong|null;done?:readonly string[];discard?:()=>Promise<{receipts:number;generations:number}>}>){
  const lease=mkdtempSync(join(tmpdir(),"ready-tc-"));scratch.push(lease);
  const stages=options.names.map(stage),digest=readyDigestsV1({platform:"linux",hash:()=>"b".repeat(64),stages});
  const shared={state:{...emptyReadyStateV1(),stages:Object.fromEntries(digest.stages.filter(row=>options.done?.includes(row.name)).map(row=>[row.name,{digest:row.digest,doneMs:1}]))} as ReadyLocalStateV1,marker:false,now:1_000_000,calls:[] as string[]};
@@ -70,7 +70,7 @@ test("the real inspection of this checkout declares and finds the compiler, so t
 });
 
 test("after a compiler failure the dependency receipts are discarded once per digest so the next stage rebuilds instead of repeating the same verdict, on a fresh failure and on a stage recorded done",async()=>{
- let discards=0;const discard=()=>{discards++;return{receipts:2,generations:6};};
+ let discards=0;const discard=async()=>{discards++;return{receipts:2,generations:6};};
  const fresh=world({names:["dependencies"],compiler:()=>wrong,discard});
  await runReadyV1(fresh.ports,fresh.controller.signal);
  expect(discards).toBe(1);expect(fresh.shared.state.failure?.code).toBe("tooling-compiler");

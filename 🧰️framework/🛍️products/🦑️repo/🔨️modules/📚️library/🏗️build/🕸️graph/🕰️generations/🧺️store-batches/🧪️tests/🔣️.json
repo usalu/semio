@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "contract": {
+  "en": "The items run in batches of at most `batch`, one batch after the other, in the order of the items; the sizes below are the sizes of the batches every implementation produces.",
+  "de": "Die Elemente laufen in Stapeln von höchstens `batch`, ein Stapel nach dem anderen, in der Reihenfolge der Elemente; die Größen unten sind die Stapelgrößen jeder Implementierung."
+ },
+ "cases": [
+  {
+   "name": "even split",
+   "items": 10,
+   "batch": 5,
+   "sizes": [
+    5,
+    5
+   ]
+  },
+  {
+   "name": "remainder",
+   "items": 23,
+   "batch": 5,
+   "sizes": [
+    5,
+    5,
+    5,
+    5,
+    3
+   ]
+  },
+  {
+   "name": "one batch",
+   "items": 3,
+   "batch": 16,
+   "sizes": [
+    3
+   ]
+  },
+  {
+   "name": "empty",
+   "items": 0,
+   "batch": 4,
+   "sizes": []
+  },
+  {
+   "name": "batch below one counts as one",
+   "items": 3,
+   "batch": 0,
+   "sizes": [
+    1,
+    1,
+    1
+   ]
+  }
+ ]
+}

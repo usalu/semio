@@ -66,3 +66,7 @@ Shell and runtime: `🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts`, `�
 Rust (unbuilt): `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🪟️window-kit/🦀️.rs`; xlsx base, strict and transitional `✏️editor/🦀️.rs`; xlsx base main window `🦀️.rs`; base editor unit tests; fixture `🧫️fixtures/🌐️canonical-cell-text/🔣️.json`.
 Fixture: strict subset `🧪️tests/🧫️fixtures/🔒️reuse-marketplaces-strict.xlsx`.
 Ticket folder: `claude-xlsx-browser-open.ts`, `.test.ts`, `.md`, `claude-xlsx-strict-fixture.py`, `claude-fulls-serve.sh`, `standalone-pane-journey.ts`, `claude-fulls-journey.ts`, the three build scripts above.
+
+## 8. Update 2026-11-26 (after the stdio split)
+
+The stdio core was split (978,350 functions) and the cleanup pump was fixed by its owners in five rounds; with the stdio 14:38 and stdio-office 15:49 wasm the pane journey is fully green (9 of 9, including the German decimal step) and the full S lane passes 36 of 36 in English and 35 of 36 in German (see `claude-full-s-host.md`: reopen of a kept document after its tab was closed, no data loss found). Extra defects fixed on the way: the crowded kept-files list squeezing the program windows (`LocalFilesV1`, test added) and, by the shell agent, the unbounded `activeUtilityByWindowId` map. Native tests for the decimal fix pass (4 of 4).

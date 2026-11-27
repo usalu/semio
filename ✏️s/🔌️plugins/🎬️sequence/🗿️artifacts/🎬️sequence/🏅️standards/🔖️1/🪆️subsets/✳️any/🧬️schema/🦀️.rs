@@ -153,10 +153,11 @@ pub struct StepParams(pub Dictionary);
 
 impl semio_framework_value::retirement::RetireOwned for StepParams {
     fn controlled_retirement_supported() -> bool { <Dictionary as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+    type RetirementCursor = <Dictionary as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
         let owner = std::mem::ManuallyDrop::new(self);
         let dictionary = unsafe { std::ptr::read(&owner.0) };
-        semio_framework_value::retirement::RetireOwned::retirement(dictionary)
+        semio_framework_value::retirement::RetireOwned::retirement_seed(dictionary)
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)

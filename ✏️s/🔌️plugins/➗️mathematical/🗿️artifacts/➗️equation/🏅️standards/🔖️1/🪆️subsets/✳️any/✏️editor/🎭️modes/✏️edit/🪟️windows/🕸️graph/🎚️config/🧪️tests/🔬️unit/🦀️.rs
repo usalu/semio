@@ -4,8 +4,8 @@ use protocol::{ColdMutation, Mutation};
 #[semio_framework_async_macros::async_test]
 async fn math_config_dsl_round_trips() {
     let config = EquationGraphWindowConfig { camera: EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } };
-    store::os_store::test_support::assert_dsl_round_trip(&config);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&config);
+    semio_os_store_test_support::assert_dsl_round_trip(&config);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&config);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -26,5 +26,5 @@ async fn config_operation_set_camera_round_trips() {
     let backwards = ::semio_os_kernel::ColdMutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]);
     assert_eq!(::semio_os_kernel::ColdMutation::diff(&backwards[0], &next).diff().clone(), base);
-    store::os_store::test_support::assert_op_line_round_trip(&operation);
+    semio_os_store_test_support::assert_op_line_round_trip(&operation);
 }

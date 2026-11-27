@@ -37,6 +37,7 @@ import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type Ca
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1,type CargoSourceAdmissionMemoV1} from "./📥️source/🎟️admission/🟦️.ts";
 import {publishCargoSourceDriftV1,watchCargoSourceDriftV1,type CargoAdmittedSourceV1,type CargoSourceDriftV1} from "./📥️source/👁️drift/🟦️.ts";
 import {requireNativeStoragePathV1} from "./💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { checkoutSnapshotProtocolV1 } from "../../🏗️build/📸️checkout-snapshot/🟦️.ts";
 import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,6 +61,7 @@ import {
   type CargoArtifactObservationV1,
   type CargoBuildResourcesV1,
   type CargoCompilerResourcesV1,
+  cargoCompilerIdentityV1,
   type CargoDepInfoV1,
   type CargoInputObservationV1,
   type CargoInvocationInputV1,
@@ -280,7 +282,7 @@ async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[
  const control=options.control,environment=options.environment??process.env,port=options.commandPort,compilerIdentity=port?.compilerIdentity??await captureOwnedCommandV1("cargo",["--version","--verbose"],policy.cwd,{control,env:environment}),toolchainIdentity=port?.toolchainIdentity??await captureOwnedCommandV1("rustc",["--version","--verbose"],policy.cwd,{control,env:environment}),physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("recipe",environment,line=>writeCargoArtifactDiagnosticV1(options,line)))})),paths=new Set<string>([manifest]);
  const ancestorInputs=["Cargo.toml",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"];
  if(!resolverLock)ancestorInputs.push("Cargo.lock");
- if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of ancestorInputs)paths.add(join(root,name));const parent=dirname(root);if(parent===root)break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
+ if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of ancestorInputs)paths.add(join(root,name));const parent=dirname(root);if(parent===root||existsSync(join(root,checkoutSnapshotProtocolV1().receiptName)))break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
  checkResourceLeaseControl(control);let manifestText:string|null=null;try{manifestText=readFileSync(manifest,"utf8");}catch{}
  const observed=await cargoRecipeInputsV1([...paths].sort(),cargoLockRootsV1(manifestText,args),physical,async()=>{await control.publish({resource:"cargo-target-recipe-inputs",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();checkResourceLeaseControl(control);}),inputs=observed.inputs,declared=cargoTargetRecipeEnvironmentV1(environment);
  return{recipe:{version:1,cwd:policy.cwd,manifest,command:port?.command??"cargo",args:[...(port?.args??[]),options.command??"build","--locked","--manifest-path",manifest,...args],buildDirectory:policy.buildDirectory,compilerIdentity:compilerIdentity.trim(),toolchainIdentity:toolchainIdentity.trim(),inputs,environment:declared},async recheck(){await observed.recheck();if(resolverLock)await recheckCargoResolverLockV1(resolverLock,control);}};
@@ -1007,7 +1009,8 @@ export class CargoProvenanceSessionV1 {
         }
         const resources: CargoResourceWitnessV1[] = [];
         for (const row of Array.isArray(observation?.resources) ? observation.resources : []) resources.push(await observe.resource(row));
-        const row:CargoCompilerResourcesV1={ path: file, sha256: await observe.sha256(file), observedAtMs: Date.now(), producer: observation?.producer ?? null, caller: observation?.caller ?? null, producerUnit: bind(observation?.producer, true), callerUnit: bind(observation?.caller, false), resources };await stream.compilerResource(row);observedCompilerResources.push(row);
+        const producer = cargoCompilerIdentityV1(observation?.producer, false), caller = cargoCompilerIdentityV1(observation?.caller, true);
+        const row:CargoCompilerResourcesV1={ path: file, sha256: await observe.sha256(file), observedAtMs: Date.now(), producer, caller, producerUnit: bind(producer, true), callerUnit: bind(caller, false), resources };await stream.compilerResource(row);observedCompilerResources.push(row);
       }
       const manifests = new Set<string>([invocation.manifest, ...witnessed.map((unit) => unit.message.manifest_path).filter((value): value is string => typeof value === "string")]);
       const inputPaths = new Set<string>(manifests);

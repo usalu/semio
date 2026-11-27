@@ -435,7 +435,7 @@ fn retained_factory_owns_every_migrated_command_and_exact_publication_lane() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
     for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(command);
         let printed = protocol::OpText::print_op(command);
         assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
     }
@@ -446,7 +446,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// other optional-field row (`setSelection`/`setFeatureSelection`/`clearSelection`/`selectAll`).
 #[semio_framework_async_macros::async_test]
 async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() }));
 }
 
 /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip

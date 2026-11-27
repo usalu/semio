@@ -375,7 +375,7 @@ async fn resize_stock_restores_authored_geometry_and_child_on_inverse() {
     let after = round_trip(&base, &mutation);
     assert_eq!(after.stock_payload.solid, WorkingSolid::Box { width: 2.0, depth: 1.0, height: 1.0 });
     assert_eq!(after.stock_solid, working_solid_child_handle("stock", &after.stock_payload.solid));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
 
     let mut rebound = base;
     rebound.stock_solid = working_solid_child_handle("rebound", &rebound.stock_payload.solid);

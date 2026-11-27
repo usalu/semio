@@ -3,6 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 pub use crate::schema::snapshot::GisMapSnapshot;
+pub use semio_s_artifact_gis_gismap_snapshot::MapFeature;
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }

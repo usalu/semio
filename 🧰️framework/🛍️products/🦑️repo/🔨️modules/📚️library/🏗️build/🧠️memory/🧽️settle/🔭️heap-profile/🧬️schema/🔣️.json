@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Heap profile of the graph read / Heap-Profil des Graph-Lesens",
+  "description": "EN: With SEMIO_GRAPH_HEAP_PROFILE=<directory> the whole read takes a heap snapshot each time its managed memory passed a further step (the first at minimumManagedMegabytes, then every stepManagedMegabytes more, at most maxSnapshots and budgetMilliseconds of snapshot time per process) and writes ONE bounded summary per snapshot: the classes, the heavy retention chains and, for the focus classes, the holder groups (which owner class holds how many nodes through which edge name, by the chain of the nearest named owners above it, depth owners deep). The summary also names the heap counters of the process, so memory the snapshot cannot reach shows as a gap. DE: Mit SEMIO_GRAPH_HEAP_PROFILE=<Ordner> nimmt das ganze Lesen jedes Mal einen Heap-Schnappschuss auf, wenn der verwaltete Speicher einen weiteren Schritt überschritten hat (der erste bei minimumManagedMegabytes, dann alle stepManagedMegabytes mehr, höchstens maxSnapshots und budgetMilliseconds Schnappschusszeit je Prozess), und schreibt EINE begrenzte Zusammenfassung je Schnappschuss: die Klassen, die schweren Haltketten und für die Fokusklassen die Halter-Gruppen (welche Besitzerklasse über welchen Kantennamen wie viele Knoten hält, nach der Kette der nächsten benannten Besitzer darüber, depth Besitzer tief). Die Zusammenfassung nennt auch die Heap-Zähler des Prozesses, damit Speicher, den der Schnappschuss nicht erreicht, als Lücke sichtbar wird.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: The numbers of the profile; retainers, classes and groups are how many rows a summary names, hops is how many hops of a path it prints, focus the node classes whose holders are grouped. DE: Die Zahlen des Profils; retainers, classes und groups sind die Zeilenzahl einer Zusammenfassung, hops die Zahl der gedruckten Schritte eines Pfades, focus die Knotenklassen, deren Halter gruppiert werden.",
+      "const": { "version": 1, "minimumManagedMegabytes": 1200, "stepManagedMegabytes": 1024, "maxSnapshots": 4, "budgetMilliseconds": 900000, "retainers": 12, "classes": 12, "groups": 12, "hops": 14, "depth": 6, "focus": ["string", "Array", "Object"] }
+    }
+  }
+}

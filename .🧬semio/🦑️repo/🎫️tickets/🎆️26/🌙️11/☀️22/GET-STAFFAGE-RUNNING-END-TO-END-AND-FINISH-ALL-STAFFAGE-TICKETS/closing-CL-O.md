@@ -1,4 +1,4 @@
-IN WORK (2026-11-26 14:45: four assets written and proven by gate, scan, guard, check CLI, pins and matrix; the pinned cases and the suites on the written files wait in the queue)
+FINAL (2026-11-26 16:10: `gas-hob`, `city-bicycle`, `scissor-lift` and `excavator` written and clean with every proof, their pinned cases green; `cargo-bike` needed no change; nothing open)
 
 # 🚲️ Closing Lane CL-O: Objects and Vehicles
 
@@ -71,11 +71,21 @@ The suites ran from 14:51 to 14:57 on the digests named in section 1 (`GEN/proof
 
 ## 4. The pinned cases on the written catalog
 
-REDCASES
+The real cases, on the catalog files of section 1 (`W/red.sh`, 16:06, `GEN/proof/red-after2.txt`):
+
+| Suite | Filter | Result |
+| --- | --- | --- |
+| `🧊️model-skeleton` | "laces both bicycle wheels through open nipple seats", "bores every scissor arm for its cross pins …", "passes each idler pin through its yoke …" | 3 passed, 24 skipped (exit 0) |
+| `📐️plan-dimension` | whole file | 2 passed of 2 (exit 0) |
+
+The other test files that name one of the five assets, whole, at 16:06 to 16:08 (`W/more.sh`): `🔤️caption-fit` 6 passed of 6, `🏗️structure-projection` 54 passed of 54, `💨️transport-assets` 7 passed of 7.
+
+Not run: the red state of the three cases before the write in the test runner (the first run, queued at 13:34, was withdrawn at 13:52 while it still waited in the queue, so that smaller requests could pass; the state before is the count of `W/pins.ts` in section 1 and lane MZ's own measurement in `requests.md`), the other 24 cases of `🧊️model-skeleton` (assets of other lanes), and the whole suites without a filter (lane MZ runs them on the frozen catalog). A first attempt at 14:50 ended in an argument error of my own script (`red.sh` passed the name filter as one word); it tested nothing and was repeated after the correction.
 
 ## 5. Stated plainly
 
 - `cargo-bike` needed nothing; the request listed it because the case names both bicycles and stops at the first missing nipple.
+- Three queued requests of this lane were withdrawn by SIGTERM of my own queue process, each while it still waited: the baseline run of the cases (13:52), the chain of the extra suites (14:51, replaced by one chain with the repeated cases) and that chain once (15:32, requeued at once, because two 800 MB requests of other lanes stood behind it). No process of another lane was touched.
 - No sheet was opened. The only 2D change is the knob of `gas-hob`, 1 mm in the model, 0.02 mm on paper at 1:50; the 3D changes of the other three are inside or flush with what was there (guard numbers equal before and after). The 3D views of `scissor-lift` 1:200 (bored arms with bushings) and of the nipples at 1:200 and 1:500 were not rendered.
 - `city-bicycle` 1:200 and 1:500 carry nipples that are below the feature of those scales (declared `texture`, as at `cargo-bike`); that is what the pin asks, against the decision of the rework of 2026-11-23.
 - The decisions of `scissor-lift` 1:200 still describe the arms as "bars 110 mm deep" in their first sentence, and those of `excavator` 1:500 say the pin "passes through two pierced yoke plates" although the yoke arms of 1:500 have no bore (the case does not ask for one there: the 30 mm plates are below the feature). Both texts are older than this lane and were not rewritten.
@@ -85,12 +95,13 @@ REDCASES
 
 - `CL-O rewrote gas-hob at 2026-11-26 14:10` under `## closing — gas-hob drawn plan depth …`.
 - `CL-O rewrote city-bicycle at 2026-11-26 14:10`, `… scissor-lift at 2026-11-26 14:14`, `… excavator at 2026-11-26 14:16` and the note that `cargo-bike` was not rewritten, under `## closing — nine assets against the detail pins …`.
-- Queue figures measured here (`/usr/bin/time -l`, largest process): light proof of four rigid assets 549 MB; write chain with the four matrices 711 MB (the matrix of `excavator`).
+- `## closing CL-O — one grant holds 8 to 9 GB against its 2500 MB reservation …` (14:50, addendum 16:05): the measured reason why the last two chains waited 75 minutes.
+- Queue figures measured here (`/usr/bin/time -l`, largest process): light proof of four rigid assets 549 MB; write chain with the four matrices 711 MB (the matrix of `excavator`); the five suites of section 3 for four assets 2661 MB; the three cases of `🧊️model-skeleton` with `📐️plan-dimension`, `🔤️caption-fit`, `🏗️structure-projection` and `💨️transport-assets` in one chain 3971 MB. The last two exceeded their 2500 MB reservation; which file of each chain held the peak was not measured.
 
 ## 7. Files
 
 Updated in the catalog (repo-relative): `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-hob/🔣️.json`, `…/🚜️vehicles/city-bicycle/🔣️.json`, `…/🏗️machinery/scissor-lift/🔣️.json`, `…/🏗️machinery/excavator/🔣️.json`.
 
-Created in `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/`: `closing-CL-O.md`; in `🧰️matrix/CL-O/`: `env.sh`, `q.sh`, `fix.ts` (the repair), `ops/city-bicycle.json` (its input), `pins.ts` and `depth.ts` (measuring copies of the pinned cases), `light.sh`, `first.sh`, `prove.sh`, `after.sh`, `tell.py`, `red.sh`, `suites.sh`, `more.sh`, `final.sh`, `backup-sha256.txt` (digests of the five files before this lane).
+Created in `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/`: `closing-CL-O.md`; in `🧰️matrix/CL-O/`: `env.sh`, `q.sh`, `fix.ts` (the repair), `ops/city-bicycle.json` (its input), `pins.ts` and `depth.ts` (measuring copies of the pinned cases), `light.sh`, `first.sh`, `prove.sh`, `after.sh`, `tell.py`, `red.sh`, `suites.sh`, `more.sh`, `final.sh`, `again.sh`, `backup-sha256.txt` (digests of the five files before this lane).
 
-Updated: `requests.md` (five lines appended). Removed: `🗑️generated/matrix/CL-O` (tool output, trial copies and backups) after this report was written.
+Updated: `requests.md` (five lines and one section appended). Removed: `🗑️generated/matrix/CL-O` (tool output, trial copies and backups) after this report was written.

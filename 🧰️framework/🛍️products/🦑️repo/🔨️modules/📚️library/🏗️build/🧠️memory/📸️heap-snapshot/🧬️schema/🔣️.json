@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slice worker heap diagnostic / Heap-Diagnose des Slice-Workers",
+  "description": "EN: Opt-in diagnostic of the slice worker: with both environment variables set (or the control file `controlFile` in the machine directory naming `directory` and `thresholdMegabytes`, for services that start without the caller's environment), the first time the heap of the worker crosses the threshold it writes one summary of its heap (classes by count and bytes, retainers by edge) into the named directory, so the dominant retainer of a whole-closure read can be named. It changes nothing else. DE: Optionale Diagnose des Slice-Workers: sind beide Umgebungsvariablen gesetzt (oder nennt die Steuerdatei im Maschinenverzeichnis, `controlFile` mit `directory` und `thresholdMegabytes`, dasselbe, für Dienste die ohne die Umgebung des Aufrufers starten), schreibt der Worker beim ersten Überschreiten der Schwelle eine Zusammenfassung seines Heaps (Klassen nach Anzahl und Bytes, Halter nach Kante) in das genannte Verzeichnis.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "thresholdEnvironment": "SEMIO_SLICE_HEAP_SNAPSHOT_MB",
+        "directoryEnvironment": "SEMIO_SLICE_HEAP_SNAPSHOT_DIR",
+        "defaultThresholdMegabytes": 3072,
+        "topRows": 40,
+        "pathDepth": 4,
+        "filePrefix": "slice-heap-",
+        "controlFile": "slice-heap.json"
+      }
+    }
+  }
+}

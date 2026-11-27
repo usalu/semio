@@ -284,7 +284,8 @@
         "output": {
           "maximumFileOutputBytes": 4194304,
           "maximumFileOutputLines": 65536,
-          "maximumTotalOutputBytes": 16777216
+          "maximumTotalOutputBytes": 16777216,
+          "overflow": "elide"
         }
       }
     },

@@ -160,3 +160,18 @@ test("one pass over 30 thousand modules answers 5 thousand owner closure digests
  expect(answers.has(undefined)).toBe(false);expect(stats.nodes).toBe(size);expect(stats.digests).toBeLessThanOrEqual(size);
  console.log("[closure-graph] 30k modules, 5k owners: "+Math.round(elapsed)+" ms, "+stats.digests+" component digests, heap "+Math.round(process.memoryUsage().heapUsed/1048576)+" MB");
 });
+
+test("a loaded graph holds one copy of each path its witnesses name: 200 stored nodes that read the same 2000 paths cost the arrays, not 400 000 strings",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"closure-heap-")),heap=()=>{Bun.gc(true);return process.memoryUsage().heapUsed/1048576;};
+ try{
+  const graph=createClosureGraphV1(),path=(at:number)=>"/tree/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/📦️packages/file-"+at+".ts";
+  const witness=()=>({paths:Array.from({length:2000},(_,at)=>path(at)),tuples:Array.from({length:2000},()=>"1:2:3:4:5"),typed:Array.from({length:2000},(_,at)=>["exists",path(at),true]),code:[],live:[]});
+  graph.update(Array.from({length:200},(_,at)=>({key:"k"+at,name:"src/m"+at+".ts",kind:"module",digest:at.toString(16).padStart(64,"0"),edges:[],extra:{witness:witness()}})));
+  await saveClosureGraphV1(graph,root);
+  const before=heap(),loaded=loadClosureGraphSyncV1(root),held=heap()-before;
+  expect([...loaded.records()].length).toBe(200);
+  const unshared=heap(),copies=Array.from({length:200},witness),reference=heap()-unshared;
+  expect(copies.length).toBe(200);
+  expect(held).toBeLessThan(reference*0.75);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

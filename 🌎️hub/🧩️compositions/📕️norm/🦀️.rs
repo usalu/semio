@@ -41,7 +41,7 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
     let iso16757 = semio_s_artifact_norm_iso16757::declaration(semio_s_artifact_norm_iso16757_model::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let vdi3805 = semio_s_artifact_norm_vdi3805::declaration(semio_s_artifact_norm_vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     PluginBuilder::<_, NormApps>::new("norm")
-        .label("Norm")
+        .label(semio_plugin::LocalizedLabel::native("Norm", "Norm"))
         .version("0.1.0")
         .package_id("semio:norm")
         .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))

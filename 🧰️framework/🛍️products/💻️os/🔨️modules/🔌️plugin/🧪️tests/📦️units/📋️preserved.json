@@ -109,7 +109,7 @@
     {
       "name": "activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🏭️tool-factory-keys-and-shared-actions/🦀️.rs",
-      "sha256": "f51aa561d5b381408027518168b582ed3a69028700d182a607c7260442217349",
+      "sha256": "d21e7d0554fdf5e9421f414b354bf1ad33e22456d88b73f0ce12747adec3c28b",
       "assertions": 18
     },
     {
@@ -153,7 +153,7 @@
     {
       "name": "retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
-      "sha256": "676036ac0ed74a0b65f651d32f56ea26154e21938c6ffed41bc424f08ab24c78",
+      "sha256": "97c8b683613c3d0ec41057f11911964cf13e45443845cb56731b41b1cc97469b",
       "assertions": 0
     },
     {
@@ -606,13 +606,13 @@
     {
       "name": "reserved_undo_invocation_does_not_require_window_ownership",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
-      "sha256": "327b04cd3cd0075e9ff5d0e9ada9ce39f7ff5df1fd18257e9f8e84e11ddb86be",
+      "sha256": "1b3d8641e2b93508e0f38b6ff56ed56c3eec05840deb08a9a032908183e991f8",
       "assertions": 1
     },
     {
       "name": "reserved_undo_actor_ingress_admits_undeclared_window_kind",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
-      "sha256": "90481f74b6deab177aa503086705bc087147103fa5f51229e1ceed2f08a116f0",
+      "sha256": "ac0912ffb551489832a57bc953ee97e3d2befe0e6b6a358ccceb798ba415871e",
       "assertions": 9
     },
     {
@@ -888,8 +888,10 @@
     {
       "name": "context_menu_wire_requires_and_forwards_canonical_view_state",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
-      "sha256": "a48c4e8fefaf93bbbd4594d05e6da36ce0441c7ec768fc65e8a73f6cc9fa45ee",
-      "assertions": 7
+      "sha256": "95d8a9026e66af62e0353e63f2600217c07dab7682d71d440a116d1daa09a23a",
+      "assertions": 6,
+      "removedAssertions": 1,
+      "removalReason": "commit 757 made into_parts infallible and moved the unknown-window refusal into with_context_menu_view; the per-surface windowId and activeUtilityId asserts of this test are asserted on the same surface-context-lifecycle fixture by surface_context_reaches_real_app_render_and_rejects_hidden_surfaces"
     },
     {
       "name": "surface_context_reaches_real_app_render_and_rejects_hidden_surfaces",
@@ -906,7 +908,7 @@
     {
       "name": "reserved_section_surfaces_render_accessor_maps_instead_of_app_bodies",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1/🦀️.rs",
-      "sha256": "2b477f7a8eaa2304b99ff6899bdce9c758ce853af24388212e36e37372f5ad35",
+      "sha256": "6994d4af40fd58ba1083243da8e68b48561193d70dd23ad27919d86237b4aeb3",
       "assertions": 9
     },
     {
@@ -924,31 +926,31 @@
     {
       "name": "world3d_scene_surface_pages_every_lane_beside_a_spine_that_fits_the_fixed_doc",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
-      "sha256": "74068186e3309f958ffde901273f5c174a4b950270d614f18b43d3b97ded0787",
+      "sha256": "c383e96db56ec9597984665e615cbd4680c25c582a94ba71e84f1f099465f9d1",
       "assertions": 7
     },
     {
       "name": "world3d_scene_surface_republishes_only_the_lanes_that_changed",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
-      "sha256": "01260a4fe791c17e29660f6d7de5d29b60e6bd9b59ed17ac38a7de78c779d069",
+      "sha256": "02cb9a99c94e834f2b3f056483b20138a0e0b4016e2c251007724c1f048e5773",
       "assertions": 3
     },
     {
       "name": "world3d_scene_surface_pages_one_oversized_lane_instead_of_faulting",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
-      "sha256": "9c67277cf0f14cd31b6083ae9ac82f5853ba4cb8800582b239ecb8d12d9e293d",
+      "sha256": "e0e0e564df21b68cc3c31a706e7882be7b2b648fc177257763fd37cfc992724c",
       "assertions": 2
     },
     {
       "name": "a_scene_that_declares_no_lanes_still_publishes_one_childless_surface",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
-      "sha256": "73d86bfb4fe318da558ddc7598ad47091de2d9b1a885e9d04f5b4a634c291693",
+      "sha256": "23912933f2239ada1455affcf6e29ea2bb053dd1912b3cf18701b2ec54847bfb",
       "assertions": 3
     },
     {
       "name": "nakagin_scale_world3d_surface_fits_document_node_cap",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
-      "sha256": "cd8011090f6451a7f1107f0087ec5b91056f37fdd83b246707ec89c01916be8e",
+      "sha256": "420096977aebfd467f30f3baa60811490b9bfe83df8ec213eccd9e8244b32bfa",
       "assertions": 1
     },
     {
@@ -1032,7 +1034,7 @@
     {
       "name": "addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler",
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
-      "sha256": "4a07ea2d213171082788dc5c2126c7f457a0ab8aa23f13a1df335e8dfd7b9b24",
+      "sha256": "6bbf3ac3831f23e267cfc78cd5f0722bcfd1af2b865efd94f2cada732e4a9478",
       "assertions": 1
     },
     {
@@ -1342,7 +1344,19 @@
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧵️spawned-task-resume/🦀️.rs",
       "sha256": "10314a960fa19cc05be3b97b3bd15ca05ed75da40176b3067ba7f99c17966289",
       "assertions": 2
+    },
+    {
+      "name": "checkout_checkpoint_without_an_id_returns_to_the_current_checkpoint",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
+      "sha256": "c6297f64c010cb102aab24beba6cf7f121bbd6b6c96a442faabd799d3a0e864a",
+      "assertions": 2
+    },
+    {
+      "name": "a_refused_interaction_verb_does_not_poison_the_next_verb",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
+      "sha256": "13dc3394c9365af64a5a094555d0c89cd81f112faf929e0857906e0105b4d4a0",
+      "assertions": 2
     }
   ],
-  "addedAssertions": 88
+  "addedAssertions": 91
 }

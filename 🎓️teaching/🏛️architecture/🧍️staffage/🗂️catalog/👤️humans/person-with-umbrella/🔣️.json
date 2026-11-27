@@ -1175,7 +1175,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1190,7 +1194,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1205,7 +1213,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1220,7 +1232,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1235,7 +1251,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1250,7 +1270,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1265,7 +1289,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1280,7 +1308,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1295,7 +1327,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1310,7 +1346,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1325,7 +1365,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1340,7 +1384,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1355,7 +1403,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1370,7 +1422,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1385,7 +1441,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1400,7 +1460,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1415,7 +1479,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1430,7 +1498,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1445,7 +1517,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1460,7 +1536,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1475,7 +1555,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1490,7 +1574,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1505,7 +1593,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1520,7 +1612,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1535,7 +1631,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1550,7 +1650,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1565,7 +1669,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1580,7 +1688,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1595,7 +1707,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1610,7 +1726,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1625,7 +1745,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         },
         {
@@ -1640,7 +1764,11 @@
           "angleDeg": 0,
           "lengthM": 0.56,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180,
+            "twistMinDeg": -180,
+            "twistMaxDeg": 180
           }
         }
       ],

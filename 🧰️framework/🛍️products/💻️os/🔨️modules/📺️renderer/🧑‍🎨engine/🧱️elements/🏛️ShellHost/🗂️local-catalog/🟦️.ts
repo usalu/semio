@@ -82,6 +82,15 @@ function parentFolder(path: string): string {
   return cut <= 0 ? "/" : path.slice(0, cut);
 }
 
+/** ⏱️ How often, and for how long at most, a kept-file open polls a retiring program before it gives up with `natural-file.program-retiring`. */
+export const KEPT_OPEN_RETIREMENT_POLL_MS_V1 = 25;
+export const KEPT_OPEN_RETIREMENT_DEADLINE_MS_V1 = 15_000;
+
+/** 🧭️ How a kept-file open treats the document's live session: `load` when none is mounted, `focus` when its program is live, `await-retirement` while its program is sealed by a retirement in flight. Re-focusing a sealed instance showed no windows and let the retirement then remove the re-focused tab, so the open waits for the retirement to settle and then reloads from the folder. */
+export function keptOpenRouteV1(existing: Readonly<{ sealed: boolean }> | undefined): "load" | "focus" | "await-retirement" {
+  return existing === undefined ? "load" : existing.sealed ? "await-retirement" : "focus";
+}
+
 /** 📁️ Where a catalog entry's events live: its own folder, or the folder of its file (the document id names it inside that
  * folder's event log, exactly as the sync card binds a file). */
 export function localCatalogBindingV1(document: LocalDocument): Extract<PersistenceBinding, { kind: "folder" }> {

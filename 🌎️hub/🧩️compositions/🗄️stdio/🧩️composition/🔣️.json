@@ -5,7 +5,7 @@
       "id": "stdio",
       "root": "🔌️plugin/🦀️.rs",
       "enum": "StdioApps",
-      "label": "Stdio",
+      "label": { "en": "Stdio", "de": "Stdio" },
       "main": true,
       "appLibraries": [
         {
@@ -87,7 +87,7 @@
       "id": "stdio-pdf",
       "root": "🧩️extensions/📘️pdf/🦀️.rs",
       "enum": "StdioPdfApps",
-      "label": "Stdio PDF",
+      "label": { "en": "Stdio PDF", "de": "Stdio PDF" },
       "main": false,
       "shards": [
         {
@@ -134,7 +134,7 @@
       "id": "stdio-cad",
       "root": "🧩️extensions/🛠️cad/🦀️.rs",
       "enum": "StdioCadApps",
-      "label": "Stdio CAD",
+      "label": { "en": "Stdio CAD", "de": "Stdio CAD" },
       "main": false,
       "shards": []
     },
@@ -142,7 +142,7 @@
       "id": "stdio-bim",
       "root": "🧩️extensions/🏠️bim/🦀️.rs",
       "enum": "StdioBimApps",
-      "label": "Stdio BIM",
+      "label": { "en": "Stdio BIM", "de": "Stdio BIM" },
       "main": false,
       "shards": []
     },
@@ -150,7 +150,7 @@
       "id": "stdio-office",
       "root": "🧩️extensions/💼️office/🦀️.rs",
       "enum": "StdioOfficeApps",
-      "label": "Stdio Office",
+      "label": { "en": "Stdio Office", "de": "Stdio Büro" },
       "main": false,
       "shards": []
     },
@@ -158,7 +158,7 @@
       "id": "stdio-semio",
       "root": "🧩️extensions/🧿️semio/🦀️.rs",
       "enum": "StdioSemioApps",
-      "label": "Stdio Semio",
+      "label": { "en": "Stdio Semio", "de": "Stdio Semio" },
       "main": false,
       "shards": []
     },
@@ -166,7 +166,7 @@
       "id": "stdio-media",
       "root": "🧩️extensions/🎵️media/🦀️.rs",
       "enum": "StdioMediaApps",
-      "label": "Stdio Media",
+      "label": { "en": "Stdio Media", "de": "Stdio Medien" },
       "main": false,
       "shards": []
     },
@@ -174,7 +174,7 @@
       "id": "stdio-mesh",
       "root": "🧩️extensions/🔺️mesh/🦀️.rs",
       "enum": "StdioMeshApps",
-      "label": "Stdio Mesh",
+      "label": { "en": "Stdio Mesh", "de": "Stdio Netz" },
       "main": false,
       "shards": []
     },
@@ -182,7 +182,7 @@
       "id": "stdio-image",
       "root": "🧩️extensions/🖼️image/🦀️.rs",
       "enum": "StdioImageApps",
-      "label": "Stdio Image",
+      "label": { "en": "Stdio Image", "de": "Stdio Bild" },
       "main": false,
       "shards": []
     },
@@ -190,7 +190,7 @@
       "id": "stdio-binary",
       "root": "🧩️extensions/🔢️binary/🦀️.rs",
       "enum": "StdioBinaryApps",
-      "label": "Stdio Binary",
+      "label": { "en": "Stdio Binary", "de": "Stdio Binär" },
       "main": false,
       "shards": []
     }

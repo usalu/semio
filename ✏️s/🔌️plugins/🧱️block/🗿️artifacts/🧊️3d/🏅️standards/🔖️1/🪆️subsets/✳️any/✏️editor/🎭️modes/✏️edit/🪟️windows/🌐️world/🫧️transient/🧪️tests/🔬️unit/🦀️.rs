@@ -48,7 +48,7 @@ fn preview_partition_matches_language_neutral_json_oracle() {
         let state = typed.entry(window_id.clone()).or_default();
         *state = protocol::apply_diff_cold(::semio_os_kernel::ColdMutation::diff(&mutation, state).diff(), state).expect("valid transient diff");
         oracle.insert(window_id, step["preview"].clone());
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
     }
     let typed = typed.into_iter().map(|(window_id, state)| (window_id, serde_json::to_value(state.brush_preview).expect("typed preview"))).collect::<serde_json::Map<_, _>>();
     assert_eq!(serde_json::Value::Object(typed), fixture["expected"]);

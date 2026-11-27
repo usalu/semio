@@ -155,7 +155,7 @@ mod tests {
     //#region 🧪️SubsetRoundtrip
     struct SemioMeshRoundtrip;
 
-    impl store::os_store::test_support::SubsetRoundtripSpec for SemioMeshRoundtrip {
+    impl semio_os_store_test_support::SubsetRoundtripSpec for SemioMeshRoundtrip {
         type Snapshot = SemioMeshSnapshot;
         type Mutation = crate::schema::mutations::SemioMeshMutation;
         type Inference = ();
@@ -164,15 +164,15 @@ mod tests {
             semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() }
         }
 
-        async fn fidelity() -> store::os_store::test_support::IoFidelityClass {
-            store::os_store::test_support::IoFidelityClass::Canonical
+        async fn fidelity() -> semio_os_store_test_support::IoFidelityClass {
+            semio_os_store_test_support::IoFidelityClass::Canonical
         }
 
         async fn drops() -> &'static [&'static str] {
             &[]
         }
 
-        async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+        async fn parse_native(asset: &semio_os_store_test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = asset.text.ok_or_else(|| "mesh cube requires dsl text".to_string())?;
             crate::io::text::snapshot::parse_mesh_dsl(text).map_err(|e| e.to_string())
         }
@@ -208,8 +208,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cube_subset_integrated_roundtrip() {
         let text = include_str!("../../../📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio");
-        let asset = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "🔺️mesh/📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio" };
-        store::os_store::test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None).await;
+        let asset = semio_os_store_test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "🔺️mesh/📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio" };
+        semio_os_store_test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None).await;
     }
     //#endregion 🧪️SubsetRoundtrip
 }

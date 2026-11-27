@@ -41,7 +41,7 @@ pub struct DemoSnapshot {
 std::thread_local! { pub static DEMO_PROJECTION_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 
 impl Clone for DemoSnapshot {
-    fn clone(&self) -> Self { DEMO_PROJECTION_CLONES.with(|count| count.set(count.get() + 1)); eprintln!("[DEBUG] demo clone {}", std::backtrace::Backtrace::force_capture()); Self { n: self.n } }
+    fn clone(&self) -> Self { DEMO_PROJECTION_CLONES.with(|count| count.set(count.get() + 1)); Self { n: self.n } }
 }
 
 impl semio_framework_schema_composition::ArtifactCompositionFields for DemoSnapshot {

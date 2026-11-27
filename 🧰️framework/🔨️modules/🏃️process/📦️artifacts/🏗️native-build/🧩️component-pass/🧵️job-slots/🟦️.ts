@@ -251,10 +251,21 @@ export function planLocalComponentJobsV1(hostValue:LocalJobsHostV1):LocalJobsDec
  return Object.freeze(requireDefinition<LocalJobsDecisionV1>("LocalJobsDecision",{jobs,reason}));
 }
 
+/** 🧵️ The component finals of `profile` as the scheduler now runs them, on one front-end, one code generation and one wasm-ld thread: an observation that kept more than `serialFinalCpuRatio` CPUs busy ran with a threaded linker, so its peak (measured 4.8 GiB at 6.6 CPUs against 2.0-3.0 GiB serial for the same final) does not forecast the serial run. A final without any serial observation keeps all of its rows.
+ * @see ./🧪️tests/🧵️local/🐍️oracle/🐍️.py */
+export function serialFinalHistoryV1(history:ReadonlyMap<string,readonly UnitObservationV1[]>,profile:string):ReadonlyMap<string,readonly UnitObservationV1[]>{
+ const kept=new Map<string,readonly UnitObservationV1[]>();
+ for(const[key,rows]of history){
+  const serial=componentFinalKeyV1(key,profile)?rows.filter(row=>row.cpuMs<=row.wallMs*policy.serialFinalCpuRatio):rows;
+  kept.set(key,serial.length?serial:rows);
+ }
+ return kept;
+}
+
 /** 📏️ The peak (megabytes) a pass is reserved at as a local job: its component finals are counted at the broker's own prediction from the recorded peaks of that crate (`predictPeakBytesV1`: headroom times the p95 of the last window), a final never recorded at the headroom times the `unmeasuredQuantile` of the recorded finals of the profile (the bound of the admission policy while fewer than `componentColdMinimumRows` exist), so an unseen big final is not mistaken for the median one; the pass holds the largest `units` finals at once (its cargo links up to `units` of them side by side).
  * @see ../../🎟️admission/🟦️.ts */
-export function componentPassPeakMegabytesV1(history:ReadonlyMap<string,readonly UnitObservationV1[]>,pass:Readonly<{profile:string;packages:readonly Readonly<{name:string}>[]}>,units:number):number{
- const family=componentFinalPeaksV1(history,pass.profile),crates=new Map<string,number[]>();
+export function componentPassPeakMegabytesV1(recorded:ReadonlyMap<string,readonly UnitObservationV1[]>,pass:Readonly<{profile:string;packages:readonly Readonly<{name:string}>[]}>,units:number):number{
+ const history=serialFinalHistoryV1(recorded,pass.profile),family=componentFinalPeaksV1(history,pass.profile),crates=new Map<string,number[]>();
  for(const[key,rows]of history){
   if(!componentFinalKeyV1(key,pass.profile))continue;
   const identity=key.split("|")[0]??"",crate=identity.slice(identity.indexOf("@")+1);

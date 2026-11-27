@@ -14,8 +14,8 @@ import {readHostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json";
 import {repoPlaywrightBrowsersPath} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import {HOST_WARDEN_TABLE_V1,parseWardenCpuV1,HOST_WARDEN_ANCHORS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,expandWardenPatternV1,headroomHostWardenV1,parseWardenSwapV1,wardenBrowsersV1,formatHostWardenAlarmV1,isHostWardenV1,triggerHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,formatHostWardenCancelFailureV1,formatHostWardenCancelReasonV1,formatHostWardenHoldV1,formatHostWardenStatusV1,hostWardenHoldsV1,swapDepthHostWardenV1,topWardenOthersV1,type HostWardenHostV1,type HostWardenStateV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
-import {HostWardenCancelledErrorV1,chargeWardenRowsV1,currentHostWardenMirrorV1,defaultHostWardenPortsV1,readHostWardenCancelsBelowV1,requireNoHostWardenCancelBelowV1,readWardenSwapV1,ensureHostWardenV1,hostWardenCodeDigestV1,readHostWardenCancelV1,readHostWardenCancelsSinceV1,readHostWardenMirrorV1,readHostWardenStateV1,runHostWardenLoopV1,wardenProcessStartV1,type HostWardenPortsV1} from "../🔁️loop/🟦️.ts";
+import {applyWardenClaimsV1,formatHostWardenCancelLineV1,HOST_WARDEN_TABLE_V1,parseWardenCpuV1,HOST_WARDEN_ANCHORS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,expandWardenPatternV1,headroomHostWardenV1,parseWardenSwapV1,wardenBrowsersV1,formatHostWardenAlarmV1,isHostWardenV1,triggerHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,formatHostWardenCancelFailureV1,formatHostWardenCancelReasonV1,formatHostWardenHoldV1,formatHostWardenStatusV1,hostWardenHoldsV1,swapDepthHostWardenV1,topWardenOthersV1,type HostWardenHostV1,type HostWardenStateV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import {HostWardenCancelledErrorV1,claimHostWardenSubjectV1,readHostWardenClaimsV1,releaseHostWardenClaimV1,chargeWardenRowsV1,currentHostWardenMirrorV1,defaultHostWardenPortsV1,readHostWardenCancelsBelowV1,requireNoHostWardenCancelBelowV1,readWardenSwapV1,ensureHostWardenV1,hostWardenCodeDigestV1,readHostWardenCancelV1,readHostWardenCancelsSinceV1,readHostWardenMirrorV1,readHostWardenStateV1,retryAfterHostWardenCancelV1,runHostWardenLoopV1,wardenProcessStartV1,type HostWardenPortsV1} from "../🔁️loop/🟦️.ts";
 
 const python=testPythonV1()??Bun.which("python3")??"python3",oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),decoder=new TextDecoder();
 const model=(mode:string):any=>{const done=Bun.spawnSync([python,"-I",oracle,mode]);if(done.exitCode!==0)throw Error(decoder.decode(done.stderr));return JSON.parse(decoder.decode(done.stdout));};
@@ -61,6 +61,18 @@ test("a declared final link is the dearest compile unit and waits longer suspend
  expect(row("heavy: a young declared final link is kept running").expect.actions).toEqual([{action:"suspend",id:"p102",reason:"guard"}]);
  expect(row("heavy: the danger line still cancels").expect.actions).toEqual([{action:"cancel",id:"p101",reason:"danger"}]);
  expect(row("heavy: a declared final link suspended 130").expect.actions).toEqual([{action:"resume",id:"p102",reason:"overdue"}]);
+});
+
+test("victim choice: with every pausable subject suspended past the pause deadline the danger cancel takes the large process, never the small young cargo step",()=>{
+ const row=fixture.decisions.find(item=>item.name.startsWith("victim: a severe danger"))!;
+ const subjects=mutable<HostWardenSubjectV1[]>(row.subjects),small=subjects.find(subject=>subject.kind==="cargo")!,large=subjects.reduce((best,subject)=>subject.megabytes>best.megabytes?subject:best);
+ const decision=decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(row.host),subjects,mutable(row.previous));
+ expect(small.megabytes,"the small step is far below the large process").toBeLessThan(large.megabytes/4);
+ expect(small.elapsedSeconds*large.megabytes,"the small step is the cheapest to lose by work per megabyte, which used to choose it").toBeLessThan(large.elapsedSeconds*small.megabytes);
+ expect(decision.actions).toEqual([{action:"cancel",id:large.id,reason:"danger"}]);
+ expect(decision.actions.some(action=>action.id===small.id)).toBe(false);
+ const running=subjects.map(subject=>subject.suspended?{...subject,suspended:false,suspendedSeconds:0}:subject);
+ expect(decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(row.host),running,mutable(row.previous)).actions.every(action=>action.action==="suspend"),"while suspension can still recover, nothing is cancelled").toBe(true);
 });
 
 test("every decision equals the independent Python oracle and the expectation stored in the fixture",()=>{
@@ -943,4 +955,92 @@ test("the loop adds the CPU a classified process gained between two ticks to a c
  expect(totals).toEqual([0,6,10]);
  const none=await watchdog(fakeTable(500,200));
  expect((JSON.parse(readFileSync(join(none.directory,"state.json"),"utf8")) as {subjects:Record<string,unknown>}).subjects).not.toHaveProperty("cpuSeconds");
+});
+
+const cancelRecord=(base:string,atMs:number,reason:"danger"|"cap",pid=4711)=>{const folder=join(base,"warden","cancelled");mkdirSync(folder,{recursive:true});writeFileSync(join(folder,`${pid}.${atMs}.json`),JSON.stringify({version:1,pid,start:"s",kind:"cargo",owner:"o",command:"bun ./script.ts generate",megabytes:216,atMs,reason,ancestors:[4242],...reason==="cap"?{capMegabytes:100}:{}}));};
+const retryHarness=(base:string)=>{let clock=Date.now();const lines:string[]=[],sleeps:number[]=[];return{lines,sleeps,options:{directory:base,report:(line:string)=>{lines.push(line);},now:()=>clock,sleep:async(milliseconds:number)=>{clock+=milliseconds;sleeps.push(milliseconds);}}};};
+
+test("requeue: a build whose process the warden cancelled for memory waits for a calm host, reports in both languages and is admitted again",async()=>{
+ const held=await ceilingRun(unitRows(100),{available:300}),harness=retryHarness(held.base);
+ expect(readHostWardenStateV1(held.base)).toMatchObject({level:"danger",hold:true});
+ let attempts=0;
+ const result=await retryAfterHostWardenCancelV1(async(attempt,startedMs)=>{attempts=attempt;if(attempt===1){cancelRecord(held.base,startedMs+1,"danger");requireNoHostWardenCancelBelowV1(4242,startedMs,held.base);}return "built";},harness.options);
+ expect(result).toBe("built");
+ expect(attempts).toBe(2);
+ expect(harness.lines[0]).toContain("queued again for capacity admission once the host memory is calm (attempt 2 of 3)");
+ expect(harness.lines[0]).toContain("erneut zur Kapazitätszulassung eingereiht");
+ expect(harness.lines.some(line=>line.includes("waiting for the host memory to be calm")),"the wait reports its progress").toBe(true);
+ expect(harness.sleeps.length,"the held state is polled until it is stale or calm").toBeGreaterThan(1);
+ expect(harness.sleeps.every(milliseconds=>milliseconds===HOST_WARDEN_POLICY_V1.requeuePollMilliseconds)).toBe(true);
+ expect(harness.lines.at(-1)).toContain("admitted again (attempt 2 of 3)");
+});
+
+test("requeue: it is bounded by the attempts, a cap or ceiling cancel and other errors are never retried, and the wait is cancellable",async()=>{
+ const base=fresh(),harness=retryHarness(base);
+ let attempts=0;
+ let caught:unknown;
+ try{await retryAfterHostWardenCancelV1(async(attempt,startedMs)=>{attempts=attempt;cancelRecord(base,startedMs+1,"danger");requireNoHostWardenCancelBelowV1(4242,startedMs,base);},harness.options);}catch(error){caught=error;}
+ expect(attempts,"requeueMaximumAttempts attempts, then the typed failure").toBe(HOST_WARDEN_POLICY_V1.requeueMaximumAttempts);
+ expect(caught).toBeInstanceOf(HostWardenCancelledErrorV1);
+ expect((caught as HostWardenCancelledErrorV1).retries).toBe(HOST_WARDEN_POLICY_V1.requeueMaximumAttempts-1);
+ expect((caught as Error).message).toContain("It was queued again 2 time(s)");
+ expect((caught as Error).message).toContain("Der Build wurde 2 Mal erneut eingereiht");
+ const capped=fresh();attempts=0;caught=undefined;
+ try{await retryAfterHostWardenCancelV1(async(attempt,startedMs)=>{attempts=attempt;cancelRecord(capped,startedMs+1,"cap");requireNoHostWardenCancelBelowV1(4242,startedMs,capped);},retryHarness(capped).options);}catch(error){caught=error;}
+ expect(attempts,"a cap reproduces itself: no retry").toBe(1);
+ expect((caught as Error).message).toContain("Nothing is retried");
+ await expect(retryAfterHostWardenCancelV1(async()=>{throw new Error("other");},harness.options)).rejects.toThrow("other");
+ const waiting=await ceilingRun(unitRows(100),{available:300}),controller=new AbortController(),abortable=retryHarness(waiting.base);
+ let rounds=0;
+ await expect(retryAfterHostWardenCancelV1(async(_attempt,startedMs)=>{cancelRecord(waiting.base,startedMs+1,"danger");requireNoHostWardenCancelBelowV1(4242,startedMs,waiting.base);},{...abortable.options,signal:controller.signal,sleep:async()=>{if(++rounds===2)controller.abort(new Error("cancelled by the user"));}})).rejects.toThrow("cancelled by the user");
+ expect(rounds).toBe(2);
+});
+
+test("shelter: a subject above its grant is cancelled before a larger one within its grant, an overdue one within its grant is not cancelled while the host is only tight, and the trigger of acute swapping is named",()=>{
+ const row=(name:string)=>fixture.decisions.find(item=>item.name.startsWith(name))!;
+ const decide=(name:string)=>{const found=row(name);return decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(found.host),mutable<HostWardenSubjectV1[]>(found.subjects),mutable(found.previous));};
+ const shelter=row("shelter: at a severe danger");
+ const [inside,above]=mutable<HostWardenSubjectV1[]>(shelter.subjects);
+ expect(inside!.megabytes,"the sheltered subject is the larger one").toBeGreaterThan(above!.megabytes);
+ expect(decide("shelter: at a severe danger").actions).toEqual([{action:"cancel",id:above!.id,reason:"danger"}]);
+ expect(decide("shelter: an overdue suspended subject without").actions).toEqual([{action:"cancel",id:"p311",reason:"overdue"}]);
+ expect(decide("shelter: the same overdue subject within").actions).toEqual([]);
+ expect(decide("shelter: a sheltered worker paused past").actions,"a sheltered worker waits while another subject has not reached its pause deadline").toEqual([]);
+ expect(decide("shelter: a worker its owner holds stopped").actions,"an owner-held worker is never a direct danger victim").toEqual([]);
+ expect(decide("trigger: acute swap-out").trigger).toBe("swapping");
+ const words=buildHostWardenAlarmV1({atMs:1,observed:false,level:"danger",action:{action:"cancel",id:"7.abcd",reason:"danger"},subject:{pid:7,kind:"slice-worker",megabytes:2672,owner:"bun",grantMegabytes:2762},host:memoryCase(2827,{swapOutMegabytesPerSecond:972}) as never,decision:{guardMegabytes:1638,dangerMegabytes:819,headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048,trigger:"swapping"}});
+ expect(words.text.en).toContain("swapping memory out at a high rate");
+ expect(words.text.en).toContain("it held 2672 MB, within its grant of 2762 MB, and was taken only because the host was in danger");
+ expect(words.text.de).toContain("innerhalb seiner Zusage von 2762 MB");
+ expect(formatHostWardenCancelLineV1("en",{reason:"danger",kind:"slice-worker",pid:7,megabytes:3900,grantMegabytes:3247})).toContain("653 MB above its grant of 3247 MB");
+});
+
+test("claims: a fresh claim carries the grant and a process the owner stopped is held, not suspended; a stale claim and another pid change nothing",()=>{
+ const stopped:HostWardenSubjectV1={id:"p1",pid:11,kind:"slice-worker",rank:60,elapsedSeconds:100,megabytes:2700,suspended:true,suspendedSeconds:300,canSuspend:true,canCancel:true};
+ const other:HostWardenSubjectV1={...stopped,id:"p2",pid:12,suspended:false,suspendedSeconds:0};
+ const now=1_000_000,claims=new Map([[11,{version:1 as const,pid:11,atMs:now-1000,grantMegabytes:2762,stopped:true}],[12,{version:1 as const,pid:12,atMs:now-HOST_WARDEN_POLICY_V1.claimMaximumMilliseconds-1,grantMegabytes:100,stopped:false}]]);
+ const [held,untouched]=applyWardenClaimsV1([stopped,other],claims,now);
+ expect(held).toMatchObject({grantMegabytes:2762,held:true,suspended:false,suspendedSeconds:0,canSuspend:false});
+ expect(untouched).toEqual(other);
+ expect(applyWardenClaimsV1([stopped],new Map(),now)).toEqual([stopped]);
+ const base=fresh();
+ claimHostWardenSubjectV1(11,{grantMegabytes:2762.9,stopped:true,owner:"slice-pool"},base,now);
+ expect(readHostWardenClaimsV1(base,now).get(11)).toEqual({version:1,pid:11,atMs:now,stopped:true,grantMegabytes:2762,owner:"slice-pool"});
+ expect(readHostWardenClaimsV1(base,now+HOST_WARDEN_POLICY_V1.claimMaximumMilliseconds+1).size).toBe(0);
+ releaseHostWardenClaimV1(11,base);
+ expect(readHostWardenClaimsV1(base,now).size).toBe(0);
+});
+
+test("MOUNTED: a worker its pool stopped while it waits for grant growth is never resumed or cancelled by the warden, one stopped without a claim is resumed when the host is calm",async()=>{
+ const tables:HostWardenTablesV1={roots:["^/fake/root"],never:[],kinds:[{name:"slice-worker",rank:60,pattern:"^/fake/slice",actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree",capMegabytes:6144,capCritical:true}]};
+ const rows=[rowOf(10,1,50,"/fake/root"),{...rowOf(11,10,2700,"/fake/slice"),stopped:true}];
+ const run=async(claimed:boolean)=>{
+  const base=fresh(),directory=join(base,"warden"),signals:string[]=[];let clock=Date.now();
+  if(claimed)claimHostWardenSubjectV1(11,{grantMegabytes:2762,stopped:true,owner:"slice-pool"},base,clock);
+  const ports:HostWardenPortsV1={directory,now:()=>clock,write:()=>undefined,mode:()=>"enforce",sample:async()=>memoryCase(9000),table:async()=>rows,signal:(pid,name)=>{signals.push(`${name}:${pid}`);},sleep:async()=>{clock+=1000;}};
+  await runHostWardenLoopV1({ports,tables,policy:{...quickPolicy,capMilliseconds:0},maxTicks:8,code:"fake",platform:"linux",workspaces:[]});
+  return signals;
+ };
+ expect(await run(true),"the owner's stop is the owner's").toEqual([]);
+ expect((await run(false)).some(entry=>entry==="SIGCONT:11"),"a stop nobody claimed is resumed by the calm host").toBe(true);
 });

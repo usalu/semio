@@ -24,6 +24,7 @@ import {
   applyTutorialUiSnapshotToShell,
   captureTutorialUiSnapshot
 } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { createSealedInstanceLedgerV1, liveNoteTargetV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("shell store reducer", () => {
@@ -422,7 +423,7 @@ describe("shell store reducer", () => {
       type: "APPLY_TUTORIAL_UI_SNAPSHOT",
       snapshot: {
         activeWindowId: "puzzle3d-main",
-        shellLayout: { kind: "window", id: "puzzle3d-main" },
+        shellLayout: { kind: "window", windowKindId: "puzzle3d-main" },
         extraWindowInstances: [],
         panelPatches: { "top-left": { visible: true, path: ["catalogue"] } },
         treeOpenStates: { "catalogue.section": true },
@@ -646,5 +647,91 @@ describe("Shell peer interaction (generic, app-agnostic)", () => {
     expect(roster).toEqual({});
     expect(peerIdsSelecting(roster, "graph", "n1")).toEqual([]);
     expect(peerIdsHovering({}, "unknown-domain", "x")).toEqual([]);
+  });
+
+  const retirementBaseState = () => initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() });
+
+  it("WINDOWS_RETIRED keeps the per-window slices bounded across 100 opened and closed programs", () => {
+    const kinds = ["sheet", "details"];
+    let state = retirementBaseState();
+    for (let index = 0; index < 100; index++) {
+      const programId = `xlsx-${index}`;
+      for (const kind of kinds) {
+        const windowId = `${programId}::${kind}`;
+        state = shellReducer(state, { type: "SET_ACTIVE_UTILITY", windowId, utilityId: "pen" });
+        state = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId, value: true });
+        state = shellReducer(state, { type: "SET_ACTION_PANE_EXPANDED", windowId, value: "extrude" });
+        state = shellReducer(state, { type: "STAGE_ACTION_ARG", windowId, actionId: "extrude", argId: "depth", value: 1 });
+        state = shellReducer(state, { type: "SET_WINDOW_TITLE", windowId, title: kind });
+        state = shellReducer(state, { type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID", value: (current) => ({ ...current, [windowId]: {} }) });
+        state = shellReducer(state, { type: "SET_WINDOW_MEASURES_BY_WINDOW_ID", value: (current) => ({ ...current, [windowId]: [] }) });
+        state = shellReducer(state, { type: "SET_SPAWNED_WINDOW_MEASURES", value: (current) => ({ ...current, [windowId]: [] }) });
+      }
+      expect(Object.keys(state.actionPane.activeUtilityByWindowId).length).toBeLessThanOrEqual(64);
+      state = shellReducer(state, { type: "WINDOWS_RETIRED", windowIds: [], programIds: [programId] });
+    }
+    expect(state.actionPane.activeUtilityByWindowId).toEqual({});
+    expect(state.actionPane.foldedByWindowId).toEqual({});
+    expect(state.actionPane.expandedByWindowId).toEqual({});
+    expect(state.actionPane.stagedArgsByKey).toEqual({});
+    expect(state.layout.windowTitlesById).toEqual({});
+    expect(state.windowUi.windowEngagementsByWindowId).toEqual({});
+    expect(state.windowUi.windowMeasuresByWindowId).toEqual({});
+    expect(state.spawnedWindow.spawnedWindowMeasures).toEqual({});
+  });
+
+  it("WINDOWS_RETIRED retires exact windows and leaves every other program's state and identities alone", () => {
+    let state = retirementBaseState();
+    for (const windowId of ["a::w", "b::w", "b::w2", "plain", "plain-2"]) state = shellReducer(state, { type: "SET_ACTIVE_UTILITY", windowId, utilityId: "pen" });
+    state = shellReducer(state, { type: "STAGE_ACTION_ARG", windowId: "plain", actionId: "go", argId: "x", value: 1 });
+    state = shellReducer(state, { type: "STAGE_ACTION_ARG", windowId: "plain::sub", actionId: "go", argId: "x", value: 1 });
+    const retired = shellReducer(state, { type: "WINDOWS_RETIRED", windowIds: ["plain"], programIds: ["a"] });
+    expect(Object.keys(retired.actionPane.activeUtilityByWindowId).sort()).toEqual(["b::w", "b::w2", "plain-2"]);
+    expect(Object.keys(retired.actionPane.stagedArgsByKey)).toEqual(["plain::sub:go"]);
+    expect(shellReducer(retired, { type: "WINDOWS_RETIRED", windowIds: ["plain"], programIds: ["a"] })).toBe(retired);
+  });
+
+  it("a session owner change retires the replaced program's own window state and keeps spawned programs'", () => {
+    const session = (instanceId: number) => ({ pluginId: "xlsx", instanceId, app: { id: "xlsx-editor" }, viewState: {} }) as never;
+    let state = shellReducer(retirementBaseState(), { type: "SET_SESSION", value: session(1) });
+    for (const windowId of ["sheet", "details", "p-1::sheet"]) state = shellReducer(state, { type: "SET_ACTIVE_UTILITY", windowId, utilityId: "pen" });
+    state = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId: "sheet", value: true });
+    const sameOwner = shellReducer(state, { type: "SET_SESSION", value: session(1) });
+    expect(Object.keys(sameOwner.actionPane.activeUtilityByWindowId).sort()).toEqual(["details", "p-1::sheet", "sheet"]);
+    const replaced = shellReducer(state, { type: "SET_SESSION", value: session(2) });
+    expect(Object.keys(replaced.actionPane.activeUtilityByWindowId)).toEqual(["p-1::sheet"]);
+    expect(replaced.actionPane.foldedByWindowId).toEqual({});
+  });
+
+  it("PROGRAM_INSTANCE_REPLACED drops the old instance's state under the same program id after the new refresh, keeping live windows and other programs", () => {
+    let state = retirementBaseState();
+    for (const windowId of ["p::sheet", "p::old-details", "q::sheet"]) {
+      state = shellReducer(state, { type: "SET_ACTIVE_UTILITY", windowId, utilityId: "pen" });
+      state = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId, value: true });
+      state = shellReducer(state, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => ({ ...current, [windowId]: "idle" }) });
+      state = shellReducer(state, { type: "SET_SPAWNED_WINDOW_MEASURES", value: (current) => ({ ...current, [windowId]: [] }) });
+      state = shellReducer(state, { type: "SET_WINDOW_TITLE", windowId, title: windowId });
+    }
+    state = shellReducer(state, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => ({ ...current, "p::sheet": "busy" as never }) });
+    const replaced = shellReducer(state, { type: "PROGRAM_INSTANCE_REPLACED", programId: "p", replacedInstanceId: 1, liveWindowIds: ["p::sheet"] });
+    expect(replaced.spawnedWindow.spawnedWindowActivityByWindowId).toEqual({ "p::sheet": "busy", "q::sheet": "idle" });
+    expect(Object.keys(replaced.spawnedWindow.spawnedWindowMeasures).sort()).toEqual(["p::sheet", "q::sheet"]);
+    expect(Object.keys(replaced.layout.windowTitlesById).sort()).toEqual(["p::sheet", "q::sheet"]);
+    expect(replaced.actionPane.activeUtilityByWindowId).toEqual({ "q::sheet": "pen" });
+    expect(replaced.actionPane.foldedByWindowId).toEqual({ "q::sheet": true });
+    expect(shellReducer(replaced, { type: "PROGRAM_INSTANCE_REPLACED", programId: "p", replacedInstanceId: 1, liveWindowIds: ["p::sheet"] })).toBe(replaced);
+  });
+
+  it("no shell-chrome note targets a sealed instance after a replacement", () => {
+    const predecessor = { pluginId: "xlsx", instanceId: 1 };
+    const successor = { pluginId: "xlsx", instanceId: 2 };
+    const handle = {};
+    const sealed = createSealedInstanceLedgerV1();
+    expect(liveNoteTargetV1(predecessor, handle, sealed)).toBe(predecessor);
+    sealed.seal(handle, predecessor.pluginId, predecessor.instanceId);
+    expect(liveNoteTargetV1(predecessor, handle, sealed)).toBeNull();
+    expect(liveNoteTargetV1(successor, handle, sealed)).toBe(successor);
+    expect(liveNoteTargetV1(successor, null, sealed)).toBeNull();
+    expect(liveNoteTargetV1(null, handle, sealed)).toBeNull();
   });
 });

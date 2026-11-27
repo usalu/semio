@@ -35,7 +35,7 @@ fn applies_to_committed_after_and_diff() {
     assert_eq!(snapshot, serde_json::from_str::<DrawingSnapshot>(*AFTER).unwrap());
     assert_eq!(serde_json::from_str::<serde_json::Value>(*OUTCOME).unwrap()["status"], "applied");
     assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(*MUTATION).unwrap());
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
 }
 
 /// ↩️ The inverse restores the base geometry exactly.

@@ -7,6 +7,6 @@ fn language_neutral_package_cases_match_serde_json() {
         let expected = &case["snapshot"];
         let value: DagSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(expected).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(), *expected);
-        os_store::test_support::assert_dsl_pack_equivalence(&value);
+        semio_os_store_test_support::assert_dsl_pack_equivalence(&value);
     }
 }

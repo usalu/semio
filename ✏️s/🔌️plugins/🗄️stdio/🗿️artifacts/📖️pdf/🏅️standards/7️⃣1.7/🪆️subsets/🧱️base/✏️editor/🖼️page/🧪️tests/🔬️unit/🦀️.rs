@@ -1925,6 +1925,8 @@ fn fault_notices_cover_every_raised_code_in_both_languages() {
         assert!(!en.trim().is_empty() && !de.trim().is_empty() && en != de, "{}", kind.code());
         assert_eq!(en.matches('{').count(), de.matches('{').count(), "{} placeholders", kind.code());
     }
+    for code in SaveCause::CODES { assert!(PdfFault::ALL.iter().any(|kind| kind.code() == code), "a declined Save carries {code}, which has no notice"); }
+    assert_eq!(SaveCause::CODES.iter().collect::<std::collections::BTreeSet<_>>().len(), SaveCause::CODES.len());
     assert_eq!(cancelled("pages"), PdfFault::PagesCancelled);
     assert_eq!(refuse(PdfFault::ArgumentMissing, "x").code.as_str(), "stdio.pdf.argument-missing");
 }

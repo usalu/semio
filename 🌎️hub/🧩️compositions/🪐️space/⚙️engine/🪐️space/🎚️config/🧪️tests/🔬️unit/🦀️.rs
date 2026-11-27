@@ -25,7 +25,7 @@ async fn space_config_default_matches_the_expected_sticky_defaults() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_config_dsl_text_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&SpaceConfig::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -56,23 +56,23 @@ async fn set_active_panel_tab_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("a".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: vec!["a".into()] }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids: vec!["a".into()] }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids: vec!["a".into()] }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera(CameraSetting { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "draw draw".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("a".into()), format: Some("dwg".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()), workflow_artifact_id: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: "s-play-catalogue".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("a".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: vec!["a".into()] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids: vec!["a".into()] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids: vec!["a".into()] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera(CameraSetting { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "draw draw".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("a".into()), format: Some("dwg".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()), workflow_artifact_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: "s-play-catalogue".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_config_dsl_pack_equivalence() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
 }
 
 fn busy_config() -> SpaceConfig {

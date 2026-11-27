@@ -8,7 +8,7 @@ use crate::standards::v1_7::subsets::base::modules::fonts::{standard_font, FontC
 use crate::standards::v1_7::subsets::base::modules::lexer::dict_get;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_with, Category};
+use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_claiming, lift_document_with, Category, ResourceClaims};
 use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_catalog_standalone, lower_document, lower_document_headless, lower_info, lower_page_standalone, lower_resources_standalone, LowerOptions, LoweredDocument};
 use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions};
 use crate::standards::v1_7::subsets::base::schema::graph_source::{GraphSource,ObjectSource};

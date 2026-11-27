@@ -2,10 +2,12 @@ import {bindCatalogV1,handleTextV1} from "../../../../../../../🔨️modules/�
 import {repoErrorV1,type RepoErrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {formatDiskBytesV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/💽️disk/🟦️.ts";
 import {casPartitionBudgetV1,type CasPartitionBudgetV1,type CasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
+import {readdirSync} from "node:fs";
+import {join,relative} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📚️ The tuning of the recovery: the time one collector may take, how many consumers a refusal names, the entry budget of one size measurement, the environment variable that marks a child of the recovery and the consumers a refusal always names when they hold bytes (the image slack and the replica store). */
-export type DiskRecoveryPolicyV1=Readonly<{version:1;collectorBudgetMilliseconds:number;consumerBudgetMilliseconds:number;consumerCount:number;measureEntryLimit:number;environmentChild:string;namedConsumers:readonly string[]}>;
+export type DiskRecoveryPolicyV1=Readonly<{version:1;collectorBudgetMilliseconds:number;consumerBudgetMilliseconds:number;consumerCount:number;measureEntryLimit:number;environmentChild:string;environmentBunCache:string;namedConsumers:readonly string[]}>;
 export const DISK_RECOVERY_POLICY_V1:DiskRecoveryPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Policy.const)));
 /** 🗣️ The bilingual catalog of the recovery; its refusal renders at the command line like every other refusal. */
 export const DISK_RECOVERY_TEXTS_V1=bindCatalogV1("disk-recovery",schema.definitions.Messages.const);
@@ -18,7 +20,7 @@ export function diskTextV1(key:string,language:DiskLanguageV1,values:Record<stri
 }
 
 /** 🗂️ One registered writer: who fills which root, how it is bounded, who collects it and in which order the gate frees it (`priority` ascending), whether freeing it returns bytes to the host volume at once (`relief`), and the exact command that frees it by hand; `floor` marks a derivable class outside the content stores that the volume floor frees, oldest first, before the cache store's free-space reserve is breached. */
-export type DiskWriterRowV1=Readonly<{id:string;priority:number;inodeRank?:number;floor?:true;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
+export type DiskWriterRowV1=Readonly<{id:string;priority:number;inodeRank?:number;floor?:true;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"bun-cache"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
 export const DISK_WRITERS_V1:readonly DiskWriterRowV1[]=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Writers.const)));
 
 /** 🔌️ A registered writer bound to its collector: what it holds now and how to free it; `collect` answers the bytes it claims to have freed (the recovery trusts the volume, not the claim). */
@@ -105,11 +107,16 @@ export async function collectInOrderV1(input:Readonly<{facts():DiskFactsV1|undef
 }
 
 /** 🧹️ Runs every collector of the registry that has one, the writers that relieve the image included, once and in priority order, whatever the volume says in between: a write that failed with "no space left" inside an image or a quota does not show in the free bytes of the host, so the stop condition of `recoverNeedV1` would never collect. Answers the steps taken, the bytes the host gained and the largest consumers left. */
-export async function sweepDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;scarce?:"inodes";writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
+export async function sweepDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;scarce?:"inodes";census?:Readonly<{root:string;limit?:number}>;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
  const steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>=[],facts=input.facts();
  const done=(consumers:readonly DiskConsumerV1[]=[]):DiskRecoveryV1=>Object.freeze({verdict:steps.length?"admit" as const:"refuse" as const,facts:input.facts()??facts,needBytes:input.needBytes,mustFreeBytes:input.needBytes,targetFreeBytes:input.needBytes,steps:Object.freeze(steps.slice()),consumers});
  if(facts===undefined)return done();
  await collectInOrderV1({facts:input.facts,current:facts,targetFreeBytes:facts.freeBytes+input.needBytes,writers:input.writers,language:input.language,report:input.report,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,startKey:"recovery.start-need",sweep:true,scarce:input.scarce,steps});
+ if(input.scarce==="inodes"&&input.census!==undefined&&input.report!==undefined){
+  const rows=inodeCensusV1(input.census.root,input.census.limit??DISK_RECOVERY_POLICY_V1.measureEntryLimit,input.signal);
+  if(rows.length===0)input.report(diskTextV1("recovery.inode-census-none",input.language,{root:input.census.root}));
+  for(const row of rows.slice(0,8))input.report(diskTextV1("recovery.inode-holder",input.language,{root:row.root,entries:row.entries,partial:row.partial?" (at least)":""}));
+ }
  return done(steps.length?[]:await consumersOfV1(input.writers,input.signal));
 }
 
@@ -165,4 +172,31 @@ export async function relieveVolumeFloorV1(input:Readonly<{facts():DiskFactsV1|u
  const writers=input.writers.filter(writer=>writer.row.floor===true&&writer.row.relief==="host");
  const last=await collectInOrderV1({facts:input.facts,current,targetFreeBytes:input.targetFreeBytes,writers,language:input.language,report:input.report,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,steps});
  return{reached:last.freeBytes>=input.targetFreeBytes,freedBytes:Math.max(0,last.freeBytes-current.freeBytes),steps};
+}
+
+/** 🔢️ Who holds the inodes below `root`: the entries (files, directories, links; links are never followed) of every folder two levels down, biggest first, the walks sharing one budget of `limit` entries (`partial` marks a folder cut short) and stopping when the signal fires, so a collection that cannot free enough names what keeps the inode table full instead of guessing. A pure read of the tree.
+ * @see ./🧪️tests/🟦️.ts */
+export function inodeCensusV1(root:string,limit:number,signal?:AbortSignal):readonly Readonly<{root:string;entries:number;partial:boolean}>[]{
+ let budget=limit;const rows:Array<{root:string;entries:number;partial:boolean}>=[];
+ const list=(path:string)=>{try{return readdirSync(path,{withFileTypes:true});}catch{return[];}};
+ const measure=(start:string):{entries:number;partial:boolean}=>{
+  let entries=0;const stack=[start];
+  while(stack.length>0){
+   if(budget<=0||signal?.aborted===true)return{entries,partial:true};
+   const path=stack.pop()!;
+   for(const entry of list(path)){if(budget<=0)return{entries,partial:true};entries++;budget--;if(entry.isDirectory()&&!entry.isSymbolicLink())stack.push(join(path,entry.name));}
+  }
+  return{entries,partial:false};
+ };
+ const walk=(path:string,depth:number):void=>{
+  for(const entry of list(path)){
+   if(budget<=0||signal?.aborted===true)return;
+   if(!entry.isDirectory()||entry.isSymbolicLink())continue;
+   const child=join(path,entry.name);
+   if(depth>=1){const row=measure(child);rows.push({root:relative(root,child),entries:row.entries,partial:row.partial});}
+   else walk(child,depth+1);
+  }
+ };
+ walk(root,0);
+ return Object.freeze(rows.sort((first,second)=>second.entries-first.entries||(first.root<second.root?-1:1)));
 }

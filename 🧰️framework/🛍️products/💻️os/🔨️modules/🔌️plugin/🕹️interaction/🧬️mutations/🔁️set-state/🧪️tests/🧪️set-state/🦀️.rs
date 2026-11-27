@@ -15,7 +15,7 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap());
     let state: InteractionState = serde_json::from_value(source.clone()).unwrap();
     let mutation = InteractionConfigMutation::set_state(state.clone());
-    assert_eq!(::store::os_store::test_support::assert_wire_witness::<InteractionConfigMutation>(include_str!("../🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")), mutation);
+    assert_eq!(::semio_os_store_test_support::assert_wire_witness::<InteractionConfigMutation>(include_str!("../🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")), mutation);
     assert_eq!(InteractionConfigMutation::DESCRIPTORS.len(), 1);
     assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(mutation.descriptor())), descriptor);
     assert_eq!(mutation.descriptor(), &SetInteractionState::DESCRIPTOR);

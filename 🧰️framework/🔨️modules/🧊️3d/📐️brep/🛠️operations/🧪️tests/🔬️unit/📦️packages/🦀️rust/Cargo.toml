@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-3d-brep-construction = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-3d-brep-curve.workspace = true
 semio-framework-3d-brep-queries.workspace = true

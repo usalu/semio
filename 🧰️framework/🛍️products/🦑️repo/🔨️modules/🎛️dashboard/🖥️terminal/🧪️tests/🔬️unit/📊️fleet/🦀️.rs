@@ -225,6 +225,32 @@ mod fleet_window {
     }
 
     #[test]
+    fn a_drill_down_charts_the_rate_of_every_skip_and_decline_reason_in_english_and_german() {
+        for (language, skips, declines, reason_skip, reason_decline) in [("en", "Units not shared", "Offload declined", "Units not shared: cache read-only", "Offload declined: no idle machine"), ("de", "Nicht geteilte Einheiten", "Auslagerung abgelehnt", "Nicht geteilte Einheiten: Cache nur lesbar", "Auslagerung abgelehnt: keine freie Maschine")] {
+            let (mut dashboard, mut tui, index) = open(language);
+            feed(&mut dashboard, &mut tui, golden("overview-5m.json"));
+            press(&mut dashboard, &mut tui, &[key('2')]);
+            feed(&mut dashboard, &mut tui, golden("overview-1h.json"));
+            dashboard.windows[index].pane.selected = dashboard.windows[index].pane.rows.iter().position(|(_, action)| *action == RowAction::FleetOrigin("g1-m01".into())).expect("the g1-m01 row");
+            press(&mut dashboard, &mut tui, &[named(Key::Enter)]);
+            let mut detail = golden("detail-g1-m01-1h.json");
+            let template = detail.detail.as_ref().unwrap().groups.iter().find(|group| group.id == "cache").unwrap().series.iter().find(|series| series.id == "cache.local.hit").unwrap().clone();
+            let groups = &mut detail.detail.as_mut().unwrap().groups;
+            for (group, id) in [("skips", "cache.skip.read-only"), ("declines", "exec.decline.no-idle-machine")] {
+                let mut series = template.clone();
+                series.id = id.into();
+                groups.push(dashboard_fleet::Group { id: group.into(), series: vec![series] });
+            }
+            feed(&mut dashboard, &mut tui, detail);
+            let lines = rows(&dashboard, index);
+            let text = lines.join("\n");
+            for heading in [skips, declines] { assert!(text.contains(&format!("\u{25be} {heading}")), "{heading} in {text}"); }
+            for label in [reason_skip, reason_decline] { assert!(lines.iter().any(|line| line.starts_with(label) && line.contains("/min")), "{label} charted as a rate: {text}"); }
+            assert_eq!(dashboard_fleet::metric_label("cache.skip.read-only", language), Some(reason_skip));
+        }
+    }
+
+    #[test]
     fn a_drill_down_marks_an_unsupported_metric_n_a_with_the_platform() {
         for (language, expected) in [("en", "n/a \u{b7} not measured on windows"), ("de", "n. v. \u{b7} auf windows nicht gemessen")] {
             let (mut dashboard, mut tui, index) = open(language);

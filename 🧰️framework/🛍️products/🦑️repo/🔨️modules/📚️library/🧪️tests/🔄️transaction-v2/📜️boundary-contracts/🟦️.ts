@@ -19,9 +19,13 @@ export const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️f
 
 export const NORMALIZATION_MODULE = process.env.SEMIO_TRANSACTION_V2_MODULE ?? resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts");
 
-export const FIXTURE_SCHEMA = process.env.SEMIO_TRANSACTION_V2_SCHEMA ?? resolve(getWorkspaceRoot(), SCHEMA_REL);
+/** 📌️ The pinned taxonomy every fixture plans against, so a golden changes only when engine semantics change, never when the live taxonomy is edited. */
+export const FIXTURE_SCHEMA = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🌳️transaction-taxonomy-snapshot/🔣️.json");
 
 export const FIXTURE_RUN_ID = process.env.SEMIO_TRANSACTION_V2_RUN_ID ?? `${process.pid}-${crypto.randomUUID()}`;
+
+/** ⏱️ Budget of one concurrent case: it covers spawned crash drivers and fixture git trees, so a loaded host needs more than the bun default of 15 s. */
+export const CASE_TIMEOUT_MS = 90_000;
 
 process.env.NX_DAEMON = "false";
 

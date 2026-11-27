@@ -61,7 +61,7 @@
     "fasteners",
     "targetVolumes"
   ],
-  "snapshotAssetCount": 148,
+  "snapshotAssetCount": 152,
   "scaleDsl": {
     "shape": "list",
     "item": "float",

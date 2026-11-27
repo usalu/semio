@@ -65,6 +65,7 @@ serde_json = { workspace = true, optional = true }
 testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing", "semio-s-artifact-bim-model-schema/testkit", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-formula/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit"]
 
 [dev-dependencies]
+semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }

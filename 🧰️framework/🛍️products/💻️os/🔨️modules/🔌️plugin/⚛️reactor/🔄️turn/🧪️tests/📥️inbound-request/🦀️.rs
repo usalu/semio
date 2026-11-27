@@ -67,7 +67,7 @@ fn inbound_request_budget(cx: &semio_framework_job::StepContext<'_>) -> semio_fr
 /// `Fn(&[u8]) -> Result<Vec<u8>, Fault>` that answers in the capability's own encoding and refuses an
 /// undecodable request with the SAME `extension.evaluate.bad-request` code the shipped crates use.
 fn inbound_request_bundle(capability: &str) -> semio_plugin_extension::extension_runtime_lift::ExtensionBundle {
-    semio_plugin_extension::extension_runtime_lift::ExtensionBundle::new("inbound-request", "Inbound Request", "0.0.1").extends("test").handler(capability, |request, cx| {
+    semio_plugin_extension::extension_runtime_lift::ExtensionBundle::new("inbound-request", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Inbound Request", "Eingehende Anfrage"), "0.0.1").extends("test").handler(capability, |request, cx| {
         let text = std::str::from_utf8(request).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
         let value: serde_json::Value = serde_json::from_str(text).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
         let answer = serde_json::to_vec(&serde_json::json!({ "echo": value })).expect("the echo answer serializes");

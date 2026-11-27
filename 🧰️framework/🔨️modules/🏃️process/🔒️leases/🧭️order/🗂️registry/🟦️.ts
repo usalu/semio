@@ -207,13 +207,13 @@ export const leaseRegistryV1=Object.freeze({
  ownHolds(directory:string):readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number}>[]{
   return source?source.snapshot().holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs})):[];
  },
- holderOf(directory:string,resource:string,mode:LeaseModeV1,ownTask?:number):Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>|undefined{
+ holderOf(directory:string,resource:string,mode:LeaseModeV1,ownTask?:number):Readonly<{pid:number;heldSeconds:number;command?:string;session?:string;self?:true}>|undefined{
   const own=source?.snapshot().holds.find(row=>row.directory===directory&&row.resource===resource&&row.task!==ownTask&&(row.mode==="exclusive"||mode==="exclusive"));
   if(own)return Object.freeze({pid:process.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-own.atMs)/1000)),command:command(),self:true as const});
   for(const entry of readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false)){
    if(entry.pid===process.pid)continue;
    const hold=entry.holds.find(row=>row.resource===resource&&(row.mode==="exclusive"||mode==="exclusive"));
-   if(hold)return Object.freeze({pid:entry.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-hold.sinceMs)/1000)),command:entry.command.slice(0,240)});
+   if(hold)return Object.freeze({pid:entry.pid,heldSeconds:Math.max(0,Math.floor((Date.now()-hold.sinceMs)/1000)),command:entry.command.slice(0,240),...entry.session===undefined?{}:{session:entry.session}});
   }
   return undefined;
  },

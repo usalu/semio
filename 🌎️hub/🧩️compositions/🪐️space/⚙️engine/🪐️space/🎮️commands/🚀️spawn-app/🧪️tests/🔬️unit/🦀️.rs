@@ -10,27 +10,27 @@ use semio_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(semio_hub_space_commands_authoring::delete_selection::DeleteSelection {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(semio_hub_space_commands_authoring::copy_app_instance::CopyAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(semio_hub_space_commands_authoring::duplicate_app_instance::DuplicateAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(semio_hub_space_commands_authoring::paste_app_instance::PasteAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(semio_hub_space_commands_authoring::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(semio_hub_space_commands_media::patch_media_nodes::PatchMediaNodes {
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(semio_hub_space_commands_authoring::delete_selection::DeleteSelection {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(semio_hub_space_commands_authoring::copy_app_instance::CopyAppInstance {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(semio_hub_space_commands_authoring::duplicate_app_instance::DuplicateAppInstance {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(semio_hub_space_commands_authoring::paste_app_instance::PasteAppInstance {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(semio_hub_space_commands_authoring::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(semio_hub_space_commands_media::patch_media_nodes::PatchMediaNodes {
         node_ids: vec!["n1".into()],
         field: "position".into(),
         axis: Some("x".into()),
         value: "120".into(),
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances {
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances {
         node_ids: vec!["n1".into()],
         field: "label".into(),
         value: "Batch Label".into(),
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(semio_hub_space_commands_authoring::reorganize_workflow::ReorganizeWorkflow {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(semio_hub_space_commands_authoring::reorganize_workflow::ReorganizeWorkflow {}));
 }
 
 /// ⚖️ LAW: a palette drop is ONE relative `move-nodes` leaf — the offset from the node's base position — with no
@@ -154,7 +154,7 @@ async fn space_bound_spawn_publishes_only_after_the_correlated_artifact_is_ready
         space_id: field("spaceId"), name: field("name"),
     };
     let completion = SpaceCommand::FinishSpawnApp(payload.clone());
-    store::os_store::test_support::assert_op_line_round_trip(&completion);
+    semio_os_store_test_support::assert_op_line_round_trip(&completion);
     let emit = studio_emit(&projection, &config, &completion).await.unwrap();
     let committed = apply_mutations(&projection, &emit.artifact_mutations).await;
     let node = committed.graph.nodes.iter().find(|node| node.id == expected_node_id).unwrap();

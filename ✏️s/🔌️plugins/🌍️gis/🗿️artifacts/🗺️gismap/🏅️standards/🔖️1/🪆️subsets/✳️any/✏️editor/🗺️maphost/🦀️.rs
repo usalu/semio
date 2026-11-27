@@ -15,7 +15,7 @@ use serde_json::Value;
 /// overlays) plus the config's camera/render/style/LOD/selection view state.
 pub fn map_host_from(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> MapHost {
     let mut host = MapHost::with_extension(gis_map_extension());
-    let _ = host.sync_map_json(&serde_json::json!({ "overlays": gis_map_overlays_value(document) }).to_string());
+    let _ = host.sync_map_json(&semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([("overlays".into(), gis_map_overlays_value(document))])));
     if let Ok(camera) = serde_json::from_str::<Value>(&cfg.camera_json) {
         let x = camera.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
         let y = camera.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);

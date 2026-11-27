@@ -12,6 +12,7 @@ esac
 cd "$D"
 export SEMIO_PLUGIN=$VARIANT SEMIO_RENDERER=react SEMIO_BUILD_MODE=prototype SEMIO_BRAND= VITE_SEMIO_PLUGIN=$VARIANT VITE_SEMIO_RENDERER=react VITE_SEMIO_APP_ID= S_OS_PORT=$PORT S_LOCAL_ONLY=1 S_HUB_URL= SEMIO_VITE_HMR=0
 export S_DATA_DIR="${S_DATA_DIR:-$R/.cache/pane-data/$VARIANT-$PORT}"
+[ "${CLEAN:-0}" = 1 ] && rm -rf "$S_DATA_DIR"
 mkdir -p "$S_DATA_DIR"
 SUFFIX=""; case "$PORT" in 6070|6272) ;; *) SUFFIX="-$PORT" ;; esac
 export SEMIO_VITE_CACHE_DIRECTORY="$R/.cache/b/p/m/vite/state/$VARIANT-react-prototype$SUFFIX"

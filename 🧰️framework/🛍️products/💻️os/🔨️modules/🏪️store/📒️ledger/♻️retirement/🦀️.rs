@@ -24,6 +24,12 @@ impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
     pub fn last(&self) -> Option<&Mu> { match self { Self::Forwards(rows) => rows.last(), Self::Inverse(rows) => rows.last() } }
     pub fn pop(&mut self) -> Option<Mu> { match self { Self::Forwards(rows) => rows.pop(), Self::Inverse(rows) => rows.pop() } }
     pub fn terminal_is_empty(&self) -> bool { match self { Self::Forwards(rows) => rows.is_empty() && (rows.capacity() == 0 || size_of::<Mu>() == 0), Self::Inverse(rows) => rows.terminal_is_empty() } }
+    pub fn release_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        match self {
+            Self::Forwards(_) => Ok(semio_framework_value::RetirementDemand { release_bytes: self.release_demand()?, depth: 1, ..Default::default() }),
+            Self::Inverse(rows) => rows.next_release_demand().map_err(ValueError::from),
+        }
+    }
     pub fn release_demand(&self) -> Result<usize, ValueError> {
         match self {
             Self::Forwards(rows) => rows.capacity().checked_mul(size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow")),
@@ -77,7 +83,7 @@ impl<Mu: 'static> ArtifactStoreOperationRowsRetirement<Mu> {
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         if let Some(row) = self.pending.as_ref().or_else(|| self.rows.last()) { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: self.factory.as_ref().expect("operation payload retains its factory").retirement_birth_bytes(row), depth: 2, ..Default::default() }); }
-        if !self.rows.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.rows.release_demand()?, depth: 1, ..Default::default() }); }
+        if !self.rows.terminal_is_empty() { return self.rows.release_demands(); }
         if self.identity.is_some() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.identity.as_ref().unwrap().capacity(), depth: 1, ..Default::default() }); }
         if self.strings.is_some() { return retirement_owner_demands(&self.strings, body); }
         if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>(), depth: 1, ..Default::default() }); }

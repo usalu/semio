@@ -38,13 +38,13 @@ test.skipIf(Bun.spawnSync(["git","--version"]).exitCode!==0)("exact staged blobs
    live.add(path+".pack");if(id!=="packWithoutIndex")live.add(path+".idx");
   }
   const expected=db.query("select json_extract(value,'$.id') id,json_extract(value,'$.outcome') outcome from json_each(?) order by key").all(JSON.stringify(fixture.rows)) as {id:string;outcome:string}[];
-  const run=Reflect.get(packgate,"prepareStagePackedObjectsV1") as (worktree:string,oids:string[],live:(path:string)=>boolean,signal?:AbortSignal)=>Promise<Record<"covered"|"loose"|"pending",string[]>>;
+  const run=packgate.prepareStagePackedObjectsV1;
   expect(typeof run).toBe("function");
   const abort=new AbortController(),reason=Error("private object read cancelled");abort.abort(reason);
   await expect(run(root,[oids.get("unshared")!],path=>live.has(path),abort.signal)).rejects.toBe(reason);
   expect(existsSync(loose(oids.get("unshared")!))).toBe(false);
   const result=await run(root,fixture.request.map(id=>oids.get(id)!),path=>live.has(path));
-  for(const outcome of ["covered","loose","pending"] as const)expect(result[outcome]).toEqual(expected.filter(row=>row.outcome===outcome).map(row=>oids.get(row.id)));
+  for(const outcome of ["covered","loose","pending"] as const)expect<unknown>(result[outcome]).toEqual(expected.filter(row=>row.outcome===outcome).map(row=>oids.get(row.id)));
   for(const row of expected){
    const oid=oids.get(row.id)!;
    expect(existsSync(loose(oid)),row.id).toBe(row.outcome==="loose");

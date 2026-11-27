@@ -8,6 +8,7 @@ import { isDiscoverySkipDirectory } from "../🪧️owner-markers/🟦️.ts";
 import { type TaxonomyPathMatcher, createTaxonomyPathMatcher } from "../🎯️taxonomy-path-matching/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, loadTaxonomy } from "../🔐️taxonomy-authority/🟦️.ts";
 import { resolveSchemaFacetKind } from "../⚖️fixed-contract-resolution/🟦️.ts";
+import { rustTokenPairs, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🩺️ One machine-readable finding of the schema scope tooling; `code` is stable, `path` repository-relative. */
 export interface SchemaScopeDiagnostic {
@@ -90,6 +91,8 @@ export interface SchemaScopeInventory {
   readonly catalog: SchemaCatalog;
   readonly diagnostics: readonly SchemaScopeDiagnostic[];
   readonly placement: readonly SchemaScopeDiagnostic[];
+  /** 🧬️ Every `🧬️schema` module outside a test or fixture collection that holds a schema definition, by the one shared predicate {@link schemaDefinitionModulePaths}; each is either a catalog row or a `schema-module-id-missing` finding. */
+  readonly definitionModules: readonly string[];
 }
 
 function byteSort(left: string, right: string): number {
@@ -194,9 +197,66 @@ export function parseSchemaExportUri(uri: string, taxonomy: Taxonomy = loadTaxon
   return groups?.scope && groups.export ? { scopeId: groups.scope, exportId: groups.export } : null;
 }
 
-interface SchemaWalkResult {
+/** 🌲️ What one walk of the repository tree reached: repository-relative directories and files, byte-sorted per directory. */
+export interface SchemaWalkResult {
   readonly directories: readonly string[];
   readonly files: readonly string[];
+}
+
+/** 🚧️ The only taxonomy slice the walk reads: the declared opaque subtrees. */
+export interface SchemaWalkTaxonomy {
+  readonly pathExclusions: Readonly<Record<string, { readonly path: string }>>;
+}
+
+/**
+ * 🧬️ Whether one parsed JSON document DEFINES a schema, as opposed to being validated by one.
+ *
+ * Policy is schema-first: a document that names a json-schema.org `$schema` IS a schema definition, wherever
+ * its module places it and whatever its `$id` says. The generator and every law that measures the tree ask this one
+ * predicate, so no second opinion on what a definition is can exist.
+ * @see https://json-schema.org/understanding-json-schema/reference/schema
+ */
+export function isSchemaDefinitionDocument(document: unknown): boolean {
+  if (document === null || typeof document !== "object" || Array.isArray(document)) return false;
+  const dialect = (document as { $schema?: unknown }).$schema;
+  return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
+}
+
+/** 📖️ Parses a document only when its text can name a json-schema.org meta-schema, and returns it when it defines a schema; the substring test only prefilters, the parse decides. */
+export function parseSchemaDefinitionText(text: string): unknown | undefined {
+  if (!text.includes("json-schema.org")) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  return isSchemaDefinitionDocument(parsed) ? parsed : undefined;
+}
+
+/**
+ * 📁️ The `🧬️schema` module directories that carry a schema definition: the nearest enclosing module of every `.json` file that defines one.
+ *
+ * `readText` is the only IO and answers `undefined` for a file that vanished mid-walk; `excluded` drops module paths a caller never catalogues (test and fixture collections).
+ */
+export function schemaDefinitionModulePaths(files: readonly string[], moduleDirName: string, readText: (path: string) => string | undefined, excluded: (modulePath: string) => boolean = () => false): ReadonlySet<string> {
+  const found = new Set<string>();
+  const rejected = new Set<string>();
+  for (const path of files) {
+    if (!path.endsWith(".json")) continue;
+    const directories = path.split("/").slice(0, -1);
+    const at = directories.lastIndexOf(moduleDirName);
+    if (at < 0) continue;
+    const modulePath = directories.slice(0, at + 1).join("/");
+    if (found.has(modulePath) || rejected.has(modulePath)) continue;
+    if (excluded(modulePath)) {
+      rejected.add(modulePath);
+      continue;
+    }
+    const text = readText(path);
+    if (text !== undefined && parseSchemaDefinitionText(text) !== undefined) found.add(modulePath);
+  }
+  return found;
 }
 
 const GIT_SUBMODULE_PATHS = new Map<string, readonly string[]>();
@@ -227,7 +287,12 @@ export function gitSubmodulePaths(repoRoot: string): readonly string[] {
   return paths;
 }
 
-function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkResult {
+/**
+ * 🌲️ The ONE walk of the repository tree for schema work: the catalog generator and every law that compares the tree with the catalog read this walk, so their file sets cannot disagree.
+ *
+ * Dot directories, discovery skip directories, symbolic links, declared git submodules and the taxonomy's opaque path exclusions are never entered; `under` narrows the walk to one subtree.
+ */
+export function walkSchemaTree(repoRoot: string, taxonomy: SchemaWalkTaxonomy, under = ""): SchemaWalkResult {
   const directories: string[] = [];
   const files: string[] = [];
   const opaque = [...Object.values(taxonomy.pathExclusions).map((exclusion) => exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "")), ...gitSubmodulePaths(repoRoot)].map((prefix) => prefix.normalize("NFC"));
@@ -250,7 +315,7 @@ function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkRes
       } else if (entry.isFile()) files.push(rel);
     }
   };
-  visit("");
+  visit(under.replace(/\/+$/u, ""));
   return { directories, files };
 }
 
@@ -337,6 +402,44 @@ function jsonPointerResolves(root: unknown, pointer: string): boolean {
   return true;
 }
 
+/** 🚫️ The twin formats whose export completeness is not checked, each with the reason it cannot be: the leaf is hand-curated, not a name-for-name twin of the schema exports. */
+export const SCHEMA_EXPORT_COMPLETENESS_EXCLUDED_FORMATS: Readonly<Record<string, string>> = {
+  "📜️wit": "A wit leaf is a hand-curated language-neutral surface with its own kebab-case interface and record names (editor-config for Generation3dConfig), not a name-for-name twin of the exports.",
+};
+
+const rustDeltaMacros: ReadonlySet<string> = new Set(["list_delta", "plain_list_delta", "row_patch"]);
+const rustDeltaMembers: ReadonlySet<string> = new Set(["removal", "insertion", "relocation", "modification"]);
+const rustMacroNamesBySource = new Map<string, ReadonlySet<string>>();
+
+/**
+ * 🪡️ The type names the list-delta macros of one Rust source declare: the delta (or patch) itself and its removal, insertion, relocation and modification types.
+ *
+ * Read from the compiler syntax tokens, so a name in a comment or a string is never a declaration.
+ * @see ../../../../../../🛍️products/💻️os/🔨️modules/🪡️list-delta/🦀️.rs
+ */
+function rustMacroDeclaredNames(source: string): ReadonlySet<string> {
+  const known = rustMacroNamesBySource.get(source);
+  if (known) return known;
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), names = new Set<string>();
+  for (let index = 0; index + 2 < tokens.length; index += 1) {
+    const head = tokens[index]!;
+    if (head.kind !== "identifier" || !rustDeltaMacros.has(head.text) || tokens[index + 1]!.text !== "!") continue;
+    const close = pairs.get(index + 2);
+    if (close === undefined || close < index + 2) continue;
+    let headed = false;
+    for (let at = index + 3; at < close; at += 1) {
+      const token = tokens[at]!, next = tokens[at + 1];
+      if (token.text === "#" && next?.text === "[") { at = pairs.get(at + 1) ?? at; continue; }
+      if (token.kind !== "identifier") continue;
+      if (!headed && token.text !== "pub" && (next?.text === "{" || next?.text === "of")) { headed = true; names.add(token.text); }
+      if (rustDeltaMembers.has(token.text) && next?.text === ":" && tokens[at + 2]?.kind === "identifier") names.add(tokens[at + 2]!.text);
+    }
+  }
+  if (rustMacroNamesBySource.size >= 64) rustMacroNamesBySource.clear();
+  rustMacroNamesBySource.set(source, names);
+  return names;
+}
+
 /** 🌿️ Whether one non-JSON format leaf declares the named export, by the declaration keywords of that language. */
 function schemaFormatDeclaresExport(formatId: string, source: string, exportId: string): boolean {
   const name = exportId.replaceAll(/[\\^$.*+?()[\]{}|]/gu, "\\$&");
@@ -349,7 +452,7 @@ function schemaFormatDeclaresExport(formatId: string, source: string, exportId: 
   const declared = keywords[formatId];
   if (!declared) return false;
   if (new RegExp(`\\b(?:${declared.join("|")})\\s+${name}\\b`, "u").test(source)) return true;
-  if (formatId === "🦀️rust") return new RegExp(`\\bpub\\s+use\\b[^;]*\\b${name}\\b`, "u").test(source);
+  if (formatId === "🦀️rust") return rustMacroDeclaredNames(source).has(exportId) || new RegExp(`\\bpub\\s+use\\b[^;]*\\b${name}\\b`, "u").test(source);
   if (formatId !== "🟦️typescript") return false;
   return new RegExp(`\\bparse${name}\\b`, "u").test(source) || new RegExp(`\\bexport\\b(?:\\s+type)?\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`, "u").test(source);
 }
@@ -381,12 +484,12 @@ function schemaLiteralTrialEnvelope(value: unknown): boolean {
 function schemaTestCorpusDefinition(exportId: string, subject: unknown, document: Record<string, unknown>): boolean {
   const producedRecord = /(?:Report|Result|Progress|Outcome|Diagnostic|Coverage)(?:V\d+)?$/u.test(exportId);
   const namedCorpus = /(?:Fixture|Corpus|Cases|(?:^|[A-Z])Vectors?(?:File)?$)/iu.test(exportId);
-  const visited = [new Set<unknown>(), new Set<unknown>()];
-  const inspect = (value: unknown, testCases = false): boolean => {
-    const seen = visited[Number(testCases)]!;
+  const visited = [new Set<unknown>(), new Set<unknown>(), new Set<unknown>(), new Set<unknown>()];
+  const inspect = (value: unknown, testCases = false, row = false): boolean => {
+    const seen = visited[Number(testCases) + 2 * Number(row)]!;
     if (!value || typeof value !== "object" || seen.has(value)) return false;
     seen.add(value);
-    if (Array.isArray(value)) return value.some((child) => inspect(child, testCases));
+    if (Array.isArray(value)) return value.some((child) => inspect(child, testCases, row));
     const node = value as Record<string, unknown>;
     if (schemaLiteralTrialEnvelope(node.const)) return true;
     if (Array.isArray(node.const) && node.const.some(row => row && typeof row === "object" && Object.keys(row).some(key => /^(?:expect$|expected(?:$|[A-Z]))/u.test(key)))) return true;
@@ -396,7 +499,7 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
       if (Array.isArray(envelope.tiles) && envelope.tiles.length && envelope.tiles.every(row => row && typeof row === "object" && typeof row.file === "string" && /^[0-9a-f]{64}$/u.test(row.sha256) && typeof row.bytes === "number" && Array.isArray(row.layers) && row.layers.every((layer: Record<string, unknown>) => layer && typeof layer === "object" && typeof layer.features === "number" && Array.isArray(layer.geometryTypes) && layer.geometryTypes.every(count => typeof count === "number")))) return true;
     }
     const reference = typeof node.$ref === "string" ? node.$ref.match(/^#\/(\$defs|definitions)\/([^/]+)$/u) : null;
-    if (reference && inspect((document[reference[1]!] as Record<string, unknown> | undefined)?.[reference[2]!], testCases)) return true;
+    if (reference && inspect((document[reference[1]!] as Record<string, unknown> | undefined)?.[reference[2]!], testCases, row)) return true;
     const properties = node.properties && typeof node.properties === "object" ? node.properties as Record<string, unknown> : {};
     const expectations = Object.keys(properties).filter((key) => /^(?:expect$|expected(?:$|[A-Z]))/u.test(key));
     const trialInput = ["input", "inputs", "setup", "operation", "sourceFixture"].some(key => Object.hasOwn(properties, key));
@@ -404,7 +507,7 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
       const child = properties[key];
       return child && typeof child === "object" && !Array.isArray(child) && (child as Record<string, unknown>).type === (["ok", "missing"].includes(key) ? "boolean" : "string") && !Object.hasOwn(child, "const") && !Object.hasOwn(child, "enum");
     });
-    if ((!producedRecord && !measuredVerification || testCases && trialInput) && expectations.length && (testCases || namedCorpus || ["grants", "hostile", "hostiles", "sourceFixture"].some((key) => Object.hasOwn(properties, key)))) return true;
+    if ((!producedRecord && !measuredVerification || testCases && trialInput) && expectations.length && (testCases || namedCorpus && row || ["grants", "hostile", "hostiles", "sourceFixture"].some((key) => Object.hasOwn(properties, key)))) return true;
     if (!producedRecord && testCases && ["accepted", "valid"].some((key) => Object.hasOwn(properties, key))) return true;
     const marker = properties.schema && typeof properties.schema === "object" ? (properties.schema as Record<string, unknown>).const : undefined;
     if (typeof marker === "string" && /(?:fixture|corpus|test[-.]cases)/iu.test(marker)) return true;
@@ -468,10 +571,23 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
       const examples = child && typeof child === "object" ? (child as Record<string, unknown>).const : undefined;
       return Array.isArray(examples) && (["cases", "vectors", "scenarios", "laws"].includes(key) || examples.some((example) => example && typeof example === "object" && Object.keys(example).some((field) => /^(?:expect$|expected(?:$|[A-Z]))/u.test(field))));
     })) return true;
-    if (Object.entries(properties).some(([key, child]) => inspect(child, testCases || /(?:^|[A-Z])(?:cases|vectors|scenarios|valid|invalid)$/iu.test(key)))) return true;
-    return Object.entries(node).some(([key, child]) => !["properties", "$defs", "definitions"].includes(key) && inspect(child, testCases));
+    if (Object.entries(properties).some(([key, child]) => inspect(child, testCases || /(?:^|[A-Z])(?:cases|vectors|scenarios|valid|invalid)$/iu.test(key), false))) return true;
+    return Object.entries(node).some(([key, child]) => !["properties", "$defs", "definitions"].includes(key) && inspect(child, testCases, row || key === "items"));
   };
-  return inspect(subject);
+  return inspect(subject, false, true);
+}
+
+/**
+ * 🎯️ Splits the `#` fragment of a `$ref` into the export it enters and whether it goes deeper.
+ *
+ * `/$defs/Thing` enters export `Thing`; `/$defs/Thing/properties/name` enters `Thing` too and is `deep`: the first segment is the
+ * export, the rest addresses inside it. Any other fragment enters no export.
+ */
+function schemaRefFragmentExport(fragment: string, exportsKeyword: string): { readonly exportId: string | null; readonly deep: boolean } {
+  const prefix = `/${exportsKeyword}/`;
+  if (!fragment.startsWith(prefix)) return { exportId: null, deep: false };
+  const [exportId = "", ...rest] = fragment.slice(prefix.length).split("/");
+  return exportId ? { exportId, deep: rest.length > 0 } : { exportId: null, deep: false };
 }
 
 function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, diagnostics: SchemaScopeDiagnostic[]): SchemaScopeDocument | null {
@@ -489,7 +605,6 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   const resolution = taxonomy.schemaExportResolution;
   const id = typeof parsed.$id === "string" ? parsed.$id : null;
   const dialect = typeof parsed.$schema === "string" ? parsed.$schema : null;
-  if (!id) diagnostics.push({ code: "schema-module-id-missing", path, detail: `Declare $id as ${resolution.idBase}<scope path>/<facet>.json.` });
   const parts = id ? schemaDocumentIdParts(id, taxonomy) : null;
   const scopeId = parts ? parts.scopePath.join(resolution.scopeIdSeparator) : null;
   if (id && !scopeId) diagnostics.push({ code: "schema-document-id-unaddressable", path, detail: `$id ${JSON.stringify(id)} does not resolve to a dotted scope id under ${resolution.idBase}.` });
@@ -540,8 +655,8 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   for (const { pointer, ref } of occurrences) {
     if (ref.startsWith("#")) {
       const local = ref.slice(1);
-      const prefix = `/${resolution.exportsKeyword}/`;
-      const exportId = local.startsWith(prefix) && !local.slice(prefix.length).includes("/") ? local.slice(prefix.length) : null;
+      const entered = schemaRefFragmentExport(local, resolution.exportsKeyword);
+      const exportId = entered.deep ? null : entered.exportId;
       if (!jsonPointerResolves(parsed, local)) diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} references ${JSON.stringify(ref)}, which this document does not declare.` });
       references.push({ documentPath: path, pointer, ref, targetScopeId: scopeId, targetExportId: exportId, local: true });
       continue;
@@ -552,10 +667,9 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
     }
     const [base, fragment = ""] = ref.split("#");
     const targetScopeId = schemaScopeIdFromDocumentId(base!, taxonomy);
-    const prefix = `/${resolution.exportsKeyword}/`;
-    const exportId = fragment.startsWith(prefix) ? fragment.slice(prefix.length) : null;
+    const exportId = schemaRefFragmentExport(fragment, resolution.exportsKeyword).exportId;
     if (!targetScopeId || (fragment && !exportId)) {
-      diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference is <target $id>#${prefix}<ExportId>.` });
+      diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference is <target $id>#/${resolution.exportsKeyword}/<ExportId>[/<pointer inside the export>].` });
       continue;
     }
     references.push({ documentPath: path, pointer, ref, targetScopeId, targetExportId: exportId, local: false });
@@ -572,7 +686,7 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
  */
 export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loadCatalogTaxonomy()): SchemaScopeInventory {
   const root = resolve(repoRoot);
-  const { directories, files } = walkRepositoryTree(root, taxonomy);
+  const { directories, files } = walkSchemaTree(root, taxonomy);
   const facetDir = taxonomy.schemaScopeOwnerLevels.facetDirName;
   const resolution = taxonomy.schemaExportResolution;
   const diagnostics: SchemaScopeDiagnostic[] = [];
@@ -627,6 +741,13 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     }
     return false;
   };
+  const definitionModules = schemaDefinitionModulePaths(sortedFiles, facetDir, (path) => {
+    try {
+      return readFileSync(join(root, path), "utf8");
+    } catch {
+      return undefined;
+    }
+  }, (modulePath) => schemaScopeCollectionPath(modulePath, taxonomy, matcher));
   const modules: SchemaScopeModule[] = [];
   const rootScopePaths = new Map<string, readonly string[] | null>();
   const rootDocuments = new Map<string, SchemaScopeDocument>();
@@ -660,8 +781,9 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     const rootScopePath = rootDocument?.scopePath ?? null;
     rootScopePaths.set(modulePath, rootScopePath);
     if (rootDocument) rootDocuments.set(modulePath, rootDocument);
-    if (documents.length > 0 && !rootScopeId) diagnostics.push({ code: "schema-module-id-missing", path: modulePath, detail: `${modulePath}/${jsonLeaf} must declare the $id that names this module's scope.` });
+    if ((documents.length > 0 || definitionModules.has(modulePath)) && !rootScopeId) diagnostics.push({ code: "schema-module-id-missing", path: modulePath, detail: `${modulePath}/${jsonLeaf} must declare the $id that names this module's scope.` });
     const mutationsPrefix = `${taxonomy.schemaScopeOwnerLevels.mutationsFacetDirName}/`;
+    for (const document of documents) if (document !== rootDocument && !document.id) diagnostics.push({ code: "schema-module-id-missing", path: document.path, detail: `Declare $id as ${resolution.idBase}<scope path>/<facet>.json.` });
     if (rootScopeId && rootScopePath) for (const document of documents) {
       if (document === rootDocument || !document.scopePath) continue;
       const relative = document.path.slice(modulePath.length + 1);
@@ -789,7 +911,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     else if (module.scopeId && module.level && byScope.get(module.scopeId)?.[0] === module && target.scopeId !== module.scopeId && !(scopes[module.scopeId]?.dependsOn ?? []).includes(target.scopeId)) diagnostics.push({ code: "schema-cross-scope-dependency-forbidden", path: document.path, detail: `${reference.pointer} crosses into scope ${target.scopeId}, which ${module.scopeId} does not declare in dependsOn.` });
   }
   for (const [scopeId, scope] of Object.entries(scopes)) {
-    const provided = Object.keys(scope.formats).filter((formatId) => formatId !== normativeFormatId);
+    const provided = Object.keys(scope.formats).filter((formatId) => formatId !== normativeFormatId && !Object.hasOwn(SCHEMA_EXPORT_COMPLETENESS_EXCLUDED_FORMATS, formatId));
     if (provided.length === 0) continue;
     const sources = new Map<string, string>();
     const restrictions = new Map<string, readonly string[]>();
@@ -828,7 +950,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     jsonSchemaDialect: taxonomy.schemaJsonDialect,
     scopes,
   };
-  return { modules, catalog, diagnostics: diagnostics.slice().sort((left, right) => byteSort(left.path, right.path) || byteSort(left.code, right.code) || byteSort(left.detail, right.detail)), placement };
+  return { modules, catalog, diagnostics: diagnostics.slice().sort((left, right) => byteSort(left.path, right.path) || byteSort(left.code, right.code) || byteSort(left.detail, right.detail)), placement, definitionModules: [...definitionModules].sort(byteSort) };
 }
 
 /** 🖌️ Deterministic catalog bytes; the generated file is exactly this rendering. */

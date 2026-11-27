@@ -243,8 +243,8 @@ test("the gate: a machine at 97.1% with collectable writers starts the command, 
  expect(failure.key).toBe("disk-recovery.low-space-consumers");expect(renderRepoErrorV1(failure,"de")).toContain("Größte Verbraucher: /big (5 GiB)");
  resetCasGuardsV1();
  const between=new Volume(Math.round(238*GIB),Math.round(8*GIB)),log2:string[]=[],guard3=createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:between.facts,usage:async()=>0,collect:async()=>stub});
- await admitBuildDiskV1(environment,{guard:guard3,partition:between.facts,mount:()=>"/same",workspace:root,writers:[fake(between,"background",10,10*GIB,log2)],write:()=>undefined});
- await Bun.sleep(30);expect(log2).toEqual(["background"]);
+ const relief=await admitBuildDiskV1(environment,{guard:guard3,partition:between.facts,mount:()=>"/same",workspace:root,writers:[fake(between,"background",10,10*GIB,log2)],write:()=>undefined});
+ await Bun.sleep(30);expect(log2).toEqual([]);await relief();expect(log2).toEqual(["background"]);
 });
 
 test("the machine budget follows the volume and the footprint: free space plus what is held, less the reserve, never above the volume",()=>{

@@ -12,8 +12,8 @@ fn the_shell_slot_replays_the_shared_fixture() {
         let rect = input["rect"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect::<Vec<_>>();
         let src = input.get("src").and_then(|value| value.as_str()).map(str::to_owned).unwrap_or_else(|| input["srcRepeat"]["unit"].as_str().unwrap().repeat(input["srcRepeat"]["times"].as_u64().unwrap() as usize));
         let slot = shell_tutorial_video_slot(Rect::new(rect[0], rect[1], rect[2], rect[3]), &src, input["muted"].as_bool().unwrap(), input["playing"].as_bool().unwrap(), input["rate"].as_f64().unwrap() as f32, input["localTimeMs"].as_f64().unwrap());
-        let expected = (!case["slot"].is_null()).then(|| serde_json::from_value::<PresentedMediaSlot>(case["slot"].clone()).unwrap());
-        assert_eq!(slot, expected, "{}", case["name"]);
+        let expected = (!case["slot"].is_null()).then(|| serde_json::to_value(serde_json::from_value::<PresentedMediaSlot>(case["slot"].clone()).unwrap()).unwrap());
+        assert_eq!(slot.map(|slot| serde_json::to_value(slot).unwrap()), expected, "{}", case["name"]);
     }
 }
 

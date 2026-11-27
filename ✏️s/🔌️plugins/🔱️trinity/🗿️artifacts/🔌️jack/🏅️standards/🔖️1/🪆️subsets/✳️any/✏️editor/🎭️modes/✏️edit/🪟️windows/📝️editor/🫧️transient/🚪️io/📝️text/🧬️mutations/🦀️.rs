@@ -37,9 +37,9 @@ use crate::editor::jack::transient::editor_window::JackEditorWindowTransient;
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`protocol::apply_diff_cold(Mutation::diff(..).diff(), ..)`) and the mutation's own inverse over `JackEditorWindowTransient`.
 ///
-/// @see store::os_store::test_support::mutation_report_json
+/// @see semio_os_store_mutation_report::mutation_report_json
 pub fn jack_editor_window_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    store::os_store::test_support::mutation_report_json::<JackEditorWindowTransient, JackEditorWindowTransientMutation>(base_json, mutation_json, after_json)
+    semio_os_store_mutation_report::mutation_report_json::<JackEditorWindowTransient, JackEditorWindowTransientMutation>(base_json, mutation_json, after_json)
 }
 }
 pub use mutations_wire_codec::*;

@@ -8,6 +8,10 @@
 //! containing exactly one `DrawNode::Text` holding that page's whole extracted text — never
 //! fabricating vector paths PDF's own typed snapshot doesn't expose.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_os_kernel as store;
+
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
@@ -50,6 +54,37 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
     }
 }
 //#endregion 🔖️Deserializer
+
+//#region 🔌️Conversion
+/// 🧾️ This leaf's composer row, built once.
+pub fn entries() -> &'static [semio_plugin::io::ComposerEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_plugin::deserializer_entry_of::<SemioDrawingFromPdf>()]).as_slice()
+}
+
+/// 🔌️ Registers and declares the pdf → `drawing` composer row; a composition root that reads pdf names it next to the
+/// subset's own import conversion.
+pub const CONVERSION: semio_s_artifact_stdio_semio_base::SemioConversion = semio_s_artifact_stdio_semio_base::SemioConversion { declare, register };
+
+fn declare(builder: semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady>) -> semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady> {
+    static COMPOSERS: std::sync::OnceLock<Vec<semio_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
+    builder.composers(semio_s_artifact_stdio_semio_base::semio_written(entries(), &COMPOSERS))
+}
+
+fn register() {
+    semio_plugin::io::register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
+}
+//#endregion 🔌️Conversion
+
+//#region 🧊️Decoding
+/// 🧊️ `bytes` read as a PDF into a drawing: one text layer per page.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_drawing_pdf(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
+    use semio_plugin::ArtifactDeserializer as _;
+    let pdf = semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|e| e.to_string())?;
+    ::semio_framework_async::poll::resolve_ready(SemioDrawingFromPdf::deserialize(&pdf)).map_err(|e| e.to_string())
+}
+//#endregion 🧊️Decoding
 
 //#region 🔖️Tests
 #[cfg(test)]

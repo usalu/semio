@@ -29,6 +29,11 @@ Feature: Every asset of the catalog has a valid 3D model set
     When its FBX is loaded by three and by assimp
     Then both find every rig bone and a finite animation of the clip's duration
 
+  Scenario: A long run of FBX files never exhausts assimp
+    Given many clip FBX files of different sizes are read one after another
+    When each file is converted by assimp in an instance of its own
+    Then every conversion succeeds with the same animation, however many files precede it
+
   Scenario: The model files and the ZIP are consistent
     Given the model JSON files and the ZIP of the asset
     When they are validated with Ajv and compared with their files

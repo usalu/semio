@@ -13,7 +13,7 @@ async fn dsl_round_trips_the_empty_snapshot() {
 #[semio_framework_async_macros::async_test]
 async fn facade_generator_example_dsl_round_trips() {
     let document = parse_dsl(FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]

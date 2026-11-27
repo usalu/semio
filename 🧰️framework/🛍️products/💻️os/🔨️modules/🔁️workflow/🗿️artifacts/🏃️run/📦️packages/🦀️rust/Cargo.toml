@@ -34,6 +34,7 @@ semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 serde_json = { workspace = true }

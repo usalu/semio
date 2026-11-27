@@ -22,6 +22,8 @@ use semio_plugin::WindowOptions;
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
+pub const HOST_INPUT_ACTION_IDS: [&str; 7] = ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasDragOver", "canvasDragLeave", "canvasDrop"];
+pub const HOST_ACTION_IDS: [&str; 8] = [SET_CAMERA_ACTION_ID, "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasDragOver", "canvasDragLeave", "canvasDrop"];
 
 /// 📷️ Local camera navigation is available in a read-only canvas.
 fn set_camera_action() -> semio_plugin::ActionDefinition {
@@ -30,6 +32,25 @@ fn set_camera_action() -> semio_plugin::ActionDefinition {
     action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
     action.in_palette = false;
     action
+}
+
+/// 🖱️ The pointer and catalogue-drag vocabulary the shared canvas surface dispatches at every `Canvas2d` window, read-only or not; declared inert so a hover over the viewer is never dropped as undeclared.
+fn host_input_actions() -> Vec<semio_plugin::ActionDefinition> {
+    let labels = [
+        LocalizedLabel::native("Canvas Pointer Down","Leinwand-Zeiger gedrückt"),
+        LocalizedLabel::native("Canvas Pointer Move","Leinwand-Zeiger bewegt"),
+        LocalizedLabel::native("Canvas Pointer Up","Leinwand-Zeiger gelöst"),
+        LocalizedLabel::native("Canvas Double Click","Leinwand-Doppelklick"),
+        LocalizedLabel::native("Canvas Drag Over","Leinwand-Ziehen darüber"),
+        LocalizedLabel::native("Canvas Drag Leave","Leinwand-Ziehen verlassen"),
+        LocalizedLabel::native("Canvas Drop","Leinwand-Ablage"),
+    ];
+    HOST_INPUT_ACTION_IDS.into_iter().zip(labels).map(|(id,label)| {
+        let mut action = semio_plugin::ActionDefinition::bounded_catalog(id,label,semio_plugin::ActionKind::View);
+        action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
+        action.in_palette = false;
+        action
+    }).collect()
 }
 
 //#region 🔖️Constants
@@ -51,7 +72,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "pen-tool".into(),
         options: WindowOptions::default(),
-        actions: vec![set_camera_action()],
+        actions: std::iter::once(set_camera_action()).chain(host_input_actions()).collect(),
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,

@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {"name": "the lean release profile", "args": ["--crate-name", "semio_hub_playbook_component", "-C", "opt-level=z", "-C", "lto=off", "-C", "codegen-units=16", "-C", "debuginfo=0", "--target", "wasm32-wasip2"], "identity": "opt-level=z;lto=off;codegen-units=16;debuginfo=0;target=wasm32-wasip2;target-cpu=-;target-feature=-"},
+    {"name": "the former fat release profile in joined spelling", "args": ["--crate-name", "semio_hub_playbook_component", "-Copt-level=3", "-Clto", "-Ccodegen-units=1", "-g", "--target=wasm32-wasip2"], "identity": "opt-level=3;lto=fat;codegen-units=1;debuginfo=2;target=wasm32-wasip2;target-cpu=-;target-feature=-"},
+    {"name": "-O is opt-level 2 and the last spelling of a flag wins", "args": ["-O", "--codegen", "opt-level=s", "-C", "lto=thin", "-C", "lto=no", "-C", "debuginfo=line-tables-only"], "identity": "opt-level=s;lto=off;codegen-units=-;debuginfo=line-tables-only;target=-;target-cpu=-;target-feature=-"},
+    {"name": "target features are a sorted set", "args": ["-C", "target-feature=+simd128,+atomics", "-Ctarget-feature=+bulk-memory", "-C", "target-cpu=native"], "identity": "opt-level=0;lto=-;codegen-units=-;debuginfo=0;target=-;target-cpu=native;target-feature=+atomics,+bulk-memory,+simd128"},
+    {"name": "flags that do not change the compile cost are not part of the identity", "args": ["--crate-name", "other", "-C", "metadata=abc", "-C", "extra-filename=-abc", "-L", "dependency=/x", "--extern", "a=/a.rlib", "--out-dir", "/o", "-C", "opt-level=z"], "identity": "opt-level=z;lto=-;codegen-units=-;debuginfo=0;target=-;target-cpu=-;target-feature=-"},
+    {"name": "no flags", "args": [], "identity": "opt-level=0;lto=-;codegen-units=-;debuginfo=0;target=-;target-cpu=-;target-feature=-"}
+  ],
+  "sameKey": [
+    ["lean release for one crate and another crate of the same profile", ["--crate-name", "a", "-C", "opt-level=z", "-C", "metadata=1", "-C", "lto=off"], ["--crate-name", "b", "-C", "metadata=2", "-C", "lto=off", "-Copt-level=z"]]
+  ],
+  "differentKey": [
+    ["lto changed", ["-C", "opt-level=z", "-C", "lto=off"], ["-C", "opt-level=z", "-C", "lto=fat"]],
+    ["codegen units changed", ["-C", "codegen-units=16"], ["-C", "codegen-units=1"]],
+    ["opt-level changed", ["-C", "opt-level=3"], ["-C", "opt-level=z"]],
+    ["debuginfo changed", ["-C", "debuginfo=0"], ["-C", "debuginfo=2"]],
+    ["target changed", ["--target", "wasm32-wasip2"], ["--target", "wasm32-unknown-unknown"]]
+  ],
+  "settingsKeys": [
+    {"name": "the lean release settings equal the command line cargo derives", "settings": {"optLevel": "s", "debug": 0, "codegenUnits": 16, "lto": "off", "target": "wasm32-wasip2"}, "sameAs": ["-C", "opt-level=s", "-C", "lto=off", "-C", "codegen-units=16", "--target", "wasm32-wasip2"]},
+    {"name": "lto false passes no lto flag and debug 1 is debuginfo 1", "settings": {"optLevel": "3", "debug": 1, "codegenUnits": 1, "lto": false, "target": "wasm32-wasip2"}, "sameAs": ["-Copt-level=3", "-Cdebuginfo=1", "-Ccodegen-units=1", "--target=wasm32-wasip2"]}
+  ],
+  "peakKey": {"crate": "semio_hub_playbook_component", "args": ["-C", "opt-level=z", "-C", "lto=off"]}
+}

@@ -75,3 +75,45 @@ console.log(JSON.stringify({loaded,before,untouched,finished,current:hash(),othe
  const next=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(next.exitCode,next.stderr.toString()).toBe(0);
  const second=JSON.parse(next.stdout.toString().trim().split("\n").at(-1)!);expect(second.loaded).toBe(sha("export const a=2;\n"));
 },60000);
+
+test("a data file read while the modules loaded (owner registry, taxonomy) is part of the pinned snapshot: an edit during the read records the loaded fact, so nothing contradicts the sealed authority and the next process records the new one",()=>{
+ const path=join(base,"registry-data.json"),unread=join(base,"unread-data.json"),module=fileURLToPath(new URL("../../🟨️.mjs",import.meta.url));writeFileSync(path,'{"owners":1}\n');writeFileSync(unread,'{"a":1}\n');
+ const script=join(base,"data-child.mjs");
+ writeFileSync(script,`import{createHash}from"node:crypto";import{readFileSync,writeFileSync,statSync}from"node:fs";import*as observation from${JSON.stringify(module)};
+const path=${JSON.stringify(path)},unread=${JSON.stringify(unread)},hash=file=>createHash("sha256").update(readFileSync(file)).digest("hex"),fact=file=>({size:statSync(file).size,mtimeMs:statSync(file).mtimeMs,ctimeMs:statSync(file).ctimeMs,ino:statSync(file).ino,sha256:hash(file)});
+const loaded=hash(path);observation.observedFs.readFileSync(path);observation.inferenceAuthorityDigestV1();
+writeFileSync(path,'{"owners":2}'+String.fromCharCode(10));writeFileSync(unread,'{"a":2}'+String.fromCharCode(10));
+const untouched=observation.loadedImplementationRecordedFactV1("file",path,fact(path)).sha256;
+observation.finishOnLoadedImplementationV1();
+const finished=observation.loadedImplementationRecordedFactV1("file",path,fact(path)).sha256,notLoaded=observation.loadedImplementationRecordedFactV1("file",unread,fact(unread)).sha256;
+console.log(JSON.stringify({loaded,untouched,finished,current:hash(path),notLoaded,unreadCurrent:hash(unread)}));`);
+ const run=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const row=JSON.parse(run.stdout.toString().trim().split("\n").at(-1)!);
+ expect(row.untouched).toBe(row.current);expect(row.finished).toBe(row.loaded);expect(row.loaded).not.toBe(row.current);expect(row.notLoaded).toBe(row.unreadCurrent);
+ const next=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(next.exitCode,next.stderr.toString()).toBe(0);
+ expect(JSON.parse(next.stdout.toString().trim().split("\n").at(-1)!).loaded).toBe(sha('{"owners":2}\n'));
+},60000);
+
+test("a worker that finishes on its loaded code is not restarted by a peer's edit of a loaded file: the load in progress completes under its digest and the next load judges by the new one",()=>{
+ const path=join(base,"inflight.mjs"),module=fileURLToPath(new URL("../../🟨️.mjs",import.meta.url)),revision=fileURLToPath(new URL("../../../📥️inputs/🔏️revision/🟨️.mjs",import.meta.url));writeFileSync(path,"export const a=1;\n");
+ const script=join(base,"inflight-child.mjs");
+ writeFileSync(script,`import{createHash}from"node:crypto";import{readFileSync,writeFileSync,statSync}from"node:fs";import*as observation from${JSON.stringify(module)};import{withImplementationPinV1}from${JSON.stringify(revision)};
+const path=${JSON.stringify(path)},hash=()=>createHash("sha256").update(readFileSync(path)).digest("hex"),row=()=>({kind:"file",path,fact:{size:statSync(path).size,mtimeMs:statSync(path).mtimeMs,ctimeMs:statSync(path).ctimeMs,ino:statSync(path).ino,sha256:hash()}});
+const loaded=hash();observation.registerLoadedImplementationRowsV1([{kind:"digest",path,fact:{sha256:loaded}}]);
+const attempt=()=>{try{observation.requirePinnedImplementationFactsV1([row()]);return"ok";}catch(error){return String(error.code??error.message).slice(0,40);}};
+const result={loaded};
+await withImplementationPinV1(()=>{
+ result.beforeEdit=attempt();
+ writeFileSync(path,process.argv[2]+String.fromCharCode(10));
+ result.current=hash();
+ result.pinnedEdited=attempt();
+ observation.finishOnLoadedImplementationV1();
+ result.finishingEdited=attempt();
+});
+console.log(JSON.stringify(result));`);
+ const run=(text:string)=>{const out=Bun.spawnSync([process.execPath,script,text],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(out.exitCode,out.stderr.toString()).toBe(0);return JSON.parse(out.stdout.toString().trim().split("\n").at(-1)!);};
+ const first=run("export const a=2;");
+ expect(first.beforeEdit).toBe("ok");expect(first.pinnedEdited).toBe("BUILD_AUTHORITY_CHANGED");expect(first.finishingEdited).toBe("ok");expect(first.current).not.toBe(first.loaded);
+ const second=run("export const a=3;");
+ expect(second.loaded).toBe(first.current);expect(second.beforeEdit).toBe("ok");expect(second.finishingEdited).toBe("ok");
+},60000);

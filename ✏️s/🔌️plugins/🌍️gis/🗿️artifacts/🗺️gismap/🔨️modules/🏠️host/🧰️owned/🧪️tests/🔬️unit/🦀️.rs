@@ -54,8 +54,8 @@ async fn gis_map_document_text_round_trips_through_store() {
     let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     install_gis_map_owners(&mut store);
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     close_gis_map_candidate(store);
 }
 

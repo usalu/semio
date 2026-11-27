@@ -190,7 +190,7 @@ fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
 #[doc(hidden)]
 #[test]
 pub fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_any::Std1AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std2_any::Std2AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_any::Std1AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std2_any::Std2AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }

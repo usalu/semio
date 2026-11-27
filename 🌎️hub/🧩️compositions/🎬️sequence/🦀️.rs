@@ -29,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// shape.
 pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
     PluginBuilder::<_, SequenceApps>::new("sequence")
-        .label("Sequence")
+        .label(semio_plugin::LocalizedLabel::native("Sequence", "Sequenz"))
         .version("0.1.0")
         .package_id("semio:sequence")
         .declare_artifact(crate::artifacts::sequence::artifact())

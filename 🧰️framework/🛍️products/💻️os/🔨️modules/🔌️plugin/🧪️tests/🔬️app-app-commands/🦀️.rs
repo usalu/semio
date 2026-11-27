@@ -68,8 +68,8 @@ pub mod delete_selection {
 
     #[semio_framework_async_macros::async_test]
     async fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
-        store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
     }
 
     #[doc(hidden)]
@@ -110,7 +110,7 @@ pub mod keyed {
         let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
         assert_eq!(command.command_id(), "addWidget");
         assert!(protocol::OpText::print_op(&command).starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 
     /// 🧪️ A fieldless payload struct must print/encode exactly like the unit variant it replaces —
@@ -120,7 +120,7 @@ pub mod keyed {
         let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
         assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
         assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode"), vec![1u8, 1, 0, 0]);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 
     #[semio_framework_async_macros::async_test]

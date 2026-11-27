@@ -40,7 +40,7 @@ test("A learned 200 % request is shrunk to the room the host has when the room c
   expect([decision.verdict,decision.reservedMegabytes,decision.reason],JSON.stringify(row)).toEqual(row.expect);
   reached.add(String(row.expect[2]));
  }
- expect(reached).toEqual(new Set(["fits","shrunk","memory","starved","pressure-critical"]));
+ expect(reached).toEqual(new Set(["fits","shrunk","memory","pressure-critical"]));
  expect(policy.operations.find(row=>row.name==="command")!.minimumMegabytes).toBeLessThan(policy.operations.find(row=>row.name==="command")!.fixedMegabytes);
 });
 
@@ -50,14 +50,15 @@ const control=()=>({signal:new AbortController().signal,remainingMilliseconds:()
 const quick=readHostCapacityPolicyV1({...plain,wait:{...library.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,deadlineBatchMilliseconds:1000,deadlineInteractiveMilliseconds:1000,starvedMilliseconds:2500,bypassMilliseconds:600000}});
 const asked=(fixedMegabytes:number,minimumMegabytes?:number):HostRequestV1=>({id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes,perJobMegabytes:0,cpuPerJob:1,...minimumMegabytes===undefined?{}:{minimumMegabytes}} as HostRequestV1);
 
-test("A request that no shrink can serve ends with a named error past the starved bound naming the holder, while a shrinkable one is admitted with what the host has",async()=>{
+test("A request that can never fit ends with a named error, a request that fits the host but not the room keeps waiting, and a shrinkable one is admitted with what the host has",async()=>{
  const directory=fresh(),lines:string[]=[],base={directory,policy:quick,control:control(),sample:async()=>({host:sample(16384,3000),swappedOutMegabytes:0}),observe:()=>Promise.resolve(600)};
  await withHostCapacityV1({...base,request:{...asked(600),label:"holder"},environment:{LANG:"en_US.UTF-8"},write:()=>undefined},async()=>{
   const shrunk=await withHostCapacityV1({...base,request:asked(4096,300),environment:{LANG:"en_US.UTF-8"},write:line=>lines.push(line)},async handle=>handle.reservedMegabytes);
   expect(shrunk).toBeGreaterThanOrEqual(300);expect(shrunk).toBeLessThanOrEqual(3000-2048);
-  const started=Date.now(),message=await withHostCapacityV1({...base,request:asked(4096,3000),environment:{LANG:"en_US.UTF-8"},write:()=>undefined},async()=>"").catch((error:Error)=>error.message);
-  expect(message).toContain("held by holder (running, 1 job(s),");expect(message).toContain("command needs at least 3000 MB");
-  expect(Date.now()-started,"the wait ended at the bound, not later").toBeLessThan(20_000);
+  const never=await withHostCapacityV1({...base,request:asked(40000,30000),environment:{LANG:"en_US.UTF-8"},write:()=>undefined},async()=>"").catch((error:Error)=>error.message);
+  expect(never).toContain("command needs at least 30000 MB");
+  const abort=new AbortController(),outcome=await Promise.race([withHostCapacityV1({...base,control:{...control(),signal:abort.signal},request:asked(4096,3000),environment:{LANG:"en_US.UTF-8"},write:()=>undefined},async()=>"admitted").catch(()=>"stopped"),new Promise<string>(done=>setTimeout(()=>{abort.abort();done("still waiting");},1500))]);
+  expect(outcome,"a request that fits the host but not the room of the moment keeps waiting, it is never refused").toBe("still waiting");
  });
 },60_000);
 

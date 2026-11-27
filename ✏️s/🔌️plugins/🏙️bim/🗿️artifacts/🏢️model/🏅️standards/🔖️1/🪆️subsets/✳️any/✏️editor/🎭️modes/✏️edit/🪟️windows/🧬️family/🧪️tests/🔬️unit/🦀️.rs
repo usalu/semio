@@ -125,7 +125,7 @@ fn the_window_renders_a_family_the_hint_and_the_empty_model() {
     assert!(render(&snapshot, &inference, &[], &["fam-table".to_string()], &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());
     let empty = ModelSnapshot::default();
     let nothing = ModelInference::infer(&empty).expect("infers");
-    assert!(render(&empty, &nothing, &[], &[], &BimLabels::NATIVE_DE).is_ok());
+    assert!(render(&empty, &nothing, &[], &[], &BimLabels::NATIVE_DE, semio_plugin::Locale::De).is_ok());
     assert_eq!(columns(&BimLabels::NATIVE_EN).len(), 6);
 }
 

@@ -146,8 +146,8 @@ fn flow_fixture_dsl_round_trips_including_cluster_widget() {
         flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: semio_framework_value_ordered::ordered::OrderedMap::new(), previews: Vec::new() },
     });
     host_snapshot.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: semio_framework_value_ordered::ordered::OrderedSet::from(["a".to_string(), "b".to_string()]) });
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    semio_os_store_test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    semio_os_store_test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
     host_snapshot.retire_cold();
 }
 
@@ -155,27 +155,27 @@ fn flow_fixture_dsl_round_trips_including_cluster_widget() {
 /// mounted transparent direct-leaf aggregate.
 #[test]
 fn flow_operation_op_text_round_trips_every_variant() {
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveWidget(MoveWidget { id: "w1".into(), to_index: 2 }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: sample_widget("w1") }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::MoveWidget(MoveWidget { id: "w1".into(), to_index: 2 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: sample_widget("w1") }));
     let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveSynapse(RemoveSynapse { id: "s1".into() }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
-    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::RemoveSynapse(RemoveSynapse { id: "s1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
 }
 
-/// 📜️ `semio_os_kernel::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostSnapshot,
+/// 📜️ `semio_os_store_test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostSnapshot,
 /// FlowMutation>` — proves the `Mutation`/`MutationDiff` (`🔖️Mutations`) and `OpText`
 /// (`🔖️OpText`) layers semio_compose_rs correctly end to end, matching every other converted crate's test.
 #[test]
 fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
     let document = FlowHostSnapshot::default();
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
-    semio_os_kernel::os_store::test_support::assert_store_roundtrip(document, operation);
+    semio_os_store_test_support::assert_store_roundtrip(document, operation);
 }
 
 /// 🪪️ The framework fixture owns the canonical `flow.flow` Semio envelope and its default
@@ -202,7 +202,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
+    semio_os_store_test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
     semio_framework_artifact_flow_flow::retire_flow_store_cold(store);
 }
 
@@ -211,8 +211,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 fn default_flow_example_dsl_round_trips() {
     let text = read_node("../📚️examples/🗣️.dsl.semio");
     let host_snapshot = <FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
+    semio_os_store_test_support::assert_dsl_round_trip(&host_snapshot);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&host_snapshot);
     host_snapshot.retire_cold();
 }
 

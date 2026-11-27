@@ -4,13 +4,13 @@
 @mutations-curation-1-any
 Feature: Apply every typed curation mutation twice — once in Rust, once in Python — and require the same answer
 
-  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a
   second implementation of the `sourcing.curation` document and all three typed mutations, written in
   Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` (the document:
   a composed catalogue handle, a stock table and an ordered id-keyed curation of `(objectId, count)`
   pairs, with `GeometryRecipe` a closed four-variant union), from
   `…/🧬️schema/🧬️mutations/🔣️.json` (the three variants and their internally tagged wire
-  form) and `…/🧬️schema/🧬️mutations/📖️component.grammar.semio` (the three verbs), and from the three
+  form) and `…/🧬️schema/🧬️mutations/📖️.grammar.semio` (the three verbs), and from the three
   committed specification vectors. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library. What distinguishes this vocabulary

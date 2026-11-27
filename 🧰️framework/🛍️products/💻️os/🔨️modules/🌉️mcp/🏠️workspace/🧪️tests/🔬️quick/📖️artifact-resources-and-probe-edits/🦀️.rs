@@ -2,7 +2,7 @@
 
 #[test]
 fn read_artifact_resource_validation_rejects_unknown_documents() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let error = workspace.read_resource("semio://artifact/does-not-exist/validation").expect_err("must not fabricate `valid: true` for an artifact this workspace has never seen");
     assert_eq!(error.code, GatewayErrorCode::NotFound);
@@ -10,7 +10,7 @@ fn read_artifact_resource_validation_rejects_unknown_documents() {
 
 #[test]
 fn read_artifact_resource_schema_is_real_for_an_open_probe_and_plugin_unavailable_otherwise() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let missing = workspace.read_resource("semio://artifact/does-not-exist/schema").expect_err("no schema query command exists on the real wire yet");
     assert_eq!(missing.code, GatewayErrorCode::PluginUnavailable);
@@ -18,7 +18,7 @@ fn read_artifact_resource_schema_is_real_for_an_open_probe_and_plugin_unavailabl
 
 #[tokio::test]
 async fn read_artifact_resource_schema_is_real_for_an_open_probe() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     workspace.ensure_probe_artifact("probe-schema", serde_json::json!({}).into()).await.expect("seed");
     let contents = workspace.read_resource("semio://artifact/probe-schema/schema").expect("real answer for an open probe artifact");
@@ -28,7 +28,7 @@ async fn read_artifact_resource_schema_is_real_for_an_open_probe() {
 
 #[tokio::test]
 async fn apply_probe_mutation_commits_a_real_second_edit_beyond_the_seed() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let seeded = workspace.ensure_probe_artifact("probe-mutate", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let mutated = workspace.apply_probe_mutation("probe-mutate", serde_json::json!({ "n": 2 }).into()).await.expect("real second commit");
@@ -40,7 +40,7 @@ async fn apply_probe_mutation_commits_a_real_second_edit_beyond_the_seed() {
 
 #[tokio::test]
 async fn undo_then_redo_round_trips_a_real_probe_mutation() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     workspace.ensure_probe_artifact("probe-undo-redo", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     workspace.apply_probe_mutation("probe-undo-redo", serde_json::json!({ "n": 2 }).into()).await.expect("second commit");
@@ -74,7 +74,7 @@ async fn probe_set_value_inverse_diffs_sum_to_the_negative_diff() {
 #[tokio::test]
 async fn canonical_pair_validation_matches_independent_json_oracle() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/canonical-pair-validation.json")).unwrap();
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:validation".to_string(), Vec::new(), empty_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     workspace.ensure_probe_artifact("validate-pair", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let (_, spr) = workspace.read_artifact_bytes("validate-pair").unwrap().unwrap();

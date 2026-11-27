@@ -8,10 +8,11 @@ import { runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory } from "../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
+import { writeTextAtomicV1 } from "./🔏️atomic-write/🟦️.ts";
 import { schemaCompilerEnvironmentV1 } from "./🎚️mode/🟦️.ts";
 import { annotateLeaves, parseTwinArguments, renderTwinReport, runTwins } from "./🧬️twin-projection/🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -106,7 +107,7 @@ export class SchemaScript extends Script {
       console.log(`[schema generate] ${rel} is current (${Object.keys(inventory.catalog.scopes).length} scopes).`);
       return;
     }
-    writeFileSync(abs, rendered);
+    writeTextAtomicV1(abs, rendered);
     console.log(`[schema generate] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes, ${inventory.diagnostics.length} diagnostics.`);
   }
 
@@ -191,7 +192,7 @@ export class SchemaScript extends Script {
       if (!target) throw new Error("[schema check] --report requires a path.");
       const path = isAbsolute(target) ? target : join(this.root, target);
       mkdirSync(dirname(path), { recursive: true });
-      writeFileSync(path, renderSchemaCheckReport(sorted));
+      writeTextAtomicV1(path, renderSchemaCheckReport(sorted));
       console.log(`[schema check] wrote ${sorted.length} findings to ${target}`);
     } else for (const finding of sorted) console.log(JSON.stringify(finding));
     const counts = new Map<string, number>();
@@ -316,7 +317,7 @@ export class SchemaScript extends Script {
     for (const finding of findings) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1);
     const byLevel = new Map<string, number>();
     for (const module of inventory.modules) byLevel.set(module.level ?? "(ineligible)", (byLevel.get(module.level ?? "(ineligible)") ?? 0) + 1);
-    writeFileSync(join(directory, "📊️schema-audit.json"), `${JSON.stringify({ catalog: inventory.catalog, modules: inventory.modules.map(({ modulePath, ownerPath, level, facetKindId, scopeId }) => ({ modulePath, ownerPath, level, facetKindId, scopeId })), findings }, null, 2)}\n`);
+    writeTextAtomicV1(join(directory, "📊️schema-audit.json"), `${JSON.stringify({ catalog: inventory.catalog, modules: inventory.modules.map(({ modulePath, ownerPath, level, facetKindId, scopeId }) => ({ modulePath, ownerPath, level, facetKindId, scopeId })), findings }, null, 2)}\n`);
     const lines = [
       "# 🧬️ Schema scope audit",
       "",
@@ -337,7 +338,7 @@ export class SchemaScript extends Script {
       ...[...counts].sort(([left], [right]) => left.localeCompare(right)).map(([code, count]) => `| \`${code}\` | ${count} |`),
       "",
     ];
-    writeFileSync(join(directory, "📓️schema-audit.md"), lines.join("\n"));
+    writeTextAtomicV1(join(directory, "📓️schema-audit.md"), lines.join("\n"));
     console.log(`[schema audit] ${inventory.modules.length} modules, ${findings.length} findings -> ${target}`);
   }
 
@@ -345,7 +346,7 @@ export class SchemaScript extends Script {
   private docs(): void {
     const inventory = this.inventory();
     const rel = this.documentPath();
-    writeFileSync(join(this.root, rel), renderSchemaCatalogDocument(inventory.catalog));
+    writeTextAtomicV1(join(this.root, rel), renderSchemaCatalogDocument(inventory.catalog));
     console.log(`[schema docs] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes.`);
   }
 }

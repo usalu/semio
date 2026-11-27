@@ -29,11 +29,23 @@ export function readBuildGraphSelectionV1(value:unknown):BuildGraphSelectionV1{
  const selection=value as BuildGraphSelectionV1;return selection.kind==="all"?{kind:"all"}:selection.kind==="owners"?{kind:"owners",projects:selection.projects.some(value=>value.startsWith("!"))?[...selection.projects]:[...selection.projects].sort(),exclude:[...selection.exclude].sort(),...(selection.targets?{targets:[...selection.targets].sort()}:{})}:{kind:"tasks",tasks:selection.tasks.map(task=>({...task})).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))),...(selection.excludeDependencies?{excludeDependencies:true as const}:{})};
 }
 
-/** 📋️ Validates only declarations and identity collisions, never independent physical inputs. */
+const identityCollisionV1="Canonical build owner identity collision",nativeCollisionV1="Canonical native owner collision",packageCollisionV1="Canonical package owner collision";
+const ownerLabelV1=(owner:BuildOwnerRegistryV1["owners"][number])=>`${JSON.stringify(owner.name)} (root ${JSON.stringify(owner.root)})`;
+/** 🧾️ Refusal of a colliding owner identity: the unchanged first line is the prefix, then the field, the colliding value, the earlier owner holding it and the current owner. */
+const collisionV1=(prefix:string,field:string,value:string,earlier:string,current:string)=>Error(`${prefix}\nfield: ${field}\nvalue: ${JSON.stringify(value)}\nearlier owner: ${earlier}\ncurrent owner: ${current}`);
+/** 📋️ Validates only declarations and identity collisions, never independent physical inputs; rows that repeat another row exactly (a line merge of concurrent edits made on two machines) merge into one, rows that differ in any field but share an identity are refused. */
 export function readBuildOwnerRegistryV1(value:unknown):BuildOwnerRegistryV1{
  if(validateJsonSchemaSubset(registrySchema,value).length)throw Error("Canonical build owner registry required");
- const registry=value as BuildOwnerRegistryV1,names=new Set<string>(),roots=new Set<string>(),packages=new Set<string>();
- for(const owner of registry.owners){if(names.has(owner.name)||roots.has(owner.root)||!contains(owner.root,owner.manifest)||!["📋️project.json","Cargo.toml"].some(name=>owner.manifest===(owner.root==="."?name:owner.root+"/"+name)))throw Error("Canonical build owner identity collision");names.add(owner.name);for(const root of[owner.root,...owner.nativeRoots??[]]){if(roots.has(root))throw Error("Canonical native owner collision");roots.add(root);}for(const name of owner.packages){if(packages.has(name))throw Error("Canonical package owner collision");packages.add(name);}}
+ const given=value as BuildOwnerRegistryV1,seen=new Set<string>(),registry:BuildOwnerRegistryV1={...given,owners:given.owners.filter(owner=>{const key=JSON.stringify([owner.name,owner.root,owner.manifest,owner.packages,owner.nativeRoots??[]]);return seen.has(key)?false:(seen.add(key),true);})},names=new Map<string,string>(),roots=new Map<string,string>(),packages=new Map<string,string>();
+ for(const owner of registry.owners){
+  const current=ownerLabelV1(owner);
+  if(names.has(owner.name))throw collisionV1(identityCollisionV1,"name",owner.name,names.get(owner.name)!,current);
+  if(roots.has(owner.root))throw collisionV1(identityCollisionV1,"root",owner.root,roots.get(owner.root)!,current);
+  if(!contains(owner.root,owner.manifest)||!["📋️project.json","Cargo.toml"].some(name=>owner.manifest===(owner.root==="."?name:owner.root+"/"+name)))throw collisionV1(identityCollisionV1,"manifest mismatch",owner.manifest,"none (single-owner check)",current);
+  names.set(owner.name,current);
+  for(const root of[owner.root,...owner.nativeRoots??[]]){if(roots.has(root))throw collisionV1(nativeCollisionV1,"native root",root,roots.get(root)!,current);roots.set(root,current);}
+  for(const name of owner.packages){if(packages.has(name))throw collisionV1(packageCollisionV1,"package",name,packages.get(name)!,current);packages.set(name,current);}
+ }
  return structuredClone(registry);
 }
 

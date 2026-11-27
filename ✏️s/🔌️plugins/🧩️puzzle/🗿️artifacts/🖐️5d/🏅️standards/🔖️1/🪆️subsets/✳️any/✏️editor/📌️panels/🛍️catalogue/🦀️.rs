@@ -37,7 +37,7 @@ pub const GRIPS_SECTION: &str = "puzzle5d-play-kinds.grips";
 pub const FASTENERS_SECTION: &str = "puzzle5d-play-kinds.fasteners";
 pub const ROPES_SECTION: &str = "puzzle5d-play-kinds.ropes";
 /// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx)? reads to auto-wire catalogue drag sources.
-const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+pub const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

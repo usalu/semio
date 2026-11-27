@@ -52,7 +52,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
             image_key: None,
         }),
     });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).await.expect("encode");
     assert_eq!(decode_op(&bytes).await.expect("decode"), operation);
 }
@@ -84,9 +84,9 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
         }, &mut semio_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 
 /// ▶️ Drives one mutation the way the interactive document lane does (`RasterOneItemApply` over its
@@ -558,8 +558,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         .await
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🔖️CommandEnvelopeTests
 
@@ -656,7 +656,7 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
     let mut document=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     document.install_document_store_owners_exact(raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     document.dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(semio_s_artifact_raster_raster_model::create_pixel_layer("Close",512,512))})],transaction:None}, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
-    store::os_store::test_support::close_plain_test_store(&mut document);
+    semio_os_store_test_support::close_plain_test_store(&mut document);
     assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");
 }
 

@@ -33,6 +33,8 @@ export interface MetricsSourcesV1{
  remoteCache?():Readonly<{groups:Readonly<Record<string,Readonly<Record<string,number>>>>}>|null;
  remoteCacheStatus?():Readonly<{entries:number;bytes:number}>|null;
  offload?():Readonly<{out:number;refused:number;fellBack:number}>|null;
+ skipReasons?():Readonly<Record<string,number>>|null;
+ offloadReasons?():Readonly<Record<string,number>>|null;
  remoteExecution?():Readonly<{running:number;queued:number;offloadedIn:number}>|null;
  pool?():Readonly<{units:number;claimed:number;published:number;failed:number;rssMegabytes:number}>|null;
  phase?():Readonly<{done:number;total:number}>|null;
@@ -47,6 +49,13 @@ export interface MetricsSourcesV1{
 const MEGABYTE=1048576;
 const number=(value:unknown):number|undefined=>typeof value==="number"&&Number.isFinite(value)?value:undefined;
 const bytes=(megabytes:number|null|undefined):number|undefined=>megabytes==null?undefined:megabytes*MEGABYTE;
+const reasonsOf=(prefix:string,counts:Readonly<Record<string,number>>|null):Record<string,number>=>{
+ if(counts===null)return {};
+ const listed=new Set(METRICS_CATALOGUE_V1.filter(row=>row.id.startsWith(prefix)&&row.id!==prefix+"other").map(row=>row.id.slice(prefix.length))),out:Record<string,number>={};let other=0;
+ for(const [name,count] of Object.entries(counts))if(listed.has(name))out[prefix+name]=count;else other+=count;
+ for(const name of listed)out[prefix+name]??=0;
+ out[prefix+"other"]=other;return out;
+};
 const pick=(values:Record<string,number|undefined>):Record<string,number>=>{const out:Record<string,number>={};for(const id in values){const value=values[id];if(value!==undefined&&Number.isFinite(value))out[id]=value;}return out;};
 
 /** 🧮️ Counts the collector keeps about itself between steps; the `self` collector reports them one step late (the step being measured cannot report its own duration). `stepCpuMicroseconds` is the process CPU time spent inside the collector's own steps since the last report (the work of the readiness process around it is not the collector's), `retainedBytes` what its rings, windows and counter maps hold, derived from the layout. */
@@ -107,10 +116,12 @@ const COLLECTORS_V1:Readonly<Record<string,CollectorV1>>={
  "remote-cache"(sources){
   const cache=sources.remoteCache?.()??null;if(cache===null)return {};
   const count=(group:string,name:string):number|undefined=>number(cache.groups[group]?.[name]);
-  return pick({"cache.remote.ac.hit":count("ac","hits"),"cache.remote.ac.miss":count("ac","misses"),"cache.remote.ac.put":count("ac","puts"),"cache.remote.ac.conflict":count("ac","conflicts"),"cache.remote.cas.hit":count("cas","hits"),"cache.remote.cas.miss":count("cas","misses"),"cache.remote.cas.put":count("cas","puts"),"cache.remote.nx.hit":count("nx","hits"),"cache.remote.nx.miss":count("nx","misses"),"cache.remote.nx.put":count("nx","puts")});
+  return pick({"cache.remote.ac.hit":count("ac","hits"),"cache.remote.ac.miss":count("ac","misses"),"cache.remote.ac.put":count("ac","puts"),"cache.remote.ac.conflict":count("ac","conflicts"),"cache.remote.cas.hit":count("cas","hits"),"cache.remote.cas.miss":count("cas","misses"),"cache.remote.cas.put":count("cas","puts"),"cache.remote.nx.hit":count("nx","hits"),"cache.remote.nx.miss":count("nx","misses"),"cache.remote.nx.put":count("nx","puts"),"cache.remote.refused":["ac","cas","nx"].reduce<number|undefined>((sum,group)=>{const value=count(group,"refused");return value===undefined?sum:(sum??0)+value;},undefined)});
  },
  "remote-cache-status"(sources){const status=sources.remoteCacheStatus?.()??null;return status===null?none():pick({"cache.remote.entries":status.entries,"cache.remote.bytes":status.bytes});},
  "offload-counters"(sources){const offload=sources.offload?.()??null;return offload===null?{}:pick({"exec.offload.out":offload.out,"exec.offload.fellback":offload.fellBack,"exec.refused":offload.refused});},
+ "cache-skip-reasons"(sources){return reasonsOf("cache.skip.",sources.skipReasons?.()??null);},
+ "offload-reasons"(sources){return reasonsOf("exec.decline.",sources.offloadReasons?.()??null);},
  "remote-execution"(sources){const row=sources.remoteExecution?.()??null;return row===null?none():{"exec.queue.running":row.running,"exec.queue.queued":row.queued,"exec.offload.in":row.offloadedIn};},
  "owner-pool"(sources){
   const pool=sources.pool?.()??null,phase=sources.phase?.()??null;

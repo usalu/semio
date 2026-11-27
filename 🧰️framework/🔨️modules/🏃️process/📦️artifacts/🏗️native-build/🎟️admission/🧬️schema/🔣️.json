@@ -65,14 +65,15 @@
           "progressMilliseconds": 30000
         },
         "bounds": {
-          "description": "Every client-to-broker request ends in a verdict, never in silence: a unit that waits in the broker queue is told so every `heartbeatMilliseconds` (the wrapper treats `silenceMilliseconds` without any line as a lost broker, drops the connection, and sends the request again, at most `attempts` times with a growing pause, so a request survives a broker that restarted); estimating the memory of a unit is bounded by `predictMilliseconds`; a grant growth by its own wait plus `growthGraceMilliseconds`; a unit that waits with nothing running for `stallMilliseconds` runs alone beside the budget it cannot get; a unit that waits longer than `queueMilliseconds` is refused. The Rust scheduler keeps `silenceMilliseconds` and `attempts` as constants and a test compares them.",
+          "description": "Every client-to-broker request ends in a verdict, never in silence: a unit that waits in the broker queue is told so every `heartbeatMilliseconds` (the wrapper treats `silenceMilliseconds` without any line as a lost broker, drops the connection, and sends the request again, at most `attempts` times with a growing pause, so a request survives a broker that restarted); estimating the memory of a unit is bounded by `predictMilliseconds`; a grant growth by its own wait plus `growthGraceMilliseconds`; a unit that waits with nothing running for `stallMilliseconds` runs alone beside the budget it cannot get; a unit that waits longer than `queueMilliseconds` is refused; a running unit whose scheduler sends no report (its resident memory is reported every second) for `runningSilenceMilliseconds` is taken for lost, its connection is closed and its memory booking is given back, so a wedged wrapper cannot hold the budget for ever. The Rust scheduler keeps `silenceMilliseconds` and `attempts` as constants and a test compares them.",
           "heartbeatMilliseconds": 30000,
           "silenceMilliseconds": 180000,
           "attempts": 5,
           "predictMilliseconds": 120000,
           "growthGraceMilliseconds": 30000,
           "stallMilliseconds": 90000,
-          "queueMilliseconds": 2700000
+          "queueMilliseconds": 2700000,
+          "runningSilenceMilliseconds": 1200000
         },
         "unitCeiling": {
           "description": "The compile-memory budget per worker class: the most one compile unit may hold at its peak so that it fits the smallest worker (a 16 GB Mac that runs several agents). A library unit (everything but a `cdylib`) stays within `libraryMegabytes`; only a final `cdylib` link unit may use the higher `finalMegabytes`, and it must use the serial back end. `workerClass` names the class the fleet is carved for. `carving` is the closed list of units known to exceed their budget, each with its measured peak and the reduction it waits for; the list may only shrink. Every carving entry declares `budgetMegabytes`, the budget the host warden enforces at runtime for that unit (at least its measured peak, at most 10 percent above it): a unit on the list is cancelled while it runs once its resident footprint exceeds it; an unlisted unit is cancelled above the budget of its kind. `families` is the closed list of homogeneous generated shard families (a regular expression over the whole crate name plus a target) whose per-shard peaks vary from run to run: its `measuredMegabytes` is the class measurement, the largest peak observed over any shard of the family (the `source` names the log lines), and its `budgetMegabytes` the budget every shard of the family may reach (at least the class measurement, at most 10 percent above it). A unit with its own carving entry uses that entry, else the family it matches.",
@@ -87,6 +88,13 @@
           },
           "carving": [
             {
+              "crate": "semio_s_artifact_process_process3d_editor",
+              "target": "host",
+              "measuredMegabytes": 6231,
+              "budgetMegabytes": 6600,
+              "action": "split-tests"
+            },
+            {
               "crate": "semio_os_mcp",
               "target": "host",
               "measuredMegabytes": 3819,
@@ -96,8 +104,8 @@
             {
               "crate": "semio_os_mcp_plugin_runtime",
               "target": "host",
-              "measuredMegabytes": 2711,
-              "budgetMegabytes": 2980,
+              "measuredMegabytes": 3127,
+              "budgetMegabytes": 3440,
               "action": "split-families"
             },
             {
@@ -194,8 +202,8 @@
             {
               "crate": "semio_s_artifact_stdio_dwg_snapshot_document",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 2012,
-              "budgetMegabytes": 2200,
+              "measuredMegabytes": 2317,
+              "budgetMegabytes": 2550,
               "action": "split-families"
             },
             {
@@ -243,8 +251,8 @@
             {
               "crate": "semio_os_flow_host_core",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 1598,
-              "budgetMegabytes": 1700,
+              "measuredMegabytes": 1716,
+              "budgetMegabytes": 1888,
               "action": "split-families"
             },
             {
@@ -260,6 +268,13 @@
               "measuredMegabytes": 4147,
               "budgetMegabytes": 4400,
               "action": "serial-backend"
+            },
+            {
+              "crate": "semio_plugin_tests_06",
+              "target": "host",
+              "measuredMegabytes": 3060,
+              "budgetMegabytes": 3360,
+              "action": "split-tests"
             },
             {
               "crate": "semio_hub_process_component",
@@ -392,6 +407,153 @@
               "target": "wasm32-wasip2",
               "measuredMegabytes": 1549,
               "budgetMegabytes": 1640,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_process_process3d_harness",
+              "target": "host",
+              "measuredMegabytes": 2033,
+              "budgetMegabytes": 2237,
+              "action": "split-tests"
+            },
+            {
+              "crate": "semio_s_artifact_process_process3d_host",
+              "target": "host",
+              "measuredMegabytes": 1750,
+              "budgetMegabytes": 1926,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_pdf_model_graphics",
+              "target": "host",
+              "measuredMegabytes": 1577,
+              "budgetMegabytes": 1735,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_pdf_model_graphics",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2059,
+              "budgetMegabytes": 2265,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_puzzle_5d_testkit",
+              "target": "host",
+              "measuredMegabytes": 1599,
+              "budgetMegabytes": 1759,
+              "action": "split-tests"
+            },
+            {
+              "crate": "semio_s_artifact_sourcing_curation_history_inputs",
+              "target": "host",
+              "measuredMegabytes": 1549,
+              "budgetMegabytes": 1704,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_sourcing_curation_history_conflicts",
+              "target": "host",
+              "measuredMegabytes": 1713,
+              "budgetMegabytes": 1885,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_gis_gismap_snapshot",
+              "target": "host",
+              "measuredMegabytes": 1651,
+              "budgetMegabytes": 1817,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_gis_gismap",
+              "target": "host",
+              "measuredMegabytes": 4584,
+              "budgetMegabytes": 5043,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_s_artifact_puzzle_2d_retained",
+              "target": "host",
+              "measuredMegabytes": 4366,
+              "budgetMegabytes": 4803,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_s_artifact_puzzle_2d_v1",
+              "target": "host",
+              "measuredMegabytes": 4227,
+              "budgetMegabytes": 4650,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_plugin_actor_input_decoder",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2280,
+              "budgetMegabytes": 2508,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_plugin_actor_input_decoder",
+              "target": "host",
+              "measuredMegabytes": 1558,
+              "budgetMegabytes": 1714,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_plugin_actor_input_wire",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2269,
+              "budgetMegabytes": 2496,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_hub_procedural",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1757,
+              "budgetMegabytes": 1933,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_stdio_pdf_1_7_viewers",
+              "target": "host",
+              "measuredMegabytes": 1550,
+              "budgetMegabytes": 1706,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_stdio_pdf_1_7_editors",
+              "target": "host",
+              "measuredMegabytes": 1568,
+              "budgetMegabytes": 1725,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_procedural_generation2d_viewer_app",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2152,
+              "budgetMegabytes": 2368,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_procedural_generation2d_editor_app",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1911,
+              "budgetMegabytes": 2103,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_s_artifact_procedural_2d_mode_edit",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1606,
+              "budgetMegabytes": 1767,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_bim_model_kit",
+              "target": "host",
+              "measuredMegabytes": 1538,
+              "budgetMegabytes": 1692,
               "action": "split-families"
             }
           ],
@@ -567,6 +729,7 @@
             "stalled": "unit {unit} waited {seconds} s with nothing running although it needs about {predicted} MB and the budget is {budget} MB: it runs alone now so that the build cannot stand still",
             "expired": "unit {unit} waited {seconds} s in the broker queue, longer than the bound of {minutes} min: it is refused so that the build ends instead of waiting for ever; retry on a quieter host or a fleet worker",
             "late": "unit {unit}: the broker did not finish estimating its memory within {seconds} s, the request is dropped and the compiler asks again",
+            "silent": "unit {unit} sent no report for {seconds} s while it should be running: its scheduler is taken for lost, the connection is closed and its memory booking is given back",
             "row": "[capacity]   unit wait, pid {pid}: {text}"
           },
           "growth": {
@@ -603,6 +766,7 @@
             "stalled": "Einheit {unit} wartete {seconds} s, obwohl nichts lief: sie braucht etwa {predicted} MB und das Budget beträgt {budget} MB; sie läuft jetzt allein, damit der Bau nicht stillsteht",
             "expired": "Einheit {unit} wartete {seconds} s in der Warteschlange des Brokers, länger als die Grenze von {minutes} min: sie wird abgelehnt, damit der Bau endet, statt ewig zu warten; auf einem ruhigeren Host oder einem Flotten-Worker erneut versuchen",
             "late": "Einheit {unit}: der Broker hat die Speicherschätzung nicht innerhalb von {seconds} s abgeschlossen, die Anfrage wird verworfen und der Compiler fragt erneut",
+            "silent": "Einheit {unit} hat seit {seconds} s nichts gemeldet, obwohl sie laufen sollte: ihr Scheduler gilt als verloren, die Verbindung wird geschlossen und ihre Speicherbuchung zurückgegeben",
             "row": "[capacity]   Einheit wartet, pid {pid}: {text}"
           },
           "growth": {

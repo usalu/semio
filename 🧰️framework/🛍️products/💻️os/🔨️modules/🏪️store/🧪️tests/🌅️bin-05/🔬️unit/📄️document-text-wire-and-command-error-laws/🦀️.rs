@@ -143,7 +143,7 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
 
     let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
-    assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
+    assert_eq!(*parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
     let mut reloaded = ArtifactStore::new(parsed.envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "ArtifactStore::new must seed live state from the persisted cursor");
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");

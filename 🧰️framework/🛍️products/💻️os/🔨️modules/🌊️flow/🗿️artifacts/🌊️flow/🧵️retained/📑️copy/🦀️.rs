@@ -595,6 +595,10 @@ pub enum FlowSnapshotCopyIntakeSource{Read(SnapshotRead<FlowHostSnapshot>),Admis
 /// 🧭️ The resident staged admission of the exact original Store read and its unsettled projection action.
 pub struct FlowSnapshotAdmission{admission:RetainedCloneSourceAdmission<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>,projection:StagedProjection<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>}
 impl FlowSnapshotAdmission{
+    /// 📏️ Quotes the heap block that holds the staged admission from its construction until its owner is published.
+    pub const fn birth_bytes()->usize{std::mem::size_of::<Self>()}
+    /// ✅️ Reports whether the admission published its whole owner, so the destination holds a finished source and no shell.
+    fn published(&self)->bool{self.admission.terminal_is_empty()&&self.projection.terminal_is_empty()}
     fn step(&mut self,output:&mut Option<RetainedCloneSource<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
         let Self{admission,projection}=self;
         if let Some(stage)=projection.stage(admission)?{return projection.advance(admission,stage,effect)}
@@ -607,11 +611,17 @@ impl FlowHostSnapshotCopy<FlowHostSnapshot>{
     /// 📥️ Admits the exact original typed Store read before any snapshot task is created.
     pub fn from_read(read:SnapshotRead<FlowHostSnapshot>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource)>{
         let grant=cx.retained_grant();let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::borrowed_constructor_demand::<SnapshotRead<FlowHostSnapshot>>();
-        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes.saturating_add(FlowSnapshotAdmission::birth_bytes())||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         if !read.commit_authority_matches(source_generation,revision){cx.consume_fuel(1);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"Flow snapshot read original revision changed").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         cx.consume_fuel(1);
         match read.source_admission(){
-            Ok(admission)=>Self::resume(Box::new(FlowSnapshotAdmission{admission,projection:StagedProjection::default()}),revision,source_generation,cx),
+            Ok(admission)=>{
+                let staged=Box::new(FlowSnapshotAdmission{admission,projection:StagedProjection::default()});
+                match cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:FlowSnapshotAdmission::birth_bytes(),..Default::default()}){
+                    Ok(())=>Self::resume(staged,revision,source_generation,cx),
+                    Err(error)=>Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Admission(staged))),
+                }
+            },
             Err((error,read))=>Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Read(read))),
         }
     }
@@ -628,10 +638,10 @@ impl FlowHostSnapshotCopy<FlowHostSnapshot>{
                 Err(error)=>return Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Admission(staged))),
             };
             let progress_zero=result.as_ref().is_ok_and(|progress|*progress==RetainedCloneProgress::default());
-            let copy=output.take().map(|source|Self{cursor:CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})}});
+            let copy=(if staged.published(){output.take()}else{None}).map(|source|Self{cursor:CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})}});
             let received=semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result:result.map(RetainedCloneStep::Progress),work:performed});
             match(copy,received){
-                (Some(copy),Ok(_))=>return Ok(copy),
+                (Some(copy),Ok(_))=>return match cx.consume_retained(RetainedCloneProgress{released_bytes:FlowSnapshotAdmission::birth_bytes(),..Default::default()}){Ok(())=>Ok(copy),Err(error)=>Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Copy(copy)))},
                 (Some(copy),Err(failure))=>return Err((failure,FlowSnapshotCopyIntakeSource::Copy(copy))),
                 (None,Err(failure))=>return Err((failure,FlowSnapshotCopyIntakeSource::Admission(staged))),
                 (None,Ok(_))=>if progress_zero{return Err((waiting().into(),FlowSnapshotCopyIntakeSource::Admission(staged)))},
@@ -645,7 +655,8 @@ pub struct FlowSnapshotIntakeProducer;
 impl semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>> for FlowSnapshotIntakeProducer{
  type Intake=FlowHostSnapshotCopy<FlowHostSnapshot>;
  type Rejected=FlowSnapshotCopyIntakeSource;
- fn source_demands(&self)->Result<RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::borrowed_constructor_demand::<SnapshotRead<FlowHostSnapshot>>();Ok(RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()})}
+ fn source_demands(&self)->Result<RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::borrowed_constructor_demand::<SnapshotRead<FlowHostSnapshot>>();let(staged,_,_)=RetainedCloneSourceAdmission::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::staged_admission_quote()?;Ok(RetirementDemand{copy_bytes:staged.copy_bytes,capacity_bytes:demand.capacity_bytes.checked_add(FlowSnapshotAdmission::birth_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake capacity overflows"))?,release_bytes:FlowSnapshotAdmission::birth_bytes(),depth:demand.depth.max(staged.depth),..Default::default()})}
+ fn source_steps(&self)->Result<(usize,u64),ValueError>{let(_,items,work)=RetainedCloneSourceAdmission::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::staged_admission_quote()?;Ok((items,work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake work overflows"))?))}
  fn preserve_source(&self,source:SnapshotRead<FlowHostSnapshot>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
  fn admit(&self,source:SnapshotRead<FlowHostSnapshot>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,revision,source_generation,cx)}
 }

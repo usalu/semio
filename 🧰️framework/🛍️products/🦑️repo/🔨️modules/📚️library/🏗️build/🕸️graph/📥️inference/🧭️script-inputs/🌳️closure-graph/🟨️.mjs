@@ -4,6 +4,7 @@ import{mkdir,readFile,readdir,rename,rm,stat,utimes,writeFile}from"node:fs/promi
 import{join}from"node:path";
 import{brotliCompressSync,brotliDecompressSync,constants}from"node:zlib";
 import{refuseBuildV1}from"../../../../📖️texts/🟦️.ts";
+import{graphStringInternerV1,internJsonStringsV1}from"../../../../🧠️memory/🟨️.mjs";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import table from"./🔣️.json"with{type:"json"};
@@ -152,12 +153,13 @@ export async function saveClosureGraphV1(graph,directory,{signal,progress,policy
  return{chunks:chunks.filter(Boolean).length,pool:poolDigest,written,bytes,nodes,edges,head:sha(headText)};
 }
 
-/** 🧩️ The records of one stored chunk after its digest and schema are checked; a chunk that does not match refuses the graph. */
+/** 🧩️ The records of one stored chunk after its digest and schema are checked; a chunk that does not match refuses the graph. Every long string of the parsed records is replaced by the process-wide shared instance: the witnesses of ten thousand stored nodes name the same few tens of thousands of paths, and a loaded graph held each of them once per node (894 k path strings, 161 MB, behind `witness.typed` in the heap summary of a whole-closure read). */
 function chunkRecordsV1(bytes,digest,bases=[]){
  let text;try{text=brotliDecompressSync(bytes,{maxOutputLength:MAXIMUM_CHUNK_BYTES}).toString("utf8");}catch{throw refuseBuildV1("invalid","closure.graph-invalid",{part:"chunk"});}
  if(sha(text)!==digest)throw refuseBuildV1("invalid","closure.graph-invalid",{part:"chunk"});
  const chunk=JSON.parse(text);
  if(validateJsonSchemaSubset(CHUNK_SCHEMA_V1,chunk).length)throw refuseBuildV1("invalid","closure.graph-invalid",{part:"chunk"});
+  internJsonStringsV1(chunk.records,graphStringInternerV1);
  return chunk.records.map(([key,name,kind,digest,edges,extra])=>({key,name,kind,digest,edges,extra:unpooledExtraV1(extra,bases)}));
 }
 /** 🧺️ The shared layers of the witnesses of one stored graph: a witness names its `base` (what the nodes of one pass share, thousands of rows) by index and the graph stores each distinct base once, in the pool the head names, so a node costs what it read itself and a loaded graph holds one copy of each base.
@@ -166,7 +168,7 @@ function createBasePoolV1(){const bases=[],byObject=new Map(),byText=new Map();r
 const pooledExtraV1=(extra,pool)=>{const witness=extra?.witness;return witness!==null&&typeof witness==="object"&&witness.base!==undefined&&witness.base!==null?{...extra,witness:{...witness,base:pool.at(witness.base)}}:extra;};
 const unpooledExtraV1=(extra,bases)=>{const witness=extra?.witness;if(witness===null||typeof witness!=="object"||witness.base===undefined||witness.base===null)return extra;const base=bases[witness.base];if(base===undefined)throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});return{...extra,witness:{...witness,base}};};
 /** 📥️ The bases of the pool a head names (none when it names none), checked against its digest. */
-const poolBasesV1=(head,read)=>{if(head.pool===null)return[];let text;try{text=brotliDecompressSync(read(head.pool+EXTENSION),{maxOutputLength:MAXIMUM_CHUNK_BYTES}).toString("utf8");}catch{throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});}if(sha(text)!==head.pool)throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});const pool=JSON.parse(text);if(pool?.version!==1||!Array.isArray(pool.bases))throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});return pool.bases;};
+const poolBasesV1=(head,read)=>{if(head.pool===null)return[];let text;try{text=brotliDecompressSync(read(head.pool+EXTENSION),{maxOutputLength:MAXIMUM_CHUNK_BYTES}).toString("utf8");}catch{throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});}if(sha(text)!==head.pool)throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});const pool=JSON.parse(text);if(pool?.version!==1||!Array.isArray(pool.bases))throw refuseBuildV1("invalid","closure.graph-invalid",{part:"pool"});return internJsonStringsV1(pool.bases,graphStringInternerV1);};
 
 /** 🧾️ The head a directory holds, checked against the head schema, with the SHA-256 of its text; undefined when there is none. */
 function headOfV1(text){

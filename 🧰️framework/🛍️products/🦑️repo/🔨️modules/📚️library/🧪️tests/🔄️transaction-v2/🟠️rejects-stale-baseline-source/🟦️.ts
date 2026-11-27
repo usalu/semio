@@ -4,7 +4,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { applyTaxonomyPlan } from "../../../🧹️normalization/🚀️apply/🟦️.ts";
 import { inventoryTaxonomy } from "../../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
-import { type Fixture, type Snapshot } from "../📜️boundary-contracts/🟦️.ts";
+import { CASE_TIMEOUT_MS, type Fixture, type Snapshot } from "../📜️boundary-contracts/🟦️.ts";
 import { embeddedFixture, generatorFixture, plan, referenceFixture, retainFixture, snapshot, transactionRoot } from "../🏗️fixture-builders/🟦️.ts";
 import { activeReferenceFixture, attemptJournal, killedAt } from "../💥️child-control/🟦️.ts";
 
@@ -33,7 +33,7 @@ export function registerRejectsStaleBaselineSourceTests(): void {
       const inventory = inventoryTaxonomy(counterfeit.options);
       expect(inventory.entries.some((entry) => entry.sourcePath.endsWith("🧾️taxonomy-transaction/plain.txt"))).toBe(true);
     } finally { retainFixture(baseline.root); retainFixture(source.root); retainFixture(counterfeit.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rejects stale resume preimage and malformed resume evidence byte-for-byte", async () => {
     const stale = await activeReferenceFixture("stale-resume"), forged = await activeReferenceFixture("forged-resume"), missing = referenceFixture("missing-resume");
     try {
@@ -54,7 +54,7 @@ export function registerRejectsStaleBaselineSourceTests(): void {
       expect(snapshot(transactionRoot(missing))).toEqual(missingTransaction);
       expect(snapshot(missing.workspace)).toEqual(missingWorkspace);
     } finally { retainFixture(stale.root); retainFixture(forged.root); retainFixture(missing.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rejects stale generator and embedded-reference authority before mutation", async () => {
     const generator = generatorFixture("stale-generator"), embedded = embeddedFixture("stale-reference");
     try {
@@ -73,7 +73,7 @@ export function registerRejectsStaleBaselineSourceTests(): void {
       expect(snapshot(transactionRoot(embedded))).toEqual(embeddedTransaction);
       expect(snapshot(embedded.workspace)).toEqual(embeddedWorkspace);
     } finally { retainFixture(generator.root); retainFixture(embedded.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rejects ordinal collisions and malformed attempt siblings without mutation", async () => {
     const canonical = await activeReferenceFixture("canonical-collision"), duplicate = await activeReferenceFixture("duplicate-collision"), future = await activeReferenceFixture("future-collision"), malformed = await activeReferenceFixture("malformed-sibling");
     try {
@@ -103,7 +103,7 @@ export function registerRejectsStaleBaselineSourceTests(): void {
       expect(snapshot(transactionRoot(malformed))).toEqual(malformedTransaction);
       expect(snapshot(malformed.workspace)).toEqual(malformedWorkspace);
     } finally { retainFixture(canonical.root); retainFixture(duplicate.root); retainFixture(future.root); retainFixture(malformed.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rejects forged backup and restore preparations without mutation", async () => {
     const backup = referenceFixture("forged-backup"), restore = referenceFixture("forged-restore");
     try {
@@ -122,7 +122,7 @@ export function registerRejectsStaleBaselineSourceTests(): void {
       expect(snapshot(transactionRoot(restore))).toEqual(restoreTransaction);
       expect(snapshot(restore.workspace)).toEqual(restoreWorkspace);
     } finally { retainFixture(backup.root); retainFixture(restore.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rejects unreachable duplicate backup and edit publication tuples exactly", async () => {
     const backup = referenceFixture("duplicate-backup-tuple"), edit = referenceFixture("duplicate-edit-tuple"), exchanged = referenceFixture("writer-edit-tuple");
     try {
@@ -152,5 +152,5 @@ export function registerRejectsStaleBaselineSourceTests(): void {
         expect(snapshot(row.workspace)).toEqual(beforeWorkspace);
       }
     } finally { retainFixture(backup.root); retainFixture(edit.root); retainFixture(exchanged.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
 }

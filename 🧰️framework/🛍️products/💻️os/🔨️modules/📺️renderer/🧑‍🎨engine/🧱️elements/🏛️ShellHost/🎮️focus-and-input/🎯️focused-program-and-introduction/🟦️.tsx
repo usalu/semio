@@ -137,6 +137,18 @@ export function useFocusedProgramAndIntroductionState({ core }: { readonly core:
     for (const key of core.committedExamplesByProgramRef.current.keys()) if (!live.includes(key)) core.committedExamplesByProgramRef.current.delete(key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spawnedRosterKey, session?.pluginId, session?.instanceId]);
+  /** 🪦️ A program that left the live roster (its last window closed, it was replaced or its plugin retired) takes its
+   * per-window shell state with it, in the same commit: one `WINDOWS_RETIRED` event for its `${id}::` namespace, and the
+   * utility register cells of those windows go too, so neither the store nor the cells grow with every program ever opened. */
+  const rosterProgramIdsRef = useRef<readonly string[]>(spawnedIds);
+  useEffect(() => {
+    const retired = rosterProgramIdsRef.current.filter((id) => !spawnedIds.includes(id));
+    rosterProgramIdsRef.current = spawnedIds;
+    if (retired.length === 0) return;
+    for (const windowId of [...utilityGenerationByWindowRef.current.keys()]) if (retired.some((id) => windowId.startsWith(`${id}::`))) utilityGenerationByWindowRef.current.delete(windowId);
+    dispatch({ type: "WINDOWS_RETIRED", windowIds: [], programIds: retired });
+    if (activeWindowId !== null && retired.some((id) => activeWindowId.startsWith(`${id}::`))) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+  }, [spawnedRosterKey]);
   /** 🪟️ The focused program's live window instances, in the ONE shape every consumer reads: a spawned
    * program contributes one per declared window kind under its own `${spawnedId}::` namespace; the
    * session's own app contributes its base kinds plus the user's split/extra instances. */

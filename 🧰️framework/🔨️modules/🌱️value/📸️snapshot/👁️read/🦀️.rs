@@ -282,6 +282,11 @@ impl SnapshotReadLeaseRegistry {
         true
     }
 
+    /// 🚫️ Revokes the published commit authority for good: every outstanding lease then reads [`Self::authority_matches`] as false and no later publication succeeds. A displaced store revokes before it retires, so a holder that polls its authority learns to return its lease instead of holding the close forever.
+    pub fn revoke_authority(&self) {
+        self.authority_sequence.store(u64::MAX, std::sync::atomic::Ordering::Release);
+    }
+
     pub fn authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
         let first = self.authority_sequence.load(std::sync::atomic::Ordering::Acquire);
         if first == 0 || first & 1 != 0 || self.authority_generation.load(std::sync::atomic::Ordering::Relaxed) != generation {

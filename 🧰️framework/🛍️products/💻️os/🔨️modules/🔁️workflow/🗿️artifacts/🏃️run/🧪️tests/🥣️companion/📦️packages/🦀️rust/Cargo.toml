@@ -28,6 +28,7 @@ semio-framework-artifact-workflow-run-admission = { path = "../../../../⚡️ad
 semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

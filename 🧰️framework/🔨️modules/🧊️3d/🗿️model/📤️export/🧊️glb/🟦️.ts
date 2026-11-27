@@ -24,8 +24,8 @@ import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 export type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 
-/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants, and optionally one model scene (default: every scene as one glTF scene, the first is the default scene). */
-export type GlbOptions = { readonly pose?: PoseSelector; readonly animations: boolean; readonly variants: boolean; readonly scene?: Slug };
+/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants, and optionally one model scene (default: every scene as one glTF scene, the first is the default scene). `compact` writes the normals of the primitives that a lit material can draw as normalized 8-bit integers (`KHR_mesh_quantization`, listed as used and required) and leaves them out where every material a primitive can show is unlit. */
+export type GlbOptions = { readonly pose?: PoseSelector; readonly animations: boolean; readonly variants: boolean; readonly scene?: Slug; readonly compact?: boolean };
 
 const GENERATOR = "semio.model glb/v1";
 const MODES = { triangles: 4, lines: 1 } as const;
@@ -107,7 +107,20 @@ function influences(joints: readonly number[], weights: readonly number[], pace:
   return { joints: j, weights: w };
 }
 
-function primitiveJson(primitive: Primitive, jointCount: number | undefined, materials: Map<string, number>, buffer: BufferBuilder, pace: Pace, where: string): Json {
+const NORMAL_BITS = 8;
+const NORMAL_TYPE = NORMAL_BITS === 8 ? ComponentType.Byte : ComponentType.Short;
+
+function quantizedNormals(normals: readonly number[], pace: Pace): number[] {
+  const top = 2 ** (NORMAL_BITS - 1) - 1;
+  const out = new Array<number>(normals.length);
+  for (let i = 0; i < normals.length; i += 1) {
+    pace.tick();
+    out[i] = Math.round(Math.max(-1, Math.min(1, normals[i]!)) * top) + 0;
+  }
+  return out;
+}
+
+function primitiveJson(primitive: Primitive, jointCount: number | undefined, materials: Map<string, number>, buffer: BufferBuilder, pace: Pace, where: string, readsNormals: boolean, quantized: { used: boolean } | undefined): Json {
   const { positions, indices } = primitive;
   const vertices = positions.length / 3;
   if (!Number.isInteger(vertices)) throw new Error(`${where}: positions are not a multiple of 3`);
@@ -125,7 +138,12 @@ function primitiveJson(primitive: Primitive, jointCount: number | undefined, mat
     if (values.length !== vertices * expected) throw new Error(`${where}: ${name} needs ${expected} values per vertex`);
     attributes[name] = buffer.add(values, ComponentType.Float, type, { target: BufferTarget.Attribute });
   };
-  if (primitive.mode === "triangles") vec("NORMAL", primitive.normals, "VEC3", 3);
+  if (primitive.mode === "triangles" && readsNormals && quantized === undefined) vec("NORMAL", primitive.normals, "VEC3", 3);
+  else if (primitive.mode === "triangles" && readsNormals && primitive.normals !== undefined) {
+    if (primitive.normals.length !== vertices * 3) throw new Error(`${where}: NORMAL needs 3 values per vertex`);
+    attributes.NORMAL = buffer.add(quantizedNormals(primitive.normals, pace), NORMAL_TYPE, "VEC3", { target: BufferTarget.Attribute, normalized: true, aligned: true });
+    quantized.used = true;
+  }
   vec("COLOR_0", primitive.colors, "VEC4", 4);
   if (primitive.joints !== undefined || primitive.weights !== undefined) {
     if (primitive.joints === undefined || primitive.weights === undefined) throw new Error(`${where}: joints and weights come together`);
@@ -227,13 +245,19 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   step(0.02);
 
   const meshes = partitionRigidParts(document.meshes, pace);
+  const unlit = new Set(materials.filter((material) => material.unlit).map((material) => material.id));
+  const quantized = { used: false };
+  const readsNormals = (primitive: Primitive): boolean => options.compact !== true || !unlit.has(primitive.material) || (options.variants && document.variants.some((variant) => {
+    const bound = variant.bindings[primitive.material];
+    return bound !== undefined && !unlit.has(bound);
+  }));
   const totalPrimitives = meshes.reduce((n, mesh) => n + mesh.primitives.length, 0);
   let done = 0;
   const gltfMeshes = meshes.map((mesh) => ({
     name: mesh.id,
     primitives: mesh.primitives.map((primitive, p) => {
       step(0.02 + (0.68 * done++) / Math.max(1, totalPrimitives));
-      return primitiveJson(primitive, skinnedMeshes.get(mesh.id), materialIndex, buffer, pace, `mesh ${mesh.id} primitive ${p}`);
+      return primitiveJson(primitive, skinnedMeshes.get(mesh.id), materialIndex, buffer, pace, `mesh ${mesh.id} primitive ${p}`, readsNormals(primitive), options.compact === true ? quantized : undefined);
     }),
   }));
 
@@ -271,6 +295,7 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   const used = new Set<string>();
   const gltfMaterials = materials.map(materialJson);
   if (materials.some((material) => material.unlit)) used.add("KHR_materials_unlit");
+  if (quantized.used) used.add("KHR_mesh_quantization");
 
   const extensions: Json = {};
   if (options.variants && document.variants.length > 0) {
@@ -303,6 +328,7 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   const asset: Json = { version: "2.0", generator: GENERATOR, extras: { schema: document.version, id: document.id, title: title(document.title), ...(document.provenance === undefined ? {} : { provenance: JSON.parse(JSON.stringify(document.provenance)) }) } };
   const json: Json = { asset, scene: 0, scenes: instances.map((instance, i) => ({ name: instance.name, nodes: sceneRoots[i], extras: instance.extras })) };
   if (used.size > 0) json.extensionsUsed = [...used].sort();
+  if (quantized.used) json.extensionsRequired = ["KHR_mesh_quantization"];
   if (Object.keys(extensions).length > 0) json.extensions = extensions;
   if (gltfNodes.length > 0) json.nodes = gltfNodes;
   if (gltfMeshes.length > 0) json.meshes = gltfMeshes;

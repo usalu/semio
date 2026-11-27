@@ -60,6 +60,7 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

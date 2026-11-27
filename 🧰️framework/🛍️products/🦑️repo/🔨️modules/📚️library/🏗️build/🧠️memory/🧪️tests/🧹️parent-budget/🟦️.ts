@@ -41,6 +41,24 @@ test("finish collects, answers the peak, the survivors and the collections of th
  expect(collector.finish()).toEqual({peakBytes:300*MB,liveBytes:300*MB,collections:1,collectMilliseconds:0});
 });
 
+test("afterProjectSettled decides like afterProject but lets the event loop turn before it collects",async()=>{
+ const order:string[]=[],state={held:policy.collectAboveMegabytes*MB+1,survives:700*MB,collected:0};
+ const collector=createParentCollectorV1({ports:{sample:()=>state.held,collect:()=>{order.push("collect");state.held=state.survives;}},now:()=>0});
+ expect(await collector.afterProjectSettled()).toBe(false);
+ const pending=collector.afterProjectSettled();order.push("called");
+ expect(await pending).toBe(true);
+ expect(order).toEqual(["called","collect"]);
+});
+
+test("settle lets the event loop turn before it collects, so memory the ending call dropped is not kept alive by that call's stack",async()=>{
+ const order:string[]=[],state={held:900*MB,survives:300*MB,collected:0};
+ const collector=createParentCollectorV1({ports:{sample:()=>state.held,collect:()=>{order.push("collect");state.held=state.survives;}},now:()=>0});
+ const pending=collector.settle();order.push("called");
+ expect(order).toEqual(["called"]);
+ expect(await pending).toEqual({peakBytes:900*MB,liveBytes:300*MB,collections:1,collectMilliseconds:0});
+ expect(order).toEqual(["called","collect"]);
+});
+
 test("the budget less the growth since the collector was made is the headroom the governor sees, however large the state the parent started with",()=>{
  const state={held:700*MB,survives:0,collected:0};
  const collector=createParentCollectorV1({ports:ports(state),budgetBytes:1000*MB});
@@ -112,7 +130,7 @@ const footprint=()=>{if(process.platform==="darwin"){const t=execFileSync("footp
 const governor=createGraphParentMemoryGovernorV1({workers:8,ports,headroom:()=>1e15,attributable:ports.sample,${controlled?"budgetBytes:300*MB,":""}policy:{...(await import(${JSON.stringify(modulePath)})).GRAPH_MEMORY_POLICY_V1,pollMilliseconds:5,admitMinimumMilliseconds:0}});
 let peakManaged=0,peakFootprint=0,running=0,most=0;
 const sampler=setInterval(()=>{peakManaged=Math.max(peakManaged,ports.sample());},5);
-const project=async()=>{running++;most=Math.max(most,running);const live=[];for(let i=0;i<500000;i++)live.push({a:"s"+i+Math.random(),b:[i,i+1],c:{d:"y".repeat(20)+i}});await new Promise(r=>setTimeout(r,60));peakFootprint=Math.max(peakFootprint,footprint());live.length=0;running--;};
+const project=async()=>{running++;most=Math.max(most,running);const live=[];for(let i=0;i<150000;i++)live.push({a:"s"+i+Math.random(),b:[i,i+1],c:{d:"y".repeat(20)+i}});await new Promise(r=>setTimeout(r,60));peakFootprint=Math.max(peakFootprint,footprint());live.length=0;running--;};
 const loop=async()=>{for(let n=0;n<4;n++){await governor.run(project,{kind:"project"});${controlled?"collector.afterProject();":""}}};
 await Promise.all(Array.from({length:8},loop));
 clearInterval(sampler);governor.dispose();

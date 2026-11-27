@@ -93,7 +93,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
 
   test("React exposes the same MIME, cancellation and targeted drop oracle", () => {
     const canvas = readModuleTreeSource(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🎨️Canvas", "🟦️.tsx"));
-    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "📐️layout-hotkeys", "🟠️handle-template-drop", "🟦️.ts"));
     const tests = readModuleTreeSource(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧪️tests", "🧪️owned-locale-detector-retirement", "🟦️.tsx"));
     expect(canvas).toContain(`COMPOSE_WINDOW_TEMPLATE_MIME = "${fixture.mime}"`);
     expect(canvas).toContain("WindowLayoutDropZone");
@@ -151,7 +151,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
   });
 
   test("React journals template transfers while its Display palette remains drag-only", () => {
-    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "📐️layout-hotkeys", "🟠️handle-template-drop", "🟦️.ts"));
     const panels = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const transfer = shell.slice(shell.indexOf("const handleTemplateDrop"), shell.indexOf("const displayHostRef"));
     const display = panels.slice(panels.indexOf("function buildDisplayWindowsTree"), panels.indexOf("function buildDisplayLayoutTree"));

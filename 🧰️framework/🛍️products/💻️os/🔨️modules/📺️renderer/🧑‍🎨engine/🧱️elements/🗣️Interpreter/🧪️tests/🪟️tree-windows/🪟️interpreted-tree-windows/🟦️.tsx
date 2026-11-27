@@ -3,6 +3,7 @@ import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️
 import { registerWindowDataAndGranularityPickTests } from "../🧬️window-data-and-granularity-picks/🟦️.tsx";
 import { registerScrollContainerResolutionTests } from "../📜️scroll-container-resolution/🟦️.tsx";
 import { registerWindowRequestsAndNestingTests } from "../🪜️window-requests-and-nesting/🟦️.tsx";
+import { registerDetachedTreeSectionTests } from "../🗂️detached-tree-sections/🟦️.tsx";
 import { registerFoldSeedingIdsAndDuplicateTests } from "../🧱️fold-seeding-ids-and-duplicates/🟦️.tsx";
 
 /** 🌲 Registers the interpreted tree windows describe block from its parts. */
@@ -13,5 +14,6 @@ export function registerInterpretedTreeWindowsSuite(kit: TreeWindowsTestKit): vo
     registerScrollContainerResolutionTests(kit);
     registerWindowRequestsAndNestingTests(kit);
     registerFoldSeedingIdsAndDuplicateTests(kit);
+    registerDetachedTreeSectionTests(kit);
   });
 }

@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {randomUUID} from "node:crypto";
 import {runScheduledV1} from "../../🎟️ticket/🟦️.ts";
-import {HOST_SERVICE_CLASS_V1,openHostSchedulerStoreV1,recordHostServicePeakV1,scheduledEstimateV1} from "../🟦️.ts";
+import {HOST_SERVICE_CLASS_V1,learnedHostSlicePeakV1,openHostSchedulerStoreV1,recordHostServicePeakV1,recordHostSlicePeakV1,scheduledEstimateV1} from "../🟦️.ts";
 
 const base=mkdtempSync(join(tmpdir(),"semio-learn-"));
 afterAll(()=>rmSync(base,{recursive:true,force:true}));
@@ -32,4 +32,23 @@ test("the host service learns its own bounded peak in a class no client shares",
  const service=await scheduledEstimateV1(HOST_SERVICE_CLASS_V1,64,own),client=await scheduledEstimateV1("phase:compile",64,own);
  expect(service.learnedPeakMegabytes).toBeLessThanOrEqual(2560);expect(service.learnedPeakMegabytes).toBeGreaterThanOrEqual(2000);
  expect(client.learnedPeakMegabytes).toBeUndefined();
+});
+
+test("a slice peak is learned per scope: a scope books what it was measured to need, a scope never measured reads the host-wide class",async()=>{
+ const own={...environment,SEMIO_HOST_CAPACITY_DIRECTORY:join(base,"slice-scopes")};
+ for(let run=0;run<4;run++){await recordHostSlicePeakV1(own,3200,8192,Date.now,"/w/large");await recordHostSlicePeakV1(own,700,8192,Date.now,"/w/small");}
+ const large=learnedHostSlicePeakV1(own,8192,Date.now,"/w/large"),small=learnedHostSlicePeakV1(own,8192,Date.now,"/w/small");
+ expect(large).toBeGreaterThanOrEqual(3200);expect(small).toBeGreaterThanOrEqual(700);expect(small).toBeLessThan(large);
+ const unknown=learnedHostSlicePeakV1(own,8192,Date.now,"/w/never");
+ expect(unknown,"an unmeasured scope reads the host-wide class").toBe(learnedHostSlicePeakV1(own,8192));
+ expect(unknown).toBeGreaterThan(0);
+});
+
+test("the slice peak of a scope follows its newest runs: stale larger history does not pin the booking",async()=>{
+ const own={...environment,SEMIO_HOST_CAPACITY_DIRECTORY:join(base,"slice-recent")};
+ let clock=1_000_000;
+ for(const peak of[6000,6000,5900,5800])await recordHostSlicePeakV1(own,peak,8192,()=>clock++,"/w/recent");
+ for(const peak of[3400,4400,3900,4500,4000])await recordHostSlicePeakV1(own,peak,8192,()=>clock++,"/w/recent");
+ expect(learnedHostSlicePeakV1(own,8192,()=>clock,"/w/recent"),"the largest of the newest five runs").toBe(4500);
+ expect(learnedHostSlicePeakV1(own,4000,()=>clock,"/w/recent"),"never above the ceiling").toBe(4000);
 });

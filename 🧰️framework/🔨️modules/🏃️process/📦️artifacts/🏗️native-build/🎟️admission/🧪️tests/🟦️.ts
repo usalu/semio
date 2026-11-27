@@ -13,6 +13,7 @@ import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import localHistory from "./🧫️fixtures/local-history.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+import { stretchedBudgetMillisecondsV1 } from "../../../../📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { appendUnitHistoryV1, compactUnitHistoryV1, admissionFrozenV1, componentFinalCratePeaksV1, componentFinalPeaksV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
 
@@ -169,7 +170,7 @@ test("a write killed at any byte of a record leaves every complete row readable 
 
 test("real Cargo through the wrapper: a tight memory budget admits one unit at a time, a roomy one runs as many as the pool holds", async () => {
   const manifest = tinyCargoWorkspaceV1(mkdtempSync(join(artifacts, "w-")), fixture.cargo.crates);
-  const tight = await buildThroughBrokerV1({ manifest, tokens: fixture.cargo.tokens, physicalBytes: fixture.cargo.tightPhysicalGiB * 1024 ** 3 });
+  const tight = await buildThroughBrokerV1({ manifest, tokens: fixture.cargo.tokens, physicalBytes: Math.round(fixture.cargo.tightPhysicalGiB * 1024 ** 3) });
   expect(tight.exit).toBe(0);
   const libraries = (units: readonly UnitRecordV1[]) => units.filter((unit) => fixture.cargo.crates.includes(unit.crate));
   expect(libraries(tight.units).map((unit) => unit.crate).sort()).toEqual([...fixture.cargo.crates].sort());
@@ -180,11 +181,11 @@ test("real Cargo through the wrapper: a tight memory budget admits one unit at a
   for (const unit of libraries(tight.units)) { expect(unit.peakRssBytes).toBeGreaterThan(0); expect(unit.rmetaMs).not.toBeNull(); expect(unit.endMs).toBeGreaterThanOrEqual(unit.startMs); }
   const top = tight.units.find((unit) => unit.crate === "top")!, producers = new Set(tight.units.map((unit) => unit.artifact));
   expect(top.dependencies.filter((edge) => edge.artifacts.some((artifact) => producers.has(artifact))).map((edge) => edge.edge)).toEqual(["rmeta", "rmeta"]);
-  const roomy = await buildThroughBrokerV1({ manifest, tokens: fixture.cargo.tokens, physicalBytes: fixture.cargo.roomyPhysicalGiB * 1024 ** 3 });
+  const roomy = await buildThroughBrokerV1({ manifest, tokens: fixture.cargo.tokens, physicalBytes: Math.round(fixture.cargo.roomyPhysicalGiB * 1024 ** 3) });
   expect(roomy.exit).toBe(0);
   expect(roomy.peakRunning).toBeLessThanOrEqual(fixture.cargo.tokens);
   expect(roomy.peakRunning).toBe(fixture.cargo.tokens);
-}, 600_000);
+}, stretchedBudgetMillisecondsV1(600_000));
 
 test("a unit's output footprint counts exactly the files its artifact stem names", () => {
   const vector = fixture.outputs as { artifact: string; entries: string[]; sizes: Record<string, number>; bytes: number };

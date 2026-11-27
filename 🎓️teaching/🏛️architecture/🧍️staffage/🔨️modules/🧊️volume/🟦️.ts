@@ -14,6 +14,7 @@
  */
 import type { Asset, AuthoredVolume, Slug, Text } from "../../🧬️schema/🟦️.ts";
 import { CancelledError, silentOperation, type Animation, type Channel, type Material, type ModelDocument, type Node, type Operation, type Pose, type Primitive, type Scene, type Solid, type TransformPatch, type Variant } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { scopedId } from "./🪪️ids/🟦️.ts";
 import { MODES, VIEWS, VIEWS_OF, modeOf, sceneIdOf, type DisplayRange, type EvaluatedState, type EvaluationQuery, type FlowField, type ForceQuantity, type Mode, type ThermalQuantity, type Vec3, type View } from "../🔗️contracts/🟦️.ts";
 import { THEMES, type Theme } from "../🎨️depiction/🖍️palette/🟦️.ts";
 import { FLOW_DEVELOP_S, VIEW_TITLES } from "../🎨️depiction/🟦️.ts";
@@ -332,11 +333,9 @@ function skeletonModel(asset: Asset, instants: Instants): { readonly nodes: Node
   return { nodes, poseBones, clipBones };
 }
 
-const prefixed = (scene: Slug, id: Slug): Slug => `${scene}-${id}`;
-
 /** 🪪️ A fragment in the ids of scene `scene`: every solid, material, glyph node and colour channel target gets the prefix `<scene>-`, and every solid rides on an identity child node `<scene>-<bone>` of its bone (the kernel's scene-specific mesh node), so scenes share the skeleton and nothing else. */
 function scoped(fragment: Fragment, scene: Slug, bones: ReadonlySet<Slug>): { readonly nodes: Node[]; readonly solids: Solid[]; readonly materials: Material[]; readonly variants: readonly Variant[]; readonly poses: ReadonlyMap<Slug, Record<Slug, TransformPatch>>; readonly channels: ReadonlyMap<Slug, Channel[]> } {
-  const p = (id: Slug): Slug => prefixed(scene, id);
+  const p = (id: Slug): Slug => scopedId(scene, id);
   const used = new Set<Slug>();
   const solids: Solid[] = fragment.solids.map((s) => {
     used.add(s.node);

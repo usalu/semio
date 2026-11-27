@@ -1,0 +1,37 @@
+import { test } from "bun:test";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { execFileSync } from "node:child_process";
+const LIB = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const { inventoryTaxonomy } = await import(`${LIB}/🧹️normalization/🔍️inventory-planning/🟦️.ts`);
+const { planTaxonomy } = await import(`${LIB}/🧹️normalization/🧠️planning/🟦️.ts`);
+const SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+test("probe", () => {
+  const root = mkdtempSync(join(process.env.PROBE_TMP!, "p-"));
+  const git = (...a: string[]) => execFileSync("git", a, { cwd: root, encoding: "utf8" });
+  const ticketDir = join(root, "🧪️tests"), workspace = join(ticketDir, "🧪️fixture"), scope = relative(root, workspace);
+  const subj = scope + "/NoEmoji";
+  mkdirSync(workspace, { recursive: true });
+  mkdirSync(join(root, SCHEMA_REL, ".."), { recursive: true });
+  const taxonomy = JSON.parse(readFileSync(join("/Users/ueli/Documents/semio", SCHEMA_REL), "utf8"));
+  delete taxonomy.generatorContracts["plugin-registry"].inputDiscovery;
+  writeFileSync(join(root, SCHEMA_REL), JSON.stringify(taxonomy, null, 2) + "\n");
+  const files: Record<string, string> = {
+    "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+    "Subject/🟦️.ts": "export const a = 1;\n",
+    "🧪️plain/x.ts": "export const b = 1;\n",
+    "NoEmoji/📋️project.json": "{}\n",
+    "🧪️consumer/🟦️component.ts": 'export { value } from "../🧪️subject/🟦️component.ts";\n',
+    "📋️build-owners.json": JSON.stringify({ version: 1, owners: [{ name: "subject", root: subj, manifest: subj + "/📋️project.json", packages: [] }], catalogProviders: [] }, null, 2) + "\n",
+  };
+  for (const [p, b] of Object.entries(files)) { mkdirSync(dirname(join(workspace, p)), { recursive: true }); writeFileSync(join(workspace, p), b); }
+  git("init", "--quiet", "--object-format=sha1"); git("config", "user.name", "x"); git("config", "user.email", "x@invalid.example"); git("config", "commit.gpgsign", "false");
+  git("add", "--all", "--", ".", `:(exclude,literal)${SCHEMA_REL}`); git("commit", "--quiet", "-m", "f");
+  const options = { repoRoot: root, scope, ticketDir, workers: 1 };
+  const plan = planTaxonomy(inventoryTaxonomy(options), { baselineCommit: git("rev-parse", "HEAD").trim(), excludedTreeDigests: [] });
+  console.log("MOVES", JSON.stringify(plan.moves.map((m: any) => [m.sourcePath, m.destinationPath]), null, 1));
+  console.log("EDITPATHS", JSON.stringify([...new Set(plan.edits.map((e: any) => e.path))]));
+  console.log("REGEDITS", JSON.stringify(plan.edits.filter((e: any) => e.path.endsWith("build-owners.json")).map((e: any) => [e.oldValue, e.newValue, e.structuredLocation])));
+  console.log("DIRMOVES", JSON.stringify(plan.moves.filter((m: any) => m.sourcePreimage?.nodeKind !== "file").map((m: any) => [m.sourcePath, m.destinationPath])));
+  console.log("VIOLATIONS", JSON.stringify(plan.violations ?? null).slice(0, 600));
+});

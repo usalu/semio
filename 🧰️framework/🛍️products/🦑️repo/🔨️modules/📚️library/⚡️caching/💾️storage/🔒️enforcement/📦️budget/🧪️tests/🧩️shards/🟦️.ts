@@ -8,9 +8,10 @@ import policy from"../../🔣️policy.json"with{type:"json"};
 import{readRepositoryCacheBudgetV1}from"../../🟦️.ts";
 const GiB=1073741824;
 const declared=Object.entries(policy.partitions).flatMap(([id,row])=>"imageShards"in row?[[id,(row as{imageShards:unknown}).imageShards]as const]:[]);
-test("the oversized partitions declare their shards, closed and equal to the shard schema, and keep the live single-image layout until the switchover",()=>{
+test("the oversized partitions declare their shards, closed and equal to the shard schema, and the split of the Rust partition is enabled",()=>{
  expect(declared.map(([id])=>id)).toEqual(["rust","dependencies"]);
- for(const[,rule]of declared){expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,rule,shardSchema)).toEqual([]);expect<unknown>(requireNativeImageShardRuleV1(rule)).toEqual(rule);expect((rule as{enabled:boolean}).enabled).toBe(false);}
+ for(const[,rule]of declared){expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,rule,shardSchema)).toEqual([]);expect<unknown>(requireNativeImageShardRuleV1(rule)).toEqual(rule);}
+ expect(declared.map(([,rule])=>(rule as{enabled:boolean}).enabled)).toEqual([true,false]);
  const budget=readRepositoryCacheBudgetV1(policy);expect<unknown>(budget.partitions.rust.imageShards).toEqual(declared[0]![1]);expect(budget.partitions.tools.imageShards).toBeUndefined();
  const bad={...(declared[0]![1] as object),extra:true};expect(validateJsonSchemaSubset(budgetSchema,{...policy,partitions:{...policy.partitions,rust:{...policy.partitions.rust,imageShards:bad}}}).length).toBeGreaterThan(0);
  expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,bad,shardSchema).length).toBeGreaterThan(0);
@@ -19,13 +20,14 @@ test("every key image of the partitions fits the cap of every platform that can 
  const rust=declared[0]![1] as Parameters<typeof requireNativeImageShardRuleV1>[0]&{roots:{needBytes:number}[];headroomPercent:number;hostFreeReservePercent:number};
  const born=nativeImageShardCapacityV1("darwin",rust as never,{needBytes:rust.roots[0]!.needBytes,hostFreeBytes:200*GiB});
  expect(born).toEqual({capacityBytes:32*GiB});expect(nativeImageShardCapBytesV1("darwin")).toBe(2**35);
- expect(Math.ceil(policy.partitions.rust.capacityBytes/nativeImageShardCapBytesV1("darwin"))).toBe(4);expect(Math.ceil(policy.partitions.dependencies.capacityBytes/nativeImageShardCapBytesV1("darwin"))).toBe(2);
+ expect(Math.ceil(policy.partitions.rust.capacityBytes/nativeImageShardCapBytesV1("darwin"))).toBe(4);expect(policy.partitions.dependencies.capacityBytes).toBeLessThanOrEqual(nativeImageShardCapBytesV1("darwin"));
  const deps=declared[1]![1] as typeof rust;expect(nativeImageShardCapacityV1("darwin",deps as never,{needBytes:deps.roots[0]!.needBytes,hostFreeBytes:200*GiB})).toEqual({capacityBytes:32*GiB});
 });
-test("the declared roots claim exactly the lanes of the Rust unit cache and the job workspaces of the dependencies, nothing else",()=>{
+test("the declared roots claim exactly the lanes, sealed and worker areas of the Rust unit cache, its cargo home and its components, and the job workspaces of the dependencies, nothing else",()=>{
  const[rust,deps]=declared.map(([,rule])=>rule as Parameters<typeof nativeImageShardKeyV1>[0]);
  expect(nativeImageShardKeyV1(rust!,"u/l/pcab777/t/x")).toEqual({root:0,key:"pcab777",id:"pcab777"});
- for(const path of["u/e/abc","u/k/lane-pcab777","u/sealed/d148cc4e846068aa","cargo/home","components/x","u/l","u/lanes/x","b/x"])expect(nativeImageShardKeyV1(rust!,path)).toBeNull();
+ expect(nativeImageShardKeyV1(rust!,"u/sealed/d148cc4e846068aa")).toEqual({root:1,key:"sealed",id:"sealed"});expect(nativeImageShardKeyV1(rust!,"u/w/x")).toEqual({root:1,key:"w",id:"w"});expect(nativeImageShardKeyV1(rust!,"cargo/home")).toEqual({root:2,key:"cargo",id:"cargo"});expect(nativeImageShardKeyV1(rust!,"components/stages/x")).toEqual({root:2,key:"components",id:"components"});
+ for(const path of["u/e/abc","u/k/lane-pcab777","u/l","u/lanes/x","b/x","published/x","nx/x","configuration/x","u/ballast"])expect(nativeImageShardKeyV1(rust!,path)).toBeNull();
  expect(nativeImageShardKeyV1(deps!,"j/02c779b7d284b46ef3fd/node_modules/x")?.id).toMatch(/^x[0-9a-f]{11}$/u);
  for(const path of["bun-cache/x","generation/x","j","python/x"])expect(nativeImageShardKeyV1(deps!,path)).toBeNull();
 });

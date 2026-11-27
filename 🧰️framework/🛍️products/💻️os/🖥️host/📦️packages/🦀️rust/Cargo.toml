@@ -74,5 +74,6 @@ semio-framework-actor = { workspace = true }
 semio-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

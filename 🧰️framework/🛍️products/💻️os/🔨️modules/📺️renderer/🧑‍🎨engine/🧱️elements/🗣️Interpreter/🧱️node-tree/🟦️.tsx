@@ -164,7 +164,7 @@ function renderTreeItemControls(store: UiDocumentStore, controls: readonly UiNod
   return controls.map((child, index) => <UiNodeView key={keys[index]} store={store} id={child.id} context={context} />);
 }
 
-export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string, rowAdmission?: RowActionAdmissionControllerV1): TreeDataItem {
+export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string, rowAdmission?: RowActionAdmissionControllerV1, blockContent = false): TreeDataItem {
   const { record, props } = node;
   const windowPath = props.window ? treeWindowPathOf(parentWindowPath, record.key) : undefined;
   const domId = uiNodeDomId(state.surface, windowPath ?? record.key, record.id);
@@ -177,7 +177,8 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     const contained = child.component.type === "container" ? child.children : undefined;
     const visual = contained?.some(id => state.nodes.get(id)?.component.type === "surface");
     const prose = contained !== undefined && contained.length > 1 && contained.every(id => state.nodes.get(id)?.component.type === "text");
-    const content = child.component.type === "surface" || child.component.type === "image" || visual || prose;
+    const block = blockContent && (child.component.type === "table" || child.component.type === "container");
+    const content = child.component.type === "surface" || child.component.type === "image" || visual || prose || block;
     if (content) contentRecords.push(child);
     return !content;
   });
@@ -207,7 +208,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), { ...context, domScope: domId })}</> : undefined,
     content: content && hover.onPointerEnter ? <div {...hover}>{content}</div> : content,
     windowContentRows: props.window && contentRecords.length > 0 ? contentRecords.length : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath, rowAdmission)) : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath, rowAdmission, blockContent)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     ...hover,
     actions: rowTreeActions(record, props, context, rowAdmission),
@@ -217,7 +218,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
 const noSubscription = () => () => undefined;
 const zeroRevision = () => 0;
 
-function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+function TreeView({ store, record, context, detached = false }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext; readonly detached?: boolean }) {
   const revision = useUiDocumentRevision(store);
   const rowAdmission = useRowActionAdmissionV1(context);
   const overlay = useUiPresenceOverlay();
@@ -237,10 +238,10 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       pick: rootActivate ? { record, binding: rootActivate } : undefined,
       pickTargets: new Map<string, { readonly key: string; readonly granularity: string }>(),
     };
-    const sectionRecords = (record.children ?? []).map((id) => state.nodes.get(id)).filter((r): r is UiNodeRecord => !!r && r.component.type === "treeSection");
+    const sectionRecords = detached ? [record] : (record.children ?? []).map((id) => state.nodes.get(id)).filter((r): r is UiNodeRecord => !!r && r.component.type === "treeSection");
     const sections = sectionRecords.map((sectionRecord) => {
-      const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
-      const items = collectTreeItems(state, sectionRecord.children ?? []);
+      const sectionProps = (sectionRecord.component.type === "treeSection" ? sectionRecord.component : { label: "", defaultOpen: true }) as Extract<Component, { type: "treeSection" }>;
+      const items = sectionRecord.component.type === "treeSection" ? collectTreeItems(state, sectionRecord.children ?? []) : collectTreeItems(state, [sectionRecord.id]);
       const domId = uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id);
       const windowPath = sectionProps.window ? treeWindowPathOf(undefined, sectionRecord.key) : undefined;
       registerTreeWalkRow(walk, windowPath ?? sectionRecord.key, domId);
@@ -253,11 +254,11 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk, windowPath, rowAdmission)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk, windowPath, rowAdmission, detached)),
       };
     });
     return { sections, walk };
-  }, [store, record, revision, context, overlay, leftoverIds, windows, openRevision, rowAdmission]);
+  }, [store, record, detached, revision, context, overlay, leftoverIds, windows, openRevision, rowAdmission]);
   const sections = walked.sections;
   const handleOpenStateChange = useCallback((stateId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(treeDomIdFromOpenStateIdV1(stateId)) ?? stateId, open), [windows, walked]);
   useTreeWindowObserver(rootRef, windows, revision, store);
@@ -578,7 +579,7 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
       return <TreeView store={store} record={record} context={context} />;
     case "treeSection":
     case "treeItem":
-      return <ContainerView store={store} record={record} context={context} />;
+      return <TreeView store={store} record={record} context={context} detached />;
     case "image":
       return <ImageView record={record} store={store} />;
     case "surface":

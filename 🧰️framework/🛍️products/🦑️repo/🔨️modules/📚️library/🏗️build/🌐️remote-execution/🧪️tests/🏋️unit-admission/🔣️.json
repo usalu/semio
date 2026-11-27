@@ -4,6 +4,7 @@
    "samples": {
     "1": 2720
    },
+   "linked": true,
    "managed": true,
    "localPeak": 2720,
    "fleetPeak": 4256,
@@ -13,6 +14,7 @@
    "samples": {
     "1": 2720
    },
+   "linked": true,
    "managed": false,
    "localPeak": 4256,
    "fleetPeak": 4256,
@@ -20,8 +22,19 @@
   },
   {
    "samples": {
+    "1": 2720
+   },
+   "linked": false,
+   "managed": false,
+   "localPeak": 2720,
+   "fleetPeak": 4256,
+   "beyond16g": false
+  },
+  {
+   "samples": {
     "1": 4100
    },
+   "linked": true,
    "managed": true,
    "localPeak": 4100,
    "fleetPeak": 5636,
@@ -31,8 +44,19 @@
    "samples": {
     "1": 4100
    },
+   "linked": true,
    "managed": false,
    "localPeak": 5636,
+   "fleetPeak": 5636,
+   "beyond16g": true
+  },
+  {
+   "samples": {
+    "1": 4100
+   },
+   "linked": false,
+   "managed": false,
+   "localPeak": 4100,
    "fleetPeak": 5636,
    "beyond16g": true
   },
@@ -41,6 +65,7 @@
     "1": 3294,
     "4": 6000
    },
+   "linked": true,
    "managed": true,
    "localPeak": 3294,
    "fleetPeak": 6000,
@@ -51,6 +76,7 @@
     "1": 3294,
     "4": 6000
    },
+   "linked": true,
    "managed": false,
    "localPeak": 6000,
    "fleetPeak": 6000,
@@ -58,8 +84,20 @@
   },
   {
    "samples": {
+    "1": 3294,
     "4": 6000
    },
+   "linked": false,
+   "managed": false,
+   "localPeak": 3294,
+   "fleetPeak": 6000,
+   "beyond16g": false
+  },
+  {
+   "samples": {
+    "4": 6000
+   },
+   "linked": true,
    "managed": true,
    "localPeak": null,
    "fleetPeak": 6000,
@@ -69,6 +107,17 @@
    "samples": {
     "4": 6000
    },
+   "linked": true,
+   "managed": false,
+   "localPeak": 6000,
+   "fleetPeak": 6000,
+   "beyond16g": true
+  },
+  {
+   "samples": {
+    "4": 6000
+   },
+   "linked": false,
    "managed": false,
    "localPeak": 6000,
    "fleetPeak": 6000,
@@ -76,6 +125,7 @@
   },
   {
    "samples": {},
+   "linked": true,
    "managed": true,
    "localPeak": null,
    "fleetPeak": null,
@@ -83,6 +133,15 @@
   },
   {
    "samples": {},
+   "linked": true,
+   "managed": false,
+   "localPeak": null,
+   "fleetPeak": null,
+   "beyond16g": false
+  },
+  {
+   "samples": {},
+   "linked": false,
    "managed": false,
    "localPeak": null,
    "fleetPeak": null,

@@ -30,7 +30,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// live peer) — untouched by this pass.
 pub fn plugin() -> Result<Plugin<DagApps>, PluginAssemblyError> {
     PluginBuilder::<_, DagApps>::new("dag")
-        .label("DAG")
+        .label(semio_plugin::LocalizedLabel::native("DAG", "DAG"))
         .version("0.1.0")
         .package_id("semio:dag")
         .declare_artifact(crate::artifacts::dag::artifact())

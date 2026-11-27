@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -54,6 +55,7 @@ semio-s-plugin-wfc-engine = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }

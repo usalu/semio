@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { transactionV2BundleRoot } from "../📁️run-allocation/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
@@ -21,8 +21,6 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
   retainTransactionV2Record(runRoot, "📷️before", { schemaVersion: 1, runId, runRoot, startedAt, inputs: beforeIdentities });
   const normalizationBundleRoot = join(bundleRoot, "🧹️normalization");
   const normalizationBundle = join(normalizationBundleRoot, "🟦️.js");
-  const schemaSnapshot = join(bundleRoot, "🔣️.json");
-  copyFileSync(identityPaths.taxonomy!, schemaSnapshot);
   const built = await runtimeBundleV1({ entrypoints: [identityPaths.suite!], outdir: bundleRoot, naming: "🟦️.test.js", target: "runtime", packages: "external" });
   if (!built.success) throw new AggregateError(built.logs, "Transaction v2 aggregate bundle failed");
   mkdirSync(normalizationBundleRoot, { recursive: true });
@@ -30,7 +28,8 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
   if (!normalizationBuilt.success) throw new AggregateError(normalizationBuilt.logs, "Transaction v2 normalization child bundle failed");
   const defaultFilters = TRANSACTION_V2_DEFAULT_FILTER_WAVES.flat();
   const filterWaves = segments.length > 1 ? [[segments.slice(1).join(" ")]] : TRANSACTION_V2_DEFAULT_FILTER_WAVES;
-  const staticTitles = [...readFileSync(identityPaths.suite!, "utf8").matchAll(/\btest(?:\.concurrent)?\("([^"]+)"/gu)].map((match) => match[1]!);
+  const suiteSources = [identityPaths.suite!, ...[...readFileSync(identityPaths.suite!, "utf8").matchAll(/^import\b[^"\n]*"(\.\/[^"]+)"/gmu)].map((match) => join(dirname(identityPaths.suite!), match[1]!))];
+  const staticTitles = suiteSources.flatMap((source) => [...readFileSync(source, "utf8").matchAll(/\btest(?:\.concurrent)?\("([^"]+)"/gu)].map((match) => match[1]!));
   if (staticTitles.length !== 14 || staticTitles.length + 48 !== 62) throw new Error(`Transaction v2 aggregate manifest count changed: ${staticTitles.length + 48}`);
   for (const title of staticTitles) {
     const selections = defaultFilters.filter((filter) => new RegExp(filter, "u").test(title));
@@ -42,7 +41,6 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
     bundle,
     bundleRoot,
     normalizationBundle,
-    schemaSnapshot,
     runId,
     runRoot,
     filterWaves,

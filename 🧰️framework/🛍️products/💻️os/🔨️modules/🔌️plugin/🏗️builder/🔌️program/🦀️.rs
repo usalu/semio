@@ -26,6 +26,7 @@ pub mod inference_gateway;
 #[allow(unused_imports)]
 pub use inference_gateway::*;
 use semio_framework::AppDefinition;
+pub use semio_ui_locale::LocalizedLabel;
 use semio_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework::manifest::{CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use semio_framework::{kernel::{ActorId, ArtifactKind, CapabilityRequirement, InvocationResult, Rights, Scope}, ActionKind, CommandDefinition, Fault, PluginManifest};
@@ -94,11 +95,11 @@ pub struct Plugin<PA: PluginApp = NoPluginApp> {
 
 impl<PA: PluginApp> Plugin<PA> {
     pub fn commit_original_producers(&mut self){for factory in self.apps.values_mut(){factory.definition.commit_producer();if let Some(registration)=factory.registration.as_mut(){registration.commit_producer();}}}
-    pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
+    pub fn new(plugin_id: impl Into<String>, label: LocalizedLabel, version: impl Into<String>) -> Self {
         Self {
             manifest: PluginManifest {
                 plugin_id: plugin_id.into(),
-                label: label.into(),
+                label,
                 version: version.into(),
                 apps: Vec::new(),
                 examples: Vec::new(),

@@ -28,6 +28,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-hub-space-app = { workspace = true, features = ["testkit"] }
 semio-hub-space-commands-authoring = { workspace = true }
 semio-hub-space-commands-media = { workspace = true }

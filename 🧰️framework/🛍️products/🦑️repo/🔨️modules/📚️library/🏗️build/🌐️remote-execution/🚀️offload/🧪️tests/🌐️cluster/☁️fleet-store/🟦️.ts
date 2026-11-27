@@ -61,7 +61,7 @@ const claimsActive=async():Promise<number>=>((await (await fetch(cluster.cache.u
 /** 💽️ The local store refuses new objects once the disk passes the CAS critical fraction (a unit would then not even be published); on such a disk this proof cannot run, and it says so instead of failing. */
 const diskFull=(():boolean=>{try{const row=statfsSync(tmpdir());return 1-Number(row.bavail)/Number(row.blocks)>=CAS_POLICY_V1.partition.criticalUsedFraction-0.005;}catch{return false;}})();
 test.skipIf(diskFull)("a unit a worker compiled is stored once in the fleet cache under the requester's key with its slot, a third checkout takes it without any compiler, and no claim stays held",async()=>{
- const requester=checkoutOf("req"),rootA=join(scratch,"unit-req"),slottedBefore=cluster.cache.store.usage().slotted;
+ const requester=checkoutOf("req"),rootA=join(scratch,"unit-req"),slottedBefore=cluster.cache.store.usage().slotted,slottedPerUnit=2;
  const environmentA=environmentOf(requester,rootA,{SEMIO_OFFLOAD:"distribute"});
  const status=await run(requester,environmentA,{admission:{probe:testHostProbeV1("critical-pressure-gigabyte-swap")}});
  expect(status).toBe(0);
@@ -72,8 +72,8 @@ test.skipIf(diskFull)("a unit a worker compiled is stored once in the fleet cach
  expect(local[0]!.slot,"the local entry carries its slot").toMatch(/^[a-f0-9]{64}$/u);
  const drained=await drainUploadsV1(rootA,environmentA,{idleMilliseconds:200});
  expect(drained).not.toBe("busy");
- await eventuallyV1(()=>cluster.cache.store.usage().slotted===slottedBefore+1,20000,"the unit entry is stored with a slot");
- expect(cluster.cache.store.usage().slotted,"stored exactly once").toBe(slottedBefore+1);
+ await eventuallyV1(()=>cluster.cache.store.usage().slotted===slottedBefore+slottedPerUnit,20000,"the unit entry and its input manifest are stored with a slot");
+ expect(cluster.cache.store.usage().slotted,"stored exactly once: the unit and its input manifest").toBe(slottedBefore+slottedPerUnit);
  await eventuallyV1(async()=>(await claimsActive())===0,20000,"the claim is released");
 
  const third=checkoutOf("third");for(const name of readdirSync(requester.deps).filter(name=>!name.includes("-"+externHash("c"))))copyFileSync(join(requester.deps,name),join(third.deps,name));
@@ -82,7 +82,7 @@ test.skipIf(diskFull)("a unit a worker compiled is stored once in the fleet cach
  expect(statusC).toBe(0);
  expect(callsOf(join(rootC,"rustc-calls.log")),"the third checkout compiled nothing\n"+trace(rootC)+"\nA:\n"+trace(rootA)).toBe(0);
  expect(cluster.events.filter(event=>event.startsWith("assigned")).length,"no worker was asked again").toBe(assignedBefore);
- expect(cluster.cache.store.usage().slotted,"nothing was stored a second time").toBe(slottedBefore+1);
+ expect(cluster.cache.store.usage().slotted,"nothing was stored a second time").toBe(slottedBefore+slottedPerUnit);
  const events=readdirSync(join(rootC,"x")).flatMap(name=>readFileSync(join(rootC,"x",name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as {kind:string}));
  expect(events.map(row=>row.kind)).toContain("remote-hit");
  expect(unitEntries(rootC)[0]?.slot).toBe(local[0]!.slot);

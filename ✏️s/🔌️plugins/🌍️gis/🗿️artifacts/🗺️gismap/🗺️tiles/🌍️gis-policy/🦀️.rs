@@ -2,12 +2,11 @@
 //!
 //! Moved from the framework tiled map (`🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🌍️gis-policy`), which now only interprets a neutral policy. The editor's map host installs [`gis_map_extension`]; the editor and viewer map windows ship [`gis_map_scene_descriptor_json`], so the wgpu engine surface and the browser session render by the same policy.
 
-use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_value;
-use crate::GisMapSnapshot;
+use crate::{GisMapSnapshot, MapFeature};
 use semio_framework_surface::tiled_map::{
-    map_layer_weight_slider_ids_json, map_lod_scale_json, CanvasExtension, DescribedMapPolicy, MapExtension, MapLayerRole, MapLayerTarget, MapLayerToggle, MapLodBand, MapOverlayGeometry, MapOverlayLayer, MapOverlayStyleFill, MapPaintTechnique, MapPaletteSlot, MapPolicy, MapPolicyDescriptor, MapStylePreset,
+    map_layer_weight_slider_ids_json, map_lod_scale_json, map_policy_descriptor_json, CanvasExtension, DescribedMapPolicy, MapExtension, MapLayerRole, MapLayerTarget, MapLayerToggle, MapLodBand, MapOverlayGeometry, MapOverlayLayer, MapOverlayStyleFill, MapPaintTechnique, MapPaletteSlot, MapPolicy, MapPolicyDescriptor, MapStylePreset,
 };
-use serde_json::Value;
+use semio_framework_value::{DslValue, ToValue};
 use std::sync::{Arc, OnceLock};
 
 #[path = "🎨️vector-style/🦀️.rs"]
@@ -237,54 +236,54 @@ pub fn gis_map_layer_weight_slider_ids_json(lod_id: &str, render_mode: &str) -> 
 }
 
 /// 📍️ One position payload (`id`, `lon`, `lat`, `name`/`label`, `kind`, `icon`, `source_url`) as a point overlay feature: the caption is `name` when present, else `label`, trimmed; `kind` becomes the style key.
-fn gis_map_position_feature(payload: &Value) -> Option<Value> {
-    let text = |key: &str| payload.get(key).and_then(Value::as_str);
-    let mut feature = serde_json::json!({ "id": text("id")?, "coordinates": [[payload.get("lon")?.as_f64()?, payload.get("lat")?.as_f64()?]] });
+fn gis_map_position_feature(payload: &DslValue) -> Option<DslValue> {
+    let text = |key: &str| payload.get(key).and_then(DslValue::as_str);
+    let mut feature = vec![("id".to_owned(), text("id")?.to_value()), ("coordinates".to_owned(), DslValue::Array(vec![DslValue::Array(vec![payload.get("lon")?.as_f64()?.to_value(), payload.get("lat")?.as_f64()?.to_value()])]))];
     let optional = [("label", text("name").or(text("label")).map(str::trim).filter(|caption| !caption.is_empty())), ("style", text("kind")), ("icon", text("icon")), ("link", text("source_url").or(text("sourceUrl")))];
-    for (key, value) in optional {
-        if let Some(value) = value {
-            feature[key] = value.into();
-        }
-    }
-    Some(feature)
+    feature.extend(optional.into_iter().filter_map(|(key, value)| Some((key.to_owned(), value?.to_value()))));
+    Some(DslValue::Object(feature))
 }
 
 /// 🧮️ A `[[lon, lat], …]` payload array as overlay coordinates, or `None` when any entry is not a number pair.
-fn gis_map_coordinates(value: Option<&Value>) -> Option<Value> {
-    let rows: Option<Vec<Value>> = value?.as_array()?.iter().map(|row| Some(serde_json::json!([row.get(0)?.as_f64()?, row.get(1)?.as_f64()?]))).collect();
-    rows.map(Value::Array)
+fn gis_map_coordinates(value: Option<&DslValue>) -> Option<DslValue> {
+    let rows: Option<Vec<DslValue>> = value?.as_array()?.iter().map(|row| {
+        let pair = row.as_array()?;
+        Some(DslValue::Array(vec![pair.first()?.as_f64()?.to_value(), pair.get(1)?.as_f64()?.to_value()]))
+    }).collect();
+    rows.map(DslValue::Array)
 }
 
 /// 🛤️ One route payload (`id`, `points`, `stroke_width`) as a line overlay feature.
-fn gis_map_route_feature(payload: &Value) -> Option<Value> {
-    let mut feature = serde_json::json!({ "id": payload.get("id")?.as_str()?, "coordinates": gis_map_coordinates(payload.get("points"))? });
-    if let Some(width) = payload.get("stroke_width").and_then(Value::as_f64) {
-        feature["width"] = width.into();
+fn gis_map_route_feature(payload: &DslValue) -> Option<DslValue> {
+    let mut feature = vec![("id".to_owned(), payload.get("id")?.as_str()?.to_value()), ("coordinates".to_owned(), gis_map_coordinates(payload.get("points"))?)];
+    if let Some(width) = payload.get("stroke_width").and_then(DslValue::as_f64) {
+        feature.push(("width".to_owned(), width.to_value()));
     }
-    Some(feature)
+    Some(DslValue::Object(feature))
 }
 
 /// 🗾️ One region payload (`id`, `ring`) as an area overlay feature.
-fn gis_map_region_feature(payload: &Value) -> Option<Value> {
-    Some(serde_json::json!({ "id": payload.get("id")?.as_str()?, "coordinates": gis_map_coordinates(payload.get("ring"))? }))
+fn gis_map_region_feature(payload: &DslValue) -> Option<DslValue> {
+    Some(DslValue::Object(vec![("id".to_owned(), payload.get("id")?.as_str()?.to_value()), ("coordinates".to_owned(), gis_map_coordinates(payload.get("ring"))?)]))
 }
 
 /// 🗺️ The document's positions, routes and regions as the `overlays` member of a map descriptor; a malformed payload is skipped.
-pub fn gis_map_overlays_value(document: &GisMapSnapshot) -> Value {
-    let descriptor = gis_map_descriptor_value(document);
-    let features = |collection: &str, convert: fn(&Value) -> Option<Value>| -> Value { Value::Array(descriptor.get(collection).and_then(Value::as_array).into_iter().flatten().filter_map(convert).collect()) };
-    let mut overlays = serde_json::Map::new();
-    overlays.insert(GIS_MAP_OVERLAY_POSITIONS.into(), features("positions", gis_map_position_feature));
-    overlays.insert(GIS_MAP_OVERLAY_ROUTES.into(), features("routes", gis_map_route_feature));
-    overlays.insert(GIS_MAP_OVERLAY_REGIONS.into(), features("regions", gis_map_region_feature));
-    Value::Object(overlays)
+pub fn gis_map_overlays_value(document: &GisMapSnapshot) -> DslValue {
+    let features = |collection: &[MapFeature], convert: fn(&DslValue) -> Option<DslValue>| DslValue::Array(collection.iter().filter_map(|feature| convert(&feature.data)).collect());
+    DslValue::Object(vec![
+        (GIS_MAP_OVERLAY_POSITIONS.to_owned(), features(&document.positions, gis_map_position_feature)),
+        (GIS_MAP_OVERLAY_ROUTES.to_owned(), features(&document.routes, gis_map_route_feature)),
+        (GIS_MAP_OVERLAY_REGIONS.to_owned(), features(&document.regions, gis_map_region_feature)),
+    ])
 }
 
 /// 📨️ The scene map descriptor: the document's overlays plus the GIS policy under `policy`, which every tiled-map host installs on sync.
 pub fn gis_map_scene_descriptor_json(document: &GisMapSnapshot) -> String {
-    static POLICY: OnceLock<Value> = OnceLock::new();
-    serde_json::json!({ "overlays": gis_map_overlays_value(document), "policy": POLICY.get_or_init(|| serde_json::to_value(gis_map_policy().descriptor()).unwrap_or_default()) }).to_string()
+    static POLICY: OnceLock<String> = OnceLock::new();
+    let policy = POLICY.get_or_init(|| map_policy_descriptor_json(gis_map_policy()));
+    format!("{{\"overlays\":{},\"policy\":{policy}}}", semio_framework_pack_json::to_json_string(&gis_map_overlays_value(document)))
 }
+
 // #endregion 🔖️JsonSurfaces
 // #endregion 🔖️GisMapPolicy
 

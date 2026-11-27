@@ -20,3 +20,6 @@ path = "../../🦀️.rs"
 semio-framework-artifact-workflow-workflow-graph = { path = "../../🕸️graph/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }

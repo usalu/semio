@@ -51,8 +51,8 @@ async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
         semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         let command=args_bridge::command_from_action(row["action"].as_str().unwrap(),None).unwrap();
-        store::os_store::test_support::assert_op_line_round_trip(&command);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_line_round_trip(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
         let (_,receipt)=settled(&mut app,command,&meta).await;
         assert_one_artifact_publication(&receipt);
         let after=app.snapshot().unwrap();

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Resident memory release of the slice worker / Rückgabe des residenten Speichers des Slice-Workers",
+  "description": "EN: Between owners a slice worker whose resident memory is far above its live heap and external memory runs one full collection and shrinks, so the scavenger returns the freed pages to the operating system and the memory warden and the plan guard see the live set, not the garbage the allocator still holds. It runs only above `minimumResidentMegabytes`, only while the resident memory exceeds `ratioBasisPoints` of heap plus external, and at most once per `minimumIntervalMilliseconds`; `SEMIO_SLICE_MEMORY_RELEASE=off` switches it off. DE: Zwischen zwei Eigentümern führt ein Slice-Worker, dessen residenter Speicher weit über Heap und externem Speicher liegt, eine vollständige Sammlung aus und schrumpft, damit die Seiten an das Betriebssystem zurückgehen.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "ratioBasisPoints": 15000,
+        "minimumResidentMegabytes": 1024,
+        "minimumIntervalMilliseconds": 15000,
+        "disableEnvironment": "SEMIO_SLICE_MEMORY_RELEASE",
+        "disabledValue": "off"
+      }
+    }
+  }
+}

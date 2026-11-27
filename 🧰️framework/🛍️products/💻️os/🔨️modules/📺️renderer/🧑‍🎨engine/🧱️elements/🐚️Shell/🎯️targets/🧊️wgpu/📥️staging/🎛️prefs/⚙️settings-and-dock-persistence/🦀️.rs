@@ -128,7 +128,7 @@ impl PrefsState {
     /// value encoded as `"<pluginId> <appId>"` exactly like React's `encodeDefaultAppValue`.
     pub fn build_settings_default_apps_ui(&self, plugins: &PluginState) -> UiNode {
         let is_de = self.locale_id == "de";
-        let rows = plugins.default_app_rows();
+        let rows = plugins.default_app_rows(self.active_terminology(), self.active_locale());
         if rows.is_empty() {
             return UiNode::Stack(UiStackNode {
                 direction: "column".into(),

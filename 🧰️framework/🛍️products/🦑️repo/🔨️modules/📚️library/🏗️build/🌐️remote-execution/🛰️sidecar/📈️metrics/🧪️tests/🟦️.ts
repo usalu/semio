@@ -6,6 +6,8 @@ import{readSeriesV1}from"../../../../../../../../../🔨️modules/🏃️proces
 import{createFleetMetricsCollectorV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🛰️collector/🟦️.ts";
 import{countUnitV1}from"../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts";
 import{countEventV1,openCounterLedgerV1}from"../../../../📈️counter-ledger/🟦️.ts";
+import{remoteCacheClientDirectoryV1}from"../../../../🌐️remote-cache/🛰️fleet/🧮️client-counters/🟦️.ts";
+import{countSkipV1}from"../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts";
 import{casCounterDirectoryV1}from"../../../../🗄️cas/🗃️store/🟦️.ts";
 import{bumpOffloadCountersV1}from"../../../🚀️offload/📊️counters/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
@@ -28,7 +30,8 @@ function fixture(origin:string,publisher:string=origin){
  countUnitV1(root,"remoteHit");countUnitV1(root,"stored");
  bumpOffloadCountersV1(root,{out:2,refused:1,fellBack:1},"no-idle-machine");
  for(let index=0;index<4;index++)countEventV1(casCounterDirectoryV1(cas),"localHit");countEventV1(casCounterDirectoryV1(cas),"localMiss");
- const ledger=openCounterLedgerV1({path:join(server,"v1","counters.json"),name:"remote-cache",now:()=>NOW});ledger.bind(()=>({ac:{hits:5,misses:2,puts:1,conflicts:0},cas:{hits:9},nx:{misses:3}}));ledger.close();
+ for(const [event,count] of [["ac-hits",5],["ac-misses",2],["ac-puts",1],["cas-hits",9],["nx-misses",3],["nx-refused",2]] as const)for(let index=0;index<count;index++)countEventV1(remoteCacheClientDirectoryV1(root),event);
+ for(const [reason,count] of [["read-only",3],["spool-full",2],["bypass-incremental",4]] as const)for(let index=0;index<count;index++)countSkipV1(root,reason);
  put(join(store,"v1","fleet","cache.json"),{publisher:{origin:publisher,directory:server}});
  put(join(own,"pool.json"),{updatedMs:NOW-1000,units:752,claimed:44,published:7,failed:2,rssMegabytes:900});
  put(join(own,"slice-memory.json"),{atMs:NOW-2000,phase:{name:"x",done:300,total:600},sources:{caches:{rowStore:{rows:72628}}}});
@@ -40,14 +43,16 @@ function fixture(origin:string,publisher:string=origin){
 
 test("the product sources read every counter file and every origin file of the store",()=>{
  const f=fixture("g1-t"),sources=fleetMetricsSourcesV1({root:f.root,environment:f.environment,origin:"g1-t",now:()=>NOW,directory:f.host});
- expect(sources.unitCounters!()).toEqual({localHit:2,remoteHit:1,miss:3,stored:1,skipped:0});
+ expect(sources.unitCounters!()).toEqual({localHit:2,remoteHit:1,miss:3,stored:1,skipped:9});
 
  expect(sources.cacheCounters!()).toEqual({localHit:4,localMiss:1,bytes:12345});
  countEventV1(machinePathV1(f.root,".cache",...NX_CACHE_POLICY_V1.directory),"nxLocalHit");countEventV1(machinePathV1(f.root,".cache",...NX_CACHE_POLICY_V1.directory),"nxExecuted");countEventV1(machinePathV1(f.root,".cache",...NX_CACHE_POLICY_V1.directory),"nxExecuted");
  expect(sources.cacheCounters!()).toEqual({localHit:5,localMiss:3,bytes:12345});
  expect(sources.offload!()).toEqual({out:2,refused:1,fellBack:1});
  expect(sources.facts!()).toBe(72628);
- expect(sources.remoteCache!()!.groups).toMatchObject({ac:{hits:5,misses:2,puts:1,conflicts:0},cas:{hits:9},nx:{misses:3}});
+ expect(sources.remoteCache!()!.groups).toMatchObject({ac:{hits:5,misses:2,puts:1,conflicts:0,refused:0},cas:{hits:9},nx:{misses:3,refused:2}});
+ expect(sources.skipReasons!()).toEqual({"read-only":3,"spool-full":2,"bypass-incremental":4});expect(sources.unitCounters!()!.skipped).toBe(9);
+ expect(sources.offloadReasons!()).toEqual({"no-idle-machine":1});
  expect(sources.pool!()).toEqual({units:752,claimed:44,published:7,failed:2,rssMegabytes:900});
  expect(sources.phase!()).toEqual({done:300,total:600});
  expect(sources.ready!()).toEqual({stageIndex:3,state:"running",attempts:2});
@@ -56,11 +61,11 @@ test("the product sources read every counter file and every origin file of the s
 
 test("a remote cache of another machine, stale pool and slice files and a missing store are gaps, never zeros; a store that has counted nothing yet has zero local hits and misses",()=>{
  const f=fixture("g1-t","g1-server"),stale=fleetMetricsSourcesV1({root:f.root,environment:f.environment,origin:"g1-t",now:()=>NOW+10*60_000,directory:f.host});
- expect(stale.remoteCache!()).toBeNull();expect(stale.pool!()).toBeNull();expect(stale.phase!()).toBeNull();expect(stale.facts!()).toBeNull();
+ expect(stale.remoteCache!()!.groups.ac!.hits,"the counts are this machine's own client counts, whichever machine serves the cache").toBeGreaterThanOrEqual(5);expect(stale.pool!()).toBeNull();expect(stale.phase!()).toBeNull();expect(stale.facts!()).toBeNull();
 
  process.env.SEMIO_MACHINE_STATE_DIRECTORY=scratch("state2");
  const none=fleetMetricsSourcesV1({root:scratch("empty"),environment:{SEMIO_CAS_ROOT:scratch("emptycas")},origin:"g1-t",now:()=>NOW,directory:f.host});
- expect(none.pool!()).toBeNull();expect(none.ready!()).toBeNull();expect(none.journal!()).toBeNull();expect(none.remoteCache!()).toBeNull();expect(none.cacheCounters!(),"no counter file yet means no event yet: zero hits and misses, so the first event of the machine is counted").toEqual({localHit:0,localMiss:0});expect(none.facts!()).toBeNull();
+ expect(none.pool!()).toBeNull();expect(none.ready!()).toBeNull();expect(none.journal!()).toBeNull();expect(none.remoteCache!()!.groups.ac).toEqual({hits:0,misses:0,puts:0,conflicts:0,refused:0});expect(none.cacheCounters!(),"no counter file yet means no event yet: zero hits and misses, so the first event of the machine is counted").toEqual({localHit:0,localMiss:0});expect(none.facts!()).toBeNull();
 });
 
 test("a collector fed by the product sources writes the deltas of the counters into the rings of the machine",()=>{

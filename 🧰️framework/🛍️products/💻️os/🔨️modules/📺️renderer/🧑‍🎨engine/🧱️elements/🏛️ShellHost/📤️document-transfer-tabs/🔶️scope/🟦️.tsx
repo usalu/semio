@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useDocumentTransferAndTabs. */
-import { programRetirementKeepsDocumentV1, type ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
+import { programRetirementKeepsDocumentV1, settleProgramRetirementsV1, type ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { NATURAL_FILE_PORT_ID, parseSurfaceAppId, type AppDefinition, type Severity } from "@semio-tech/framework";
 import { decodePackValue } from "@semio-tech/framework/packs";
 import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
@@ -7,6 +7,7 @@ import { type ActiveSession } from "../../../🐚️Shell/📦️program-session
 import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileSaveNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { naturalFileMediaInputV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { liveChromeTargetV1 } from "../../🖱️shell-actions/🧭️input-funnel/🎯️dispatch-target-and-view-state/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
@@ -19,7 +20,7 @@ import { programHistoryKeyV1, programHistoryProjectionV1, spawnedProgramViewStat
 import { shellUncommittedEditCountV1 } from "../../🏁️operation-settle/🟦️.ts";
 import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { openedProgramPublicationV1 } from "../../📂️opened-program/🟦️.ts";
-import { localCatalogBindingV1 } from "../../🗂️local-catalog/🟦️.ts";
+import { KEPT_OPEN_RETIREMENT_DEADLINE_MS_V1, KEPT_OPEN_RETIREMENT_POLL_MS_V1, keptOpenRouteV1, localCatalogBindingV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
 import { FOLDER_ENDPOINT_PATH } from "../../../../../../🏪️store/👷️worker/⚙️constants/🟦️.ts";
@@ -63,7 +64,9 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     if (publication === "already-primary") return true;
     if (primary !== null && shellUncommittedEditCountV1(programHistoryProjectionV1(core.historyStore.get(), programHistoryKeyV1(primary), EMPTY_SHELL_HISTORY_PROJECTION_V1).entries) > 0) {
       const identity = core.identityRef.current;
-      await onAction({ controllerId: primary.app.controllerId, action: "commitCheckpoint", args: { message: "auto", authors: identity ? [{ id: identity.userId, name: identity.displayName }] : [] } });
+      const checkpoint = { controllerId: primary.app.controllerId, action: "commitCheckpoint", args: { message: "auto", authors: identity ? [{ id: identity.userId, name: identity.displayName }] : [] } };
+      const owner = liveChromeTargetV1({ hostMode: core.hostMode, panel: parsePanelState(primary.viewState), loadedPlugins: core.loadedPluginsRef.current, activeWindowIdRef: core.activeWindowIdRef, spawnedIdsRef: core.spawnedIdsRef, contributorInstancesRef: core.contributorInstancesRef, session: primary, action: checkpoint, sealed: core.sealedInstancesRef.current });
+      if (owner !== null) await core.onActionRef.current(checkpoint);
       if (!current() || task.signal.aborted) return false;
     }
     let published = false;
@@ -403,6 +406,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       transferInFlightRef.current = false;
     }
   };
+  const settleProgramRetirements = (): Promise<void> => settleProgramRetirementsV1(core.programRetirementsInFlightRef.current);
   /** 📂️ Reopens the kept archive and exact selected surface under its persisted document identity. */
   const openKeptFile = async (document: LocalDocument, signal: AbortSignal): Promise<void> => {
     if (!beginDocumentTransferV1(transferInFlightRef)) return notifyDocumentTransfer("transfer-busy", document.name, "info");
@@ -427,6 +431,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       task.progress(completed, 4);
     };
     try {
+      await settleProgramRetirements();
       checkpoint(0);
       const role = parseSurfaceAppId(surface!.appId).role;
       const opening = await core.resolveArtifactOpeningWithActivationRef.current("os.open-artifact", { artifactRef: surface!.appId, role, pluginId: surface!.pluginId, appId: surface!.appId });
@@ -436,7 +441,14 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       if (core.pluginOpInFlightRef.current.has(surface!.pluginId)) throw new Error("natural-file.program-retiring");
       if (opening?.app.pluginId !== surface!.pluginId || opening.app.appId !== surface!.appId || owner === undefined || app?.io?.artifactSchema !== document.schema) throw new Error("natural-file.kept-surface-unavailable");
       handle = owner.handle;
-      const existing = core.openDocumentSessionsRef.current.get(document.documentId);
+      const sealedSession = (entry: NonNullable<ReturnType<typeof core.openDocumentSessionsRef.current.get>>): boolean => core.sealedInstancesRef.current.sealed(entry.plugin, entry.session.pluginId, entry.session.instanceId);
+      let existing = core.openDocumentSessionsRef.current.get(document.documentId);
+      for (let waited = 0; existing !== undefined && keptOpenRouteV1({ sealed: sealedSession(existing) }) === "await-retirement"; waited += KEPT_OPEN_RETIREMENT_POLL_MS_V1) {
+        if (waited >= KEPT_OPEN_RETIREMENT_DEADLINE_MS_V1) throw new Error("natural-file.program-retiring");
+        await new Promise<void>((resolve) => setTimeout(resolve, KEPT_OPEN_RETIREMENT_POLL_MS_V1));
+        checkpoint(0);
+        existing = core.openDocumentSessionsRef.current.get(document.documentId);
+      }
       if (existing !== undefined) {
         if (existing.plugin !== handle || existing.session.app.id !== app.id || !await publishOpenedProgram({ handle, app, instanceId: existing.session.instanceId, label: document.name, breadcrumb: app.breadcrumb }, task, keptOwnerHeld)) throw new Error("natural-file.kept-document-owner-mismatch");
         published = true;
@@ -481,7 +493,11 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     const hostSession = core.sessionRef.current;
     let pickedName = "";
     return openPickedFileV1<{ readonly handle: PluginWasmHandle; readonly app: AppDefinition }, File>({
-      select: async () => dropped ?? (await requestFileSelectionV1(acceptedExtensions))[0],
+      select: async () => {
+        const picked = dropped ?? (await requestFileSelectionV1(acceptedExtensions))[0];
+        await settleProgramRetirements();
+        return picked;
+      },
       claim: () => beginDocumentTransferV1(transferInFlightRef),
       release: () => { transferInFlightRef.current = false; },
       track: (name) => trackDocumentTransfer(name, "open-file"),

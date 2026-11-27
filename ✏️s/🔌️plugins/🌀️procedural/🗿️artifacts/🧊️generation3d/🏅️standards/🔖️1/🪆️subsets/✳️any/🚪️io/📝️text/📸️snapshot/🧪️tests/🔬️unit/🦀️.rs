@@ -4,7 +4,7 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
-use semio_os_kernel::os_store::test_support;
+use semio_os_store_test_support as test_support;
 use pack::snapshot::ArtifactDsl;
 use semio_framework_artifact_flow_flow::{FlowChannelRef,FlowNodeGui,FlowPreviewGui,FlowUi,NodeChrome,OrderedMap,OrderedSet,neural::{Neuron,Synapse,Tree}};
 

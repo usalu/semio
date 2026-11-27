@@ -25,7 +25,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// otherwise), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<CadApps>, PluginAssemblyError> {
     PluginBuilder::<_, CadApps>::new("cad")
-        .label("CAD")
+        .label(semio_plugin::LocalizedLabel::native("CAD", "CAD"))
         .version("0.1.0")
         .package_id("semio:cad")
         .artifact(semio_s_artifact_cad_cad::declaration().map_err(PluginAssemblyError::definition)?)

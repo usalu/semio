@@ -40,7 +40,7 @@ import {nativeImageBackingFilenameV1,nativeStatfsSyncV1} from "../💾️storage
 import {volumeMountOfV1} from "../../../🆓️free-space/💽️disk-full/🟦️.ts";
 import {nativeImageAvailabilityCorrectionMillisecondsV1, nativeImageContainerFreeBytesSyncV1, nativeImageRealAvailableBytesV1} from "../💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import { availableParallelism, constants as osConstants, homedir } from "node:os";
-import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -159,9 +159,18 @@ export function nativeBuildPassInputRequestsV1(plan: Pick<NativeBuildPlanV1, "pa
   return plan.passes.map(pass => Object.freeze({ manifest: pass.manifest, cwd: options.cwd, arguments: cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass), undefined, options.build), environment: Object.freeze({ ...options.environment, CARGO_TARGET_DIR: options.target, CARGO_BUILD_BUILD_DIR: options.build }), control: options.control }));
 }
 
-/** 🎟️ The registry read of the memory-admitting scheduler crate a driver builds when it is handed none: declared beside the pass requests, so the reader that spans the whole driver covers it instead of refusing it as an undeclared selection. */
-export function nativeBuildSchedulerInputRequestV1(options: Readonly<{ cwd: string; build: string; target: string; environment: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>): CargoCompilerInputsRequestV1 {
-  const selected = schedulerCargoSelectionV1(false, options.environment.SEMIO_BUILD_MODE === "prototype" ? "prototype" : "release");
+/** 🧭️ The scheduler selection rebased from the live origin onto the source root of a checkout snapshot; any other selection is unchanged. */
+export function nativeBuildSchedulerSelectionV1(selected: Readonly<{ manifest: string; args: readonly string[] }>, options: Readonly<{ cwd: string; originCwd?: string }>): Readonly<{ manifest: string; args: readonly string[] }> {
+  if (options.originCwd === undefined || options.originCwd === options.cwd) return selected;
+  const distance = relative(options.originCwd, selected.manifest);
+  if (distance.startsWith("..") || isAbsolute(distance)) return selected;
+  const manifest = join(options.cwd, distance);
+  return Object.freeze({ manifest, args: Object.freeze(selected.args.map(argument => argument === selected.manifest ? manifest : argument)) });
+}
+
+/** 🎟️ The registry read of the memory-admitting scheduler crate a driver builds when it is handed none: declared beside the pass requests, so the reader that spans the whole driver covers it instead of refusing it as an undeclared selection; it follows the source root of a checkout snapshot. */
+export function nativeBuildSchedulerInputRequestV1(options: Readonly<{ cwd: string; originCwd?: string; build: string; target: string; environment: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>): CargoCompilerInputsRequestV1 {
+  const selected = nativeBuildSchedulerSelectionV1(schedulerCargoSelectionV1(false, options.environment.SEMIO_BUILD_MODE === "prototype" ? "prototype" : "release"), options);
   return Object.freeze({ manifest: selected.manifest, cwd: options.cwd, arguments: cargoConfigurationArgumentsV1(selected.args, undefined, options.build), environment: Object.freeze({ ...options.environment, CARGO_TARGET_DIR: options.target, CARGO_BUILD_BUILD_DIR: options.build }), control: options.control });
 }
 
@@ -336,6 +345,7 @@ export type NativeBuildDriverOptionsV1 = Readonly<{
   withCargoInputs?:CargoCompilerInputsPortV1;
   withPassInputs?:<T>(requests:readonly CargoCompilerInputsRequestV1[],body:(control:CompilerAdmissionControl)=>Promise<T>)=>Promise<T>;
   cwd: string;
+  originCwd?: string;
   cacheRoot: string;
   shared: Readonly<{ target: string; build: string }>;
   generation: NativeBuildGenerationKindV1;
@@ -530,7 +540,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   });
   try {
   if(!options.scheduler){
-   const selected=schedulerCargoSelectionV1(false,options.environment.SEMIO_BUILD_MODE==="prototype"?"prototype":"release"),environment={...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build};
+   const selected=nativeBuildSchedulerSelectionV1(schedulerCargoSelectionV1(false,options.environment.SEMIO_BUILD_MODE==="prototype"?"prototype":"release"),options),environment={...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build};
    const scheduler=await withCargoCompilerInputsV1({manifest:selected.manifest,cwd:options.cwd,arguments:selected.args,environment,control:options.control},options.withCargoInputs,input=>input.withWriter(writer=>withCompilerCapacityConsumptionV1({directory:options.leaseDirectory,control:writer,environment:input.environment,request:{kind:"exact",parallelism:1}},async(_capacity,control)=>{
     const scheduler=(await buildSchedulerV1({cwd:options.cwd,targetDirectory:generation.target,buildDirectory:generation.build,environment:input.environment,arguments:input.arguments,control,storage:options.storage,sourceBoundary:options.sourceBoundary})).get("semio-build-scheduler");if(!scheduler)throw Error("Actual compiled scheduler required");return async()=>scheduler;
    })));options={...options,scheduler};

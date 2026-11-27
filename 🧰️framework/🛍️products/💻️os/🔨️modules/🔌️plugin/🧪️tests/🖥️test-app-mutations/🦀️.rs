@@ -16,9 +16,9 @@ pub use crate::test_app_mutation_fixture::document::TestSnapshot;
 #[doc(hidden)]
 #[test]
 pub fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<TestConfigMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<TestConfigMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<TestMutation>(include_str!("../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️TestAppMutationFixtures

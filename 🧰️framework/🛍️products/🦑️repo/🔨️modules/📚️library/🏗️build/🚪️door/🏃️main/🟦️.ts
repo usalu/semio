@@ -1,5 +1,5 @@
 import "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🚪️entry/🟦️.ts";
-import {runBuildDoorV1,startBuildDoorLivenessV1} from "../🟦️.ts";
+import {buildDoorStaysQuietV1,runBuildDoorV1,startBuildDoorLivenessV1} from "../🟦️.ts";
 import {profileMarkV1,profilePhaseV1} from "../../⏱️profile/🟨️.mjs";
 import {guardStandardStreamsV1} from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
@@ -8,5 +8,5 @@ import {guardStandardStreamsV1} from "../../../../../../../🔨️modules/⚙️
 export async function runBuildDoorMainV1(root:string,argv:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void>{
  guardStandardStreamsV1();
  profileMarkV1("boot.main");
- if(await runBuildDoorV1(root,argv,environment)==="full"){const stopLiveness=startBuildDoorLivenessV1(environment);try{const{runBuildWithRestartV1}=await import("../🔄️restart/🟦️.ts");await profilePhaseV1("cli.run",()=>runBuildWithRestartV1(async()=>{const{runBuildCliV1}=await import("../../📜️script.ts");await runBuildCliV1(root,argv);},argv).catch(async error=>{const{reportBoundaryErrorV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts");reportBoundaryErrorV1(error);}));}finally{stopLiveness();}}
+ if(await runBuildDoorV1(root,argv,environment)==="full"){const stopLiveness=buildDoorStaysQuietV1(argv,environment)?()=>undefined:startBuildDoorLivenessV1(environment);try{const{runBuildWithRestartV1}=await import("../🔄️restart/🟦️.ts");await profilePhaseV1("cli.run",()=>runBuildWithRestartV1(async()=>{const{runBuildCliV1}=await import("../../📜️script.ts");await runBuildCliV1(root,argv);},argv).catch(async error=>{const{reportBoundaryErrorV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts");reportBoundaryErrorV1(error);}));}finally{stopLiveness();}}
 }

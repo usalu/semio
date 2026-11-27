@@ -1,0 +1,15 @@
+[
+ {
+  "facet": "th-tp-.*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ]
+ },
+ {
+  "decision": {
+   "en": "Budget: every transpiration outlet is a faceted lobe, a polyhedron with the facets of its ellipsoid at 24 segments around (the surface every check of the volumes measures), so an outlet that is enlarged to the feature of a coarser scale costs no more triangles than the finer one.",
+   "de": "Budget: Jeder Transpirationsauslass ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 24 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst); ein Auslass, der auf das Merkmal eines gröberen Maßstabs vergrößert ist, kostet damit nicht mehr Dreiecke als der feinere."
+  }
+ }
+]

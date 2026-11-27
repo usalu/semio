@@ -52,6 +52,7 @@ semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/�
 semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust"}
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust"}
 semio-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }

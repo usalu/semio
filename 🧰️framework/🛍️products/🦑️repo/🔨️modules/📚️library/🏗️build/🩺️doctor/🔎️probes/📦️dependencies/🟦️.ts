@@ -3,7 +3,8 @@ import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {DependencyScopeFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
+import {readUnderImageLeaseV1} from "../💾️storage/🔒️image-lease/🟦️.ts";
+import type {DoctorProbeResultV1,DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 const dependencyInputsV1=async():Promise<readonly string[]>=>{const manager=(await import("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts")).selectPackageManagerV1("javascript");return [...manager.manifestFileNames(),manager.primaryLockName(),...manager.configurationNames("scope")];};
 const READY="bindings.json",KEY=/^[a-f0-9]{20}$/u;
@@ -17,6 +18,7 @@ export const dependenciesProbeV1:DoctorProbeV1=Object.freeze({
  async read(ports){
   const mount=join(ports.root,...budget.partitions.dependencies.directory.split("/"),"m");
   if(!existsSync(mount))return {unavailable:"The dependency image is not attached or was never created"};
+  const held=await readUnderImageLeaseV1(ports,budget.partitions.dependencies.directory,async():Promise<DoctorProbeResultV1>=>{
   const pointerDirectory=join(mount,"pointer"),generations=join(mount,"j"),now=ports.now();
   let names:string[]=[];try{names=readdirSync(pointerDirectory).filter(name=>name.endsWith(".pointer.json"));}catch{}
   const INPUTS=names.length===0?[]:await dependencyInputsV1();
@@ -42,5 +44,7 @@ export const dependenciesProbeV1:DoctorProbeV1=Object.freeze({
   }catch{}
   const average=sizes.length?Math.round(sizes.reduce((sum,value)=>sum+value,0)/sizes.length):0;
   return {sections:{dependencies:{pointers:names.length?"present":"absent",scopes,orphans,orphanEstimatedBytes:orphans*average,unready,unreadyOldestSeconds:oldest}}};
+  });
+  return held==="busy"?{unavailable:"The dependency image is held by a retirement, regrow or detach"}:held;
  },
 });

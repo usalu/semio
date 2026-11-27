@@ -24,4 +24,6 @@ pub trait StoreCloseWitness {
     fn close_structural_owners_terminal_is_empty(&self) -> bool;
     /// 🪦️ Whether every owned root has been detached.
     fn owned_roots_terminal_is_empty(&self) -> bool;
+    /// 🧭️ Names which owned root keeps `owned_roots_terminal_is_empty` false.
+    fn owned_roots_witness(&self) -> String;
 }

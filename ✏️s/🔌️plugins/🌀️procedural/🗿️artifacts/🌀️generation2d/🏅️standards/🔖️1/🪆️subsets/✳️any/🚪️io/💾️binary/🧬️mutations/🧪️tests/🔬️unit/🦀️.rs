@@ -9,7 +9,7 @@ use semio_s_artifact_procedural_2d_mut_widgets::delete_widget;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::OpText;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
-use semio_os_kernel::os_store::test_support;
+use semio_os_store_test_support as test_support;
 use store::os_store::store_schema::ArtifactCommand;
 
 //#region 🔖️OpTextTests

@@ -193,6 +193,8 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
   const dispatchCheckpoint = useCallback(
     (message: string): boolean => {
       if (focusedApp === null || !canCheckIn(focusedApp.role)) return false;
+      const focusedProgram = core.focusedProgram;
+      if (focusedProgram !== null && core.sealedInstancesRef.current.sealed(loadedPluginsRef.current.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle ?? null, focusedProgram.pluginId, focusedProgram.instanceId)) return false;
       const gate = checkpointGateV1(focusedHistoryV1().timeTravel, message);
       if (gate === "frozen") {
         const notice = historyRefusalNoticeV1("timeTravel.frozen");
@@ -209,7 +211,7 @@ export function useHostModeState({ core }: { readonly core: ShellCoreAfterDocume
       onAction({ controllerId: focusedApp.controllerId, action: "commitCheckpoint", args: { message, authors } });
       return true;
     },
-    [currentDocumentRuntimeKey, focusedApp, focusedHistoryV1, onAction],
+    [core, currentDocumentRuntimeKey, focusedApp, focusedHistoryV1, onAction],
   );
 
   const previousCheckpointIdRef = useRef<string | undefined>(undefined);

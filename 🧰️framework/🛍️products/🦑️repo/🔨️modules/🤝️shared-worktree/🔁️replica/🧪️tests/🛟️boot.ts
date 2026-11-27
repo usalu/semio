@@ -311,7 +311,7 @@ test("a refused first bootstrap snapshot publication is retried after the store 
  try{
   const digest=await codeDigestV1(where.module),target=join(store,"v1","bootstrap","code",digest);
   const blocker=join(store,"v1","bootstrap","code");
-  await until(()=>events.some(event=>event.event==="error"&&event.stage==="code-snapshot"&&event.message.includes(blocker)),row.timeout);
+  await until(()=>events.some(event=>event.event==="error"&&event.stage==="code-snapshot"&&event.message?.includes(blocker)===true),row.timeout);
   expect(existsSync(target)).toBe(false);
   rmSync(blocker);
   await until(async()=>(await listStoreCodeV1(store)).some(item=>item.digest===digest),row.timeout);

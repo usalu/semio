@@ -89,6 +89,8 @@ export function createLayerIndexV1({directory,limits=INFERENCE_LIMITS_V1}){
   table=found;tableIdentity=identity;return size;
  };
  return Object.freeze({
+  /** 🔓️ Closes the dictionary descriptor this process keeps open for reads, so no file of the image stays open between operations; the next read opens it again and listings handed out before answer nothing and fall back to their content-addressed layer. */
+  release(){closeRead();},
   /** 📖️ The dictionary ids of the rows of the layer `digest`, in layer order, or undefined while the list is absent, damaged or belongs to another dictionary than the one this process reads. */
   idsSync(digest){
    let bytes;try{bytes=readFileSync(idsPath(digest));}catch{return undefined;}

@@ -275,6 +275,7 @@
       "sampleMaximumAgeMilliseconds": 1000,
       "maximumWaiters": 256,
       "bypassMilliseconds": 30000,
+      "headOfLineMilliseconds": 60000,
       "maximumBypasses": 6,
       "agingMilliseconds": 300000,
       "lendAfterMilliseconds": 5000,

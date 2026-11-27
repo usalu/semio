@@ -3,7 +3,7 @@ use super::*;
 /// 🎨️ Original attribute rows and samples transfer unchanged while replaced original indices close under actual receipts.
 #[test]
 fn original_mesh_tessellation_attribute_projection_keeps_exact_original_rows(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");
     for copy in law["attributeProjection"]["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in[None,Some(0usize),Some(4),Some(15),Some(30)]{

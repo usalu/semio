@@ -157,7 +157,6 @@ pub enum SemioDrawingFormat {
     Svg,
     Dxf,
     Dwg,
-    Pdf { version: &'static str },
     Png,
 }
 

@@ -29,8 +29,8 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id.into(), after.clone().into());
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
     let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(decoded, after);
     let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");

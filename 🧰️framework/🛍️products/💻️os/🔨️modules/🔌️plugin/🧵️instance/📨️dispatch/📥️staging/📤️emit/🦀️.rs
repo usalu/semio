@@ -11,7 +11,7 @@ use crate::dispatch_bundle::DispatchCtx;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation;
 use semio_framework::{AppEvent, AppRole, ArtifactHandle, ArtifactDiff, ArtifactVersion, ActorId, DslValue, Effect, HybridLogicalTimestamp, InvocationId, InvocationResult, InverseMutation, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
 use semio_framework::kernel::{EditRef, UiDirtyScope};
 use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};

@@ -10,6 +10,7 @@ import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {listOriginsV1} from "../../📒️journal/🟦️.ts";
+import type {LatencyReportV1} from "../../🎣️tiers/🟦️.ts";
 import {platformV1} from "../../🗺️topology/🟦️.ts";
 import {parseGitViewV1} from "../../🌿️git/🟦️.ts";
 import {closeReplicaV1,CompactTableV1,compactV1,homedOriginsV1,joinV1,openReplicaV1,publishOnceV1,ReplicaBookV1,relayOnceV1,runV1,seedV1,setSyncEnabledV1,type ReplicaEventV1,type ReplicaV1,type ReplicaOptionsV1} from "../../🔁️replica/🟦️.ts";
@@ -21,7 +22,8 @@ const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:stri
 const scratch:string[]=[],python=testPythonV1(),temp=(label:string):string=>{const path=mkdtempSync(join(tmpdir(),`attest-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
-const idle={passes:0,lastMs:null,dutyPercent:null},silent={publishMs:{p50:null,p95:null},applyMs:{p50:null,p95:null},samples:{publish:0,apply:0},tiers:{hot:idle,sweep:idle,file:idle,walk:idle,view:idle}};
+const headsOf=(heads:Readonly<Record<string,Readonly<{segment:number;bytes:number}>|undefined>>):Record<string,Readonly<{segment:number;bytes:number}>>=>Object.fromEntries(Object.entries(heads).flatMap(([origin,head])=>head===undefined?[]:[[origin,head]]));
+const idle:LatencyReportV1["tiers"]["hot"]={passes:0,lastMs:null,dutyPercent:null},silent:LatencyReportV1={publishMs:{p50:null,p95:null},applyMs:{p50:null,p95:null},samples:{publish:0,apply:0},tiers:{hot:idle,sweep:idle,file:idle,walk:idle,view:idle}};
 const git={present:true,head:"refs/heads/main",commit:"a".repeat(40),indexTree:"c".repeat(40)};
 const fast={pollMilliseconds:10,scanSeconds:1,debounceMilliseconds:5,persistMilliseconds:0,attestMilliseconds:100,restartStableMilliseconds:100,restartJitterMilliseconds:0,minimumUptimeMilliseconds:0,selfCheck:async()=>({ok:true as const}),logFiles:[] as string[],viewMilliseconds:300,viewDebounceMilliseconds:50};
 type Runner={name:string;options:ReplicaOptionsV1;events:ReplicaEventV1[];controller:AbortController;done?:Promise<void>};
@@ -50,7 +52,7 @@ const agreed=async(store:string,count:number):Promise<boolean>=>{const report=aw
 test("the fixture and a report satisfy the closed schema",()=>{
  const check=validator("Fixture");
  expect(check(fixture),JSON.stringify(check.errors?.[0])).toBe(true);
- const report=judgeFleetV1({now:fixture.verdicts[0]!.now,heads:fixture.verdicts[0]!.heads,attestations:fixture.verdicts[0]!.attestations as unknown as Record<string,FleetAttestationV1>,retirements:{}});
+ const report=judgeFleetV1({now:fixture.verdicts[0]!.now,heads:headsOf(fixture.verdicts[0]!.heads),attestations:fixture.verdicts[0]!.attestations as unknown as Record<string,FleetAttestationV1>,retirements:{}});
  expect(validator("Report")(report)).toBe(true);
 });
 
@@ -65,11 +67,11 @@ for(const row of fixture.code)test(`code digest vector: ${row.name}`,async()=>{
 });
 
 for(const row of fixture.verdicts)test(`fleet verdict vector: ${row.name}`,()=>{
- expect(judgeFleetV1({now:row.now,heads:row.heads,attestations:row.attestations as unknown as Record<string,FleetAttestationV1>,retirements:row.retirements as Record<string,RetirementV1>,...("registered" in row?{registered:row.registered as string[]}:{})})).toEqual(row.expected as FleetReportV1);
+ expect(judgeFleetV1({now:row.now,heads:headsOf(row.heads),attestations:row.attestations as unknown as Record<string,FleetAttestationV1>,retirements:row.retirements as Record<string,RetirementV1>,...("registered" in row?{registered:row.registered as string[]}:{})})).toEqual(row.expected as FleetReportV1);
 });
 
 for(const row of fixture.agreements)test(`fleet agreement vector: ${row.name}`,()=>{
- const report=judgeFleetV1({now:row.now,heads:row.heads,attestations:row.attestations as unknown as Record<string,FleetAttestationV1>,retirements:row.retirements as Record<string,RetirementV1>,windows:row.windows as unknown as Record<string,GapWindowV1>});
+ const report=judgeFleetV1({now:row.now,heads:headsOf(row.heads),attestations:row.attestations as unknown as Record<string,FleetAttestationV1>,retirements:row.retirements as Record<string,RetirementV1>,windows:row.windows as unknown as Record<string,GapWindowV1>});
  expect(report).toEqual(row.expected as unknown as FleetReportV1);
  expect(validator("Report")(report)).toBe(true);
 });
@@ -78,7 +80,7 @@ for(const row of fixture.gitComparisons)test(`Git evidence vector: ${row.name}`,
  for(const [left,right] of [[row.left,row.right],[row.right,row.left]] as const){
   const result=compareCheckpointsV1({git:left},{git:right},row.left.wallMs,{});
   expect(result.known.has("git")).toBe(row.known);
-  expect(result.items.map(({field,same})=>({field,same}))).toEqual(row.compared);
+  expect<unknown>(result.items.map(({field,same})=>({field,same}))).toEqual(row.compared);
  }
 });
 
@@ -662,11 +664,11 @@ test("the daemon attests liveness while the initial Git sample is blocked",async
  try{
   await entered.promise;
   await until(async()=>(await readAttestationV1(store,who.name))!==undefined,3000);
-  expect(await actual()).toEqual(results[0]);
+  expect<unknown>(await actual()).toEqual(results[0]);
   expect((await readAttestationV1(store,who.name))?.view).toBeNull();
   release.resolve();
   await until(async()=>(await actual()).tree===git.indexTree,3000);
-  expect(await actual()).toEqual(results[1]);
+  expect<unknown>(await actual()).toEqual(results[1]);
  }finally{release.resolve();database.close();await stop(who);}
 });
 
@@ -684,13 +686,13 @@ test("a certified stage is reported while its initial worktree view is still rea
  try{
   await attester.start();
   expect(await attester.tick(snapshot)).toBe("written");
-  expect(await observed()).toEqual(oracle[0]);
+  expect<unknown>(await observed()).toEqual(oracle[0]);
   expect(existsSync(viewPathV1(store,"a1"))).toBe(false);
   expect(calls).toBe(1);
   release.resolve();await measured.promise;
   clock+=1000;
   expect(await attester.tick(snapshot)).toBe("written");
-  expect(await observed()).toEqual(oracle[1]);
+  expect<unknown>(await observed()).toEqual(oracle[1]);
   expect(await readViewLinesV1(store,"a1",view.digest)).toEqual(view.lines);
   expect(calls).toBe(1);
  }finally{release.resolve();database.close();}
@@ -917,7 +919,7 @@ test("a replica whose guards differ is named by origin and field, capability dif
 test("an origin without git is exempt from the view agreement",()=>{
  const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>;
  const view={staged:0,modified:1,deleted:0,untracked:0,digest:"a".repeat(64)};
- const report=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:null}},retirements:{}});
+ const report=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:null}},retirements:{}});
  expect(report.ok).toBe(true);
  expect(report.differing).toEqual([]);
 });
@@ -925,13 +927,13 @@ test("an origin without git is exempt from the view agreement",()=>{
 test("a stale view is not settled, so the fleet waits instead of reporting a divergence, and it is shown to the schema",()=>{
  const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>;
  const view={staged:0,modified:1,deleted:0,untracked:0,digest:"a".repeat(64)},stale={...view,digest:"b".repeat(64),stale:true};
- const report=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:stale}},retirements:{}});
+ const report=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:stale}},retirements:{}});
  expect(report.ok).toBe(false);
  expect(report.rows.map(row=>[row.originId,row.verdict])).toEqual([["a","ok"],["b","ok"],["c","lagging"]]);
  expect(report.differing).toEqual([]);
  expect(validator("Attestation")({...attestations.c!,view:stale})).toBe(true);
  expect(validator("Attestation")({...attestations.c!,view:{...stale,stale:"yes"}})).toBe(false);
- const fresh=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:{...stale,stale:false}}},retirements:{}});
+ const fresh=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:{...attestations.a!,view},b:{...attestations.b!,view},c:{...attestations.c!,view:{...stale,stale:false}}},retirements:{}});
  expect(fresh.differing).toHaveLength(1);
 });
 
@@ -939,17 +941,17 @@ test("workers that cannot resolve HEAD while another origin has one are diverged
  const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>,commit="1".repeat(40);
  const view={staged:0,modified:1,deleted:0,untracked:0,digest:"a".repeat(64)},tree="2".repeat(40);
  const server={...attestations.a!,head:{ref:"refs/heads/main",commit},indexTree:tree,view:{...view,stale:true}},one={...attestations.b!,head:null,indexTree:tree,view},two={...attestations.c!,head:null,indexTree:tree,view};
- const report=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:server,b:one,c:two},retirements:{}});
+ const report=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:server,b:one,c:two},retirements:{}});
  expect(report.ok).toBe(false);
  expect(report.rows.map(row=>[row.originId,row.verdict])).toEqual([["a","lagging"],["b","diverged"],["c","diverged"]]);
  expect(report.rows.find(row=>row.originId==="b")!.differs).toContain("head.commit");
  expect(report.differing.filter(item=>item.field==="head.commit").map(item=>[item.originId,item.value,item.expected])).toEqual([["b",null,commit],["c",null,commit]]);
  expect(report.warnings.filter(item=>item.kind==="git-broken").map(item=>[item.originId,item.detail])).toEqual([["b","head-null"],["c","head-null"]]);
  expect(validator("Report")(report)).toBe(true);
- const named={...one,head:null,failures:[{kind:"git-broken-tip-missing",count:3,lastMs:one.wallMs-1000}]},alone=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...server,view},b:named,c:{...two,head:{ref:"refs/heads/main",commit}}},retirements:{}});
+ const named={...one,head:null,failures:[{kind:"git-broken-tip-missing",count:3,lastMs:one.wallMs-1000}]},alone=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:{...server,view},b:named,c:{...two,head:{ref:"refs/heads/main",commit}}},retirements:{}});
  expect(alone.warnings.filter(item=>item.kind==="git-broken").map(item=>[item.originId,item.detail])).toEqual([["b","tip-missing"]]);
  expect(alone.rows.find(row=>row.originId==="b")!.verdict).toBe("diverged");
- const noGit=judgeFleetV1({now:base.now,heads:base.heads,attestations:{a:{...server,view},b:{...one,indexTree:null},c:{...two,head:{ref:"refs/heads/main",commit},indexTree:tree}},retirements:{}});
+ const noGit=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{a:{...server,view},b:{...one,indexTree:null},c:{...two,head:{ref:"refs/heads/main",commit},indexTree:tree}},retirements:{}});
  expect(noGit.warnings.filter(item=>item.kind==="git-broken")).toEqual([]);
 });
 
@@ -963,7 +965,7 @@ test("recent historical observations do not warn after an exact stage is certifi
    const report=judgeFleetV1({now:base.now,heads:{a:base.heads.a!},attestations:{a:item},retirements:{}});
    return {expected:report.warnings.find(warning=>warning.kind==="stage")?.detail??null};
   });
-  expect(observed).toEqual(oracle);
+  expect<unknown>(observed).toEqual(oracle);
  }finally{database.close();}
 });
 
@@ -971,15 +973,15 @@ test("a machine whose index tree differs from the others is diverged in indexTre
  const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>,commit="1".repeat(40),tree="2".repeat(40),other="3".repeat(40);
  const view={staged:0,modified:0,deleted:0,untracked:0,digest:"a".repeat(64)},head={ref:"refs/heads/main",commit};
  const members={a:{...attestations.a!,head,indexTree:tree,view},b:{...attestations.b!,head,indexTree:tree,view},c:{...attestations.c!,head,indexTree:other,view,failures:[{kind:"stage-objects-missing",count:1,lastMs:attestations.c!.wallMs-1000}]}};
- const report=judgeFleetV1({now:base.now,heads:base.heads,attestations:members,retirements:{}});
+ const report=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:members,retirements:{}});
  expect(report.ok).toBe(false);
  expect(report.rows.find(row=>row.originId==="c")).toMatchObject({verdict:"diverged",differs:["indexTree"]});
  expect(report.differing.filter(item=>item.field==="indexTree").map(item=>[item.originId,item.value,item.expected])).toEqual([["c",other,tree]]);
  expect(report.warnings.filter(item=>item.kind==="stage").map(item=>[item.originId,item.detail])).toEqual([["c","objects-missing"]]);
  expect(validator("Report")(report)).toBe(true);
- const behind=judgeFleetV1({now:base.now,heads:base.heads,attestations:{...members,c:{...members.c,indexTree:tree,head:{ref:"refs/heads/main",commit:"4".repeat(40)},failures:undefined}},retirements:{}});
+ const behind=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{...members,c:{...members.c,indexTree:tree,head:{ref:"refs/heads/main",commit:"4".repeat(40)},failures:undefined}},retirements:{}});
  expect(behind.rows.find(row=>row.originId==="c")).toMatchObject({verdict:"diverged",differs:["head.commit"]});
- const agreed=judgeFleetV1({now:base.now,heads:base.heads,attestations:{...members,c:{...members.c,indexTree:tree,failures:undefined}},retirements:{}});
+ const agreed=judgeFleetV1({now:base.now,heads:headsOf(base.heads),attestations:{...members,c:{...members.c,indexTree:tree,failures:undefined}},retirements:{}});
  expect(agreed.rows.map(row=>row.verdict)).toEqual(["ok","ok","ok"]);
  expect(agreed.warnings.filter(item=>item.kind==="stage")).toEqual([]);
 });
@@ -1036,7 +1038,7 @@ test("a rejected Git observation withdraws its checkpoint and counts only each f
    const receipt=(await readAttestationV1(store,"a1"))!;
    expect(receipt.indexTree,row).toBe(row==="exact"?git.indexTree:null);
    expect(receipt.checkpoints?.git?.indexTree,row).toBe(row==="exact"?git.indexTree:undefined);
-   expect({rejected:counts.get("stage-observe-observation-failed")?.count??0,moved:counts.get("stage-observe-index-changed")?.count??0},row).toEqual(oracle.get(JSON.stringify(rows),index));
+   expect<unknown>({rejected:counts.get("stage-observe-observation-failed")?.count??0,moved:counts.get("stage-observe-index-changed")?.count??0},row).toEqual(oracle.get(JSON.stringify(rows),index));
    expect(JSON.stringify(receipt)).not.toContain("private-index-reason");
    expect(validator("Attestation")(receipt)).toBe(true);
   }

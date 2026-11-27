@@ -134,6 +134,13 @@ export function createSealedInstanceLedgerV1(slots: number = SEALED_INSTANCE_LED
   };
 }
 
+/** 🪦️ The session a shell-chrome note may address: the one live at call time, and only while its program is loaded and its
+ * instance unsealed. A long-lived window callback that captured a session before a replacement resolves here to the
+ * successor — or to `null` — so no command is ever dispatched to a sealed instance. */
+export function liveNoteTargetV1<T extends Readonly<{ pluginId: string; instanceId: number }>>(live: T | null, handle: object | null, sealed: SealedInstanceLedgerV1): T | null {
+  return live === null || handle === null || sealed.sealed(handle, live.pluginId, live.instanceId) ? null : live;
+}
+
 /** 🔇️ The ONE typed diagnostic a sealed instance's late work is allowed to produce. Everything a
  * retired instance is still addressed by — a queued action, a completion's host-effect pass, an
  * extension answer landing after the round trip — resolves to this and stops, instead of reaching

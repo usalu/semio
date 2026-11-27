@@ -3,7 +3,7 @@ use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1996Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    semio_os_store_test_support::assert_dsl_round_trip(&En1996Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -16,6 +16,6 @@ async fn loadbearing_wall_example_fixture_parses_and_round_trips() {
     assert_eq!(document.storeys, 2);
     assert_eq!(document.walls.len(), 1);
     assert_eq!(document.walls[0].id, "wall-north");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
     let _ = EN1996_LOADBEARING_WALL_EXAMPLE_TEXT;
 }

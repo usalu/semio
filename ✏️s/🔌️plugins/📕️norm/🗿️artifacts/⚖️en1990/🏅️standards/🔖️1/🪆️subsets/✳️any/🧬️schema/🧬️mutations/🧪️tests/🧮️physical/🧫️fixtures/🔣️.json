@@ -2,7 +2,7 @@
   "schema": "s.norm-eurocode.en1990.physical-public-factory.v1",
   "bodyBytes": 4096,
   "maximumTurns": 100000,
-  "copyBytes": 4096,
+  "copyBytes": 8192,
   "capacityBytes": 65536,
   "releaseBytes": 65536,
   "depth": 4096,

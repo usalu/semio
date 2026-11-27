@@ -14,7 +14,7 @@ const osDev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍
 const fixture = join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
 const url = process.env.PDF_PANE_URL ?? "http://127.0.0.1:6260/";
 const out = join(import.meta.dir, "🗑️generated", process.env.PDF_JOURNEY_OUT ?? "pdf-journey");
-const steps = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["en", "de", "open-en", "open-de", "transfer-en", "transfer-de", "details-en", "details-de", "a11y-en", "a11y-de"];
+const steps = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["en", "de", "open-en", "open-de", "transfer-en", "transfer-de", "details-en", "details-de", "a11y-en", "a11y-de", "ops-en", "ops-de"];
 const OPEN_BOUND_MS = Number(process.env.PDF_OPEN_BOUND_MS ?? 120_000);
 const OPENED = /^shell\.(?:documentTransfer\.(?:file-opened|file-open-failed|open-cancelled|transfer-busy)|openFile\.[^|]+)\|/u;
 
@@ -109,8 +109,23 @@ async function session(browser: Browser, locale: "en-US" | "de-DE", step: string
     await field.press("Enter");
     await page.waitForTimeout(1000);
   };
+  const act = async (id: string, args: Record<string, string>) => {
+    const camel = id.replace(/-(\w)/gu, (_, letter: string) => letter.toUpperCase());
+    const first = Object.keys(args)[0];
+    let pressed = await press(id);
+    if (await page.locator(`[id$="action.${camel}.arg.${first}.input"]`).count() === 0) pressed = await press(id);
+    for (const [key, entry] of Object.entries(args)) await page.locator(`[id$="action.${camel}.arg.${key}.input"]`).first().fill(entry);
+    const form = await page.evaluate((suffix) => [...document.querySelectorAll(`[id$="${suffix}"],[id*="action."][id$=".input"]`)].map(element => `${element.id.slice(-48)}=${(element as HTMLInputElement).value}`), `action.${camel}.execute`);
+    const executeState = await page.evaluate((suffix) => [...document.querySelectorAll(`[id$="${suffix}"]`)].map(element => `${(element as HTMLButtonElement).disabled}|${element.getAttribute("aria-disabled")}|${(element.textContent ?? "").trim()}`), `action.${camel}.execute`);
+    const hit = await page.evaluate((suffix) => [...document.querySelectorAll(`[id$="${suffix}"]`)].map(element => { const box = element.getBoundingClientRect(); const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2); return `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)} top=${top === element || element.contains(top) ? "self" : `${top?.tagName}#${top?.id}.${(top?.className as string | undefined)?.toString().slice(0, 60)}`}`; }), `action.${camel}.execute`);
+    const covered = hit.some(line => !line.endsWith("top=self"));
+    const submitted = await clickUncovered(page, `[id$="action.${camel}.execute"]`);
+    await page.waitForTimeout(Number(process.env.ACT_WAIT_MS ?? 2500));
+    const after = await page.evaluate(() => [...document.querySelectorAll("input")].filter(input => /rotation|drehung/iu.test(`${input.getAttribute("aria-label") ?? ""} ${input.id}`)).map(input => `${input.getAttribute("aria-label")}=${input.value}`));
+    return { id, pressed, submitted, covered, hit, form, executeState, after, notices: (await notices()).slice(-4), alerts: await alerts() };
+  };
   const titleValue = (language: "en" | "de") => page.getByRole("textbox", { name: labels[language].title, exact: true }).first().inputValue().catch(() => "");
-  return { context, page, faults, notices, alerts, noticeWithCode, open, save, shot, text, pageRows, press, insertText, setTitle, titleValue, canvasHash };
+  return { context, page, faults, notices, alerts, noticeWithCode, open, save, shot, text, pageRows, press, act, insertText, setTitle, titleValue, canvasHash };
 }
 
 const pdfText = (bytes: Uint8Array) => new TextDecoder("latin1").decode(bytes);
@@ -228,7 +243,7 @@ async function details(browser: Browser, language: "en" | "de") {
     const title = language === "en" ? "Details Title" : "Detailtitel";
     const before = await pane.titleValue(language);
     await pane.press("setSnapshotValue");
-    for (const [key, entry] of Object.entries({ path: "/info/title", value: JSON.stringify(title) })) await pane.page.locator(`[id$="action.setSnapshotValue.arg.${key}.input"]`).first().fill(entry);
+    for (const [key, entry] of Object.entries({ path: "/info/title", value: title })) await pane.page.locator(`[id$="action.setSnapshotValue.arg.${key}.input"]`).first().fill(entry);
     await clickUncovered(pane.page, '[id$="action.setSnapshotValue.execute"]');
     let shown = "";
     for (const deadline = Date.now() + 20_000; !shown.includes(title) && Date.now() < deadline; await pane.page.waitForTimeout(500)) shown = await pane.titleValue(language);
@@ -239,7 +254,7 @@ async function details(browser: Browser, language: "en" | "de") {
     verdicts.push({ step: `${language}: the Details pane sets the title of an untitled document`, pass: before === "" && shown.includes(title) && layer && inFile, evidence: { before, shown, layer, inFile, bytes: saved.bytes.byteLength, alerts: await pane.alerts(), faults: pane.faults.slice(0, 8) } });
     await pane.press("setSnapshotValue");
     if (await pane.page.locator('[id$="action.setSnapshotValue.arg.path.input"]').count() === 0) await pane.press("setSnapshotValue");
-    for (const [key, entry] of Object.entries({ path: "/info/nonexistent", value: JSON.stringify("x") })) await pane.page.locator(`[id$="action.setSnapshotValue.arg.${key}.input"]`).first().fill(entry);
+    for (const [key, entry] of Object.entries({ path: "/info/nonexistent", value: "x" })) await pane.page.locator(`[id$="action.setSnapshotValue.arg.${key}.input"]`).first().fill(entry);
     await clickUncovered(pane.page, '[id$="action.setSnapshotValue.execute"]');
     const refused = await pane.noticeWithCode("stdio.pdf.unknown-field", labels[language].unknownField);
     await pane.shot(`${language}-details-2-refused`);
@@ -394,6 +409,40 @@ async function expandProbe(browser: Browser) {
   }
 }
 
+/** 📑️ Page operations on a new document: insert a second A4 page, draw a rectangle and write text on it, rotate it by 90 degrees, save, then let a third-party reader (pymupdf and pypdf, `journey-oracle.py`) confirm two pages, the A4 box, the rotation, the text and the title, and reopen the saved file in the pane. */
+async function pageOperations(browser: Browser, language: "en" | "de") {
+  const pane = await session(browser, language === "en" ? "en-US" : "de-DE", `ops-${language}`);
+  try {
+    const title = language === "en" ? "Page Operations" : "Seitenoperationen";
+    const marker = language === "en" ? "Second Page" : "Zweite Seite";
+    await pane.setTitle(language, title);
+    const two = (body: string) => language === "en" ? body.includes("Page 2 / 2") : body.includes("Seite 2 / 2");
+    const inserted = await pane.act("insert-page", { page: "2", width: "595", height: "842" });
+    for (const deadline = Date.now() + 15_000; !two(await pane.text()) && Date.now() < deadline;) await pane.page.waitForTimeout(500);
+    const pagesShown = two(await pane.text());
+    const rectangle = await pane.act("insert-rectangle", { page: "2", x: "72", y: "600", width: "200", height: "100", red: "1", green: "0", blue: "0" });
+    const text = await pane.insertText(marker, "2");
+    const rotated = await pane.act("set-page-rotation", { page: "2", x: "90" });
+    await pane.shot(`${language}-ops-1-edited`);
+    const textShown = (await pane.text()).includes(marker);
+    const saved = await pane.save(`${language}-ops.pdf`).catch(error => ({ pressed: "failed", path: "", suggested: String(error).slice(0, 120), bytes: new Uint8Array() }));
+    const oracle = saved.bytes.byteLength > 0 ? Bun.spawnSync(["uv", "run", "--offline", "--with", "pymupdf==1.26.7", "--with", "pypdf", "python", "-I", join(import.meta.dir, "journey-oracle.py"), "ops", saved.path, title, marker], { stdout: "pipe", stderr: "pipe" }) : undefined;
+    const oracleOk = oracle?.exitCode === 0;
+    verdicts.push({ step: `${language}: insert page, rectangle, text and rotation survive Save in a third-party reader`, pass: pagesShown && textShown && oracleOk && ![inserted, rectangle, rotated].some(step => step.covered), evidence: { inserted, pagesShown, rectangle, text, rotated, textShown, bytes: saved.bytes.byteLength, oracle: `${oracle?.stdout.toString() ?? ""}${oracle?.stderr.toString() ?? ""}`.slice(-1500), faults: pane.faults.slice(0, 8) } });
+    if (saved.bytes.byteLength > 0) {
+      const again = await pane.open(saved.path);
+      for (const deadline = Date.now() + 15_000; !two(await pane.text()) && Date.now() < deadline;) await pane.page.waitForTimeout(500);
+      await pane.shot(`${language}-ops-2-reopened`);
+      const body = await pane.text();
+      const titleAgain = await pane.titleValue(language);
+      verdicts.push({ step: `${language}: reopen keeps both pages, the text and the title`, pass: again.notice.startsWith("shell.documentTransfer.file-opened|") && two(body) && body.includes(marker) && titleAgain.includes(title), evidence: { notice: again.notice, pages: two(body), textAgain: body.includes(marker), titleAgain, faults: pane.faults.slice(0, 8) } });
+    }
+    consoleVerdict(`${language} page operations`, pane);
+  } finally {
+    await pane.context.close();
+  }
+}
+
 /** 🔬️ Diagnostic: after insert-text, which gesture makes the pane show the text. */
 async function probe(browser: Browser) {
   const pane = await session(browser, "en-US", "probe");
@@ -455,6 +504,7 @@ try {
       else if (step === "a11y-en" || step === "a11y-de") await accessibility(browser, step === "a11y-en" ? "en" : "de");
       else if (step === "probe") await probe(browser);
       else if (step === "expand") await expandProbe(browser);
+      else if (step === "ops-en" || step === "ops-de") await pageOperations(browser, step === "ops-en" ? "en" : "de");
       else if (step === "transfer-en" || step === "transfer-de") await transfer(browser, step === "transfer-en" ? "en" : "de");
       else throw new Error(`Unknown journey step: ${step}`);
     } catch (error) {

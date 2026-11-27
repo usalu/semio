@@ -1,0 +1,22 @@
+{
+  "title": "Split PDF Out of the Stdio Drawing Export and Import Umbrellas",
+  "emoji": "✂️",
+  "status": "open",
+  "description": "Restructure the stdio semio drawing export/import umbrellas so consumers depend only on the formats they use: carve drawing-pdf-export and drawing-pdf-import crates, narrow the PDF writer out of conformance-support where feasible, move each plugin's PDF serializer (gismap first) into its own crate that only the app composition root depends on, update all dependent manifests and Cargo.lock in one sweep. Measure gismap lib closure before/after (756 local crates, 87 pdf before). Follows plan in 26/11/22/GIS-PLUGIN-END-TO-END/gis-dependency-closure.md.",
+  "goal": "runningstdio",
+  "sessions": [
+    "9fd22dad-a997-4fcb-9930-ebbffa0bee48"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 00:22:27",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Restructure the stdio semio drawing export/import umbrellas so consumers depend only on the formats they use: carve drawing-pdf-export and drawing-pdf-import crates, narrow the PDF writer out of conformance-support where feasible, move each plugin's PDF serializer (gismap first) into its own crate that only the app composition root depends on, update all dependent manifests and Cargo.lock in one sweep. Measure gismap lib closure before/after (756 local crates, 87 pdf before). Follows plan in 26/11/22/GIS-PLUGIN-END-TO-END/gis-dependency-closure.md.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

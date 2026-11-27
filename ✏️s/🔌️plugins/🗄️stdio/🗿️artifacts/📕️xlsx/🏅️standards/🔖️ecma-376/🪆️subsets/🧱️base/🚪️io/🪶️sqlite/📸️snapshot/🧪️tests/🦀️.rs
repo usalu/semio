@@ -141,7 +141,7 @@ fn sqlite_snapshot_xlsx_partial_part_reconstruction_retires_deep_completed_docum
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_xlsx_actual_declaration_exposes_complete_typed_snapshot() {
     use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
-    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("XLSX SQLite").version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition().unwrap()).unwrap()).try_build().unwrap();
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label(semio_plugin::LocalizedLabel::native("XLSX SQLite", "XLSX-SQLite")).version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
     let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
@@ -354,7 +354,7 @@ fn sqlite_snapshot_xlsx_complete_literal_native_file_matches_independent_fixture
 async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_and_reject_foreign_state() {
     use semio_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
-        .label("XLSX exact owned subsets")
+        .label(semio_plugin::LocalizedLabel::native("XLSX exact owned subsets", "Exakte eigene XLSX-Teilmengen"))
         .version("0.0.1")
         .package_id("semio:stdio")
         .artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition().unwrap()).unwrap())

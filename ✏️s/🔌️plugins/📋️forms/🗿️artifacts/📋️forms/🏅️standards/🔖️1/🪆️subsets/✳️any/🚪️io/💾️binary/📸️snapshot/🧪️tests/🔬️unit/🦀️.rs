@@ -10,13 +10,13 @@ async fn snapshot_pack_round_trips_with_composed_children() {
     let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
     let (structure, results) = forms_children_from_steps(&steps);
     let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, definition: Default::default(), responses: Vec::new(), structure, results };
-    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
+    semio_os_store_test_support::assert_pack_schema_identity(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn building_component_fixture_pack_agrees_with_dsl() {
     let spec = dsl::parse_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);
 }
@@ -24,7 +24,7 @@ async fn building_component_fixture_pack_agrees_with_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn default_fixture_pack_agrees_with_dsl() {
     let spec = dsl::parse_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);
 }
@@ -32,7 +32,7 @@ async fn default_fixture_pack_agrees_with_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn onboarding_fixture_pack_agrees_with_dsl() {
     let spec = dsl::parse_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&spec);
     let bytes = encode(&spec);
     assert_eq!(decode(&bytes).expect("decode"), spec);
 }
@@ -53,6 +53,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::mutations::create_step::mutation::CreateStep { step, index: None })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests

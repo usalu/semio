@@ -375,7 +375,7 @@
       "value": "separate",
       "valueName": "owner",
       "operations": ["dependencies"],
-      "description": { "en": "Restrict the operation to one dependency owner.", "de": "Beschränkt die Operation auf einen Abhängigkeits-Eigentümer." }
+      "description": { "en": "Restrict the operation to one dependency owner; sync accepts the flag repeatedly for several owners.", "de": "Beschränkt die Operation auf einen Abhängigkeits-Eigentümer; sync nimmt das Flag mehrfach für mehrere Eigentümer." }
     },
     {
       "name": "--store",

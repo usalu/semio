@@ -7,8 +7,9 @@ import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import consistencySchema from "../../../🧬️schema/🧾️owner-consistency.json" with { type: "json" };
 import registrySchema from "../../../🧬️schema/📋️owners.json" with { type: "json" };
-import { BUILD_OWNER_REGISTRY_FILE, cargoPackageName, explainOwnerlessRoot, ownerlessCrateManifests, withOwnerRegistryLockV1, checkBuildOwnerRegistry, findOwnerFindings, memoryOwnerTree, moveOwnerScopes, reconcileBuildOwnerRegistry, syncOwnerRegistry, type OwnerFinding, type OwnerRow, type OwnerTreePolicy } from "../🟦️.ts";
+import { BUILD_OWNER_REGISTRY_FILE, cargoPackageName, explainOwnerlessRoot, ownerlessCrateManifests, checkBuildOwnerRegistry, findOwnerFindings, memoryOwnerTree, moveOwnerScopes, reconcileBuildOwnerRegistry, syncOwnerRegistry, type OwnerFinding, type OwnerRow, type OwnerTreePolicy } from "../🟦️.ts";
 import { readBuildOwnerRegistryV1 } from "../../🚪️admission/🟦️.ts";
+import { createOwnerRegistryTextV1, updateBuildOwnerRegistryV1, withOwnerRegistryLockV1 } from "../🔏️writer/🟦️.ts";
 import fixture from "./🔣️.json" with { type: "json" };
 
 const policy: OwnerTreePolicy = fixture.policy;
@@ -168,8 +169,133 @@ test("the registry lock refuses a second writer instead of hanging, releases aft
     writeFileSync(join(lock, "owner"), `${ended} ${Date.now()}\n`);
     expect(withOwnerRegistryLockV1(file, () => "ended holder replaced", { waitMilliseconds: 2000 })).toBe("ended holder replaced");
     mkdirSync(lock);
-    writeFileSync(join(lock, "owner"), `${process.pid} 0\n`);
+    writeFileSync(join(lock, "owner"), "unreadable\n");
     expect(withOwnerRegistryLockV1(file, () => "stale holder replaced", { staleMilliseconds: 0, waitMilliseconds: 2000 })).toBe("stale holder replaced");
+    mkdirSync(lock);
+    writeFileSync(join(lock, "owner"), `${process.pid} 0\n`);
+    expect(() => withOwnerRegistryLockV1(file, () => 0, { staleMilliseconds: 0, waitMilliseconds: 80 })).toThrow("is locked by another writer");
+    rmSync(lock, { recursive: true, force: true });
     expect(existsSync(lock)).toBe(false);
   } finally { rmSync(lock, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true }); }
+});
+
+for (const row of fixture.duplicates) {
+  test(`owner duplicates: ${row.name}`, () => {
+    const root = mkdtempSync(join(tmpdir(), "owners-duplicates-"));
+    const file = join(root, BUILD_OWNER_REGISTRY_FILE);
+    const raw = JSON.stringify({ version: 1, owners: row.owners, catalogProviders: [] }, null, 2);
+    try {
+      writeFileSync(file, raw);
+      if ("refusal" in row) {
+        expect(() => readBuildOwnerRegistryV1(JSON.parse(raw))).toThrow(row.refusal);
+        expect(() => reconcileBuildOwnerRegistry(root, { write: true }, policy)).toThrow(row.refusal);
+        expect(readFileSync(file, "utf8")).toBe(raw);
+      } else {
+        expect(readBuildOwnerRegistryV1(JSON.parse(raw)).owners.map((owner) => owner.name)).toEqual(row.names);
+        const healed = reconcileBuildOwnerRegistry(root, { write: true, additionsOnly: true }, policy);
+        expect(healed.changed).toBe(row.healed);
+        expect(JSON.parse(readFileSync(file, "utf8")).owners.map((owner: OwnerRow) => owner.name)).toEqual(row.names);
+        expect(reconcileBuildOwnerRegistry(root, { write: true, additionsOnly: true }, policy).changed).toBe(false);
+      }
+      expect(readdirSync(root)).toEqual([BUILD_OWNER_REGISTRY_FILE]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+const ownerRow = (name: string, packages: string[] = []) => ({ name, root: name.slice(3), manifest: `${name.slice(3)}/📋️project.json`, packages });
+const registryText = (rows: readonly ReturnType<typeof ownerRow>[]): string => `${JSON.stringify({ version: 1, owners: rows, catalogProviders: [] }, null, 2)}\n`;
+const ownerNamesOf = (file: string): string[] => JSON.parse(readFileSync(file, "utf8")).owners.map((owner: { name: string }) => owner.name).sort();
+const stagedFilesOf = (directory: string): string[] => readdirSync(directory).filter((name) => name.endsWith(".tmp"));
+const addOwnerRow = (name: string) => (source: string): { value: boolean; text?: string } => {
+  const registry = JSON.parse(source);
+  if (registry.owners.some((owner: { name: string }) => owner.name === name)) return { value: false };
+  registry.owners.push(ownerRow(name));
+  return { value: true, text: `${JSON.stringify(registry, null, 2)}\n` };
+};
+const writerModule = join(import.meta.dir, "..", "🔏️writer", "🟦️.ts");
+const adderScript = (file: string, name: string, hooks = "{}"): string => `import { updateBuildOwnerRegistryV1 } from ${JSON.stringify(writerModule)};
+updateBuildOwnerRegistryV1(${JSON.stringify(file)}, (source) => { const registry = JSON.parse(source); Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 120); if (registry.owners.some((owner) => owner.name === ${JSON.stringify(name)})) return { value: false }; registry.owners.push({ name: ${JSON.stringify(name)}, root: ${JSON.stringify(name.slice(3))}, manifest: ${JSON.stringify(`${name.slice(3)}/📋️project.json`)}, packages: [] }); return { value: true, text: JSON.stringify(registry, null, 2) + "\\n" }; }, ${hooks});`;
+const withRegistryFile = (rows: readonly ReturnType<typeof ownerRow>[], run: (file: string, root: string) => void | Promise<void>): Promise<void> | void => {
+  const root = mkdtempSync(join(tmpdir(), "owners-writer-"));
+  const file = join(root, BUILD_OWNER_REGISTRY_FILE);
+  writeFileSync(file, registryText(rows));
+  const done = (): void => { rmSync(join(tmpdir(), `semio-build-owners-${createHash("sha256").update(file).digest("hex").slice(0, 16)}.lock`), { recursive: true, force: true }); rmSync(root, { recursive: true, force: true }); };
+  try { const result = run(file, root); if (result instanceof Promise) return result.finally(done); done(); } catch (error) { done(); throw error; }
+};
+
+test("the shared registry writer refuses an invalid registry and leaves the old file byte for byte", () => {
+  withRegistryFile([ownerRow("@t/a")], (file, root) => {
+    const before = readFileSync(file, "utf8");
+    const duplicate = registryText([ownerRow("@t/a"), ownerRow("@t/a", ["other"])]);
+    expect(() => updateBuildOwnerRegistryV1(file, () => ({ value: 0, text: duplicate }))).toThrow("Canonical build owner identity collision");
+    expect(() => updateBuildOwnerRegistryV1(file, () => ({ value: 0, text: "{}\n" }))).toThrow("Canonical build owner registry required");
+    expect(() => updateBuildOwnerRegistryV1(file, () => ({ value: 0, text: "not json" }))).toThrow();
+    expect(readFileSync(file, "utf8")).toBe(before);
+    expect(stagedFilesOf(root)).toEqual([]);
+    expect(updateBuildOwnerRegistryV1(file, addOwnerRow("@t/b"))).toBe(true);
+    expect(ownerNamesOf(file)).toEqual(["@t/a", "@t/b"]);
+  });
+});
+
+test("two concurrent adders in separate processes both land exactly once, a shared row lands once, and no row is lost", async () => {
+  await withRegistryFile([ownerRow("@t/a")], async (file, root) => {
+    const names = ["@t/b", "@t/c", "@t/d", "@t/same", "@t/same", "@t/e"];
+    const children = names.map((name) => Bun.spawn([process.execPath, "-e", adderScript(file, name)], { stdout: "pipe", stderr: "pipe" }));
+    const codes = await Promise.all(children.map((child) => child.exited));
+    expect(codes).toEqual(names.map(() => 0));
+    expect(ownerNamesOf(file)).toEqual(["@t/a", "@t/b", "@t/c", "@t/d", "@t/e", "@t/same"]);
+    expect(readBuildOwnerRegistryV1(JSON.parse(readFileSync(file, "utf8"))).owners).toHaveLength(6);
+    expect(stagedFilesOf(root)).toEqual([]);
+  });
+});
+
+test("a hand edit between the read and the rename is detected, the writer computes again on the new file and the peer's row survives", () => {
+  withRegistryFile([ownerRow("@t/a")], (file) => {
+    let computed = 0;
+    const result = updateBuildOwnerRegistryV1(file, (source) => {
+      computed++;
+      if (computed === 1) writeFileSync(file, registryText([ownerRow("@t/a"), ownerRow("@t/peer")]));
+      return addOwnerRow("@t/b")(source);
+    });
+    expect(result).toBe(true);
+    expect(computed).toBe(2);
+    expect(ownerNamesOf(file)).toEqual(["@t/a", "@t/b", "@t/peer"]);
+  });
+});
+
+test("a failure or a crash between the temporary write and the rename leaves the old file, and the next writer lands its row", async () => {
+  await withRegistryFile([ownerRow("@t/a")], async (file, root) => {
+    const before = readFileSync(file, "utf8");
+    expect(() => updateBuildOwnerRegistryV1(file, addOwnerRow("@t/b"), { rename: () => { throw Error("disk gone"); } })).toThrow("disk gone");
+    expect(readFileSync(file, "utf8")).toBe(before);
+    expect(stagedFilesOf(root)).toEqual([]);
+    const crashed = Bun.spawn([process.execPath, "-e", adderScript(file, "@t/b", "{ rename: () => process.exit(7) }")], { stdout: "pipe", stderr: "pipe" });
+    expect(await crashed.exited).toBe(7);
+    expect(readFileSync(file, "utf8")).toBe(before);
+    expect(stagedFilesOf(root)).toHaveLength(1);
+    expect(readBuildOwnerRegistryV1(JSON.parse(readFileSync(file, "utf8"))).owners).toHaveLength(1);
+    expect(updateBuildOwnerRegistryV1(file, addOwnerRow("@t/c"))).toBe(true);
+    expect(ownerNamesOf(file)).toEqual(["@t/a", "@t/c"]);
+  });
+});
+
+test("the registry is created once and whole: a second creator or an invalid registry creates nothing", () => {
+  const root = mkdtempSync(join(tmpdir(), "owners-create-"));
+  const file = join(root, BUILD_OWNER_REGISTRY_FILE);
+  try {
+    expect(() => createOwnerRegistryTextV1(file, registryText([ownerRow("@t/a"), ownerRow("@t/a", ["x"])]))).toThrow("Canonical build owner identity collision");
+    expect(existsSync(file)).toBe(false);
+    expect(createOwnerRegistryTextV1(file, registryText([ownerRow("@t/a")]))).toBe(true);
+    expect(createOwnerRegistryTextV1(file, registryText([ownerRow("@t/b")]))).toBe(false);
+    expect(ownerNamesOf(file)).toEqual(["@t/a"]);
+    expect(stagedFilesOf(root)).toEqual([]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("only the shared writer writes the registry: no other source of the library publishes it", () => {
+  const library = join(import.meta.dir, "..", "..", "..", "..");
+  for (const path of ["🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts", "🧪️testing/🧫️private-repository/🧰️adoption/🟦️.ts"]) {
+    const source = readFileSync(join(library, path), "utf8");
+    expect(source, path).not.toMatch(/renameSync\(|writeFileSync\([^)]*build-owners|copyFileSync\([^)]*build-owners/);
+  }
 });

@@ -22,9 +22,13 @@ const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 function generatedBindingsPath(root: string): string {
   return join(root, "..", "..", "🤖️generated", "⏳️async", "🟦️.ts");
 }
+/** 🧬️ The companion crate owns the `exports_typescript_bindings` test; the shipped crate declares no typegen feature. */
+function typegenManifestPath(root: string): string {
+  return join(root, "..", "..", "🧪️tests", "🥣️companion", "📦️packages", "🦀️rust", "Cargo.toml");
+}
 async function runTypegenExportTest(original:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,root: string, outPath: string): Promise<void> {
   const env = { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  await runAdmittedCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"--features","typegen",TYPEGEN_TEST_FILTER],root,env,buildBudgetMs());
+  await runAdmittedCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",typegenManifestPath(root),TYPEGEN_TEST_FILTER],root,env,buildBudgetMs());
 }
 
 /** 🏃️ Runs the `WorkerMaintenanceCheckScript` command under the caller's roots and invocation. */
@@ -179,7 +183,7 @@ export async function runPreviewGeneratedScript(context: Readonly<{ root: string
   let content: Buffer;
   try {
     const outPath = join(temp, basename(targetPath));
-    await runAdmittedCargoCommandV1(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:caller",0),context.repoRoot,["test","--locked","--manifest-path",join(context.root,"Cargo.toml"),"--features","typegen",TYPEGEN_TEST_FILTER],context.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
+    await runAdmittedCargoCommandV1(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:caller",0),context.repoRoot,["test","--locked","--manifest-path",typegenManifestPath(context.root),TYPEGEN_TEST_FILTER],context.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
     content = readFileSync(outPath);
   } finally {
     rmSync(temp, { recursive: true, force: true });

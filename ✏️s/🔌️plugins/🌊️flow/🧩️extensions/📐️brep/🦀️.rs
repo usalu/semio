@@ -309,7 +309,7 @@ pub mod extension_guest {
         let manifest_json = ::semio_framework_async::poll::resolve_ready(super::extension_manifest_json());
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
-        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
+        let bundle = ExtensionBundle::new("flow-extension-brep", semio_plugin::LocalizedLabel::native("Brep", "Brep"), env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = ::semio_framework_async::poll::resolve_ready(async {
             bundle.contributes(semio_plugin::app::ArtifactContribution::builder(super::geometry_inference::GEOMETRY_ARTIFACT_KIND).await

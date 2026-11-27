@@ -39,6 +39,7 @@
         "semio-plugin-ownership",
         "semio-plugin-reactor-app",
         "semio-plugin-retained-command",
+        "semio-plugin-retained-command-operation",
         "semio-plugin-store-lifecycle",
         "semio-plugin-testing-caller",
         "semio-plugin-testing-laws",

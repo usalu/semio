@@ -26,7 +26,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🔌️ Composes the three artifact declarations with their mutation rosters and activation events.
 pub fn plugin() -> Result<Plugin<BlockApps>, PluginAssemblyError> {
     PluginBuilder::<NeedsLabel, BlockApps>::new("block")
-        .label("Block")
+        .label(semio_plugin::LocalizedLabel::native("Block", "Block"))
         .version("0.1.0")
         .package_id("semio:block")
         .declare_artifact(semio_s_artifact_block_2d::artifact::<BlockApps>())

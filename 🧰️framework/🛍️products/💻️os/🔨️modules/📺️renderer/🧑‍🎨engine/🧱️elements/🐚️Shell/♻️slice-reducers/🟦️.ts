@@ -3,7 +3,7 @@ import { ANCHORS, uiDataLabel, type Anchor } from "@semio-tech/ui-react";
 import { type WindowLayoutNode, windowIdOf } from "@semio-tech/ui-layout";
 import { DEFAULT_PANEL_WIDTH_PX } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import type { LoadedProgramState } from "../📦️program-sessions/🟦️.ts";
-import { type ActionPaneState, actionStageKey, type CommandPanelState, type InferenceState, type MergeState, type OverlayState, type PanelState, type PluginRuntimeState, resolveUpdatable, type ShellLayoutState, type SpawnedWindowState, type SyncState, type TutorialState, type UiPrefsState, type WindowUiState, withField } from "../🗃️state-shapes/🟦️.ts";
+import { type ActionPaneState, actionStageKey, type CommandPanelState, type InferenceState, type MergeState, type OverlayState, type PanelState, type PluginRuntimeState, resolveUpdatable, type ShellLayoutState, type SpawnedWindowState, type SyncState, type TutorialState, type UiPrefsState, type WindowUiState, ownedByReplacedInstanceV1, stageKeyRetiredV1, staleAfterReplacementV1, windowKeyRetiredV1, withField, withFieldsV1, withoutRetiredKeysV1 } from "../🗃️state-shapes/🟦️.ts";
 import type { ShellAction } from "../🎛️shell-actions/🟦️.ts";
 
 //#region 🧮️ShellStore
@@ -52,6 +52,16 @@ export function windowUiReducer(state: WindowUiState, action: ShellAction): Wind
       return withField(state, "appLabelsOverlay", resolveUpdatable(action.value, state.appLabelsOverlay));
     case "SET_APP_CATALOGUE":
       return withField(state, "appCatalogue", resolveUpdatable(action.value, state.appCatalogue));
+    case "WINDOWS_RETIRED": {
+      const doomed = (key: string): boolean => windowKeyRetiredV1(key, action);
+      return withFieldsV1(state, {
+        windowUiByWindowId: withoutRetiredKeysV1(state.windowUiByWindowId, doomed),
+        windowEngagementsByWindowId: withoutRetiredKeysV1(state.windowEngagementsByWindowId, doomed),
+        windowMeasuresByWindowId: withoutRetiredKeysV1(state.windowMeasuresByWindowId, doomed),
+        toolMeasuresByToolId: withoutRetiredKeysV1(state.toolMeasuresByToolId, doomed),
+        panelBodyStoreByKey: withoutRetiredKeysV1(state.panelBodyStoreByKey, doomed),
+      });
+    }
     default:
       return state;
   }
@@ -68,6 +78,22 @@ export function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAct
       return withField(state, "spawnedWindowEngagements", resolveUpdatable(action.value, state.spawnedWindowEngagements));
     case "SET_SPAWNED_WINDOW_MEASURES":
       return withField(state, "spawnedWindowMeasures", resolveUpdatable(action.value, state.spawnedWindowMeasures));
+    case "WINDOWS_RETIRED": {
+      const doomed = (key: string): boolean => windowKeyRetiredV1(key, action);
+      return withFieldsV1(state, {
+        spawnedWindowActivityByWindowId: withoutRetiredKeysV1(state.spawnedWindowActivityByWindowId, doomed),
+        spawnedWindowEngagements: withoutRetiredKeysV1(state.spawnedWindowEngagements, doomed),
+        spawnedWindowMeasures: withoutRetiredKeysV1(state.spawnedWindowMeasures, doomed),
+      });
+    }
+    case "PROGRAM_INSTANCE_REPLACED": {
+      const stale = (key: string): boolean => staleAfterReplacementV1(key, action);
+      return withFieldsV1(state, {
+        spawnedWindowActivityByWindowId: withoutRetiredKeysV1(state.spawnedWindowActivityByWindowId, stale),
+        spawnedWindowEngagements: withoutRetiredKeysV1(state.spawnedWindowEngagements, stale),
+        spawnedWindowMeasures: withoutRetiredKeysV1(state.spawnedWindowMeasures, stale),
+      });
+    }
     default:
       return state;
   }
@@ -100,6 +126,24 @@ export function actionPaneReducer(state: ActionPaneState, action: ShellAction): 
     case "SET_ACTIVE_UTILITY": {
       if (Object.hasOwn(state.activeUtilityByWindowId, action.windowId) && state.activeUtilityByWindowId[action.windowId] === action.utilityId) return state;
       return { ...state, activeUtilityByWindowId: { ...state.activeUtilityByWindowId, [action.windowId]: action.utilityId } };
+    }
+    case "WINDOWS_RETIRED": {
+      const doomed = (key: string): boolean => windowKeyRetiredV1(key, action);
+      return withFieldsV1(state, {
+        foldedByWindowId: withoutRetiredKeysV1(state.foldedByWindowId, doomed),
+        expandedByWindowId: withoutRetiredKeysV1(state.expandedByWindowId, doomed),
+        stagedArgsByKey: withoutRetiredKeysV1(state.stagedArgsByKey, (key) => stageKeyRetiredV1(key, action)),
+        activeUtilityByWindowId: withoutRetiredKeysV1(state.activeUtilityByWindowId, doomed),
+      });
+    }
+    case "PROGRAM_INSTANCE_REPLACED": {
+      const owned = (key: string): boolean => ownedByReplacedInstanceV1(key, action);
+      return withFieldsV1(state, {
+        foldedByWindowId: withoutRetiredKeysV1(state.foldedByWindowId, owned),
+        expandedByWindowId: withoutRetiredKeysV1(state.expandedByWindowId, owned),
+        stagedArgsByKey: withoutRetiredKeysV1(state.stagedArgsByKey, owned),
+        activeUtilityByWindowId: withoutRetiredKeysV1(state.activeUtilityByWindowId, owned),
+      });
     }
     case "SET_ACTIVE_TOOL":
       if (state.activeToolId === action.toolId) return state;
@@ -191,6 +235,22 @@ export function shellLayoutReducer(state: ShellLayoutState, action: ShellAction)
       const extraWindowInstances = state.extraWindowInstances.map((entry) => (entry.id === action.windowId ? { ...entry, title: action.title } : entry));
       const shellLayout = state.shellLayout ? withWindowLayoutTitle(state.shellLayout, action.windowId, action.title) : null;
       return { ...state, windowTitlesById, extraWindowInstances, shellLayout };
+    }
+    case "WINDOWS_RETIRED": {
+      const doomed = (key: string): boolean => windowKeyRetiredV1(key, action);
+      const extraWindowInstances = state.extraWindowInstances.filter((entry) => !doomed(entry.id));
+      return withFieldsV1(state, {
+        windowTitlesById: withoutRetiredKeysV1(state.windowTitlesById, doomed),
+        windowIconsById: withoutRetiredKeysV1(state.windowIconsById, doomed),
+        extraWindowInstances: extraWindowInstances.length === state.extraWindowInstances.length ? state.extraWindowInstances : extraWindowInstances,
+      });
+    }
+    case "PROGRAM_INSTANCE_REPLACED": {
+      const stale = (key: string): boolean => staleAfterReplacementV1(key, action);
+      return withFieldsV1(state, {
+        windowTitlesById: withoutRetiredKeysV1(state.windowTitlesById, stale),
+        windowIconsById: withoutRetiredKeysV1(state.windowIconsById, stale),
+      });
     }
     case "SET_WINDOW_ICON": {
       const windowIconsById = { ...state.windowIconsById, [action.windowId]: action.iconId };

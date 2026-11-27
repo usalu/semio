@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "busyStatuses": [16, 32],
+        "busyTexts": ["Resource busy", "target is busy", "being used by another process"],
+        "maximumAttempts": 24,
+        "backoffMilliseconds": [500, 1000, 2000, 4000, 8000, 15000],
+        "holderProgram": "lsof",
+        "holderArguments": ["-F", "pc", "+f", "--", "<mountPoint>"],
+        "holderMaximumBytes": 65536,
+        "holderMaximumLines": 4096,
+        "maximumReportedHolders": 8
+      }
+    },
+    "Texts": {
+      "const": {
+        "waiting": {
+          "en": "Image at <mountPoint> is busy (attempt <attempt> of <attempts>), retrying in <seconds> s; holders: <holders>",
+          "de": "Image unter <mountPoint> ist belegt (Versuch <attempt> von <attempts>), neuer Versuch in <seconds> s; Halter: <holders>"
+        },
+        "exhausted": {
+          "en": "Image at <mountPoint> stayed busy after <attempts> attempts and was not detached (never forced); holders: <holders>",
+          "de": "Image unter <mountPoint> blieb nach <attempts> Versuchen belegt und wurde nicht abgehängt (nie erzwungen); Halter: <holders>"
+        },
+        "none": {
+          "en": "none visible",
+          "de": "keine sichtbar"
+        },
+        "cancelled": {
+          "en": "Cancelled",
+          "de": "Abgebrochen"
+        }
+      }
+    }
+  }
+}

@@ -184,7 +184,7 @@ pub async fn plugin_begin_document_archive_load<PA:PluginApp>(runtime:&PluginRun
     let cell=runtime_instance_cell(runtime,instance_id)?;
     let mut instance=cell.host_instance().ok_or_else(||plugin_internal_fault("archive admission requires its exact available instance"))?;
     let admitted = instance.app.begin_document_archive_load(operation, archive, admission, cx)?;
-    cell.instance_progress_epoch.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    cell.note_instance_progress(semio_plugin_reactor_lifecycle::life_app_cell::InstanceProgressOwner::ArchiveLoadAdmission);
     if admitted { cell.pending_effects.retain(); }
     Ok(admitted)
 }
@@ -215,7 +215,7 @@ pub async fn plugin_poll_document_archive_load<PA: PluginApp>(runtime: &PluginRu
     with_instances_mut(runtime, |list| {
         let cell = list.get(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
         let mut instance = find_instance(list, instance_id)?;
-        cell.instance_progress_epoch.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        cell.note_instance_progress(semio_plugin_reactor_lifecycle::life_app_cell::InstanceProgressOwner::ArchiveLoadPoll);
         drive_self_waking_ready(instance.app.poll_document_archive_load(operation, identity, cx))
     })
     .await

@@ -67,8 +67,8 @@ async fn authored_seed_pins_and_geometry_survive_actual_pack_spr_replay() {
         serde_json::json!({ "seed": observed.seed, "pin": { "x": pin.x, "y": pin.y, "color": pin.color }, "geometry": { "width": observed.output.width, "height": observed.output.height, "periodic": observed.output.periodic } })
     };
     assert_eq!(projection, case["expected"]);
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     let mut turns = 0;
     while !store.close_owned_terminal_is_empty() {
         store.close_owned_step_cold(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 }).expect("replay store closes through original owners");

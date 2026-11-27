@@ -11983,11 +11983,39 @@
        ]
       },
       "repeat": {
-       "count": 4,
+       "count": 2,
        "translation": [
         0,
         0,
-        0.096
+        0.192
+       ]
+      }
+     },
+     {
+      "id": "floor-boards-b",
+      "kind": "box",
+      "bone": "crate",
+      "material": "pine",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.584,
+       0.018,
+       0.096
+      ],
+      "transform": {
+       "translation": [
+        0.31,
+        0.054,
+        -0.048
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.192
        ]
       }
      },
@@ -14087,6 +14115,11 @@
       "region": "crate"
      },
      {
+      "id": "th-floor-boards-b",
+      "of": "floor-boards-b",
+      "region": "crate"
+     },
+     {
       "id": "th-side-wall-left",
       "of": "side-wall-left",
       "region": "crate"
@@ -14303,6 +14336,12 @@
      {
       "id": "st-floor-boards",
       "of": "floor-boards",
+      "member": "crate",
+      "part": "member"
+     },
+     {
+      "id": "st-floor-boards-b",
+      "of": "floor-boards-b",
       "member": "crate",
       "part": "member"
      },
@@ -14601,8 +14640,8 @@
     ],
     "decisions": [
      {
-      "en": "Body: the crate as built, two 75 x 45 mm skids, four 93 mm floor boards with 4 mm gaps, two side boards and two end boards of 18 mm with rounded 100 x 25 mm hand slots and four 35 mm corner posts; the burner as a die-cast housing extruded from its side profile with the rear scroll, the side motor turned with its domed end cap and capacitor, the oil pump with solenoid coil and two brass nipples, control box with reset button, ignition transformer, the plug with its cut 10 mm cable, the clamp collar with its screw, the 8 mm flange and the 8 mm ceramic gasket each with the 89 mm bore and four 11 mm bolt holes, the 2 mm wall blast tube with its sooted tip and the recessed combustion head disc, and the hinged 15 mm air shutter; the two 16 mm hoses with 23 mm brass caps lie on the floor.",
-      "de": "Körper: die Kiste wie gebaut, zwei Kufen 75 x 45 mm, vier Bodenbretter 93 mm mit 4 mm Fugen, zwei Seiten- und zwei Stirnbretter zu 18 mm mit gerundeten Grifflöchern 100 x 25 mm und vier Eckleisten 35 mm; der Brenner als aus dem Seitenprofil extrudiertes Druckgussgehäuse mit hinterer Spirale, der seitliche Motor gedreht mit gewölbtem Lagerdeckel und Kondensator, die Ölpumpe mit Magnetspule und zwei Messingnippeln, Steuergerät mit Entstörknopf, Zündtrafo, der Stecker mit gekapptem 10-mm-Kabel, der Klemmring mit Schraube, der 8-mm-Flansch und die 8-mm-Keramikdichtung je mit 89-mm-Bohrung und vier 11-mm-Schraubenlöchern, das Flammrohr mit 2 mm Wand, verrußter Spitze und zurückgesetzter Brennerkopfscheibe und die angelenkte 15-mm-Luftklappe; die beiden 16-mm-Schläuche mit 23-mm-Messingkappen liegen am Boden."
+      "en": "Body: the crate as built, two 75 x 45 mm skids, four 96 mm floor boards laid tight as two alternating pairs, two side boards and two end boards of 18 mm with rounded 100 x 25 mm hand slots and four 35 mm corner posts; the burner as a die-cast housing extruded from its side profile with the rear scroll, the side motor turned with its domed end cap and capacitor, the oil pump with solenoid coil and two brass nipples, control box with reset button, ignition transformer, the plug with its cut 10 mm cable, the clamp collar with its screw, the 8 mm flange and the 8 mm ceramic gasket each with the 89 mm bore and four 11 mm bolt holes, the 2 mm wall blast tube with its sooted tip and the recessed combustion head disc, and the hinged 15 mm air shutter; the two 16 mm hoses with 23 mm brass caps lie on the floor.",
+      "de": "Körper: die Kiste wie gebaut, zwei Kufen 75 x 45 mm, vier dicht verlegte Bodenbretter 96 mm als zwei abwechselnde Paare, zwei Seiten- und zwei Stirnbretter zu 18 mm mit gerundeten Grifflöchern 100 x 25 mm und vier Eckleisten 35 mm; der Brenner als aus dem Seitenprofil extrudiertes Druckgussgehäuse mit hinterer Spirale, der seitliche Motor gedreht mit gewölbtem Lagerdeckel und Kondensator, die Ölpumpe mit Magnetspule und zwei Messingnippeln, Steuergerät mit Entstörknopf, Zündtrafo, der Stecker mit gekapptem 10-mm-Kabel, der Klemmring mit Schraube, der 8-mm-Flansch und die 8-mm-Keramikdichtung je mit 89-mm-Bohrung und vier 11-mm-Schraubenlöchern, das Flammrohr mit 2 mm Wand, verrußter Spitze und zurückgesetzter Brennerkopfscheibe und die angelenkte 15-mm-Luftklappe; die beiden 16-mm-Schläuche mit 23-mm-Messingkappen liegen am Boden."
      },
      {
       "en": "Thermal: every body solid is referenced into its region (crate, housing with shutter, motor, pump, controls, flange with collar, gasket, blast tube, combustion head, hoses, fittings); the tube is a hollow shell closed by the head, so its inside does not count.",

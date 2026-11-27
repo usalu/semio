@@ -310,32 +310,70 @@
         }
       }
     },
-    "cache-reclaim-wait-rust": {
+    "cache-relayout-rust": {
       "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/**/*"],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
       "outputs": [],
       "options": {
-        "command": "repo ./📜️script.ts reclaim-wait rust",
+        "command": "repo ./📜️script.ts relayout rust",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
         "forwardAllArgs": false
       },
       "metadata": {
         "semio": {
-          "execution": {"version": 1, "kind": "source"},
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
           "sourceInputObservation": "freshness",
-          "cache": {"version": 1, "class": "live", "reason": "exercises-host-resources"},
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
           "dashboard": {
-            "title": {"en": "Wait to Reclaim Idle Rust Image Blocks", "de": "Auf Freigabe zur Rückgabe von Rust-Image-Blöcken warten"},
+            "title": {
+              "en": "Split Rust Cache Into Images",
+              "de": "Rust-Cache auf Images aufteilen"
+            },
             "description": {
-              "en": "On macOS under disk pressure, wait up to two minutes for exclusive access and return unused blocks of the existing Rust image in place.",
-              "de": "Unter macOS bei Plattendruck bis zu zwei Minuten auf exklusiven Zugriff warten und ungenutzte Blöcke des vorhandenen Rust-Images an Ort und Stelle zurückgeben."
+              "en": "Give every sub-area of the Rust cache its own image of at most 32 GiB and move its files in, keeping every logical path; refused with busy while any build holds the cache, and resumable.",
+              "de": "Jedem Teilbereich des Rust-Caches ein eigenes Image von höchstens 32 GiB geben und seine Dateien hineinverschieben, jeder logische Pfad bleibt; solange ein Build den Cache hält, wird mit busy abgewiesen, und der Lauf ist fortsetzbar."
             }
           }
         }
       }
     },
+  "cache-reclaim-wait-rust": {
+    "executor": "repo:script",
+    "cache": false,
+    "dependsOn": [],
+    "inputs": ["{projectRoot}/**/*"],
+    "outputs": [],
+    "options": {
+      "command": "repo ./📜️script.ts reclaim-wait rust",
+      "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+      "forwardAllArgs": false
+    },
+    "metadata": {
+      "semio": {
+        "execution": {"version": 1, "kind": "source"},
+        "sourceInputObservation": "freshness",
+        "cache": {"version": 1, "class": "live", "reason": "exercises-host-resources"},
+        "dashboard": {
+          "title": {"en": "Wait to Reclaim Idle Rust Image Blocks", "de": "Auf Freigabe zur Rückgabe von Rust-Image-Blöcken warten"},
+          "description": {
+            "en": "On macOS under disk pressure, wait up to two minutes for exclusive access and return unused blocks of the existing Rust image in place.",
+            "de": "Unter macOS bei Plattendruck bis zu zwei Minuten auf exklusiven Zugriff warten und ungenutzte Blöcke des vorhandenen Rust-Images an Ort und Stelle zurückgeben."
+          }
+        }
+      }
+    }
+  },
     "cache-reclaim-tools": {
       "executor": "repo:script",
       "cache": false,

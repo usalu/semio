@@ -1,0 +1,10 @@
+{
+  "hostMegabytes": 32768,
+  "planMegabytes": 2000,
+  "growths": [{"extraMegabytes": 300}, {"extraMegabytes": 500}, {"extraMegabytes": 700}, {"extraMegabytes": 400}, {"extraMegabytes": 600}, {"extraMegabytes": 292}],
+  "expectedGrants": 1,
+  "expectedReservedMegabytes": 4792,
+  "competingMegabytes": 18000,
+  "blockingMegabytes": 14000,
+  "waitingGrowthMegabytes": 14000
+}

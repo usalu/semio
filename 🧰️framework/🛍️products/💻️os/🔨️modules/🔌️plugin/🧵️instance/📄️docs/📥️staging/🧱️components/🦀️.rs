@@ -26,8 +26,8 @@ pub struct MediaTransfers<A: ArtifactApp> {
     pub original_picker: Option<Box<semio_plugin_instance_natural_publication::picker::PickerPublication>>,
     pub natural_source: Option<Box<semio_plugin_instance_natural_publication::NaturalFilePublication>>,
     pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
-    pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
-    pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>>>,
+    pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command_operation::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation<A>>>,
     pub reserved_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     /// 🏁️ The terminal publication of the operation the reserved mount issued: registered with its operation id when the operation is mounted, filled by the first accepted acknowledgement of its terminal page whoever sends it, and taken exactly once by the custody that waits for it.
     pub reserved_terminal:Option<(u64,Option<Result<(),semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault>>)>,

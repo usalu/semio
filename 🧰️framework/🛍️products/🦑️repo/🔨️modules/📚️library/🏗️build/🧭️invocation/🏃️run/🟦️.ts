@@ -5,6 +5,7 @@ import {runScheduledInvocationV1} from "../🗓️schedule/🟦️.ts";
 import type {SchedulerStoreV1} from "../../🗓️scheduler/💾️store/🟦️.ts";
 import {join} from "node:path";
 import {buildBooleanOptionV1} from "../../🧭️selection/🟦️.ts";
+import {NATIVE_IMAGE_SHARED_READ_POLICY_V1,withNativeImageSharedReadV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 
 /** 🧾️ The commands whose success means every task of their plan ran: their tasks are recorded with the key the plan computed. */
 const TASK_RECORDING_COMMANDS_V1:readonly string[]=Object.freeze(["run","run-many","affected"]);
@@ -14,7 +15,8 @@ export async function recordPlanSuccessV1(options:Readonly<{root:string;args:rea
  const{root,args,keys}=options;
  if(!TASK_RECORDING_COMMANDS_V1.includes(args[0]??"")||buildBooleanOptionV1(args,"dry-run")===true||Object.keys(keys).length===0)return 0;
  const[{createCasStoreV1},{createTaskRecorderV1},{workspaceIdV1}]=await Promise.all([import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs"),import("../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs")]);
- await createTaskRecorderV1({directory:machinePathV1(root,".cache/b/g/m/task-keys"),cas:options.cas??createCasStoreV1()}).record(workspaceIdV1(root),Object.entries(keys).map(([id,key])=>({id,key})));
+ const wait=NATIVE_IMAGE_SHARED_READ_POLICY_V1.sampleWaitMilliseconds;
+ try{await withNativeImageSharedReadV1({leaseDirectory:machinePathV1(root,".cache/b/l/m/data"),imageDirectory:machinePathV1(root,".cache/b/g"),signal:AbortSignal.timeout(wait*2),timeoutMs:wait},()=>createTaskRecorderV1({directory:machinePathV1(root,".cache/b/g/m/task-keys"),cas:options.cas??createCasStoreV1()}).record(workspaceIdV1(root),Object.entries(keys).map(([id,key])=>({id,key}))));}catch(error){if(/timed out/iu.test(String((error as Error)?.message)))return 0;throw error;}
  return Object.keys(keys).length;
 }
 

@@ -150,7 +150,7 @@ async fn extension_bundle_extends_flow_and_evaluates() {
     let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_topic_contribution("flow-play", "bim", "Bim", "bim", &manifest_json);
     let procedural3d_topic = flow_extension_topic_contribution("procedural3d-play", "bim", "Bim", "bim", &manifest_json);
-    let bundle = ExtensionBundle::new("flow-extension-bim", "Bim", "0.1.0")
+    let bundle = ExtensionBundle::new("flow-extension-bim", semio_plugin::LocalizedLabel::native("Bim", "BIM"), "0.1.0")
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)

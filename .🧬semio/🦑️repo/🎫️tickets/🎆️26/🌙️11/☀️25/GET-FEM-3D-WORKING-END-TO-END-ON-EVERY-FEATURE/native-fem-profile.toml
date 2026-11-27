@@ -1,10 +1,10 @@
 [profile.prototype]
 inherits = "dev"
-opt-level = "s"
+opt-level = 1
 debug = 0
-codegen-units = 16
-incremental = false
-lto = "thin"
+codegen-units = 256
+incremental = true
+lto = false
 debug-assertions = true
 overflow-checks = true
 strip = "symbols"

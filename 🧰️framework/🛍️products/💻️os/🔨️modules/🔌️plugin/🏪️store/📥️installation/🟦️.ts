@@ -9,6 +9,8 @@ import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "../../../..
 import type { StreamMuxJsonV1, StreamMuxServerV1 } from "@semio-tech/framework/io/stream-mux";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
 import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
+import type { LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
+import { parseLocalizedLabelV1 } from "@semio-tech/framework-manifest/localized-labels";
 import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
@@ -53,7 +55,7 @@ const FOLDER_WATCH_DEBOUNCE_MS = 200;
 export type ExtensionManifestRecord = {
   readonly extensionId: string;
   readonly directoryName: string;
-  readonly label: string;
+  readonly label: LocalizedLabel;
   readonly version: string;
   readonly extends: string;
   readonly capabilities?: readonly unknown[];
@@ -64,7 +66,7 @@ export type ExtensionManifestRecord = {
 export type ExtensionPackageManifestRecord = {
   readonly extensionId: string;
   readonly directoryName: string;
-  readonly label: string;
+  readonly label: LocalizedLabel;
   readonly version: string;
   readonly extends: string;
   readonly capabilities: readonly string[];
@@ -76,7 +78,7 @@ export type InstalledExtensionRecord = {
   readonly extensionId: string;
   readonly directoryName: string;
   readonly version: string;
-  readonly label: string;
+  readonly label: LocalizedLabel;
   readonly extends: string;
   readonly moduleUrl: string;
   readonly packageHash: string;
@@ -190,11 +192,10 @@ function decodeExtensionManifest(manifestBytes: Uint8Array): ExtensionManifestRe
   const row = decoded as Record<string, unknown>;
   const extensionId = row.extensionId;
   installationDirectoryEmoji(row.directoryName);
-  const label = row.label;
+  const label = parseLocalizedLabelV1(row.label, "extension manifest label");
   const version = row.version;
   const extendsHost = row.extends;
   if (typeof extensionId !== "string" || !extensionId) throw new Error("extension manifest missing extensionId");
-  if (typeof label !== "string") throw new Error("extension manifest missing label");
   if (typeof version !== "string" || !version) throw new Error("extension manifest missing version");
   return {
     extensionId,

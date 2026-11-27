@@ -8,16 +8,18 @@ use semio_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INST
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_plugin_program::PluginProgram;
-use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::{RUNTIME_CLEANUP_UNMEASURED_US, RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT, RuntimeCleanupFault, RuntimeCloseStatus, RuntimeMaintenanceStatus, runtime_cleanup_fault};
+use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::{RUNTIME_CLEANUP_UNMEASURED_US, RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT, RuntimeCleanupFault, RuntimeCloseStatus, RuntimeMaintenanceStatus, runtime_cleanup_fault, runtime_cleanup_fault_with_reading};
 use crate::inst_opening::{RUNTIME_CLOSE_INNER_GRANT_US, RUNTIME_CLOSE_STALL_CREDIT_US, RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT};
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_plugin_reactor_lifecycle::life_app_cell::{RuntimeAppCell, RuntimeInstanceRefusal};
-use semio_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeCloseCleanupJob, RuntimeCloseCleanupPump, RuntimeLiveCleanupJob, RuntimeLiveCleanupPump, plugin_begin_instance_close, runtime_close_phase, runtime_drain_maintenance_source, runtime_close_owned_app_source};
+use semio_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeMaintenanceReading, runtime_maintenance_reading, RuntimeCloseCleanupJob, RuntimeCloseCleanupPump, RuntimeLiveCleanupJob, RuntimeLiveCleanupPump, plugin_begin_instance_close, runtime_close_phase, runtime_drain_maintenance_source, runtime_close_owned_app_source};
 use semio_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
 use std::mem::size_of_val;
 /// ⏱️ Real time a live pump may stay fruitless while NO other owner of the instance advances: the turn ceiling times the full pressure bursts that fit into the zero-progress count, so a stall is judged over whole turns rather than one interleaved browser frame.
 pub const RUNTIME_LIVE_STALL_CREDIT_US: u64 = RUNTIME_CLOSE_STALL_CREDIT_US * (RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT as u64 / LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN as u64);
 /// 🧮️ The live pump's structural verdict on ONE maintenance reading, priced in BOTH currencies like [`runtime_close_stall_verdict`]: `RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT` consecutive fruitless readings AND `RUNTIME_CLOSE_STALL_CREDIT_US` of real time since the pump last moved.
+///
+/// 🩻️ Only a [`RuntimeMaintenanceReading::Fruitless`] reading buys debt: a starved reading (`contended`) buys none and does not clear, and a waiting reading (`Blocked`, `AwaitingInput`) clears like the close verdict's external wait. The caller marks the repeat pumps of one reactor turn starved, so the count is per turn.
 ///
 /// 🐛️ The count alone was the whole rule. An ingress-free reactor turn repeats the live pump up to `LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN` times while a funded document archive is runnable, so 256 fruitless readings fit into a handful of microsecond-long turns and a booting natural-file import faulted with `plugin.internal.zero-progress` reporting `elapsed 0us` against an `8000us` ceiling. The returned reading is the credit actually spent.
 #[doc(hidden)]
@@ -30,17 +32,13 @@ pub fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option
         clear();
         return (RuntimeMaintenanceStatus::Ready, 0);
     }
-    if contended {
-        return (RuntimeMaintenanceStatus::Ready, 0);
-    }
-    if matches!(progress, Some(PluginLifecycleStep::AwaitingInput { .. })) {
-        clear();
-        return (RuntimeMaintenanceStatus::Ready, 0);
-    }
-    let zero_progress = matches!(progress,Some(PluginLifecycleStep::Progress(receipt)) if receipt==RetainedCloneProgress::default())||matches!(progress,Some(PluginLifecycleStep::Blocked{..}));
-    if !zero_progress {
-        clear();
-        return (RuntimeMaintenanceStatus::Ready, 0);
+    match runtime_maintenance_reading(contended, progress) {
+        RuntimeMaintenanceReading::Starved => return (RuntimeMaintenanceStatus::Ready, 0),
+        RuntimeMaintenanceReading::Waiting | RuntimeMaintenanceReading::Progress => {
+            clear();
+            return (RuntimeMaintenanceStatus::Ready, 0);
+        }
+        RuntimeMaintenanceReading::Fruitless => {}
     }
     let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
     let Some(now_us) = now_us else { return (RuntimeMaintenanceStatus::Ready, 0) };
@@ -100,8 +98,18 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         if !session.acknowledge_outcome(cx)?{return Ok(RuntimeMaintenanceStatus::Ready);}
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
-        let (status, credit_us) = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps, &cell.maintenance_stall_since_us, semio_framework_job::default_now_us(), cell.instance_progress_epoch.load(Ordering::SeqCst), &cell.maintenance_seen_progress_epoch);
+        if let Ok(mut reading) = cell.maintenance_last_reading.lock() {
+            *reading = match job.progress {
+                Some(PluginLifecycleStep::Blocked { reason }) => format!("blocked: {reason}"),
+                Some(PluginLifecycleStep::AwaitingInput { reason }) => format!("awaiting-input: {reason}"),
+                Some(PluginLifecycleStep::Progress(receipt)) if receipt == RetainedCloneProgress::default() => String::from("zero-progress receipt"),
+                Some(_) => String::from("progress"),
+                None => String::from("no reading"),
+            };
+        }
+        let (status, credit_us) = runtime_live_cleanup_nonterminal_status(job.contended || cell.maintenance_repeat.load(Ordering::SeqCst), job.progress, &cell.maintenance_stalled_steps, &cell.maintenance_stall_since_us, semio_framework_job::default_now_us(), cell.instance_progress_epoch.load(Ordering::SeqCst), &cell.maintenance_seen_progress_epoch);
         pump.pending_status = status;
+        cell.maintenance_starved.store(runtime_maintenance_reading(job.contended, job.progress) == RuntimeMaintenanceReading::Starved, Ordering::SeqCst);
         if matches!(status, RuntimeMaintenanceStatus::Fault(_)) {
             eprintln!("[DEBUG] live-cleanup stall fault progress={:?} stage={} credit_us={credit_us}", job.progress, semio_plugin_reactor_app::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed));
             cell.maintenance_stall_credit_spent_us.store(credit_us, Ordering::SeqCst);
@@ -454,17 +462,22 @@ pub fn plugin_live_cleanup_under_pressure<PA: PluginApp + 'static>(runtime: &Plu
 /// displaces three or more owners per commit and at most one commit lands per turn, so this
 /// burst drains faster than any cadence fills while the fair single step stays the idle cost.
 pub const LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN: usize = 32;
+/// 🔁️ Marks whether the next [`plugin_step_live_cleanup`] is a repeat pump of the reactor turn that already pumped once, so its fruitless readings are echoes of the first pump and the stall is counted per turn.
+pub fn plugin_mark_live_cleanup_repeat<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, repeat: bool) {
+    runtime.live_cleanup_repeat.set(repeat);
+}
 pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime:&PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     cx.with_original_retirement(|cx|{
     let instances=runtime.instances.try_borrow().map_err(|_|plugin_internal_fault("runtime instance authority is busy"))?;
     let Some((index,_,cell))=instances.next_entry_from(runtime.live_cleanup_cursor.get())else{runtime.live_cleanup_pressure.set(false);return Ok(false)};
-    runtime.live_cleanup_cursor.set((index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS);let stepped=plugin_step_live_cleanup_cell(cell,cx);runtime.live_cleanup_pressure.set(cell.maintenance_pressure.load(Ordering::Relaxed));stepped
+    runtime.live_cleanup_cursor.set((index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS);let stepped=plugin_step_live_cleanup_cell(cell,runtime.live_cleanup_repeat.get(),cx);runtime.live_cleanup_pressure.set(cell.maintenance_pressure.load(Ordering::Relaxed)&&!cell.maintenance_starved.load(Ordering::Relaxed));stepped
     })
 }
 
-fn plugin_step_live_cleanup_cell<PA:PluginApp+'static>(cell:&std::sync::Arc<RuntimeAppCell<PA>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+fn plugin_step_live_cleanup_cell<PA:PluginApp+'static>(cell:&std::sync::Arc<RuntimeAppCell<PA>>,repeat:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     if cx.retirement_should_yield(){return Ok(false)}
-    if let RuntimeMaintenanceStatus::Fault(cause)=RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(Ordering::SeqCst)){return Err(runtime_cleanup_fault("live",cause,cell.id,cell.maintenance_fault_us.load(Ordering::SeqCst)).into())}
+    if let RuntimeMaintenanceStatus::Fault(cause)=RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(Ordering::SeqCst)){return Err(runtime_cleanup_fault_with_reading("live",cause,cell.id,cell.maintenance_fault_us.load(Ordering::SeqCst),&cell.stall_reading()).into())}
+    cell.maintenance_repeat.store(repeat,Ordering::SeqCst);
     let generation=semio_framework_job::Generation(cell.maintenance_generation.load(Ordering::SeqCst));
     run_runtime_live_cleanup_turn(cell,generation,cx)?;Ok(true)
 }

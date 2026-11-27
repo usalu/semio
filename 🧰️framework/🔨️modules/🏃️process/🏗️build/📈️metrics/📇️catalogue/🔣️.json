@@ -789,6 +789,292 @@
         "en": "Readiness process resident memory (whole process)",
         "de": "Residenter Speicher des Bereitschaftsprozesses (ganzer Prozess)"
       }
+    },
+    {
+      "id": "cache.skip.spool-full",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload spool full",
+        "de": "Nicht geteilte Einheiten: Upload-Spool voll"
+      }
+    },
+    {
+      "id": "cache.skip.upload-expired",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload expired",
+        "de": "Nicht geteilte Einheiten: Upload abgelaufen"
+      }
+    },
+    {
+      "id": "cache.skip.upload-expired-down",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload expired, cache down",
+        "de": "Nicht geteilte Einheiten: Upload abgelaufen, Cache nicht erreichbar"
+      }
+    },
+    {
+      "id": "cache.skip.upload-expired-denied",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload expired, credential denied",
+        "de": "Nicht geteilte Einheiten: Upload abgelaufen, Berechtigung abgelehnt"
+      }
+    },
+    {
+      "id": "cache.skip.upload-entry-gone",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload entry gone",
+        "de": "Nicht geteilte Einheiten: Upload-Eintrag verschwunden"
+      }
+    },
+    {
+      "id": "cache.skip.upload-failed",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload failed",
+        "de": "Nicht geteilte Einheiten: Upload fehlgeschlagen"
+      }
+    },
+    {
+      "id": "cache.skip.upload-dropped",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: upload dropped",
+        "de": "Nicht geteilte Einheiten: Upload verworfen"
+      }
+    },
+    {
+      "id": "cache.skip.key-incomplete",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: key incomplete",
+        "de": "Nicht geteilte Einheiten: Schlüssel unvollständig"
+      }
+    },
+    {
+      "id": "cache.skip.path-dependent",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: path dependent output",
+        "de": "Nicht geteilte Einheiten: pfadabhängige Ausgabe"
+      }
+    },
+    {
+      "id": "cache.skip.read-only",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: cache read-only",
+        "de": "Nicht geteilte Einheiten: Cache nur lesbar"
+      }
+    },
+    {
+      "id": "cache.skip.diverged",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: output diverged",
+        "de": "Nicht geteilte Einheiten: Ausgabe abweichend"
+      }
+    },
+    {
+      "id": "cache.skip.breaker-denied",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: circuit breaker denied",
+        "de": "Nicht geteilte Einheiten: Unterbrecher: verweigert"
+      }
+    },
+    {
+      "id": "cache.skip.other",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "cache-skip-reasons",
+      "label": {
+        "en": "Units not shared: any other reason",
+        "de": "Nicht geteilte Einheiten: jeder andere Grund"
+      }
+    },
+    {
+      "id": "exec.decline.local-slot",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: local slot free",
+        "de": "Auslagerung abgelehnt: lokaler Platz frei"
+      }
+    },
+    {
+      "id": "exec.decline.cheap",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: too cheap to offload",
+        "de": "Auslagerung abgelehnt: zu billig zum Auslagern"
+      }
+    },
+    {
+      "id": "exec.decline.unmapped-path",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: path not mapped",
+        "de": "Auslagerung abgelehnt: Pfad nicht abgebildet"
+      }
+    },
+    {
+      "id": "exec.decline.infrastructure",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: infrastructure fault",
+        "de": "Auslagerung abgelehnt: Infrastrukturfehler"
+      }
+    },
+    {
+      "id": "exec.decline.unmeasured",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: not measured",
+        "de": "Auslagerung abgelehnt: nicht gemessen"
+      }
+    },
+    {
+      "id": "exec.decline.pin-failed",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: pin failed",
+        "de": "Auslagerung abgelehnt: Anheften fehlgeschlagen"
+      }
+    },
+    {
+      "id": "exec.decline.not-portable",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: not portable",
+        "de": "Auslagerung abgelehnt: nicht portabel"
+      }
+    },
+    {
+      "id": "exec.decline.worker-policy",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: worker policy",
+        "de": "Auslagerung abgelehnt: Worker-Richtlinie"
+      }
+    },
+    {
+      "id": "exec.decline.no-idle-machine",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: no idle machine",
+        "de": "Auslagerung abgelehnt: keine freie Maschine"
+      }
+    },
+    {
+      "id": "exec.decline.queue-timeout",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: queue timeout",
+        "de": "Auslagerung abgelehnt: Warteschlangen-Frist"
+      }
+    },
+    {
+      "id": "exec.decline.incomplete-inputs",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: incomplete inputs",
+        "de": "Auslagerung abgelehnt: unvollständige Eingaben"
+      }
+    },
+    {
+      "id": "exec.decline.other",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-reasons",
+      "label": {
+        "en": "Offload declined: any other reason",
+        "de": "Auslagerung abgelehnt: jeder andere Grund"
+      }
+    },
+    {
+      "id": "cache.remote.refused",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache requests refused",
+        "de": "Abgelehnte Remote-Cache-Anfragen"
+      }
     }
   ]
 }

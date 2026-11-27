@@ -1,10 +1,10 @@
 import {test,expect} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {existsSync,statSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {adoptInstalledNxToolkitIdentityV1,adoptInstalledToolV1,requireAdoptedReadOnlyV1} from "../🟦️.ts";
+import {adoptBuildOwnerRegistryForV1,adoptInstalledNxToolkitIdentityV1,adoptInstalledToolV1,requireAdoptedReadOnlyV1} from "../🟦️.ts";
 import {testCheckoutRootV1} from "../../📥️invocation/🟦️.ts";
 import {privateRepositoryWorkspaceV1} from "../../🟦️.ts";
 import {captureNxAuthorizerSourcesV1} from "../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
@@ -58,3 +58,17 @@ test("the Source closure of an authorizer entry adopted into a private repositor
  const original=await captureNxAuthorizerSourcesV1(checkout,entry,signal),adopted=await captureNxAuthorizerSourcesV1(repository.root,entry,signal);
  expect(adopted.digest).toBe(original.digest);expect(adopted.manifest.sources).toEqual(original.manifest.sources);
 },120000);
+
+test("adopting the build owner registry copies a valid registry once whole, leaves an existing file and refuses an invalid registry",()=>{
+ const base=mkdtempSync(join(tmpdir(),"adopt-owners-")),checkout=join(base,"checkout"),workspace=join(base,"workspace"),row=(name:string,packages:string[]=[])=>({name,root:name,manifest:name+"/📋️project.json",packages}),registry=(owners:unknown[])=>JSON.stringify({version:1,owners,catalogProviders:[]},null,2)+"\n";
+ try{
+  mkdirSync(checkout);mkdirSync(workspace);
+  adoptBuildOwnerRegistryForV1(workspace,checkout);expect(existsSync(join(workspace,"📋️build-owners.json"))).toBe(false);
+  writeFileSync(join(checkout,"📋️build-owners.json"),registry([row("a"),row("a",["x"])]));
+  expect(()=>adoptBuildOwnerRegistryForV1(workspace,checkout)).toThrow("Canonical build owner identity collision");expect(readdirSync(workspace)).toEqual([]);
+  writeFileSync(join(checkout,"📋️build-owners.json"),registry([row("a")]));
+  adoptBuildOwnerRegistryForV1(workspace,checkout);expect(readFileSync(join(workspace,"📋️build-owners.json"),"utf8")).toBe(registry([row("a")]));
+  writeFileSync(join(checkout,"📋️build-owners.json"),registry([row("b")]));
+  adoptBuildOwnerRegistryForV1(workspace,checkout);expect(readFileSync(join(workspace,"📋️build-owners.json"),"utf8")).toBe(registry([row("a")]));expect(readdirSync(workspace)).toEqual(["📋️build-owners.json"]);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});

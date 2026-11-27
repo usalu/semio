@@ -78,4 +78,5 @@ serde_json = "1.0.140"
 semio-framework-actor = { workspace = true }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }

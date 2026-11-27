@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-gis-gismap-pdf-export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "GIS map pdf export route, composed only by the app composition root"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🔖️1.4/✳️any/🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-s-artifact-gis-gismap = { path = "../../../../../../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing-pdf-export = { workspace = true }
+
+[dev-dependencies]
+lopdf = { version = "0.44", default-features = false }
+serde_json = { workspace = true }

@@ -54,12 +54,12 @@ async fn every_operation_obeys_the_inverse_sum_law_including_a_middle_camera_row
 
 #[semio_framework_async_macros::async_test]
 async fn presence_and_operations_round_trip_text_and_binary() {
-    store::os_store::test_support::assert_dsl_round_trip(&busy());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&busy());
-    store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetActiveNode { node_id: Some("a".into()) });
-    store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetCollapsed { node_ids: vec!["a".into()] });
-    store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetCamera { window_id: "left".into(), camera: camera(3.0) });
-    store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::RemoveCamera { window_id: "left".into() });
+    semio_os_store_test_support::assert_dsl_round_trip(&busy());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&busy());
+    semio_os_store_test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetActiveNode { node_id: Some("a".into()) });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetCollapsed { node_ids: vec!["a".into()] });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetCamera { window_id: "left".into(), camera: camera(3.0) });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpacePresenceMutation::RemoveCamera { window_id: "left".into() });
 }
 
 #[test]

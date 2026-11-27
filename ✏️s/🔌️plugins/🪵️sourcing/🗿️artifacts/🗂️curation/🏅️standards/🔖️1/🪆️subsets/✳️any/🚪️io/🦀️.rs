@@ -15,13 +15,9 @@
 //! `declaration().languages(...)` channel — `NativeCodecs` below wires them in via
 //! `crate::language_spec` rather than leaving every `LanguagePair` `None`.
 //!
-//! ⚠️ Fidelity honesty: `json` import/export is a genuine structural `serde_json::Value` bridge
-//! (`IoFidelity::Exact`). `zip`/`png`/`stl`/`obj` import/export are PRE-EXISTING non-functional
-//! stubs (the old code tried to decode/encode bytes as the wrong artifact's own pack format —
-//! confirmed by inspection, not fixed this pass, no domain-correct geometry↔catalog mapping is
-//! defined anywhere) — carried over behaviorally unchanged, labeled `IoFidelity::Lossy` for
-//! honesty, same treatment as `txt`'s pre-existing "not yet implemented" stub. See
-//! `📓️w4-sourcing-report.md` `## openQuestions`.
+//! Fidelity: `zip` (document archive: DSL member plus rfc8259 rendition), `json` (rfc8259) and `txt` (utf-8 DSL
+//! carrier) are lossless `IoFidelity::Exact` hops; the language-agnostic expectations live in
+//! `🧪️tests/🧫️fixtures/🚪️io-curation-1/🔣️.json` and are reproduced by `🧪️tests/🚪️io-curation-1/🐍️.py`.
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_plugin::app::declarations::IoDeclaration {

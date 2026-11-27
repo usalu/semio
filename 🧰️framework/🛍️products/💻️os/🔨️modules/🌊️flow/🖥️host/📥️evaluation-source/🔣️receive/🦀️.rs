@@ -30,9 +30,9 @@ fn receive<E:NativeReceivingEffectError>(cx:&mut StepContext<'_>,d:RetirementDem
 }
 /// 🫴️ One native receiving turn of an effect-shaped cursor; an unstarted frame is cancelled so the turn retries intact.
 fn receive_effect<E:NativeReceivingEffectError>(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),OriginalTurnFailure>{
- if !fits(cx,d){return Ok(())}
+ if !fits(cx,d){eprintln!("[DEBUG] receive_effect unfit d={d:?} grant={:?} yield={}",cx.retained_grant(),cx.should_yield());return Ok(())}
  let maximum=cx.fuel_remaining();let mut out=None;let mut frame=NativeReceivingEffect::<E>::default();let mut done=None;
- cx.with_native_receiving(&mut out,|native,_|{let polled=native.receive_effect(d,maximum,&mut frame,run)?;if matches!(polled,NativeReceivingEffectPoll::Pending{work:0})&&frame.phase()==NativeReceivingEffectPhase::Granted{frame.cancel_unstarted(native)?}done=Some(polled);Ok(())})?;
+ let ran=cx.with_native_receiving(&mut out,|native,_|{let polled=native.receive_effect(d,maximum,&mut frame,run)?;if matches!(polled,NativeReceivingEffectPoll::Pending{work:0})&&frame.phase()==NativeReceivingEffectPhase::Granted{frame.cancel_unstarted(native)?}done=Some(polled);Ok(())})?;eprintln!("[DEBUG] receive_effect ran={ran} done={} grant={:?} fuel={}",match &done{Some(NativeReceivingEffectPoll::Complete(_))=>"complete",Some(NativeReceivingEffectPoll::Pending{work:0})=>"pending0",Some(NativeReceivingEffectPoll::Pending{..})=>"pending",None=>"none"},cx.retained_grant(),cx.fuel_remaining());
  match done{Some(NativeReceivingEffectPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},Some(NativeReceivingEffectPoll::Pending{work:0})|None=>Ok(()),Some(NativeReceivingEffectPoll::Pending{..})=>Err(invalid().into())}
 }
 /// ♻️ Pays the receiver close start once, then closes it through its reply-shaped retirement cursor.

@@ -94,26 +94,28 @@ impl AssemblyJob<'_> {
                 Err(_) => NumericalRun::Fault,
             };
         }
+        let retained = matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_));
         loop {
             context.consume_fuel(1);
+            let due = self.state.checkpoint_due || self.state.preview_due;
             if self.state.checkpoint_due {
                 self.state.checkpoint_due = false;
-                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                if !retained {
+                    self.publication = Some((AssemblyPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
                     return NumericalRun::Yield;
                 }
-                self.publication = Some((AssemblyPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
-                return NumericalRun::Yield;
-            }
-            if self.state.preview_due {
+            } else if self.state.preview_due {
                 self.state.preview_due = false;
-                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                if !retained {
+                    self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
                     return NumericalRun::Yield;
                 }
-                self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
+            }
+            if due && context.should_yield() {
                 return NumericalRun::Yield;
             }
             if self.state.stage == AssemblyJobStage::Complete {
-                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                if retained {
                     return NumericalRun::Complete;
                 }
                 self.publication = Some((AssemblyPublicationKind::Complete, NumericalBytesPublication::new(JobPayloadStream::CommitOutput, encode_value(&self.preview()))));
@@ -157,11 +159,11 @@ impl AssemblyJob<'_> {
             if context.is_cancelled() {
                 return NumericalRun::Cancelled;
             }
-            if self.state.preview_due || self.state.checkpoint_due || self.state.stage == AssemblyJobStage::Complete || context.should_yield() {
+            if !retained && (self.state.preview_due || self.state.checkpoint_due || self.state.stage == AssemblyJobStage::Complete) || context.should_yield() {
                 break;
             }
         }
-        if self.state.preview_due {
+        if !retained && self.state.preview_due {
             self.state.preview_due = false;
             self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
             NumericalRun::Yield

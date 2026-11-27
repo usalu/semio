@@ -70,7 +70,6 @@ pub mod standards {
                             #[path = "."]
                             pub mod artifacts {
                                 pub use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::io::export::serializers::artifacts::svg;
-                                pub use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::io::export::serializers::artifacts::pdf;
                                 pub use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::io::export::serializers::artifacts::png;
                                 #[path = "."]
                                 pub mod json {

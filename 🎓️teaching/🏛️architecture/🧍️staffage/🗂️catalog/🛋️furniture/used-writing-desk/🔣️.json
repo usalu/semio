@@ -182,8 +182,8 @@
     "densityKgM3": 680,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -198,8 +198,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 10600000000.0,
-    "strengthPa": 95000000.0,
+    "elasticModulusPa": 10600000000,
+    "strengthPa": 95000000,
     "source": "literature",
     "reference": "wood-handbook-2021"
    },
@@ -214,8 +214,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -244,7 +244,7 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
+    "elasticModulusPa": 210000000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -326,7 +326,7 @@
       "maxM": 1.32
      },
      "mass": {
-      "kg": 2.0,
+      "kg": 2,
       "comX": 0.62,
       "comY": 0.01,
       "distribution": "point",
@@ -354,7 +354,7 @@
      "mass": {
       "kg": 6.725,
       "comX": 0.3618,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-312-2010"
@@ -400,7 +400,7 @@
      "mass": {
       "kg": 14.077,
       "comX": 0.4034,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-312-2010"
@@ -739,1269 +739,6 @@
    }
   ],
   "representations": {
-   "500": {
-    "status": "authored",
-    "denominator": 500,
-    "validRange": {
-     "minDenominator": 350,
-     "maxDenominator": 1000
-    },
-    "pens": {
-     "body": 0.18,
-     "detail": null,
-     "texture": null,
-     "glazing": null,
-     "ground": 0.25
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 1.24,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "modesty-panel",
-       "bone": "top",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "kind": "rect",
-       "x": 0.0125,
-       "y": -0.435,
-       "w": 0.715,
-       "h": 0.435,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "leg-panel-edge",
-       "bone": "leg-panel",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.0125,
-       "w": 0.715,
-       "h": 0.025,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "pedestal",
-       "bone": "carcass",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.2,
-       "w": 0.715,
-       "h": 0.4,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-front",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.012,
-       "w": 0.359,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-front",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.0155,
-       "w": 0.359,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-front",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.0145,
-       "w": 0.359,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-edge",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.0425,
-       "y": 0.0,
-       "w": 1.2,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.32,
-       "y": 0.0,
-       "w": 0.64,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "pedestal-side-outer",
-       "bone": "carcass",
-       "role": "body",
-       "z": 7,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.02,
-       "w": 0.56,
-       "h": 0.715,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-end",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.735,
-       "w": 0.6,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-block",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.083,
-       "w": 0.48,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-block",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.4045,
-       "w": 0.48,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-block",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.5905,
-       "w": 0.48,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.62,
-       "y": -0.32,
-       "w": 1.24,
-       "h": 0.64,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "drawer-bottom-block",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.48,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-block",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.48,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-block",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.48,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "poly",
-       "points": [
-        [
-         -0.6,
-         -0.3
-        ],
-        [
-         0.6,
-         -0.3
-        ],
-        [
-         0.6,
-         0.3
-        ],
-        [
-         -0.6,
-         0.3
-        ]
-       ],
-       "closed": true,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "Elevation 2.5 x 1.5 mm: the blanket line, the top over the knee space between the panel edge and the pedestal block with its three fronts.",
-      "de": "Ansicht 2,5 x 1,5 mm: die Deckenlinie, die Platte über dem Knieraum zwischen Wangenkante und Unterschrankblock mit seinen drei Fronten."
-     },
-     "retained": {
-      "en": "Overall 1.24 x 0.76 m, knee space, pedestal 0.40 m, the three fronts.",
-      "de": "Gesamt 1,24 x 0,76 m, Knieraum, Unterschrank 0,40 m, die drei Fronten."
-     },
-     "merged": {
-      "en": "The pedestal is one block; the three drawers are blocks that slide out of it.",
-      "de": "Der Unterschrank ist ein Block; die drei Schubkästen sind Blöcke, die aus ihm herausgleiten."
-     },
-     "omitted": {
-      "en": "Plinth, shadow gaps, grips, handle, chip and traces of use.",
-      "de": "Sockel, Schattenfugen, Griffe, Bügel, Abbruch und Gebrauchsspuren."
-     },
-     "thinElements": {
-      "en": "Top, panel edge, modesty panel and blanket are drawn at their true 20-25 mm and carried by the 0.18 mm outline.",
-      "de": "Platte, Wangenkante, Knieblende und Decke sind mit ihren wahren 20-25 mm gezeichnet und vom 0,18-mm-Umriss getragen."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Top 0.62, pedestal 0.5, fronts 0.5, panels 0.55, blanket 0.3.",
-      "de": "Platte 0,62, Unterschrank 0,5, Fronten 0,5, Wangen 0,55, Decke 0,3."
-     },
-     "overlays": {
-      "en": "None.",
-      "de": "Keine."
-     }
-    }
-   },
-   "200": {
-    "status": "authored",
-    "denominator": 200,
-    "validRange": {
-     "minDenominator": 150,
-     "maxDenominator": 350
-    },
-    "pens": {
-     "body": 0.25,
-     "detail": 0.13,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.35
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 1.24,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "modesty-panel",
-       "bone": "top",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "kind": "rect",
-       "x": 0.0125,
-       "y": -0.435,
-       "w": 0.715,
-       "h": 0.435,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "leg-panel-edge",
-       "bone": "leg-panel",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.0125,
-       "w": 0.715,
-       "h": 0.025,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "pedestal-side-inner",
-       "bone": "carcass",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.2,
-       "w": 0.715,
-       "h": 0.03,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "pedestal-side-outer",
-       "bone": "carcass",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.17,
-       "w": 0.715,
-       "h": 0.03,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "plinth",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "rect",
-       "x": 0.652,
-       "y": -0.17,
-       "w": 0.063,
-       "h": 0.34,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-front",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0095,
-       "y": -0.012,
-       "w": 0.34,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-front",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0095,
-       "y": -0.0155,
-       "w": 0.34,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-front",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0095,
-       "y": -0.0145,
-       "w": 0.34,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-edge",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.0425,
-       "y": 0.0,
-       "w": 1.2,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.32,
-       "y": 0.0,
-       "w": 0.64,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "pedestal-side-outer",
-       "bone": "carcass",
-       "role": "body",
-       "z": 7,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.02,
-       "w": 0.56,
-       "h": 0.715,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-end",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.735,
-       "w": 0.6,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-block",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.083,
-       "w": 0.53,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-block",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.4045,
-       "w": 0.53,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-block",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.5905,
-       "w": 0.53,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.62,
-       "y": -0.32,
-       "w": 1.24,
-       "h": 0.64,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "drawer-bottom-block",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.2,
-       "y": -0.28,
-       "w": 0.34,
-       "h": 0.53,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-block",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.2,
-       "y": -0.28,
-       "w": 0.34,
-       "h": 0.53,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-block",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.2,
-       "y": -0.28,
-       "w": 0.34,
-       "h": 0.53,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "poly",
-       "points": [
-        [
-         -0.6,
-         -0.3
-        ],
-        [
-         0.6,
-         -0.3
-        ],
-        [
-         0.6,
-         0.3
-        ],
-        [
-         -0.6,
-         0.3
-        ]
-       ],
-       "closed": true,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "Elevation 6.2 x 3.8 mm: the blanket band, panel edge, modesty panel, the pedestal with generalised 30 mm side edges, a flush plinth and three fronts, the top.",
-      "de": "Ansicht 6,2 x 3,8 mm: das Deckenband, die Wangenkante, die Knieblende, der Unterschrank mit verallgemeinerten 30-mm-Seitenkanten, bündigem Sockel und drei Fronten, die Platte."
-     },
-     "retained": {
-      "en": "Top 25 mm, panel end 25 mm, pedestal 400 mm, the three fronts, knee space 0.715 x 0.70 m.",
-      "de": "Platte 25 mm, Wange 25 mm, Unterschrank 400 mm, die drei Fronten, Knieraum 0,715 x 0,70 m."
-     },
-     "merged": {
-      "en": "The plinth recess (40 mm, under 0.15 mm gap at 1:350) is drawn flush; the sides are widened to 30 mm; each drawer is one block.",
-      "de": "Der Sockelrücksprung (40 mm, unter 0,15 mm Lücke bei 1:350) ist bündig gezeichnet; die Seiten sind auf 30 mm verbreitert; jeder Schubkasten ist ein Block."
-     },
-     "omitted": {
-      "en": "Corner chip, grips, handle, escutcheon and every trace of use.",
-      "de": "Eckabbruch, Griffe, Bügel, Schlüsselschild und alle Gebrauchsspuren."
-     },
-     "thinElements": {
-      "en": "Top, panel and blanket keep their true 25 and 20 mm, carried by the 0.25 mm outline.",
-      "de": "Platte, Wange und Decke behalten ihre wahren 25 und 20 mm, getragen vom 0,25-mm-Umriss."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Top 0.62, panels 0.55, fronts 0.5, plinth 0.4, blanket 0.3.",
-      "de": "Platte 0,62, Wangen 0,55, Fronten 0,5, Sockel 0,4, Decke 0,3."
-     },
-     "overlays": {
-      "en": "None.",
-      "de": "Keine."
-     }
-    }
-   },
-   "100": {
-    "status": "authored",
-    "denominator": 100,
-    "validRange": {
-     "minDenominator": 75,
-     "maxDenominator": 150
-    },
-    "pens": {
-     "body": 0.35,
-     "detail": 0.18,
-     "texture": 0.13,
-     "glazing": 0.13,
-     "ground": 0.5
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 1.24,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "modesty-panel",
-       "bone": "top",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "kind": "rect",
-       "x": 0.0125,
-       "y": -0.435,
-       "w": 0.715,
-       "h": 0.435,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "leg-panel-edge",
-       "bone": "leg-panel",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.0125,
-       "w": 0.715,
-       "h": 0.025,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "pedestal-side-inner",
-       "bone": "carcass",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.2,
-       "w": 0.715,
-       "h": 0.019,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "pedestal-side-outer",
-       "bone": "carcass",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.181,
-       "w": 0.715,
-       "h": 0.019,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "plinth",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": 0.652,
-       "y": -0.181,
-       "w": 0.063,
-       "h": 0.362,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-front",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.0015,
-       "y": -0.012,
-       "w": 0.362,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-front",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.0015,
-       "y": -0.0155,
-       "w": 0.362,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-front",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.0015,
-       "y": -0.0145,
-       "w": 0.362,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-edge",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.0425,
-       "y": 0.0,
-       "w": 1.2,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "shadow-gap-top",
-       "bone": "top",
-       "role": "detail",
-       "z": 10,
-       "filled": false,
-       "tone": 0.2,
-       "kind": "poly",
-       "points": [
-        [
-         0.7465,
-         -0.0015
-        ],
-        [
-         1.1085,
-         -0.0015
-        ]
-       ],
-       "closed": false,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.32,
-       "y": 0.0,
-       "w": 0.64,
-       "h": 0.02,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "pedestal-side-outer",
-       "bone": "carcass",
-       "role": "body",
-       "z": 7,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.02,
-       "w": 0.56,
-       "h": 0.715,
-       "region": "carcass",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top-end",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.735,
-       "w": 0.6,
-       "h": 0.025,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-bottom-box",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": -0.261,
-       "y": 0.095,
-       "w": 0.521,
-       "h": 0.27,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-bottom-front",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.083,
-       "w": 0.019,
-       "h": 0.3215,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-box",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": -0.261,
-       "y": 0.42,
-       "w": 0.521,
-       "h": 0.15,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-middle-front",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.4045,
-       "w": 0.019,
-       "h": 0.186,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-box",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": -0.261,
-       "y": 0.605,
-       "w": 0.521,
-       "h": 0.105,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-top-front",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": -0.28,
-       "y": 0.5905,
-       "w": 0.019,
-       "h": 0.1445,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "rect",
-       "x": -0.62,
-       "y": -0.32,
-       "w": 1.24,
-       "h": 0.64,
-       "region": "blanket",
-       "material": "moving-blanket"
-      },
-      {
-       "id": "drawer-bottom-box",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": 0.1915,
-       "y": -0.261,
-       "w": 0.357,
-       "h": 0.521,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-bottom-front",
-       "bone": "drawer-bottom",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.019,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-middle-box",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": 0.1915,
-       "y": -0.261,
-       "w": 0.357,
-       "h": 0.521,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-middle-front",
-       "bone": "drawer-middle",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.019,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "drawer-top-box",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "rect",
-       "x": 0.1915,
-       "y": -0.261,
-       "w": 0.357,
-       "h": 0.521,
-       "material": "chipboard-p2"
-      },
-      {
-       "id": "drawer-top-front",
-       "bone": "drawer-top",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.5,
-       "kind": "rect",
-       "x": 0.1905,
-       "y": -0.28,
-       "w": 0.359,
-       "h": 0.019,
-       "region": "drawer-fronts",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "top",
-       "bone": "top",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.62,
-       "kind": "poly",
-       "points": [
-        [
-         -0.572,
-         -0.3
-        ],
-        [
-         0.6,
-         -0.3
-        ],
-        [
-         0.6,
-         0.3
-        ],
-        [
-         -0.6,
-         0.3
-        ],
-        [
-         -0.6,
-         -0.284
-        ],
-        [
-         -0.588,
-         -0.291
-        ]
-       ],
-       "closed": true,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      },
-      {
-       "id": "ring-mark",
-       "bone": "top",
-       "role": "texture",
-       "z": 10,
-       "filled": false,
-       "tone": 0.45,
-       "kind": "ellipse",
-       "cx": -0.3,
-       "cy": 0.08,
-       "rx": 0.04,
-       "ry": 0.04,
-       "region": "desk-top",
-       "material": "teak-veneered-chipboard"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "Elevation 12.4 x 7.6 mm: blanket, panel edge, modesty panel, pedestal with side edges, plinth recess and the three fronts, top. Front: the outer pedestal side with the end of the top over the blanket. Plan: the top with its knocked-off corner.",
-      "de": "Ansicht 12,4 x 7,6 mm: Decke, Wangenkante, Knieblende, Unterschrank mit Seitenkanten, Sockelrücksprung und den drei Fronten, Platte. Vorderansicht: die äußere Unterschrankseite mit dem Plattenende über der Decke. Grundriss: die Platte mit abgeschlagener Ecke."
-     },
-     "retained": {
-      "en": "Top 25 mm, panel end 25 mm, sides 19 mm, plinth recess 60 x 40 mm, fronts 140, 183 and 320 mm, corner chip, one ring mark.",
-      "de": "Platte 25 mm, Wange 25 mm, Seiten 19 mm, Sockelrücksprung 60 x 40 mm, Fronten 140, 183 und 320 mm, Eckabbruch, ein Glasrand."
-     },
-     "merged": {
-      "en": "Grips, handle and escutcheon are not drawn (18 mm and less, under 0.2 mm at 1:150).",
-      "de": "Griffe, Bügel und Schlüsselschild entfallen (18 mm und weniger, unter 0,2 mm bei 1:150)."
-     },
-     "omitted": {
-      "en": "Scratches, scuffs, sticker, worn zone and the blanket quilting.",
-      "de": "Kratzer, Schrammen, Aufkleber, abgenutzte Zone und die Steppung der Decke."
-     },
-     "thinElements": {
-      "en": "The 25 mm panel edge and top and the 19 mm sides are filled strips carried by the 0.35 mm outline.",
-      "de": "Die 25-mm-Wangenkante und -Platte und die 19-mm-Seiten sind gefüllte Streifen, getragen vom 0,35-mm-Umriss."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "As at 1:50.",
-      "de": "Wie bei 1:50."
-     },
-     "overlays": {
-      "en": "One ring mark remains on the top as texture.",
-      "de": "Ein Glasrand bleibt als Textur auf der Platte."
-     }
-    }
-   },
    "50": {
     "status": "authored",
     "denominator": 50,
@@ -2050,8 +787,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.24,
        "h": 0.02,
        "region": "blanket",
@@ -2081,7 +818,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.715,
        "h": 0.025,
@@ -2096,7 +833,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.2,
        "w": 0.715,
        "h": 0.019,
@@ -2111,7 +848,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.181,
        "w": 0.715,
        "h": 0.019,
@@ -2187,7 +924,7 @@
        "tone": 0.62,
        "kind": "rect",
        "x": -0.0425,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.025,
        "region": "desk-top",
@@ -2294,7 +1031,7 @@
        "points": [
         [
          -0.0145,
-         0.0
+         0
         ],
         [
          -0.0145,
@@ -2412,7 +1149,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": -0.32,
-       "y": 0.0,
+       "y": 0,
        "w": 0.64,
        "h": 0.02,
        "region": "blanket",
@@ -2908,7 +1645,7 @@
          -0.205
         ],
         [
-         0.0,
+         0,
          -0.2
         ],
         [
@@ -3098,6 +1835,1269 @@
      "overlays": {
       "en": "Traces of use drawn as texture: five scratches, two ring marks and the outline of the worn, sun-bleached zone where the forearms rest, scuffs on the bottom front, the panel edge and the pedestal side, the price sticker.",
       "de": "Gebrauchsspuren als Textur: fünf Kratzer, zwei Glasränder und der Umriss der abgenutzten, sonnengebleichten Zone der Unterarme, Schrammen auf der unteren Front, der Wangenkante und der Unterschrankseite, der Preisaufkleber."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 1.24,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "modesty-panel",
+       "bone": "top",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.0125,
+       "y": -0.435,
+       "w": 0.715,
+       "h": 0.435,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "leg-panel-edge",
+       "bone": "leg-panel",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.0125,
+       "w": 0.715,
+       "h": 0.025,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "pedestal-side-inner",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.2,
+       "w": 0.715,
+       "h": 0.019,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "pedestal-side-outer",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.181,
+       "w": 0.715,
+       "h": 0.019,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "plinth",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.652,
+       "y": -0.181,
+       "w": 0.063,
+       "h": 0.362,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-front",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.0015,
+       "y": -0.012,
+       "w": 0.362,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-front",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.0015,
+       "y": -0.0155,
+       "w": 0.362,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-front",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.0015,
+       "y": -0.0145,
+       "w": 0.362,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-edge",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.0425,
+       "y": 0,
+       "w": 1.2,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "shadow-gap-top",
+       "bone": "top",
+       "role": "detail",
+       "z": 10,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         0.7465,
+         -0.0015
+        ],
+        [
+         1.1085,
+         -0.0015
+        ]
+       ],
+       "closed": false,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.32,
+       "y": 0,
+       "w": 0.64,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "pedestal-side-outer",
+       "bone": "carcass",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.02,
+       "w": 0.56,
+       "h": 0.715,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-end",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.735,
+       "w": 0.6,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-box",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.261,
+       "y": 0.095,
+       "w": 0.521,
+       "h": 0.27,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-bottom-front",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.083,
+       "w": 0.019,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-box",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.261,
+       "y": 0.42,
+       "w": 0.521,
+       "h": 0.15,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-middle-front",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.4045,
+       "w": 0.019,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-box",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.261,
+       "y": 0.605,
+       "w": 0.521,
+       "h": 0.105,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-top-front",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.5905,
+       "w": 0.019,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.62,
+       "y": -0.32,
+       "w": 1.24,
+       "h": 0.64,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-bottom-box",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.1915,
+       "y": -0.261,
+       "w": 0.357,
+       "h": 0.521,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-bottom-front",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.019,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-box",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.1915,
+       "y": -0.261,
+       "w": 0.357,
+       "h": 0.521,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-middle-front",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.019,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-box",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.1915,
+       "y": -0.261,
+       "w": 0.357,
+       "h": 0.521,
+       "material": "chipboard-p2"
+      },
+      {
+       "id": "drawer-top-front",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.019,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "poly",
+       "points": [
+        [
+         -0.572,
+         -0.3
+        ],
+        [
+         0.6,
+         -0.3
+        ],
+        [
+         0.6,
+         0.3
+        ],
+        [
+         -0.6,
+         0.3
+        ],
+        [
+         -0.6,
+         -0.284
+        ],
+        [
+         -0.588,
+         -0.291
+        ]
+       ],
+       "closed": true,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "ring-mark",
+       "bone": "top",
+       "role": "texture",
+       "z": 10,
+       "filled": false,
+       "tone": 0.45,
+       "kind": "ellipse",
+       "cx": -0.3,
+       "cy": 0.08,
+       "rx": 0.04,
+       "ry": 0.04,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Elevation 12.4 x 7.6 mm: blanket, panel edge, modesty panel, pedestal with side edges, plinth recess and the three fronts, top. Front: the outer pedestal side with the end of the top over the blanket. Plan: the top with its knocked-off corner.",
+      "de": "Ansicht 12,4 x 7,6 mm: Decke, Wangenkante, Knieblende, Unterschrank mit Seitenkanten, Sockelrücksprung und den drei Fronten, Platte. Vorderansicht: die äußere Unterschrankseite mit dem Plattenende über der Decke. Grundriss: die Platte mit abgeschlagener Ecke."
+     },
+     "retained": {
+      "en": "Top 25 mm, panel end 25 mm, sides 19 mm, plinth recess 60 x 40 mm, fronts 140, 183 and 320 mm, corner chip, one ring mark.",
+      "de": "Platte 25 mm, Wange 25 mm, Seiten 19 mm, Sockelrücksprung 60 x 40 mm, Fronten 140, 183 und 320 mm, Eckabbruch, ein Glasrand."
+     },
+     "merged": {
+      "en": "Grips, handle and escutcheon are not drawn (18 mm and less, under 0.2 mm at 1:150).",
+      "de": "Griffe, Bügel und Schlüsselschild entfallen (18 mm und weniger, unter 0,2 mm bei 1:150)."
+     },
+     "omitted": {
+      "en": "Scratches, scuffs, sticker, worn zone and the blanket quilting.",
+      "de": "Kratzer, Schrammen, Aufkleber, abgenutzte Zone und die Steppung der Decke."
+     },
+     "thinElements": {
+      "en": "The 25 mm panel edge and top and the 19 mm sides are filled strips carried by the 0.35 mm outline.",
+      "de": "Die 25-mm-Wangenkante und -Platte und die 19-mm-Seiten sind gefüllte Streifen, getragen vom 0,35-mm-Umriss."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As at 1:50.",
+      "de": "Wie bei 1:50."
+     },
+     "overlays": {
+      "en": "One ring mark remains on the top as texture.",
+      "de": "Ein Glasrand bleibt als Textur auf der Platte."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 1.24,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "modesty-panel",
+       "bone": "top",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.0125,
+       "y": -0.435,
+       "w": 0.715,
+       "h": 0.435,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "leg-panel-edge",
+       "bone": "leg-panel",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.0125,
+       "w": 0.715,
+       "h": 0.025,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "pedestal-side-inner",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.2,
+       "w": 0.715,
+       "h": 0.03,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "pedestal-side-outer",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.17,
+       "w": 0.715,
+       "h": 0.03,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "plinth",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.652,
+       "y": -0.17,
+       "w": 0.063,
+       "h": 0.34,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-front",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.0095,
+       "y": -0.012,
+       "w": 0.34,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-front",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.0095,
+       "y": -0.0155,
+       "w": 0.34,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-front",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.0095,
+       "y": -0.0145,
+       "w": 0.34,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-edge",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.0425,
+       "y": 0,
+       "w": 1.2,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.32,
+       "y": 0,
+       "w": 0.64,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "pedestal-side-outer",
+       "bone": "carcass",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.02,
+       "w": 0.56,
+       "h": 0.715,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-end",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.735,
+       "w": 0.6,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-block",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.083,
+       "w": 0.53,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-block",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.4045,
+       "w": 0.53,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-block",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.5905,
+       "w": 0.53,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.62,
+       "y": -0.32,
+       "w": 1.24,
+       "h": 0.64,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-bottom-block",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.28,
+       "w": 0.34,
+       "h": 0.53,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-block",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.28,
+       "w": 0.34,
+       "h": 0.53,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-block",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.28,
+       "w": 0.34,
+       "h": 0.53,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "poly",
+       "points": [
+        [
+         -0.6,
+         -0.3
+        ],
+        [
+         0.6,
+         -0.3
+        ],
+        [
+         0.6,
+         0.3
+        ],
+        [
+         -0.6,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Elevation 6.2 x 3.8 mm: the blanket band, panel edge, modesty panel, the pedestal with generalised 30 mm side edges, a flush plinth and three fronts, the top.",
+      "de": "Ansicht 6,2 x 3,8 mm: das Deckenband, die Wangenkante, die Knieblende, der Unterschrank mit verallgemeinerten 30-mm-Seitenkanten, bündigem Sockel und drei Fronten, die Platte."
+     },
+     "retained": {
+      "en": "Top 25 mm, panel end 25 mm, pedestal 400 mm, the three fronts, knee space 0.715 x 0.70 m.",
+      "de": "Platte 25 mm, Wange 25 mm, Unterschrank 400 mm, die drei Fronten, Knieraum 0,715 x 0,70 m."
+     },
+     "merged": {
+      "en": "The plinth recess (40 mm, under 0.15 mm gap at 1:350) is drawn flush; the sides are widened to 30 mm; each drawer is one block.",
+      "de": "Der Sockelrücksprung (40 mm, unter 0,15 mm Lücke bei 1:350) ist bündig gezeichnet; die Seiten sind auf 30 mm verbreitert; jeder Schubkasten ist ein Block."
+     },
+     "omitted": {
+      "en": "Corner chip, grips, handle, escutcheon and every trace of use.",
+      "de": "Eckabbruch, Griffe, Bügel, Schlüsselschild und alle Gebrauchsspuren."
+     },
+     "thinElements": {
+      "en": "Top, panel and blanket keep their true 25 and 20 mm, carried by the 0.25 mm outline.",
+      "de": "Platte, Wange und Decke behalten ihre wahren 25 und 20 mm, getragen vom 0,25-mm-Umriss."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Top 0.62, panels 0.55, fronts 0.5, plinth 0.4, blanket 0.3.",
+      "de": "Platte 0,62, Wangen 0,55, Fronten 0,5, Sockel 0,4, Decke 0,3."
+     },
+     "overlays": {
+      "en": "None.",
+      "de": "Keine."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 1.24,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "modesty-panel",
+       "bone": "top",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.0125,
+       "y": -0.435,
+       "w": 0.715,
+       "h": 0.435,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "leg-panel-edge",
+       "bone": "leg-panel",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.0125,
+       "w": 0.715,
+       "h": 0.025,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "pedestal",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.2,
+       "w": 0.715,
+       "h": 0.4,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-front",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.012,
+       "w": 0.359,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-front",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.0155,
+       "w": 0.359,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-front",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.0145,
+       "w": 0.359,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-edge",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.0425,
+       "y": 0,
+       "w": 1.2,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.32,
+       "y": 0,
+       "w": 0.64,
+       "h": 0.02,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "pedestal-side-outer",
+       "bone": "carcass",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.02,
+       "w": 0.56,
+       "h": 0.715,
+       "region": "carcass",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top-end",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.735,
+       "w": 0.6,
+       "h": 0.025,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-bottom-block",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.083,
+       "w": 0.48,
+       "h": 0.3215,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-block",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.4045,
+       "w": 0.48,
+       "h": 0.186,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-block",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.5905,
+       "w": 0.48,
+       "h": 0.1445,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.62,
+       "y": -0.32,
+       "w": 1.24,
+       "h": 0.64,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-bottom-block",
+       "bone": "drawer-bottom",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.48,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-middle-block",
+       "bone": "drawer-middle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.48,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "drawer-top-block",
+       "bone": "drawer-top",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1905,
+       "y": -0.28,
+       "w": 0.359,
+       "h": 0.48,
+       "region": "drawer-fronts",
+       "material": "teak-veneered-chipboard"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "poly",
+       "points": [
+        [
+         -0.6,
+         -0.3
+        ],
+        [
+         0.6,
+         -0.3
+        ],
+        [
+         0.6,
+         0.3
+        ],
+        [
+         -0.6,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "region": "desk-top",
+       "material": "teak-veneered-chipboard"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Elevation 2.5 x 1.5 mm: the blanket line, the top over the knee space between the panel edge and the pedestal block with its three fronts.",
+      "de": "Ansicht 2,5 x 1,5 mm: die Deckenlinie, die Platte über dem Knieraum zwischen Wangenkante und Unterschrankblock mit seinen drei Fronten."
+     },
+     "retained": {
+      "en": "Overall 1.24 x 0.76 m, knee space, pedestal 0.40 m, the three fronts.",
+      "de": "Gesamt 1,24 x 0,76 m, Knieraum, Unterschrank 0,40 m, die drei Fronten."
+     },
+     "merged": {
+      "en": "The pedestal is one block; the three drawers are blocks that slide out of it.",
+      "de": "Der Unterschrank ist ein Block; die drei Schubkästen sind Blöcke, die aus ihm herausgleiten."
+     },
+     "omitted": {
+      "en": "Plinth, shadow gaps, grips, handle, chip and traces of use.",
+      "de": "Sockel, Schattenfugen, Griffe, Bügel, Abbruch und Gebrauchsspuren."
+     },
+     "thinElements": {
+      "en": "Top, panel edge, modesty panel and blanket are drawn at their true 20-25 mm and carried by the 0.18 mm outline.",
+      "de": "Platte, Wangenkante, Knieblende und Decke sind mit ihren wahren 20-25 mm gezeichnet und vom 0,18-mm-Umriss getragen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Top 0.62, pedestal 0.5, fronts 0.5, panels 0.55, blanket 0.3.",
+      "de": "Platte 0,62, Unterschrank 0,5, Fronten 0,5, Wangen 0,55, Decke 0,3."
+     },
+     "overlays": {
+      "en": "None.",
+      "de": "Keine."
      }
     }
    }
@@ -3446,7 +3446,7 @@
       "ease": "smooth"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "carried",
       "ease": "smooth"
      },
@@ -3511,7 +3511,7 @@
      {
       "id": "lift",
       "fromS": 0.5,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Lift off",
        "de": "Abheben"
@@ -3519,7 +3519,7 @@
      },
      {
       "id": "carry",
-      "fromS": 2.0,
+      "fromS": 2,
       "toS": 4,
       "title": {
        "en": "Carry level",
@@ -3545,7 +3545,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "kind": "motion",
       "title": {
        "en": "Held level 0.10 m above the floor",
@@ -3576,7 +3576,7 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -3586,7 +3586,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -3596,7 +3596,7 @@
       }
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -3609,7 +3609,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -3673,7 +3673,7 @@
      {
       "id": "top-drawer",
       "fromS": 0,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Top drawer",
        "de": "Oberer Schubkasten"
@@ -3681,8 +3681,8 @@
      },
      {
       "id": "middle-drawer",
-      "fromS": 2.0,
-      "toS": 4.0,
+      "fromS": 2,
+      "toS": 4,
       "title": {
        "en": "Middle drawer",
        "de": "Mittlerer Schubkasten"
@@ -3690,7 +3690,7 @@
      },
      {
       "id": "bottom-drawer",
-      "fromS": 4.0,
+      "fromS": 4,
       "toS": 6.4,
       "title": {
        "en": "Bottom drawer",
@@ -3709,7 +3709,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "motion",
       "title": {
        "en": "Top drawer at its stop",
@@ -3718,7 +3718,7 @@
       "target": "drawer-top"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "kind": "motion",
       "title": {
        "en": "Middle drawer at its stop",
@@ -3933,1946 +3933,6 @@
    "clinical": false
   },
   "volumes": {
-   "500": {
-    "status": "authored",
-    "denominator": 500,
-    "body": [
-     {
-      "id": "blanket",
-      "kind": "box",
-      "bone": "blanket",
-      "material": "moving-blanket",
-      "role": "body",
-      "tone": 0.3,
-      "size": [
-       1.24,
-       0.02,
-       0.64
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "top-board",
-      "kind": "box",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.62,
-      "size": [
-       1.2,
-       0.025,
-       0.6
-      ],
-      "transform": {
-       "translation": [
-        0.5575,
-        0.0125,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "leg-panel",
-      "kind": "box",
-      "bone": "leg-panel",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.55,
-      "size": [
-       0.715,
-       0.025,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        0.0,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "pedestal",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.715,
-       0.4,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        0.0,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "modesty-panel",
-      "kind": "box",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.715,
-       0.435,
-       0.025
-      ],
-      "transform": {
-       "translation": [
-        0.37,
-        -0.2175,
-        0.2575
-       ]
-      }
-     },
-     {
-      "id": "drawer-bottom-block",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.32,
-       0.4815
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.148,
-        0.22025
-       ]
-      }
-     },
-     {
-      "id": "drawer-middle-block",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.183,
-       0.4815
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0775,
-        0.22025
-       ]
-      }
-     },
-     {
-      "id": "drawer-top-block",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.14,
-       0.4815
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.057,
-        0.22025
-       ]
-      }
-     }
-    ],
-    "thermal": [
-     {
-      "id": "th-blanket",
-      "of": "blanket",
-      "region": "blanket"
-     },
-     {
-      "id": "th-top-board",
-      "of": "top-board",
-      "region": "desk-top"
-     },
-     {
-      "id": "th-leg-panel",
-      "of": "leg-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal",
-      "of": "pedestal",
-      "region": "carcass"
-     },
-     {
-      "id": "th-modesty-panel",
-      "of": "modesty-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-drawer-bottom-front",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.3245,
-       0.075
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.14725,
-        0.0185
-       ]
-      },
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-middle-front",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.186,
-       0.075
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0775,
-        0.0185
-       ]
-      },
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-top-front",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.1445,
-       0.075
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.05775,
-        0.0185
-       ]
-      },
-      "region": "drawer-fronts"
-     }
-    ],
-    "structure": [
-     {
-      "id": "m-blanket",
-      "of": "blanket",
-      "member": "blanket",
-      "part": "member"
-     },
-     {
-      "id": "m-top-board",
-      "of": "top-board",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-leg-panel",
-      "of": "leg-panel",
-      "member": "leg-panel",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal",
-      "of": "pedestal",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-modesty-panel",
-      "of": "modesty-panel",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-bottom-block",
-      "of": "drawer-bottom-block",
-      "member": "drawer-bottom",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-middle-block",
-      "of": "drawer-middle-block",
-      "member": "drawer-middle",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-top-block",
-      "of": "drawer-top-block",
-      "member": "drawer-top",
-      "part": "member"
-     },
-     {
-      "id": "j-leg-top-connector",
-      "kind": "box",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.075,
-       0.075,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.05,
-        -0.0375,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "joint"
-     },
-     {
-      "id": "j-pedestal-top-connector",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.075,
-       0.075,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.0375,
-        -0.2375,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-bottom-runner",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.075,
-       0.075,
-       0.3
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0255,
-        0.161
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-middle-runner",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.075,
-       0.075,
-       0.3
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0235,
-        0.161
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-top-runner",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.075,
-       0.075,
-       0.3
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0245,
-        0.161
-       ]
-      },
-      "member": "drawer-top",
-      "part": "joint"
-     },
-     {
-      "id": "mass-blanket",
-      "kind": "ellipsoid",
-      "bone": "blanket",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      },
-      "member": "blanket",
-      "part": "mass"
-     },
-     {
-      "id": "mass-top",
-      "kind": "ellipsoid",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.517,
-        -0.0373,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "mass"
-     },
-     {
-      "id": "mass-leg-panel",
-      "kind": "ellipsoid",
-      "bone": "leg-panel",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.3618,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "leg-panel",
-      "part": "mass"
-     },
-     {
-      "id": "mass-carcass",
-      "kind": "ellipsoid",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.4034,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-bottom",
-      "kind": "ellipsoid",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.1255,
-        0.0
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-middle",
-      "kind": "ellipsoid",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0647,
-        0.0
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-top",
-      "kind": "ellipsoid",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0432,
-        0.0
-       ]
-      },
-      "member": "drawer-top",
-      "part": "mass"
-     }
-    ],
-    "decisions": [
-     {
-      "en": "Body, authored for 75 mm: blanket, top, panel end, modesty panel, the pedestal as one block and the three drawers as blocks lying in it, so they slide out of the block in the drawer poses; the knee space (0.715 x 0.70 m) is the decisive feature of the silhouette.",
-      "de": "Körper, für 75 mm gebaut: Decke, Platte, Wange, Knieblende, der Unterschrank als ein Block und die drei Schubkästen als darin liegende Blöcke, die in den Schubkastenposen aus dem Block herausgleiten; der Knieraum (0,715 x 0,70 m) ist das entscheidende Merkmal der Silhouette."
-     },
-     {
-      "en": "Thermal: 75 mm front slabs on the drawer bones inside the drawer blocks; structure members on the blocks and panels.",
-      "de": "Wärme: 75-mm-Frontplatten an den Schubkastenknochen in den Schubkastenblöcken; Tragwerksstäbe auf Blöcken und Wangen."
-     }
-    ]
-   },
-   "200": {
-    "status": "authored",
-    "denominator": 200,
-    "body": [
-     {
-      "id": "blanket",
-      "kind": "box",
-      "bone": "blanket",
-      "material": "moving-blanket",
-      "role": "body",
-      "tone": 0.3,
-      "size": [
-       1.24,
-       0.02,
-       0.64
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "top-board",
-      "kind": "box",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.62,
-      "size": [
-       1.2,
-       0.025,
-       0.6
-      ],
-      "transform": {
-       "translation": [
-        0.5575,
-        0.0125,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "leg-panel",
-      "kind": "box",
-      "bone": "leg-panel",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.55,
-      "size": [
-       0.715,
-       0.025,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        0.0,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "pedestal-side",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.55,
-      "size": [
-       0.715,
-       0.03,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        -0.185,
-        0.0
-       ]
-      },
-      "repeat": {
-       "count": 2,
-       "translation": [
-        0.0,
-        0.37,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "pedestal-back",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.652,
-       0.34,
-       0.03
-      ],
-      "transform": {
-       "translation": [
-        0.326,
-        0.0,
-        0.265
-       ]
-      }
-     },
-     {
-      "id": "pedestal-plinth",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.4,
-      "size": [
-       0.063,
-       0.34,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.6835,
-        0.0,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "modesty-panel",
-      "kind": "box",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.715,
-       0.435,
-       0.03
-      ],
-      "transform": {
-       "translation": [
-        0.37,
-        -0.2175,
-        0.255
-       ]
-      }
-     },
-     {
-      "id": "drawer-bottom-block",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.32,
-       0.53
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.148,
-        0.246
-       ]
-      }
-     },
-     {
-      "id": "drawer-middle-block",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.183,
-       0.53
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0775,
-        0.246
-       ]
-      }
-     },
-     {
-      "id": "drawer-top-block",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.14,
-       0.53
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.057,
-        0.246
-       ]
-      }
-     }
-    ],
-    "thermal": [
-     {
-      "id": "th-blanket",
-      "of": "blanket",
-      "region": "blanket"
-     },
-     {
-      "id": "th-top-board",
-      "of": "top-board",
-      "region": "desk-top"
-     },
-     {
-      "id": "th-leg-panel",
-      "of": "leg-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-side",
-      "of": "pedestal-side",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-back",
-      "of": "pedestal-back",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-plinth",
-      "of": "pedestal-plinth",
-      "region": "carcass"
-     },
-     {
-      "id": "th-modesty-panel",
-      "of": "modesty-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-drawer-bottom-front",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.3245,
-       0.03
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.14725,
-        -0.004
-       ]
-      },
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-middle-front",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.186,
-       0.03
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0775,
-        -0.004
-       ]
-      },
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-top-front",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.34,
-       0.1445,
-       0.03
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.05775,
-        -0.004
-       ]
-      },
-      "region": "drawer-fronts"
-     }
-    ],
-    "structure": [
-     {
-      "id": "m-blanket",
-      "of": "blanket",
-      "member": "blanket",
-      "part": "member"
-     },
-     {
-      "id": "m-top-board",
-      "of": "top-board",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-leg-panel",
-      "of": "leg-panel",
-      "member": "leg-panel",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-side",
-      "of": "pedestal-side",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-back",
-      "of": "pedestal-back",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-plinth",
-      "of": "pedestal-plinth",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-modesty-panel",
-      "of": "modesty-panel",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-bottom-block",
-      "of": "drawer-bottom-block",
-      "member": "drawer-bottom",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-middle-block",
-      "of": "drawer-middle-block",
-      "member": "drawer-middle",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-top-block",
-      "of": "drawer-top-block",
-      "member": "drawer-top",
-      "part": "member"
-     },
-     {
-      "id": "j-leg-top-connector",
-      "kind": "box",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.03,
-       0.03,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.0275,
-        -0.015,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "joint"
-     },
-     {
-      "id": "j-pedestal-top-connector",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.03,
-       0.03,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.015,
-        -0.215,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-bottom-runner",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.03,
-       0.03,
-       0.12
-      ],
-      "transform": {
-       "translation": [
-        0.0095,
-        0.003,
-        0.071
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-middle-runner",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.03,
-       0.03,
-       0.12
-      ],
-      "transform": {
-       "translation": [
-        0.0095,
-        0.001,
-        0.071
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-top-runner",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.03,
-       0.03,
-       0.12
-      ],
-      "transform": {
-       "translation": [
-        0.0095,
-        0.002,
-        0.071
-       ]
-      },
-      "member": "drawer-top",
-      "part": "joint"
-     },
-     {
-      "id": "mass-blanket",
-      "kind": "ellipsoid",
-      "bone": "blanket",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      },
-      "member": "blanket",
-      "part": "mass"
-     },
-     {
-      "id": "mass-top",
-      "kind": "ellipsoid",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.517,
-        -0.0373,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "mass"
-     },
-     {
-      "id": "mass-leg-panel",
-      "kind": "ellipsoid",
-      "bone": "leg-panel",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.3618,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "leg-panel",
-      "part": "mass"
-     },
-     {
-      "id": "mass-carcass",
-      "kind": "ellipsoid",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.4034,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-bottom",
-      "kind": "ellipsoid",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.1255,
-        0.0
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-middle",
-      "kind": "ellipsoid",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0647,
-        0.0
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-top",
-      "kind": "ellipsoid",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.015,
-       0.015,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0432,
-        0.0
-       ]
-      },
-      "member": "drawer-top",
-      "part": "mass"
-     }
-    ],
-    "decisions": [
-     {
-      "en": "Body, authored for 30 mm: blanket, square top (no chip), panel end, pedestal shell with the sides generalised to 30 mm, a 30 mm back and a flush plinth block, a 30 mm modesty panel, and each drawer as one block between the sides. The 25 mm top and panel and the 20 mm blanket keep their true thickness because the 2D draws them so.",
-      "de": "Körper, für 30 mm gebaut: Decke, rechteckige Platte (ohne Abbruch), Wange, Unterschrankschale mit auf 30 mm verallgemeinerten Seiten, 30-mm-Rückwand und bündigem Sockelblock, eine 30-mm-Knieblende und jeder Schubkasten als ein Block zwischen den Seiten. Die 25-mm-Platte und -Wange und die 20-mm-Decke behalten ihre wahre Stärke, weil das 2D sie so zeichnet."
-     },
-     {
-      "en": "Thermal: the drawer fronts are 30 mm front slabs on the drawer bones; structure members on the blocks and panels.",
-      "de": "Wärme: die Schubkastenfronten sind 30-mm-Frontplatten an den Schubkastenknochen; Tragwerksstäbe auf Blöcken und Wangen."
-     }
-    ]
-   },
-   "100": {
-    "status": "authored",
-    "denominator": 100,
-    "body": [
-     {
-      "id": "blanket",
-      "kind": "box",
-      "bone": "blanket",
-      "material": "moving-blanket",
-      "role": "body",
-      "tone": 0.3,
-      "size": [
-       1.24,
-       0.02,
-       0.64
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "top-board",
-      "kind": "extrude",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.62,
-      "profile": [
-       [
-        -0.291,
-        -0.0305
-       ],
-       [
-        -0.284,
-        -0.0425
-       ],
-       [
-        0.3,
-        -0.0425
-       ],
-       [
-        0.3,
-        1.1575
-       ],
-       [
-        -0.3,
-        1.1575
-       ],
-       [
-        -0.3,
-        -0.0145
-       ]
-      ],
-      "plane": "zx",
-      "from": 0.0,
-      "to": 0.025
-     },
-     {
-      "id": "leg-panel",
-      "kind": "box",
-      "bone": "leg-panel",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.55,
-      "size": [
-       0.715,
-       0.025,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        0.0,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "pedestal-side",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.55,
-      "size": [
-       0.715,
-       0.019,
-       0.56
-      ],
-      "transform": {
-       "translation": [
-        0.3575,
-        -0.1905,
-        0.0
-       ]
-      },
-      "repeat": {
-       "count": 2,
-       "translation": [
-        0.0,
-        0.381,
-        0.0
-       ]
-      }
-     },
-     {
-      "id": "pedestal-back",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.671,
-       0.362,
-       0.015
-      ],
-      "transform": {
-       "translation": [
-        0.3355,
-        0.0,
-        0.2725
-       ]
-      }
-     },
-     {
-      "id": "pedestal-bottom",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.016,
-       0.362,
-       0.526
-      ],
-      "transform": {
-       "translation": [
-        0.663,
-        0.0,
-        0.002
-       ]
-      }
-     },
-     {
-      "id": "plinth",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.35,
-      "size": [
-       0.044,
-       0.362,
-       0.016
-      ],
-      "transform": {
-       "translation": [
-        0.693,
-        0.0,
-        -0.232
-       ]
-      }
-     },
-     {
-      "id": "modesty-panel",
-      "kind": "box",
-      "bone": "top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.45,
-      "size": [
-       0.715,
-       0.435,
-       0.016
-      ],
-      "transform": {
-       "translation": [
-        0.37,
-        -0.2175,
-        0.262
-       ]
-      }
-     },
-     {
-      "id": "drawer-bottom-front",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.32,
-       0.019
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.148,
-        -0.0095
-       ]
-      }
-     },
-     {
-      "id": "drawer-bottom-box",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.6,
-      "size": [
-       0.359,
-       0.28,
-       0.521
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.13,
-        0.2605
-       ]
-      }
-     },
-     {
-      "id": "drawer-middle-front",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.183,
-       0.019
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0775,
-        -0.0095
-       ]
-      }
-     },
-     {
-      "id": "drawer-middle-box",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.6,
-      "size": [
-       0.359,
-       0.162,
-       0.521
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.069,
-        0.2605
-       ]
-      }
-     },
-     {
-      "id": "drawer-top-front",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "teak-veneered-chipboard",
-      "role": "body",
-      "tone": 0.5,
-      "size": [
-       0.359,
-       0.14,
-       0.019
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.057,
-        -0.0095
-       ]
-      }
-     },
-     {
-      "id": "drawer-top-box",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "body",
-      "tone": 0.6,
-      "size": [
-       0.359,
-       0.116,
-       0.521
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.047,
-        0.2605
-       ]
-      }
-     }
-    ],
-    "thermal": [
-     {
-      "id": "th-blanket",
-      "of": "blanket",
-      "region": "blanket"
-     },
-     {
-      "id": "th-top-board",
-      "of": "top-board",
-      "region": "desk-top"
-     },
-     {
-      "id": "th-leg-panel",
-      "of": "leg-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-side",
-      "of": "pedestal-side",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-back",
-      "of": "pedestal-back",
-      "region": "carcass"
-     },
-     {
-      "id": "th-pedestal-bottom",
-      "of": "pedestal-bottom",
-      "region": "carcass"
-     },
-     {
-      "id": "th-plinth",
-      "of": "plinth",
-      "region": "carcass"
-     },
-     {
-      "id": "th-modesty-panel",
-      "of": "modesty-panel",
-      "region": "carcass"
-     },
-     {
-      "id": "th-drawer-bottom-front",
-      "of": "drawer-bottom-front",
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-middle-front",
-      "of": "drawer-middle-front",
-      "region": "drawer-fronts"
-     },
-     {
-      "id": "th-drawer-top-front",
-      "of": "drawer-top-front",
-      "region": "drawer-fronts"
-     }
-    ],
-    "structure": [
-     {
-      "id": "m-blanket",
-      "of": "blanket",
-      "member": "blanket",
-      "part": "member"
-     },
-     {
-      "id": "m-top-board",
-      "of": "top-board",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-leg-panel",
-      "of": "leg-panel",
-      "member": "leg-panel",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-side",
-      "of": "pedestal-side",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-back",
-      "of": "pedestal-back",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-pedestal-bottom",
-      "of": "pedestal-bottom",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-plinth",
-      "of": "plinth",
-      "member": "carcass",
-      "part": "member"
-     },
-     {
-      "id": "m-modesty-panel",
-      "of": "modesty-panel",
-      "member": "top",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-bottom-box",
-      "of": "drawer-bottom-box",
-      "member": "drawer-bottom",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-middle-box",
-      "of": "drawer-middle-box",
-      "member": "drawer-middle",
-      "part": "member"
-     },
-     {
-      "id": "m-drawer-top-box",
-      "of": "drawer-top-box",
-      "member": "drawer-top",
-      "part": "member"
-     },
-     {
-      "id": "j-leg-top-connector",
-      "kind": "box",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.02,
-       0.02,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.0225,
-        -0.01,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "joint"
-     },
-     {
-      "id": "j-pedestal-top-connector",
-      "kind": "box",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.02,
-       0.02,
-       0.4
-      ],
-      "transform": {
-       "translation": [
-        0.01,
-        -0.21,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-bottom-runner",
-      "kind": "box",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.015,
-       0.015,
-       0.06
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0075,
-        0.041
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-middle-runner",
-      "kind": "box",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.015,
-       0.015,
-       0.06
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0075,
-        0.041
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "joint"
-     },
-     {
-      "id": "j-drawer-top-runner",
-      "kind": "box",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "size": [
-       0.015,
-       0.015,
-       0.06
-      ],
-      "transform": {
-       "translation": [
-        0.0,
-        0.0075,
-        0.041
-       ]
-      },
-      "member": "drawer-top",
-      "part": "joint"
-     },
-     {
-      "id": "mass-blanket",
-      "kind": "ellipsoid",
-      "bone": "blanket",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.62,
-        0.01,
-        0.0
-       ]
-      },
-      "member": "blanket",
-      "part": "mass"
-     },
-     {
-      "id": "mass-top",
-      "kind": "ellipsoid",
-      "bone": "top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.517,
-        -0.0373,
-        0.0
-       ]
-      },
-      "member": "top",
-      "part": "mass"
-     },
-     {
-      "id": "mass-leg-panel",
-      "kind": "ellipsoid",
-      "bone": "leg-panel",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.3618,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "leg-panel",
-      "part": "mass"
-     },
-     {
-      "id": "mass-carcass",
-      "kind": "ellipsoid",
-      "bone": "carcass",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.4034,
-        0.0,
-        0.0
-       ]
-      },
-      "member": "carcass",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-bottom",
-      "kind": "ellipsoid",
-      "bone": "drawer-bottom",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.1255,
-        0.0
-       ]
-      },
-      "member": "drawer-bottom",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-middle",
-      "kind": "ellipsoid",
-      "bone": "drawer-middle",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0647,
-        0.0
-       ]
-      },
-      "member": "drawer-middle",
-      "part": "mass"
-     },
-     {
-      "id": "mass-drawer-top",
-      "kind": "ellipsoid",
-      "bone": "drawer-top",
-      "material": "chipboard-p2",
-      "role": "detail",
-      "tone": 0.3,
-      "radii": [
-       0.012,
-       0.012,
-       0.012
-      ],
-      "transform": {
-       "translation": [
-        0.1795,
-        0.0432,
-        0.0
-       ]
-      },
-      "member": "drawer-top",
-      "part": "mass"
-     }
-    ],
-    "decisions": [
-     {
-      "en": "Body, authored for 15 mm: blanket, top with its chip (16 mm notch), the panel end without the 12 mm foot recess, the two pedestal sides as one repeated solid, a back thickened to 15 mm, bottom, plinth and modesty panel; each drawer a 19 mm front on one solid box that touches the sides within 1.5 mm, so the runners are not needed. Grips, bow handle, escutcheon and sticker (18 mm and less) are left out as in the 2D.",
-      "de": "Körper, für 15 mm gebaut: Decke, Platte mit Abbruch (16-mm-Kerbe), die Wange ohne den 12-mm-Fußausschnitt, die zwei Unterschrankseiten als ein wiederholter Körper, eine auf 15 mm verstärkte Rückwand, Boden, Sockel und Knieblende; je Schubkasten eine 19-mm-Front auf einem massiven Kasten, der die Seiten auf 1,5 mm berührt, daher entfallen die Laufleisten. Griffe, Bügel, Schlüsselschild und Aufkleber (18 mm und weniger) entfallen wie im 2D."
-     },
-     {
-      "en": "Thermal and structure as at 1:50 on these solids; the runner joints are small blocks at the side of each drawer box.",
-      "de": "Wärme und Tragwerk wie bei 1:50 auf diesen Körpern; die Laufgelenke sind kleine Klötze an der Seite jedes Kastens."
-     }
-    ]
-   },
    "50": {
     "status": "authored",
     "denominator": 50,
@@ -5893,7 +3953,7 @@
        "translation": [
         0.62,
         0.01,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.008
@@ -5932,7 +3992,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.025
      },
      {
@@ -5945,11 +4005,11 @@
       "profile": [
        [
         -0.28,
-        0.0
+        0
        ],
        [
         -0.2,
-        0.0
+        0
        ],
        [
         -0.2,
@@ -5961,11 +4021,11 @@
        ],
        [
         0.2,
-        0.0
+        0
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.28,
@@ -5996,7 +4056,7 @@
        "translation": [
         0.3575,
         -0.1905,
-        0.0
+        0
        ]
       }
      },
@@ -6016,7 +4076,7 @@
        "translation": [
         0.3575,
         0.1905,
-        0.0
+        0
        ]
       }
      },
@@ -6035,7 +4095,7 @@
       "transform": {
        "translation": [
         0.3355,
-        0.0,
+        0,
         0.276
        ]
       }
@@ -6055,7 +4115,7 @@
       "transform": {
        "translation": [
         0.663,
-        0.0,
+        0,
         0.0055
        ]
       }
@@ -6075,7 +4135,7 @@
       "transform": {
        "translation": [
         0.693,
-        0.0,
+        0,
         -0.232
        ]
       }
@@ -6143,9 +4203,9 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
+        0,
         0.35,
-        0.0
+        0
        ]
       }
      },
@@ -6280,9 +4340,9 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
+        0,
         0.35,
-        0.0
+        0
        ]
       }
      },
@@ -6397,9 +4457,9 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
+        0,
         0.35,
-        0.0
+        0
        ]
       }
      },
@@ -6855,7 +4915,7 @@
        "translation": [
         0.0225,
         -0.01,
-        0.0
+        0
        ]
       },
       "member": "top",
@@ -6877,7 +4937,7 @@
        "translation": [
         0.01,
         -0.21,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -6899,7 +4959,7 @@
        "translation": [
         0.62,
         0.01,
-        0.0
+        0
        ]
       },
       "member": "blanket",
@@ -6921,7 +4981,7 @@
        "translation": [
         0.517,
         -0.0373,
-        0.0
+        0
        ]
       },
       "member": "top",
@@ -6942,8 +5002,8 @@
       "transform": {
        "translation": [
         0.3618,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "leg-panel",
@@ -6964,8 +5024,8 @@
       "transform": {
        "translation": [
         0.4034,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "carcass",
@@ -6987,7 +5047,7 @@
        "translation": [
         0.1795,
         0.1255,
-        0.0
+        0
        ]
       },
       "member": "drawer-bottom",
@@ -7009,7 +5069,7 @@
        "translation": [
         0.1795,
         0.0647,
-        0.0
+        0
        ]
       },
       "member": "drawer-middle",
@@ -7031,7 +5091,7 @@
        "translation": [
         0.1795,
         0.0432,
-        0.0
+        0
        ]
       },
       "member": "drawer-top",
@@ -7046,6 +5106,1946 @@
      {
       "en": "Thermal: references for the top, the panels and the blanket; the drawer fronts are own solids that close the 3 mm shadow gaps, so the pedestal is a closed cavity and the boxes inside are no thermal surface. Structure: the panels and boards are the members (they are the load path of a panel desk), runners and connector blocks are joints, one support per anchor, one mass marker per bone.",
       "de": "Wärme: Verweise für Platte, Wangen und Decke; die Schubkastenfronten sind eigene Körper, die die 3-mm-Schattenfugen schließen, so dass der Unterschrank ein geschlossener Hohlraum ist und die Kästen darin keine Wärmefläche sind. Tragwerk: Platten und Wangen sind die Stäbe (sie sind der Lastweg eines Wangentischs), Laufleisten und Verbinderklötze sind Gelenke, je Anker ein Lager, je Knochen eine Massenmarke."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       1.24,
+       0.02,
+       0.64
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      }
+     },
+     {
+      "id": "top-board",
+      "kind": "extrude",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.62,
+      "profile": [
+       [
+        -0.291,
+        -0.0305
+       ],
+       [
+        -0.284,
+        -0.0425
+       ],
+       [
+        0.3,
+        -0.0425
+       ],
+       [
+        0.3,
+        1.1575
+       ],
+       [
+        -0.3,
+        1.1575
+       ],
+       [
+        -0.3,
+        -0.0145
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.025
+     },
+     {
+      "id": "leg-panel",
+      "kind": "box",
+      "bone": "leg-panel",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.715,
+       0.025,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "pedestal-side",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.715,
+       0.019,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        -0.1905,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0.381,
+        0
+       ]
+      }
+     },
+     {
+      "id": "pedestal-back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.671,
+       0.362,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.3355,
+        0,
+        0.2725
+       ]
+      }
+     },
+     {
+      "id": "pedestal-bottom",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.016,
+       0.362,
+       0.526
+      ],
+      "transform": {
+       "translation": [
+        0.663,
+        0,
+        0.002
+       ]
+      }
+     },
+     {
+      "id": "plinth",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.044,
+       0.362,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.693,
+        0,
+        -0.232
+       ]
+      }
+     },
+     {
+      "id": "modesty-panel",
+      "kind": "box",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.715,
+       0.435,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.37,
+        -0.2175,
+        0.262
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom-front",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.32,
+       0.019
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.148,
+        -0.0095
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom-box",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.359,
+       0.28,
+       0.521
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.13,
+        0.2605
+       ]
+      }
+     },
+     {
+      "id": "drawer-middle-front",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.183,
+       0.019
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0775,
+        -0.0095
+       ]
+      }
+     },
+     {
+      "id": "drawer-middle-box",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.359,
+       0.162,
+       0.521
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.069,
+        0.2605
+       ]
+      }
+     },
+     {
+      "id": "drawer-top-front",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.14,
+       0.019
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.057,
+        -0.0095
+       ]
+      }
+     },
+     {
+      "id": "drawer-top-box",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.359,
+       0.116,
+       0.521
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.047,
+        0.2605
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-top-board",
+      "of": "top-board",
+      "region": "desk-top"
+     },
+     {
+      "id": "th-leg-panel",
+      "of": "leg-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-side",
+      "of": "pedestal-side",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-back",
+      "of": "pedestal-back",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-bottom",
+      "of": "pedestal-bottom",
+      "region": "carcass"
+     },
+     {
+      "id": "th-plinth",
+      "of": "plinth",
+      "region": "carcass"
+     },
+     {
+      "id": "th-modesty-panel",
+      "of": "modesty-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-drawer-bottom-front",
+      "of": "drawer-bottom-front",
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-middle-front",
+      "of": "drawer-middle-front",
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-top-front",
+      "of": "drawer-top-front",
+      "region": "drawer-fronts"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-top-board",
+      "of": "top-board",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-leg-panel",
+      "of": "leg-panel",
+      "member": "leg-panel",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-side",
+      "of": "pedestal-side",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-back",
+      "of": "pedestal-back",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-bottom",
+      "of": "pedestal-bottom",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-plinth",
+      "of": "plinth",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-modesty-panel",
+      "of": "modesty-panel",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-bottom-box",
+      "of": "drawer-bottom-box",
+      "member": "drawer-bottom",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-middle-box",
+      "of": "drawer-middle-box",
+      "member": "drawer-middle",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-top-box",
+      "of": "drawer-top-box",
+      "member": "drawer-top",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-top-connector",
+      "kind": "box",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.0225,
+        -0.01,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "joint"
+     },
+     {
+      "id": "j-pedestal-top-connector",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.01,
+        -0.21,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-bottom-runner",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0075,
+        0.041
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-middle-runner",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0075,
+        0.041
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-top-runner",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0075,
+        0.041
+       ]
+      },
+      "member": "drawer-top",
+      "part": "joint"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "ellipsoid",
+      "bone": "blanket",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     },
+     {
+      "id": "mass-top",
+      "kind": "ellipsoid",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.517,
+        -0.0373,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "mass"
+     },
+     {
+      "id": "mass-leg-panel",
+      "kind": "ellipsoid",
+      "bone": "leg-panel",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.3618,
+        0,
+        0
+       ]
+      },
+      "member": "leg-panel",
+      "part": "mass"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.4034,
+        0,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-bottom",
+      "kind": "ellipsoid",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.1255,
+        0
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-middle",
+      "kind": "ellipsoid",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0647,
+        0
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-top",
+      "kind": "ellipsoid",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0432,
+        0
+       ]
+      },
+      "member": "drawer-top",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 15 mm: blanket, top with its chip (16 mm notch), the panel end without the 12 mm foot recess, the two pedestal sides as one repeated solid, a back thickened to 15 mm, bottom, plinth and modesty panel; each drawer a 19 mm front on one solid box that touches the sides within 1.5 mm, so the runners are not needed. Grips, bow handle, escutcheon and sticker (18 mm and less) are left out as in the 2D.",
+      "de": "Körper, für 15 mm gebaut: Decke, Platte mit Abbruch (16-mm-Kerbe), die Wange ohne den 12-mm-Fußausschnitt, die zwei Unterschrankseiten als ein wiederholter Körper, eine auf 15 mm verstärkte Rückwand, Boden, Sockel und Knieblende; je Schubkasten eine 19-mm-Front auf einem massiven Kasten, der die Seiten auf 1,5 mm berührt, daher entfallen die Laufleisten. Griffe, Bügel, Schlüsselschild und Aufkleber (18 mm und weniger) entfallen wie im 2D."
+     },
+     {
+      "en": "Thermal and structure as at 1:50 on these solids; the runner joints are small blocks at the side of each drawer box.",
+      "de": "Wärme und Tragwerk wie bei 1:50 auf diesen Körpern; die Laufgelenke sind kleine Klötze an der Seite jedes Kastens."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       1.24,
+       0.02,
+       0.64
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      }
+     },
+     {
+      "id": "top-board",
+      "kind": "box",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       1.2,
+       0.025,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.5575,
+        0.0125,
+        0
+       ]
+      }
+     },
+     {
+      "id": "leg-panel",
+      "kind": "box",
+      "bone": "leg-panel",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.715,
+       0.025,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "pedestal-side",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.715,
+       0.03,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        -0.185,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0.37,
+        0
+       ]
+      }
+     },
+     {
+      "id": "pedestal-back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.652,
+       0.34,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.326,
+        0,
+        0.265
+       ]
+      }
+     },
+     {
+      "id": "pedestal-plinth",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.063,
+       0.34,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.6835,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "modesty-panel",
+      "kind": "box",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.715,
+       0.435,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.37,
+        -0.2175,
+        0.255
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom-block",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.32,
+       0.53
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.148,
+        0.246
+       ]
+      }
+     },
+     {
+      "id": "drawer-middle-block",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.183,
+       0.53
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0775,
+        0.246
+       ]
+      }
+     },
+     {
+      "id": "drawer-top-block",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.14,
+       0.53
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.057,
+        0.246
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-top-board",
+      "of": "top-board",
+      "region": "desk-top"
+     },
+     {
+      "id": "th-leg-panel",
+      "of": "leg-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-side",
+      "of": "pedestal-side",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-back",
+      "of": "pedestal-back",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal-plinth",
+      "of": "pedestal-plinth",
+      "region": "carcass"
+     },
+     {
+      "id": "th-modesty-panel",
+      "of": "modesty-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-drawer-bottom-front",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.3245,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.14725,
+        -0.004
+       ]
+      },
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-middle-front",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.186,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0775,
+        -0.004
+       ]
+      },
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-top-front",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.34,
+       0.1445,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.05775,
+        -0.004
+       ]
+      },
+      "region": "drawer-fronts"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-top-board",
+      "of": "top-board",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-leg-panel",
+      "of": "leg-panel",
+      "member": "leg-panel",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-side",
+      "of": "pedestal-side",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-back",
+      "of": "pedestal-back",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal-plinth",
+      "of": "pedestal-plinth",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-modesty-panel",
+      "of": "modesty-panel",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-bottom-block",
+      "of": "drawer-bottom-block",
+      "member": "drawer-bottom",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-middle-block",
+      "of": "drawer-middle-block",
+      "member": "drawer-middle",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-top-block",
+      "of": "drawer-top-block",
+      "member": "drawer-top",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-top-connector",
+      "kind": "box",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        -0.015,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "joint"
+     },
+     {
+      "id": "j-pedestal-top-connector",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.015,
+        -0.215,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-bottom-runner",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.0095,
+        0.003,
+        0.071
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-middle-runner",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.0095,
+        0.001,
+        0.071
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-top-runner",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.0095,
+        0.002,
+        0.071
+       ]
+      },
+      "member": "drawer-top",
+      "part": "joint"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "ellipsoid",
+      "bone": "blanket",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     },
+     {
+      "id": "mass-top",
+      "kind": "ellipsoid",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.517,
+        -0.0373,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "mass"
+     },
+     {
+      "id": "mass-leg-panel",
+      "kind": "ellipsoid",
+      "bone": "leg-panel",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.3618,
+        0,
+        0
+       ]
+      },
+      "member": "leg-panel",
+      "part": "mass"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.4034,
+        0,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-bottom",
+      "kind": "ellipsoid",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.1255,
+        0
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-middle",
+      "kind": "ellipsoid",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0647,
+        0
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-top",
+      "kind": "ellipsoid",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0432,
+        0
+       ]
+      },
+      "member": "drawer-top",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 30 mm: blanket, square top (no chip), panel end, pedestal shell with the sides generalised to 30 mm, a 30 mm back and a flush plinth block, a 30 mm modesty panel, and each drawer as one block between the sides. The 25 mm top and panel and the 20 mm blanket keep their true thickness because the 2D draws them so.",
+      "de": "Körper, für 30 mm gebaut: Decke, rechteckige Platte (ohne Abbruch), Wange, Unterschrankschale mit auf 30 mm verallgemeinerten Seiten, 30-mm-Rückwand und bündigem Sockelblock, eine 30-mm-Knieblende und jeder Schubkasten als ein Block zwischen den Seiten. Die 25-mm-Platte und -Wange und die 20-mm-Decke behalten ihre wahre Stärke, weil das 2D sie so zeichnet."
+     },
+     {
+      "en": "Thermal: the drawer fronts are 30 mm front slabs on the drawer bones; structure members on the blocks and panels.",
+      "de": "Wärme: die Schubkastenfronten sind 30-mm-Frontplatten an den Schubkastenknochen; Tragwerksstäbe auf Blöcken und Wangen."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       1.24,
+       0.02,
+       0.64
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      }
+     },
+     {
+      "id": "top-board",
+      "kind": "box",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       1.2,
+       0.025,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.5575,
+        0.0125,
+        0
+       ]
+      }
+     },
+     {
+      "id": "leg-panel",
+      "kind": "box",
+      "bone": "leg-panel",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.715,
+       0.025,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "pedestal",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.715,
+       0.4,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.3575,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "modesty-panel",
+      "kind": "box",
+      "bone": "top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.715,
+       0.435,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.37,
+        -0.2175,
+        0.2575
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom-block",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.32,
+       0.4815
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.148,
+        0.22025
+       ]
+      }
+     },
+     {
+      "id": "drawer-middle-block",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.183,
+       0.4815
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0775,
+        0.22025
+       ]
+      }
+     },
+     {
+      "id": "drawer-top-block",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.14,
+       0.4815
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.057,
+        0.22025
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-top-board",
+      "of": "top-board",
+      "region": "desk-top"
+     },
+     {
+      "id": "th-leg-panel",
+      "of": "leg-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-pedestal",
+      "of": "pedestal",
+      "region": "carcass"
+     },
+     {
+      "id": "th-modesty-panel",
+      "of": "modesty-panel",
+      "region": "carcass"
+     },
+     {
+      "id": "th-drawer-bottom-front",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.3245,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.14725,
+        0.0185
+       ]
+      },
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-middle-front",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.186,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0775,
+        0.0185
+       ]
+      },
+      "region": "drawer-fronts"
+     },
+     {
+      "id": "th-drawer-top-front",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "teak-veneered-chipboard",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.359,
+       0.1445,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.05775,
+        0.0185
+       ]
+      },
+      "region": "drawer-fronts"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-top-board",
+      "of": "top-board",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-leg-panel",
+      "of": "leg-panel",
+      "member": "leg-panel",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal",
+      "of": "pedestal",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-modesty-panel",
+      "of": "modesty-panel",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-bottom-block",
+      "of": "drawer-bottom-block",
+      "member": "drawer-bottom",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-middle-block",
+      "of": "drawer-middle-block",
+      "member": "drawer-middle",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-top-block",
+      "of": "drawer-top-block",
+      "member": "drawer-top",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-top-connector",
+      "kind": "box",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        -0.0375,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "joint"
+     },
+     {
+      "id": "j-pedestal-top-connector",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.2375,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-bottom-runner",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0255,
+        0.161
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-middle-runner",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0235,
+        0.161
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "joint"
+     },
+     {
+      "id": "j-drawer-top-runner",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0245,
+        0.161
+       ]
+      },
+      "member": "drawer-top",
+      "part": "joint"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.62,
+        0.01,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     },
+     {
+      "id": "mass-top",
+      "kind": "box",
+      "bone": "top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.517,
+        -0.0373,
+        0
+       ]
+      },
+      "member": "top",
+      "part": "mass"
+     },
+     {
+      "id": "mass-leg-panel",
+      "kind": "box",
+      "bone": "leg-panel",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3618,
+        0,
+        0
+       ]
+      },
+      "member": "leg-panel",
+      "part": "mass"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4034,
+        0,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-bottom",
+      "kind": "box",
+      "bone": "drawer-bottom",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.1255,
+        0
+       ]
+      },
+      "member": "drawer-bottom",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-middle",
+      "kind": "box",
+      "bone": "drawer-middle",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0647,
+        0
+       ]
+      },
+      "member": "drawer-middle",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-top",
+      "kind": "box",
+      "bone": "drawer-top",
+      "material": "chipboard-p2",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1795,
+        0.0432,
+        0
+       ]
+      },
+      "member": "drawer-top",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 75 mm: blanket, top, panel end, modesty panel, the pedestal as one block and the three drawers as blocks lying in it, so they slide out of the block in the drawer poses; the knee space (0.715 x 0.70 m) is the decisive feature of the silhouette.",
+      "de": "Körper, für 75 mm gebaut: Decke, Platte, Wange, Knieblende, der Unterschrank als ein Block und die drei Schubkästen als darin liegende Blöcke, die in den Schubkastenposen aus dem Block herausgleiten; der Knieraum (0,715 x 0,70 m) ist das entscheidende Merkmal der Silhouette."
+     },
+     {
+      "en": "Thermal: 75 mm front slabs on the drawer bones inside the drawer blocks; structure members on the blocks and panels. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Wärme: 75-mm-Frontplatten an den Schubkastenknochen in den Schubkastenblöcken; Tragwerksstäbe auf Blöcken und Wangen. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

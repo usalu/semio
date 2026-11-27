@@ -6,6 +6,7 @@ import {processTestCheckoutV1,runProcessTestSuiteV1,withProcessTestOutputV1} fro
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import type {ProcessTestSuiteV1,ProcessTestTableV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
 import {describeClampedBudgetV1,stretchedBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {issueRepositoryScriptProvidersV1} from "../../../🏃️process/🔌️providers/🟦️.ts";
 import {genuineBirthLaunchersV1} from "../../../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../📥️caller/📤️child/🟦️.ts";
 import {workspaceTestPythonEnvironmentV1} from "../../🗂️suites/🐍️python/🟦️.ts";
@@ -77,6 +78,7 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
    const owner=route.table===null?undefined:rules.tables.find(row=>row.id===route.table),declared=owner===undefined?undefined:tables.get(owner.id)?.suites.find(suite=>suite.id===route.suite),tableRoot=owner===undefined?resolve(root,route.file,".."):resolve(root,owner.root),module=posix(relative(tableRoot,resolve(root,route.file)));
    const unowned=route.mode==="oracle"?rules.oracle:rules.plain,row:ProcessTestSuiteV1=declared===undefined?{id:unowned.id,budgetMs:unowned.budgetMs,typecheck:"none",files:[module]}:testFileNarrowedSuiteV1(declared,module);
    const table:ProcessTestTableV1={version:1,suites:[row],codeSuites:[],helpers:[]},checkout=processTestCheckoutV1(tableRoot,root),environment={...base,SEMIO_WORKSPACE_ROOT:checkout};
+   issueRepositoryScriptProvidersV1(environment);
    const project=owner?.project??rules.plain.project,launchers=owner?.launchers?genuineBirthLaunchersV1(resolve(root,rules.launcherScript),checkout):undefined;
    notice(testFileTextV1(options.language,"run.start",{index:index+1,total:routes.length,file:route.file,mode:route.mode,suite:route.suite}));
    const funded=stretchedBudgetV1(row.budgetMs),clamp=describeClampedBudgetV1(row.budgetMs,funded);

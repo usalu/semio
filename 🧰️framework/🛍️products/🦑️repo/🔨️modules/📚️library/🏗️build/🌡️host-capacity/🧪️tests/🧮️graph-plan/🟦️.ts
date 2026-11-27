@@ -10,6 +10,7 @@ import {graphPlanObserverV1,reserveGraphPlanCapacityV1} from "../../🟦️.ts";
 import {createSlicePoolV1} from "../../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import custody from "./🧫️fixtures/🔣️custody.json" with {type:"json"};
 import retainedGrant from "./🧫️fixtures/🔣️retained-grant.json" with {type:"json"};
+import oneGrant from "./🧫️fixtures/🔣️one-grant.json" with {type:"json"};
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"plan-capacity-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -240,3 +241,28 @@ test("on a 16 GB machine the graph is computed with a grant of at least its mini
  const refused=await reserveGraphPlanCapacityV1({megabytes:7168,minimumMegabytes:minimum,environment:{LANG:"en_US.UTF-8"},directory:fresh(),policy:fast,write:()=>undefined,sample:async()=>({host:host({totalMegabytes:3072,availableMegabytes:3000}),swappedOutMegabytes:0})}).then(()=>"",error=>(error as Error).message);
  expect(refused,"a machine that can never give the minimum is refused at once, naming the numbers").toContain("3072");
 },60000);
+
+test("a plan that outgrows its grant again and again books every growth into the one grant of its process: one grant row, the reservation is the sum, and release frees all of it",async()=>{
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},fixture=oneGrant,rows=()=>grants(directory).map(name=>JSON.parse(readFileSync(join(directory,"grants",name),"utf8")) as {operation:string;reservedMegabytes:number});
+ const reservation=await reserveGraphPlanCapacityV1({megabytes:fixture.planMegabytes,environment,directory,policy:fast,write:()=>undefined,sample});
+ reservation.attach(process.pid);
+ let added=0;for(const growth of fixture.growths)added+=await reservation.grow({megabytes:growth.extraMegabytes});
+ expect(added).toBe(fixture.growths.reduce((sum,growth)=>sum+growth.extraMegabytes,0));
+ expect(rows().filter(row=>row.operation==="graph-plan")).toHaveLength(fixture.expectedGrants);
+ expect(rows()[0]!.reservedMegabytes).toBe(fixture.expectedReservedMegabytes);
+ let ran=false;const contender=build(directory,fixture.competingMegabytes,async()=>{ran=true;});
+ expect(await until(()=>queue(directory).length===1)).toBe(true);expect(ran).toBe(false);
+ reservation.release();await contender;expect(ran).toBe(true);expect(await until(()=>grants(directory).length===0)).toBe(true);
+ expect(await reservation.grow({megabytes:100}),"a released grant grows by nothing").toBe(0);
+},15000);
+
+test("a growth that waits for memory ends with its signal and leaves neither a waiter nor a second grant behind",async()=>{
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},fixture=oneGrant;
+ const reservation=await reserveGraphPlanCapacityV1({megabytes:fixture.planMegabytes,environment,directory,policy:fast,write:()=>undefined,sample});
+ let open=()=>{};const held=new Promise<void>(done=>{open=done;}),blocker=build(directory,fixture.blockingMegabytes,()=>held);
+ expect(await until(()=>grants(directory).length===2)).toBe(true);
+ const controller=new AbortController(),reason=Error("growth cancelled"),waiting=reservation.grow({megabytes:fixture.waitingGrowthMegabytes,signal:controller.signal}).catch(error=>error);
+ expect(await until(()=>queue(directory).length===1)).toBe(true);controller.abort(reason);
+ expect(await waiting).toBe(reason);expect(await until(()=>queue(directory).length===0)).toBe(true);expect(grants(directory)).toHaveLength(2);
+ open();await blocker;reservation.release();expect(await until(()=>grants(directory).length===0)).toBe(true);
+},15000);

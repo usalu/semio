@@ -38,10 +38,8 @@ semio-s-artifact-stdio-xml = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
-hayro = { workspace = true }
 resvg = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-import = { workspace = true }

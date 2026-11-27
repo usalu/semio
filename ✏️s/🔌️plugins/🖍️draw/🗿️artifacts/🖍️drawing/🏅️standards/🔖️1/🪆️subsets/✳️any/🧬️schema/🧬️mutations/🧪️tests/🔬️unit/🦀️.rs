@@ -278,7 +278,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     } else {
         result.retire_unscheduled().expect("refused history releases its replay state");
     }
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
     report
 }
 

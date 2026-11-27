@@ -28,11 +28,6 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.pdf")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.pdf@1.4/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.pdf@1.4/*")?)?,
-        )?
-        .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation2d.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "29:s.procedural.generation2d@1/*17:s.stdio.png@1.2/*")?)?,
@@ -65,13 +60,19 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         )
 }
 
-/// 🔖️ Assembles s.generation2d's typed runtime declaration.
+/// 🔖️ Assembles s.generation2d's typed runtime declaration from its own leaves.
 pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
-    semio_plugin::ArtifactDeclaration::builder(definition()?)
+    declaration_from(definition()?, &[])
+}
+
+/// 🧩️ Assembles the declaration from `definition` and the composer rows a composition root adds on top of this
+/// artifact's own leaves (each row's capability must be in `definition`), e.g. the pdf route of
+/// `semio-s-artifact-procedural-generation2d-pdf-export`.
+pub fn declaration_from(definition: semio_plugin::ArtifactDefinition, composers: &[&'static [semio_plugin::io::ComposerEntry]]) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    let builder = semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_procedural_2d_model::generation2d_artifact_schema_descriptor())
         .inferences([semio_s_artifact_procedural_2d_model::inferences::generation2d_artifact_inference_descriptor()])
-        .composers(semio_s_artifact_procedural_2d_io::io_registry::entries())
-        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>()
-        .try_build()
+        .composers(semio_s_artifact_procedural_2d_io::io_registry::entries());
+    composers.iter().fold(builder, |builder, rows| builder.composers(rows)).document_codec::<semio_plugin::EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>().try_build()
 }
 //#endregion 🔖️Declaration

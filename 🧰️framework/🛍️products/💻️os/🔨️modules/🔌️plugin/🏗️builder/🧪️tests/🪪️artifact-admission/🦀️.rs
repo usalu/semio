@@ -51,20 +51,20 @@ async fn assert_published_nothing(before: &[bool]) {
 async fn strict_artifact_identity_all_builder_channels_reject_before_publication() {
     let before = publication_witness().await;
     for (kind, code) in [("s.fixture", "plugin-assembly.artifact-kind"), ("s.other.document", "plugin-assembly.artifact-owner")] {
-        let old = PluginBuilder::<_, fixture::FixtureApps>::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").artifact(declaration(kind)).try_build();
+        let old = PluginBuilder::<_, fixture::FixtureApps>::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").artifact(declaration(kind)).try_build();
         assert_eq!(old.err().expect("old declaration denied").code, code);
-        let only = PluginBuilder::<_, fixture::FixtureApps>::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").artifact_definition(definition(kind)).try_build();
+        let only = PluginBuilder::<_, fixture::FixtureApps>::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").artifact_definition(definition(kind)).try_build();
         assert_eq!(only.err().expect("definition-only denied").code, code);
         assert_published_nothing(&before).await;
     }
     let mut foreign = crate::declarations_fixture_tests::fixture::build_declaration();
     foreign.kind = ArtifactKindId::parse("s.other.document").expect("canonical foreign kind");
-    let tree = PluginBuilder::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(foreign).try_build();
+    let tree = PluginBuilder::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").declare_artifact(foreign).try_build();
     assert_eq!(tree.err().expect("foreign tree denied").code, "plugin-assembly.artifact-owner");
     assert_published_nothing(&before).await;
     let mut foreign_subset = crate::declarations_fixture_tests::fixture::build_declaration();
     foreign_subset.standards[0].subsets[0].dialect.artifact_kind = "s.other.document";
-    let tree = PluginBuilder::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(foreign_subset).try_build();
+    let tree = PluginBuilder::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").declare_artifact(foreign_subset).try_build();
     assert_eq!(tree.err().expect("foreign subset denied").code, "plugin-assembly.artifact-owner");
     assert_published_nothing(&before).await;
 }
@@ -72,10 +72,10 @@ async fn strict_artifact_identity_all_builder_channels_reject_before_publication
 #[semio_framework_async_macros::async_test]
 async fn strict_artifact_identity_mixed_channels_publish_nothing() {
     let before = publication_witness().await;
-    let old = PluginBuilder::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).artifact(declaration("s.other.document")).try_build();
+    let old = PluginBuilder::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).artifact(declaration("s.other.document")).try_build();
     assert_eq!(old.err().expect("mixed old denied").code, "plugin-assembly.artifact-owner");
     assert_published_nothing(&before).await;
-    let only = PluginBuilder::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).artifact_definition(definition("s.other.document")).try_build();
+    let only = PluginBuilder::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).artifact_definition(definition("s.other.document")).try_build();
     assert_eq!(only.err().expect("mixed definition denied").code, "plugin-assembly.artifact-owner");
     assert_published_nothing(&before).await;
 }
@@ -93,10 +93,10 @@ fn strict_artifact_identity_matches_independent_neutral_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn strict_artifact_identity_owned_tree_and_definition_channels_publish() {
-    let stdio = PluginBuilder::<_, fixture::FixtureApps>::new("stdio").label("Admission").version("0.1.0").package_id("semio:stdio").artifact_definition(definition("s.stdio.json")).try_build().expect("owned definition");
+    let stdio = PluginBuilder::<_, fixture::FixtureApps>::new("stdio").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:stdio").artifact_definition(definition("s.stdio.json")).try_build().expect("owned definition");
     assert_eq!(stdio.manifest.plugin_id, "stdio");
     assert!(stdio.artifact_definitions().definitions().all(|definition| ArtifactKindId::parse(definition.identity().as_str()).unwrap().plugin() == stdio.manifest.plugin_id));
-    let tree = PluginBuilder::new("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).try_build().expect("owned tree");
+    let tree = PluginBuilder::new("testkit").label(semio_plugin_builder::LocalizedLabel::native("Admission", "Zulassung")).version("0.1.0").package_id("semio:testkit").declare_artifact(crate::declarations_fixture_tests::fixture::build_declaration()).try_build().expect("owned tree");
     assert_eq!(tree.manifest.plugin_id, "testkit");
     assert_eq!(tree.manifest.apps.len(), 6);
     assert!(semio_framework_schema_registry::artifact_schema_descriptor_registered("s.testkit.w1c-fixture@1/*"));

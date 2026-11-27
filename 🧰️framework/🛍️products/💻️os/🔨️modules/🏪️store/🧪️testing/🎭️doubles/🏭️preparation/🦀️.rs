@@ -70,6 +70,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
         Ok(Default::default())
     }
     fn close_state_step(state:&mut Self::CloseState,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll { let result=DemoOneItemPreparationFactory::close_result(state,body,effect);semio_framework_value::RetirementPollExit::settle(effect,result) }
+    unsafe fn close_state_terminal_native_release_safe()->bool { true }
     fn close_state_work_demand(state:&Self::CloseState,body:usize)->Result<u64,ValueError> {
         use semio_framework_value::FactoryPayloadRetirement as _;
         if state.published.is_some() { return Ok(1); }

@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_stock_example_dsl_round_trips() {
     let document = parse_dsl(DEMO_STOCK_TEXT).expect("parse demo-stock example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -24,7 +24,7 @@ async fn demo_stock_example_preserves_authored_content_against_json_oracle() {
 #[semio_framework_async_macros::async_test]
 async fn empty_curation_example_dsl_round_trips() {
     let document = parse_dsl(EMPTY_CURATION_TEXT).expect("parse empty-curation example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -40,5 +40,5 @@ async fn curation_document_dsl_round_trips_a_mesh_kind_and_a_curated_selection()
         geometry: Box::new(GeometryRecipe::Mesh { positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0], normals: vec![0.0, 1.0, 0.0, 0.0, 1.0, 0.0], indices: vec![0, 1, 2] }),
     }];
     let document = crate::curation_snapshot_from_stock(&stock, vec![crate::CuratedItem { object_id: "beam-mesh-custom".into(), count: 2 }]);
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }

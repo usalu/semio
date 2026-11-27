@@ -33,11 +33,11 @@ Both are below 262144 B and 32 files. No cycle: authoring never referenced read 
 
 Ported to the effect-shaped API (`RetainedAllocationEffect`): read compare tests, authoring controller laws and the host-laws suites. Shared lending helper: `⚖️laws/🧰️effect/🦀️.rs`.
 
-| crate | result |
+| crate | result (round 4, `repo cargo test --no-fail-fast`) |
 | --- | --- |
 | semio-os-flow-host-read | 1 passed (compare law) |
-| semio-os-flow-host-read-authoring | 0 passed, 1 failed: controller law passes every operation, profile and cancel point and fails only on its last line, 3 retired registry versions remain (see below) |
-| semio-os-flow-host-laws | lib 37 passed, 18 failed; `original-evaluation-pipeline` 1 passed, 1 failed (`..._under_one_fuel_and_512_items`); `recorded-math-resume` 1 passed |
+| semio-os-flow-host-read-authoring | 1 passed (controller law, including the final registry drain) |
+| semio-os-flow-host-laws | lib 44 passed, 11 failed; `original-evaluation-pipeline` 1 passed, 1 failed (`..._under_one_fuel_and_512_items`); `recorded-math-resume` 1 passed |
 
 Production changes:
 - `SourceCompare::demands` quoted 0 copy bytes for the page reservation although the paged list requires its header copy bytes; it now quotes `next_reserve_copy_byte_demand`.
@@ -78,3 +78,23 @@ Remaining failures (18 lib, 1 pipeline, 1 authoring):
 - Stale policy fixture: `🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json` now grants 16777216 items and 65536000000 fuel while the opportunity laws assert 512 items and 32768 fuel: both pipeline target tests, the two `original_work_opportunity_laws`, `original_work_publication_fits_original_editor_opportunity_without_new_funding`.
 
 Test ports done this round: dispatch law uses the shared request fixture's extension id; invocation identity and ledger loops, session close loop and preview retention and cancellation loops fund the real demand (copy bytes) instead of the tiny body budget; publication work test local `done` flag no longer shadows the helper; read compare and invocation session steps pass effects; read test retires the shared snapshot through `elect_cold`.
+
+### Round 4 (flow-host-4): 19 failures became 12
+
+Fixed in production:
+- Authoring controller law (retired registry versions): not a live reader. `OperatorRetirement` quoted a fixed 2 work units for every non-trivial operator, while `ContributedExtensionStub::retire_step` drives a nested `ControlledRetirement` (4 units); the parent lent the child an effect ceiling of 2, the child refused every step with an empty `Progress` and the front retired registry version never advanced. `neural::Operator` now has `next_retire_work_demand(maximum_copy_bytes)` (default 2), `OperatorRetirement::next_computational_work` forwards it and the stub quotes its nested retirement. The `OPERATOR_FIELD_ADMISSION_WORK` constant is gone.
+- Source birth service (zero grant records progress): `OriginalJobFixtureCaller::turn_with_decoder` no longer widens its grant or serves the return birth and origin refresh when the business grant admits no item, so a zero grant records nothing (`original_work_publication_...` and `flow_source_read_rejects_...` were in fact the body-dependent copy denial, see below).
+
+Fixed in tests (law premise obsolete or shape stale):
+- Preview laws: not a production gap. The committed mesh equals the oracle; the old comparison was order- and number-kind-sensitive (`DslValue::Object` order, `UInt` against `Float`). Both laws compare canonical `f64` JSON of the Serde fixture with the wire form of `to_value()`; the replace law closes its session on a bare retirement turn.
+- Copy denial: the step derives its body from the grant, so a grant of `quote - 1` bytes is a legal narrower body, not a denial. Publication and source-read laws only deny copy when the quote at the narrower body still exceeds it (the same guard the preview law already used).
+- Old `StepContextOwner` callers: read tick close, store read and birth laws, the invocation alias close and the evaluation donation law run on `OriginalJobFixtureCaller` through `source_caller`/`bare`/`bare_retiring` in `⚖️laws/🧰️effect/🦀️.rs` (bare turns pay no origin refresh). The publication opportunity law reads its deadline from the shared caller policy.
+- DAG host retirement: `dag_close_turn` drives the close through the invocation-capable `observed` effect instead of the invocation-less `EffectBank`.
+- Session reset: the queue backing reservation is stepwise (root table, then leaf page); the law loops the quoted reservation until the slot exists, funds the quoted copy bytes of the handoff and retires its counted alias.
+- Baseline publication: bytes born and freed inside the steps (the displaced display text) are counted net, and the 83 byte published text is owned by the host, not the session.
+
+Remaining 12 (11 lib, 1 pipeline), grouped by cause:
+1. One-fuel premise (`work_tests` x2, `original_work_opportunity_laws` one-fuel, pipeline one-fuel, `flow_source_read_rejects_...` which runs on `StepBudget::new(1,..)`, invocation alias close under `with_original_work_loan(1,..)`): every stall is a first step whose quote exceeds one unit: a shared admission is `SharedOriginalStorage::source_admission_work_demand() = 4` plus its owner step, the ordered-entry search is `1 + min(body, 64)`, and `StepContext::with_original_effect` lends exactly the remaining fuel as ceiling with no untouched-turn overdraft (only the grant-shaped `close_original_quoted_retained_step` documents that). The law's `maximumEventWork: 1` contradicts these quotes; splitting needs micro-steps in the ordered-map search and Arc admission machinery, so no production change was made and no loan was raised. Decision for the dev: either implement untouched-turn whole-quote admission for effect-shaped Work, or re-base the loan on the quoted event work.
+2. Close never reaches terminal-empty with full grants (`original_work_opportunity_laws::..._fits_the_existing_two_hundred_call_opportunity`, `publication_work_tests::original_work_publication_preserves_genuine_completion_...` session close, `preview_tests::..._replaces_same_handle...` session close, `evaluation_tests::..._donates_dictionary...` receiver close): same signature as the registry defect (a parent quotes less than a nested child needs), not yet isolated.
+3. `original_json_field_...`: after the first funded turn births the return table, later funded turns record no progress; the old zero-grant turn used to be the one that served the birth.
+4. `flow_source_read_tick_store_read_...`: the staged snapshot admission needs a grant and Work larger than the constructor quote the law funds; the law must drive the staged admission through `resume` turns.

@@ -384,6 +384,11 @@ function leaseTaskOf(options:Pick<LeaseOptions,"control"|"signal">):Readonly<{ta
  const key:object=options.control!==null&&typeof options.control==="object"?options.control:options.signal!==null&&typeof options.signal==="object"?options.signal:untrackedTask;
  return{task:leaseTaskIdV1(key),ancestors:[]};
 }
+/** 🪬️ Whether the calling task, or an ancestor task, holds the exclusive lease of this resource right now; a read under it may reenter without waiting. */
+export function holdsExclusiveInTaskV1(options:Pick<LeaseOptions,"directory"|"resource"|"control"|"signal">):boolean{
+ const{task,ancestors}=leaseTaskOf(options),directory=resolve(options.directory);
+ return heldLeasesV1(task,ancestors).some(row=>row.directory===directory&&row.resource===options.resource&&row.mode==="exclusive");
+}
 /** 🧭️ Begins the order bookkeeping of one public acquisition; internal queue, claim and admission leases are not tracked. */
 function orderGuard(options:LeaseOptions,queued:boolean):LeaseOrderGuardV1|undefined{
  if(typeof options.resource!=="string"||!options.resource.length||internalLeaseResource(options.resource))return undefined;

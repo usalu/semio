@@ -1,0 +1,14 @@
+import {readBuildOwnerRegistryV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts";
+import * as producer from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+import {captureObservedSourceInputsV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
+import {summarizeHeapSnapshotV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/📸️heap-snapshot/🟨️.mjs";
+const root=process.cwd(),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),owner=registry.owners.find(o=>o.name===process.argv[2])!;
+const mem=(l:string)=>{Bun.gc(true);const m=process.memoryUsage();console.log(l,"heapUsed MB",Math.round(m.heapUsed/1e6),"external MB",Math.round(m.external/1e6));};
+await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();mem("boot");
+const t=performance.now();
+const {value,observations}=await captureObservedSourceInputsV1(()=>producer.discoverBuildOwnerAdmissionFactsV1(owner,JSON.parse(process.argv[3]??"[]"),registry,{workspaceRoot:root,selection:{kind:"all"},nativeCache:new Map(),nativeClosures:new Map(),preparationControl:{advance:async()=>{}}},JSON.parse(process.argv[4]??"[]")),undefined,false);
+console.log("discovery s",((performance.now()-t)/1000).toFixed(1),"rows",observations.length,"files",(value as any).files.length,"observedFiles",(value as any).observedFiles?.length,"factsJSON MB",Math.round(JSON.stringify(value).length/1e6));
+mem("after discovery (facts and rows retained)");
+const s=summarizeHeapSnapshotV1(Bun.generateHeapSnapshot() as any);
+console.log("strings",s.classes.find(c=>c.name==="string"),"total MB",Math.round(s.totalBytes/1e6));
+for(const r of s.retainers.slice(0,6))console.log(" R",r.retainer,r.count,Math.round(r.bytes/1e6)+"MB");

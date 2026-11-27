@@ -36,3 +36,7 @@ semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️valu
 [[test]]
 name = "origin-birth-layout"
 path = "../../🧪️tests/🔒️birth/🦀️.rs"
+
+[[test]]
+name = "scope-quote"
+path = "../../🧪️tests/🎟️scope-quote/🦀️.rs"

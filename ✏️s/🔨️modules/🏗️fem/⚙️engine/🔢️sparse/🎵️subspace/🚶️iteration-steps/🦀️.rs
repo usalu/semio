@@ -813,7 +813,7 @@ impl SubspaceIterationJob {
             if self.state.work.first == 0&&!self.state.final_theta.is_empty() {
                 let grant=context.retained_grant();let depth=self.state.final_theta.next_pop_depth_demand().map_err(|_|())?;
                 if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<f64>()||grant.maximum_depth<depth{return Ok(())}
-                self.state.final_theta.pop();context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;
+                self.state.final_theta.pop();context.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;
                 return Ok(());
             }
             if self.state.work.first < self.state.m {

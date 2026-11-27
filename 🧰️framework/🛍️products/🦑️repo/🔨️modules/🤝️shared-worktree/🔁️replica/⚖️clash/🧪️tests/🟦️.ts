@@ -42,10 +42,10 @@ test("the fixture is valid against the schema",()=>{
 });
 
 test("the structural conflict rule matches the vectors and the independent Python oracle",()=>{
- for(const vector of fixture.vectors)expect(Object.fromEntries(retiredV1(vector.entries)),vector.name).toEqual(vector.retired);
+ for(const vector of fixture.vectors)expect<unknown>(Object.fromEntries(retiredV1(vector.entries)),vector.name).toEqual(vector.retired);
  for(const vector of fixture.stale)expect(staleRepublishV1(vector.events,vector.hlc)??null,vector.name).toEqual(vector.stale);
  expect(clashV1("a/b","a/b")).toBe(false);expect(clashV1("a","a/b")).toBe(true);expect(clashV1("A/b","a/c")).toBe(false);expect(clashKeyV1("STRASSE")).toBe(clashKeyV1("straße"));
- if(python===undefined)return;
+ if(python===null)return;
  const result=Bun.spawnSync([python,"-I",oracle,"vectors",fixturePath],{stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
 });
@@ -63,7 +63,7 @@ test("a local edit wins a conflict only when it is simultaneous with the remote 
 test("the rule is order independent",()=>{
  for(const vector of fixture.vectors){
   const shuffled=[...vector.entries].reverse();
-  expect(Object.fromEntries(retiredV1(shuffled)),vector.name).toEqual(vector.retired);
+  expect<unknown>(Object.fromEntries(retiredV1(shuffled)),vector.name).toEqual(vector.retired);
  }
  for(const vector of fixture.stale)expect(staleRepublishV1([...vector.events].reverse(),vector.hlc)??null,vector.name).toEqual(vector.stale);
 });
@@ -341,6 +341,6 @@ posixTest("a simultaneous edit of the same base still resolves by modification t
  await publish(m2);
  await sync(fleet);
  const winner=text(m0,"both.txt");
- expect(["from zero\n","from two\n"]).toContain(winner);
+ expect<unknown>(["from zero\n","from two\n"]).toContain(winner);
  for(const who of [m1,m2])expect(text(who,"both.txt")).toBe(winner);
 },240_000);

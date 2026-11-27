@@ -3028,6 +3028,32 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-context-step",
+ "semio-framework-job-payload",
+ "semio-framework-job-receiving",
+ "semio-framework-job-return-budget",
+ "semio-framework-job-testing-caller",
+ "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-frame",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-shared-issuance",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-job-context-step"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-job-clock",
  "semio-framework-job-failure",
@@ -3040,6 +3066,7 @@ dependencies = [
  "semio-framework-job-return-budget",
  "semio-framework-job-return-escrow-publication",
  "semio-framework-job-work-grant",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-call",
@@ -3050,6 +3077,9 @@ dependencies = [
  "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
 ]
 
 [[package]]
@@ -8262,6 +8292,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
@@ -9972,6 +10003,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
+ "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
  "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
@@ -11915,6 +11947,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-save-cause",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-locale",
 ]
@@ -12280,6 +12313,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-persistent",
  "semio-s-artifact-stdio-pdf-model-content-values",
  "semio-s-artifact-stdio-pdf-model-object",
 ]
@@ -13352,6 +13386,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-stdio-pdf-save-cause",
  "semio-s-artifact-stdio-pdf-schema-4",
 ]
 
@@ -13555,6 +13590,10 @@ dependencies = [
  "semio-ui-locale",
  "serde_json",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-save-cause"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-schema"

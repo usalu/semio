@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-results-state = { path = "../../🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-editor-terminology = { path = "../../../../../../🗣️terminology/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-editor-session = { path = "../../../../../../🧵️session/📦️packages/🦀️rust" }

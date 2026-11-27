@@ -57,6 +57,9 @@ impl MountedState {
 
     pub(super) fn step(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         cx.set_stage(if self.cancel.is_cancelled_now() { "fem3d.cancelled" } else if self.done { "fem3d.validated" } else if self.numerical_done { "fem3d.visual" } else { self.numerical.as_ref().map_or("fem3d.preparation", |child| child.stage.progress_stage()) });
+        if self.snapshot.as_ref().is_some_and(|snapshot| !snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision)) {
+            self.cancel.cancel_now();
+        }
         if self.cancel.is_cancelled_now() {
             return Ok(self.fail(b"fem3d.visual-cancelled".to_vec()));
         }

@@ -1,5 +1,5 @@
 //! 🧬️ The committed-vector laws every state-lane and document mutation case asserts over one report of its owner's
-//! `*_mutation_report_json` bridge (`store::test_support::mutation_report_json`): the applied snapshot is the committed
+//! `*_mutation_report_json` bridge (`semio_os_store_test_support::mutation_report_json`): the applied snapshot is the committed
 //! after-snapshot, the produced delta is the committed `🔺️diff`, the diagnostics are the ones the committed `🎯️outcome`
 //! declares, a kind the vector shows moving really moved, and the mutation's own computed inverse restores the
 //! committed before-snapshot.

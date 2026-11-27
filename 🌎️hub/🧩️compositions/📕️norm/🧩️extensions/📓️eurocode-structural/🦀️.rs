@@ -51,7 +51,7 @@ pub fn plugin() -> Result<Plugin<NormEurocodeStructuralApps>, PluginAssemblyErro
     let en1993 = semio_s_artifact_norm_en1993::declaration(semio_s_artifact_norm_en1993::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let en1994 = semio_s_artifact_norm_en1994::declaration(semio_s_artifact_norm_en1994::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     PluginBuilder::<_, NormEurocodeStructuralApps>::new("norm-eurocode-structural")
-        .label("Norm Eurocode Structural")
+        .label(semio_plugin::LocalizedLabel::native("Norm Eurocode Structural", "Norm Eurocode Tragwerk"))
         .version("0.1.0")
         .package_id("semio:norm-eurocode-structural")
         .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))

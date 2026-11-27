@@ -47,7 +47,7 @@ test("painted scenes bound grants, cancel, keep published ownership and refuse f
  for(const steps of [0,1,3,10,30,100]){const job=new RasterSceneJob(value);expect(()=>job.result()).toThrow();for(let i=0;i<steps;i++)job.advance(1,stock(1));job.cancel();expect(()=>job.advance(1,stock(1))).toThrow(/cancel/);expect(()=>job.result()).toThrow(/cancel/);}
  const job=new RasterSceneJob(value);while(!job.advance(4096,stock(4096)).done){}const pixels=job.result().pixels;job.cancel();expect([...pixels]).toEqual(cases[5]!.expected);
  const overflow=new RasterSceneJob({...value,maxPixels:1});expect(()=>{for(let at=0;at<2000000;at++)if(overflow.advance(100000,stock(100000)).done)break;}).toThrow(/pixel/i);expect(()=>overflow.result()).toThrow();expect(()=>overflow.advance(1,stock(1))).toThrow();
- for(const grant of [0,-1,1.5,NaN,Infinity])expect(()=>new RasterSceneJob(value).advance(grant)).toThrow();
+ for(const grant of [0,-1,1.5,NaN,Infinity])expect(()=>new RasterSceneJob(value).advance(grant,stock(grant))).toThrow();
  const invalids=[{width:0},{origin:[NaN,0]},{maxPixels:0},{maxPixels:67108865},{nodes:new Array(1025).fill(value.nodes[0])}];
  for(const patch of invalids)expect(()=>new RasterSceneJob({...value,...patch} as RasterSceneInput)).toThrow();
 });

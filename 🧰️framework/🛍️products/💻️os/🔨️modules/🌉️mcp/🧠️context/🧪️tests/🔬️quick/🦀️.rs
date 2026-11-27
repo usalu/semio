@@ -127,7 +127,7 @@ fn subscribe_and_unsubscribe_stay_accepted_no_ops() {
 
 #[tokio::test]
 async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog()), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let registry = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace.clone());
@@ -145,7 +145,7 @@ async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
 
 #[tokio::test]
 async fn a_bound_registry_lists_every_resource_uri_exactly_once() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog()), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let listed = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace).list();
@@ -161,7 +161,7 @@ async fn a_bound_registry_lists_every_resource_uri_exactly_once() {
 
 #[test]
 fn bound_registry_keeps_serving_real_catalog_reads_unchanged() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog()), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
     let registry = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace);
     let contents = registry.read("semio://capability").expect("catalog read still works once bound");

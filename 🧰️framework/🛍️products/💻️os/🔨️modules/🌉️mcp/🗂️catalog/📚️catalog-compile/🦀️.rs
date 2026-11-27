@@ -95,7 +95,7 @@ pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminolog
 
     for descriptor in &source.descriptors {
         let plugin_id = descriptor.manifest.plugin_id.clone();
-        let plugin_label = descriptor.manifest.label.clone();
+        let plugin_label = descriptor.manifest.label.resolve(terminology, locale).to_string();
 
         for app in descriptor.manifest.apps.iter() {
             let app_id = app.id.clone();

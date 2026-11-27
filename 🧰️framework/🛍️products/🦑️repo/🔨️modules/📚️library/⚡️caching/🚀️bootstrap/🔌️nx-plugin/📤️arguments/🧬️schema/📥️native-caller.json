@@ -28,6 +28,12 @@
       "maxLength": 256,
       "pattern": "^[^\\u0000]+$"
     },
+    "sourceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
     "arguments": {
       "type": "array",
       "items": {

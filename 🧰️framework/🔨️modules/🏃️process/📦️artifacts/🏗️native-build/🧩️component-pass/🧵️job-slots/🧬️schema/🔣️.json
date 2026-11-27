@@ -16,6 +16,7 @@
         "localJobsPollMilliseconds": 5000,
         "localJobsProgressMilliseconds": 60000,
         "unmeasuredQuantile": 0.9,
+        "serialFinalCpuRatio": 1.5,
         "fleetPollMilliseconds": 5000,
         "fleetBusyWaitMilliseconds": 30000,
         "fleetPassFootprintMegabytes": 512,

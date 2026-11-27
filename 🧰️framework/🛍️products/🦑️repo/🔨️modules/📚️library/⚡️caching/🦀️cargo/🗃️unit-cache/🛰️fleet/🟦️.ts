@@ -3,6 +3,7 @@ import {hostname} from "node:os";
 import {closeSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {differingComponentsV1,unitKeyComponentsV1,type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
+import {tryAcquireRemoteWaitV1} from "../🔒️lock/🟦️.ts";
 import {decodeActionResultV1,parseRemoteUnitV1,type KeyComponentsV1} from "./📦️wire/🟦️.ts";
 import {type UnitEventV1} from "../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "./📡️client/🟦️.ts";
@@ -122,14 +123,29 @@ export async function awaitFleetSettlesV1():Promise<void>{
  if(settling.size>0)await Promise.allSettled([...settling]);
 }
 
-/** 🫀️ A claim this process holds at the fleet cache and keeps alive while it compiles. */
-export type FleetHoldV1=Readonly<{release():Promise<void>;stop():void;lost():boolean}>;
+/** 🫀️ A claim this process holds at the fleet cache and keeps alive while it compiles. `park` gives the claim back while the unit waits for local admission (a unit that does not compile must not keep other machines waiting for it), `resume` takes it again once the unit is about to run: `"granted"`, or `"lost"` when another machine took it meanwhile (the unit then compiles without a claim and the first stored result wins). */
+export type FleetHoldV1=Readonly<{release():Promise<void>;stop():void;lost():boolean;park():Promise<void>;resume():Promise<"granted"|"lost">}>;
 
 function hold(unit:FleetUnitV1):FleetHoldV1{
- let stopped=false,gone=false;
- const timer=setInterval(()=>{void unit.client.renew(unit.key,unit.owner,fleet.claim.ttlMilliseconds).then(async state=>{if(state==="lost"&&!stopped){const reasserted=await unit.client.claim(unit.key,unit.owner,fleet.claim.ttlMilliseconds);if(reasserted.state==="granted")return;gone=true;stopped=true;clearInterval(timer);}});},fleet.claim.heartbeatMilliseconds);timer.unref?.();
+ let stopped=false,gone=false,parked=false,timer:ReturnType<typeof setInterval>|undefined;
+ const bounded=<T>(work:Promise<T>,fallback:T,milliseconds:number):Promise<T>=>Promise.race([work.catch(()=>fallback),new Promise<T>(done=>{const wait=setTimeout(()=>done(fallback),milliseconds);wait.unref?.();})]);
+ const start=():void=>{timer=setInterval(()=>{void unit.client.renew(unit.key,unit.owner,fleet.claim.ttlMilliseconds).then(async state=>{if(state==="lost"&&!stopped&&!parked){const reasserted=await unit.client.claim(unit.key,unit.owner,fleet.claim.ttlMilliseconds);if(reasserted.state==="granted")return;gone=true;stopped=true;clearInterval(timer);}});},fleet.claim.heartbeatMilliseconds);timer.unref?.();};
+ start();
  const stop=()=>{if(!stopped){stopped=true;clearInterval(timer);}};
- return Object.freeze({stop,lost:()=>gone,async release(){stop();if(!gone)await Promise.race([unit.client.release(unit.key,unit.owner),new Promise<void>(done=>{const wait=setTimeout(done,600);wait.unref?.();})]);}});
+ const park=async():Promise<void>=>{
+  if(stopped||gone||parked)return;
+  parked=true;clearInterval(timer);timer=undefined;
+  await bounded(unit.client.release(unit.key,unit.owner),undefined,600);
+ };
+ const resume=async():Promise<"granted"|"lost">=>{
+  if(gone)return "lost";
+  if(!parked)return "granted";
+  parked=false;
+  const claim=stopped?undefined:await bounded(unit.client.claim(unit.key,unit.owner,fleet.claim.ttlMilliseconds),undefined,fleet.claim.parkMaximumMilliseconds);
+  if(claim?.state==="granted"){start();return "granted";}
+  gone=true;stopped=true;return "lost";
+ };
+ return Object.freeze({stop,park,resume,lost:()=>gone,async release(){const wasParked=parked;stop();if(!gone&&!wasParked)await bounded(unit.client.release(unit.key,unit.owner),undefined,600);}});
 }
 
 /** 🌳️ The directories of a machine a compiled unit can hold although its source never names them: the kinds a unit is keyed on when it does (`lane` is no kind: a lane directory belongs to one lane of one machine, a unit holding it is not shared). */
@@ -217,6 +233,7 @@ export type FleetDecisionV1=Readonly<{outcome:"hit";waitedMs:number;via:"cache"|
 /** 🧭️ The protocol for one missing unit. Look it up; on a miss claim it; if another machine holds the claim wait (long-polling, bounded by twice the holder's expected cost) for the upload and fetch it; when the holder lapses claim it ourselves (`redirect`, asked before every further round, may answer the same unit under another key, which the protocol then follows: the root-keyed key of a unit that turned out to hold a directory). A claim, wait or fetch that fails because the server is momentarily unreachable (`down`) is tried again up to `retries` times with a growing pause before the unit compiles locally; a refused credential or an unsupported server is not retried. Anything unreachable, denied or too slow ends in "compile locally" with its reason (the caller counts it): correctness never depends on the fleet. */
 export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1["kind"],milliseconds:number,waitedMs:number,reason?:string)=>void,overrides:Partial<typeof fleet.claim>={},redirect?:()=>Promise<FleetUnitV1|undefined>):Promise<FleetDecisionV1>{
  const policy={...fleet.claim,...overrides},started=Date.now(),compile=(reason:string,held?:FleetHoldV1):FleetDecisionV1=>({outcome:"compile",hold:held,waitedMs:Date.now()-started,reason});
+ let leave:(()=>void)|undefined;
  try{
   const first=await fetchFleetUnitV1(unit);
   if(first==="hit"){event("remote-hit",Date.now()-started,0,"cache");return {outcome:"hit",waitedMs:0,via:"cache"};}
@@ -231,6 +248,7 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
    if(claim.state==="stored"){const again=await fetchFleetUnitV1(unit);if(again==="hit"){event("remote-hit",Date.now()-started,Date.now()-started,"stored");return {outcome:"hit",waitedMs:Date.now()-started,via:"wait"};}return compile("stored-unreadable");}
    if(claim.state==="unavailable"&&claim.fault==="down"&&transient<policy.retries){transient++;await pause(policy.retryBackoffMilliseconds*transient);continue;}
    if(claim.state!=="held")return compile(claim.state==="full"?"claims-full":"claims-"+claim.fault);
+   if(leave===undefined&&policy.maximumRemoteWaiters>0){const taken=tryAcquireRemoteWaitV1(unit.root,policy.maximumRemoteWaiters);if(taken===undefined){event("remote-skip",0,Date.now()-started,"waiters-full");return compile("waiters-full");}leave=()=>taken.release();}
    if(limit===undefined){limit=Math.min(policy.maximumWaitMilliseconds,Math.max(policy.minimumWaitMilliseconds,policy.waitFactor*(claim.expectedMilliseconds??policy.defaultExpectedMilliseconds)));deadline=Date.now()+limit;}
    const remaining=deadline-Date.now();
    if(remaining<=0){event("remote-wait",0,Date.now()-started,"timeout");return compile("holder-slow");}
@@ -244,6 +262,7 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
   }
   return compile("rounds");
  }catch{return compile("error");}
+ finally{leave?.();}
 }
 
 const jobExtras=(unit:FleetUnitV1)=>({...unit.run?{run:true as const}:{},...unit.tools===undefined?{}:{tools:{...unit.tools}},...unit.keyComponents===undefined?{}:{keyComponents:unit.keyComponents}});
@@ -258,7 +277,7 @@ export function offerFleetUnitV1(unit:FleetUnitV1,hint?:Readonly<{neutralKey:str
 
 /** 🚫️ Why a unit that was compiled and published locally did not enter the upload spool: `read-only` (this machine may not write to the fleet cache: nothing it compiles ever seeds the fleet), else `spool-full`. */
 export function unsharedReasonV1(unit:FleetUnitV1):string{
- return unit.client.settings.upload?"spool-full":"read-only";
+ return!unit.client.settings.upload?"read-only":spoolLengthV1(unit.root)>=spoolBoundV1(unit.root)?"spool-full":"spool-error";
 }
 
 /** 📮️ After a successful compile that was published locally: queues the unit for upload (also while the breaker is open: the worker holds the job until the fleet cache answers or the job is too old) and starts the worker; the claim, if held, is handed over (the worker keeps it alive and the server drops it when the result arrives). Never waits for the network. */

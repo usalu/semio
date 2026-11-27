@@ -67,6 +67,7 @@ semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }

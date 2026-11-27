@@ -8973,3 +8973,258 @@ Time 15:20. Files: `🏭️generated-owner/🟦️.ts` (index wiring, bazel/.r s
 ## Wave 1125 F102: original-control on issued Originals, inputs/storage timeout, typecheck sweep
 - 11-26 15:3x. Lock `landing.lock.testing` only for the helper write. `🧪️testing/🧫️private-repository`: `invoke` options gain `capabilities` (refine the bootstrap grant, e.g. `codeRoot`), exported type `PrivateRepositoryInvocationOptionsV1`. `original-control` test rewritten onto `privateRepositoryWorkspaceV1().invoke` (all 13 laws kept, `callerCeilingMilliseconds` 60000). inputs/storage test now prepares the `graph` and `leases` partitions before the timed body.
 - Tests: original-control 13/0, inputs/storage 22/0. `repo typecheck` on F99 files: passed (50 files). Open: 2 pre-existing errors in `🏃️process/🧪️testing/🦀️cargo/🧪️tests/🗄️admission/🟦️.ts` (lock `process` held by F97 since 14:13). Details wave-1125/result-F102.md.
+- F102 15:5x: typed the 2 admission errors at the root (`readNativeCallerAuthorityV1`) in `🏃️process/🧪️testing/🦀️cargo/🧪️tests/🗄️admission/🟦️.ts`, plus importers `🧪️tests/🟦️.ts` and `🔒️lease/🧪️tests/🟦️.ts`; typecheck passed (6 files), dangling 0, lock `process` only for the write. Tests using the helper still red (0/1 and 0/2) from a missing `SEMIO_SCRIPT_PROVIDERS` env in the suite run, not types. Details wave-1125/result-F102.md addendum.
+
+## Wave 1125 F98: typecheck program boundaries, Next.js ambient globals isolated (product 372 -> 93, NODE_ENV class 0)
+- 11-26 15:3x. Lock `build`. Policy: `library/🏗️build/🔬️typecheck/🔣️.json` + schema (`ambient` list), projects `server-next` / `server-build`, `typecheckProjectOfV1` matches a root equal to the file; new `🖥️server/tsconfig.next.json` + `tsconfig.json`; product `tsconfig.json` (no `files`, excludes `🖥️server/**`); `skipDirectories` + `📁️some`; `invocation` added in three go-package-commands tests; file-budgets entry for the typecheck test file; two AMBIENT LAW tests.
+- Checks: typecheck test file 22/0, file-budgets tests 8/0, `repo typecheck` `🖥️server` passed, product 372 -> 93 (rest unrelated, mostly `🤝️shared-worktree` tests), dangling-imports exit 0. Result: `wave-1125/result-F98.md`.
+
+## Wave 1125 F103: typecheck of the product 93 -> 0 (shared-worktree, launcher, native, search, test)
+- 11-26 15:3x-15:47. Lock `replica` only for the product batch (15:47:08, one atomic temp+rename of 4 files). Test files edited first, then the batch: `🔁️replica/🧷️sidecars/🟦️.ts` (declaration `protocol?:Partial<Record<keyof typeof sidecarProtocolV1,number>>`), `🧲️adopt/🟦️.ts` (`child.stdout!.on`), `🥾️bootstrap/🟦️.ts` (`let wanted:[string,FleetManifestEntryV1][]`), new `🥾️entry/🟨️.d.mts`. Bun transpiler output before/after identical for the three `.ts` files.
+- Replica daemon after the batch: boot beat, health.json fresh, one process (pid 51216 after a restart ~35 s later, running 13 min, no revert needed).
+- Checks: `repo typecheck --all-errors --no-importers 🧰️framework/🛍️products/🦑️repo` passed, 0 errors, 0 drifts (was 93); every changed test file green with `repo test-file` except `🧪️test/🧪️tests/🧬️schema-invariants` (163/1, `schema-catalog-stale` of the test domain, not an edited line); dangling-imports exit 0. Result: `wave-1125/result-F103.md`.
+
+## Wave 1125 F104: heap profile every +1 GB with holder groups, read-parent scope no longer pins the read body
+- `🏗️build/🧠️memory/🧽️settle/🔭️heap-profile` (`🟨️.mjs`, `🟨️.d.mts`, new `🧬️schema/🔣️.json`, tests): `profileHeapOnceV1` replaced by `profileHeapV1` (snapshot at 1200 MB, then every further 1024 MB, at most 4 and 15 min of snapshot time, cancellable), summary now holds holder groups for strings/Array/Object, heap counters and cost; dense id table instead of an 11M-entry Map. Caller `🧽️settle/🟨️.mjs` (`reportRetainedGraphMemoryV1` takes `signal`).
+- `🏗️build/👁️observation/🚧️read-parent/🟨️.mjs`: the scope object of a read is made in its own function, so its `arm` closure no longer shares an environment with the read body (configFiles, options, context); test proves the inputs are freed once the read is over (old shape: 0 of 10 freed, new: 9 of 10).
+- typecheck passed (10 files), dangling-imports clean, heap-profile 5/0, read-parent 4/0.
+
+## Wave 1125 F106: managed metric no longer double counts external memory, settling collects after the event loop turned
+- `🏗️build/🧠️memory/🟨️.mjs` + `🟨️.d.mts` + `🧬️schema/🔣️.json` (+ tests fixture `🧪️tests/🔣️.json`): `graphMemoryPressureBytesV1` takes an optional `heapSize` (JSC `heapSize` already contains `extraMemorySize`); `createMemoryPortsV1().sample` uses `bun:jsc heapSize()` (constant time) else `heapUsed+external`; new `yieldGraphTurnV1` (policy `collectYieldMilliseconds: 0`); `createParentCollectorV1().settle()` (yield, then `finish`).
+- `🏗️build/🧠️memory/🧽️settle/🟨️.mjs`: `settleGraphMemoryV1` yields one turn between release and collection (the settle suite failure: the releasing call's stack kept the garbage alive in the same turn).
+- `🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs`: wave end uses `await parentCollector.settle()`.
+- Tests: settle 8/0 (2 new), reservation corpus +2 pressure rows (oracle `coalesce(heapSize, heapUsed+external)`) 8/0, memory main 30/0, overrun 1/0, parent-budget `settle` test passes under `bun test` (the file under `repo test-file` stops at the 3072 MB budget fence, see result-F106.md). typecheck passed, dangling-imports clean.
+
+## Wave 1125 F106 round 2: mid-wave collection and census yield one turn first; parent-budget child sized down
+- `🧠️memory/🟨️.mjs`/`.d.mts`: collector `afterProjectSettled()` (same decision as `afterProject`, yields one `yieldGraphTurnV1` only when a collection is due, then collects); `project-nodes/🟨️.mjs` awaits it; `🧽️settle/🟨️.mjs` `reportRetainedGraphMemoryV1` is async and yields before the 2 us sample (host awaits it in both wave hooks). No `heapStats()` on any hot path.
+- Tests: settle census-yield, `afterProjectSettled`, project-nodes source-shape test updated (it also needed `await parentCollector.settle()` from round 1). parent-budget real-process child: 500k -> 150k objects per project (it held 3.1-3.8 GB, over the 3072 MB fence).
+- repo test-file: memory main 30/0, reservation 8/0, overrun 8/0, settle 9/0, parent-budget 15/0 (3 runs green), project-nodes parent-budget green; typecheck 42 files 0 errors, dangling-imports 0.
+
+## Wave 1125 F105: schema-invariants catalog finding (no landing)
+- 11-26 16:0x-17:1x. No product or catalog write; `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json` unchanged (sha256 prefix 790feed5cedb4d58 before and after).
+- Test `schema-invariants`: 163 pass / 1 fail before and after (`schema-catalog-stale` for four `🧪️test/**/🧬️schema` folders). Generator emits no row for those folders; hand-adding rows was refused. Full generator render differs from live catalog in 44 added and 2844 changed rows (repo-wide staleness, not this finding). Result: `wave-1125/result-F105.md`.
+
+## Wave 1125 F104: closure entries cache charged by its real string bytes
+- `🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs` (+ `🟨️.d.mts`): `closureEntryChargeBytesV1` (exported, used as `sizeOf` of `inference:closure-entries`) charges every string of an entry value its header (`closureEntryValueStringBytes` 40) plus one byte per character, instead of 16 bytes per item; `🧬️schema/🔣️.json` gets the new limit (EN + DE). Measured by the coordinator: 4106 entries held 604 MB under a 96 MiB budget. New test `🧪️tests/🪣️entry-bytes`.
+- typecheck of script-inputs passed, dangling-imports clean; neighbours closure-collections-shared 1/0, closure-store-limits 3/0.
+
+## Wave 1125 F104: one charge rule for every closure cache, census on the same function
+- `🧭️script-inputs/💾️entries/🟨️.mjs` (+ `🟨️.d.mts`): new `closureValueChargeBytesV1`; the `inference:closure-values` cache charges through it (was 16 B per item). `🧭️script-inputs/🟨️.mjs`: `closureEntryChargeBytesV1` uses it for the value part; the census row `closure:entries.value` sums the same function over the live entries (no 16-entry sample). Test `🪣️entry-bytes` 3/0; closure-collections-shared 1/0, closure-store-limits 3/0; typecheck passed, dangling-imports clean.
+
+## Wave 1125 F107: one schema-definition predicate, catalog regenerated, freshness suite
+- 11-26 17:2x-18:0x. Lock `schema` held only for the atomic writes. Shared predicate/walk in `schema-scope-catalog/🟦️.ts` (`isSchemaDefinitionDocument`, `schemaDefinitionModulePaths`, `walkSchemaTree`, `inventory.definitionModules`); the test-platform rule (`📐️schema-contracts` placement + tree) delegates to it. `$id`s fixed for 3 test schemas, new root `🧪️test/🧬️schema/🔣️.json`.
+- Catalog regenerated with the generator's own functions: 5924 -> 5972 scopes, 0 removed, 48 added, 2844 rows with new hashes; `📓️schema-catalog.md` and the derive `🗂️schema-document-index.json` regenerated.
+- New suite `schema-catalog-fresh` (suite table + aggregate + `test-schema-catalog-fresh`): schema edits without regeneration now fail the suite.
+- schema-invariants 164/0, scope-catalog 35/0, freshness 1/0, route table 5/0; typecheck 0 errors, dangling-imports 0. See wave-1125/result-F107.md.
+
+## Wave 1125 F113: owner collision errors name field, value and both owners
+- 11-26 17:41-17:45. Lock `graph` held only for the atomic writes (temp + rename). Result: `wave-1125/result-F113.md`.
+- Files (after sha256 prefix): `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts` -> `b5b54d4976f8`; `…/admission/🧪️tests/🟦️.ts` -> `29216619851a`. Before hashes not recorded.
+- Change: `readBuildOwnerRegistryV1` throws keep their first line as prefix and append field, value, earlier owner and current owner. Three new tests (identity name/root, native root, package) assert both owners.
+- Tests: `repo test-file` admission tests 13 pass, 0 fail. `repo typecheck` passed (55 files, 0 errors). `dangling-imports.py` on the admission folder exit 0.
+
+## Wave 1125 F108: atomic schema writers and goal-gate dialect
+- New `🎛️commands/🧬️schema/🔏️atomic-write/🟦️.ts`; `schema/🟦️.ts` and `twin-projection/🟦️.ts` use it for every write; tests appended to `schema/🧪️tests/🟦️.ts`.
+- `🧪️test/🎯️acceptance/🧪️tests/🎯️goal-gate/🟦️.ts`: Ajv class chosen by the document `$schema`.
+- `📚️library/🔣️schema-catalog.json` regenerated (only `s.dag.dag` changed, peer edit).
+- Details: wave-1125/result-F108.md
+
+## Wave 1125 F112: twins freshness gate (twins generate changes nothing)
+- Whole-repo `planTwins` dry run: 5684 plans, 0 differ from committed twins; no twin written. `schema-export-incomplete` stays 4489 (not remedied by regeneration: 3633 findings sit in families without a twin dialect or with projection off, 856 are un-annotated norm Rust exports).
+- New test `📚️library/🎛️commands/🧬️schema/🧬️twin-projection/🧪️tests/🧮️twins-freshness/🟦️.ts` (1/0, 24 s); suite `schema-twins-fresh` + target `test-schema-twins-fresh` + aggregate entry landed together in `⚡️caching/🗂️suites/🔣️.json` and `📋️project.json` under `landing.lock.caching`.
+- Tests: route table law 5/0; `repo typecheck` passed; dangling-imports 0.
+- Details: `wave-1125/result-F112.md`.
+
+## Wave 1125 F114: Busy image detach retries instead of aborting
+- New `🍎️image/🔁️detach/` (module, schema, 12 tests); `🍎️image/🟦️.ts` (2 retirement detach sites) and `🧩️shard/🟦️.ts` (no -force after busy) use it. Result: wave-1125/result-F114.md. Typecheck of touched files passes; shard tests (20) green; dangling-imports 0.
+
+## Wave 1125 F115: one validated, locked, atomic build owner registry writer
+- 17:54, locks graph and testing (taken per swap, released). New `🧾️registry-consistency/🔏️writer/🟦️.ts` (e526272b); `reconcileBuildOwnerRegistry` (1cde9cb7) and `adoptBuildOwnerRegistryForV1` (b41dd6bf) go through it: validate with `readBuildOwnerRegistryV1` before the rename, temp + rename in the same directory, lock plus compare-and-swap with recompute. Tests: registry-consistency 43/0 (invalid refused, concurrent adders exactly once, crash keeps old file), adoption 9/0; typecheck and dangling-imports clean. See wave-1125/result-F115.md.
+
+## Wave 1125 F111: schema checker false positives (deep refs, duplicate id row, rust macros, wit, corpus role)
+- `📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts`: shared `schemaRefFragmentExport`, root-id report once, `rustMacroDeclaredNames` (rust syntax tokens), `SCHEMA_EXPORT_COMPLETENESS_EXCLUDED_FORMATS` (wit), corpus-name role check. Tests appended to `🧪️tests/🟦️.ts` (42/0).
+- `📚️library/🔣️schema-catalog.json` and `📓️schema-catalog.md` regenerated (peer drift on `mit-bestand.demonstrator.runtime.catalog`), catalog-freshness 1/0, schema-invariants 164/0, typecheck and dangling-imports clean.
+- Findings 16242 -> 12327. Details: wave-1125/result-F111.md
+
+## Wave 1125 F114b: Graph format identity ignores backing size
+- `planRepositoryGraphFormatV1` compares the backing inode only (regrow keeps it); foreign inode refused bilingually with remedy. Test added in 📇️format/🧪️tests. Typecheck passed, dangling 0. See result-F114.md addendum.
+
+## Wave 1125 F119: schema-module-id path rule (stopped at the 99% gate)
+- No repo change. Candidate path-to-`$id` rule reproduces 1558 of 6388 conforming ids (24.4%; 53% outside plugins), far below 99%: ids are authored names (hand-named scopes, app/window lane scheme, facet filename variants, descriptor verbs). Nothing applied, catalog and findings unchanged. New: `🧰️scripts/F119/{dump-modules.ts,prove-rule.py}`; report `wave-1125/result-F119.md`.
+
+## Wave 1125 F114c: Charge re-quote after elastic regrow
+- New journal event `regrown` + `regrowNativeStorageAllocationV1`; reservation `requoteRepositoryCacheChargeV1`/`openRepositoryElasticChargeV1` wired into partition open for graph and rust. Tests added in storage 📈️regrow and reservation 📈️regrow; dangling 0. See result-F114.md addendum 2.
+
+## Wave 1125 F114d: Closure implementation source bound
+- `🧾️closures/🟦️.ts` captures implementation sources with the 8 MiB bound (was 65536, exceeded by generations/🟨️.mjs); format test lookup follows `role` into 🏷️names. Format test 7/7. See result-F114.md addendum 3.
+
+## Wave 1125 F118: Graph read SIGKILL at the store phase
+- Evidence: the kill was a self-trap of the sealed bun child (crash reports `bun-2026-11-26-175809.ips` and `-065602.ips`, same signature), not warden (observe, 0 cancels), jetsam, owned execution or the graph server; see wave-1125/result-F118.md.
+- `🕸️graph/🕰️generations`: new `🧺️store-batches` (`mapBatchesV1`, test + language-agnostic vectors), fragments store loop runs in batches of `fragmentBatch` (16) with a footprint-gate admission and an event-loop turn per batch; schema/policy/d.mts updated. Typecheck passed, dangling 0, test-file 7/7.
+
+## Wave 1125 F116: Every direct reader of a cache image takes its shared lease
+Time 2026-11-26 evening. Report: `wave-1125/result-F116.md`.
+- New member `🍎️image/🤲️shared-read` (reader with burst holds and maximum hold, one-shot read, cached sample; queued shared lease, writer preference kept) plus public mirror; `🕸️graph/🕰️generations/🤲️leased-files` port wrapper.
+- Routed through it: sidecar uploader (files and closure leaves), `progressAtMs`, refresh custody (wanted server `refreshDeferred` may be async), head adoption, doctor graph and dependencies probes, Ready `discardDependencies`, task-key recorders of `repo run` and the resident host.
+- Law `⚖️laws/👓️image-lease-readers` (static scan, schema-first policy with 12 documented entries, Python oracle).
+- Fixed the 5 type errors of `🧩️shard/🧪️tests/🟦️.ts` at the root (`NativeImageShardBornEventV1`, `null` guard, `same` helper).
+- Tests (repo test-file): shared-read 12, leased-files 2, shard 20, doctor probes 25, ready tooling-compiler 5, ready 58, sidecar graph 9, stall 9, sidecar wave-upload 3, adoption 5, wanted server 19, generations wave-upload 7, remote-exchange 13, task-state 3, invocation plan 17, law 5: all pass. Resident host test blocked by a peer's oversized `🕸️graph/🕰️generations/🟨️.mjs` (66227 bytes). `repo typecheck` passed, dangling-imports exit 0. No landing locks were taken (see result).
+- F116 correction: the law allowlist has 13 documented entries (not 12).
+
+## Wave 1125 F120: Taxonomy reference edits publish the registry through its writer
+- Lock `graph` for one swap only. `🏗️build/🕸️graph/🧾️registry-consistency/🔏️writer/🟦️.ts` (e526272b -> 73fbce0d): option `mode`. New `🧹️normalization/✍️own-file-writers/` (declared mapping `🔣️.json`, schema, `🟦️.ts`), `🛟️recovery/🟦️.ts` (ccf4957f -> f82db2e4: optional `ownWriter` of `applyReferenceEditAtomically`), `🔧️transaction-steps/🟦️.ts` (97115e90 -> 8c554963: `check` before backup, `publish` to the engine). Ticket script `rename_groups_en1999.py`: atomic and validated registry write (not run).
+- Tests: new `🧹️normalization/🧪️tests/✍️own-file-writers/🟦️.ts` 4/0; registry-consistency 43/0; transaction-recovery-authority 6/0; typecheck passed; dangling-imports 0. Details: wave-1125/result-F120.md.
+
+## Wave 1125 F122: transaction-v2 fixture issues its own run identity
+- Lock `tests` (taken and released around one atomic write). `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts` (8f424e7d -> f1c822f0): `fixtureRunRoot()` issues a run root via `transactionV2BundleRoot` when the launcher propagated none; `assertFixtureRunRoot` unchanged.
+- Tests: `repo test-file` of `🧪️tests/🔄️transaction-v2/🟦️.ts` with `SEMIO_TEST_FILE_CEILING=off`: 55 pass / 7 fail (pre-existing generator-preview, stale golden digests, golden title scan; not F120). typecheck passed, dangling-imports 0. Staged for after 19:00: `T/🧰️scripts/F122/land-budget.py` (budget row 4000 MB). Details: wave-1125/result-F122.md.
+
+## Wave 1125 F121: Remaining image readers routed, lease law per call site
+Time 2026-11-26 18:27-18:40. Report: `wave-1125/result-F121.md`. Locks taken and released within the same second each: laws x2, cache-gc, graph x4, process, resident, invocation.
+- Routed: closure `sizeLeased` (exchange, 3 call sites), resident host task-state keying section under one reader per workspace (`leased`, part-id descriptor closed via new layer index `release` / settler `releaseFiles`), cache-gc tools census and dependency collection (schema limit `imageReadLeaseWaitMilliseconds`). 🔌️nx products scan needed nothing (path classification, reads inside the products store custody). Shared reader: nested `run` no longer waits for itself past the hold limit.
+- Law `⚖️laws/👓️image-lease-readers` now judges every opener call on the TypeScript syntax tree (schema: openers, leaseCallees, leasedParameters, entries with `site`; allowlist 3 call-site entries; Python tokenizer oracle equal on 22 corpus cases and the repository; scratch mixed file fails, fixed file passes).
+- Tests (repo test-file): law 5, shared-read 13, closure-leaves 11, remote-exchange 13/2/5/1, sidecar graph 9 and closure 6, wave-upload 7, task-state 4, layer-index 8, derived-nodes 14, part-ids 5, cutoff 159, plan 18, resident host 39 (real count, 0 fail), cache-gc 19/4/4/7/4/9, catalog freshness 1. Typecheck (no importers) passed on 58 files; importer errors only in a peer's `🧠️memory/🦶️footprint` test. dangling-imports exit 0.
+- Finding: `repo cache dedupe` clones files below mounted images without a shared lease (not in the law's sight).
+
+## Wave 1125 F125: Footprint Test Type Errors Fixed By Declaration
+
+- Area: graph (`🕸️graph/📥️inference/🧭️script-inputs/♨️reuse`). Updated `🟨️.d.mts` to match `🟨️.mjs`: `createSharedSourceFilesV1` accepts `maximumCharacters`, `SharedSourceFilesV1` declares `characters(): number`. The footprint test (`🏗️build/🧠️memory/🦶️footprint/🧪️tests/🟦️.ts`) is unchanged.
+- Checks: `repo test-file` footprint test 54 pass, 0 fail; `repo typecheck` on the test and the `.d.mts` passed; dangling-imports exit 0.
+- Report: `wave-1125/result-F125.md`.
+
+## Wave 1125 F123: transaction-v2 62/0, goldens pinned
+- Locks `tests`, `process`, `transactions`, each around single atomic writes. Library tests `🧪️tests/🔄️transaction-v2/*` (builders, boundary-contracts, golden scan, three case modules), new fixture `🧪️tests/🧫️fixtures/🌳️transaction-taxonomy-snapshot/🔣️.json`, recaptured `🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json` (6 keys), launcher `🔄️transactions/🧪️verification/{📋️orchestration,🏃️shard-execution,🧾️provenance}`, file budget row 4600 MB for transaction-v2.
+- Tests: `repo test-file` transaction-v2 plain 62/0; typecheck passed; dangling-imports 0. Details: `wave-1125/result-F123.md`.
+## Wave 1125 F126: Stale Edges Environment Heals Instead Of Failing Publication
+
+- Area: graph (`🕸️graph/🕰️generations`). Files: `🟨️.mjs` (heal wave before the publication check), `🧭️plan/🟨️.mjs` (foreign `edgesEnv` owners planned dirty), `🔌️load/🟨️.mjs` and `.d.mts` (`healing` message en/de), `🟨️.d.mts`, new test `🧪️tests/🩺️edges-env-heal/🟦️.ts`.
+- Checks: new test 2 pass, related generations tests pass, `repo typecheck` 0 errors, dangling-imports exit 0. Report: `wave-1125/result-F126.md`.
+
+## Wave 1125 F124: Dedupe runs under the shared image lease, the lease law sees its path construction
+Time 2026-11-26 18:50-19:10. Report: `wave-1125/result-F124.md`, findings: `wave-1125/findings-F124.md`. Locks (each held for one atomic write, released the same second): `laws` x12, `cache-gc` x2, `caching-storage` x1.
+- `🧹️cache-gc/👯️dedupe` takes a required `reader` (shared lease of the image, short steps: readdir, 256-entry lstat batches, 8 MiB hash holds with reopen per hold, clone probe, one replacement), the command holds one reader per target (`CacheCommandContextV1.leaseDirectory`, set by `runCacheLedgerV1`), refuses without a lease directory, reports a failing target and goes on; two new limits in the cache-gc schema, two texts (en/de) in the ledger texts. Dedupe stays on the shared mode (it writes only same-byte clones, charges nothing).
+- Law `⚖️laws/👓️image-lease-readers`: data flow over the AST (declarations with root types, parameters, assignments, loops, same-file call arguments, carrier methods like push/set, templates/ternaries/spreads, key names ignored), new policy keys `rootPatterns`, `rootTypes`, `leasedArguments`, `carrierMethods`, class `unrouted`; oracle rewritten to match (equal on 42 corpus cases and the repository). Proof: old dedupe pattern fails (corpus and scratch repository test), the fixed one passes. Allowlist 13 entries: 3 custody, 5 metadata-probe plus the 3 earlier, 2 unrouted (cache-gc runner, remote-execution worker; see findings).
+- Tests (repo test-file): law 6, dedupe 12, cache-gc main 19, budget 7, verify 4, journals 4, sweep 4, ledger 15 and law 8, disk-recovery 23. typecheck passed; dangling-imports exit 0 on cache-gc, the law and the ledger.
+
+## Wave 1125 F127: cache-gc runner and remote-execution worker home routed through the shared image lease
+
+Result: `wave-1125/result-F127.md`. Locks `cache-gc`, `remote-execution`, `laws` taken per atomic write and released at once (one tiny worker edit without the lock, see result).
+- `🧹️cache-gc/🏃️runner`: new `CacheRunnerPortsV1.images`, `createCacheImagesV1`, `cacheImageReaderOfV1`, `cacheLeaseRefusedV1`; every walk, probe, listing and removal is a short step of the image's shared lease (128 entries per hold when measuring, 32 unlinks per hold when removing), lease refusals skip the area (`gc.held`, `image:<partition>`) and are never read as "absent", `settle()` before delegates and at the end; quick status stays lease-free, deep status is leased. `⌨️command` builds the images from the repository lease directory and hands them to ports and to the remote-execution collection.
+- `🌐️remote-execution/👷️worker`: `collectRemoteExecutionForLedgerV1(..., images?)`, `retireRemoteExecutionWorkV1(..., {reader?})` (removal in steps instead of one recursive `rm`), `RemoteExecutionBlobCacheV1.prune(dryRun,{reader?,signal?})`.
+- Decision: removal inside an image needs only the shared lease (exclusive custody guards geometry and existence, not file content; the area lease, lock probes, quiet time and re-measure protect the units); documented in the result.
+- Law allowlist: both `unrouted` entries removed (13 -> 11), no new entry needed.
+- Tests (repo test-file): cache-gc main 22 (3 new), dedupe 12, budget 7, units 6, strays 5, scratch 2, future 3, directory 3, verify 4, journals 4, publications 3, quota 3, ledger sqlite 10, worker retirement 7 (3 new), worker main 17, law 6 (final code). typecheck passed (52 files); dangling-imports exit 0.
+## Wave 1125 F126b: Diagnostics For Stale Environment On A Returned Owner
+
+- Area: graph (`🕰️generations/🟨️.mjs` error detail, now 65523 bytes of a 65536 cap; it was over the cap for about two minutes), new test in `🧪️tests/🩺️edges-env-heal`. Report: `wave-1125/result-F126.md` addendum.
+## Wave 1125 F126c: Heal In Closure Repair Builds, Re-Added Config Dirties Its Owner
+
+- Area: graph (`🕰️generations/🟨️.mjs` heal enabled for repair, `🧭️plan/🟨️.mjs` re-added known config marks the owner dirty), test `🧪️tests/🩺️edges-env-heal`. Report: `wave-1125/result-F126.md` addendum 19:55.
+
+## Wave 1125 F128: workspace stage SIGTERM is the host warden taking the stage wrapper
+- Root cause: warden (enforce) cancelled kind `stage` (71 MB, unsheltered) first at a swap-out danger, 6 ms before the stage ended with SIGTERM; not the 6144 MB cap, not the supervisor. Evidence in `wave-1125/result-F128.md`.
+- Warden: `lastResort` kind flag and subject field, `dearer` puts the stage owner last (schema, TS, Python oracle, fixture). Supervisor: new code `memory-cancelled` with bilingual refusal, warden cancel lines in the tail, initial back-off.
+- Files: `host-capacity/🛡️warden/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🐍️.py,🧪️tests/🧫️fixtures/🔣️.json}`; `remote-execution/🛰️sidecar/🚦️ready/{🟦️.ts,🌲️process-tree/🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🧯️warden-cancel/{🟦️.ts,🐍️.py}}`.
+- Tests: warden 60 pass, ready 58 pass, new 3 pass; typecheck of ready files passes; dangling-imports 0.
+
+## Wave 1125 F118b: a dying owned child leaves its reason
+- `🔨️modules/🏃️process/🎛️owned-execution/🪦️death-note` (note in EN/DE with last stderr lines and the macOS crash report of the pid) wired into `runOwnedCommand` for signals owned execution did not send. Tests 5/5 and owned-execution 7/7. Evidence on the third crash: wave-1125/result-F118.md (Follow-up 2).
+## Wave 1125 F129: edges-only refresh for stale edges (plan, compute, heal)
+- Stale untagged owners get their edges again without inference (plan `edgeStale`, spec `edgeStale`, `edgeRefreshOwnersV1` `stale`, heal as edge-only wave, inference only as round 2); new module `🕰️generations/🪡️edge-heal/`; 14 files, details in `wave-1125/result-F129.md`.
+- Follow-up fix: `edges-env-heal` test typed its compute spec with `readonly string[]` for `edgeStale`; typecheck of `🕰️generations` passes, edge-refresh 21/0, edges-env-heal 7/0.
+
+## Wave 1127 H4: a free local slot no longer keeps a worthy unit on a pressured host
+00:25. Files: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts (offloadGateV1), 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🧪️tests/🚪️gate/{🟦️.ts unchanged,🐍️.py,🔣️.json}. Test: gate file 4 pass / 0 fail (vectors + exhaustive python model). repo typecheck of the admission file was still running at release (slow, load 60+).
+
+## Wave 1127 H3: unit-cache uploader outage pause, spool reasons, bounds
+00:16 area caching-cargo. Files under `⚡️caching/🦀️cargo/🗃️unit-cache/`: `🛰️fleet/📤️uploader/🟦️.ts`, `🛰️fleet/🟦️.ts`, `🏗️buildscript/🟦️.ts`, `🛰️fleet/🧬️schema/🔣️.json`, `🛰️fleet/📤️uploader/🧪️tests/🟦️.ts`. Tests: uploader 12 pass / 1 fail (pre-existing facts-access test, unrelated); buildscript fleet-run 1 pass / 1 fail (calls uploadUnitV1 directly, untouched). dangling-imports exit 0.
+
+## Wave 1127 H7: Busy files moved aside when removing dependency generations
+Storage 🟦️.ts: retireBusyFileV1/sweepRetiredBusyFilesV1, injectable unlink; tests tree-removal (9 pass). See wave-1127/result-H7.md.
+
+## Wave 1127 H5: fleet status readers off the event loop, closure digest memory
+- 00:3x (11/27). Files: build/🧹️cache-gc/🏃️runner/🟦️.ts (async mounted-volume usage, parallel partition prefetch, 3 s per-volume probe in status), native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts + packages shim (nativeImageVolumeUsedBytesV1 async), build/🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts + 🛰️sidecar/🟦️.ts (optional persisted closure memory), build/🌐️remote-execution/🚢️status/🟦️.ts (treeCode from baseline + memory under .cache/f/fleet-sidecar-closure.json). Edits to the remote-execution files were made before I held a lock (H4 held landing.lock.remote-execution); anchored read-modify-write, no overlap seen.
+- Tests: cache-gc/📁️directory 4 pass, sidecar/🧮️closure 7 pass, fleet-status 31 pass. typecheck: my files clean; 3 errors in the importer native-build/💾️storage/🍎️image/♻️reclaim/🧪️tests (spawnSync overloads, not touched by me). dangling-imports exit 0.
+
+## Wave 1127 H1: source-transient covers rustc/bundle half-edits; authorizer bundle never published from a changed snapshot
+Locks `landing.lock.caching`, `landing.lock.remote-execution` (released). Script `🧰️scripts/H1/source-settle.py`.
+- `⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts` `ensureNxAuthorizerBundleV1`: before the atomic rename, both source captures (authorizer, compiler) are re-captured via `nxAuthorizerSourcesHoldV1` (existing but unused); a changed snapshot throws `concurrentEditV1("bytes", …, "Authorizer sources changed while the … bundle was built, it is not published", "build")`, staging is removed, nothing is published.
+- `🚦️ready/🧬️schema/🔣️.json` `sourceTransientPatterns` gains: that refusal text, `^ReferenceError: \w+ is not defined`, rustc `error[E0…]: cannot find (type|value|function|…)`. Such a failure retries a debounce (15 s) after the replicated tree changed, with EN+DE refusal (existing `source-transient`).
+- Tests: `🚦️ready/🧪️tests/🧱️source-transient/🟦️.ts` +6 classification cases (equal to the Python oracle); new `🛠️tools/🧪️tests/🧱️bundle-settled/🟦️.ts`. `repo typecheck` of both tools files passed.
+
+## Wave 1127 H2: Rate-based cache findings and registration re-sync
+See wave-1127/result-H2.md. Touched: fleet-status (ts, schema, tests), remote-execution status, sidecar agent.
+
+## Wave 1127 H8: Inode census names what holds the inode table when the inode sweep cannot free enough (g1-m04)
+- 2026-11-27 00:2x. Areas `host-capacity` (lock `landing.lock.host-capacity` was held by a peer when I tried; the two edits below were written atomically in round 1 before I took any lock, in regions nobody else touched, and the file was re-read by tests afterwards) and `remote-execution` (lock taken for this entry).
+- `🧹️disk-recovery/🟦️.ts`: new `inodeCensusV1(root,limit,signal)` (entries two folders down, links not followed, shared budget, `partial`), `sweepDiskV1` option `census` reports the top 8 holders; `🧬️schema/🔣️.json`: messages `recovery.inode-holder`, `recovery.inode-census-none` (en/de). `🚦️ready/🟦️.ts`: the inode sweep passes `census:{root:<workspace>/.cache}`.
+- Tests: new `🧹️disk-recovery/🧪️tests/🔢️inode-census/🟦️.ts` 3/3 (independent `find | wc -l` oracle); `🧪️tests/🟦️.ts` 23/23. Typecheck: 0 errors in touched files (2 pre-existing in `💽️disk/🧪️tests/🟦️.ts`).
+
+## Wave 1127 H5: windowed counter rates in fleet status
+- 00:4x (11/27). New: framework/🔨️modules/🏃️process/🏗️build/📈️metrics/🪟️windows/🟦️.ts (`metricWindowTotalsV1`, `pointShareV1`). Changed: build/🚢️fleet-status/🟦️.ts (rates fact/section/text, warden finding windowed), 📥️readers/🟦️.ts (`readFleetRatesV1`, source `rates`), 🧬️schema/🔣️.json (Policy.rates, RatesFact/RatesSection, messages en+de, source id), tests (🟦️.ts, 🐍️.py oracle rates section + windowed warden rule, fixture case warden-reported-alarm with rates), metrics 🧪️tests/🟦️.ts (windows test).
+- Tests: fleet-status 32 pass, metrics 15 pass. typecheck passed (12 files), dangling-imports 0.
+
+## Wave 1127 H14: cache server restarts only every 3 h, 507/503 refusals logged
+Locks remote-execution, remote-cache (released). `🛰️sidecar/🧬️schema/🔣️.json` cache role restart policy (quiet 15 min, max deferral and minimum interval 3 h); `🖥️server/🚨️refusals/` new refusal log (tests 3 pass), wired in `🖥️server/🟦️.ts` and `🛰️sidecar/🗄️cache/🟦️.ts`; restart tests 24 pass, server tests 10 pass, typecheck 0 errors, dangling imports 0. See wave-1127/result-H14.md.
+
+## Wave 1127 H7 round 2: Deadline for tool provisioning, Windows death note
+Tool-setup provision deadline (3600 s, bilingual), ps1 download/installer timeouts, death-note NTSTATUS + minidump lookup. See wave-1127/result-H7.md.
+
+## Wave 1127 H13: the graph slice read fits a 16 GB worker
+- 00:5x, locks host-capacity, process, resident (released). `🏡️resident/🏗️composition/🌐️host/👷️slice-pool/{🟨️.mjs,🧱️limit/🟨️.mjs,🧱️limit/🟨️.d.mts}` (new `sliceLeanMegabytesV1`: a measured booking asks the full peak x 1.15 but its minimum is `leanBasisPoints` of it, floor 2048; the worker cuts its waves to the grant), `🏡️resident/🧬️schema/🔣️.json` (`sliceHostElasticity.leanBasisPoints` 4000), `🌡️host-capacity/🟦️.ts` (graph-plan request priority interactive), `🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts` (graph-plan with a minimum passes head-of-line and strict barriers of other operations and, after `wait.bypassMilliseconds`, is admitted shrunk against the unrealized reservations of ramping non-retaining grants).
+- Tests: new `host-capacity/🧪️tests/🪶️graph-read-precedence` 5 pass; resident booking 7 (new lean oracle), grant-growth 8, reservation 8, plan-guard 13, plan-limit 3, cut-load 9; overcommit 4, ancestors 9, lend 7, starvation 7, upgrade 10, unsatisfiable 13, shrink 6, nested 3, graph-plan 13 pass. Red, not mine (no graph-plan): gate 3 (ramp slot law, 2 wait markers), main 1 (`ancestorHolds` placeholders), progress 2. Details `wave-1127/result-H13.md`.
+
+## Wave 1127 H15: stored `.d` outputs are identical across runs and origins
+- Lock caching-cargo (released). `unit-cache/🔏️key/🔗️sources/🟦️.ts` new `canonicalDepInfoV1` (drops proc-macro observation entries, paths and checksums); applied in `📜️script.ts` (every finished `.d`, atomic rename) and `🛰️fleet/📤️uploader/🟦️.ts` (every `.d` upload); test added to `🧪️tests/🧳️portable/🟦️.ts`.
+- Tests: portable 36 pass, 1 pre-existing fail (H3 `unsharedReasonV1` expectation). typecheck passed (35 files), dangling-imports 0. Proof on real evidence: 10 of 11 `.d` pairs identical after. See wave-1127/result-H15.md.
+
+## Wave 1127 H15 round 2: evidence keeps divergent stdout/stderr, unshared-reason test
+- Lock remote-cache (released). `🌐️remote-cache/🔬️action-result/🟦️.ts`: `named` rows now include `⟨stdout⟩`/`⟨stderr⟩` digests, so a stream-only divergence lists them in `differing` and the server evidence keeps both blobs (bounded by the existing evidence limits). Test fix `unit-cache/🧪️tests/🧳️portable/🟦️.ts` (empty spool gives `spool-error`: H3's code is right).
+- Tests: action-result 4, provenance 6+1+3, portable 37 pass. typecheck passed (13 files), dangling-imports 0.
+
+## Wave 1127 H1 round 3: bundler failures over captured sources carry digest evidence and are rechecked
+Lock `landing.lock.caching` (released). Script `🧰️scripts/H1/bundle-evidence.py`.
+- `⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts`: the publication catch of `ensureNxAuthorizerBundleV1` routes a `Bundle failed` / `compilation refused` error through `authorizerBundleFailureV1`: a capture that no longer holds against the tree becomes the concurrent-edit refusal (source-transient); otherwise the message gains `[captured against disk: <path> captured sha256 …, on disk …]` for every captured module it names (`authorizerBundleEvidenceV1`, exported, pure).
+- Tests in `🛠️tools/🧪️tests/🧱️bundle-settled/🟦️.ts` (3 pass); `repo typecheck` passed.
+
+## Wave 1127 H7 round 3: CPU-only stall limit, partition census mirror, typed capacity refusal
+ready: cpuSince/cpuOnlyStallMilliseconds, 🧱️partition-census (partitions.json); leases: partition-full relief; directory: nativeDirectoryCapacityRefusalV1. See wave-1127/result-H7.md.
+
+## Wave 1127 H5 round 2: per-reason metrics, client-side remote cache counts, one windowed-rate source
+- 01:0x (11/27), locks taken per area before each edit. New metrics (26 counters: `cache.skip.<reason>` x13, `exec.decline.<reason>` x12, `cache.remote.refused`; ids may now contain `-`): metrics catalogue + collector schema (collectors `cache-skip-reasons`, `offload-reasons`) + collector 🟦️.ts + tests; ring ids digest changed, rings restart on every machine (accepted).
+- Client side: new build/🌐️remote-cache/🛰️fleet/🧮️client-counters/🟦️.ts (counted in `remoteCacheFetchV1`), product sources read them instead of the server ledger (sidecar/📈️metrics). Removed: `readSkipGrowthV1` + `.cache/f/fleet-skip-baseline.json` + `cacheSkipGrewAgoSeconds` + policy `skipGrowthSeconds`; `unit-cache-*` findings and the text now read the windowed rates (fleet-status schema/🟦️.ts/readers/tests/oracle/fixture).
+- Dashboard drill-down groups `skips` and `declines` + more cache ids (dashboard schema 📊️fleet).
+- Tests: metrics 15, collector 29, fleet-status 32, sidecar metrics 8, sidecar 7, remote-cache fleet 16, typecheck clean, dangling 0.
+
+## Wave 1127 H9: Stall watch of the graph read restarts its counters at every wave
+- `🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts` (`createGraphReadWatchV1`): a wave row of the newest (or a newer) generation is progress and clears the phase/owner-ledger high marks. Cause: the read at 00:52 was stopped as "stalled" (1501 s) while its second wave (4542 projects re-derived under a moved environment, owners 2..13 of 48) was working; the first wave's highs (owners 48 of 48, inference 46) made every count of the second wave look like replay.
+- Test `🧪️tests/🛠️server/🌊️wave-rows` 4/0, read-watch 10/0, `repo typecheck` 0 errors, lock released.
+
+## Wave 1127 H8 round 3: per-scope dependency synchronization, derived scopes for the dependency stage, Bun package cache collector (g1-m04 inode need)
+- 2026-11-27 01:07 CET. Areas `host-capacity`, `remote-execution`, `bootstrap`, `build-command` (locks taken for the verification and released after typecheck 0 errors / dangling-imports exit 0; the files were written before the locks (replica copies live), each atomically, in the order command surface, receipt, ready).
+- Scoped receipt (schema first): `🧾️incremental/🧬️schema/🔣️.json` `SyncReceipt.selection` is `all|scopes`; `🧾️incremental/🟦️.ts` new pure laws `syncRequestRowsV1` (which rows a request needs: `all` needs a receipt that sealed the complete roster, `scopes` needs every named owner, `recorded` takes the held rows) and `mergeSyncScopesV1` (new rows replace rows of the same owner, others stay, roster `all` when the run was complete or the receipt already was); `💾️storage/🟦️.ts` publishes the merged receipt after every sync (was: only `--all`) and gates `all` and `scopes` selections by the request (`verifyJavascriptDependencySyncCurrentV1` takes a request, default `all`; new `readJavascriptDependencySyncReceiptV1`).
+- Command surface: `dependencies sync --scope a --scope b` (repeatable, sync only; lock stays single): `🧬️schema/📥️dependencies.json` kind `scopes`, `🧭️invocation/🟦️.ts`, `⌨️command/📦️dependencies/🟦️.ts`, `⌨️commands/🟦️.ts`, catalogue flag text en/de + help fixtures (8 lines).
+- Ready: schema `scopeDerivation`; `🚦️ready/🟦️.ts` new `readyScopeOwnersV1`, `readyProjectRootsV1`, `readyDependencyScopesV1`, `readyStagesForRootV1`, `readyScopesOfStageV1`: the dependency stage installs the root plus the owners of the projects of the workspace stage (here `.` and `✏️s`, derived from the project files, never hard-coded; falls back to every owner when a project is not found); the derived inode need counts only those lockfiles (about 142k instead of 428,796). Stage digests are over inputs, not arguments: workers that are ready stay ready; a worker re-runs the stage only when its lock inputs change or it is not ready (m04).
+- Bun package cache: `🧹️disk-recovery` writer `bun-cache` (priority 91, last of the derivable ones, last in the inode sweep), collector `bun-cache`; `🔌️real` spawns `repo cache gc --area=dependencies` with `SEMIO_DISK_RECOVERY_BUN_CACHE=1`; `🧹️cache-gc/⌨️command/🟦️.ts` `purgeBunCache`: takes the exclusive build lease of the workspace with timeout 0 (an install holds it for its whole run), skips with a bilingual line when busy, else `purgeJavascriptDependencyBunCacheV1`.
+- Tests: ready `🎯️scopes` 5/5 (python owner oracle, real checkout resolves to `.`+`✏️s`); incremental `🧪️tests` 20/20 (new scoped-law test against a Python model); `🧺️bun-cache` 3/3; `🔢️inode-census` 3/3; disk-recovery `🧪️tests` 23/23, `📥️need` 7/7; dependency-bootstrap invocation 3/3 (new scopes case + 5 refusals); ready `🪜️stage-plan` 3/3, `💽️disk-recovery` 11, `🧮️early-admission` 4, `🔁️resume` 8, `🧾️stage-completion` 8, `🕳️disk-unknown` 6, `🧷️failure-log` 8. Typecheck of the 10 touched files: 0 errors (145 files). dangling-imports: exit 0.
+- Not verified: `⚙️operations/🧪️tests/🟦️.ts` (15/16, the one failure is the real-CLI spawn timing out under load 50) and `🧭️help-offline` (timed out at 240 s on the busy host); ready `🧪️tests/🟦️.ts` 57/58 (the CPU-silent stage test, timing under load); the gate and merge laws against a real install; the bun-cache purge on a real store.
+
+## Wave 1127 H21: journal-vouched memo verification (resumable slice inventory)
+- 01:10 CET, locks graph + observation (released after typecheck 211 files 0 errors, dangling-imports exit 0).
+- New: `📥️load/🗞️journal-clean/🟦️.ts` + `🧬️schema/🔣️.json` + `🧪️tests/🟦️.ts` (sha a03772aecddb 91437a126b36 ). Edited (sha before -> after): observation `🟨️.mjs` 4130a29446a3 -> 852ea790d696, `🟨️.d.mts` 4a69f35731f1 -> 4c65750926b8 (optional last parameter `clean` of observationsHold / observationsHoldWithinRoundV1), graph `📁️workspace/🟦️.ts` 3fa5e7ca8a5e -> cab2b729fb4a, `📥️load/🟦️.ts` f1f7764a2c29 -> ab0f51ac4ece.
+- Tests: journal-clean 6/0, observation stretch-verdicts 4/0, lookup-holds 1/0, admission-memo 14/0.
+
+## Wave 1127 H19: bounded admission waits, parked claims, broker watchdog, Windows reader cancel
+- 01:2x (11/27), locks caching-cargo and process (released). unit-cache: new member `⏳️admit` (`awaitCompileAdmissionV1`, `whileClaimParkedV1`), `📜️script.ts` compile/offload waits go through it, `🔒️lock` (bounded `acquireAloneV1`/`acquireLightSlotV1`, new `tryAcquireRemoteWaitV1`), `🛰️fleet/🟦️.ts` (`FleetHoldV1.park/resume`, remote waiter cap `waiters-full`), `🏗️buildscript/🟦️.ts` (bounded slots, parked claim), schemas `slot.alone/lightMaximumWait`, `parkAfter`, `claim.maximumRemoteWaiters/parkMaximum`, 5 bilingual messages. admission: `🟦️.ts` (running-silence watchdog, growth rescue also beside running units for driver overhead, bounded probe estimate), schema `bounds.runningSilenceMilliseconds` + `waits.silent` en/de, `🦀️.rs` (Windows reader cancel via `CancelSynchronousIo`).
+- Tests: unit-cache `🪢️wedge` 10 pass (new), headroom-first 5, slot-deadline 3, alone 2, fleet fallback 4, stale 1; admission `🐕️watchdog` 5 pass (new), deadlines 6, waits 6, growth 8, cold-class 6, parent 5, sibling 2, probe 3, cold-external 5; Rust 16 pass (unix) + windows-msvc metadata check clean. repo typecheck passed (54, 32, 24 files), dangling-imports 0. See wave-1127/result-H19.md.
+
+## Wave 1127 H20: identity-based worker registration, restart without lost attempts, measured queue wait, line-per-statement Windows supervise script
+01:09 (11/27), locks `execution`, `remote-execution`, `replica` released. Details wave-1127/result-H20.md.
+- Schema `🏃️execution/🧬️schema/🌐️remote-execution.json` WorkerRegistration `startedMs`; `🌐️remote-execution/🟦️.ts`, `👷️worker`, `🗓️scheduler` (worker-replaced; left/replaced/abandoned cost no attempt), `⌨️command` event.
+- Offload: schema timeouts (floor, cap, factor, minimum samples), `📐️policy` offloadQueueWaitMillisecondsV1, `🚦️admission` queueWait, `🟦️.ts` waitMs.
+- Topology `windowsSuperviseScriptV1` one statement per line; tests updated and added.
+- Tests: scheduler 31 pass, queue-wait 3 pass; topology/command/remote-execution suite see result. typecheck: only error in untouched `🚛️beyond-host/🧪️tests/🟦️.ts:80`.
+
+## Wave 1127 H18: Nx task hashes no longer carry the liveness line of repo tools exec --light
+- 01:36 CET, lock door (released). Root cause: nx.json `sharedGlobals` (inside `default`, so every cached task) runs `repo tools exec --light node/bun` as Nx `runtime` inputs; Nx hashes stdout AND stderr of a runtime input; the door printed `[repo] still working after N s; last phase started: P` (en, de or both) after 5 s, so the hash depended on load, seconds and language (measured: 4 s empty, 9 s de, 11 s en stderr).
+- `🏗️build/🚪️door`: `🔣️.json` + schema `quiet` (tools exec --light), `🟦️.ts` `buildDoorStaysQuietV1`, `🏃️main/🟦️.ts` skips liveness for it, README en/de. Tests `🧪️tests/🤫️quiet` 4/0 (truth table, nx.json law, native Nx hasher cross-check), door tests 9/0, repo typecheck passed, dangling exit 0. sha after: b7d6e1b1e945 ba9d8bcc07dd 4684b0c2525c 3eadcb5017af 0f4b030bdd45 0330ae0acc9c  (before: 🔣️.json 786e0335 schema e700e19f 🟦️.ts 41f2bb5c main 1f60770d README 817705de).

@@ -6,6 +6,7 @@ import {join} from "node:path";
 import {METRICS_CATALOGUE_V1,METRICS_RING_V1,metricSupportedOnV1,METRICS_SOURCES_V1,METRICS_TIERS_V1,closeMetricsRingsV1,createCounterDeltasV1,openMetricsRingsV1,readRingFileV1,readSeriesV1,recordSampleV1,type MetricsPointV1,type MetricsTierV1} from "../🟦️.ts";
 import {requireTestToolV1} from "../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {metricWindowTotalsV1,pointShareV1} from "../🪟️windows/🟦️.ts";
 
 /** 📈️ Contract: the catalogue is complete and bilingual, the tiers fold exactly, a torn row reads as absent, a restart changes nothing, and TypeScript, Python and Rust read the same bytes into the same series. */
 const here=import.meta.dir,oracle=join(here,"🐍️.py"),golden=join(here,"🧫️fixtures","🏅️golden"),S=schema.definitions;
@@ -256,5 +257,19 @@ test("production sizes: one file per tier of rowBytes * buckets, and a write cos
  expect(readdirSync(directory).filter(name=>name.endsWith(".tmp"))).toEqual([]);
  expect(perTick).toBeLessThan(5);
  expect(readRingFileV1(join(directory,"t1.ring"))!.rows.length).toBeGreaterThan(10);
+ rmSync(directory,{recursive:true,force:true});
+});
+
+test("windows: a counter's trailing totals equal the sum of its raw samples (exact inside the finest tier, a clipped share beyond it); no rings is null", () => {
+ const directory=scratch("windows"),samples=Array.from({length:100},(_,index)=>({at:BASE+index*1000+10,values:{"build.units.compiled":index%5+1}})),now=BASE+100_000;
+ feed(directory,samples);
+ const raw=(seconds:number):number=>samples.filter(sample=>sample.at>=now-seconds*1000).reduce((sum,sample)=>sum+sample.values["build.units.compiled"],0);
+ const found=metricWindowTotalsV1({directory,ids:["build.units.compiled"],nowMs:now,windowsSeconds:[4,8,32]})!;
+ expect(found.windowsSeconds).toEqual([4,8,32]);
+ expect(found.totals["build.units.compiled"]![0]).toBe(raw(4));expect(found.totals["build.units.compiled"]![1]).toBe(raw(8));
+ expect(Math.abs(found.totals["build.units.compiled"]![2]!-raw(32))).toBeLessThanOrEqual(Math.ceil(raw(32)*0.15));
+ expect(metricWindowTotalsV1({directory:join(directory,"absent"),ids:["build.units.compiled"],nowMs:now,windowsSeconds:[4]})).toBeNull();
+ expect(metricWindowTotalsV1({directory,ids:["x.y"],nowMs:now,windowsSeconds:[4]})).toBeNull();
+ expect(pointShareV1([0,10,0,1,0,0,100,0,0],5,20)).toBe(50);expect(pointShareV1([0,10,0,1,0,0,100,0,0],10,20)).toBe(0);
  rmSync(directory,{recursive:true,force:true});
 });

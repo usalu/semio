@@ -77,6 +77,7 @@ semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️
 pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }

@@ -142,7 +142,7 @@ async fn editor_stamps_artifact_schema_from_the_type_when_left_empty() {
     let def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
     assert!(def.io.artifact_schema.is_empty(), "fixture precondition: builder leaves io.artifact_schema empty");
     let plugin = PluginBuilder::<_, SchemaStampApps>::new("builder-test-schema-stamp-editor")
-        .label("Builder Test Schema Stamp Editor")
+        .label(LocalizedLabel::native("Builder Test Schema Stamp Editor", "Builder-Test Schemastempel Editor"))
         .version("0.1.0")
         .package_id("semio:builder-test-schema-stamp-editor")
         .editor::<SchemaStampEditorFixture>(def)
@@ -159,7 +159,7 @@ async fn editor_does_not_overwrite_an_explicitly_set_artifact_schema() {
     let mut def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
     def.io.artifact_schema = "already-set.document".into();
     let plugin = PluginBuilder::<_, SchemaStampApps>::new("builder-test-schema-stamp-editor-explicit")
-        .label("Builder Test Schema Stamp Editor Explicit")
+        .label(LocalizedLabel::native("Builder Test Schema Stamp Editor Explicit", "Builder-Test Schemastempel Editor explizit"))
         .version("0.1.0")
         .package_id("semio:builder-test-schema-stamp-editor-explicit")
         .editor::<SchemaStampEditorFixture>(def)
@@ -174,7 +174,7 @@ async fn viewer_stamps_artifact_schema_from_the_type_when_left_empty() {
     let def = minimal_surface_def(VIEWER_STAMP_DIALECT, AppRole::Viewer);
     assert!(def.io.artifact_schema.is_empty(), "fixture precondition: builder leaves io.artifact_schema empty");
     let plugin = PluginBuilder::<_, SchemaStampApps>::new("builder-test-schema-stamp-viewer")
-        .label("Builder Test Schema Stamp Viewer")
+        .label(LocalizedLabel::native("Builder Test Schema Stamp Viewer", "Builder-Test Schemastempel Betrachter"))
         .version("0.1.0")
         .package_id("semio:builder-test-schema-stamp-viewer")
         .viewer::<SchemaStampViewerFixture>(def)
@@ -198,7 +198,7 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
         payload: None,
     };
     let plugin = PluginBuilder::<_, NoPluginApp>::new(metadata.owner)
-        .label("Builder Test Routed Inference")
+        .label(LocalizedLabel::native("Builder Test Routed Inference", "Builder-Test Geroutete Inferenz"))
         .version("0.1.0")
         .package_id("semio:builder-test-routed-inference")
         .routed_inference(metadata)

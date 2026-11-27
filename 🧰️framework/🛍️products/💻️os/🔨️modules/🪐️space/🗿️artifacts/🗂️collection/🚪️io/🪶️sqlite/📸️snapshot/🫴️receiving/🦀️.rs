@@ -77,9 +77,9 @@ macro_rules! receive{
    let before_work=settlement.with_control(|control|control.performed_work());
    let result=(||->std::result::Result<(),store::NativeSnapshotFailure>{
     let owned=settlement.with_control(|control|{let mut port=Paid{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));Ok::<_,ValueError>(port.owned())})?;
-    let frame=slot.as_mut().unwrap();let status=frame.result.take().unwrap();let settled=settlement.finish_body(owned);
+    let frame=slot.as_mut().unwrap();let status=frame.result.take().unwrap();let settled=settlement.finish_body(owned).and_then(|()|if status.is_ok(){settlement.confirm().and_then(|()|native.checkpoint())}else{Ok(())});
     *published=Some(match(status,settled){
-     (Ok(()),Ok(()))=>Fallible::<$output>::from(($publish)(frame)).map_err(store::NativeSnapshotFailure::from).map_err(Stage::Operation),
+     (Ok(()),Ok(()))=>{let value:Fallible<$output>=($publish)(frame);value}.map_err(store::NativeSnapshotFailure::from).map_err(Stage::Operation),
      (Ok(()),Err(refusal))=>Err(Stage::Operation(refusal.with_retained_progress(body.progress()).into())),
      (Err(primary),Ok(()))=>Err(Stage::Operation(primary.into())),
      (Err(primary),Err(refusal))=>Err(Stage::Settlement{operation:Err(primary.into()),refusal:refusal.with_retained_progress(body.progress()),receipt:None}),
@@ -88,7 +88,9 @@ macro_rules! receive{
    })();
    RetainedWorkOutcome{result,work:u128::from(settlement.with_control(|control|control.performed_work()).saturating_sub(before_work))}
   }));
-  let result=turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(owner.native().owned_bytes(),error)));
+  let result=turn.result.map_err(|error|{let failure=settlement.refused_failure(owner.native().owned_bytes(),error);match failure.settlement_refusal().cloned(){Some(refusal)=>Stage::Settlement{operation:Err(failure),refusal,receipt:None},None=>Stage::Operation(failure)}});
+  let result=if result.is_ok()&&matches!(output,Some(Ok(_))){owner.release_receiving_frame().result.map_err(|error|{let failure=settlement.refused_failure(owner.native().owned_bytes(),error);Stage::Operation(failure)})}else{result};
+  store::space_history::io::sqlite::snapshot::settlement::stamp_published_failure(output,owner.progress());
   RetainedWorkOutcome{result,work:turn.work}
  }
  };
@@ -102,8 +104,8 @@ macro_rules! validate{
  }
  };
 }
-receive!(validate_decoding_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(store::io_schema::IoOutcome::clean(())));
-receive!(validate_encoding_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(store::io_schema::IoOutcome::clean(())));
+receive!(validate_decoding_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(Ok(store::io_schema::IoOutcome::clean(()))));
+receive!(validate_encoding_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(Ok(store::io_schema::IoOutcome::clean(()))));
 validate!(validate_decoding,validate_decoding_receiving,NativeSnapshotDecodeOwner);
 validate!(validate_encoding,validate_encoding_receiving,NativeSnapshotEncodeOwner);
 #[cfg(test)]

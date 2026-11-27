@@ -1,0 +1,10 @@
+{
+ "policy": {"budgetBasisPoints": 10000, "overrideAfterMilliseconds": 120000},
+ "cases": [
+  {"name": "an enclosing grant the machine can carry beside the need is no deadlock", "totalMegabytes": 16384, "floorMegabytes": 4096, "minimumMegabytes": 6553, "ancestors": 1, "ancestorMegabytes": 4500, "otherRunning": 1, "waitedMilliseconds": 0, "deadlocked": false, "possibleMegabytes": 7788},
+  {"name": "an enclosing grant that leaves less than the need can never be waited out", "totalMegabytes": 16384, "floorMegabytes": 4096, "minimumMegabytes": 6553, "ancestors": 1, "ancestorMegabytes": 8000, "otherRunning": 3, "waitedMilliseconds": 0, "deadlocked": true, "possibleMegabytes": 4288},
+  {"name": "only an ancestor exists and the override time has passed", "totalMegabytes": 16384, "floorMegabytes": 4096, "minimumMegabytes": 6553, "ancestors": 1, "ancestorMegabytes": 0, "otherRunning": 0, "waitedMilliseconds": 120000, "deadlocked": true, "possibleMegabytes": 12288},
+  {"name": "only an ancestor exists but the override time has not passed yet", "totalMegabytes": 16384, "floorMegabytes": 4096, "minimumMegabytes": 6553, "ancestors": 1, "ancestorMegabytes": 0, "otherRunning": 0, "waitedMilliseconds": 1000, "deadlocked": false, "possibleMegabytes": 12288},
+  {"name": "a request without ancestors never waits for itself", "totalMegabytes": 16384, "floorMegabytes": 4096, "minimumMegabytes": 20000, "ancestors": 0, "ancestorMegabytes": 0, "otherRunning": 0, "waitedMilliseconds": 999999, "deadlocked": false, "possibleMegabytes": 12288}
+ ]
+}

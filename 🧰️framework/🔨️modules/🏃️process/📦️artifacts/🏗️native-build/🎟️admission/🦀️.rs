@@ -217,6 +217,7 @@ mod windows {
     unsafe extern "system" {
         pub fn K32GetProcessMemoryInfo(process: isize, counters: *mut MemoryCounters, cb: u32) -> i32;
         pub fn GetProcessTimes(process: isize, creation: *mut FileTime, exit: *mut FileTime, kernel: *mut FileTime, user: *mut FileTime) -> i32;
+        pub fn CancelSynchronousIo(thread: isize) -> i32;
     }
 }
 
@@ -333,12 +334,33 @@ fn retry_while<T>(mut open: impl FnMut() -> std::io::Result<T>, retryable: impl 
     }
 }
 
+/// 🛑️ How often and how long a dropped connection tries to cancel its reader thread (`cancel_reader`).
+#[cfg(any(windows, test))]
+const READER_CANCEL_ATTEMPTS: u32 = 50;
+#[cfg(any(windows, test))]
+const READER_CANCEL_PAUSE: Duration = Duration::from_millis(20);
+
+/// 🛑️ Ends a thread that sits in a blocking read: closing a named pipe does not wake a synchronous read on Windows, so `cancel` (`CancelSynchronousIo`) is asked again and again until the thread has finished, because a cancel that arrives before the thread entered the read finds nothing to cancel. `true` when the thread finished within the attempts; the thread has to look at its own stop flag between reads.
+/// @see ./🧪️tests/⌛️deadlines/🟦️.ts
+#[cfg(any(windows, test))]
+fn cancel_reader(finished: impl Fn() -> bool, mut cancel: impl FnMut(), attempts: u32, pause: Duration) -> bool {
+    for _ in 0..attempts {
+        if finished() { return true; }
+        cancel();
+        std::thread::sleep(pause);
+    }
+    finished()
+}
+
 /// 🔗️ A line-oriented connection to the driver's broker: a Unix socket, or a named pipe on Windows.
 struct Broker {
     writer: Mutex<Box<dyn Write + Send>>,
     lines: Mutex<std::sync::mpsc::Receiver<std::io::Result<String>>>,
+    closing: Arc<AtomicBool>,
     #[cfg(unix)]
     closer: std::os::unix::net::UnixStream,
+    #[cfg(windows)]
+    reader: std::thread::JoinHandle<()>,
 }
 
 /// 🔇️ How long the broker may stay silent (no verdict and no queue heartbeat) before the request is dropped and sent again; equals `Policy.bounds.silenceMilliseconds` of the admission schema.
@@ -357,9 +379,12 @@ impl Broker {
         #[cfg(unix)]
         let closer = stream.try_clone()?;
         let (sender, lines) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        let closing = Arc::new(AtomicBool::new(false));
+        let stop = Arc::clone(&closing);
+        let thread = std::thread::spawn(move || {
             let mut reader = BufReader::new(reader);
             loop {
+                if stop.load(Ordering::Acquire) { break; }
                 let mut line = String::new();
                 let item = match reader.read_line(&mut line) {
                     Ok(0) => Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed")),
@@ -370,7 +395,9 @@ impl Broker {
                 if sender.send(item).is_err() || last { break; }
             }
         });
-        Ok(Broker { writer: Mutex::new(Box::new(stream)), lines: Mutex::new(lines), #[cfg(unix)] closer })
+        #[cfg(unix)]
+        drop(thread);
+        Ok(Broker { writer: Mutex::new(Box::new(stream)), lines: Mutex::new(lines), closing, #[cfg(unix)] closer, #[cfg(windows)] reader: thread })
     }
 
     /// 📤️ Sends one protocol line.
@@ -392,10 +419,17 @@ impl Broker {
 }
 
 impl Drop for Broker {
-    /// 🔌️ Closes the socket so the broker forgets this request and the reader thread ends.
+    /// 🔌️ Closes the socket so the broker forgets this request and the reader thread ends; on Windows the reader is cancelled out of its blocking read first, because the pipe handle stays open while a thread reads it.
     fn drop(&mut self) {
+        self.closing.store(true, Ordering::Release);
         #[cfg(unix)]
         let _ = self.closer.shutdown(std::net::Shutdown::Both);
+        #[cfg(windows)]
+        {
+            use std::os::windows::io::AsRawHandle;
+            let handle = self.reader.as_raw_handle() as isize;
+            cancel_reader(|| self.reader.is_finished(), || { unsafe { windows::CancelSynchronousIo(handle) }; }, READER_CANCEL_ATTEMPTS, READER_CANCEL_PAUSE);
+        }
     }
 }
 
@@ -497,15 +531,16 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
     match result { Ok(result) => Ok((result, copies)), Err(error) => { for copy in copies { let _ = std::fs::remove_file(copy); } Err(error) } }
 }
 
-/// 🧵️ Reads the compiler mode from direct arguments and response files before spending the run's parallelism.
+/// 🧵️ Reads the compiler mode from direct arguments and response files before spending the run's parallelism. The third value tells that the link of a wasm final must run on one `wasm-ld` thread: lld threads every section pass by default, and a final that links its whole dependency closure measured 4.8 GiB at 6.6 CPUs against 2.0-3.0 GiB at one.
 /// The concrete WASI actor decoder measured 1,173 MiB with the serial policy; wider codegen exceeded its library memory ceiling.
-fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usize, bool), String> {
+fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usize, bool, bool), String> {
     let mut expects_type = false;
     let mut expects_crate = false;
     let mut expects_target = false;
     let mut final_component = false;
     let mut actor_decoder = false;
     let mut wasip2 = false;
+    let mut wasm = false;
     let mut nightly = false;
     let mut inspect = |argument: &str| {
         let types = argument.strip_prefix("--crate-type=").or_else(|| expects_type.then_some(argument));
@@ -514,6 +549,7 @@ fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usi
         final_component |= types.is_some_and(|types| types.split(',').any(|kind| kind == "cdylib"));
         actor_decoder |= name == Some("semio_plugin_actor_input_decoder");
         wasip2 |= target == Some("wasm32-wasip2");
+        wasm |= target.is_some_and(|target| target.starts_with("wasm32-"));
         expects_type = argument == "--crate-type";
         expects_crate = argument == "--crate-name";
         expects_target = argument == "--target";
@@ -533,7 +569,7 @@ fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usi
     let grant = tokens.filter(|count| *count > 0);
     let serial_unit = final_component || (actor_decoder && wasip2);
     let workers = if serial_unit { 1 } else { grant.unwrap_or(1) };
-    Ok((workers, grant == Some(1) || (serial_unit && (nightly || grant.is_some()))))
+    Ok((workers, grant == Some(1) || (serial_unit && (nightly || grant.is_some())), final_component && wasm))
 }
 
 /// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
@@ -664,12 +700,13 @@ fn main() -> ExitCode {
     let text = match expand_admission_arguments(&args) { Ok(text) => text, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     let unit = parse_unit(&text, &|name| env::var(name).ok()).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
     let tokens = admitted_tokens();
-    let (threads, serial) = match compiler_parallelism(&args, tokens) {
+    let (threads, serial, serial_link) = match compiler_parallelism(&args, tokens) {
         Ok(policy) => policy,
         Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); }
     };
     let (mut args, copies) = match bounded_argfiles(&args, Some(threads)) { Ok(result) => result, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     if serial { args.extend([OsString::from("-Z"), OsString::from("no-parallel-backend")]); }
+    if serial_link { args.extend([OsString::from("-C"), OsString::from("link-arg=--threads=1")]); }
     let code = match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
         (Some(unit), Some(endpoint), Some(pass)) => scheduled(&rustc, &args, &unit, &endpoint, &pass).unwrap_or_else(|error| {
             eprintln!("semio-build-scheduler: {error}");
@@ -839,6 +876,46 @@ mod tests {
         let _ = std::fs::remove_dir_all(&directory);
     }
 
+    /// 🛑️ A reader blocked in a read that only the cancel interrupts ends once the cancel arrives (asked again until then); a reader that never ends is given up after the attempts.
+    #[test]
+    fn blocked_reader_is_cancelled_until_it_ends() {
+        let interrupted = Arc::new(AtomicBool::new(false));
+        let flag = Arc::clone(&interrupted);
+        let worker = std::thread::spawn(move || { while !flag.load(Ordering::Acquire) { std::thread::sleep(Duration::from_millis(2)); } });
+        let mut cancels = 0;
+        assert!(cancel_reader(|| worker.is_finished(), || { cancels += 1; if cancels == 3 { interrupted.store(true, Ordering::Release); } }, 50, Duration::from_millis(5)));
+        assert_eq!(cancels, 3);
+        assert!(READER_CANCEL_PAUSE * READER_CANCEL_ATTEMPTS <= Duration::from_secs(2));
+        let mut asked = 0;
+        assert!(!cancel_reader(|| false, || asked += 1, READER_CANCEL_ATTEMPTS.min(4), Duration::ZERO));
+        assert_eq!(asked, 4);
+        assert!(cancel_reader(|| true, || asked += 1, 5, Duration::ZERO));
+        assert_eq!(asked, 4);
+    }
+
+    /// 🔌️ Dropping a connection stops its reader thread: the thread sees the stop flag instead of reading on.
+    #[cfg(unix)]
+    #[test]
+    fn dropped_connection_ends_its_reader() {
+        let directory = env::temp_dir().join(format!("semio-drop-broker-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("broker.sock");
+        let _ = std::fs::remove_file(&path);
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        let accepted = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut seen = Vec::new();
+            let mut byte = [0u8; 1];
+            let closed = std::io::Read::read(&mut stream, &mut byte).map(|count| count == 0).unwrap_or(true);
+            seen.push(closed);
+            seen
+        });
+        let broker = Broker::connect(path.to_str().unwrap()).unwrap();
+        drop(broker);
+        assert_eq!(accepted.join().unwrap(), vec![true]);
+        let _ = std::fs::remove_dir_all(&directory);
+    }
+
     /// 🧱️ Terminal parent and placement refusals prevent execution and keep actionable diagnostics.
     #[test]
     fn decodes_terminal_admission_refusals() {
@@ -880,13 +957,16 @@ mod tests {
     #[test]
     fn compiler_workers_fit_their_admission() {
         for (args, grant, expected) in [
-            (vec!["--crate-type", "cdylib", "a.rs"], Some(8), (1, true)),
-            (vec!["--crate-type=cdylib"], Some(8), (1, true)),
-            (vec!["--crate-type=cdylib", "-Zthreads=2"], None, (1, true)),
-            (vec!["--crate-type=cdylib"], None, (1, false)),
-            (vec!["--crate-type=lib"], Some(1), (1, true)),
-            (vec!["--crate-type=lib"], Some(8), (8, false)),
-            (vec!["--crate-type=lib"], Some(0), (1, false)),
+            (vec!["--crate-type", "cdylib", "a.rs"], Some(8), (1, true, false)),
+            (vec!["--crate-type=cdylib"], Some(8), (1, true, false)),
+            (vec!["--crate-type=cdylib", "-Zthreads=2"], None, (1, true, false)),
+            (vec!["--crate-type=cdylib"], None, (1, false, false)),
+            (vec!["--crate-type=cdylib", "--target", "wasm32-wasip2"], Some(8), (1, true, true)),
+            (vec!["--crate-type=cdylib", "--target=wasm32-wasip2"], None, (1, false, true)),
+            (vec!["--crate-type=lib", "--target", "wasm32-wasip2"], Some(8), (8, false, false)),
+            (vec!["--crate-type=lib"], Some(1), (1, true, false)),
+            (vec!["--crate-type=lib"], Some(8), (8, false, false)),
+            (vec!["--crate-type=lib"], Some(0), (1, false, false)),
         ] {
             let args = args.into_iter().map(OsString::from).collect::<Vec<_>>();
             assert_eq!(compiler_parallelism(&args, grant).unwrap(), expected);

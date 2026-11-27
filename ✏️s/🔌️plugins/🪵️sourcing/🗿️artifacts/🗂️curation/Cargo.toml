@@ -4,6 +4,11 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️harness/🌉️actions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️harness/🎬️dispatch/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️harness/🚪️mount/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️harness/🪟️windows/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪧️pane-smoke/🔬️law/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
@@ -11,6 +16,10 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️domain/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
+    "🧪️tests/⏮️history-acceptance/⚔️conflicts/📦️packages/🦀️rust",
+    "🧪️tests/⏮️history-acceptance/⛓️inputs/📦️packages/🦀️rust",
+    "🧪️tests/⏮️history-acceptance/✏️edits/📦️packages/🦀️rust",
+    "🧪️tests/⏮️history-acceptance/🧯️close/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",

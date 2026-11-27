@@ -1,0 +1,11 @@
+{
+ "hostMegabytes": 16384,
+ "parentMegabytes": 4500,
+ "plan": {"megabytes": 6553, "minimumMegabytes": 2048},
+ "second": {"megabytes": 4000, "minimumMegabytes": 1000},
+ "expected": {
+  "reducedGrantMegabytes": 4500,
+  "afterReleaseGrantMegabytes": 4000,
+  "refusedMinimumMegabytes": 6553
+ }
+}

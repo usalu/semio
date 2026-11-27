@@ -13,6 +13,7 @@ role = "library"
 workspace = true
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 semio-framework = { path = "../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
@@ -26,6 +27,15 @@ semio-ui-scene = { path = "../../../../../../../../../../../../../🧰️framewo
 semio-ui-contract-values = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-semio = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-s-artifact-sourcing-curation-harness-mount = { path = "../../🧰️harness/🚪️mount/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-harness-dispatch = { path = "../../🧰️harness/🎬️dispatch/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-harness-windows = { path = "../../🧰️harness/🪟️windows/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-harness-actions = { path = "../../🧰️harness/🌉️actions/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-pane-smoke = { path = "../../🪧️pane-smoke/🔬️law/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-history-edits = { path = "../../../../../../../../🧪️tests/⏮️history-acceptance/✏️edits/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-history-close = { path = "../../../../../../../../🧪️tests/⏮️history-acceptance/🧯️close/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-history-inputs = { path = "../../../../../../../../🧪️tests/⏮️history-acceptance/⛓️inputs/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation-history-conflicts = { path = "../../../../../../../../🧪️tests/⏮️history-acceptance/⚔️conflicts/📦️packages/🦀️rust" }
 serde_json.workspace = true
 
 [[test]]
@@ -43,3 +53,23 @@ path = "../../🎯️targets/🪟️windows/🦀️.rs"
 [[test]]
 name = "editor_commands"
 path = "../../🎯️targets/🎮️commands/🦀️.rs"
+
+[[test]]
+name = "pane_smoke"
+path = "../../🪧️pane-smoke/🦀️.rs"
+
+[[test]]
+name = "history_edits"
+path = "../../../../../../../../🧪️tests/⏮️history-acceptance/🎯️targets/✏️edits/🦀️.rs"
+
+[[test]]
+name = "history_close"
+path = "../../../../../../../../🧪️tests/⏮️history-acceptance/🎯️targets/🧯️close/🦀️.rs"
+
+[[test]]
+name = "history_inputs"
+path = "../../../../../../../../🧪️tests/⏮️history-acceptance/🎯️targets/⛓️inputs/🦀️.rs"
+
+[[test]]
+name = "history_conflicts"
+path = "../../../../../../../../🧪️tests/⏮️history-acceptance/🎯️targets/⚔️conflicts/🦀️.rs"

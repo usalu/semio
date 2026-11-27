@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-s-artifact-vcs-vcs-editor = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework = { path = "../../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

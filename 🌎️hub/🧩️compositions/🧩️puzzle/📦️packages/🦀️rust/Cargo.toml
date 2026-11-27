@@ -21,6 +21,7 @@ semio-s-artifact-puzzle-3d-model = { workspace = true }
 semio-s-artifact-puzzle-3d-viewer = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d = { workspace = true }
+semio-s-artifact-puzzle-2d-pdf-export = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-5d = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }

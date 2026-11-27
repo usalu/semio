@@ -21,7 +21,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
     PluginBuilder::<_, AnimateApps>::new("animate")
-        .label("Animate")
+        .label(semio_plugin::LocalizedLabel::native("Animate", "Animate"))
         .version("0.1.0")
         .package_id("semio:animate")
         .declare_artifact(crate::artifacts::presentation::artifact::<AnimateApps>())

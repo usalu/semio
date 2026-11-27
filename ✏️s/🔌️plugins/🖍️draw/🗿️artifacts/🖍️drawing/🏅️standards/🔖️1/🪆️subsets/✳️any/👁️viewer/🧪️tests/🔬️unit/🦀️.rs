@@ -77,8 +77,36 @@ fn drawing_viewer_camera_is_declared_with_only_local_window_publication() {
     assert_eq!(action.semantics.execution.interactive_job,InteractiveJobClassification::Migrated);
     assert_eq!(<DrawingViewCommand as protocol::OpBinary>::TOOL_JOB_IDS,DRAWING_VIEW_TOOL_IDS);
     let contracts = <DrawingViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
-    assert_eq!(contracts.len(),1);
-    assert_eq!(contracts[0].lanes,&[ArtifactToolPublicationLane::WindowConfig]);
+    assert_eq!(contracts.len(),canvas::HOST_ACTION_IDS.len());
+    let camera = contracts.iter().find(|contract| contract.tool_id == "setCamera").unwrap();
+    assert_eq!(camera.lanes,&[ArtifactToolPublicationLane::WindowConfig]);
+    assert!(contracts.iter().filter(|contract| contract.tool_id != "setCamera").all(|contract| contract.lanes == [ArtifactToolPublicationLane::HostOnly]));
+}
+
+/// ⚖️ LAW: the viewer's canvas window kind declares every verb the shared `Canvas2d` surface dispatches (pointer, double click, catalogue drag, camera sync), each inert or window-config only, so no hover is dropped as undeclared.
+#[test]
+fn drawing_viewer_canvas_declares_every_action_its_surface_dispatches() {
+    use semio_plugin::ArtifactOwnedToolJobFactory;
+    let definition = create_drawing_viewer();
+    let window = definition.window_kinds.iter().find(|window| window.id == canvas::WINDOW_KIND_ID).unwrap();
+    for dispatched in ["setCamera","canvasPointerDown","canvasPointerMove","canvasPointerUp","canvasDoubleClick","canvasDragOver","canvasDragLeave","canvasDrop"] {
+        let action = window.actions.iter().find(|action| action.id == dispatched).unwrap_or_else(|| panic!("viewer canvas does not declare {dispatched}"));
+        assert_eq!(action.kind,semio_plugin::ActionKind::View);
+        assert_eq!(action.semantics.execution.interactive_job,InteractiveJobClassification::Migrated);
+        assert!(<DrawingViewCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&dispatched));
+        let command = command_from_action(dispatched,Some(&semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"camera":{"x":0,"y":0,"zoom":1}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
+        assert_eq!(command.action_id(),dispatched);
+    }
+    assert_eq!(window.actions.len(),canvas::HOST_ACTION_IDS.len());
+}
+
+#[test]
+fn drawing_viewer_host_input_commands_publish_nothing() {
+    for dispatched in canvas::HOST_INPUT_ACTION_IDS {
+        let command = command_from_action(dispatched,None).unwrap();
+        let emit = camera_emit(&command,None).unwrap();
+        assert!(emit.window_config_mutations.is_empty());
+    }
 }
 
 #[test]

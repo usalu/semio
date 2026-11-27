@@ -20,7 +20,7 @@ use tiled_map_model::{
     REVISION_FNV_OFFSET,
 };
 pub use tiled_map_model::{
-    clamp_map_layer_weight, map_camera_limits_json, map_camera_limits_json_for_viewport, map_layer_weight_slider_ids_json, map_lod_scale_json, projection, tiles, vector_tiles_available_at_camera_zoom, DefaultMapExtension, DescribedMapPolicy,
+    clamp_map_layer_weight, map_camera_limits_json, map_camera_limits_json_for_viewport, map_layer_weight_slider_ids_json, map_lod_scale_json, map_policy_descriptor_json, projection, tiles, vector_tiles_available_at_camera_zoom, DefaultMapExtension, DescribedMapPolicy,
     MapClassRank, MapClassRanks, MapClassSpan, MapClassSpanRange, MapClassSpans, MapClassWidth, MapClassWidths, MapDampingCurve, MapExtension, MapFeatureFacts, MapFeatureKeys, MapLabelRules, MapLayerGates, MapLayerRole, MapLayerSwitches,
     MapLayerTarget, MapLayerToggle, MapLevelWidth, MapLevelWidths, MapLineDamping, MapLineScale, MapLodBand, MapOverlayFeature, MapOverlayGeometry, MapOverlayLayer, MapOverlayStyleFill, MapOverlayTables, MapPaintTechnique, MapPalette,
     MapPaletteSlot, MapPolicy, MapPolicyDescriptor, MapSourceLayer, MapSpanZoom, MapStylePreset, MapSyncJson, MapTileMode, MapViewFacts, MapWidth, MAP_CAMERA_ZOOM_MAX, MAP_CAMERA_ZOOM_MIN, MAP_EXTENSION_DEFAULT_ID, MAP_LAYER_WEIGHT_MAX,

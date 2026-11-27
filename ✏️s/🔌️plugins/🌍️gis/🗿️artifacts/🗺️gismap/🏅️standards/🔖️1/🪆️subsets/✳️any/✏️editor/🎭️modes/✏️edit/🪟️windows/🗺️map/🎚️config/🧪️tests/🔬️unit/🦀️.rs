@@ -24,18 +24,18 @@ async fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() 
 async fn layer_visible_defaults_to_true_and_honours_explicit_entries() {
     let mut config = MapWindowConfig::default();
     assert!(layer_visible(&config, "water"), "a layer with no entry is visible");
-    config.layer_visibility.insert("water".into(), false);
+    config.layer_visibility.cold_insert("water".into(), false);
     assert!(!layer_visible(&config, "water"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis2d_config_dsl_round_trips_default_and_populated() {
-    store::os_store::test_support::assert_dsl_round_trip(&MapWindowConfig::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&MapWindowConfig::default());
     let mut populated = MapWindowConfig::default();
-    populated.layer_visibility.insert("water".into(), false);
-    populated.layer_stroke_scale.insert("roads".into(), 1.5);
-    store::os_store::test_support::assert_dsl_round_trip(&populated);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
+    populated.layer_visibility.cold_insert("water".into(), false);
+    populated.layer_stroke_scale.cold_insert("roads".into(), 1.5);
+    semio_os_store_test_support::assert_dsl_round_trip(&populated);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&populated);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -74,10 +74,10 @@ async fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis2d_config_operation_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: Some(false) }));
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetRenderMode(SetRenderMode { value: "vector".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetVectorStyle(SetVectorStyle { value: "figureGround".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLodMode(SetLodMode { value: "automatic".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(1.5) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: Some(false) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetRenderMode(SetRenderMode { value: "vector".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetVectorStyle(SetVectorStyle { value: "figureGround".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLodMode(SetLodMode { value: "automatic".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&MapWindowConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(1.5) }));
 }

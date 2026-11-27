@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// does not yet wire live, not a second registration of the artifact/schema/io itself.
 pub fn plugin() -> Result<Plugin<RemodelApps>, PluginAssemblyError> {
     PluginBuilder::<_, RemodelApps>::new("remodel")
-        .label("Remodel")
+        .label(semio_plugin::LocalizedLabel::native("Remodel", "Umbau"))
         .version("0.1.0")
         .package_id("semio:remodel")
         .declare_artifact(crate::artifacts::remodeling::artifact())

@@ -9,9 +9,11 @@ import {packRunV1} from "./📦️run-wire/🟦️.ts";
 import {casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {readCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 import {compilerReleaseV1,localKeyV1,portableRootsV1,portableTextV1,slotIdV1,toolRootsV1,type PortableRootV1} from "../🛰️fleet/🪪️identity/🟦️.ts";
-import {awaitFleetSettlesV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,shareFleetUnitV1,unsharedReasonV1,type FleetHoldV1,type FleetUnitV1} from "../🛰️fleet/🟦️.ts";
+import {awaitFleetSettlesV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,shareFleetUnitAwaitingV1,unsharedReasonV1,type FleetHoldV1,type FleetUnitV1} from "../🛰️fleet/🟦️.ts";
 import {countFallbackV1,countSkipV1,skipNameV1} from "../🛰️fleet/📊️counters/🟦️.ts";
-import {acquireLightSlotV1,acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
+import {SlotWaitTimeoutV1,acquireLightSlotV1,acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
+import {laneMessageV1} from "../🚪️launch/🟦️.ts";
+import {whileClaimParkedV1} from "../⏳️admit/🟦️.ts";
 import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,publishBuildRunV1,recordLookupV1,restoreBuildRunV1,type UnitEventV1} from "../💾️store/🟦️.ts";
 import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverProbeShellV1,jobserverStdioV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {isMainModuleV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
@@ -107,7 +109,7 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
    else{hold=decision.hold;if(decision.reason!=="granted")countFallbackV1(root,"run-"+decision.reason);}
   }
   lookup("miss");
-  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,cwd,root,lane,crate,key,outDir,stampDirectory,event:(kind,key,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),capture:held=>runReal(real,args,held?slotHeldEnvironmentV1(environment):environment,cwd,true)});
+  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,cwd,root,lane,crate,key,outDir,stampDirectory,hold,event:(kind,key,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),capture:held=>runReal(real,args,held?slotHeldEnvironmentV1(environment):environment,cwd,true)});
   if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
   event("script-miss",key,Date.now()-compiled,waited);
   let entry:ReturnType<typeof publishBuildRunV1>;
@@ -122,7 +124,7 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
 }
 
 /** ☁️ Produces the outcome of one build script run on a fleet miss, after the fleet claim: on an idle machine of the fleet when the script is hermetic (`offloadBuildScriptRunV1`, in `distribute` mode, same cancellation and timeouts as every command offload), its streams replayed here exactly as a local run prints them; otherwise, or on any fault, by running the real executable here with the reason recorded. */
-async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;event:(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs?:number,reason?:string)=>void;capture:(slotHeld:boolean)=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
+async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;hold?:FleetHoldV1|undefined;event:(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs?:number,reason?:string)=>void;capture:(slotHeld:boolean)=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
  const waiting=(waited:number)=>input.event("slot-wait",null,0,waited),light=Number(input.environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS??0),slots=Number(input.environment.SEMIO_UNIT_CACHE_SLOTS??0);
  const controller=new AbortController();let received:number|undefined;
  const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
@@ -131,7 +133,7 @@ async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;arg
   if(input.digest!==null){
    let hold:ClaimV1|undefined;
    try{
-    hold=light>0?await acquireLightSlotV1(input.root,light,{signal:controller.signal,onWait:waiting}):undefined;
+    hold=light>0?await acquireLightSlotV1(input.root,light,{signal:controller.signal,maximumWaitMilliseconds:policy.slot.lightMaximumWaitMilliseconds,onWait:waiting}):undefined;
     const {offloadBuildScriptRunV1}=await import("./☁️offload/🟦️.ts"),answer=await offloadBuildScriptRunV1({real:input.real,args:input.args,environment:input.environment,cwd:input.cwd,root:input.root,lane:input.lane,crate:input.crate,key:input.key,outDir:input.outDir,signal:controller.signal,digest:path=>digestFileV1(path,input.stampDirectory)});
     if(answer.kind==="done"){process.stdout.write(answer.stdout);process.stderr.write(answer.stderr);return{status:0,stdout:answer.stdout,stderr:answer.stderr};}
    }catch{}
@@ -139,7 +141,13 @@ async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;arg
   }
   if(received!==undefined)return cancelled()!;
   let local:ClaimV1|undefined;
-  try{local=slots>0?await acquireSlotV1(input.root,slots,{signal:controller.signal,onWait:waiting}):undefined;}catch(error){if(received!==undefined)return cancelled()!;throw error;}
+  try{local=slots>0?(await whileClaimParkedV1(input.hold,policy.slot.parkAfterMilliseconds,()=>acquireSlotV1(input.root,slots,{signal:controller.signal,maximumWaitMilliseconds:policy.slot.maximumWaitMilliseconds,onWait:waiting}))).value:undefined;}
+  catch(error){
+   if(received!==undefined)return cancelled()!;
+   if(!(error instanceof SlotWaitTimeoutV1))throw error;
+   process.stderr.write((["en","de"] as const).map(language=>laneMessageV1("slotTimeout",{crate:input.crate,seconds:Math.round(error.waitedMs/1000),bound:Math.round(policy.slot.maximumWaitMilliseconds/1000)},language)).join(" / ")+"\n");
+   input.event("slot-wait",null,0,error.waitedMs,"timeout: the build script runs without the slot");
+  }
   try{return received!==undefined?cancelled()!:await input.capture(local!==undefined);}finally{local?.release();}
  }finally{for(const [name,handler] of handlers)process.off(name,handler);}
 }
@@ -152,7 +160,7 @@ async function shareRunV1(fleet:FleetUnitV1,input:Readonly<{entry:ReturnType<typ
  if(typeof packed==="string"){
   input.event("remote-skip",input.key,0,0,packed.startsWith("path-dependent")?packed:"run: "+packed);countSkipV1(workspace,"run-"+skipNameV1(packed));await hold?.release();return;
  }
- if(!shareFleetUnitV1(fleet,{claimed:hold,costMs:input.costMs})){countSkipV1(workspace,unsharedReasonV1(fleet));await hold?.release();}
+ if(!await shareFleetUnitAwaitingV1(fleet,{claimed:hold,costMs:input.costMs})){countSkipV1(workspace,unsharedReasonV1(fleet));await hold?.release();}
 }
 
 /** 🏁️ What the stand-in runs: the real executable is the first argument, the arguments Cargo passed follow. Resolves to the exit status. */

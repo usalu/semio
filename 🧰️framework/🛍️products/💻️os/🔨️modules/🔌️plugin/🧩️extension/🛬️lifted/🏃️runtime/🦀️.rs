@@ -10,6 +10,7 @@ use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue};
 use semio_framework::{ExecutionMode, Fault, FaultCode, FaultFrom, FaultOrigin, TopicContribution};
 use semio_plugin_plugin_program::{Plugin, PluginProgram};
 use semio_plugin_reactor_app::PluginApp;
+pub use semio_ui_locale::LocalizedLabel;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use std::cell::RefCell;
@@ -86,7 +87,8 @@ mod foreign_kernel_value_bridge {
 pub struct ExtensionManifest {
     pub package_id: String,
     pub extension_id: String,
-    pub label: String,
+    /// 🏷️ The extension name in every terminology and locale — no default language.
+    pub label: LocalizedLabel,
     pub version: String,
     pub extends: String,
     #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
@@ -120,13 +122,13 @@ impl ExtensionBundle {
     /// `depends_on`/`extends`/`assert_extends_matches_primary_dependency` below (their only
     /// sync-closure `catch_unwind` test consumers are language-barred from async). `contributes`
     /// stays genuinely async — real registry I/O, not touched.
-    pub fn new(extension_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
+    pub fn new(extension_id: impl Into<String>, label: LocalizedLabel, version: impl Into<String>) -> Self {
         let extension_id = extension_id.into();
         Self {
             manifest: std::mem::ManuallyDrop::new(ExtensionManifest {
                 package_id: format!("semio:{extension_id}"),
                 extension_id,
-                label: label.into(),
+                label,
                 version: version.into(),
                 extends: String::new(),
                 capabilities: Vec::new(),

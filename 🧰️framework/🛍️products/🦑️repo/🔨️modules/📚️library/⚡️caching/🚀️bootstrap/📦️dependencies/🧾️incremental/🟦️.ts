@@ -143,9 +143,25 @@ export async function replayExecutionObservationsV1(observations:readonly Execut
 /** 🧩️ Is one scope of a sealed synchronization: its generation, the sha of its generation receipt and the sha of its installed-paths receipt. */
 export interface SyncScopeV1{readonly scope:string;readonly generation:string;readonly read:string;readonly installed:string}
 /** 🏁️ Is the sealed claim that a complete synchronization of every scope ended in exactly these verified states. */
-export interface SyncReceiptV1{readonly version:1;readonly purpose:"dependency-sync-receipt";readonly selection:"all";readonly runtimeSha256:string;readonly scopes:readonly SyncScopeV1[];readonly sha256:string}
+export interface SyncReceiptV1{readonly version:1;readonly purpose:"dependency-sync-receipt";readonly selection:"all"|"scopes";readonly runtimeSha256:string;readonly scopes:readonly SyncScopeV1[];readonly sha256:string}
 /** 📡️ Seals a synchronization receipt with its scopes in byte order. */
 export const sealSyncReceiptV1=(body:Omit<SyncReceiptV1,"sha256">):SyncReceiptV1=>seal({...body,scopes:[...body.scopes].sort((left,right)=>compareBytes(left.scope,right.scope))});
+/** 🧭️ What a command asks of the sealed synchronization: every owner of the workspace (`all`), a named subset (`scopes`), or whatever this machine holds (`recorded`, the selection-free `ensure`). */
+export type SyncRequestV1=Readonly<{kind:"all"}>|Readonly<{kind:"scopes";owners:readonly string[]}>|Readonly<{kind:"recorded"}>;
+/** 🧮️ The scope rows a request needs verified, `"incomplete"` when the receipt cannot answer it: `all` needs a receipt that sealed the complete roster, `scopes` needs every named owner among the rows, `recorded` takes the rows the machine holds. A pure law.
+ * @see ./🧪️tests/🐍️.py */
+export function syncRequestRowsV1(receipt:SyncReceiptV1,request:SyncRequestV1):readonly SyncScopeV1[]|"incomplete"{
+ if(request.kind==="recorded")return receipt.scopes;
+ if(request.kind==="all")return receipt.selection==="all"?receipt.scopes:"incomplete";
+ const rows=request.owners.map(owner=>receipt.scopes.find(row=>row.scope===owner));
+ return rows.every(row=>row!==undefined)?rows as SyncScopeV1[]:"incomplete";
+}
+/** 🔀️ The state after a synchronization of some owners: the new rows replace the old rows of the same owners, every other row stays, and the roster is `all` when this run covered the complete roster or the receipt it extends was `all` already. A pure law.
+ * @see ./🧪️tests/🐍️.py */
+export function mergeSyncScopesV1(previous:Pick<SyncReceiptV1,"selection"|"scopes">|undefined,rows:readonly SyncScopeV1[],complete:boolean):Readonly<{selection:"all"|"scopes";scopes:readonly SyncScopeV1[]}>{
+ const fresh=new Set(rows.map(row=>row.scope)),kept=(previous?.scopes??[]).filter(row=>!fresh.has(row.scope));
+ return Object.freeze({selection:complete||previous?.selection==="all"?"all" as const:"scopes" as const,scopes:Object.freeze([...kept,...rows].sort((left,right)=>compareBytes(left.scope,right.scope)))});
+}
 /** 🔄️ Admits only a schema-valid, correctly sealed synchronization receipt with distinct scopes. */
 export function parseSyncReceiptV1(bytes:Uint8Array):SyncReceiptV1{
  const value=parseSealed<SyncReceiptV1>(bytes,protocol.sync.maximumReceiptBytes,syncSchema,"synchronization receipt");

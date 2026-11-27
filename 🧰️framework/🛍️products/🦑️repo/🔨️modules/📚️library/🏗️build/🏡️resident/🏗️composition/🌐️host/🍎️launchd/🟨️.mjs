@@ -11,7 +11,7 @@ export const SERVICE_LABEL_PREFIX_V1="tech.semio.repo.service.";
 const escapeXml=text=>String(text).replace(/&/gu,"&amp;").replace(/</gu,"&lt;").replace(/>/gu,"&gt;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/gu,"");
 const string=value=>"<string>"+escapeXml(value)+"</string>";
 const ALLOWED_NAMES_V1=Object.freeze(["HOME","PATH","LANG","LANGUAGE","LC_ALL","LC_CTYPE","LC_MESSAGES","TMPDIR","USER","LOGNAME","SHELL","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_STATE_HOME","XDG_CONFIG_HOME","XDG_RUNTIME_DIR","BUN_JSC_forceRAMSize"]);
-const SECRET_NAME_V1=/TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|COOKIE|EMAIL|SESSION|UUID|KEY|AUTH|INVOCATION/iu;
+const SECRET_NAME_V1=/TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|COOKIE|EMAIL|SESSION|UUID|KEY|AUTH|INVOCATION|PROCESS_OWNER/iu;
 
 /** 🧹️ The environment a persistent job may carry: an allow-list (`HOME`, `PATH`, the locale, `TMPDIR`, the XDG folders, the memory bound of the runtime) and the `SEMIO_*` variables whose names do not look like a secret or a session; never the rest of the environment of the process that asked for the start (agent sessions, tokens, mail addresses). */
 export function allowedEnvironmentV1(environment){

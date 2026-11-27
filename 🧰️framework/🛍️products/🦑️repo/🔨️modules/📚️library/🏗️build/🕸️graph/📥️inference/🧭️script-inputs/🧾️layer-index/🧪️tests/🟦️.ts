@@ -129,3 +129,19 @@ test("row offsets belong to the dictionary generation in which they were issued"
   expect(original!.rowSync(original!.ids[0]!)).toBeUndefined();
  }finally{oracle.close();rmSync(directory,{recursive:true,force:true});}
 });
+
+/** 🧪️ The descriptor this process keeps open for reads is closed by `release`, so no file of the image stays open between operations. */
+test("release closes the dictionary descriptor: a listing handed out before answers nothing, the next read opens it again",()=>{
+ const directory=root();
+ try{
+  const layer=rows(20,0),index=createLayerIndexV1({directory});
+  index.indexSync(digest("a"),layer);
+  const listing=index.listingSync(digest("a"))!;
+  expect(listing.rowSync(listing.ids[0]!)).toEqual(layer[0]);
+  index.release();
+  expect(listing.rowSync(listing.ids[0]!)).toBeUndefined();
+  const again=index.listingSync(digest("a"))!;
+  expect(again.rowSync(again.ids[0]!)).toEqual(layer[0]);
+  index.release();index.release();
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});

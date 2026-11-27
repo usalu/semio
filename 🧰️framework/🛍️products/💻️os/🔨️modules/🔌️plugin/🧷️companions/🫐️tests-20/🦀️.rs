@@ -4,6 +4,7 @@
 #![cfg(test)]
 
 pub use semio_plugin_retained_command::*;
+pub use semio_plugin_retained_command_operation::typed_operation;
 
 #[path = "../../🧵️retained-command/🧪️tests/🔬️unit/🦀️.rs"]
 mod unit;

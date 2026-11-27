@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 import {isDiskFullV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
 import {refuseLowSpaceV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/💽️disk/🟦️.ts";
 import {casHostAreasV1} from "../📂️areas/🟦️.ts";
-import {collectCasV1,readCasUsageHintV1,type CasAreaSourceV1,type CasCollectionV1,type CasUsageHintV1} from "../🧹️collector/🟦️.ts";
+import {collectCasV1,readCasUsageHintV1,recordCasMeasurementV1,type CasAreaSourceV1,type CasCollectionV1,type CasUsageHintV1} from "../🧹️collector/🟦️.ts";
 import {casPartitionNeedBytesV1,casPartitionPolicyForV1,casReserveBytesV1,casPartitionUsedFractionV1,decideCasEnforcementV1,measureCasPartitionV1,type CasEnforcementDecisionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 import {stampCasTransientsV1} from "../📌️pins/🟦️.ts";
@@ -246,7 +246,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   },
   async settle(){await state.criticalBackground;await state.background;await state.direct?.task;await state.running?.task;await state.measuring;},
   account(bytes){state.admitted+=bytes;},
-  async remeasure(signal){const measured=await usage(root);signal?.throwIfAborted();state.base=measured;state.admitted=0;state.hintAt=now();state.checkedAt=now();},
+  async remeasure(signal){const measured=await usage(root);signal?.throwIfAborted();state.base=measured;state.admitted=0;state.hintAt=now();state.checkedAt=now();await recordCasMeasurementV1(root,measured,now());},
   relieve(error){if(isDiskFullV1(error))void direct();},
   enforce:direct,
   async sweep(signal,stepBytes=policy.sweepStepBytes){
@@ -261,14 +261,17 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
 /** ⏱️ One tick of the service that keeps the host store inside its cap and its partition inside its watermarks: while the partition's free space is below the hard reserve it sweeps first, without a step bound and without the collection lock (the unreferenced pass never touches a held, pinned, leased or linked object), so a release build's writes never outrun it; it then measures the store itself only when no sweep left a usage hint within two sweep periods (a walk of the store is the most expensive read there is), then judges like a write of no bytes, so it collects (down to the low watermarks) only when the partition or the store is above its high watermark, measures a store without a usage hint, waits for what it started and honours the cancellation of the service. A partition that stays at its critical share after the collection raises the typed low-space refusal, which the service logs. Independent of every watermark it then sweeps (`guard.sweep`, every `sweepEveryMs`, at once again while a step freed its full `sweepStepBytes`): objects nobody references and expired transient inputs, older than the in-flight grace, go in bounded steps, never a held, pinned, leased or linked entry. */
 export async function casEnforceTickV1(options:Readonly<{root:string;policy?:CasPolicyV1;signal?:AbortSignal;sweep?:boolean}&CasGuardPortsV1>):Promise<void>{
  const guard=createCasGuardV1(options),measure=():CasPartitionV1|undefined=>(options.partition??measureCasPartitionV1)(options.root);
+ {
+  const early=options.usage===undefined?await readCasUsageHintV1(options.root):undefined,at=(options.now??Date.now)(),policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1);
+  if(early===undefined||at<early.atMs||at-early.atMs>policy.sweepEveryMs*2)await guard.remeasure(options.signal);
+ }
  let partition=measure();
  if(options.relieve!==undefined&&partition!==undefined){
   const full=requireCasPolicyV1(options.policy??CAS_POLICY_V1),target=Math.ceil(casReserveBytesV1(full,partition)*full.volumeReliefReserveFactor);
   if(partition.freeBytes<target){await options.relieve({root:options.root,targetFreeBytes:target,freeBytes:partition.freeBytes,...options.signal===undefined?{}:{signal:options.signal}}).catch(error=>{if(options.signal?.aborted)throw error;});partition=measure();}
  }
  if(options.sweep!==false&&partition!==undefined&&partition.freeBytes<casReserveBytesV1(requireCasPolicyV1(options.policy??CAS_POLICY_V1),partition)){await guard.sweep(options.signal,Number.POSITIVE_INFINITY);sweepState.set(options.root,{atMs:(options.now??Date.now)(),more:false});}
- const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),at=(options.now??Date.now)(),last=sweptAt.get(options.root),hint=options.usage===undefined?await readCasUsageHintV1(options.root):undefined;
- if(hint===undefined||at<hint.atMs||at-hint.atMs>policy.sweepEveryMs*2)await guard.remeasure(options.signal);
+ const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),at=(options.now??Date.now)(),last=sweptAt.get(options.root);
  await guard.admit(0,options.signal);await guard.settle();
  if((last===undefined||at<last||at-last>=policy.transientLeaseMs)&&await stampCasTransientsV1(options.root)!==""){sweptAt.set(options.root,at);await guard.enforce(options.signal);await guard.settle();}
  const swept=sweepState.get(options.root);

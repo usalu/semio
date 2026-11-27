@@ -13,7 +13,7 @@ const HOST_APP_ID: &str = "sourcing-curation";
 // bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 pub fn bundle() -> ExtensionBundle {
     let module = SlabsModule;
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Slabs", env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());
+    let bundle = ExtensionBundle::new(EXTENSION_ID, semio_plugin::LocalizedLabel::native("Sourcing Module Slabs", "Beschaffungsmodul Platten"), env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());
     let bundle = bundle.mode(ExecutionMode::Declarative);
     bundle.contributes_topic(
         "sourcing.module",

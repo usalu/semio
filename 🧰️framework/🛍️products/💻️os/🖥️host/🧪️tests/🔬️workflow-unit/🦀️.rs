@@ -400,7 +400,7 @@ mod tests {
             assert_eq!(deliveries, witness.expected_deliveries, "{}", witness.name);
             let mut document = resolve_kernel_future(empty_workflow_snapshot());
             document.graph = witness.graph;
-            store::test_support::assert_dsl_pack_equivalence(&document);
+            semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
         }
     }
     //#endregion 🔖️WorkflowPlanner

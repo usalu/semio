@@ -34,7 +34,6 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
 
     /// 📮️ Whether the mailbox still owes the runtime an apply — the per-frame predicate that turns a
     /// queued `DispatchEvents`/`Resize` into the next `request_frame` on an event-driven shell.
-    #[cfg(target_arch = "wasm32")]
     pub fn has_pending_applies(&self) -> bool {
         !self.0.completions.lock().expect("runtime completion mailbox lock").ready.is_empty()
     }

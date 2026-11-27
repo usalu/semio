@@ -1,0 +1,18 @@
+{"live":166,"rss":295,"stepMs":244}
+{"live":269,"rss":563,"stepMs":245}
+{"live":574,"rss":838,"stepMs":244}
+{"live":884,"rss":1114,"stepMs":326}
+{"live":902,"rss":1383,"stepMs":299}
+{"live":1162,"rss":1665,"stepMs":318}
+{"live":1469,"rss":1935,"stepMs":366}
+{"live":1469,"rss":2213,"stepMs":310}
+{"live":1878,"rss":2491,"stepMs":323}
+{"live":1878,"rss":2760,"stepMs":227}
+{"live":2424,"rss":3029,"stepMs":541}
+{"live":2424,"rss":3294,"stepMs":236}
+{"live":2424,"rss":3559,"stepMs":224}
+{"live":3099,"rss":3832,"stepMs":234}
+{"live":3099,"rss":4095,"stepMs":226}
+{"live":3099,"rss":4364,"stepMs":1309}
+CAP
+DONE 16

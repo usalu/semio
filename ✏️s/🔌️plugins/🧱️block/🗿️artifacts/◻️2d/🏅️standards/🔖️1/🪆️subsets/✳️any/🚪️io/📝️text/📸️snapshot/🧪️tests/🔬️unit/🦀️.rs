@@ -43,17 +43,17 @@ pub fn hexagonal_cut_concrete_forest_left() -> Block2dSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn block2d_definition_dsl_round_trips() {
     let empty = Block2dSnapshot::default();
-    store::os_store::test_support::assert_dsl_round_trip(&empty);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_store_test_support::assert_dsl_round_trip(&empty);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty);
     let definition = hexagonal_cut_concrete_forest_left();
-    store::os_store::test_support::assert_dsl_round_trip(&definition);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&definition);
+    semio_os_store_test_support::assert_dsl_round_trip(&definition);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&definition);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block2d_example_fixtures_parse_and_round_trip_as_dsl() {
     for dsl_text in [BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT] {
         let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-        store::os_store::test_support::assert_dsl_round_trip(&definition);
+        semio_os_store_test_support::assert_dsl_round_trip(&definition);
     }
 }

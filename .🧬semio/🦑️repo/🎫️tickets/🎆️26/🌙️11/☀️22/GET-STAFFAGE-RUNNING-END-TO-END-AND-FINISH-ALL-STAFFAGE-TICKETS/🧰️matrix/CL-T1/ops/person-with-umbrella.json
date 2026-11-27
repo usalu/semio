@@ -1,0 +1,418 @@
+[
+ {
+  "set": "rig.bones[pleat-front-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-l-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-l-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-l-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-l-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-l-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-l-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-l-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-l-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-l-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-l-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-l-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-l-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-r-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-r-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-r-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-back-r-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-r-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-r-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-r-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-r-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-r-1].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-r-2].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-r-3].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ },
+ {
+  "set": "rig.bones[pleat-front-r-4].joint",
+  "was": {
+   "type": "fixed"
+  },
+  "value": {
+   "type": "revolute",
+   "minDeg": -180,
+   "maxDeg": 180,
+   "twistMinDeg": -180,
+   "twistMaxDeg": 180
+  }
+ }
+]

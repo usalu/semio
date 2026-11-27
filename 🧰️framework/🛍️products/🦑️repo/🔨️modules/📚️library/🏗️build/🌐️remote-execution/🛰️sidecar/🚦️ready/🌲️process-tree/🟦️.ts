@@ -161,6 +161,10 @@ export function readyStallTrackerV1(policy:typeof P=P,prior:readonly string[]=[]
  }});
 }
 
+/** 🔥️ Whether a stage whose only sign of life is processor time has had nothing else for `cpuOnlyStallMilliseconds`: a loop that burns CPU and decides nothing is a stall, however busy the tree looks.
+ * @see ./🧪️tests/🔥️cpu-only */
+export function readyCpuOnlyStalledV1(cpuSince:number|undefined,nowMs:number,policy:typeof P=P):boolean{return cpuSince!==undefined&&nowMs-cpuSince>=policy.cpuOnlyStallMilliseconds;}
+
 /** 🛑️ Whether a stage whose output showed nothing new for `sinceProgressMs` is stopped to be tried again: at `stallStopMilliseconds` and later. A pure function.
  * @see ./🧪️tests/🐍️.py */
 export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P,exempt:boolean=false):boolean{return!exempt&&sinceProgressMs>=policy.stallStopMilliseconds;}
@@ -168,6 +172,14 @@ export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P,exempt:b
 /** 🧊️ Whether the host warden holds a process of the stage tree suspended: a suspended process cannot show anything new, so the stall window does not run while the warden holds one (the warden bounds the hold itself: it resumes or cancels after `suspendMaximumSeconds`). A pure function.
  * @see ./🧪️tests/🧊️warden-hold */
 export function readyWardenHoldsV1(mirror:Readonly<{absent?:true;suspended?:readonly Readonly<{pid:number}>[]}>,tree:ReadonlySet<number>):boolean{return mirror.absent!==true&&(mirror.suspended??[]).some(row=>tree.has(row.pid));}
+
+/** 🧯️ The newest cancel record the host warden wrote for the stage process itself (`pid`, the wrapper that owns the stage tree), `undefined` when it cancelled none: only then is a SIGTERM of the stage the warden's and not a crash or a person's. A pure function.
+ * @see ./🧪️tests/🧯️warden-cancel */
+export function readyWardenCancelOfStageV1<Row extends Readonly<{pid:number;atMs:number}>>(cancels:readonly Row[],pid:number):Row|undefined{
+ let newest:Row|undefined;
+ for(const record of cancels)if(record.pid===pid&&(newest===undefined||record.atMs>newest.atMs))newest=record;
+ return newest;
+}
 
 /** 🔐️ Whether the read of the stage is queued for the storage mapping: its own fresh slice report (younger than `grantWaitFreshMilliseconds`) lists a waiter of the mapping queue (`presence.mappingQueue.waiting`) whose current wait is shorter than `grantWaitMaximumMilliseconds`. With the shared grant never queued behind long exclusive work a wait lasts seconds, so this is only a bounded safety: the stall window does not run while a short wait is pending, and a wait past the maximum is a wedge the stall rule ends. A pure function.
  * @see ./🧪️tests/🔐️grant-wait */
@@ -183,6 +195,15 @@ export function readyGrantWaitV1(report:unknown,nowMs:number,policy:typeof P=P):
 export function readySliceSilentV1(report:unknown,nowMs:number,startedMs:number,policy:typeof P=P):boolean{
  const row=report as {atMs?:unknown;reason?:unknown}|null|undefined;
  return typeof row?.atMs==="number"&&row.atMs>=startedMs&&row.reason!=="end"&&nowMs-row.atMs>=policy.sliceSilentMilliseconds;
+}
+
+/** 🚶️ The progress signature of a fresh slice report of this attempt: the phase of the read with its done and total counts, the owners the ledger decided or runs, and the owners taken or finished; `null` for a report of an earlier attempt, a finished read, one without a clock or a malformed one. A change of the signature between two looks is progress of the read although the stage log repeats its last line (a planner of 440 owners that takes 15 minutes on a swapping 16 GB machine still counts `taken 559 of 616` in its own report); the processor time of the worker and the clock are never part of it, so a loop that spins without deciding anything is no progress. A pure function.
+ * @see ./🧪️tests/🚶️slice-moved */
+export function readySliceMovedSignatureV1(report:unknown,startedMs:number):string|null{
+ const row=report as {atMs?:unknown;reason?:unknown;phase?:{name?:unknown;done?:unknown;total?:unknown};sources?:{owners?:{ledger?:{done?:unknown;running?:unknown;total?:unknown};finished?:unknown;taken?:unknown}}}|null|undefined;
+ if(typeof row?.atMs!=="number"||row.atMs<startedMs||row.reason==="end")return null;
+ const owners=row.sources?.owners,ledger=owners?.ledger;
+ return JSON.stringify([row.phase?.name,row.phase?.done,row.phase?.total,ledger?.done,ledger?.running,ledger?.total,owners?.finished,owners?.taken]);
 }
 
 /** 🌱️ The graph counter tracker of one stage run: `observe` answers whether the newest counter of `graphCounterPatterns` (`taken 461 of 600`) is above the highest one seen, so a read whose text repeats after normalisation but whose server counter advanced is progress; a counter that repeats or falls back is none. A pure function of the lines seen so far.

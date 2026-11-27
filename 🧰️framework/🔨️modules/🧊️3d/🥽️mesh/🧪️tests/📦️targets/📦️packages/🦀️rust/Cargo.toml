@@ -21,6 +21,7 @@ maxActiveLines = 4000
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-3d = { path = "../../../../../📦️packages/🦀️rust", features = ["mesh-test-observation"] }
 semio-framework-3d-mesh-reconstruction = { path = "../../../../🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust" }
 semio-framework-3d-mesh-quality = { path = "../../../../🔎️quality/📦️packages/🦀️rust" }

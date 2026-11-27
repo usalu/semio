@@ -243,8 +243,8 @@
     },
     "domainPackages": {
       "type": "array",
-      "minItems": 318,
-      "maxItems": 318,
+      "minItems": 319,
+      "maxItems": 319,
       "items": {
         "type": "object",
         "additionalProperties": false,

@@ -58,11 +58,15 @@ await page.addInitScript(() => {
 page.setDefaultNavigationTimeout(180_000);
 const downloads: Download[] = [];
 const faults: string[] = [];
+const sealedRefusals: string[] = [];
+const reopenLoop = Number(process.env.REOPEN_LOOP ?? 0);
+let lastSaved: {text: string | null; path: string} | null = null;
 const picker: {next: Uint8Array | null; name: string} = {next: null, name: ""};
 page.on("download", d => downloads.push(d));
 page.on("pageerror", e => faults.push("pageerror: " + e.message.slice(0, 300)));
-page.on("console", m => { const t = m.text(); if (/unreachable|trapped|panicked|Uncaught|dispatch-failed|refused:/i.test(t)) faults.push(`${m.type()}: ${t.slice(0, 300)}`); });
-page.on("filechooser", (c: FileChooser) => { const bytes = picker.next; picker.next = null; void c.setFiles(bytes === null ? [] : [{name: picker.name, mimeType: "application/octet-stream", buffer: Buffer.from(bytes)}]); });
+page.on("console", m => { const t = m.text(); if (t.includes("[DEBUG]")) { console.log("[browser] " + t.slice(0, 400)); return; } if (/instance-(?:sealed|retired)\b/.test(t)) { sealedRefusals.push(t.slice(0, 300)); return; } if (/unreachable|trapped|panicked|Uncaught|dispatch-failed|refused:/i.test(t)) faults.push(`${m.type()}: ${t.slice(0, 300)}`); });
+let chooserEvents = 0;
+page.on("filechooser", (c: FileChooser) => { chooserEvents += 1; const bytes = picker.next; picker.next = null; void c.setFiles(bytes === null ? [] : [{name: picker.name, mimeType: "application/octet-stream", buffer: Buffer.from(bytes)}]); });
 
 const notices = () => page.evaluate(() => (window as unknown as {__notices: string[]}).__notices ?? []);
 const spawned = () => page.evaluate(() => (window as unknown as {__semioOsCatalogProbe?: {spawned: {id: string; pluginId: string; appId: string}[]}}).__semioOsCatalogProbe?.spawned ?? []);
@@ -106,7 +110,9 @@ async function openViaPicker(bytes: Uint8Array, name: string, editorAppId = "s.s
   const before = await windowIds(page), seen = (await notices()).length;
   picker.next = bytes; picker.name = name;
   await clickUncovered(page, '[data-slot="window-action-pane"] [id="action.openArtifactFile"]');
+  const choosersBefore = chooserEvents;
   const result = await settleOpen(before, seen);
+  if (result.opened.length === 0) console.log(`[journey ${locale}] DIAG picker open ${name}: choosers=${chooserEvents - choosersBefore} bootstrap=${JSON.stringify(bootstrap)} rail=${JSON.stringify((await readShell(page)).actions.filter(id => /open|save/i.test(id)))} windows=${JSON.stringify((await windowIds(page)).slice(0, 8))}`);
   if (bootstrap.length > 0) await closeWindows(bootstrap);
   return result;
 }
@@ -152,7 +158,8 @@ try {
 
   for (const dialect of ["transitional", "strict"] as Dialect[]) {
     for (const via of ["picker", "drop"] as const) {
-      const tag = `${dialect}-${via}`, name = `Quarterly-Budget-${dialect}-${via}.xlsx`, marker = dialect === "strict" ? "ID" : `Original ${dialect} ${via}`, edited = `Edited ${dialect} ${via} ${locale}`;
+      for (let rep = 0; rep < (reopenLoop === 0 ? 1 : dialect === "strict" && via === "drop" ? reopenLoop : 0); rep += 1) {
+      const tag = `${dialect}-${via}${reopenLoop > 0 ? `#${rep}` : ""}`, name = `Quarterly-Budget-${dialect}-${via}.xlsx`, marker = dialect === "strict" ? "ID" : `Original ${dialect} ${via}`, edited = `Edited ${dialect} ${via} ${locale}`;
       const {opened, notes} = await (via === "picker" ? openViaPicker(dialectWorkbook(dialect, marker), name, `s.stdio.xlsx@ecma-376/${dialect}#editor`) : openViaDrop(dialectWorkbook(dialect, marker), name));
       const wanted = `s.stdio.xlsx@ecma-376/${dialect}#editor`;
       const owner = (await spawned()).filter(s => s.appId === wanted);
@@ -177,6 +184,7 @@ try {
         const path = join(out, `saved-${tag}.xlsx`);
         await dl.saveAs(path);
         const wb = await readXlsx(page, new Uint8Array(await Bun.file(path).arrayBuffer()), "A1");
+        lastSaved = {text: wb.text ?? null, path};
         record(`${tag}:save-name`, dl.suggestedFilename() === name, `suggested=${dl.suggestedFilename()} expected=${name}`);
         record(`${tag}:save-content`, wb.valid === true && wb.text === edited, `valid=${wb.valid} A1=${JSON.stringify(wb.text)} notes=${JSON.stringify(saveNotes.slice(0, 2))}`);
       } else record(`${tag}:save-name`, false, `no download; notes=${JSON.stringify(saveNotes.slice(0, 3))}`);
@@ -186,18 +194,25 @@ try {
       const button = page.locator(`[data-semio-local-document-id=${JSON.stringify(kept)}]`).first();
       await button.waitFor({state: "visible", timeout: 120_000}).catch(() => undefined);
       const before = await windowIds(page), seenReopen = (await notices()).length;
-      await button.click().catch(() => undefined);
+      let clickError = "";
+      await button.click({timeout: 15_000}).catch((error: unknown) => { clickError = String(error).slice(0, 300); });
       const reopened = await waitFor("reopen", 120_000, async () => { const w = (await windowIds(page)).filter(id => !before.includes(id)); const n = (await notices()).slice(seenReopen); return w.length > 0 && n.some(x => x.startsWith("shell.documentTransfer.file-opened|")) ? w : null; });
       await page.waitForTimeout(2000);
       const after = await waitFor("a1-reopen", 60_000, async () => (await cellValue()) === edited ? true : null);
+      if (reopenLoop > 0 && !(reopened && after)) console.log(`[journey ${locale}] REPRO ${tag}: clickError=${JSON.stringify(clickError)} notices=${JSON.stringify((await notices()).slice(seenReopen))} listCount=${await page.locator("[data-semio-local-document-id]").count()} targetCount=${await button.count()} kept=${kept} savedA1=${JSON.stringify(lastSaved?.text)} savedFile=${lastSaved?.path}`);
       record(`${tag}:reopen`, !!reopened && !!after, `windows=${reopened?.length ?? 0} A1=${JSON.stringify(await cellValue())} expected=${JSON.stringify(edited)}`);
       await shot(`${tag}-reopened`);
       if (reopened) await closeWindows(reopened);
+      }
     }
   }
 
+  if (reopenLoop > 0) { writeFileSync(join(out, "verdicts.json"), JSON.stringify({locale, serve, verdicts}, null, 1)); await browser.close(); process.exit(verdicts.every(v => v.status === "pass") ? 0 : 1); }
+
   for (const [label, bytes, fname, reason] of [["foreign-docx", foreignDocx, "Foreign-Document.xlsx", "content-mismatch"], ["not-a-zip", notZip, "Broken.xlsx", "content-mismatch"], ["unknown-extension", notZip, "mystery.zzz", "unresolved"]] as const) {
     for (const via of ["picker", "drop"] as const) {
+      await page.evaluate(() => { for (const el of document.querySelectorAll("[data-semio-transient-notice]")) el.querySelector("button")?.click(); });
+      await page.waitForTimeout(500);
       const windowsBefore = await windowIds(page);
       const res = await (via === "picker" ? openViaPicker : openViaDrop)(bytes, fname);
       const windowsAfter = await windowIds(page);
@@ -211,6 +226,30 @@ try {
       void text;
     }
   }
+  const keptBefore = await page.evaluate(() => document.querySelectorAll("[data-semio-local-document-id]").length);
+  for (let index = 0; index < 30; index += 1) {
+    const seeded = await openViaDrop(workbook("transitional", `Seed ${index}`), `Seed-${locale}-${index}.xlsx`);
+    await closeWindows(seeded.opened);
+    if (index % 8 === 7) { await page.goto(serve); await awaitBeacon(page, Date.now() + 180_000); await dismissIntroduction(page); }
+  }
+  await page.goto(serve); await awaitBeacon(page, Date.now() + 180_000); await dismissIntroduction(page);
+  const crowdedName = `Crowded-${locale}.xlsx`;
+  const crowded = await openViaPicker(workbook("transitional", "Opened on a crowded device"), crowdedName);
+  const crowdedKept = await page.evaluate(() => document.querySelectorAll("[data-semio-local-document-id]").length);
+  await unfoldActionsRail(page).catch(() => undefined);
+  const rowBox = await page.evaluate(() => { const row = document.querySelector('[data-slot="window-action-pane"] [id="action.saveArtifactFile"]') as HTMLElement | null; if (!row) return null; const box = row.getBoundingClientRect(); return {top: box.top, bottom: box.bottom, viewport: innerHeight}; });
+  record("kept-many:picker-open", crowded.opened.length > 0 && crowded.notes.some(n => n.startsWith("shell.documentTransfer.file-opened|")) && rowBox !== null && rowBox.top >= 0 && rowBox.bottom <= rowBox.viewport, `kept(before)=${keptBefore} kept(after)=${crowdedKept} opened=${crowded.opened.length} notes=${JSON.stringify(crowded.notes.slice(0, 2))} saveRow=${JSON.stringify(rowBox)}`);
+  await shot("kept-many");
+  const faultsBeforeOneSession = faults.length;
+  for (let index = 0; index < 40; index += 1) {
+    const seeded = await openViaDrop(workbook("transitional", `One session ${index}`), `One-session-${locale}-${index}.xlsx`);
+    await closeWindows(seeded.opened);
+  }
+  const afterForty = await spawnEditor("s.stdio.xlsx@ecma-376/transitional#editor");
+  const capFaults = faults.splice(faultsBeforeOneSession);
+  record("kept-many:one-session", typeof afterForty !== "string" && afterForty.length > 0 && capFaults.length === 0, `spawn after 40 opens without reload: ${typeof afterForty === "string" ? afterForty : `${afterForty.length} windows`} faults=${JSON.stringify([...new Set(capFaults)].slice(0, 3))}`);
+  await shot("kept-many-one-session");
+  console.log(`[journey ${locale}] OBSERVATION sealed-instance refusals (${sealedRefusals.length}): ${JSON.stringify([...new Set(sealedRefusals)])}`);
   record("faults", faults.length === 0, JSON.stringify([...new Set(faults)].slice(0, 6)));
 } catch (error) {
   record("fatal", false, String(error).split("\n")[0]!.slice(0, 300));

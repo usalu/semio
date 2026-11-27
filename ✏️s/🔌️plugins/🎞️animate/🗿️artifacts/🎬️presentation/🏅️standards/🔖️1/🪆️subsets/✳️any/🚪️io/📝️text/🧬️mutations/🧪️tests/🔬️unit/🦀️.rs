@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{create_tile,delete_t
 
 use crate::standards::v1::subsets::any::schema::tile_grid::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{default_figure_tile_source, default_presentation_snapshot, presentation_working_scene, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
-use store::os_store::test_support;
+use semio_os_store_test_support as test_support;
 
 async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutation) -> PresentationSnapshot {
     let (forward, _messages) = vcs::apply_mutation(deck, operation).expect("valid mutation");

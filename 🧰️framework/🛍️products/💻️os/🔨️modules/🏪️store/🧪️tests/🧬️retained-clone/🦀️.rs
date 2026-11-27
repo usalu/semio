@@ -150,7 +150,13 @@ trait CursorTurns<T: RetainedClone>: RetainedCloneCursor<T> + Sized {
     }
     fn advance_funded(&mut self, source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneStep, OriginalRetirementFailure> {
         let demand = self.advance_demands(source, body, WORK).expect("retained clone advance quote");
-        self.advance(source, body, funded(grant, demand))
+        assert!(demand.depth <= grant.maximum_depth.max(1), "depth envelope {} is below the quoted minimal step {demand:?}", grant.maximum_depth);
+        let turn = funded(grant, demand);
+        let outcome = self.advance(source, body, turn);
+        if let Ok(step) = &outcome.result {
+            assert!(step.progress().fits(turn), "turn receipt {:?} exceeds its funded grant {turn:?}", step.progress());
+        }
+        outcome
     }
     fn taken(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<Option<(T, RetainedCloneProgress)>, ValueError> {
         let mut output = None;
@@ -270,7 +276,6 @@ where
         turns += 1;
         let turn = if turns == 1 { bound(grant) } else { grant };
         let step = cursor.advance_funded(source.borrow(), body, turn).result.expect("retained copy");
-        assert_progress(step.progress(), turn);
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.taken(physical_grant()).result.expect("retained take").expect("retained copy output").0;
         }
@@ -303,7 +308,6 @@ fn derived_clone_matches_clone_and_serde_oracles_with_distinct_capacity_credits(
     let output = loop {
         turns += 1;
         let step = cursor.advance_funded(retained_source.borrow(), fixture.grant.maximum_copy_bytes, grant).result.expect("retained clone step");
-        assert_progress(step.progress(), grant);
         if let RetainedCloneStep::Complete(_) = step {
             break cursor.taken(physical_grant()).result.expect("retained take").expect("completed retained clone").0;
         }
@@ -419,7 +423,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
-    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease), physical_grant());
+    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease), SOURCE_STOCK);
     let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
     cursor.advance_funded(retained_source.borrow(), 1, bound(copy_grant)).result.expect("production snapshot read alias bind");
@@ -443,7 +447,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(source(&fixture));
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production cancellation snapshot read lease");
-    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(owner, lease), physical_grant());
+    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(owner, lease), SOURCE_STOCK);
     let grant = grant(&fixture);
     let mut cursor = NeutralSnapshot::retained_clone_cursor();
     cursor.advance_funded(retained_source.borrow(), 1, grant).result.expect("production cancellation reserve");
@@ -605,10 +609,24 @@ fn recursive_depth_envelope_accepts_boundary_and_rejects_the_next_box() {
 fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
     let maximum_depth = 64usize;
     let source = recursive_record((maximum_depth - 1) / 2);
-    let mut retained_owner = retained_source(source);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: COMPOSITE_COPY_BYTES, maximum_capacity_bytes: 65_536, maximum_depth, maximum_release_bytes: 65_536 };
+    let mut probe_source = retained_source(source.clone());
+    let mut probe = RecursiveRecord::retained_clone_cursor();
+    let mut complete_turns = 0usize;
+    let started = std::time::Instant::now();
+    loop {
+        let step = probe.advance_funded(probe_source.borrow(), COMPOSITE_COPY_BYTES, grant).result.expect("recursive probe copy");
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+        complete_turns += 1;
+        if complete_turns % 100 == 0 { eprintln!("[DEBUG] recursive probe turn {complete_turns} after {:?}: {step:?} next {:?}", started.elapsed(), probe.advance_demands(probe_source.borrow(), COMPOSITE_COPY_BYTES, WORK)); }
+        assert!(complete_turns < 3_000, "recursive probe copy stalled under {grant:?}; last turn {step:?}");
+    }
+    probe.taken(physical_grant()).result.expect("recursive probe take");
+    close_cursor::<RecursiveRecord>(&mut probe);
+    close_source(&mut probe_source);
+    let mut retained_owner = retained_source(source);
     let mut cursor = RecursiveRecord::retained_clone_cursor();
-    for _ in 0..64 {
+    for _ in 0..complete_turns {
         assert!(matches!(cursor.advance_funded(retained_owner.borrow(), COMPOSITE_COPY_BYTES, grant).result.expect("recursive prefix copy"), RetainedCloneStep::Progress(_)));
     }
     assert!(cursor.began());
@@ -622,7 +640,7 @@ fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
         turns += 1;
         assert!(turns < 100_000);
     }
-    assert!(turns > maximum_depth);
+    assert!(turns > (maximum_depth - 1) / 2, "closing the partial nesting takes at least one turn per live nested owner");
     close_source(&mut retained_owner);
 }
 

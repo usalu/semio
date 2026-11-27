@@ -6,3 +6,6 @@ export function repositoryCommandKernelV1(args:readonly string[],environment:Rea
 /** 🕸️ Whether a command reads the project graph and so runs under the memory cap of a graph child: the declared kernels except the declared verbs that never load the graph.
  * @see ./🧬️schema/🔣️.json */
 export function repositoryCommandReadsGraphV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>=process.env):boolean{const{kind}=repositoryCommandKernelV1(args,environment),verb=parseBuildInvocationV1(args,environment).args[0]??"";return(schema.properties.graph.const.kinds as readonly string[]).includes(kind)&&!(schema.properties.graph.const.freeVerbs as readonly string[]).includes(verb);}
+/** 🐏️ Whether the process of a command runs under the collector cap and the allocator purge of a graph child: the commands that read the graph and the declared kernels that keep a long run alive without loading it (`capped` in the schema).
+ * @see ./🧬️schema/🔣️.json */
+export function repositoryCommandMemoryCappedV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>=process.env):boolean{return repositoryCommandReadsGraphV1(args,environment)||(schema.properties.capped.const.kinds as readonly string[]).includes(repositoryCommandKernelV1(args,environment).kind);}

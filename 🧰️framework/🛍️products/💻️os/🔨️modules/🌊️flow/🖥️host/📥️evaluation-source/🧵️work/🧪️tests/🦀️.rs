@@ -6,7 +6,7 @@ struct OriginalCaller{issuer:std::mem::ManuallyDrop<semio_framework_job::Origina
 impl OriginalCaller{
  fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:128<<20,maximum_capacity_bytes:256<<20,maximum_release_bytes:512<<20,maximum_depth:4096}}
  fn new()->Self{Self{issuer:std::mem::ManuallyDrop::new(semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(707),semio_framework_job::Generation(9),Self::stock(),||Some(1),1500,32768)),last:Default::default()}}
- fn run<T>(&mut self,grant:RetainedCloneGrant,step:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->T)->T{let mut output=None;self.issuer.turn(grant,|cx|cx.with_original_work_loan(1,1500,|cx|{output=Some(step(cx));Ok(())})).unwrap();self.last=self.issuer.receipt();assert!(self.last.fits(grant));output.unwrap()}
+ fn run<T>(&mut self,grant:RetainedCloneGrant,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->T)->T{let mut output=None;self.issuer.turn(grant,|cx|{crate::effect::quoted_loan(cx,crate::effect::quote_ceiling(),|cx|{output=Some(step(cx));Ok(())})?;Ok(())}).unwrap();self.last=self.issuer.receipt();assert!(self.last.fits(grant));output.unwrap()}
 }
 impl Drop for OriginalCaller{fn drop(&mut self){unsafe{std::mem::ManuallyDrop::take(&mut self.issuer)}.retire(Self::stock());}}
 

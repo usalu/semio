@@ -66,6 +66,8 @@ impl FlowEvalSession {
     pub fn tick_snapshot_intake_constructor_demands<Source,P:semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,Source>>(producer:&P)->Result<RetirementDemand,ValueError>{
         let mut demand=producer.source_demands()?;demand.capacity_bytes=demand.capacity_bytes.checked_add(size_of::<P::Intake>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows"))?;Ok(demand)
     }
+    /// ⛽️ Quotes the items and Work of every stage of the admission that [`Self::begin_tick_snapshot_intake`] drives, so its caller funds the constructor whole.
+    pub fn tick_snapshot_intake_constructor_steps<Source,P:semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,Source>>(producer:&P)->Result<(usize,u64),ValueError>{producer.source_steps()}
     /// 🧾️ Retains the exact original source through its selected concrete producer before normal copying begins.
     pub fn begin_tick_snapshot_intake<Source,P:semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,Source>>(&mut self,read:Source,producer:&P,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),FlowSnapshotIntakeFailure<P::Rejected>>{
         if self.closing||!self.tick_snapshot_intake_terminal_is_empty()||self.state.host.is_some(){return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake custody is occupied").into(),source:producer.preserve_source(read)})}

@@ -170,7 +170,8 @@ async fn definition_declares_the_table_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_pool_table_scene() {
     let mut app = new_app().await;
-    let has_surface = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_POOL, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| root.children.iter().any(|child| matches!(child.component, semio_plugin::Component::Surface(_)))).await.expect("render");
+    let mut has_surface = false;
+    crate::editor_unit_tests::context::observe(&mut app, SOURCING_CURATION_BODY_POOL, &mut |root| has_surface = root.children.iter().any(|child| matches!(child.component, semio_plugin::Component::Surface(_)))).await;
     assert!(has_surface);
 }
 
@@ -281,7 +282,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: fake_contribution() })).await;
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
+    crate::editor_unit_tests::context::dispatch_meta(&mut app, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local")).await;
     let restocked = settle(&mut app)
         .await
         .into_iter()
@@ -302,7 +303,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
 async fn the_restock_button_publishes_a_merged_catalogue_document() {
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
+    crate::editor_unit_tests::context::dispatch_meta(&mut app, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local")).await;
     let restocked = settle(&mut app)
         .await
         .into_iter()

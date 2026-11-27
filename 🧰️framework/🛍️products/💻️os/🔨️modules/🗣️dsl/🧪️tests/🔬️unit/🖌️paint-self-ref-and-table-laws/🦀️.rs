@@ -80,13 +80,13 @@ async fn derived_option_statements_field_round_trips_present_and_absent() {
     let printed = <PaintDocument as pack::snapshot::ArtifactDsl>::print_dsl(&with_fill);
     let parsed = <PaintDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, with_fill, "Some(..) round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_fill);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&with_fill);
 
     let no_fill = PaintDocument { attributes: PaintAttributes { fill: None } };
     let printed_none = <PaintDocument as pack::snapshot::ArtifactDsl>::print_dsl(&no_fill);
     let parsed_none = <PaintDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
     assert_eq!(parsed_none, no_fill, "None round trip diverged;\nprinted:\n{printed_none}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&no_fill);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&no_fill);
 }
 
 // --- regression: `#[dsl(block)] Option<PlainRecord>` (the `draw` pilot's `attributes.stroke:
@@ -162,14 +162,14 @@ async fn derived_option_block_record_field_omits_rather_than_printing_empty_brac
     let printed = <BrushDocument as pack::snapshot::ArtifactDsl>::print_dsl(&with_brush);
     let parsed = <BrushDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, with_brush, "Some(..) round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_brush);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&with_brush);
 
     let no_brush = BrushDocument { brush: None };
     let printed_none = <BrushDocument as pack::snapshot::ArtifactDsl>::print_dsl(&no_brush);
     assert!(!printed_none.contains("brush"), "an absent block-wrapped Option<Record> must be omitted entirely, not printed as empty braces: {printed_none:?}");
     let parsed_none = <BrushDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
     assert_eq!(parsed_none, no_brush, "None round trip diverged;\nprinted:\n{printed_none:?}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&no_brush);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&no_brush);
 }
 
 // --- end-to-end derive test: `#[dsl(statements)] Box<T>` (the `draw` pilot's
@@ -334,7 +334,7 @@ async fn derived_self_referential_record_struct_round_trips_nested_values() {
     let printed = <SelfRefDocument as pack::snapshot::ArtifactDsl>::print_dsl(&doc);
     let parsed = <SelfRefDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "self-referential record round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 // --- end-to-end derive test: `#[dsl(table)] Vec<T>` (Structure-of-Arrays columnar field) ---
@@ -410,5 +410,5 @@ async fn derived_table_field_prints_compact_soa_and_round_trips() {
     assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");
     let parsed = <TableDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "table round trip diverged;\nprinted:\n{printed}");
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&doc);
 }

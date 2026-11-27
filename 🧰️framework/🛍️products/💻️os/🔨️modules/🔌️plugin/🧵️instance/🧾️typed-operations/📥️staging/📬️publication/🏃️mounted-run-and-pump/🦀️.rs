@@ -2,8 +2,8 @@
 
 use super::*;
 use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority, Observer};
-use semio_plugin_retained_command::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
-use semio_plugin_retained_command::typed_operation::{note_publication_wait,MountedIdentityWork};
+use semio_plugin_retained_command_operation::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
+use semio_plugin_retained_command_operation::typed_operation::{note_publication_wait,MountedIdentityWork};
 
 fn publication_unit_advanced(
     receipt_pending: bool,

@@ -61,6 +61,7 @@ serde_json = { workspace = true }
 testkit = ["semio-s-artifact-trinity-jack-model/testkit", "semio-s-artifact-trinity-jack-window-config/testkit", "semio-s-artifact-trinity-jack-inferences/testkit", "semio-s-artifact-trinity-jack-language-service/testkit", "semio-s-artifact-trinity-jack-schema/testkit", "semio-s-artifact-trinity-jack-results-window/testkit"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

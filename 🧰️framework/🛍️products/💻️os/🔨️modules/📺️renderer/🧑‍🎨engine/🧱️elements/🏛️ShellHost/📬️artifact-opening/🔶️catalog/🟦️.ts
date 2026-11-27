@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from "../../../⚛️react-port/🟦�
 import { type AppRef, type AppRole, AppRouter, type AppRouterManifest, type ArtifactDialect, artifactKindActivationOwner, dialectCoordinate, parseDialectCoordinate, parseSurfaceAppId, EMPTY_OPENING_PREFERENCES, foldOpeningPreferences, type OpeningConfigMutation, type OpeningPreferences, type ConflictResolution, type MergePolicy } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
 import { localProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { EMPTY_APP_LABELS_OVERLAY } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { EMPTY_APP_LABELS_OVERLAY, resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
@@ -49,7 +49,7 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
   /** 🧯️ `pluginId -> the surface fault that excluded it from {@link appRouter}` — merged onto the
    * plugin's own status so an excluded plugin is visible instead of silently unroutable. */
   const routerFaultByPluginId = useMemo(() => new Map(appRouter.pluginFaults().map((fault) => [fault.scope.pluginId ?? "", fault] as const)), [appRouter]);
-  const pluginLabelById = useMemo(() => new Map(localPrograms.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [localPrograms]);
+  const pluginLabelById = useMemo(() => new Map(localPrograms.map((entry) => [entry.handle.pluginId, resolveManifestLabel(entry.manifest.label, uiTerminology, uiLocale) || entry.handle.pluginId])), [localPrograms, uiTerminology, uiLocale]);
   /** 🔤️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
    * (contract freeze §1), never inferred from a surface id string. Feeds the Settings
    * `SettingsDefaultApps` table; `appRouter` itself has no public "every registered dialect"

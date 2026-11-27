@@ -36,7 +36,7 @@ fn procedural_payload_vectors_match_the_json_oracle() {
     ];
     for row in fixture["cases"].as_array().expect("mutation vectors") {
         let witness = WITNESSES.iter().find(|(case, _)| row["witness"] == *case).map(|(_, text)| *text).expect("case names a committed wire witness");
-        let mutation: ModulePayloadMutation = store::os_store::test_support::assert_wire_witness(witness);
+        let mutation: ModulePayloadMutation = semio_os_store_test_support::assert_wire_witness(witness);
         let post = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("apply mutation");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&post)).expect("independent state oracle"), row["expected"]);
         assert_eq!(ModulePayloadMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
@@ -51,7 +51,7 @@ async fn procedural_actor_descriptor_matches_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️actor.json")).expect("independent actor fixture");
     __semio_install_plugin_bundle();
     let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_plugin::plugin_runtime::plugin_manifest(runtime)));
-    assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
+    assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {:?}", manifest.label);
     let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_extension_with_apps(runtime)));
     semio_plugin::plugin_runtime::extension_dispose_cold().expect("cold actor inspection retires its installed extension");
     assert!(semio_plugin::plugin_runtime::extension_terminal_is_empty());
@@ -306,8 +306,8 @@ async fn module_labels_resolve_german_locale() {
 //#region 🔖️DslAndOpText
 #[semio_framework_async_macros::async_test]
 async fn module_render_payload_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&default_payload());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&default_payload());
+    semio_os_store_test_support::assert_dsl_round_trip(&default_payload());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&default_payload());
 }
 
 /// 🪞️ `serde` dropped from this crate's own types entirely (playbook fan-out, ticket
@@ -331,7 +331,7 @@ async fn module_payload_value_codec_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn module_payload_operation_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload(SetPayload { payload: default_payload() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload(SetPayload { payload: default_payload() }));
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -353,7 +353,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     payload.interactive = false;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     store.close_owned_unscheduled().expect("module store closes through its exact bounded owners");
 }
 //#endregion 🔖️CommandEnvelopeTests

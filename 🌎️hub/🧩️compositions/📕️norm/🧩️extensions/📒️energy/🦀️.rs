@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 pub fn plugin() -> Result<Plugin<NormEnergyApps>, PluginAssemblyError> {
     let din18599 = semio_s_artifact_norm_din18599::declaration(semio_s_artifact_norm_din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     PluginBuilder::<_, NormEnergyApps>::new("norm-energy")
-        .label("Norm Energy")
+        .label(semio_plugin::LocalizedLabel::native("Norm Energy", "Norm Energie"))
         .version("0.1.0")
         .package_id("semio:norm-energy")
         .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))

@@ -358,7 +358,7 @@ async fn every_rendered_action_bridges_through_the_framework_harness() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_own_wire_keyword() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
         let keyword = printed.split_whitespace().next().unwrap_or_default().to_string();
         assert!(!keyword.is_empty(), "a command must print a leading wire keyword: {printed:?}");

@@ -275,7 +275,10 @@
           "const": "dependency-sync-receipt"
         },
         "selection": {
-          "const": "all"
+          "enum": [
+            "all",
+            "scopes"
+          ]
         },
         "runtimeSha256": {
           "$ref": "#/$defs/Sha256"

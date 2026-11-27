@@ -8,7 +8,8 @@ import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {fleetDurationV1,fleetTextV1,formatFleetReportV1,summarizeFleetV1,validateFleetFactsV1,validateFleetReportV1,type FleetFactsV1,type FleetLanguageV1,type FleetReportV1 as FleetReport} from "../🟦️.ts";
-import {collectFleetFactsV1,readFleetBazelV1,readFleetHostNamesV1,readFleetGenerationV1,readFleetSealedV1,readWorkerMappingV1,readWorkerTreesV1,treeDifferenceV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
+import {METRICS_CATALOGUE_V1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🟦️.ts";
+import {readFleetRatesV1,collectFleetFactsV1,readFleetBazelV1,readFleetHostNamesV1,readFleetGenerationV1,readFleetSealedV1,readWorkerMappingV1,readWorkerTreesV1,treeDifferenceV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
 import {fleetArgumentsV1,runFleetCliV1} from "../⌨️command/🟦️.ts";
 import {requireHostWardenV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -281,7 +282,8 @@ test("unit keys that differ across origins for the same source are a finding nam
 
 test("a machine the fleet cache refuses is an alert and every machine lists why its units were not shared, in both languages, under the closed schema",()=>{
  const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,over:Record<string,unknown>={})=>({origin,platform:"macos-arm64-0123456789abcdef",pressure:"normal",load:1.5,cores:8,running:2,queued:0,headroom:true,ageSeconds:3,worker:"busy",offloadedIn:4,offloadedOut:1,refused:0,cacheHit:30,cacheMiss:10,...over});
- const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m02",{cacheSkipped:16,cacheSkipReasons:{"upload-expired-denied":12,"read-only":3,"path-dependent":1}}),machine("g1-m01",{cacheSkipped:2,cacheSkipReasons:{"upload-expired":2}}),machine("g1-m03")],queued:0,executing:0,offloadRejected:0,refused:0,retried:0}} as unknown as FleetFactsV1;
+ const rates={windowsSeconds:[900,3600,86400],origins:{"g1-m02":{"cache.skip.upload-expired-denied":[12,12,12],"cache.skip.read-only":[3,3,3]},"g1-m04":{"cache.skip.upload-expired-denied":[0,0,5],"cache.skip.read-only":[0,0,4]}}};
+ const facts={...plain(base.facts),rates,fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m02",{cacheSkipped:16,cacheSkipReasons:{"upload-expired-denied":12,"read-only":3,"path-dependent":1}}),machine("g1-m01",{cacheSkipped:2,cacheSkipReasons:{"upload-expired":2}}),machine("g1-m03"),machine("g1-m04",{cacheSkipped:9,cacheSkipReasons:{"upload-expired-denied":5,"read-only":4}}),machine("g1-m05",{cacheSkipped:3,cacheSkipReasons:{"read-only":3}})],queued:0,executing:0,offloadRejected:0,refused:0,retried:0}} as unknown as FleetFactsV1;
  expect(validator("Facts")(facts)).toBe(true);expect(validateFleetFactsV1(facts)).toEqual([]);
  for(const language of["en","de"] as const){
   const report=summarizeFleetV1(facts,language),lines=formatFleetReportV1(language,report,20).join("\n");
@@ -289,11 +291,11 @@ test("a machine the fleet cache refuses is an alert and every machine lists why 
   expect(report.findings.filter(row=>row.id==="unit-cache-denied").map(row=>[row.severity,row.subject,row.values.count])).toEqual([["alert","g1-m02",12]]);
   expect(report.findings.filter(row=>row.id==="unit-cache-read-only").map(row=>[row.severity,row.subject,row.values.count])).toEqual([["warn","g1-m02",3]]);
   expect(report.summary.alerts).toBeGreaterThanOrEqual(1);
-  expect(lines).toContain("upload-expired-denied 12, read-only 3, path-dependent 1");expect(lines).toContain("upload-expired 2");
+  expect(lines).toContain(`  ${metricLabelOf("cache.skip.read-only",language)}: 3 / 3 / 7 (2 ${language==="en"?"machines":"Maschinen"})`);expect(lines).not.toContain("upload-expired-denied 12");
   expect(lines).not.toMatch(/\{[a-zA-Z]+\}/u);
  }
  const quiet=summarizeFleetV1({...facts,fleet:{...facts.fleet!,machines:[machine("g1-m01")] as never}},"en");
- expect(quiet.findings.some(row=>row.id.startsWith("unit-cache-"))).toBe(false);expect(formatFleetReportV1("en",quiet,20).join("\n")).not.toContain("did not share");
+ expect(quiet.findings.some(row=>row.id.startsWith("unit-cache-"))).toBe(false);
 });
 
 test("every machine line names the code its agent runs and whether it is the code of the coordinator's tree, in both languages, under the closed schema",()=>{
@@ -365,7 +367,8 @@ const alarmOf=(action:"suspend"|"cancel"|"report",text:{en:string;de:string})=>(
 const stateOf=(over:Record<string,unknown>={},host:Record<string,unknown>={})=>({version:1,atMs:NOW-5000,pid:77,mode:"enforce",code:"c0de",host:{totalMegabytes:16384,availableMegabytes:7000,swapUsedMegabytes:100,swapOutMegabytesPerSecond:0,compressedMegabytes:900,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null,...host},level:"calm",hold:false,guardMegabytes:2048,dangerMegabytes:1024,resumeMegabytes:3072,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048,subjects:{count:2,megabytes:2500,byKind:{cargo:{count:2,megabytes:2500}}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:50},lastAlarms:[],overhead:{tickMillisecondsP50:2,tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41},...over});
 const memoryOf=(origin:string,value:unknown,at=NOW)=>workerMemoryOfV1(origin,value as never,at);
 const workerRow=(origin:string,liveness:"ready"|"working"|"offline"="ready")=>({origin,platform:"macos",liveness,recorded:"running",stage:"tools",stageIndex:1,stageCount:5,attempts:1,recordAgeSeconds:3,heartbeatAgeSeconds:2,refusal:null});
-const memoryFacts=(origins:Record<string,unknown>,local:unknown=null):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],workers:{offlineSeconds:600,rows:Object.keys(origins).map(origin=>workerRow(origin))},memory:{local:local as never,origins:origins as never}});
+const metricLabelOf=(id:string,language:"en"|"de"="en"):string=>(METRICS_CATALOGUE_V1.find(row=>row.id===id)!.label[language]);
+const memoryFacts=(origins:Record<string,unknown>,local:unknown=null,cancelled:Record<string,number>={}):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],rates:{windowsSeconds:[900,3600,86400],origins:Object.fromEntries(Object.entries(cancelled).map(([origin,count])=>[origin,{"warden.cancelled":[count,count,count]}]))},workers:{offlineSeconds:600,rows:Object.keys(origins).map(origin=>workerRow(origin))},memory:{local:local as never,origins:origins as never}});
 const ids=(facts:FleetFactsV1,language:FleetLanguageV1="en")=>summarizeFleetV1(facts,language).findings.map(row=>`${row.id}:${row.severity}:${row.subject}`);
 
 test("worker memory: a calm record is shown per worker and raises no finding, the absent record, a missing file and a stale record raise worker-warden-absent",()=>{
@@ -392,16 +395,16 @@ test("worker memory: a calm record is shown per worker and raises no finding, th
 test("worker memory: guard warns, danger with a cancel alarm alerts and names the process, owner and action of the last alarm in the chosen language",()=>{
  const guard=stateOf({level:"guard",lastAlarms:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:9}},{availableMegabytes:1500,pressure:"warn"});
  const danger=stateOf({level:"danger",counters:{suspended:2,resumed:1,cancelled:1,ticks:90},lastAlarms:[alarmOf("suspend",{en:"old en",de:"old de"}),alarmOf("cancel",{en:"cancelled cargo pid 4242 of agent-7 (3100 MB)",de:"cargo PID 4242 von agent-7 abgebrochen (3100 MB)"})]},{availableMegabytes:600,pressure:"critical",swapUsedMegabytes:null});
- const facts=memoryFacts({g:memoryOf("g",guard),d:memoryOf("d",danger)});
+ const facts=memoryFacts({g:memoryOf("g",guard),d:memoryOf("d",danger)},null,{d:1});
  expect(ids(facts)).toEqual(["worker-memory-tight:alert:d","worker-warden-intervened:alert:d","worker-memory-tight:warn:g"]);
  const en=summarizeFleetV1(facts,"en").findings,de=summarizeFleetV1(facts,"de").findings;
  expect(en.find(row=>row.id==="worker-memory-tight"&&row.subject==="g")!.text).toBe("worker g is at memory level guard: 1500 MB available (guard 2048 MB, danger 1024 MB), swap 100 MB, pressure warn");
  expect(en.find(row=>row.id==="worker-memory-tight"&&row.subject==="d")!.text).toBe("worker d is at memory level danger: 600 MB available (guard 2048 MB, danger 1024 MB), swap ? MB, pressure critical");
- expect(en.find(row=>row.id==="worker-warden-intervened")!.text).toBe("worker d: its warden intervened (2 suspended, 1 resumed, 1 cancelled); last: cancelled cargo pid 4242 of agent-7 (3100 MB)");
- expect(de.find(row=>row.id==="worker-warden-intervened")!.text).toBe("Worker d: sein Wächter hat eingegriffen (2 angehalten, 1 fortgesetzt, 1 abgebrochen); zuletzt: cargo PID 4242 von agent-7 abgebrochen (3100 MB)");
+ expect(en.find(row=>row.id==="worker-warden-intervened")!.text).toBe("worker d: its warden cancelled 1 operations in the last 15 min (2 suspended, 1 resumed, 1 cancelled since it started); last: cancelled cargo pid 4242 of agent-7 (3100 MB)");
+ expect(de.find(row=>row.id==="worker-warden-intervened")!.text).toBe("Worker d: sein Wächter hat in den letzten 15 min 1 Vorgänge abgebrochen (2 angehalten, 1 fortgesetzt, 1 abgebrochen seit dem Start); zuletzt: cargo PID 4242 von agent-7 abgebrochen (3100 MB)");
  expect(de.find(row=>row.id==="worker-memory-tight"&&row.subject==="d")!.text).toBe("Worker d ist auf Speicherstufe Gefahr: 600 MB verfügbar (Wache 2048 MB, Gefahr 1024 MB), Swap ? MB, Druck critical");
  const suspendedOnly=memoryFacts({s:memoryOf("s",stateOf({counters:{suspended:1,resumed:1,cancelled:0,ticks:3},lastAlarms:[alarmOf("suspend",{en:"suspended x",de:"x angehalten"})]}))});
- expect(ids(suspendedOnly)).toEqual(["worker-warden-intervened:warn:s"]);
+ expect(ids(suspendedOnly),"counters since the start alone are history, not a fault").toEqual([]);
  expect(formatFleetReportV1("de",summarizeFleetV1(suspendedOnly,"de")).some(line=>line.includes("Speicher frei 7000 MB, Swap 100 MB, komprimiert 900 MB, ruhig (eingreifend), Eingriffe a/f/b 1/1/0"))).toBe(true);
 });
 
@@ -576,4 +579,26 @@ test("repo fleet hostname apply prints the plan with the exact sudo command, ask
   expect((await drive(["hostname","apply"],"y")).code).toBe(0);
   expect(calls).toEqual(["sudo scutil --set LocalHostName semio-g1-zz-test"]);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("rates: every counter comes with trailing windows read from the metric rings of each machine, a machine without rings has none, and a past fault is no finding",async()=>{
+ const base=mkdtempSync(join(tmpdir(),"fleet-rates-")),now=1_800_000_000_000;
+ try{
+  const {closeMetricsRingsV1,openMetricsRingsV1,recordSampleV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🟦️.ts");
+  const dir=join(base,"v1","origins","a","metrics");mkdirSync(join(base,"v1","origins","b"),{recursive:true});
+  const handle=openMetricsRingsV1({directory:dir,createdMs:now-120_000});
+  for(let second=0;second<60;second++)recordSampleV1(handle,now-60_000+second*1000+10,{"warden.cancelled":second<10?1:0,"build.units.skipped":2});
+  closeMetricsRingsV1(handle);
+  const found=await readFleetRatesV1({root:"/w",environment:{SEMIO_FLEET_STORE_ROOT:base},language:"en",now:()=>now,signal:new AbortController().signal});
+  expect(found.rates!.windowsSeconds).toEqual([900,3600,86400]);
+  expect(Object.keys(found.rates!.origins)).toEqual(["a"]);
+  expect(found.rates!.origins.a!["warden.cancelled"]).toEqual([10,10,10]);expect(found.rates!.origins.a!["build.units.skipped"]).toEqual([120,120,120]);
+  expect(await readFleetRatesV1({root:"/w",environment:{SEMIO_FLEET_STORE_ROOT:join(base,"absent")},language:"en",now:()=>now})).toEqual({});
+  const facts:FleetFactsV1={version:1,atMs:now,workspace:"/w",sources:[],rates:found.rates};
+  const report=summarizeFleetV1(facts,"en");
+  expect(report.rates!.fleet["warden.cancelled"]).toEqual([10,10,10]);expect(validateFleetReportV1(report)).toEqual([]);
+  const text=formatFleetReportV1("en",report);
+  expect(text).toContain("Counters in the last 15 min / 60 min / 24.0 h:");expect(text).toContain("  Units skipped: 120 / 120 / 120 (1 machines)".replace("Units skipped",metricLabelOf("build.units.skipped")));expect(text.some(line=>line.endsWith(": 10 / 10 / 10 (1 machines)"))).toBe(true);
+  expect(formatFleetReportV1("de",summarizeFleetV1(facts,"de")).some(line=>line.startsWith("Zähler in den letzten 15 min"))).toBe(true);
+ }finally{rmSync(base,{recursive:true,force:true});}
 });

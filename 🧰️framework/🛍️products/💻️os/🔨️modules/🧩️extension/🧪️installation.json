@@ -2,7 +2,7 @@
   "manifest": {
     "extensionId": "external.user-choice",
     "directoryName": "🧩️authored-extension",
-    "label": "Authored Extension",
+    "label": { "native": { "en": "Authored Extension", "de": "Verfasste Erweiterung" }, "reuse": { "en": "Authored Extension", "de": "Verfasste Erweiterung" } },
     "version": "1.0.0",
     "extends": "flow",
     "capabilities": [],

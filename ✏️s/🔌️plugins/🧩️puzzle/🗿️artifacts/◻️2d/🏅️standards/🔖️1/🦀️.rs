@@ -14,8 +14,8 @@ use semio_plugin::app::declarations::MediaDeclaration;
 use semio_plugin::app::declarations::StandardDeclaration;
 use {semio_framework_artifact_reference::StandardId};
 
-pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
-    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle2d+json"], extensions: &["puzzle2d-play"] }, subsets: vec![subsets::any::subset::<PA>()] }
+pub fn standard<PA: crate::ArtifactApps>(routes: &'static [semio_os_kernel::io::io_mechanism::IoEntry]) -> StandardDeclaration<PA> {
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle2d+json"], extensions: &["puzzle2d-play"] }, subsets: vec![subsets::any::subset::<PA>(routes)] }
 }
 
 //#region 🧩️ArtifactItems2
@@ -64,11 +64,10 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         ("s.puzzle.puzzle2d.inference.artifact", "inference", "s.puzzle.puzzle2d.inference", &[("schema", "s.puzzle.puzzle2d.inference")], None),
         ("s.puzzle.puzzle2d.composer.native", "composer", "s.puzzle.puzzle2d@1/*", &[("dialect", "s.puzzle.puzzle2d@1/*")], None),
         ("s.puzzle.puzzle2d.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.puzzle.puzzle2d.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.puzzle.puzzle2d.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.puzzle.puzzle2d.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.puzzle.puzzle2d.composer.format-5", "composer", "s.stdio.dwg@ac1024/*", &[("dialect", "s.stdio.dwg@ac1024/*")], None),
-        ("s.puzzle.puzzle2d.composer.format-6", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-4", "composer", "s.stdio.dwg@ac1024/*", &[("dialect", "s.stdio.dwg@ac1024/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-5", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
         ("s.puzzle.puzzle2d.grammar.1", "grammar", "puzzle.puzzle2d", &[("grammar", "puzzle.puzzle2d")], None),
         ("s.puzzle.puzzle2d.grammar.2", "grammar", "puzzle.puzzle2d.op", &[("grammar", "puzzle.puzzle2d.op")], None),
         ("s.puzzle.puzzle2d.grammar.3", "grammar", "puzzle.puzzle2d.diff", &[("grammar", "puzzle.puzzle2d.diff")], None),
@@ -99,9 +98,16 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    artifact_with::<PA>(crate::standards::v1::subsets::any::io::routes::entries())
+}
+
+/// 🧩️ The declaration tree with `routes` as the subset's foreign-format routes: this subset's own
+/// (`io::routes::rows`) plus those a composition root adds, e.g. the pdf route of
+/// `semio-s-artifact-puzzle-2d-pdf-export`.
+pub fn artifact_with<PA: ArtifactApps>(routes: &'static [semio_os_kernel::io::io_mechanism::IoEntry]) -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle2d").expect("canonical puzzle2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle2d").expect("canonical puzzle2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>(routes)] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

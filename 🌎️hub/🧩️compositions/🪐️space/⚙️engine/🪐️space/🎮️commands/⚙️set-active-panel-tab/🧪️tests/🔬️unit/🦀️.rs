@@ -5,10 +5,10 @@ use semio_hub_space_foundation::config::SpaceConfig;
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     use semio_hub_space_app::SpaceCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(semio_hub_space_commands_media::go_home::GoHome {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode(semio_hub_space_commands_media::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations(semio_hub_space_commands_media::set_app_registrations::SetAppRegistrations { json: "[]".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::GoHome(semio_hub_space_commands_media::go_home::GoHome {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::NavigateVirtualFileSystemNode(semio_hub_space_commands_media::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode { space_id: "demo".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::SetAppRegistrations(semio_hub_space_commands_media::set_app_registrations::SetAppRegistrations { json: "[]".into() }));
 }
 
 /// 🪐️ End-to-end proof of the catalogue-empty bugfix: registers an app with an EMPTY `document`

@@ -30,7 +30,7 @@ function sourceDirectories(path: string): string[] {
 }
 
 /** 🧬️ Discovers mutation vocabularies from their Rust enum declarations. */
-function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
+function discoverArtifacts(repoRoot: string, scope: string): ArtifactTarget[] {
   const found: ArtifactTarget[] = [];
   const walk = (dir: string): void => {
     for (const entry of sourceDirectories(dir)) {
@@ -43,7 +43,7 @@ function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
       }
     }
   };
-  walk(repoRoot);
+  walk(scope);
   return found.sort((left, right) => left.label.localeCompare(right.label));
 }
 
@@ -215,7 +215,7 @@ export class FixturesScript extends BundleScript {
       process.exit(1);
     }
     const full = segments.includes("--full");
-    const targets = discoverArtifacts(this.repoRoot);
+    const targets = discoverArtifacts(this.repoRoot, join(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle"));
     const vocabularies = targets.map(target => ({ target, vocabulary: declaredMutations(target) }));
     const findings = vocabularies.flatMap(({ target, vocabulary }) => lintArtifact(target, vocabulary, full));
     const errors = findings.filter((finding) => finding.level === "error");

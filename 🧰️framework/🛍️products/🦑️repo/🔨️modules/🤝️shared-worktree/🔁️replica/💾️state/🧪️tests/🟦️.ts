@@ -98,7 +98,7 @@ test("the committed vectors are reproduced by the Python oracle and by the TypeS
  }
  for(const item of fixture.logs){
   const scan=scanWalV1(Buffer.from(item.base64,"base64"));
-  expect(scan.verdict).toBe(item.verdict);expect(scan.good).toBe(item.good);expect(scan.generation??null).toBe(item.generation);
+  expect<unknown>(scan.verdict).toBe(item.verdict);expect(scan.good).toBe(item.good);expect(scan.generation??null).toBe(item.generation);
   expect(sorted(scan.payloads.flatMap(payload=>decodeRecordsV1(payload).map(record=>record.kind==="memo"?{...record,value:record.value===null?null:Buffer.from(record.value).toString("base64")}:record)))).toEqual(sorted(item.records));
   for(const record of item.records)expect(validator("WalRecord")(record)).toBe(true);
  }

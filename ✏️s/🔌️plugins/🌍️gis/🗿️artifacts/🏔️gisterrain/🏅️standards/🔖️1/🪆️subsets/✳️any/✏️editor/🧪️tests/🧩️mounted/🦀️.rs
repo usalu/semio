@@ -88,7 +88,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
     for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(command);
         let printed = protocol::OpText::print_op(command);
         assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
     }

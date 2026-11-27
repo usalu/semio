@@ -442,7 +442,7 @@ pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", sta
 #[cfg(any(test, feature = "testkit"))]
 pub fn register_sqlite_test_declaration(){
     static DECLARED:std::sync::OnceLock<()>=std::sync::OnceLock::new();
-    DECLARED.get_or_init(||{semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("GIF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();});
+    DECLARED.get_or_init(||{semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label(semio_plugin::LocalizedLabel::native("GIF SQLite declaration", "GIF-SQLite-Deklaration")).version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();});
 }
 //#endregion 🔖️Dialect
 }

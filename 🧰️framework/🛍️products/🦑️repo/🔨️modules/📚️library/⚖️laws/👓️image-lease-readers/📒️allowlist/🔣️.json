@@ -1,0 +1,169 @@
+{
+ "$schema": "../🧬️schema/🔣️.json",
+ "version": 1,
+ "roots": [
+  "🧰️framework"
+ ],
+ "skipDirectories": [
+  "node_modules",
+  "🧪️tests",
+  ".git",
+  "dist",
+  "target"
+ ],
+ "extensions": [
+  ".ts",
+  ".tsx",
+  ".mjs"
+ ],
+ "skipSuffixes": [
+  ".d.ts",
+  ".d.mts"
+ ],
+ "mountPatterns": [
+  "partitions\\.[a-z]+\\.directory[^;\\n]{0,160}?[\"']m[\"']",
+  "\\.cache/b/[a-km-z]/m\\b",
+  "[\"']m[\"']\\s*,\\s*[\"']generations[\"']"
+ ],
+ "rootPatterns": [
+  "\\b(cacheAreaDirectoryV1|cacheAreaHomeV1)\\s*\\(",
+  "\\bbudgetPolicy\\.partitions\\b",
+  "\\brepositoryCacheBudgetV1\\s*\\([^()]*\\)\\s*\\.partitions\\b"
+ ],
+ "rootTypes": [
+  "\\b(CachePartitionBudgetsV1|RepositoryCachePartitionV1|DedupeRequestV1)\\b"
+ ],
+ "openers": [
+  "(^|\\.)(readFile|writeFile|appendFile|copyFile|readdir|opendir|stat|lstat|access|readlink|realpath|mkdir|rmdir|rm|unlink|rename|cp|truncate|open|utimes|chmod|exists)(Sync)?$",
+  "(^|\\.)create(Read|Write)Stream$",
+  "^Bun\\.(file|write)$",
+  "^(censusNxToolingStoreV1|collectUnpinnedDependencyGenerationsV1|dedupeTreeV1)$"
+ ],
+ "leaseCallees": [
+  "^(withNativeImageSharedReadV1|readUnderImageLeaseV1|withRepositoryCacheStoreV1|withRepositoryCacheStoreMaintenanceV1)$",
+  "(^|\\.)(reader|peek)\\.run$",
+  "^held$",
+  "^createNativeImageSharedSampleV1$"
+ ],
+ "leasedParameters": [
+  "\\bNativeImageSharedReaderV1\\b",
+  "\\bleased\\b",
+  "\\b(RepositoryToolingStoreV1|RepositoryCacheStoreV1)\\b"
+ ],
+ "carrierMethods": [
+  "push",
+  "unshift",
+  "add",
+  "set"
+ ],
+ "leasedArguments": [
+  "\\breader\\b"
+ ],
+ "classes": [
+  "custody",
+  "metadata-probe",
+  "test-support",
+  "unrouted"
+ ],
+ "entries": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts",
+   "site": "existsSync(store)",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Asks only whether the mount directory exists to report an image that is not attached; it opens no file, and the answer is the same while a writer holds the image.",
+    "de": "Fragt nur, ob das Mount-Verzeichnis existiert, um ein nicht angehängtes Image zu melden; es öffnet keine Datei, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/📦️dependencies/🟦️.ts",
+   "site": "existsSync(mount)",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Asks only whether the mount directory exists to report an image that is not attached; it opens no file, and the answer is the same while a writer holds the image.",
+    "de": "Fragt nur, ob das Mount-Verzeichnis existiert, um ein nicht angehängtes Image zu melden; es öffnet keine Datei, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/🕸️graph/🟦️.ts",
+   "site": "existsSync(mount)",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Asks only whether the mount directory exists to report an image that is not attached; it opens no file, and the answer is the same while a writer holds the image.",
+    "de": "Fragt nur, ob das Mount-Verzeichnis existiert, um ein nicht angehängtes Image zu melden; es öffnet keine Datei, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+   "site": "(",
+   "class": "custody",
+   "reason": {
+    "en": "The image's own reset and in-place regrow: it runs inside the exclusive non-waiting lease it takes itself or under the issued resource control of the store custody, so it is the writer the shared readers wait for.",
+    "de": "Das Zurücksetzen und das Vergrößern des Images an Ort und Stelle: es läuft in der exklusiven, nicht wartenden Lease, die es selbst nimmt, oder unter der ausgestellten Ressourcenkontrolle der Store-Obhut, ist also der Schreiber, auf den die geteilten Leser warten."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🟦️.ts",
+   "site": "(",
+   "class": "custody",
+   "reason": {
+    "en": "Writes the durable charge receipt of the store under its exclusive `repository-cache-charge` lease and the reservation of the opened image; it is part of the store custody itself.",
+    "de": "Schreibt den dauerhaften Belastungsbeleg des Stores unter dessen exklusiver `repository-cache-charge`-Lease und der Reservierung des geöffneten Images; es ist Teil der Store-Obhut selbst."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts",
+   "site": "statSync(",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Reads only the metadata of a mount or backing file (existence, device) to report an image that is not attached; it reads no content and the answer is the same while a writer holds the image.",
+    "de": "Liest nur Metadaten eines Mounts oder der Backing-Datei (Existenz, Gerät), um ein nicht angehängtes Image zu melden; es liest keinen Inhalt, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs",
+   "site": "readdirSync(",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Lists the mount directories once so the operating system shows its consent dialog for the launcher; it reads no content and the answer does not depend on a writer.",
+    "de": "Listet die Mount-Verzeichnisse einmal auf, damit das Betriebssystem seinen Zustimmungsdialog für den Starter zeigt; es liest keinen Inhalt, und die Antwort hängt nicht von einem Schreiber ab."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts",
+   "site": "existsSync(join(graph",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Reads only the metadata of a mount or backing file (existence, device) to report an image that is not attached; it reads no content and the answer is the same while a writer holds the image.",
+    "de": "Liest nur Metadaten eines Mounts oder der Backing-Datei (Existenz, Gerät), um ein nicht angehängtes Image zu melden; es liest keinen Inhalt, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
+   "site": "statSync(",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Reads only the metadata of a mount or backing file (existence, device) to report an image that is not attached; it reads no content and the answer is the same while a writer holds the image.",
+    "de": "Liest nur Metadaten eines Mounts oder der Backing-Datei (Existenz, Gerät), um ein nicht angehängtes Image zu melden; es liest keinen Inhalt, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "site": "(",
+   "class": "custody",
+   "reason": {
+    "en": "The nx graph cache store is the store custody of the nx partition itself: it opens, funds and retires the child images of its namespaces inside the consumer frame of the partition owner, so these checks run inside the custody the shared readers wait for.",
+    "de": "Der Nx-Graph-Cache-Store ist selbst die Store-Obhut der Nx-Partition: er öffnet, finanziert und entfernt die Kind-Images seiner Namensräume im Verbraucher-Rahmen des Partitionseigners, diese Prüfungen laufen also innerhalb der Obhut, auf die die geteilten Leser warten."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧹️disk-recovery/🖼️image-slack/🟦️.ts",
+   "site": "lstatSync(",
+   "class": "metadata-probe",
+   "reason": {
+    "en": "Reads only the type and device of the image directory, its backing file and its mount to measure the slack of attached images; it reads no content and the answer is the same while a writer holds the image.",
+    "de": "Liest nur Typ und Gerät des Image-Verzeichnisses, seiner Backing-Datei und seines Mounts, um den Leerraum angehängter Images zu messen; es liest keinen Inhalt, und die Antwort ist dieselbe, während ein Schreiber das Image hält."
+   }
+  }
+ ]
+}

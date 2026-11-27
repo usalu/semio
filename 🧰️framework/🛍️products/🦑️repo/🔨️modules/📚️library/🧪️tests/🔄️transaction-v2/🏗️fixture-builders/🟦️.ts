@@ -1,10 +1,12 @@
 /** 🏗️ The fixture builders of the transaction-v2 suite: run roots, plans, snapshots and fixture variants. */
-import { constants, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
+import { constants, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, delimiter, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { inventoryTaxonomy } from "../../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
 import { planTaxonomy } from "../../../🧹️normalization/🧠️planning/🟦️.ts";
 import { type TaxonomyPlan } from "../../../🧹️normalization/📜️plan-contracts/🟦️.ts";
+import { transactionV2BundleRoot } from "../../../🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { ownedFilePaths, ownedPathByteSort } from "../../🔍️filesystem/🟦️.ts";
 import { FIXTURE_RUN_ID, FIXTURE_SCHEMA, type Fixture, SCHEMA_REL, type Snapshot, fixturePlans, fixtureTemplates } from "../📜️boundary-contracts/🟦️.ts";
@@ -24,8 +26,21 @@ function assertFixtureRunRoot(artifactRoot: string, runId: string, runRoot: stri
   return runRoot;
 }
 
+let issuedRunRoot: string | undefined;
+
+/** 🪪 Issues the run root of a standalone run (no suite runner): a fresh exclusive run owner below the test artifact directory, or below a private temp directory that is removed at exit. */
+function issueStandaloneRunRoot(): string {
+  const given = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  const artifactRoot = given ? resolve(given) : realpathSync(mkdtempSync(join(tmpdir(), "semio-transaction-v2-")));
+  if (!given) process.once("exit", () => rmSync(artifactRoot, { recursive: true, force: true }));
+  mkdirSync(artifactRoot, { recursive: true });
+  return assertFixtureRunRoot(artifactRoot, FIXTURE_RUN_ID, dirname(transactionV2BundleRoot(artifactRoot, FIXTURE_RUN_ID)));
+}
+
 export function fixtureRunRoot(): string {
-  return assertFixtureRunRoot(process.env.SEMIO_TEST_ARTIFACT_DIR ?? "", FIXTURE_RUN_ID, process.env.SEMIO_TRANSACTION_V2_RUN_ROOT ?? "");
+  const propagated = process.env.SEMIO_TRANSACTION_V2_RUN_ROOT;
+  if (propagated !== undefined) return assertFixtureRunRoot(process.env.SEMIO_TEST_ARTIFACT_DIR ?? "", FIXTURE_RUN_ID, propagated);
+  return (issuedRunRoot ??= issueStandaloneRunRoot());
 }
 
 export function retainFixture(root: string): void {
@@ -94,7 +109,7 @@ function fixture(name: string, files: Readonly<Record<string, string>>, configur
   }
   retainFixture(template.root);
   const root = mkdtempSync(join(owner, `🧪️${name}-`));
-  cpSync(template.root, root, { recursive: true, mode: constants.COPYFILE_FICLONE });
+  cpSync(template.root, root, { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE });
   const rebaseSymlinks = (path: string): void => {
     for (const name of readdirSync(path)) {
       const child = join(path, name), stat = lstatSync(child);
@@ -162,7 +177,7 @@ export function referenceFixture(name: string): Fixture {
 export function cloneFixture(source: Fixture, name: string): Fixture {
   const owner = fixtureRunRoot(), root = mkdtempSync(join(owner, `🧪️${name}-`));
   retainFixture(source.root);
-  cpSync(source.root, root, { recursive: true, mode: constants.COPYFILE_FICLONE });
+  cpSync(source.root, root, { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE });
   const ticketDir = join(root, "🧪️tests"), workspace = join(ticketDir, "🧪️fixture"), scope = relative(root, workspace).replaceAll("\\", "/");
   return { baselineCommit: source.baselineCommit, options: { ...source.options, repoRoot: root, scope, ticketDir }, planCacheKey: source.planCacheKey, repoRoot: root, root, scope, ticketDir, workspace };
 }
@@ -194,22 +209,36 @@ export function embeddedFixture(name: string): Fixture {
   });
 }
 
+let repoShimInstalled = false;
+
+/** 🪪 Puts a fixture-local `repo` ahead of the real one on this process's PATH: `repo run <project>:generate|check` runs the owner's `📜️script.ts` directly, so a fixture generator never boots a graph service for its temporary checkout. Windows keeps the real `repo`, which a `.cmd` shim cannot stand in for without a shell. */
+function installFixtureRepoShim(): void {
+  if (repoShimInstalled || process.platform === "win32") return;
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), "semio-transaction-v2-repo-")));
+  process.once("exit", () => rmSync(directory, { recursive: true, force: true }));
+  const shim = join(directory, "repo");
+  writeFileSync(shim, ["#!/bin/sh", "target=\"${2##*:}\"", "case \"$1:$target\" in run:generate|run:check) exec \"" + process.execPath + "\" ./📜️script.ts \"$target\" ;; esac", "echo \"fixture repo shim supports only run <project>:generate|check\" >&2", "exit 64", ""].join("\n"), { mode: 0o755 });
+  process.env.PATH = `${directory}${delimiter}${process.env.PATH ?? ""}`;
+  repoShimInstalled = true;
+}
+
 export function generatorFixture(name: string): Fixture {
+  installFixtureRepoShim();
   return fixture(name, { "🧪️generator/🟦️.ts": "export const input = true;\n", "🧪️generator/🤖️generated/old.txt": "stale\n" }, (row) => {
     const owner = relative(row.repoRoot, join(row.workspace, "🧪️generator")).replaceAll("\\", "/"), outputRoot = `${owner}/🤖️generated`, schemaPath = join(row.repoRoot, SCHEMA_REL);
     const taxonomy = JSON.parse(readFileSync(schemaPath, "utf8")) as Record<string, unknown>;
-    taxonomy.generatorContracts = Object.fromEntries(Object.entries({ ...(taxonomy.generatorContracts as Record<string, unknown>), "fixture-generator": { ownership: "owned", ownerPath: owner, target: "@fixture/generator:generate", previewTarget: "@fixture/generator:preview-generated", inputPatterns: [`${owner}/⚙️engine/🟦️.ts`, `${owner}/🟦️.ts`], outputRoots: [{ path: outputRoot, inclusion: "ignored" }], reason: "Transaction mixed-output fixture" } }).sort(([left], [right]) => left.localeCompare(right)));
+    taxonomy.generatorContracts = Object.fromEntries(Object.entries({ ...(taxonomy.generatorContracts as Record<string, unknown>), "fixture-generator": { ownership: "owned", ownerPath: owner, target: "@fixture/generator:generate", previewTarget: "@fixture/generator:preview-generated", checkTarget: "@fixture/generator:check", inputPatterns: [`${owner}/⚙️engine/🟦️.ts`, `${owner}/🟦️.ts`], outputRoots: [{ path: outputRoot, inclusion: "ignored" }], reason: "Transaction mixed-output fixture" } }).sort(([left], [right]) => left.localeCompare(right)));
     writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
     writeFileSync(join(row.repoRoot, ".gitignore"), `${outputRoot}\nnode_modules\n`);
     symlinkSync(join(getWorkspaceRoot(), "node_modules"), join(row.repoRoot, "node_modules"), "junction");
     writeFileSync(join(row.repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
-    writeFileSync(join(row.repoRoot, "package.json"), "{\"name\":\"transaction-generator-fixture\",\"private\":true}\n");
-    const project = `${JSON.stringify({ name: "@fixture/generator", root: owner, targets: { generate: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts generate" } }, "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts preview-generated" } }, check: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts check" } } } }, null, 2)}\n`;
-    writeFileSync(join(row.repoRoot, "project.json"), project);
+    writeFileSync(join(row.repoRoot, "package.json"), "{\"name\":\"transaction-generator-fixture\",\"private\":true,\"workspaces\":[]}\n");
+    const project = `${JSON.stringify({ name: "@fixture/generator", root: owner, targets: { generate: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts generate" } }, "preview-generated": { executor: "repo:script", options: { cwd: owner, command: "repo ./📜️script.ts preview-generated" } }, check: { executor: "nx:run-commands", options: { cwd: owner, command: "repo ./📜️script.ts check" } } } }, null, 2)}\n`;
+    writeFileSync(join(row.repoRoot, "📋️project.json"), project);
     writeFiles(join(row.workspace, "🧪️generator"), {
       "📋️project.json": project,
       "📜️script.ts": [
-        "import { BundleScript, ScriptRouter, runScriptMain } from \"@semio-tech/repo-lib/routing\";",
+        "import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from \"@semio-tech/process/routing\";",
         "import { runEvidenceGenerator } from \"./⚙️engine/🟦️.ts\";",
         "class PreviewScript extends BundleScript {",
         "  run(): void { runEvidenceGenerator(this.root,\"preview-generated\"); }",
@@ -220,7 +249,7 @@ export function generatorFixture(name: string): Fixture {
         "class CheckScript extends BundleScript {",
         "  run(): void { runEvidenceGenerator(this.root,\"check\"); }",
         "}",
-        "await runScriptMain(new ScriptRouter(import.meta.dir).register(\"preview-generated\",PreviewScript).register(\"generate\",GenerateScript).register(\"check\",CheckScript),import.meta.url);",
+        "await receiveScriptProcessInvocation(process.env, (original) => runScriptMain(new ScriptRouter(import.meta.dir).register(\"preview-generated\",PreviewScript).register(\"generate\",GenerateScript).register(\"check\",CheckScript), { invocation: original }));",
         "",
       ].join("\n"),
       "⚙️engine/🟦️.ts": [

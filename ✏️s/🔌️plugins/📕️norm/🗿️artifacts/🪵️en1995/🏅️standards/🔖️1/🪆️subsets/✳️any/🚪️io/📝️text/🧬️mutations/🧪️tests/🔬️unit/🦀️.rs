@@ -7,7 +7,7 @@ async fn every_variant_op_text_round_trips() {
     let cases = every_mutation();
     assert_eq!(cases.len(), KINDS.len());
     for mutation in cases {
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
     }
 }
 

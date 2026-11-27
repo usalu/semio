@@ -76,8 +76,8 @@ fn collection_document_example_matches_codec_and_pack_contract() {
     let parsed = CollectionSnapshot::parse_dsl(crate::test_inputs::text("📚️examples/🎬️demo.collection")).expect("parse collection example");
     assert_eq!(CollectionSnapshot::envelope_id(), S_COLLECTION_SCHEMA);
     assert_eq!(parsed.schema, "s.collection");
-    store::os_store::test_support::assert_dsl_round_trip(&parsed);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&demo_collection());
+    semio_os_store_test_support::assert_dsl_round_trip(&parsed);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&demo_collection());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,8 +88,8 @@ async fn collection_mutation_inventory_and_round_trip_are_owned_by_the_package()
         assert!(descriptor.owner.starts_with("🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/🧬️mutations/"));
     }
     let rename = CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() };
-    store::os_store::test_support::assert_op_line_round_trip(&rename);
-    store::os_store::test_support::assert_operation_round_trip(&demo_collection(), rename).await;
+    semio_os_store_test_support::assert_op_line_round_trip(&rename);
+    semio_os_store_test_support::assert_operation_round_trip(&demo_collection(), rename).await;
 }
 
 #[test]

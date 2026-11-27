@@ -5,7 +5,7 @@ import {loadBuildGraphV1,resolveBuildTargetV1} from "../../../../🏗️build/�
 import {withRepositoryBuildGraphArtifactV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts";
 import {declaredStoreReceiptV1,issueStoreReceiptV1,settleStoreReceiptV1} from "../../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import {withRepositoryCargoArtifactPlanV1} from "../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import {withRetainedRepositoryCompilerStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {awaitCompilerProductLaneV1,productLaneReporterV1,withRetainedRepositoryCompilerStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {withRepositoryPublishedCargoExecutableV1} from "../../../../⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../📥️dependencies/🟦️.ts";
@@ -40,6 +40,7 @@ export async function withRepositoryDeclaredCargoArtifactV1<T>(workspace:string,
   const receiptDeclaration={workspaceRoot:root,projectRoot:project.root,target:request.target,outputs:target.outputs};if(declaredStoreReceiptV1(receiptDeclaration)===undefined)throw Error("Declared Cargo artifact StoreReceipt output required");
   const issued=issueStoreReceiptV1(receiptDeclaration),environment=Object.freeze({...process.env,...issued,SEMIO_BUILD_MODE:request.configuration,SEMIO_TASK_PROJECT:project.name,SEMIO_TASK_TARGET:request.target}),startedAtMs=Date.now();let published=false,failed=false,failure:unknown;
   try{
+   await awaitCompilerProductLaneV1(root,request.configuration,control,{manifest,command:"build",producer:"artifact",arguments:["--package",declaration.package,"--bin",declaration.binary]},{signal:control.signal,report:productLaneReporterV1(environment)});
    return await withRetainedRepositoryCompilerStoreV1(root,request.configuration,control,environment,async retained=>{
     const name=declaration.binary+(process.platform==="win32"?".exe":""),args=["--package",declaration.package,"--bin",declaration.binary],network=repositoryCargoNetworkV1(invocation,root);let identity:string|undefined,produced:Artifact["receipt"]|undefined;
     await withRepositoryCargoArtifactPlanV1(manifest,args,root,{invocation,producer:"artifact",control:retained,environment,network,...(declaration.sourcesRecord===undefined?{}:{sourcesRecord:declaration.sourcesRecord}),consume:async capture=>{await verifyCapturedCargoArtifactsV1(capture);produced=await capturedCargoExecutableReceiptV1(capture,name);}},async plan=>{identity=plan.identity;await plan.produce();});

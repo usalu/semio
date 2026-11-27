@@ -118,3 +118,13 @@ test("a path written within the racy window gets no witness and the live rows ar
   expect(await observationWitnessHoldsV1(live)).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("the witnesses of 300 nodes that read the same 3000 paths share one copy of each path: the heap holds the arrays, not 900 000 strings",()=>{
+ const heap=()=>{Bun.gc(true);return process.memoryUsage().heapUsed/1048576;};
+ const rows=(salt:number)=>Array.from({length:3000},(_,at)=>({kind:"exists",path:"/tree/"+"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/📦️packages/"+at+(salt>=0?"":"x"),fact:true}));
+ const before=heap(),kept:unknown[]=[];
+ for(let node=0;node<300;node++)kept.push(observationWitnessV1(rows(node) as never,{since:0}));
+ const held=heap()-before;
+ expect(kept.length).toBe(300);expect((kept[0] as {typed:unknown[]}).typed.length).toBe(3000);
+ expect(held).toBeLessThan(65);
+});

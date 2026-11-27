@@ -57,7 +57,7 @@ async fn the_production_action_bridge_admits_every_declared_command() {
 /// backs.
 #[semio_framework_async_macros::async_test]
 async fn every_rendered_action_bridges_through_the_framework_harness() {
-    artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurationApp>>(sourcing_manifest_for_tests).await;
+    context::assert_declared_actions_bridge_to_commands().await;
 }
 
 /// 📛️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
@@ -107,7 +107,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -165,7 +165,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
         assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 

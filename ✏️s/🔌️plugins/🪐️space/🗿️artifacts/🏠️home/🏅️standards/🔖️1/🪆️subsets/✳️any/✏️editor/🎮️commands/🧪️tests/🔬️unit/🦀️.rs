@@ -127,12 +127,12 @@ use semio_plugin::{AppActionRegistry, EditorApp, HistoryView, PluginApp, VcsArti
 #[semio_framework_async_macros::async_test]
 async fn home_command_op_text_round_trips_every_variant() {
     use crate::editor::home::HomeCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::BindSpaceFile(crate::editor::home::commands::bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(crate::editor::home::commands::import_space::ImportSpace { dsl: Some("programs=[]".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(crate::editor::home::commands::import_space::ImportSpace { dsl: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(crate::editor::home::commands::open_space::OpenSpace { space_id: "s1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "folder".into(), folder_path: Some("/tmp/x".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::BindSpaceFile(crate::editor::home::commands::bind_space_file::BindSpaceFile { space_id: "s1".into(), file_path: "/tmp/x.os".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(crate::editor::home::commands::import_space::ImportSpace { dsl: Some("programs=[]".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::ImportSpace(crate::editor::home::commands::import_space::ImportSpace { dsl: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(crate::editor::home::commands::open_space::OpenSpace { space_id: "s1".into() }));
 }
 
 /// 🚦️ Both routes the shell actually needs from Home are past the classification gate. Ticket
@@ -276,9 +276,9 @@ use super::super::navigate_virtual_file_system_node::*;
 #[semio_framework_async_macros::async_test]
 async fn home_command_op_text_round_trips_every_variant() {
     use crate::editor::home::HomeCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(crate::editor::home::commands::delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::GoHome(crate::editor::home::commands::go_home::GoHome {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(crate::editor::home::commands::delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeCommand::GoHome(crate::editor::home::commands::go_home::GoHome {}));
 }
 }
 

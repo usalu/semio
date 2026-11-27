@@ -68,14 +68,14 @@ fn empty_space_snapshot_matches_schema() {
 
 #[test]
 fn space_snapshot_dsl_pack_round_trips() {
-    store::test_support::assert_dsl_pack_equivalence(&demo_space());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&demo_space());
 }
 
 #[test]
 fn space_default_example_dsl_round_trips() {
     let text = include_str!("../../🗿️artifacts/🪐️space/📚️examples/🪐️demo.space");
     let parsed = <SpaceSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .space example");
-    store::test_support::assert_dsl_round_trip(&parsed);
+    semio_os_store_test_support::assert_dsl_round_trip(&parsed);
 }
 //#endregion 🧪️SpaceDocumentLaws
 
@@ -90,7 +90,7 @@ fn empty_collection_snapshot_matches_schema() {
 
 #[test]
 fn collection_projection_dsl_pack_round_trips() {
-    store::test_support::assert_dsl_pack_equivalence(&demo_collection());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&demo_collection());
 }
 
 #[test]
@@ -117,24 +117,24 @@ fn space_envelope_id_is_two_dot_segments() {
 fn collection_default_example_dsl_round_trips() {
     let text = include_str!("../../🗿️artifacts/🗂️collection/📚️examples/🎬️demo.collection");
     let parsed = <CollectionSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .collection example");
-    store::test_support::assert_dsl_round_trip(&parsed);
+    semio_os_store_test_support::assert_dsl_round_trip(&parsed);
 }
 //#endregion 🧪️CollectionDocumentLaws
 
 //#region 🧪️SpaceMutationLaws
 #[test]
 fn space_operation_op_text_round_trips_every_variant() {
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::SetName { name: "Renamed".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::SetKind { kind: SpaceKind::Studio });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::SetVisibility { visibility: SpaceVisibility::Public });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator), index: None });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveUser { user_id: "u2".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveCollection { collection_id: "c2".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallExtension {
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::SetName { name: "Renamed".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::SetKind { kind: SpaceKind::Studio });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::SetVisibility { visibility: SpaceVisibility::Public });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator), index: None });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::RemoveUser { user_id: "u2".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::RemoveCollection { collection_id: "c2".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::InstallExtension {
         extension_id: "flow-math".into(),
         version: "1.0.0".into(),
         source_uri: "https://example.test/flow-math.sxt".into(),
@@ -142,33 +142,33 @@ fn space_operation_op_text_round_trips_every_variant() {
         enabled: true,
         index: Some(1),
     });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
 }
 
 #[test]
 fn space_operation_backwards_restores_pre_state() {
     let base = demo_space();
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::SetName { name: "New Name".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Author), index: None });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator), index: None });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveUser { user_id: "u1".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveCollection { collection_id: "c1".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::SetName { name: "New Name".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Author), index: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator), index: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveUser { user_id: "u1".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveCollection { collection_id: "c1".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
     let mut with_program = base.clone();
     with_program.programs.push("cad".into());
-    store::test_support::assert_operation_round_trip(&with_program, SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
-    store::test_support::assert_operation_round_trip(
+    semio_os_store_test_support::assert_operation_round_trip(&with_program, SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
+    semio_os_store_test_support::assert_operation_round_trip(
         &base,
         SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "1.0.0".into(), source_uri: "https://example.test/flow-math.sxt".into(), package_hash: "hash-flow-math".into(), enabled: true, index: None },
     );
     let mut with_extension = base.clone();
     with_extension.extensions.push(demo_extension("flow-math", true));
-    store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
-    store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
-    store::test_support::assert_operation_round_trip(
+    semio_os_store_test_support::assert_operation_round_trip(&with_extension, SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&with_extension, SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
+    semio_os_store_test_support::assert_operation_round_trip(
         &with_extension,
         SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "2.0.0".into(), source_uri: "https://example.test/flow-math-v2.sxt".into(), package_hash: "hash-flow-math-v2".into(), enabled: false, index: None },
     );
@@ -248,38 +248,38 @@ fn space_member_removal_inverse_restores_the_original_index() {
 fn collection_operation_op_text_round_trips_every_variant() {
     let folder = CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() };
     let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::CreateFolder { folder: folder.clone(), index: 0 });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::DeleteFolder { folder_id: "f1".into() });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: Some("f2".into()) });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::CreateEntry { entry: entry.clone(), index: 0 });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::DeleteEntry { entry_id: "e1".into() });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
-    store::test_support::assert_op_line_round_trip(&CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::CreateFolder { folder: folder.clone(), index: 0 });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::DeleteFolder { folder_id: "f1".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: Some("f2".into()) });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::CreateEntry { entry: entry.clone(), index: 0 });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::DeleteEntry { entry_id: "e1".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
+    semio_os_store_test_support::assert_op_line_round_trip(&CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
 }
 
 #[test]
 fn collection_operation_binary_matches_text() {
-    store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
     let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
-    store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::CreateEntry { entry, index: 0 });
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&CollectionMutation::CreateEntry { entry, index: 0 });
 }
 
 #[test]
 fn collection_operation_backwards_restores_pre_state() {
     let base = demo_collection();
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameCollection { new_name: "Renamed".into() });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::CreateFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, index: 0 });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteFolder { folder_id: "f1".into() });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteEntry { entry_id: "e1".into() });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
-    store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
-    store::test_support::assert_operation_round_trip(
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::RenameCollection { new_name: "Renamed".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::CreateFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, index: 0 });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteFolder { folder_id: "f1".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteEntry { entry_id: "e1".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
+    semio_os_store_test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
+    semio_os_store_test_support::assert_operation_round_trip(
         &base,
         CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) },
     );
@@ -309,7 +309,7 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
         body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-child".into() }),
     });
 
-    store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
+    semio_os_store_test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
 
     let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection).into_parts().0;
     let mut deleted_folders = diff.folders.clone().unwrap_or_default().removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
@@ -595,7 +595,7 @@ fn draft_promote_moves_envelope_bytes_byte_identical() {
     assert_eq!(demote, CollectionMutation::DeleteEntry { entry_id: entry.id.clone() });
 
     let empty = empty_collection_snapshot("Demo");
-    store::test_support::assert_operation_round_trip(&empty, operation);
+    semio_os_store_test_support::assert_operation_round_trip(&empty, operation);
 }
 
 /// 🧪️ `demote_asset` is `promote_draft`'s real byte-moving inverse: the SAME bytes travel back

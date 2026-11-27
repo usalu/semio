@@ -105,6 +105,6 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
 #[doc(hidden)]
 #[test]
 pub fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(fixture_text!("../../../📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<WireTestMutation>(fixture_text!("../../../📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️ContributedMutationWireLaws

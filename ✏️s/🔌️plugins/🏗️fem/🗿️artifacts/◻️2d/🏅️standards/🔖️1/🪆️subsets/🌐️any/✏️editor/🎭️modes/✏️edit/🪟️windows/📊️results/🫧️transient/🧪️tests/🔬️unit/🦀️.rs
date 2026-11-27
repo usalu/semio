@@ -131,7 +131,7 @@ fn clock_partition_matches_language_neutral_json_oracle() {
         let (next, _) = store::os_store::replay::apply_outcome(state, ::semio_os_kernel::ColdMutation::diff(&mutation, state));
         *state = next;
         oracle.insert(window_id, step["clock"].clone());
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
     }
     let typed = typed.into_iter().map(|(window_id, state)| (window_id, serde_json::to_value(state.clock).expect("typed clock"))).collect::<serde_json::Map<_, _>>();
     assert_eq!(serde_json::Value::Object(typed), fixture["expected"]);

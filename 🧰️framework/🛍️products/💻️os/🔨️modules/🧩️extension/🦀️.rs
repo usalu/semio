@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipArchiveError, ZipWriter};
 
+pub use semio_ui_locale::LocalizedLabel;
 use semio_os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
 
 //#region 🔖️Errors
@@ -127,7 +128,8 @@ fn is_exact_pin(raw: &str) -> bool {
 pub struct ExtensionPackageManifest {
     pub extension_id: String,
     pub directory_name: String,
-    pub label: String,
+    /// 🏷️ The extension name in every terminology and locale — no default language.
+    pub label: LocalizedLabel,
     pub version: String,
     pub extends: String,
     pub capabilities: Vec<String>,
@@ -161,7 +163,7 @@ impl ExtensionPackageManifest {
         object([
             ("extensionId".to_string(), Value::from(self.extension_id.clone())),
             ("directoryName".to_string(), Value::from(self.directory_name.clone())),
-            ("label".to_string(), Value::from(self.label.clone())),
+            ("label".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&self.label))),
             ("version".to_string(), Value::from(self.version.clone())),
             ("extends".to_string(), Value::from(self.extends.clone())),
             ("capabilities".to_string(), Value::Array(self.capabilities.iter().map(|c| Value::from(c.clone())).collect())),
@@ -187,7 +189,7 @@ impl ExtensionPackageManifest {
         Ok(Self {
             extension_id: field_str("extensionId")?,
             directory_name: field_str("directoryName")?,
-            label: field_str("label")?,
+            label: value.get("label").ok_or_else(|| "missing field label".to_string()).and_then(|label| <LocalizedLabel as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(label)).map_err(|error| format!("label: {error}")))?,
             version: field_str("version")?,
             extends: field_str("extends")?,
             capabilities,

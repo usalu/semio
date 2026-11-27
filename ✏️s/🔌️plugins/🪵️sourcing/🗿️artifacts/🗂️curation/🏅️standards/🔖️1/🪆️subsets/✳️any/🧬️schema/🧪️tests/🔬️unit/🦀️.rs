@@ -144,10 +144,10 @@ async fn preview_kind_bounds_wraps_box_stock_at_the_origin() {
 
 #[semio_framework_async_macros::async_test]
 async fn curation_document_dsl_round_trips_sample_and_empty() {
-    store::os_store::test_support::assert_dsl_round_trip(&sample_document());
-    store::os_store::test_support::assert_dsl_round_trip(&CurationSnapshot::default());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&sample_document());
-    store::os_store::test_support::assert_dsl_pack_equivalence(&CurationSnapshot::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&sample_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&CurationSnapshot::default());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample_document());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&CurationSnapshot::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -244,4 +244,72 @@ async fn every_shipped_module_typology_segment_and_kind_has_an_english_and_a_ger
     let unlisted = ObjectKind { id: "unlisted".into(), name: "Own Kind".into(), module_id: "own".into(), typology_path: vec!["own".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 1.0, height: 1.0, depth: 1.0 }) };
     assert_eq!(catalog_kind_name(&unlisted, De), "Own Kind");
     assert_eq!(catalog_module_label("own", "Own", De), "Own");
+}
+
+/// 🧮️ The committed language-agnostic stock-query fixture the Python SQLite oracle reproduces.
+fn stock_law() -> serde_json::Value {
+    serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️stock-curation-1/🔣️.json")).unwrap()
+}
+
+/// 📦️ The committed stock the stock-query fixture refers to.
+fn stock_law_stock() -> Vec<ObjectKind> {
+    semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+}
+
+/// 🔍️ The filters a stock-query fixture row states.
+fn stock_law_filters(value: &serde_json::Value) -> Filters {
+    let strings = |key: &str| value[key].as_array().map(|rows| rows.iter().map(|row| row.as_str().unwrap().to_owned()).collect()).unwrap_or_default();
+    Filters {
+        query: value["query"].as_str().unwrap_or_default().into(),
+        module_ids: strings("moduleIds"),
+        typology_path: strings("typologyPath"),
+        min_availability: value["minAvailability"].as_u64().unwrap_or(0) as u32,
+        sort: value.get("sort").map(|sort| crate::TableSort { column_id: sort["columnId"].as_str().unwrap().into(), direction: if sort["direction"] == "desc" { crate::SortDirection::Desc } else { crate::SortDirection::Asc } }),
+    }
+}
+
+/// 🏷️ Every unsorted typology, module, query and availability filter answers the committed ids in document order.
+#[test]
+fn stock_filters_match_the_committed_language_agnostic_fixture() {
+    let (law, document) = (stock_law(), crate::curation_snapshot_from_stock(&stock_law_stock(), Vec::new()));
+    for case in law["filters"].as_array().unwrap().iter().filter(|case| case["filters"].get("sort").is_none()) {
+        let ids: Vec<String> = filtered_stock(&document, &stock_law_filters(&case["filters"])).into_iter().map(|kind| kind.id).collect();
+        assert_eq!(serde_json::json!(ids), case["ids"], "{}", case["id"]);
+    }
+}
+
+/// 🔢️ The availability totals, the per-module sums and the minimum-availability counts equal the committed ones.
+#[test]
+fn availability_counts_match_the_committed_language_agnostic_fixture() {
+    let (law, stock) = (stock_law(), stock_law_stock());
+    let counts = &law["availability"];
+    let sum = |keep: &dyn Fn(&ObjectKind) -> bool| stock.iter().filter(|kind| keep(kind)).map(|kind| u64::from(kind.availability)).sum::<u64>();
+    assert_eq!(sum(&|_| true), counts["total"].as_u64().unwrap());
+    for (module, total) in counts["byModule"].as_object().unwrap() {
+        assert_eq!(sum(&|kind| &kind.module_id == module), total.as_u64().unwrap(), "{module}");
+    }
+    let document = crate::curation_snapshot_from_stock(&stock, Vec::new());
+    for row in counts["kindsAtLeast"].as_array().unwrap() {
+        let filters = Filters { min_availability: row["min"].as_u64().unwrap() as u32, ..Default::default() };
+        assert_eq!(filtered_stock(&document, &filters).len() as u64, row["kinds"].as_u64().unwrap(), "{row}");
+    }
+}
+
+/// 🎯️ Every count adjustment resolves to the committed decision, clamped to the stock availability.
+#[test]
+fn count_decisions_match_the_committed_language_agnostic_fixture() {
+    let (law, stock) = (stock_law(), stock_law_stock());
+    for case in law["decisions"].as_array().unwrap() {
+        let curated = case["curated"].as_array().unwrap().iter().map(|row| CuratedItem { object_id: row["objectId"].as_str().unwrap().into(), count: row["count"].as_u64().unwrap() as u32 }).collect();
+        let document = crate::curation_snapshot_from_stock(&stock, curated);
+        let (id, value) = (case["objectId"].as_str().unwrap(), case["value"].as_i64().unwrap());
+        let decision = if case["op"] == "delta" { curation_decision_for_delta(&document, id, value) } else { curation_decision_for_set(&document, id, value as u32) };
+        let observed = match decision {
+            CurationDecision::NoOp => serde_json::json!({"kind": "noOp"}),
+            CurationDecision::Create(item) => serde_json::json!({"kind": "create", "count": item.count}),
+            CurationDecision::ChangeCount { new_count, .. } => serde_json::json!({"kind": "changeCount", "count": new_count}),
+            CurationDecision::Delete { .. } => serde_json::json!({"kind": "delete"}),
+        };
+        assert_eq!(observed, case["decision"], "{}", case["id"]);
+    }
 }

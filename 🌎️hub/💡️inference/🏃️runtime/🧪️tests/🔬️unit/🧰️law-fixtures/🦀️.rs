@@ -147,7 +147,7 @@ async fn published_pair_snapshot(pack: &[u8], spr: &[u8]) -> Result<semio_s_arti
         .await
         .map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
     let snapshot = parsed.snapshot.clone();
-    directory::os_store::test_support::retire_parsed_document(parsed);
+    semio_os_store_test_support::retire_parsed_document(parsed);
     Ok(snapshot)
 }
 

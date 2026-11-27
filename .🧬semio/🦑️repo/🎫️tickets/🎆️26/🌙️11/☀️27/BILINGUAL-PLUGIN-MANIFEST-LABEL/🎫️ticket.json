@@ -1,0 +1,22 @@
+{
+  "title": "Bilingual Plugin Manifest Label",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Make the plugin manifest label bilingual (en + de, no default language) across the whole framework, schema-first: schema label type to the localized label type, regenerate Rust/TS types, PluginManifest/Plugin::new/.label builder take the localized label only, rewrite all Rust call sites by script with real German labels, update readers, regenerate component descriptors, trusted-catalog fixtures and signed hub catalogs. Plan: ticket 2026/11/22/GIS-PLUGIN-END-TO-END conformance-fixes.md item 5b.",
+  "goal": "runningplugins",
+  "sessions": [
+    "89571119-f854-4784-9ed2-ccaaffe91f46"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 00:19:30",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make the plugin manifest label bilingual (en + de, no default language) across the whole framework, schema-first: schema label type to the localized label type, regenerate Rust/TS types, PluginManifest/Plugin::new/.label builder take the localized label only, rewrite all Rust call sites by script with real German labels, update readers, regenerate component descriptors, trusted-catalog fixtures and signed hub catalogs. Plan: ticket 2026/11/22/GIS-PLUGIN-END-TO-END conformance-fixes.md item 5b.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

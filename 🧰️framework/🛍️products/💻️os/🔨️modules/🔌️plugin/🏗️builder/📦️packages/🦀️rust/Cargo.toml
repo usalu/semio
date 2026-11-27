@@ -41,6 +41,7 @@ semio-plugin-instance-app = { path = "../../../🧵️instance/📦️packages/�
 semio-plugin-instance-construction = { path = "../../../🧵️instance/🧱️construction/📦️packages/🦀️rust"}
 semio-plugin-instance-initialization = { path = "../../../🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-canvas-assets = { path = "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust", optional = true }
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
@@ -53,3 +54,4 @@ semio-plugin-reactor-jobs = { path = "../../../⚛️reactor/💼️jobs/📦️
 semio-plugin-registration = { path = "../../📜️registration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }

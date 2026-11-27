@@ -126,6 +126,9 @@ function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObje
   return maxHeightPx;
 }
 
+/** 🧱️ Block space the docked bottom chip row (the Utilities chip) owns: top-anchored panes stop above it so their footers (e.g. Execute/Reset) are never covered. */
+const windowBottomChipReserve = "var(--chip-row-height)";
+
 const windowQuickActionsWidthVar = "--window-quick-actions-width";
 
 const Window: React.FC<WindowProps> = ({
@@ -388,6 +391,7 @@ const Window: React.FC<WindowProps> = ({
               overlayRef={measuresOverlayRef}
               hostRef={windowBodyRef}
               anchor="top-right"
+              blockEndReserve={windowBottomChipReserve}
               inlineEdgeReservePx={controlsWidthPx}
               icon={WINDOW_PANE_MEASURES_ICON}
               label={windowOptionsLabel}
@@ -431,6 +435,7 @@ const Window: React.FC<WindowProps> = ({
               overlaySlot="window-engagement-overlay"
               hostRef={windowBodyRef}
               anchor="top-left"
+              blockEndReserve={windowBottomChipReserve}
               icon={WINDOW_PANE_ACTIONS_ICON}
               label={actionLabel}
               folded={!engagementExpanded}
@@ -454,6 +459,7 @@ const Window: React.FC<WindowProps> = ({
               overlaySlot="window-search-overlay"
               hostRef={windowBodyRef}
               anchor="top-middle"
+              blockEndReserve={windowBottomChipReserve}
               icon={WINDOW_PANE_SEARCH_ICON}
               label={searchLabel}
               folded={!searchExpanded}

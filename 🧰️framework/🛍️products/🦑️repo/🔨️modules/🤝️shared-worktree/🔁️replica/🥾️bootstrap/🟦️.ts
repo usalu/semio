@@ -241,7 +241,7 @@ export async function writeBootstrapArchiveV1(options:BootstrapOptionsV1&Bootstr
  const size=(list:readonly (readonly [string,FleetManifestEntryV1])[]):number=>list.reduce((sum,[,entry])=>sum+entry.bytes!+tarOverhead,2*BLOCK);
  const stem=join(store.tmp,`${options.originId}-bootstrap-${token()}`),archive=`${stem}.tar`,manifest=`${stem}.json`,side=`${stem}.entries`,staged=`${stem}.pk`;
  const sources=new Map<string,string>();
- let wanted=eligible,reach:Awaited<ReturnType<typeof writeReachablePackV1>>;
+ let wanted:[string,FleetManifestEntryV1][]=eligible,reach:Awaited<ReturnType<typeof writeReachablePackV1>>;
  try{
   if(options.reachable!==false&&await stat(join(options.worktree,".git","HEAD")).then(()=>true,()=>false)){
    await guard(size(plain)+2**30);

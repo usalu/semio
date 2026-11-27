@@ -64,6 +64,16 @@ test("workspace closure verification hashes bounded chunks and reports an unknow
  await expect(verify(NAMESPACE,key,signal)).rejects.toBe(reason);
 });
 
+test("a closure port with a shared reader stats every leaf under the lease and answers the same size as the plain stat",async()=>{
+ const workspace=scratch(),plain=workspaceClosurePortV1(workspace)!,runs:string[]=[],reader={run:async<T>(body:()=>T|Promise<T>):Promise<T>=>{runs.push("run");return body();},close:async()=>undefined},leased=workspaceClosurePortV1(workspace,reader)!;
+ const bytes=Buffer.alloc(33,7),key=sha(bytes),directory=plain.directory(NAMESPACE);
+ expect(plain.sizeLeased).toBeUndefined();
+ await expect(leased.sizeLeased!(NAMESPACE,key)).resolves.toBeUndefined();
+ mkdirSync(directory,{recursive:true});writeFileSync(join(directory,key+".json"),bytes);
+ await expect(leased.sizeLeased!(NAMESPACE,key)).resolves.toBe(33);
+ expect(leased.size(NAMESPACE,key)).toBe(33);expect(plain.size(NAMESPACE,key)).toBe(33);expect(runs).toEqual(["run","run"]);
+});
+
 test("an upload sends each named leaf once and a restore fetches the leaves this machine lacks, verified by name",async()=>{
  const server=await serve(),one=leaf("a.ts"),two=leaf("b.ts"),mother=scratch(),motherLeaves=port(scratch());
  await motherLeaves.put(NAMESPACE,one.key,one.bytes);await motherLeaves.put(NAMESPACE,two.key,two.bytes);

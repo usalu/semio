@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::{forms_children_from_steps, forms_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
 use semio_framework_test_fixtures::fixture_text;
-use store::os_store::test_support::assert_dsl_round_trip;
+use semio_os_store_test_support::assert_dsl_round_trip;
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_dsl_round_trips_with_composed_children() {

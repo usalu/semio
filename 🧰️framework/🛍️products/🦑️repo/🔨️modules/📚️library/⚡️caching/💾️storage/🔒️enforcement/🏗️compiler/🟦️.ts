@@ -2,7 +2,10 @@ import {profilePhaseV1} from "../../../../🏗️build/⏱️profile/🟨️.mjs
 import {CARGO_TOOL_IDS_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import {buildPreparationBudgetMs,progressDeadlinePolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import{readNativeArtifactCacheParentPolicyV1,readNativeArtifactCachePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/🟦️.ts";
-import{withRepositoryCachePartitionArtifactCacheV1}from"../📦️budget/📥️opening/🟦️.ts";
+import{withRepositoryCachePartitionArtifactCacheV1,repositoryCachePartitionRootV1}from"../📦️budget/📥️opening/🟦️.ts";
+export {productLaneReporterV1} from "./🛤️lane/🟦️.ts";
+import {awaitProductLaneFreeV1} from "../../../🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🎯️product/🟦️.ts";
+import type {PoolReportV1} from "../../../🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
 import type{NativeArtifactCachePolicyV1,NativeArtifactCacheVolumeV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/🟦️.ts";
 import{recoverCompactCompilerHeadroomV1,relieveUnitCacheHeadroomV1}from"./📏️capacity/♻️recovery/🟦️.ts";
 import{withCompilerWorkspaceLifetimeV1,withCompilerWorkspaceBorrowV1,requireCompilerWorkspaceBorrowCustodyV1}from"./📏️capacity/🟦️.ts";
@@ -32,7 +35,7 @@ import {ensureRepositoryWindowsCompilerV1,withRepositoryWindowsCompilerV1} from 
 import {unitCacheRootV1,unitCacheWrapperV1} from "../../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {laneFlavourV1} from "../../../🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
 import {withCompilerLaneViewV1,withCompilerProductViewV1,type CompilerLaneRequestV1} from "./🛤️lane/🟦️.ts";
-import {compilerProductKeyV1} from "./🎯️product/🟦️.ts";
+import {compilerProductKeyV1,compilerProductToolchainDigestV1} from "./🎯️product/🟦️.ts";
 import {refuseCachingV1} from "../../../📖️texts/🟦️.ts";
 
 /** 🏪️ Retains one charged shared compiler working set rather than minting a new allocation per invocation. */
@@ -83,16 +86,24 @@ export function withRepositoryCompilerStoreLaneV1<T>(store:RepositoryCompilerSto
  return withCompilerLaneViewV1({host:owner.host,store,control,request:{...request,...laneFlavourV1(store.buildDirectory)===undefined?{}:{flavour:laneFlavourV1(store.buildDirectory)!}},register:view=>{compilerStoreOwners.set(view,owner);}},body);
 }
 
+/** 🚏️ Waits for the product lane of an intended build before any store, image, toolchain or lease is opened: the key derives from the pinned toolchain file, so the caller queues holding nothing, with no bound, and reports the holder on every notice. The store entered afterwards takes the lane at once in the usual case; a caller that loses the race to another process yields again (`withRepositoryCompilerStoreProductV1` with `yieldLane`) or, inside a retained store, waits bounded. */
+export async function awaitCompilerProductLaneV1(workspace:string,mode:BuildMode,control:ResourceLeaseControl,request:Readonly<{manifest:string;command:string;producer:"artifact"|"descriptor-emitter";arguments:readonly string[]}>,options:Readonly<{signal:AbortSignal;report?:PoolReportV1}>):Promise<void>{
+ const key=await compilerProductKeyV1({version:1,root:workspace,manifest:resolve(workspace,request.manifest),mode,command:request.command,producer:request.producer,arguments:request.arguments,toolchain:compilerProductToolchainDigestV1(workspace)},control);
+ await awaitProductLaneFreeV1(unitCacheRootV1(repositoryCachePartitionRootV1(workspace,"rust")),key,options);
+}
+
 /** 🎯️ Selects an intended product path under the exact live compiler owner before taking its exclusive execution claim. */
-export async function withRepositoryCompilerStoreProductV1<T>(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl,request:Readonly<{manifest:string;command:string;producer:"artifact"|"descriptor-emitter";arguments:readonly string[];crates:readonly string[]}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+export async function withRepositoryCompilerStoreProductV1<T>(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl,request:Readonly<{manifest:string;command:string;producer:"artifact"|"descriptor-emitter";arguments:readonly string[];crates:readonly string[];yieldLane?:boolean}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  const owner=compilerStoreOwners.get(store);if(!owner?.live||owner.storage!==store.storage||owner.control!==store.control||owner.partition.root!==store.root)throw refuseCachingV1("stale","compiler.retained-store-required");
  requireIssuedResourceControlInvocationV1(control,owner.invocation);requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);
- const captured=Object.freeze({...request,arguments:Object.freeze([...request.arguments]),crates:Object.freeze([...request.crates])}),product=await compilerProductKeyV1({version:1,root:owner.workspace,manifest:resolve(owner.workspace,captured.manifest),mode:owner.mode,command:captured.command,producer:captured.producer,arguments:captured.arguments,toolchain:store.toolchain.digest},control);
+ const captured=Object.freeze({...request,arguments:Object.freeze([...request.arguments]),crates:Object.freeze([...request.crates])}),product=await compilerProductKeyV1({version:1,root:owner.workspace,manifest:resolve(owner.workspace,captured.manifest),mode:owner.mode,command:captured.command,producer:captured.producer,arguments:captured.arguments,toolchain:compilerProductToolchainDigestV1(owner.workspace)},control);
  if(!owner.live)throw refuseCachingV1("stale","compiler.retained-store-required");requireNativeStorageReservationV1(owner.storage,owner.control);
- return withCompilerProductViewV1({host:owner.host,store,control,request:{crates:captured.crates,...laneFlavourV1(store.buildDirectory)===undefined?{}:{flavour:laneFlavourV1(store.buildDirectory)!}},product,register:view=>{compilerStoreOwners.set(view,owner);}},body);
+ return withCompilerProductViewV1({host:owner.host,store,control,request:{crates:captured.crates,...laneFlavourV1(store.buildDirectory)===undefined?{}:{flavour:laneFlavourV1(store.buildDirectory)!}},product,...captured.yieldLane===true?{yieldLane:true}:{},register:view=>{compilerStoreOwners.set(view,owner);}},body);
 }
 
 type RetainedCompilerStoreV1={readonly store:RepositoryCompilerStoreV1;readonly control:ResourceLeaseControl;readonly invocation:ScriptInvocation;live:boolean};
+/** 🧵️ Whether the caller already runs inside a live retained store of this workspace and mode: leaving the inner scope then releases none of its holds. */
+export function compilerStoreRetainedV1(workspace:string,mode:BuildMode):boolean{return retainedCompilerStores.getStore()?.get(retainedCompilerKeyV1(workspace,mode))?.live===true;}
 const retainedCompilerStores=new AsyncLocalStorage<ReadonlyMap<string,RetainedCompilerStoreV1>>(),retainedCompilerKeyV1=(workspace:string,mode:BuildMode)=>workspace+"\0"+mode;
 /** 🧵️ Enters the compiler store once and lets every `withRepositoryCompilerStoreV1` call of the same invocation, workspace and mode inside `body` reuse it with its own deadline and cancellation, until `body` settles. */
 export function withRetainedRepositoryCompilerStoreV1<T>(workspace:string,mode:BuildMode,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{

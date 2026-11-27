@@ -99,6 +99,12 @@
         "reclaimTightHostFreeBytes": {"type": "integer", "minimum": 0, "maximum": 1099511627776}
       }
     },
+    "imageCap": {
+      "description": "No image of any partition is born, grown or declared above this many bytes: macOS returns freed blocks of a mounted APFS image only for containers of at most 2^35 bytes, so a larger image can never give space back. A partition that needs more is split into several images by `imageShards`; its `capacityBytes` is then the budget of all its images together.",
+      "const": {
+        "maximumImageBytes": 34359738368
+      }
+    },
     "filesystemOverhead": {
       "const": {
         "tinyCapacityBytes": 268435456
@@ -112,6 +118,37 @@
       }
     },
     "partition": {
+      "anyOf": [
+        {
+          "description": "One image: its capacity is the image and stays within the image cap.",
+          "properties": {
+            "capacityBytes": {
+              "type": "integer",
+              "maximum": 34359738368
+            }
+          }
+        },
+        {
+          "description": "Several images: `imageShards` is enabled, so each image stays within the image cap and `capacityBytes` is the budget of all of them.",
+          "required": [
+            "imageShards"
+          ],
+          "properties": {
+            "imageShards": {
+              "type": "object",
+              "required": [
+                "enabled"
+              ],
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "const": true
+                }
+              }
+            }
+          }
+        }
+      ],
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -162,7 +199,7 @@
             "maximumImageBytes": {
               "type": "integer",
               "minimum": 1073741824,
-              "maximum": 137438953472
+              "maximum": 34359738368
             },
             "headroomPercent": {
               "type": "integer",
@@ -200,7 +237,7 @@
                   "needBytes": {
                     "type": "integer",
                     "minimum": 1048576,
-                    "maximum": 137438953472
+                    "maximum": 34359738368
                   }
                 }
               }
@@ -220,17 +257,17 @@
             "darwin": {
               "type": "integer",
               "minimum": 33554432,
-              "maximum": 103080263680
+              "maximum": 34359738368
             },
             "linux": {
               "type": "integer",
               "minimum": 33554432,
-              "maximum": 103080263680
+              "maximum": 34359738368
             },
             "win32": {
               "type": "integer",
               "minimum": 33554432,
-              "maximum": 103080263680
+              "maximum": 34359738368
             }
           }
         }
@@ -324,13 +361,13 @@
         "needBytes": {
           "type": "integer",
           "minimum": 1048576,
-          "maximum": 103080263680
+          "maximum": 34359738368
         },
         "floorBytes": {
           "description": "The smallest image that still works (a compile needs its workspaces): the share of the host never cuts an image below it, and a host that cannot give it is refused before the image is born; an image born smaller is recreated at the next regrow.",
           "type": "integer",
           "minimum": 33554432,
-          "maximum": 103080263680
+          "maximum": 34359738368
         },
         "headroomPercent": {
           "type": "integer",
@@ -363,13 +400,13 @@
         "maximumBytes": {
           "type": "integer",
           "minimum": 33554432,
-          "maximum": 103080263680
+          "maximum": 34359738368
         },
         "minimumBytes": {
           "description": "The smallest image the partition is born with; it never exceeds the declared partition capacity and the maximum.",
           "type": "integer",
           "minimum": 33554432,
-          "maximum": 103080263680
+          "maximum": 34359738368
         },
         "reclaimFloorBytes": {
           "description": "An idle image is reclaimed in place by `repo cache gc` when its host allocation exceeds the bytes used inside by at least this floor and by the ratio below.",

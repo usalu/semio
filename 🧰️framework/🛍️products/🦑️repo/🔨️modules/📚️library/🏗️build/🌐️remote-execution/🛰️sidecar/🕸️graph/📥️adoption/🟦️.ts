@@ -16,7 +16,8 @@ import {readRemoteExecutionHostViewV1} from "../../../🌡️load/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {hostFloorMegabytesV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import {machinePathV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import {graphRefreshCustodyHeldV1} from "../🔬️stall/🟦️.ts";
+import {createNativeImageSharedReaderV1,NATIVE_IMAGE_SHARED_READ_POLICY_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
+import {graphRefreshDeferredV1} from "../🔬️stall/🟦️.ts";
 import {liveGraphReadV1} from "../🔭️read/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -190,6 +191,7 @@ export async function runHeadAdoptionLaneV1(context:RemoteExecutionSidecarContex
  const {repositoryCacheBudgetV1}=await import("../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),{nativeDirectoryHostAvailableBytesV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts");
  const receiptLocation={root,store,origin,localDirectory:steerDirectory};
  const graph=repositoryCacheBudgetV1(root).partitions.graph,generationsRoot=join(graph.directory,"m","generations"),leaseDirectory=machinePathV1(root,".cache/b/l/m/data");
+ const peek=createNativeImageSharedReaderV1({leaseDirectory,imageDirectory:graph.directory,signal,timeoutMs:NATIVE_IMAGE_SHARED_READ_POLICY_V1.sampleWaitMilliseconds});
  let heldMegabytes=0;
  const tick=createHeadAdoptionTurnV1({
   async eligible(turn,active){
@@ -197,7 +199,7 @@ export async function runHeadAdoptionLaneV1(context:RemoteExecutionSidecarContex
    const view=await readRemoteExecutionHostViewV1(environment),host=view.host,floor=hostFloorMegabytesV1(BUILD_HOST_CAPACITY_POLICY_V1,host);
    if(host.totalMegabytes<policy.minimumHostMegabytes||host.totalMegabytes>=serveTotalMegabytes||host.pressure!=="normal"||host.availableMegabytes<floor+(active?0:policy.grantMegabytes)||view.waiters.some(row=>!active||row.pid!==process.pid)||view.grants.some(row=>!active||row.pid!==process.pid))return false;
    if(active)return heldMegabytes===0||process.memoryUsage.rss()/1048576<heldMegabytes;
-   if(liveGraphReadV1(steerDirectory)?.status===null||graphRefreshCustodyHeldV1({generationsRoot,leaseDirectory,environment,signal:turn}))return false;
+   if(liveGraphReadV1(steerDirectory)?.status===null||await graphRefreshDeferredV1(peek,{generationsRoot,leaseDirectory,environment,signal:turn}))return false;
    const copy=readLocalFleetCacheFactsV1(root),resolved=copy&&resolveRemoteCacheV1(environment,{root,copy});
    if(loadFleetSignerV1(root,"cache-read")?.originId!==origin||resolved?.tokenFrom!=="fleet-identity"||resolved.endpointFrom!=="fleet-facts"||!(copy?.facts.cache.transport==="sealed"||new URL(resolved.contract.endpoint).protocol==="https:"))return false;
    return nativeDirectoryHostAvailableBytesV1(graph.directory)>=graph.filesystemBytes;
@@ -210,9 +212,11 @@ export async function runHeadAdoptionLaneV1(context:RemoteExecutionSidecarContex
   },
   fault:error=>context.write("graph-head adoption / Graphstand-Übernahme "+String(error instanceof Error?error.message:error).slice(0,200)),
  });
- while(!signal.aborted){
-  await tick(signal);
-  if(!context.work?.restartPending&&await liveForHeadAdoptionV1(store,origin,signal))await mirrorWholeGenerationAdoptionReceiptV1({...receiptLocation,signal});
-  await wait(policy.roundMilliseconds,signal);
- }
+ try{
+  while(!signal.aborted){
+   await tick(signal);
+   if(!context.work?.restartPending&&await liveForHeadAdoptionV1(store,origin,signal))await mirrorWholeGenerationAdoptionReceiptV1({...receiptLocation,signal});
+   await wait(policy.roundMilliseconds,signal);
+  }
+ }finally{await peek.close();}
 }

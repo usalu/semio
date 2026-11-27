@@ -51,7 +51,7 @@ mod tests {
     //#region 🧪️SubsetRoundtrip
     struct XmlValidRoundtrip;
 
-    impl store::os_store::test_support::SubsetRoundtripSpec for XmlValidRoundtrip {
+    impl semio_os_store_test_support::SubsetRoundtripSpec for XmlValidRoundtrip {
         type Snapshot = XmlSnapshot;
         type Mutation = crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
         type Inference = crate::standards::v1_0::subsets::base::schema::inferences::XmlInference;
@@ -60,8 +60,8 @@ mod tests {
             semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "valid".into() }
         }
 
-        async fn fidelity() -> store::os_store::test_support::IoFidelityClass {
-            store::os_store::test_support::IoFidelityClass::Canonical
+        async fn fidelity() -> semio_os_store_test_support::IoFidelityClass {
+            semio_os_store_test_support::IoFidelityClass::Canonical
         }
 
         async fn drops() -> &'static [&'static str] {
@@ -72,7 +72,7 @@ mod tests {
             true
         }
 
-        async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+        async fn parse_native(asset: &semio_os_store_test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = asset.text.ok_or_else(|| "xml valid requires dsl text".to_string())?;
             <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
         }
@@ -112,10 +112,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn xml_valid_subset_integrated_roundtrip() {
         let text = crate::standards::v1_0::subsets::base::examples::demo::PRIMARY_TEXT;
-        let positive = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };
+        let positive = semio_os_store_test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };
         let negative_text = crate::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
-        let negative = store::os_store::test_support::ExampleAsset { bytes: negative_text.as_bytes(), text: Some(negative_text), provenance: "✳️valid/📚️examples/🚫️no-doctype" };
-        store::os_store::test_support::assert_subset_roundtrip::<XmlValidRoundtrip>(&positive, Some(&negative)).await;
+        let negative = semio_os_store_test_support::ExampleAsset { bytes: negative_text.as_bytes(), text: Some(negative_text), provenance: "✳️valid/📚️examples/🚫️no-doctype" };
+        semio_os_store_test_support::assert_subset_roundtrip::<XmlValidRoundtrip>(&positive, Some(&negative)).await;
     }
     //#endregion 🧪️SubsetRoundtrip
 }

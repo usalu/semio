@@ -1,7 +1,5 @@
 //! 🧰️ Round-trip assertions shared by every technology crate's `Mutation` test suite: demo owners, preparation doubles, scratch directories and the language-neutral mutation report.
 
-#[path = "📥️lifted/🏪️store/🦀️.rs"]
-pub mod lifted_store;
 use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
 use semio_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreEnvelopeRetirement};
 use semio_os_spr::{ActorId, ArtifactId, Edit, ColdMutation, Mutation, OpBinary, OpText, SchemaId};
@@ -28,54 +26,11 @@ use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCl
 use serde::Serialize;
 use semio_os_vcs::{VcsError, apply_mutation};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_os_store_replay::apply_outcome;
 use semio_os_store_document::create_document_envelope;
 use semio_os_store_space::lifted_store::install_unscheduled_catalog;
 use semio_os_store_space_member::lifted_document_materialize::materialize_document_snapshot;
 use semio_os_store_command::{parse_command, print_command};
 
-//#region 🧪️MutationReport
-/// 🧪️ The report every language-neutral mutation case compares against its committed specification vector. The
-/// base and expected-after snapshots and the mutation are decoded through the production JSON codec, the mutation is
-/// applied through `protocol::apply_diff` (so an apply refusal surfaces as the fatal message production
-/// dispatch records), and the mutation's own computed inverse steps are replayed in reverse order (as the engine does) onto the applied snapshot.
-/// The forward half is `base`, `expectedSnapshot`, `snapshot`, `diff`, `messages`; the inverse half is
-/// `inverseSteps`, `inverseSnapshot`, `inverseMessages`. `expectedSnapshot` is decoded through the same path as
-/// `base`, so a caller compares like with like.
-///
-/// @see ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the laws case adapters assert over this report.
-pub fn mutation_report_json<S, M>(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String>
-where
-    S: Clone + ToValue + FromValue,
-        M: ColdMutation<S> + ToValue + FromValue,
-{
-    let decode_snapshot = |text: &str| -> Result<S, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
-    let base = decode_snapshot(base_json)?;
-    let expected = decode_snapshot(after_json)?;
-    let mutation: M = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let (applied, forward) = apply_outcome(&base, mutation.diff(&base));
-    let inverse = mutation.inverse(&base).map_err(ValueError::into_message)?;
-    let mut undone = applied.clone();
-    let mut inverse_messages = Vec::new();
-    for step in inverse.iter().rev() {
-        let (next, step_outcome) = apply_outcome(&undone, step.diff(&undone));
-        undone = next;
-        inverse_messages.extend(step_outcome.messages().iter().cloned());
-    }
-    let json = |value: DslValue| semio_framework_pack_json::from_dsl_value(&value);
-    let report = semio_framework_pack_json::object([
-        ("base".to_string(), json(base.to_value())),
-        ("expectedSnapshot".to_string(), json(expected.to_value())),
-        ("snapshot".to_string(), json(applied.to_value())),
-        ("diff".to_string(), json(forward.diff().to_value())),
-        ("messages".to_string(), json(forward.messages().to_vec().to_value())),
-        ("inverseSteps".to_string(), json(inverse.to_value())),
-        ("inverseSnapshot".to_string(), json(undone.to_value())),
-        ("inverseMessages".to_string(), json(inverse_messages.to_value())),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&report))
-}
-//#endregion 🧪️MutationReport
 
 /// 🧬️ Order-preserving test projection for an independent JSON byte encoder.
 #[cfg(any(test, feature = "testkit"))]
@@ -521,7 +476,7 @@ where
     assert!(parsed.envelope.active_alternative_id.is_none() && parsed.envelope.viewer_checkpoint_id.is_none(), "document text hydrates to the canonical trunk tip");
     if store.envelope().active_alternative_id.is_none() && store.envelope().viewer_checkpoint_id.is_none() {
         assert!(&parsed.envelope == store.envelope(), "document-text round trip lost durable history");
-        assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
+        assert_eq!(*parsed.snapshot, live, "document-text round trip diverged from store snapshot");
     }
     retire(parsed);
 }
@@ -554,6 +509,7 @@ where
     let mut retirement = ArtifactStoreEnvelopeRetirement::new(envelope, Arc::new(semio_os_store_engine_owners::BoundedArtifactRetirementFactory::<P>::new()), Arc::new(semio_os_store_engine_owners::BoundedArtifactRetirementFactory::<Mutation>::new()));
     drive_retirement(&mut retirement).expect("parsed document retires within its quoted demands");
     assert!(retirement.terminal_is_empty(), "parsed document must reach its terminal-empty shell");
+    let snapshot = Arc::try_unwrap(snapshot).unwrap_or_else(|_| panic!("parsed snapshot is still shared after its envelope retired"));
     let mut snapshot = semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).unwrap_or_else(|(error, _)| panic!("parsed snapshot refused its controlled retirement: {error}"));
     drive_retirement(&mut snapshot).expect("parsed snapshot retires within its quoted demands");
 }
@@ -762,7 +718,7 @@ where
     let live = store.snapshot().expect("store snapshot");
     let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
     let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
-    assert_eq!(parsed_pack.snapshot, live, "document-pack round trip diverged from store snapshot");
+    assert_eq!(*parsed_pack.snapshot, live, "document-pack round trip diverged from store snapshot");
     let viewer = (&parsed_pack.envelope.active_alternative_id, &parsed_pack.envelope.viewer_checkpoint_id);
     assert_eq!(viewer, (&store.envelope().active_alternative_id, &store.envelope().viewer_checkpoint_id), "document-pack round trip lost the viewer head");
 

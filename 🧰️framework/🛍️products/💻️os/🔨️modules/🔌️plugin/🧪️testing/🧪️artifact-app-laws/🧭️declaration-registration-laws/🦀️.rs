@@ -20,7 +20,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
     let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
-    let plugin = semio_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
+    let plugin = semio_plugin_builder::PluginBuilder::new(plugin_id).label(semio_plugin_builder::LocalizedLabel::native(plugin_id, plugin_id)).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
 
     for id in &expected_schema_ids {
         assert!(::semio_framework_schema_registry::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
@@ -49,7 +49,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: semio_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
     let schema_count_before = ::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len());
     let io_count_before = semio_os_kernel::io::io_mechanism::io_entries().len();
-    let result = semio_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
+    let result = semio_plugin_builder::PluginBuilder::new(plugin_id).label(semio_plugin_builder::LocalizedLabel::native(plugin_id, plugin_id)).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
     assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
     assert_eq!(::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
     assert_eq!(semio_os_kernel::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");

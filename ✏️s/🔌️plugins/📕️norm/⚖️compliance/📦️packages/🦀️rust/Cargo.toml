@@ -43,6 +43,7 @@ serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-s-plugin-norm-compliance-core = { path = "../../🧱️core/📦️packages/🦀️rust", features = ["compliance-testing"] }
 semio-framework-artifact-reference = { workspace = true }

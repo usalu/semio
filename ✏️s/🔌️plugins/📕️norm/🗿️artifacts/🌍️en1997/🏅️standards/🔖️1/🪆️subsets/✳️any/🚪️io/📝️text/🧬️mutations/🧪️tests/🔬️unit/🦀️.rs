@@ -3,19 +3,19 @@ use semio_s_artifact_norm_en1997_model::compliant_demo;
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_annex() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
+    semio_os_store_test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_design_approach() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach {
+    semio_os_store_test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach {
         new_design_approach: semio_s_artifact_norm_en1997_model::ApproachChoice::Da2,
     }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_footing_width() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeFootingWidth(change_footing_width::ChangeFootingWidth {
+    semio_os_store_test_support::assert_op_line_round_trip(&En1997Mutation::ChangeFootingWidth(change_footing_width::ChangeFootingWidth {
         id: "f1".into(),
         new_width: 2.4,
     }));
@@ -25,7 +25,7 @@ async fn op_text_round_trips_change_footing_width() {
 #[semio_framework_async_macros::async_test]
 async fn every_variant_op_text_round_trips() {
     for mutation in every_mutation() {
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
     }
 }
 

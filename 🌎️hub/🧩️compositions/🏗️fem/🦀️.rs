@@ -63,7 +63,7 @@ pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
     semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::initialize();
     semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::initialize();
     PluginBuilder::<_, FemApps>::new("fem")
-        .label("FEM")
+        .label(semio_plugin::LocalizedLabel::native("FEM", "FEM"))
         .version("0.1.0")
         .package_id("semio:fem")
         .declare_artifact(semio_s_artifact_fem_2d::artifact::<FemApps>())

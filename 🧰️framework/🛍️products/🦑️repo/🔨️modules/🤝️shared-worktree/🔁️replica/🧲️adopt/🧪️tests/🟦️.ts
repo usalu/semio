@@ -161,13 +161,13 @@ const vectors=fixture.cases as unknown as readonly {local:never;remote:never;evi
 
 test("the classification of every vector follows the rule, never reads a modification time, and the Python oracle decides the same",()=>{
  const results=vectors.map(item=>{const category=classifyV1((item.local??undefined) as never,(item.remote??undefined) as never,item.evidence);return [category??null,reasonV1(category,(item.remote??undefined) as never,item.evidence)??null];});
- expect(results).toEqual(vectors.map(item=>[item.expect,item.reason]));
+ expect<unknown>(results).toEqual(vectors.map(item=>[item.expect,item.reason]));
  for(const item of vectors){
   if(item.local===null)continue;
   const local=item.local as {mtimeMs:number};
   for(const mtimeMs of [0,1,4102444800000]){
    const moved=classifyV1({...local,mtimeMs} as never,(item.remote??undefined) as never,item.evidence)??null;
-   expect(moved).toBe(item.expect);
+   expect<unknown>(moved).toBe(item.expect);
   }
  }
  if(python){

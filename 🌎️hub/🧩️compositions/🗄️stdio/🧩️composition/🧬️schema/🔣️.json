@@ -48,8 +48,14 @@
             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
           },
           "label": {
-            "type": "string",
-            "minLength": 1
+            "description": "🏷️ The owner plugin's name per locale ({en, de}), the same text in every terminology; no default language.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "de"],
+            "properties": {
+              "en": { "type": "string", "minLength": 1 },
+              "de": { "type": "string", "minLength": 1 }
+            }
           },
           "main": {
             "type": "boolean"

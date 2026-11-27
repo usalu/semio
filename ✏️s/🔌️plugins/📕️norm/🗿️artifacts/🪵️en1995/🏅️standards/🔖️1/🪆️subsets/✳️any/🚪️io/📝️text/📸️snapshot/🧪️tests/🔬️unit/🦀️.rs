@@ -4,7 +4,7 @@ use semio_s_artifact_norm_en1995_model::MemberRole;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    semio_os_store_test_support::assert_dsl_round_trip(&En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -15,7 +15,7 @@ async fn glulam_footbridge_example_fixture_parses_and_round_trips() {
     assert_eq!(document.members[0].role, MemberRole::Bridge);
     assert_eq!(document.members[0].strength_class, "GL28h");
     assert!(document.connections.is_empty());
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]

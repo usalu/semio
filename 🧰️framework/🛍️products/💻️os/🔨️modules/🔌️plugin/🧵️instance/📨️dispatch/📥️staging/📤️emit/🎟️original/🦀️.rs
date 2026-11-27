@@ -3,7 +3,7 @@ use crate::dispatch_bundle::DispatchCtx;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_job::original_emission::{OriginalEmissionInput,OriginalEmissionCapture,OriginalEmissionReceipt,admit_original_emission_receipt};
-use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
+use semio_plugin_retained_command_operation::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
 use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_retained_turn,close_original_retained_step};
 use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};

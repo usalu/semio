@@ -10,7 +10,7 @@ use std::future::Future;
 use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US};
 use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation;
 use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -77,32 +77,32 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let started_us=cx.now_us();
         for pump in 0..INTERACTIVE_TURN_WORKER_PUMPS {
             if !self.tools.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
-                return Ok(());
+                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 1 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
             }
             if self.tools.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
                 // Earlier units settled directly on this recipient. Start the granted
                 // retirement receipt in its own publication window.
-                if pump != 0 { return Ok(()); }
+                if pump != 0 { {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 2 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())}; }
                 return self.retire_granted_typed_operation_run(operation_id, cx, started_us);
             }
             let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand,grant) {
-                return Ok(());
+                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 3 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
             }
             match cx.with_retained_loan(grant,|same|self.retire_typed_operation_unit(operation_id,same).map_err(Into::into))? {
-                PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => return Ok(()),
+                PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 4 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())},
                 PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => {
                     if !progress.fits(grant) {
                         return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"typed operation retirement exceeded its issuer grant").with_retained_progress(progress).into());
                     }
                     if progress == RetainedCloneProgress::default() {
-                                                return Ok(());
+                                                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 5 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
                     }
                 }
             }
             if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)) {
-                return Ok(());
+                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 6 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
             }
         }
         Ok(())
@@ -146,6 +146,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             failure.effects = spent.saturating_add(failure.effects);
             return Err(failure);
         }
+        if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] granted retire spent items={} bytes={} grant items={} fuel={} ready={} pending={}",spent.copied_items,spent.copied_bytes,grant.maximum_items,cx.fuel_remaining(),owner.granted_retirement_ready(),owner.granted_retirement_pending());}
         if spent != RetainedCloneProgress::default() {
             assert!(owner.original_retirement_receipt.is_none(), "original mounted Close receipt cannot be overwritten before acknowledgement");
             owner.original_retirement_receipt = Some((grant, spent));

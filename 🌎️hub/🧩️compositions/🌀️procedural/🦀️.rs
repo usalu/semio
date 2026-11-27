@@ -94,10 +94,10 @@ fn flow_extension_declarations() -> Result<Vec<FlowExtensionDeclaration>, Plugin
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
     let mut builder = PluginBuilder::<NeedsLabel, ProceduralApps>::new("procedural")
-        .label("Procedural")
+        .label(semio_plugin::LocalizedLabel::native("Procedural", "Prozedural"))
         .version("0.1.0")
         .package_id("semio:procedural")
-        .artifact(semio_s_artifact_procedural_generation2d::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(semio_s_artifact_procedural_generation2d_pdf_export::declaration().map_err(PluginAssemblyError::definition)?)
         .artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
             "s.procedural.host-media.mesh-import",

@@ -56,7 +56,7 @@ pub(crate) mod tool_jobs {
     pub use time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 }
 pub(crate) mod typed_operation {
-    pub use semio_plugin_retained_command::typed_operation::*;
+    pub use semio_plugin_retained_command_operation::typed_operation::*;
 }
 //#endregion 👷️JobsFacet
 //#region ⚛️ReactorFacet

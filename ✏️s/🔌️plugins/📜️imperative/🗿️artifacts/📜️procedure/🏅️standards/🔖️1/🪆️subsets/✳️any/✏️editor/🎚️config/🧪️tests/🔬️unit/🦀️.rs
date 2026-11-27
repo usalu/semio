@@ -9,8 +9,8 @@ async fn imperative_config_default_is_empty_english() {
 #[semio_framework_async_macros::async_test]
 async fn imperative_config_dsl_round_trips() {
     let config = ImperativeConfig { run_output_json: r#"{"counter":1}"#.into(), contributions_json: "[]".into() };
-    store::os_store::test_support::assert_dsl_round_trip(&config);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&config);
+    semio_os_store_test_support::assert_dsl_round_trip(&config);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&config);
 }
 
 #[semio_framework_async_macros::async_test]

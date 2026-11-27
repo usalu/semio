@@ -1,11 +1,13 @@
 import {afterAll,expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
-import {existsSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {CAS_POLICY_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
+import {casReserveBytesV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
+import {casUsageHintPathV1,recordCasMeasurementV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
 import {readCasPinsV1} from "../../../🗄️cas/📌️pins/🟦️.ts";
 import {slotIdV1} from "../../../🪢️slots/🟦️.ts";
 import {planRemoteCacheBlobBoundV1} from "../../🧹️collector/🟦️.ts";
@@ -70,6 +72,18 @@ test("the server bound is a share of the host store's cap in force and follows t
  expect(await remoteCacheBlobBoundV1(large,50)).toBe(2**30);
  expect(await remoteCacheBlobBoundV1(large,25)).toBe(2**29);
  expect(await remoteCacheBlobBoundV1(large,undefined)).toBeUndefined();
+});
+
+test("the server bound shrinks as the free space nears the hard reserve and is judged on the newest measurement, not on the last collection",async()=>{
+ const root=directory("free"),host={root,policy:CAS_POLICY_V1},total=926*2**30,reserve=casReserveBytesV1(CAS_POLICY_V1,{totalBytes:total,role:"cache-host"}),at=(free:number)=>()=>({partition:"/volume",totalBytes:total,freeBytes:free,role:"cache-host" as const});
+ mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:60*2**30,atMs:Date.now()-3600000}));
+ const stale=await remoteCacheBlobBoundV1(host,50,at(reserve+20*2**30));
+ expect(await recordCasMeasurementV1(root,100*2**30,Date.now())).toBe(true);
+ const fresh=await remoteCacheBlobBoundV1(host,50,at(reserve+20*2**30)),tight=await remoteCacheBlobBoundV1(host,50,at(reserve+2*2**30)),roomy=await remoteCacheBlobBoundV1(host,50,at(reserve+80*2**30));
+ expect(stale).toBeLessThan(fresh!);
+ expect(tight).toBeLessThan(fresh!);
+ expect(tight).toBeLessThanOrEqual(Math.floor((100*2**30+2*2**30)/2));
+ expect(roomy).toBeGreaterThan(fresh!);
 });
 
 const bytesOf=(name:string,size:number)=>new TextEncoder().encode(name.repeat(Math.ceil(size/name.length)).slice(0,size));

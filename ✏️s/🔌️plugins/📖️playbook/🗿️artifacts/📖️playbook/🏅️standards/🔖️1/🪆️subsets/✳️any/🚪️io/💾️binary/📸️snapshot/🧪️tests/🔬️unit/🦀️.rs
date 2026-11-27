@@ -23,8 +23,8 @@ async fn facade_generator_example_pack_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn facade_generator_example_pack_agrees_with_dsl() {
     let document = empty_playbook_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
-    store::os_store::test_support::assert_pack_schema_identity(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_pack_schema_identity(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -37,6 +37,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<PlaybookSnapshot, PlaybookMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<PlaybookMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<PlaybookSnapshot, PlaybookMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<PlaybookSnapshot, PlaybookMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     store.close_owned_unscheduled().expect("playbook store closes through its exact bounded owners");
 }

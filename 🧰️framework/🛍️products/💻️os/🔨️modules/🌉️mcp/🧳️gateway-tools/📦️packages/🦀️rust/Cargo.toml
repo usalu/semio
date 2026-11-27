@@ -42,6 +42,7 @@ semio-os-mcp-tools-inference = { path = "../../../🔭️inference-tools/📦️
 semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️packages/🦀️rust", features = ["testkit"] }
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }

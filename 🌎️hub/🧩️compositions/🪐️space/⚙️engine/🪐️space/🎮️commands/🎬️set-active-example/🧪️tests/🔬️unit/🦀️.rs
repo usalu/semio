@@ -10,12 +10,12 @@ use semio_os::{WorkflowMutation, WorkflowSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(semio_hub_space_commands_media::export_studio_pack::ExportStudioPack {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into(), workflow_artifact_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(semio_hub_space_commands_media::export_studio_pack::ExportStudioPack {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into(), workflow_artifact_id: None }));
 }
 
 #[semio_framework_async_macros::async_test]

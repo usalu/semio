@@ -37,6 +37,7 @@ semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/
 semio-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

@@ -5,13 +5,20 @@ T="$(cd "$(dirname "$0")" && pwd)"; G="${QUEUE_GENERATED:-$T/🗑️generated}";
 ROOT="$(cd "$T/../../../../../../.." && pwd)"
 M="${QUEUE_MODULES:-$ROOT/.cache/b/p/m/browser/release/modules}"
 mkdir -p "$G"
+export SEMIO_SOURCE_SNAPSHOT_OWNER="$$"
+forget_snapshot() {
+  repo "$ROOT/🧰️framework/🔨️modules/🏃️process/🏗️build/📸️checkout-snapshot/📜️script.ts" forget --step="$1" >/dev/null 2>&1
+}
 staged() {
   awk -v count="$2" '/^\[native-build\] [0-9]+ unit\(s\),/ { accepted = $0 ~ (", " count " component\\(s\\) staged,") && /, 0 failure\(s\) in .*; report / } END { exit !accepted }' "$1"
 }
 build() {
   local id="$1" attempt
   rm -f "$G/confirmed/$id.json"
+  trap 'forget_snapshot "$SEMIO_SOURCE_SNAPSHOT_STEP"; trap - RETURN' RETURN
   for attempt in 1 2; do
+    [ -z "${SEMIO_SOURCE_SNAPSHOT_STEP:-}" ] || forget_snapshot "$SEMIO_SOURCE_SNAPSHOT_STEP"
+    export SEMIO_SOURCE_SNAPSHOT_STEP="browser-$id-$$-$attempt-$(date +%s)"
     [ -f "$G/browser-$id.log" ] && mv "$G/browser-$id.log" "$G/browser-$id.log.prev"
     FORCE=1 "$DRIVER" step "browser-$id" "" repo ./📜️script.ts components describe "$id" --facet browser; local rc=$?
     if { [ "$rc" -eq 0 ] || [ "$rc" -eq 75 ]; } && [ -f "$G/browser-$id.log" ] && staged "$G/browser-$id.log" 1; then
@@ -27,6 +34,8 @@ build() {
 }
 build_pair() {
   local left="$1" right="$2" name="browser-pair-$1+$2" rc pending status=0
+  export SEMIO_SOURCE_SNAPSHOT_STEP="$name-$$-$(date +%s)"
+  trap 'forget_snapshot "$SEMIO_SOURCE_SNAPSHOT_STEP"; trap - RETURN' RETURN
   rm -f "$G/confirmed/$left.json" "$G/confirmed/$right.json"
   [ ! -f "$G/$name.log" ] || mv "$G/$name.log" "$G/$name.log.prev"
   FORCE=1 "$DRIVER" step "$name" "" repo ./📜️script.ts components describe "$left" "$right" --facet browser

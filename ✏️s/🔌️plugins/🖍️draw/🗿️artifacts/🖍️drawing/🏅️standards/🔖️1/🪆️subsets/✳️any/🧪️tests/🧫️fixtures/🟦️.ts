@@ -157,15 +157,15 @@ export function svgNodesFixture(value: unknown): DrawingSvgNode[] {
   if (!Array.isArray(value)) throw new TypeError("fixture nodes must be an array");
   return value.map((item, index) => {
     const at = `$.nodes[${index}]`, row = fixtureRecord(item, at);
-    if (typeof row.id !== "string" || typeof row.blendMode !== "string" || typeof row.visible !== "boolean" || !Array.isArray(row.transform)) throw new TypeError(`${at} needs an id, blend mode, visibility flag and transform list`);
+    if (typeof row.id !== "string" || typeof row.visible !== "boolean" || !Array.isArray(row.transform)) throw new TypeError(`${at} needs an id, visibility flag and transform list`);
     const groups = row.groups === undefined ? undefined : Array.isArray(row.groups) ? row.groups.map((group, groupIndex) => {
       const entry = fixtureRecord(group, `${at}.groups[${groupIndex}]`);
-      if (typeof entry.id !== "string" || typeof entry.blendMode !== "string") throw new TypeError(`${at}.groups[${groupIndex}] needs an id and a blend mode`);
-      return { id: entry.id, opacity: fixtureNumber(entry.opacity, `${at}.groups[${groupIndex}].opacity`), blendMode: entry.blendMode };
+      if (typeof entry.id !== "string") throw new TypeError(`${at}.groups[${groupIndex}] needs an id`);
+      return { id: entry.id, opacity: fixtureNumber(entry.opacity, `${at}.groups[${groupIndex}].opacity`), blendMode: parseBlendMode(entry.blendMode, `${at}.groups[${groupIndex}].blendMode`) };
     }) : (() => { throw new TypeError(`${at}.groups must be an array`); })();
     const text = row.text === undefined ? undefined : (({ content, size }) => ({ content: String(content), size: fixtureNumber(size, `${at}.text.size`) }))(fixtureRecord(row.text, `${at}.text`));
     const image = row.image === undefined ? undefined : (({ assetId, width, height }) => ({ assetId: String(assetId), width: fixtureNumber(width, `${at}.image.width`), height: fixtureNumber(height, `${at}.image.height`) }))(fixtureRecord(row.image, `${at}.image`));
-    return { id: row.id, transform: row.transform.map((entry, entryIndex) => fixtureNumber(entry, `${at}.transform[${entryIndex}]`)), segments: pathSegmentsFixture(row.segments), opacity: fixtureNumber(row.opacity, `${at}.opacity`), blendMode: row.blendMode, visible: row.visible, ...(groups && { groups }), ...(row.fill !== undefined && { fill: fillStyleFixture(row.fill, `${at}.fill`) }), ...(row.stroke !== undefined && { stroke: strokeStyleFixture(row.stroke, `${at}.stroke`) }), ...(typeof row.fillRule === "string" && { fillRule: row.fillRule }), ...(text && { text }), ...(image && { image }) };
+    return { id: row.id, transform: row.transform.map((entry, entryIndex) => fixtureNumber(entry, `${at}.transform[${entryIndex}]`)), segments: pathSegmentsFixture(row.segments), opacity: fixtureNumber(row.opacity, `${at}.opacity`), blendMode: parseBlendMode(row.blendMode, `${at}.blendMode`), visible: row.visible, ...(groups && { groups }), ...(row.fill !== undefined && { fill: fillStyleFixture(row.fill, `${at}.fill`) }), ...(row.stroke !== undefined && { stroke: strokeStyleFixture(row.stroke, `${at}.stroke`) }), ...(typeof row.fillRule === "string" && { fillRule: row.fillRule }), ...(text && { text }), ...(image && { image }) };
   });
 }
 

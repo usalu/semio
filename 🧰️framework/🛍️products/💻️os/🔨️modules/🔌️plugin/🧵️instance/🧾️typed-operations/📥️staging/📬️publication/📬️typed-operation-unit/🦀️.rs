@@ -1,8 +1,8 @@
 //! 📬️ Typed operation unit of the typed operation publication: the publication of one mounted typed operation with its store, history, receipt and result page steps. See [`super`].
 
 use super::*;
-use semio_plugin_retained_command::typed_operation::note_publication_wait;
-use semio_plugin_retained_command::typed_operation::pending_result_page::{PublicationPageIntent,PublicationPagePlan,PublicationRawReason};
+use semio_plugin_retained_command_operation::typed_operation::note_publication_wait;
+use semio_plugin_retained_command_operation::typed_operation::pending_result_page::{PublicationPageIntent,PublicationPagePlan,PublicationRawReason};
 
 enum OriginalPublicationAdvanceFailure{Primary(semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary),Domain(store::VcsError)}
 
@@ -121,18 +121,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             return Ok(());
         }
-        if mounted.tool_stage!=semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete{
-            use semio_plugin_retained_command::typed_operation::ToolSettlementUnit as Unit;
+        if mounted.tool_stage!=semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage::Complete{
+            use semio_plugin_retained_command_operation::typed_operation::ToolSettlementUnit as Unit;
             let settled=self.as_render().settle_tool_operation(mounted.operation.operation.0,&mounted.canonical_revision,&mounted.meta.actor,mounted.publication.as_mut().expect("mounted publication retains its accepted emit"),&mut mounted.tool_stage,&mut mounted.tool_press_result,&mut mounted.command_logged,cx)?;
             match settled{
                 Unit::Complete=>{}
                 Unit::Advanced=>{note_publication_wait(op,"the tool settlement advanced but is not complete (stage, retained items, fuel)",[mounted.tool_stage as u64,cx.retained_grant().maximum_items as u64,cx.fuel_remaining()]);return Ok(())}
-                Unit::Waiting(wait)=>{semio_plugin_retained_command::typed_operation::note_publication_unit_wait(op,wait);return Ok(())}
+                Unit::Waiting(wait)=>{semio_plugin_retained_command_operation::typed_operation::note_publication_unit_wait(op,wait);return Ok(())}
             }
-            let bytes=std::mem::size_of::<semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();
+            let bytes=std::mem::size_of::<semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();
             if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{note_publication_wait(op,"the tool settlement close is not funded or yielded (items, copy bytes, depth)",[grant.maximum_items as u64,grant.maximum_copy_bytes as u64,grant.maximum_depth as u64]);return Ok(())}
-            if mounted.tool_stage==semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Scrub{if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_ref(){if emit.transaction.is_none(){mounted.command_logged=true}}}
-            mounted.tool_stage=semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete;
+            if mounted.tool_stage==semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage::Scrub{if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_ref(){if emit.transaction.is_none(){mounted.command_logged=true}}}
+            mounted.tool_stage=semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage::Complete;
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
             if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut(){let verbs=take_inline_interaction_verbs(&mut emit.effects);if !verbs.is_empty(){self.tools.typed_inline_interaction_verbs.retain(|(operation,_)|*operation!=mounted.operation.operation.0);self.tools.typed_inline_interaction_verbs.push((mounted.operation.operation.0,verbs));}}
             return Ok(())
@@ -160,7 +160,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
             let durable=matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_));
-            let capture=if durable{2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
+            let capture=if durable{2*std::mem::size_of::<Option<semio_plugin_retained_command_operation::typed_operation::OriginalPublicationFailure>>()}else{0};
             let (scope_items, scope_copy, scope_work) = if cx.original_receiving_scope_held() { (0, 0, 0) } else { semio_framework_job::original_receiving_scope_headroom() };
             let phase = cx.retained_grant();
             let fuel = cx.fuel_remaining();
@@ -232,7 +232,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let ownership=prior.checked_add(match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt)|store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_,receipt))=>*receipt,Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused)=>pending.preparation_refusal_progress().ok_or_else(||plugin_sdk_fault("typed preparation refused without its original retained failure"))?,Err(OriginalPublicationAdvanceFailure::Primary(error))=>error.retained_progress(),Err(OriginalPublicationAdvanceFailure::Domain(error))=>{let mut progress=match error{store::VcsError::InverseRefused(error)|store::VcsError::NativeEncoding(error)=>error.retained_progress(),_=>Default::default()};progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(capture).ok_or_else(||semio_framework_value::ValueError::invariant("publication failure capture exceeds original receipt"))?;progress},_=>Default::default()})?;
             let receipt = cx.consume_receiving_retained(funded, ownership);
             if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original publication receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
-            let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
+            let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command_operation::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
             return match advance {
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, _) => {
                     match pending_lane {
@@ -574,7 +574,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     }else{
                         let copy=&mut mounted.page_publication.ui_copy;
                         if !copy.ready(){let d=copy.demands(&emit.ui_scope,retained.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|copy.advance(&emit.ui_scope,g))?;return Ok(())}
-                        let mut d=semio_plugin_retained_command::typed_operation::MountedUiCopy::transfer_demands();d.copy_bytes+=std::mem::size_of::<Option<PublicationPagePlan>>()+std::mem::size_of::<bool>();
+                        let mut d=semio_plugin_retained_command_operation::typed_operation::MountedUiCopy::transfer_demands();d.copy_bytes+=std::mem::size_of::<Option<PublicationPagePlan>>()+std::mem::size_of::<bool>();
                         if !cx.retained_work_can_enter(d){note_publication_wait(op,"the ui outbox page is not funded (retained items, copy bytes, depth)",[cx.retained_grant().maximum_items as u64,cx.retained_grant().maximum_copy_bytes as u64,d.copy_bytes as u64]);return Ok(())}
                         let scope=copy.take();
                         let intent=if mounted.ui_pending{match self.tools.typed_ui_outbox.push(scope){Ok(())=>{},Err(scope)=>{copy.restore(scope);return Err(plugin_sdk_fault("typed-operation UI receiver is saturated").into())}}mounted.ui_pending=false;PublicationPageIntent::Ui}

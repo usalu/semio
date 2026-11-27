@@ -171,7 +171,7 @@ test("the service shim runs the worktree supervisor although the worktree script
  requireEntryShapeV1("EntryState",readEntryStateV1(box.entry),"state");
  expect(shim.proc.exitCode).toBeNull();
  const code=await stopShim(shim);
- expect([0,143]).toContain(code);
+ expect<unknown>([0,143]).toContain(code);
 });
 
 

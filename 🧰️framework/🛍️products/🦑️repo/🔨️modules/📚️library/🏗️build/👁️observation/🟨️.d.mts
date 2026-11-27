@@ -93,7 +93,7 @@ export function inferenceCacheSizesV1():{interned:number;rowStore:{rows:number;s
 /** 🗄️ Uses a machine store of source analyses (a directory shared by the processes of the machine), or none. */
 export function useSourceAnalysisStoreV1(store:{root:string;directory:string}|undefined):void;
 /** 🌐️ Registers the answer of one global fact a record may depend on. */
-export function registerGlobalFactV1(name:string,holds:(workspaceRoot:string,segments:any,fact:unknown)=>boolean,prepare?:(rows:readonly {kind:string;path:string;fact?:unknown}[])=>Promise<void>):void;
+export function registerGlobalFactV1(name:string,holds:(workspaceRoot:string,segments:any,fact:unknown)=>boolean,prepare?:(rows:readonly {kind:string;path:string;fact?:unknown}[])=>Promise<void>,meaning?:(fact:any)=>unknown):void;
 /** 🛎️ Gets the global fact resolvers with asynchronous preparation ready for the `global` rows among `rows`. */
 export function prepareGlobalFactsV1(rows:readonly {kind:string;path:string;fact?:unknown}[]):Promise<void>;
 /** ✍️ Records what the running inference read of one global fact. */
@@ -155,8 +155,8 @@ export function inferenceHeaderLine(path:string):string|null;
 /** 🖋️ A persisted record header with its fact blocks expanded. */
 export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
-export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void,exhaustive?:boolean):Promise<boolean>;
-export function observationsHoldWithinRoundV1(observations:readonly unknown[],limit:number,signal?:AbortSignal,onStale?:(row:SourceObservationV1)=>void,onVerified?:(rows:number)=>void):Promise<boolean>;
+export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void,exhaustive?:boolean,clean?:(row:SourceObservationV1)=>boolean):Promise<boolean>;
+export function observationsHoldWithinRoundV1(observations:readonly unknown[],limit:number,signal?:AbortSignal,onStale?:(row:SourceObservationV1)=>void,onVerified?:(rows:number)=>void,clean?:(row:SourceObservationV1)=>boolean):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;
 /** 🌐️ The facts one project record consumed, whether it was computed or reused in this process. */

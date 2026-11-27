@@ -16,7 +16,22 @@ pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &
 /// ⬇️ Lifts a whole document and hands back the lifter (its reference → id maps included).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource) -> Lifter<'s> {
+    lift_with_cursor(DocumentLiftCursor::new(), trailer, declared_version, source)
+}
+
+/// ⬇️ Lifts a document slice whose resource ids continue `claims` (the ids the slices before it claimed) and logs its own claims into `claims` when the lifter is unbound with [`Lifter::unbind`] or read through [`Lifter::take_claims`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lift_document_claiming<'s>(trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource, claims: ResourceClaims) -> Lifter<'s> {
     let mut cursor = DocumentLiftCursor::new();
+    if let Some(state) = cursor.lifter.as_mut() {
+        let ResourceClaims { ids, used, inline_ids, log } = claims;
+        (state.ids, state.used, state.inline_ids, state.claim_log) = (ids, used, inline_ids, Some(log));
+    }
+    lift_with_cursor(cursor, trailer, declared_version, source)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn lift_with_cursor<'s>(mut cursor: DocumentLiftCursor, trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource) -> Lifter<'s> {
     let grant = DocumentLiftGrant {
         traversal: CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX }, semantic: true,
     };

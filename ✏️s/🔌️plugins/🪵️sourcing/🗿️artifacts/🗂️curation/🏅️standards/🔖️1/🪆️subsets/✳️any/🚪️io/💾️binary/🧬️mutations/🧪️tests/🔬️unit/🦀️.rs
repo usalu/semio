@@ -8,7 +8,7 @@ use crate::CurationSnapshot;
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let operation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
@@ -24,8 +24,8 @@ async fn curation_document_text_round_trips_through_a_vcs_store() {
     let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
     let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
-    store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&doc_store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&doc_store).await;
     for _ in 0..500_000 {
         if matches!(store::SpaceMember::close_owned_step_cold(&mut doc_store, grant).expect("bounded store close"), semio_framework_value::RetainedCloneStep::Complete(_)) {
             break;

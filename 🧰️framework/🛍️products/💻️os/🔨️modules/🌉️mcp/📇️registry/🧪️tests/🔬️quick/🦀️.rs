@@ -23,7 +23,7 @@ fn write_descriptor(root: &Path, owner_rel: &str, descriptor: &manifest::Package
 
 #[test]
 fn discovers_exactly_the_descriptors_a_synthetic_registry_names() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let root = dir.path().to_path_buf();
     let catalog=write_registry(&root, &[("note", "plugins/note"), ("cad", "plugins/cad")]);
     write_descriptor(&root, "plugins/note", &note_descriptor());
@@ -36,7 +36,7 @@ fn discovers_exactly_the_descriptors_a_synthetic_registry_names() {
 
 #[test]
 fn a_malformed_descriptor_is_skipped_with_a_diagnostic_not_a_panic_or_err() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let root = dir.path().to_path_buf();
     let catalog=write_registry(&root, &[("broken", "plugins/broken")]);
     let owner_root = root.join("plugins/broken");
@@ -54,7 +54,7 @@ fn a_malformed_descriptor_is_skipped_with_a_diagnostic_not_a_panic_or_err() {
 
 #[test]
 fn a_missing_registry_yields_an_empty_descriptor_list_plus_gateway_capabilities() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let source=CatalogSource{descriptors:RegistryDiscovery::scan(dir.path().to_path_buf(),&NativeCatalogV1::default()).unwrap().descriptors,gateway:core_tool_capabilities(),shell:Vec::new(),os_commands:Vec::new()};
     assert!(source.descriptors.is_empty(), "no registry was ever written under this tempdir");
     assert_eq!(source.gateway, core_tool_capabilities(), "gateway capabilities are always present, fixture-independent");
@@ -64,7 +64,7 @@ fn a_missing_registry_yields_an_empty_descriptor_list_plus_gateway_capabilities(
 
 #[test]
 fn the_same_input_compiles_to_a_byte_identical_catalog_hash_twice() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let root = dir.path().to_path_buf();
     let catalog=write_registry(&root, &[("note", "plugins/note"), ("cad", "plugins/cad")]);
     write_descriptor(&root, "plugins/note", &note_descriptor());
@@ -95,7 +95,7 @@ fn the_catalog_hash_changes_exactly_when_the_catalog_content_changes() {
 
 #[test]
 fn parallel_descriptor_loading_keeps_registry_order_for_paths_and_diagnostics() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let root = dir.path().to_path_buf();
     let rows = [("note", "plugins/note"), ("gone-a", "plugins/gone-a"), ("cad", "plugins/cad"), ("gone-b", "plugins/gone-b")];
     let catalog = write_registry(&root, &rows);

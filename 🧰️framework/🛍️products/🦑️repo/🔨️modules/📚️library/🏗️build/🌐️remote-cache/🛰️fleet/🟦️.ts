@@ -7,6 +7,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {readRemoteCachePolicyV1,readRemoteCacheTokenV1,resolveRemoteCacheContractV1,type RemoteCacheContractV1,type RemoteCachePolicyV1} from "../🟦️.ts";
 import {fleetSignedFetchV1,loadFleetSignerV1,readFleetOriginKeyV1,syncFleetIdentityV1} from "./🪪️identity/🟦️.ts";
+import {countRemoteCacheClientV1} from "./🧮️client-counters/🟦️.ts";
 import {createSealedFetchV1} from "../🔐️sealed/🟦️.ts";
 import {fleetEndpointCandidatesV1,fleetTcpProbeV1,readFleetAddressMirrorV1,readFleetAddressSetV1,readFleetLastGoodV1,resolveFleetEndpointV1,type FleetAddressLanguageV1,type FleetResolutionPathV1} from "../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts";
 
@@ -113,13 +114,17 @@ export function remoteCacheFetchV1(environment:Readonly<Record<string,string|und
  const signed=root===undefined?undefined:fleetSignedFetchV1({root,audience,...(options.roleOf===undefined?{}:{roleOf:options.roleOf}),fetch:base});
  const named=(url:string):boolean=>{if(root===undefined)return false;const copy=facted(root);if(copy===undefined)return false;const where=origin(url);return copy.candidates.some(endpoint=>origin(endpoint)===where)||(copy.selectedExecution!==null&&(origin(copy.selectedExecution)===where||sameHost(copy.selectedExecution,url)))||(copy.facts.execution!==undefined&&copy.candidates.some(endpoint=>sameHost(endpoint,url)));};
  const pointer=filled(environment,policy.environment.endpoint),explicitNow=():string|undefined=>pointer===undefined||pointerSupersededV1(environment,policy.environment.endpoint,root===undefined?undefined:facted(root)?.candidates)?undefined:pointer;
- return ((input:RequestInfo|URL,init?:RequestInit)=>{
+ const send=((input:RequestInfo|URL,init?:RequestInit)=>{
   const url=typeof input==="string"||input instanceof URL?String(input):input.url,isNamed=named(url);
   const copied=root===undefined||!isNamed?undefined:facted(root),facts=copied?.facts;
   if(facts!==undefined&&facts.cache.transport==="sealed"&&copied?.candidates.some(endpoint=>origin(endpoint)===origin(url))===true&&root!==undefined&&loadFleetSignerV1(root,"cache-read")!==undefined)return sealedSignedV1(root,facts.group,audience,base,options.roleOf)(input,init);
   if(isNamed&&signed!==undefined&&root!==undefined&&loadFleetSignerV1(root,"cache-read")!==undefined)return signed(input,init);
   if(token!==undefined&&(isNamed||(explicit=>explicit!==undefined&&origin(url)===origin(explicit))(explicitNow()))){const headers=new Headers(init?.headers);headers.set("authorization",`Bearer ${token}`);return base(input,{...init,headers});}
   return base(input,init);
+ }) as typeof fetch;
+ return ((input:RequestInfo|URL,init?:RequestInit)=>{
+  const pending=send(input,init);
+  return root===undefined?pending:pending.then(response=>{countRemoteCacheClientV1(root,typeof input==="string"||input instanceof URL?String(input):input.url,init?.method??(typeof input==="object"&&!(input instanceof URL)?input.method:undefined)??"GET",response.status);return response;});
  }) as typeof fetch;
 }
 const sealedFetchers=new Map<string,typeof fetch>();

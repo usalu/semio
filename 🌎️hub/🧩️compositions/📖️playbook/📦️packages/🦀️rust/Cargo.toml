@@ -20,7 +20,6 @@ semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-s-artifact-playbook-playbook = { workspace = true }
 semio-ui-contract.workspace = true
-semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 flow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
 semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

@@ -32,6 +32,11 @@ impl<PA: PluginApp + 'static> LiveCleanupFixture<PA> {
         Self { runtime, cell: Some(cell), id }
     }
 
+    /// 🏭️ The production runtime the app is admitted to, for a law that drives the runtime's own entry points between its pumps.
+    pub fn runtime(&self) -> &PluginRuntime<PA> {
+        &self.runtime
+    }
+
     /// 🔓️ The app under test; drop the guard before the next pump.
     pub fn app(&self) -> std::sync::MutexGuard<'_, AppInstance<PA>> {
         self.cell.as_ref().expect("live fixture").instance.lock().expect("fixture app lock")

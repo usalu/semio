@@ -4,14 +4,14 @@ use protocol::{ColdMutation, Mutation};
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_dsl_text_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&HomeConfig::default());
-    store::os_store::test_support::assert_dsl_round_trip(&HomeConfig { retired_local_studio_ids: vec!["studio-a".into(), "studio-雪".into()], ..HomeConfig::default() });
+    semio_os_store_test_support::assert_dsl_round_trip(&HomeConfig::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&HomeConfig { retired_local_studio_ids: vec!["studio-a".into(), "studio-雪".into()], ..HomeConfig::default() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id: "studio-a".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id: "studio-a".into() }));
 }
 
 /// 🫧️ The config carries the human's own Home choices only: its default holds no tombstone, and its op vocabulary has no

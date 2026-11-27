@@ -36,3 +36,4 @@ impl protocol::OpBinary for SurfaceMutation {
     }
 }
 dsl::original_ordinal_operation_receiving!(SurfaceMutation);
+semio_os_kernel::artifact_persisted_encoded_binary_operation!(SurfaceMutation);

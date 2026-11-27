@@ -22,11 +22,11 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::NoOperation(NoOperation {}));
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}));
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }));
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }));
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::NoOperation(NoOperation {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}));
 }
 }
 
@@ -37,7 +37,7 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn rename_vcs_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::RenameVcs(RenameVcs { title: "Renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::RenameVcs(RenameVcs { title: "Renamed".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -61,7 +61,7 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_counter_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::ChangeCounter(ChangeCounter { value: 7 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::ChangeCounter(ChangeCounter { value: 7 }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -85,7 +85,7 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_status_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::ChangeStatus(ChangeStatus { status: "reviewed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::ChangeStatus(ChangeStatus { status: "reviewed".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -109,7 +109,7 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_notes_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::ChangeNotes(ChangeNotes { notes: "Jotted".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&VcsCommand::ChangeNotes(ChangeNotes { notes: "Jotted".into() }));
 }
 
 #[semio_framework_async_macros::async_test]

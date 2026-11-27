@@ -214,7 +214,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -247,7 +247,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     ];
     for (command, text, _hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 

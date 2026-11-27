@@ -9,7 +9,7 @@ import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { createWeakCollectionTrackerV1, sharedBytesV1 } from "../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import { creditOwnerSharedV1, throwIfOwnerExceededV1 } from "../../../🧠️memory/🎯️owner-scope/🟨️.mjs";
 import { FOOTPRINT_POLICY_V1, footprintPulseV1, releaseIfGrownV1, footprintGateV1, decideFootprintV1, noteSlowV1 } from "../../../🧠️memory/🦶️footprint/🟨️.mjs";
-import { createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
+import { closureValueChargeBytesV1, createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
 import { rowKeyV1 } from "../../🕰️generations/🧮️fact-rows/🟨️.mjs";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import{isRepoErrorV1,repoErrorDataV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
@@ -401,6 +401,13 @@ function generatedTargetsV1(cache, closure, workspaceRoot) {
   let modules = cache.moduleSets.get(closure);
   if (!modules) { const compiled=cache.compiledNames.get(closure);if(!compiled)throw Error("Exact compiled command closure required");cache.moduleSets.set(closure,modules=new Set([...compiled].map(path=>resolve(workspaceRoot,path.slice("{workspaceRoot}/".length))))); }
   return [...new Set([...cache.generatedImports].filter(([path]) => modules.has(path)).flatMap(([, rows]) => rows.map(row => row.target)))].sort();
+}
+
+/** 🧲️ The modules of one closure that import a generated output, relative to the workspace, so a refusal names the importer to move. */
+function generatedImportersV1(cache, closure, workspaceRoot) {
+  generatedTargetsV1(cache, closure, workspaceRoot);
+  const modules = cache.moduleSets.get(closure);
+  return [...cache.generatedImports.keys()].filter(path => modules.has(path)).map(path => relative(workspaceRoot, path)).sort();
 }
 
 /** 🗓️ Drops the scheduling code from a command closure: the files of the declared scheduling domains decide when and where the command runs, never what it writes, so an edit of one must not change the key of the target (the policy and its law live in the closure module's scheduling domains). */
@@ -908,7 +915,7 @@ async function prepareClosureGraphRowsV1(rows) {
     try { await closureGraphAnswerV1(scripts, workspaceRoot, closureGraphQuestionOfV1(workspaceRoot, segments)); } catch {}
   }
 }
-registerGlobalFactV1(CLOSURE_GRAPH_FACT_V1, closureGraphFactHoldsV1, prepareClosureGraphRowsV1);
+registerGlobalFactV1(CLOSURE_GRAPH_FACT_V1, closureGraphFactHoldsV1, prepareClosureGraphRowsV1, fact => fact?.answer ?? fact);
 const CLOSURE_GRAPH_PATH_V1 = JSON.stringify([CLOSURE_GRAPH_FACT_V1]).slice(0, -1) + ",";
 /** 🪪️ The `closure-graph` rows among the own rows of an entry or a bundle, prepared and judged in one turn before anything else is (a long row check gives the event loop turns), and the other rows for the caller to judge. */
 async function closureGraphRowsHoldV1(rows) {
@@ -1256,7 +1263,7 @@ async function scriptProviderGroupV1(workspaceRoot, scripts, port, view) {
   const files = new Set();
   for (const walk of await providerWalksV1(scripts, workspaceRoot, [port], designation)) {
     const generated = scripts.generatedImports.size ? generatedTargetsV1(scripts, walk, workspaceRoot) : [];
-    if (generated.length) throw refuseBuildV1("invalid", "closure.provider-generated-import", { port: String(port), targets: generated.join(", ") });
+    if (generated.length) throw refuseBuildV1("invalid", "closure.provider-generated-import", { port: String(port), targets: generated.join(", "), importers: generatedImportersV1(scripts, walk, workspaceRoot).join(", ") });
     for (const name of withoutSchedulingV1(walk, walkViewPrefixesV1(view))) files.add(name);
   }
   let index = 0;
@@ -1273,7 +1280,7 @@ async function toolClosureGroupV1(workspaceRoot, scripts, name) {
   const designation = providerDesignationV1(scripts), base = dirname(designation.path), inside = path => !closurePathNameV1(scripts, workspaceRoot, path).startsWith("{workspaceRoot}/../"), walk = await boundedScriptInputsV1(tool.entries.map(entry => resolve(base, entry)).filter(inside), workspaceRoot, scripts), ports = scripts.walkPorts.get(walk) ?? [], files = new Set();
   for (const each of [walk, ...await providerWalksV1(scripts, workspaceRoot, ports, designation)]) {
     const generated = scripts.generatedImports.size ? generatedTargetsV1(scripts, each, workspaceRoot) : [];
-    if (generated.length) throw refuseBuildV1("invalid", "closure.provider-generated-import", { port: String(name), targets: generated.join(", ") });
+    if (generated.length) throw refuseBuildV1("invalid", "closure.provider-generated-import", { port: String(name), targets: generated.join(", "), importers: generatedImportersV1(scripts, each, workspaceRoot).join(", ") });
     for (const file of withoutSchedulingV1(each, walkViewPrefixesV1(tool.view))) files.add(file);
   }
   for (const resource of tool.resources) { const path = resolve(base, resource); if (!inside(path)) continue; requirePhysicalSourceV1(path); files.add(closurePathNameV1(scripts, workspaceRoot, path)); }
@@ -1336,9 +1343,10 @@ export function registerClosureQueryV1(name, query) { CLOSURE_QUERIES_V1.set(nam
 
 /** 🔢️ The bytes the parsed layers of a derived entry are charged: `closureLayerRowBytes` per row, nothing once the entry keeps only the digests of its stored layers. */
 const closureLayerChargeV1 = layers => layers ? INFERENCE_LIMITS_V1.closureLayerRowBytes * layers.reduce((sum, layer) => sum + layer.length, 0) : 0;
-const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryDigestBytes * (entry.digests?.length ?? 0) + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + INFERENCE_LIMITS_V1.closureEntryValueItemBytes * closureValueItemsV1(entry.value) + closureLayerChargeV1(entry.layers) });
-/** 🔢️ How many items one closure value holds: the files of a list, or the files and the other lists of a closure record, without serialising it. */
-const closureValueItemsV1 = value => Array.isArray(value) ? value.length : Object.values(value ?? {}).reduce((sum, part) => sum + (Array.isArray(part) ? part.length : 1), 1);
+const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: closureEntryChargeBytesV1 });
+/** 🔢️ The bytes one in-process closure entry is charged against the byte budget of the cache: its base, layer digests, observation rows, value and parsed layers.
+ * @param {{digests?:unknown[];rows:unknown[];value:unknown;layers?:unknown[][]}} entry */
+export function closureEntryChargeBytesV1(entry) { return INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryDigestBytes * (entry.digests?.length ?? 0) + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + closureValueChargeBytesV1(entry.value) + closureLayerChargeV1(entry.layers); }
 let closureEntriesV1 = closureEntryCacheV1(INFERENCE_LIMITS_V1.closureEntryCacheBytes);
 const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts", maxEntries: 16, maxBytes: 16 }),
   closureStoresV1 = createBoundedCacheV1({ name: "inference:closure-stores", maxEntries: 16, maxBytes: 16 }),
@@ -1594,7 +1602,7 @@ function cooperativeStepV1(scripts, phase) {
 const verdictMapsV1 = createWeakCollectionTrackerV1(), trackVerdictsV1 = round => { const map = new Map(); layerVerdictsV1.set(round, map); verdictMapsV1.track(map); return map; };
 /** 🧮️ The layer verdict maps of the live validation rounds, for the slice memory report. */
 export function closureCollectionsV1() { let entries = 0, alive = 0, largest; for (const map of verdictMapsV1) { alive++; entries += map.size; if (largest === undefined || map.size > largest.size) largest = map; } const spread = (cache, map) => { const keys = cache.keys(), step = Math.max(1, Math.floor(keys.length / 16)); return { entries: keys.length, sample: () => keys.filter((_key, at) => at % step === 0).slice(0, 16).map(key => map(cache.peek(key))) }; };
-  const part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [part("value"), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
+  const charged = (key, charge) => { let bytes = 0, entries = 0; for (const id of closureEntriesV1.keys()) { const entry = closureEntriesV1.peek(id); if (entry === undefined) continue; entries++; bytes += charge(entry); } return { name: "closure:entries." + key, entries, bytes }; }, part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [charged("value", entry => closureValueChargeBytesV1(entry.value)), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
   return [...real, { name: "closure:verdictSeen (verdict files of finished rounds)", entries: verdictSeenV1.size, bytes: verdictSeenV1.size * 240 }, { name: "typescript:sharedSourceFiles (parsed trees, estimated 32 B per text character)", entries: sharedSourceFilesV1.size(), bytes: sharedSourceFilesV1.textBytes() * 32 }, ...alive === 0 ? [] : [{ name: "closure:layerVerdicts (" + alive + " rounds)", entries, bytes: entries * 96 }]]; }
 /** 🗂️ The verdicts of one read, shared by every process of it: the first process that verifies a stored closure layer or entry writes a small verdict file named by its digest into a directory of the validation round it ran in, every other look of that round (the parent, farm children, pool children) reads the file instead of probing the rows again; a round is one snapshot of the tree, so a new round has a new directory and sees an edit at once. Without a round there is no directory and nothing is shared. A child joins the round of its parent with \`withClosurePassV1(compute, { verdicts })\`.
  * @see ./🧪️tests/🧬️read-verdicts */

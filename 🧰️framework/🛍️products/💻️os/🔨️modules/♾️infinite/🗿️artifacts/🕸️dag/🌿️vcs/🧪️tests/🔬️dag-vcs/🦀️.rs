@@ -24,7 +24,7 @@ fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn dag_document_vcs_replays_node_operations() {
     let mut store = create_dag_store("dag", empty_dag_document(), opened_dag_test_actor()).await.expect("store");
-    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], transaction: None }).await.expect("apply");
+    semio_os_store_test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(store.local_actor_id()).unwrap(), fixture["openedActor"]);
@@ -228,8 +228,8 @@ fn kitchen_sink_snapshot() -> DagSnapshot {
 
 #[test]
 fn dag_document_dsl_round_trips_the_demo_fixture() {
-    crate::os_store::test_support::assert_dsl_round_trip(&default_dag_document());
-    crate::os_store::test_support::assert_dsl_pack_equivalence(&default_dag_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&default_dag_document());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&default_dag_document());
 }
 
 #[test]
@@ -241,80 +241,80 @@ fn bundled_demo_fixture_is_canonical() {
 
 #[test]
 fn dag_document_dsl_round_trips_every_node_kind() {
-    crate::os_store::test_support::assert_dsl_round_trip(&kitchen_sink_snapshot());
-    crate::os_store::test_support::assert_dsl_pack_equivalence(&kitchen_sink_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&kitchen_sink_snapshot());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&kitchen_sink_snapshot());
 }
 
 #[test]
 fn dag_document_dsl_round_trips_the_empty_document() {
-    crate::os_store::test_support::assert_dsl_round_trip(&empty_dag_document());
-    crate::os_store::test_support::assert_dsl_pack_equivalence(&empty_dag_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&empty_dag_document());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty_dag_document());
 }
 
 #[test]
 fn op_text_round_trips_create_node() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
 }
 
 #[test]
 fn op_text_round_trips_delete_node() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DeleteNode(DeleteNode { id: "n1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::DeleteNode(DeleteNode { id: "n1".into() }));
 }
 
 #[test]
 fn op_text_round_trips_rename_node() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::RenameNode(RenameNode { id: "n1".into(), new_id: "n1-renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::RenameNode(RenameNode { id: "n1".into(), new_id: "n1-renamed".into() }));
 }
 
 #[test]
 fn op_text_round_trips_change_node_name() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeName(ChangeNodeName { id: "n1".into(), new_name: "Renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeName(ChangeNodeName { id: "n1".into(), new_name: "Renamed".into() }));
 }
 
 #[test]
 fn op_text_round_trips_move_node() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 42.0, y: 7.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 42.0, y: 7.0 }));
 }
 
 #[test]
 fn op_text_round_trips_resize_node() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ResizeNode(ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ResizeNode(ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 }));
 }
 
 #[test]
 fn op_text_round_trips_change_node_icon() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeIcon(ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeIcon(ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() }));
 }
 
 #[test]
 fn op_text_round_trips_change_node_abbreviation() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() }));
 }
 
 #[test]
 fn op_text_round_trips_change_node_operator_kind_some_and_none() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) }));
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None }));
 }
 
 #[test]
 fn op_text_round_trips_replace_node_kind() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "n1".into(), new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "n1".into(), new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") } }));
 }
 
 #[test]
 fn op_text_round_trips_replace_node_properties() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "n1".into(), new_properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "n1".into(), new_properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }));
 }
 
 #[test]
 fn op_text_round_trips_reorder_nodes() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes(ReorderNodes { moves: vec![NodeMove { id: "a".into(), to: 2 }, NodeMove { id: "c".into(), to: 0 }] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes(ReorderNodes { moves: vec![NodeMove { id: "a".into(), to: 2 }, NodeMove { id: "c".into(), to: 0 }] }));
 }
 
 #[test]
 fn op_text_round_trips_connect_nodes() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ConnectNodes(ConnectNodes {
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::ConnectNodes(ConnectNodes {
         index: 0,
         id: "e1".into(),
         source: "a@out".into(),
@@ -326,15 +326,15 @@ fn op_text_round_trips_connect_nodes() {
 
 #[test]
 fn op_text_round_trips_disconnect_nodes() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_store_with_an_applied_operation() {
     let mut store = create_dag_store("dag", kitchen_sink_snapshot(), opened_dag_test_actor()).await.expect("store");
-    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
-    crate::os_store::test_support::assert_document_text_round_trip(&store).await;
-    crate::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     close_dag_test_store(store);
 }
 
@@ -342,10 +342,10 @@ async fn document_text_round_trips_a_store_with_an_applied_operation() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = create_dag_store("dag", kitchen_sink_snapshot(), opened_dag_test_actor()).await.expect("store");
-    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
+    semio_os_store_test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<DagMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     close_dag_test_store(store);
 }
 //#endregion 🔖️DslTests

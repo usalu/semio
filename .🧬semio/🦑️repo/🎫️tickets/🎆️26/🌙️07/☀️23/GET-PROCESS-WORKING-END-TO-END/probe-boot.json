@@ -1,0 +1,1 @@
+[{"name":"body after boot","js":"(async()=>JSON.stringify([document.title,document.querySelectorAll('canvas').length,document.body.innerText.slice(0,600),performance.getEntriesByType('resource').length]))()","settleMs":500}]

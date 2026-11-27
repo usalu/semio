@@ -45,7 +45,7 @@ impl From<VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>, sem
 /// document write access to persist edits.
 pub fn plugin() -> Result<Plugin<SourcingApps>, PluginAssemblyError> {
     PluginBuilder::<_, SourcingApps>::new("sourcing")
-        .label("Sourcing")
+        .label(semio_plugin::LocalizedLabel::native("Sourcing", "Beschaffung"))
         .version("0.1.0")
         .package_id("semio:sourcing")
         .declare_artifact(crate::artifacts::curation::artifact())

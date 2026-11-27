@@ -27,8 +27,8 @@
     },
     "laws": {
       "type": "array",
-      "minItems": 221,
-      "maxItems": 221,
+      "minItems": 223,
+      "maxItems": 223,
       "items": {
         "type": "object",
         "additionalProperties": false,

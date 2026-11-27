@@ -15,15 +15,15 @@ test("the governor of a call gets the managed budget of the parent and the ports
 
 test("the collection never follows the resident set and every finished project is offered to the collector",()=>{
  const all=calls();for(const call of all.filter(row=>["createParentCollectorV1","createGraphParentMemoryGovernorV1","collectResident"].includes(row.callee)))expect(call.text).not.toMatch(/memoryUsage|\.rss|maxRSS/u);
- expect(source).toContain("const collectResident=()=>{parentCollector.afterProject();};");expect(source).not.toContain("collectAbove");
- const offers=calls().filter(call=>call.callee==="parentCollector.afterProject");
+ expect(source).toContain("const collectResident=()=>parentCollector.afterProjectSettled();");expect(source).not.toContain("collectAbove");
+ const offers=calls().filter(call=>call.callee==="parentCollector.afterProjectSettled");
  expect(offers.length).toBeGreaterThanOrEqual(1);
- expect(source).toMatch(/const loop=async[^\n]*=>\{[^\n]*collectResident\(\)/u);
+ expect(source).toMatch(/const loop=async[^\n]*=>\{[^\n]*await collectResident\(\)/u);
 });
 
 test("the end of the inference reports the collector and the running projects report their peak to the wave meter before the phase ends",()=>{
  const all=calls(),finish=all.find(call=>call.callee==="graphWaveMeterV1.parent");
- expect(finish?.text).toBe("graphWaveMeterV1.parent(parentCollector.finish())");
+ expect(finish?.text).toBe("graphWaveMeterV1.parent(await parentCollector.settle())");
  expect(source.indexOf("graphWaveMeterV1.parent(")).toBeLessThan(source.indexOf('phases?.end("inference"'));
  const observe=all.find(call=>call.callee==="graphWaveMeterV1.observe");
  expect(observe?.text).toBe("graphWaveMeterV1.observe(memoryPorts.sample(),active.keys())");

@@ -107,11 +107,19 @@ export function graphChildHeapBytesV1(policy=P){return policy.childHeapMegabytes
 export function graphServiceHeapBytesV1(policy=P){return policy.serviceHeapMegabytes*MEGABYTE;}
 
 /** 🔌️ The charged resident bytes of the process and the collection that releases them; both are ports so every platform and every test supplies its own. The sample reads the runtime counters (constant time): a heap walk costs time proportional to the heap and ran every few milliseconds. */
-/** 📏️ Charges the managed bytes (heap in use plus external buffers), never the resident pages: with a small collector target the pages hold freed memory the allocator has not returned yet, which no admission can release; the host free-memory floor still guards the machine. */
-export function graphMemoryPressureBytesV1(counters){if(![counters.rss,counters.heapUsed,counters.external].every(value=>Number.isSafeInteger(value)&&value>=0))throw Error("Actual graph parent memory counters required");return counters.heapUsed+counters.external;}
+/** 📏️ Charges the managed bytes, never the resident pages: with a small collector target the pages hold freed memory the allocator has not returned yet, which no admission can release; the host free-memory floor still guards the machine. The managed bytes are the runtime's own `heapSize` where its heap already contains its external memory (JavaScriptCore: `heapSize` includes `extraMemorySize`, so `heapUsed + external` counted native strings and buffers twice and `heapUsed` can lag a native allocation), else the heap in use plus the external buffers.
+ * @see ./🧬️schema/🔣️.json */
+export function graphMemoryPressureBytesV1(counters){
+ if(![counters.rss,counters.heapUsed,counters.external].every(value=>Number.isSafeInteger(value)&&value>=0)||(counters.heapSize!==undefined&&!(Number.isSafeInteger(counters.heapSize)&&counters.heapSize>=0)))throw Error("Actual graph parent memory counters required");
+ return counters.heapSize??counters.heapUsed+counters.external;
+}
+/** 🧮️ The heap size of JavaScriptCore in constant time (`bun:jsc` `heapSize`, never `heapStats`, which walks the heap in about 150 ms); `undefined` on a runtime without it. */
+const runtimeHeapSizeV1=(()=>{let read;try{read=process.getBuiltinModule?.("bun:jsc")?.heapSize;}catch{}return typeof read==="function"?()=>{try{const value=read();return Number.isSafeInteger(value)&&value>=0?value:undefined;}catch{return undefined;}}:()=>undefined;})();
+/** 🔁️ Lets the event loop turn (`collectYieldMilliseconds`): a collection inside the call that released memory still sees that call's stack and keeps what it dropped, so a settling collects only after this turn. */
+export const yieldGraphTurnV1=(policy=P)=>new Promise(resolve=>setTimeout(resolve,policy.collectYieldMilliseconds));
 export function createMemoryPortsV1(){
  return Object.freeze({
-  sample:()=>graphMemoryPressureBytesV1(process.memoryUsage()),
+  sample:()=>{const counters=process.memoryUsage(),heapSize=runtimeHeapSizeV1();return graphMemoryPressureBytesV1(heapSize===undefined?counters:{...counters,heapSize});},
   collect:()=>{runtimeCollectGarbageV1(true);},
  });
 }
@@ -308,7 +316,7 @@ export function graphParentManagedBytesV1(environment=process.env,policy=P){
 }
 
 /**
- * 🧹️ The collector of the graph parent: JavaScriptCore keeps what the parent allocated for many projects until a collection runs, and the physical footprint (macOS `phys_footprint`) holds all of it, so after every `collectEveryProjects` finished projects it reads the managed bytes (constant time) and runs one full collection when they passed the trigger (`collectAboveMegabytes`, then `collectGrowthMegabytes` above what survived the last collection, never twice within `collectMinimumIntervalMilliseconds`, and after a collection that took C milliseconds not before C * (100 - collectDutyPercent) / collectDutyPercent milliseconds have passed, so forced collections of a heap that takes seconds to walk never take more than `collectDutyPercent` of the wall time); the trigger never follows the resident set, which a collection does not lower. `finish` collects at the end of a wave and answers what the wave held (peak and surviving managed bytes, collections), `headroomBytes` is what the budget leaves.
+ * 🧹️ The collector of the graph parent: JavaScriptCore keeps what the parent allocated for many projects until a collection runs, and the physical footprint (macOS `phys_footprint`) holds all of it, so after every `collectEveryProjects` finished projects it reads the managed bytes (constant time) and runs one full collection when they passed the trigger (`collectAboveMegabytes`, then `collectGrowthMegabytes` above what survived the last collection, never twice within `collectMinimumIntervalMilliseconds`, and after a collection that took C milliseconds not before C * (100 - collectDutyPercent) / collectDutyPercent milliseconds have passed, so forced collections of a heap that takes seconds to walk never take more than `collectDutyPercent` of the wall time); the trigger never follows the resident set, which a collection does not lower. `finish` collects at the end of a wave and answers what the wave held (peak and surviving managed bytes, collections), `afterProjectSettled` and `settle` let the event loop turn first so the collection no longer sees the stack of the call that ended the wave, `headroomBytes` is what the budget leaves.
  * @param {{ports?:{sample:()=>number;collect:()=>void};policy?:typeof GRAPH_MEMORY_POLICY_V1;budgetBytes?:number;now?:()=>number}} [options]
  */
 export function createParentCollectorV1({ports=createMemoryPortsV1(),policy=P,budgetBytes=policy.parentManagedMegabytes*MEGABYTE,baselineBytes=ports.sample(),now=()=>performance.now()}={}){
@@ -316,14 +324,13 @@ export function createParentCollectorV1({ports=createMemoryPortsV1(),policy=P,bu
  let since=0,next=above,lastAt=-Infinity,quietUntil=-Infinity,peak=0,live=0,collections=0,milliseconds=0;
  const note=bytes=>{if(bytes>peak)peak=bytes;return bytes;};
  const run=()=>{const started=now();ports.collect();lastAt=now();milliseconds+=lastAt-started;collections++;live=ports.sample();next=Math.max(above,live+growth);quietUntil=lastAt+Math.max(policy.collectMinimumIntervalMilliseconds,Math.max(0,lastAt-started)*(100-policy.collectDutyPercent)/policy.collectDutyPercent);return live;};
+ const due=()=>{if(++since<policy.collectEveryProjects)return false;since=0;return!(note(ports.sample())<next||now()<quietUntil);};
+ const finish=()=>{note(ports.sample());run();const row=Object.freeze({peakBytes:peak,liveBytes:live,collections,collectMilliseconds:Math.round(milliseconds)});peak=live;collections=0;milliseconds=0;return row;};
  return Object.freeze({
-  afterProject(){
-   if(++since<policy.collectEveryProjects)return false;
-   since=0;
-   if(note(ports.sample())<next||now()<quietUntil)return false;
-   run();return true;
-  },
-  finish(){note(ports.sample());run();const row=Object.freeze({peakBytes:peak,liveBytes:live,collections,collectMilliseconds:Math.round(milliseconds)});peak=live;collections=0;milliseconds=0;return row;},
+  afterProject(){return due()?(run(),true):false;},
+  async afterProjectSettled(){if(!due())return false;await yieldGraphTurnV1(policy);run();return true;},
+  finish,
+  async settle(){await yieldGraphTurnV1(policy);return finish();},
   headroomBytes:()=>budgetBytes-(note(ports.sample())-baselineBytes),
  });
 }

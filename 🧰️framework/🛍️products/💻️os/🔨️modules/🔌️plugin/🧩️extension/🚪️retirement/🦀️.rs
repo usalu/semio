@@ -265,7 +265,7 @@ impl ExtensionManifest {
     pub fn payload_is_empty(&self) -> bool {
         self.package_id.capacity() == 0
             && self.extension_id.capacity() == 0
-            && self.label.capacity() == 0
+            && self.label.owned_bytes() == 0
             && self.version.capacity() == 0
             && self.extends.capacity() == 0
             && self.capabilities.capacity() == 0
@@ -279,7 +279,7 @@ impl ExtensionManifest {
         Self {
             package_id: String::new(),
             extension_id: String::new(),
-            label: String::new(),
+            label: semio_ui_locale::LocalizedLabel::from_fn(|_, _| String::new()),
             version: String::new(),
             extends: String::new(),
             capabilities: Vec::new(),
@@ -542,6 +542,14 @@ impl Drop for MetadataRetirement {
 impl MetadataOwner for String {
     fn release_bytes(&self) -> usize {
         size_of::<Self>().saturating_add(self.capacity())
+    }
+    fn expand(self: Box<Self>, _close: &mut MetadataRetirement) -> Result<(), String> {
+        Ok(())
+    }
+}
+impl MetadataOwner for semio_ui_locale::LocalizedLabel {
+    fn release_bytes(&self) -> usize {
+        size_of::<Self>().saturating_add(self.owned_bytes())
     }
     fn expand(self: Box<Self>, _close: &mut MetadataRetirement) -> Result<(), String> {
         Ok(())

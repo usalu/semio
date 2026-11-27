@@ -1,0 +1,2 @@
+/** 🧺️ Runs `visit` over `items` in bounded batches; `admit` is asked before and `after` called after every batch, a cancelled `signal` stops before the next batch. */
+export function mapBatchesV1<T,R>(items:readonly T[],options:{batch:number;visit:(item:T,at:number)=>Promise<R>|R;admit?:(signal?:AbortSignal)=>Promise<unknown>|unknown;after?:(done:number,total:number)=>Promise<void>|void;signal?:AbortSignal}):Promise<R[]>;

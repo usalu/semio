@@ -9,4 +9,4 @@ export interface SettleResultV1{readonly managedBeforeMegabytes:number;readonly 
 export function settleGraphMemoryV1(options?:{release?:()=>unknown;ports?:{sample:()=>number;collect:()=>void};resident?:()=>number;shrink?:()=>void;environment?:Readonly<Record<string,string|undefined>>;report?:(line:string)=>void;limitBytes?:number;force?:boolean}):Promise<SettleResultV1|undefined>;
 /** 🔌️ Registers the collections of the whole read with the report of retained memory (once per process). */
 export function registerRetainedCollectionsV1():Promise<void>;
-export function reportRetainedGraphMemoryV1(options?:{ports?:{sample:()=>number;collect:()=>void};resident?:()=>number;environment?:Readonly<Record<string,string|undefined>>;report?:(line:string)=>void;limitBytes?:number;stats?:()=>readonly {name:string;entries:number;bytes:number}[]}):void;
+export function reportRetainedGraphMemoryV1(options?:{signal?:AbortSignal;ports?:{sample:()=>number;collect:()=>void};resident?:()=>number;environment?:Readonly<Record<string,string|undefined>>;report?:(line:string)=>void;limitBytes?:number;stats?:()=>readonly {name:string;entries:number;bytes:number}[]}):Promise<void>;

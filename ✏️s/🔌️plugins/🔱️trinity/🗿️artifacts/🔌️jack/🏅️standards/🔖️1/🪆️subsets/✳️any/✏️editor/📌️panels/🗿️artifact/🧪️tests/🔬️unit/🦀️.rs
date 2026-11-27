@@ -21,7 +21,7 @@ fn oversized_snapshot(nodes: usize, edges: usize) -> JackSnapshot {
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })
         .collect();
     let edges: Vec<Edge> = (0..edges).map(|index| Edge { id: format!("edge-{index}"), kind: "Connection".into(), source: format!("node-{index}"), target: format!("node-{}", index + 1), properties: PropertyBag::new() }).collect();
-    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "oversized".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes, edges }, None)
+    JackSnapshot::with_content::<semio_os_store_test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "oversized".into(), "nakagin".into(), Camera::default(), JackWorkingScene { nodes, edges }, None)
 }
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.

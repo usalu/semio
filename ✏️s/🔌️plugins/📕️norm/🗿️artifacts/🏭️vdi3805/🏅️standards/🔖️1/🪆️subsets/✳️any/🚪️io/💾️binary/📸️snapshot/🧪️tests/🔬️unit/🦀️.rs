@@ -6,7 +6,7 @@ use crate::binary::snapshot::*;
 // `pack/value/rs/lib.rs`'s `decode_table_soa` fallback branch drops the column's `Shape` (passes
 // `None` where `encode_table`'s matching branch passes `Some(&field.shape)`), so a `#[dsl(table)]`
 fn document_dsl_pack_equivalence_the_reference_fixture() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&semio_s_artifact_norm_vdi3805_model::reference_fixture());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&semio_s_artifact_norm_vdi3805_model::reference_fixture());
 }
 
 #[semio_framework_async_macros::async_test]

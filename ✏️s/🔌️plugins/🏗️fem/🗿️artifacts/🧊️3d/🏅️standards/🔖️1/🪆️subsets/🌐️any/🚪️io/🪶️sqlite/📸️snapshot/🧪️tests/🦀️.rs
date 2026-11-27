@@ -81,7 +81,7 @@ mod public_populated_owner {
         }}
         same(&a.to_value(),&b.to_value());
     }
-    fn register(){let _plugin=semio_plugin::PluginBuilder::<_, FemArtifactApps>::new("fem").label("FEM3d SQLite owner").version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
+    fn register(){let _plugin=semio_plugin::PluginBuilder::<_, FemArtifactApps>::new("fem").label(semio_plugin::LocalizedLabel::native("FEM3d SQLite owner", "FEM3d-SQLite-Eigentümer")).version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};

@@ -10,9 +10,9 @@ async fn playbook_config_default_matches_the_existing_runtime_defaults() {
 
 #[semio_framework_async_macros::async_test]
 async fn playbook_config_dsl_round_trips_default_and_populated() {
-    store::os_store::test_support::assert_config_round_trip(&PlaybookConfig::default());
+    semio_os_store_test_support::assert_config_round_trip(&PlaybookConfig::default());
     let populated = PlaybookConfig { contributions_json: "[]".into() };
-    store::os_store::test_support::assert_config_round_trip(&populated);
+    semio_os_store_test_support::assert_config_round_trip(&populated);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -42,5 +42,5 @@ async fn config_mutations_apply_and_restore_every_field() {
 
 #[semio_framework_async_macros::async_test]
 async fn playbook_config_operation_binary_matches_text() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: PlaybookConfig::default() }));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: PlaybookConfig::default() }));
 }

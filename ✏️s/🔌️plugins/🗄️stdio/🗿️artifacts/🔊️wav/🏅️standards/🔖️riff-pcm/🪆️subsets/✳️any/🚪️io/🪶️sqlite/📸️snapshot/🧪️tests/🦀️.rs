@@ -130,7 +130,7 @@ async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_s
     let patterns: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let floats = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| f32::from_bits(value.as_u64().unwrap() as u32)).collect();
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
-        .label("Wav erased SQLite")
+        .label(semio_plugin::LocalizedLabel::native("Wav erased SQLite", "Typgelöschtes WAV-SQLite"))
         .version("0.0.1")
         .package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap())
@@ -262,7 +262,7 @@ async fn sqlite_snapshot_wav_actual_declaration_preserves_owned_state_over_io() 
     use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
-        .label("WAV SQLite declaration")
+        .label(semio_plugin::LocalizedLabel::native("WAV SQLite declaration", "WAV-SQLite-Deklaration"))
         .version("0.0.1")
         .package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap())

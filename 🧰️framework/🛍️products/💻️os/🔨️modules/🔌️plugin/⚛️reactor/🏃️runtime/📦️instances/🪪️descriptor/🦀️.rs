@@ -46,7 +46,7 @@ pub async fn plugin_manifest<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Plug
     if let Some(fault) = runtime.plugin_assembly_error.borrow().clone() {
         return PluginManifest {
             plugin_id: "assembly-failed".into(),
-            label: fault.message,
+            label: semio_plugin_plugin_program::LocalizedLabel::data(fault.message),
             version: "0.0.0".into(),
             apps: vec![],
             examples: vec![],
@@ -62,7 +62,7 @@ pub async fn plugin_manifest<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Plug
     runtime.plugin.borrow().as_ref().map_or_else(
         || PluginManifest {
             plugin_id: "empty".into(),
-            label: "Empty".into(),
+            label: semio_plugin_plugin_program::LocalizedLabel::native("Empty", "Leer"),
             version: "0.0.0".into(),
             apps: vec![],
             examples: vec![],

@@ -12,7 +12,7 @@ use crate::standards::v1_7::subsets::base::schema::{graph_source::ObjectSource, 
 
 pub use semio_s_artifact_stdio_pdf_page_tree::{PageAttribute, PageInheritance, PageTreeCursor, PageTreeEvent, PageTreeLeaf, PageTreeReceipt};
 
-pub use semio_s_artifact_stdio_pdf_lifter::{Category, DocumentLiftState, FontLift, FontStart, Lifter};
+pub use semio_s_artifact_stdio_pdf_lifter::{Category, Claim, DocumentLiftState, FontLift, FontStart, Lifter, ResourceClaims};
 pub use semio_s_artifact_stdio_pdf_page_content::{operator_bytes, project_content_bytes, PageContentBarrier, PageContentCursor, PageContentEvent, PageContentReceipt, PageProgramCursor};
 use semio_s_artifact_stdio_pdf_lifter::{lift_viewer_preferences, page_layout_from_name, page_mode_from_name, CATALOG_KEYS};
 

@@ -1,6 +1,6 @@
 /** 🧪️ Contract: a heavy command is admitted to the cache partition before it writes anything. Above the high share a collection starts in the background, at the critical share the command waits for it (with a localized progress line) and is refused with the typed `disk.low-space` refusal when that frees too little, the partition of another workspace is held to the same critical share, and a light or foreign environment is left alone. */
 import {afterAll,expect,spyOn,test} from "bun:test";
-import {mkdtempSync,rmSync} from "node:fs";
+import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {readHostCapacityPolicyV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
@@ -14,6 +14,8 @@ import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../🟦️.ts";
 import {Database} from "bun:sqlite";
 import {CAS_BUDGET_V1,CAS_RESERVE_FACTOR_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {DISK_WRITERS_V1} from "../../🧹️disk-recovery/🟦️.ts";
+import {casPartitionBudgetV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
+import {CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheLedgerV1,cacheRootDirectoryV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import * as realDiskRecovery from "../../🧹️disk-recovery/🔌️real/🟦️.ts";
 import fixture from "../../🧹️disk-recovery/🖼️image-slack/🧪️tests/♻️reclaim/🔣️receipts.json" with {type:"json"};
 
@@ -125,4 +127,37 @@ test("automatic build intake carries same-volume in-place reclaim pressure and t
  try{await admitBuildDiskV1(environment,{guard,partition:measure,mount:path=>measure(path).partition,workspace,expectedBytes:needed,write:()=>{}});}
  finally{writers.mockRestore();}
  expect(runs).toBe(1);
+});
+
+
+test("a recovery that only keeps the reserve runs no collector while the command is admitted and runs after the command through the returned relief, a recovery below the cushion still runs first",async()=>{
+ resetCasGuardsV1();
+ const environment=real("en"),GIB=1024**3,total=256*GIB,budget=casPartitionBudgetV1(total);
+ const workspace=join(environment.HOME,"ws");let free=0,runs=0;
+ const measure=(path:string):CasPartitionV1=>path===environment.SEMIO_CAS_ROOT?{partition:"/cache",totalBytes:total,freeBytes:free}:{partition:workspace,totalBytes:total,freeBytes:total/2};
+ const guard=createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:measure,usage:async()=>0,collect:async()=>stub});
+ const row=DISK_WRITERS_V1.find(candidate=>candidate.floor===true&&candidate.relief==="host")!,collect=async()=>{runs++;free=total/2;return 1;};
+ const ports={guard,partition:measure,mount:(path:string)=>measure(path).partition,workspace,expectedBytes:0,write:()=>{},writers:[{row,root:workspace,measure:()=>0,collect}]};
+ free=Math.ceil((budget.cushionBytes+budget.reserveBytes)/2);
+ const relief=await admitBuildDiskV1(environment,ports);
+ expect(runs).toBe(0);
+ await relief();expect(runs).toBe(1);await relief();expect(runs).toBe(1);
+ free=Math.floor(budget.cushionBytes/2);runs=0;
+ const none=await admitBuildDiskV1(environment,ports);
+ expect(runs).toBe(1);await none();expect(runs).toBe(1);
+});
+
+const collectorOfV1=<W extends {collect?:(...args:never[])=>unknown}>(writer:W):NonNullable<W["collect"]>=>{if(writer.collect===undefined)throw Error("Disk writer collector required");return writer.collect.bind(writer) as NonNullable<W["collect"]>;};
+test("the background ledger collector starts only when the size ledger records an area over its budget and then collects only those areas",async()=>{
+ const ledger=cacheLedgerV1(),area=ledger.areas.find(candidate=>candidate.collect!==undefined&&cacheAreaBudgetBytesV1(ledger,candidate)!==null)!,budget=cacheAreaBudgetBytesV1(ledger,area)!;
+ const row=DISK_WRITERS_V1.find(candidate=>candidate.collector==="ledger"&&candidate.relief==="host")!;
+ for(const [factor,expected] of [[0.5,0],[2,1]] as const){
+  const root=fresh(),directory=cacheRootDirectoryV1(root,ledger,"repository");mkdirSync(directory,{recursive:true});
+  writeFileSync(join(directory,CACHE_SIZE_FILE_V1),JSON.stringify({version:1,records:{[area.id]:{usedBytes:Math.round(budget*factor),partial:false,atMs:1}}}));
+  const calls:(string|undefined)[]=[],writer=realDiskRecovery.realDiskWritersV1({workspace:root,home:root,tmp:root,uid:0,environment:{},background:true,ledger:async(_signal,_need,areas)=>{calls.push(areas);}},[row])[0]!;
+  await collectorOfV1(writer)({needBytes:1,signal:undefined as never});
+  expect(calls.length).toBe(expected);if(expected)expect(calls[0]).toBe(area.id);
+ }
+ const root=fresh(),calls:(string|undefined)[]=[],blocking=realDiskRecovery.realDiskWritersV1({workspace:root,home:root,tmp:root,uid:0,environment:{},ledger:async(_signal,_need,areas)=>{calls.push(areas);}},[row])[0]!;
+ await collectorOfV1(blocking)({needBytes:1,signal:undefined as never});expect(calls.length).toBe(1);
 });

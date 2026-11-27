@@ -4,7 +4,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::au
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WindowType;
 
 fn window() -> WindowType {
-    WindowType { name: "w".into(), width: 1.2, height: 1.4, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m".into(), u_value: None, g_value: None }
+    WindowType { name: "w".into(), width: 1.2, height: 1.4, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m".into(), u_value: None, g_value: None, frame_fraction: None }
 }
 
 fn opening(kind: OpeningKind) -> Opening {

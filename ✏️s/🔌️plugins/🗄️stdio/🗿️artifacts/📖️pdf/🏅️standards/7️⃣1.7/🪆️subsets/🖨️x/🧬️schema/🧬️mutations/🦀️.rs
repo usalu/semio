@@ -58,7 +58,7 @@ pub enum PdfXMutation {
     RemoveMediaAnnotation(RemoveMediaAnnotation),
 }
 dsl::original_pack_value_operation_receiving!(PdfXMutation);
-dsl::artifact_persisted_binary_operation!(PdfXMutation);
+dsl::artifact_persisted_pack_value_operation!(PdfXMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

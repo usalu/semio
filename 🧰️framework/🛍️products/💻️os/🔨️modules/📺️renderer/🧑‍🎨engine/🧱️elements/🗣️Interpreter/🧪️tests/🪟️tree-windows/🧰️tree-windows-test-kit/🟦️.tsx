@@ -79,10 +79,10 @@ export async function createTreeWindowsTestKit(vitest: NonNullable<ImportMeta["v
   }
   /** 🪟️ The same guest tree under an arbitrary host chain, so the scroll-container rule can be stated
    * against a `📜️Scrollable`, a plain `overflow-y: auto` ancestor and no scroller at all. */
-  function renderWindowedTree(nodes: readonly AnyRecord[], reportWindows: (requests: readonly AnyRecord[], viewportRows: number) => void, wrap: (tree: any) => any) {
+  function renderWindowedTree(nodes: readonly AnyRecord[], reportWindows: (requests: readonly AnyRecord[], viewportRows: number) => void, wrap: (tree: any) => any, channelOverrides: AnyRecord = {}) {
     const store = new UiDocumentStore(SURFACE);
     store.loadSnapshot({ surface: SURFACE, revision: 1, root: 1, nodes: [...nodes] });
-    const channel = { bodyKey: SURFACE, openStates: {}, setOpen: () => {}, reportWindows };
+    const channel = { bodyKey: SURFACE, openStates: {}, setOpen: () => {}, reportWindows, ...channelOverrides };
     return render(wrap(createElement(TreeWindowContext.Provider, { value: channel }, createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: () => {} } }))));
   }
   /** 🪟️ A section of `total` rows whose materialised row `objects.1` is itself an OPEN windowed group —

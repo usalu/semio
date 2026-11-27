@@ -16,7 +16,7 @@ fn folder_export_cancellation_and_retry_use_actual_note_bytes() {
     assert!(semio_os_mcp_capabilities::capability_declarations::artifact_capabilities().iter()
         .any(|capability| capability.id.0 == "artifact.export" && capability.execution.cancellable));
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏱️export-cancellation-law.json")).expect("neutral export law");
-    let dir = semio_os_kernel::test_support::tempdir().expect("export folder");
+    let dir = semio_os_store_test_support::tempdir().expect("export folder");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(
         dir.path().to_path_buf(), "agent:export-law".into(), Vec::new(), Arc::new(build_catalog()),
         serde_json::from_str(include_str!("../../../🎚️config/🏛️host-driver-policy.json")).expect("host driver policy"),

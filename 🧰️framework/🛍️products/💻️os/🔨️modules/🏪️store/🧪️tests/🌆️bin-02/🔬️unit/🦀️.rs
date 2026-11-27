@@ -74,16 +74,16 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
         let (mut publication,_) = member.begin_one_item_owned_publication(&mut request, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).expect("bounded source admission").expect("funded publication birth");
         assert_eq!(preflights.load(Ordering::SeqCst), 0, "admission cannot scan every source row before the first caller grant");
         assert_eq!(member.snapshot_ref().n, Some(0));
-        assert!(matches!(receiving_fixture.receive(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert!(matches!(receiving_fixture.receive_with_work(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         assert_eq!(preflights.load(Ordering::SeqCst), 0);
         for row in 0..count {
             let before = preflights.load(Ordering::SeqCst);
-            assert!(matches!(receiving_fixture.receive(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Progress(_, _)));
+            assert!(matches!(receiving_fixture.receive_with_work(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Progress(_, _)));
             assert_eq!(preflights.load(Ordering::SeqCst) - before, fixture["census"]["maximumPreflightsPerTurn"].as_u64().unwrap() as usize);
             assert_eq!(preflights.load(Ordering::SeqCst), row + 1);
             assert_eq!(member.snapshot_ref().n, Some(0));
         }
-        assert!(matches!(receiving_fixture.receive(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Progress(_, _)));
+        assert!(matches!(receiving_fixture.receive_with_work(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Progress(_, _)));
         assert_eq!(preflights.load(Ordering::SeqCst), count);
         publication.begin_close();
         assert!(!publication.terminal_is_empty());
@@ -296,23 +296,23 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
     let rejected = wrong.begin_one_item_wire_publication(missing).err().expect("missing member factory fails closed");
     assert_eq!(rejected.mutations.first().expect("rejection returns its exact admitted owners").bytes.as_ptr(), original, "rejection returns the exact input owner");
     let mut stale = member.begin_one_item_wire_publication(request(member.generation(), member.content_revision_now())).unwrap_or_else(|_| panic!("owned wire admits"));
-    assert!(receiving_fixture.receive(|receiving|wrong.advance_one_item_publication(&mut *stale, 4096, grant,receiving)).is_err(), "matching schema/id/revision cannot impersonate the exact store owner");
+    assert!(receiving_fixture.receive_with_work(|receiving|wrong.advance_one_item_publication(&mut *stale, 4096, grant,receiving)).is_err(), "matching schema/id/revision cannot impersonate the exact store owner");
     assert_eq!(stale.progress().completed_bytes, 0);
     let mut replacement = member.begin_member_apply_batch(semio_framework_job::OperationId(801), member.generation(), member.content_revision_now(), "member-test".into(), vec![DemoMutation::SetN(SetN { n: 9 })]).unwrap();
     for _ in 0..262_144 {
-        if matches!(receiving_fixture.receive(|receiving|member.advance_apply_batch(&mut replacement, 4096, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)) {
+        if matches!(receiving_fixture.receive_with_work(|receiving|member.advance_apply_batch(&mut replacement, 4096, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)) {
             break;
         }
     }
     assert!(replacement.acknowledge());
     close_durable_publication(&mut replacement);
-    assert!(receiving_fixture.receive(|receiving|member.advance_one_item_publication(&mut *stale, 4096, grant,receiving)).is_err());
+    assert!(receiving_fixture.receive_with_work(|receiving|member.advance_one_item_publication(&mut *stale, 4096, grant,receiving)).is_err());
     close_erased_member_publication(&mut *stale, grant);
     for steps in [0, 1, 3, 5] {
         let before = member.one_item_publication_identity();
         let mut cancelled = member.begin_one_item_wire_publication(request(before.0, before.1)).unwrap_or_else(|_| panic!("cancel owner admits"));
         for _ in 0..steps {
-            assert!(!matches!(receiving_fixture.receive(|receiving|member.advance_one_item_publication(&mut *cancelled, 4096, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)));
+            assert!(!matches!(receiving_fixture.receive_with_work(|receiving|member.advance_one_item_publication(&mut *cancelled, 4096, grant,receiving)).unwrap(), ArtifactStoreOneItemAdvance::Published(_, _)));
         }
         cancelled.begin_close();
         close_erased_member_publication(&mut *cancelled, grant);
@@ -355,7 +355,7 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
     for index in 0..members.len() {
         let mut reserved = false;
         for _ in 0..262_144 {
-            let step = receiving_fixture.receive(|receiving|members[index].prepare_one_item_publication(&mut *publications[index], 4096, grant,receiving)).expect("one group preparation or reservation turn");
+            let step = receiving_fixture.receive_with_work(|receiving|members[index].prepare_one_item_publication(&mut *publications[index], 4096, grant,receiving)).expect("one group preparation or reservation turn");
             for other in 0..members.len() {
                 assert_eq!(members[other].one_item_publication_identity(), before[other]);
                 assert!(members[other].envelope().vcs.edits.is_empty());
@@ -369,19 +369,19 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
             }
         }
         assert!(reserved, "member must reach real history and retirement reservation under maximum grant");
-        assert!(receiving_fixture.receive(|receiving|members[index].advance_one_item_publication(&mut *publications[index], 4096, grant,receiving)).is_err(), "ordinary publication cannot consume a group-reserved candidate");
+        assert!(receiving_fixture.receive_with_work(|receiving|members[index].advance_one_item_publication(&mut *publications[index], 4096, grant,receiving)).is_err(), "ordinary publication cannot consume a group-reserved candidate");
     }
     let mut competing = members[0].begin_member_apply_batch(semio_framework_job::OperationId(901), before[0].0, before[0].1, "other-test".into(), vec![DemoMutation::SetN(SetN { n: 99 })]).unwrap();
     for _ in 0..262_144 {
         if competing.phase() == ArtifactStoreOneItemPublicationPhase::Publishing {
             break;
         }
-        receiving_fixture.receive(|receiving|members[0].advance_apply_batch(&mut competing, 4096, grant,receiving)).unwrap();
+        receiving_fixture.receive_with_work(|receiving|members[0].advance_apply_batch(&mut competing, 4096, grant,receiving)).unwrap();
     }
-    assert!(receiving_fixture.receive(|receiving|members[0].advance_apply_batch(&mut competing, 4096, grant,receiving)).is_err(), "the real reserved edit slot excludes a competing append before any visible mutation");
+    assert!(receiving_fixture.receive_with_work(|receiving|members[0].advance_apply_batch(&mut competing, 4096, grant,receiving)).is_err(), "the real reserved edit slot excludes a competing append before any visible mutation");
     close_durable_publication(&mut competing);
     members[1].invalidate_after_external_resource_change().unwrap();
-    assert!(receiving_fixture.receive(|receiving|members[1].prepare_one_item_publication(&mut *publications[1], 4096, grant,receiving)).is_err(), "freshness is revalidated even after reservation");
+    assert!(receiving_fixture.receive_with_work(|receiving|members[1].prepare_one_item_publication(&mut *publications[1], 4096, grant,receiving)).is_err(), "freshness is revalidated even after reservation");
     assert!(receiving_fixture.retire(grant.retained_grant(),|original|pump_turn(grant.retained_grant(), |effect| members[1].abort_one_item_publication(&mut *publications[0], original, effect)).expect("abort turn admitted").map_err(exit_error)).is_err(), "only the exact member can release its reservation");
     for index in 0..members.len() {
         publications[index].begin_close();
@@ -436,7 +436,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
             for lane in 0..3 {
                 let mut prepared = false;
                 for _ in 0..262_144 {
-                    if matches!(receiving_fixture.receive(|receiving|members[lane].prepare_one_item_publication(&mut *publications[lane], fixture["maximumBytes"].as_u64().unwrap()as usize, grant,receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(_, _)) { prepared = true; break; }
+                    if matches!(receiving_fixture.receive_with_work(|receiving|members[lane].prepare_one_item_publication(&mut *publications[lane], fixture["maximumBytes"].as_u64().unwrap()as usize, grant,receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(_, _)) { prepared = true; break; }
                 }
                 assert!(prepared);
             }
@@ -677,7 +677,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
         let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).unwrap();
         let grant=physical_test_close_grant();
         assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth);
-        if matches!(receiving_fixture.receive(|receiving|store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, receiving,64,&mut || false)).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
+        if matches!(receiving_fixture.receive_with_work(|receiving|store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, receiving,64,&mut || false)).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
     }
     assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
     assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);
@@ -722,7 +722,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert!(store.finished_history_preview_read_demands(&preview).is_err(),"unfinished checkpoint cannot issue a read");
     for _ in 0..100_000{
         if preview.finished{break}
-        receiving_fixture.receive(|receiving|store.step_derived_checkpoint_preview(&mut preview,&checkpoint_id,grant,receiving,&mut||false)).expect("fold exact checkpoint ledger");
+        receiving_fixture.receive_with_work(|receiving|store.step_derived_checkpoint_preview(&mut preview,&checkpoint_id,grant,receiving,&mut||false)).expect("fold exact checkpoint ledger");
     }
     assert!(preview.finished,"checkpoint source reaches its exact selected state");
     let selected=preview.state.as_ref().expect("finished selected checkpoint");

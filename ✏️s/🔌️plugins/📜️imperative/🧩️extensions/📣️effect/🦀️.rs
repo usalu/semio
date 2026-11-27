@@ -156,7 +156,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 
 pub fn bundle() -> semio_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
-    semio_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Effect", MODULE_VERSION)
+    semio_plugin::ExtensionBundle::new(EXTENSION_ID, semio_plugin::LocalizedLabel::native("Imperative Effect", "Imperativ Effekt"), MODULE_VERSION)
         .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
         .mode(semio_plugin::ExecutionMode::Linked)
         .resource_owner(imperative_extension_sdk::ImperativeEvaluationResources::new(module_registry))

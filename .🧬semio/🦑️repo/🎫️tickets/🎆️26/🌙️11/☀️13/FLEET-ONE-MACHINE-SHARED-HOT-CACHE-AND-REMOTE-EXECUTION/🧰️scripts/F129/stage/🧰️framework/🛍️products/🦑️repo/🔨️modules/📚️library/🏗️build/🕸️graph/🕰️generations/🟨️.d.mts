@@ -1,0 +1,104 @@
+/** 🕰️ One observation row: what a computation read and the fact it saw. */
+export interface GenerationRowV1{readonly kind:string;readonly path:string;readonly fact:unknown;readonly scope?:"project"|"native"|"environment"|"all"}
+export interface GenerationPolicyV1{readonly version:1;readonly reasonRows:number;readonly headRetryMilliseconds:number;readonly headRetryLimit:number;readonly pointer:string;readonly manifests:string;readonly fragments:string;readonly indexes:string;readonly directoryStampsFile:string;readonly frontiers:string;readonly envOwner:string;readonly doubtChunkRows:number;readonly yieldMilliseconds:number;readonly progressReportMilliseconds:number;readonly ownerWave:number;readonly ownerWaveMaximum:number;readonly ownerWaveGrowth:number;readonly ownerWaveBudgetMilliseconds:number;readonly ownerAhead:number;readonly policies:readonly ["fresh","current"];readonly retainGenerations:number;readonly graceMilliseconds:number;readonly verifyChunkRows:number;readonly verifyParallelChunks:number;readonly bisectBudgetCalls:number;readonly racyMilliseconds:number;readonly readConcurrency:number;readonly fragmentBatch:number;readonly publishWaitMilliseconds:number;readonly pollMaximumMilliseconds:number;readonly maximumOwners:number;readonly maximumManifestBytes:number;readonly maximumFragmentBytes:number;readonly maximumIndexBytes:number;readonly indexCacheEntries:number;readonly indexCacheBytes:number;readonly indexRowBytes:number;readonly pendingCrateReports:number;readonly compactionFactor:number;readonly compactionFloor:number;readonly compactionGrowth:number;readonly compactionDuplication:number;readonly brotliQuality:number;readonly brotliWindow:number;readonly stampVerification:boolean;readonly waitNoticeMilliseconds:number;readonly hintMaximumAgeMilliseconds:number;readonly sweepWaitMilliseconds:number;readonly textMaximumCharacters:number;readonly reasonMaximumCharacters:number;readonly rowKeyTextLimit:number;readonly leaseStaleMilliseconds:number;readonly expansionMaximumProjects:number;readonly expansionMaximumBytes:number;readonly withheldReasonCharacters:number;readonly pathDisplayCharacters:number}
+export const GENERATION_POLICY_V1:GenerationPolicyV1;
+export type GenerationGraphPolicyV1="fresh"|"current";
+export interface GenerationPointerV1{readonly version:1;readonly generation:number;readonly manifest:string|null;readonly parent:string|null;readonly reason?:string;readonly verified?:import("./🔭️coverage/🟨️.mjs").VerifiedStampV1}
+export interface GenerationOwnerRowV1{readonly root:string;readonly kind:"project"|"unavailable";readonly fragment:string;readonly bytes:number;readonly edgesEnv:string;readonly targets:readonly string[];readonly config?:string;readonly nativeRoot?:string;readonly tag?:string;readonly reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}
+export interface GenerationManifestV1{readonly version:1;readonly generation:number;readonly parent:string|null;readonly identity:string;readonly implementation:string;readonly env:string;readonly membership:string;readonly frontier:string|null;readonly factIndex:string;readonly global:string;readonly envParts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentStoredPartsV1;readonly owners:Readonly<Record<string,GenerationOwnerRowV1>>;readonly built:{readonly kind:"cold"|"delta"|"refresh";readonly base:number|null;readonly dirty:readonly string[]}}
+export interface GenerationFragmentV1{readonly version:1;readonly name:string;readonly root:string;readonly kind:"project"|"unavailable";readonly node:unknown;readonly edges:readonly {source:string;target:string;[key:string]:unknown}[];readonly edgesEnv:string;readonly targets:readonly string[];readonly config?:string;readonly nativeRoot?:string}
+export interface GenerationSealedV1{readonly pointer:GenerationPointerV1;readonly manifest:GenerationManifestV1|undefined;readonly missing?:boolean}
+/** 📦️ The rows one owner holds as the patch consumes them: an array, or an iterable that also names its rows in batches (`batches()`, loaded where they are consumed). */
+export type GenerationRowSourceV1=readonly GenerationRowV1[]|(Iterable<GenerationRowV1>&{readonly length:number;batches():AsyncIterable<readonly GenerationRowV1[]>});
+export interface FactIndexV1{version:1;owners:string[];rows:GenerationRowV1[];classes:{r:number[];o:number[]}[]}
+export interface FrontierV1{version:1;capturedAt:number;directories:[string,number,number][];members:[string,number][]}
+export interface MembershipChangeV1{path:string;kind:"added"|"removed"|"changed";directory?:boolean;config?:boolean;pending?:boolean}
+export interface GenerationMembershipV1{digest:string;frontier:FrontierV1;changes:MembershipChangeV1[];dirty?:{paths:readonly string[];overflow?:boolean;excluded?:(path:string)=>boolean}}
+export interface GenerationStaleReasonV1{row?:GenerationRowV1;change?:{path:string;kind:"added"|"removed"|"changed"};owners:string[]}
+export interface GenerationPlanV1{kind:"cold"|"clean"|"delta";reason?:string;dirty:Set<string>;edgeStale?:readonly string[];added:string[];removed:string[];envStale:boolean;checked:number;stale?:number;reasons?:GenerationStaleReasonV1[];cutoff?:{questions:number;skipped:number;held:number;kept:number;changed:number;failed:number;reused:number};times?:Record<string,number>;revalidated?:readonly string[];pending?:readonly string[];doubtful?:number;staleKinds?:Record<string,number>;refresh?:ReadonlyMap<string,GenerationRowV1[]>}
+export interface GenerationProgressV1{phase:"facts"|"verification"|"assembly";done:number;total:number}
+export interface GenerationComputeSpecV1{cold:boolean;owners:string[];ahead?:readonly string[];forcedOwners?:readonly string[];discover:string[];removed:string[];changed:string[];previousEnv:string|null;previousParts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentStoredPartsV1;edgeStale?:readonly string[];envStale:boolean;generation:number;coldReason?:string;reasons:GenerationStaleReasonV1[];staleRows:number;staleKinds?:Record<string,number>;stubs:Record<string,{root:string;kind:"project"|"unavailable";targets:readonly string[];nativeRoot?:string;config?:string;tag?:string;reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}>}
+export interface GenerationComputedOwnerV1{name:string;partial?:"edges";root?:string;kind?:"project"|"unavailable";node?:unknown;edges?:unknown[];targets?:string[];config?:string;nativeRoot?:string;tag?:string;rows?:GenerationRowSourceV1;reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}
+export interface GenerationComputeResultV1{owners:GenerationComputedOwnerV1[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>;readsOf?:(name:string)=>import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];env:{digest:string;rows:GenerationRowV1[];parts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};global?:unknown;replaceTags?:string[];derived?:import("./✂️cutoff/🟨️.mjs").DerivedFactV1[];inferred?:number;phases?:Record<string,number>;dispose?:()=>void|Promise<void>}
+export interface GenerationFilePortV1{read(path:string):Promise<Uint8Array|undefined>;write(path:string,bytes:Uint8Array,options?:{ifAbsent?:boolean}):Promise<boolean>;names(directory:string):Promise<string[]>;list(directory:string):Promise<{name:string;modifiedMs:number}[]>;remove(path:string,options?:{singleLink?:boolean;signal?:AbortSignal}):Promise<void>}
+export interface GenerationLeasePortV1{exclusive<T>(resource:string,body:()=>Promise<T>,options?:{signal?:AbortSignal;timeoutMs?:number}):Promise<T>}
+/** 🧠️ Complete answers may be shared only within one workspace, identity, implementation and deriver domain; every reuse validates their support through the current store. */
+export interface GenerationStoreOptionsV1{workspaceRoot?:string;say?:(key:"storing"|"healing"|"indexing"|"sealing"|"resumed"|"resumedWaves",fields:Readonly<Record<string,string|number>>)=>void;stepped?:(step:"storing"|"indexing"|"sealing")=>void|Promise<void>;answers?:Map<string,import("./✂️cutoff/🟨️.mjs").DerivedAnswerV1>;root:string;fs?:GenerationFilePortV1;lease?:GenerationLeasePortV1;holds:(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>Promise<boolean>;doubt?:unknown;derive?:(row:GenerationRowV1,signal?:AbortSignal)=>Promise<import("./✂️cutoff/🟨️.mjs").DerivedAnswerV1>;resources:{facts:string;builder?:string};now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>}
+/** 🧩️ The stale owners a refresh found before it asked for the builder: the generation it planned against, their names in code point order and their roots. */
+export interface GenerationPendingV1{readonly generation:number;readonly dirty:readonly string[];readonly roots:Readonly<Record<string,string>>;readonly structural:boolean}
+/** 🩹️ An admitted repair receipt binds forced owners to one invalidated generation and its immutable parent. */
+export interface GenerationRepairV1{readonly generation:number;readonly parent:string;readonly owners:readonly string[];readonly receipt:string;readonly maximumOwners?:number}
+export interface GenerationRefreshOptionsV1{published?:(generation:number,info:{done:number;total:number;phases?:Record<string,number>})=>unknown;wave?:(info:{generation:number;done:number;total:number})=>unknown;closure?:(current:GenerationSealedV1,control:{signal?:AbortSignal})=>Promise<ReadonlySet<string>>;identity:string;implementation:string;policy?:GenerationGraphPolicyV1;only?:ReadonlySet<string>;repair?:GenerationRepairV1;qualify?:(candidate:GenerationManifestV1,signal?:AbortSignal)=>Promise<void>;membership:(previous:{manifest:GenerationManifestV1;frontier:FrontierV1}|undefined,signal?:AbortSignal)=>Promise<GenerationMembershipV1>;compute:(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>Promise<GenerationComputeResultV1>;signal?:AbortSignal;progress?:(event:GenerationProgressV1)=>void|Promise<void>;builder?:<T>(body:(claim?:import("./🔐️custody/🟨️.mjs").SliceClaimV1)=>Promise<T>,pending?:GenerationPendingV1)=>Promise<T>;requestedAt?:number;planned?:GenerationCarriedPlanV1}
+/** 🪞️ The delta plan of a shared read, handed to the builder of the same command: `holds` answers whether the change cursor proves that nothing the plan was made from changed since. */
+export interface GenerationCarriedPlanV1{readonly key:string;readonly plan:GenerationPlanV1;readonly live:GenerationMembershipV1;holds():Promise<boolean>}
+export interface GenerationRefreshResultV1{current:GenerationSealedV1;served:"current"|"verified"|"covered"|"built";built:boolean;published:boolean;computed:number;carried?:number;plan?:GenerationPlanV1;index?:GenerationIndexSizeV1;needsBuild?:boolean;repairUnavailable?:boolean;pending?:GenerationPendingV1;merged?:number;planned?:Omit<GenerationCarriedPlanV1,"holds">}
+export interface GenerationAssembledV1{projects:Record<string,unknown>;dependencies:unknown[];externalNodes:Record<string,unknown>;unavailable:{root:string;[key:string]:unknown}[];generation:number;membership:string}
+/** 📏️ The size of the fact index a build published. */
+export interface GenerationIndexSizeV1{readonly rows:number;readonly owners:number;readonly expandedBytes:number;readonly packedBytes:number}
+export interface GenerationStoreV1{
+ /** 🕊️ Drops the parsed fact indexes the store keeps for patching (about a gigabyte on the real workspace); a reader that verified or built needs them no longer. */
+ dropIndexes():void;
+ read(signal?:AbortSignal):Promise<GenerationSealedV1|undefined>;readManifestAt(digest:string,signal?:AbortSignal):Promise<GenerationManifestV1|undefined>;readIndex(digest:string):Promise<FactIndexV1|undefined>;readIndexView(digest:string):Promise<FactIndexV1|undefined>;readFrontier(digest:string|null):Promise<FrontierV1|undefined>;readFragment(row:GenerationOwnerRowV1):Promise<GenerationFragmentV1|undefined>;
+ readGlobal(manifest:GenerationManifestV1):Promise<{readonly externalNodes?:Record<string,unknown>;readonly unavailable?:readonly {readonly root:string}[]}>;
+ catalog(current:GenerationSealedV1,options?:{signal?:AbortSignal}):Promise<{projects:{name:string;root:string;targets:readonly string[]}[];unavailable:{root:string}[]}>;
+ plan(options:{current:GenerationSealedV1|undefined;identity:string;changes?:MembershipChangeV1[];only?:ReadonlySet<string>;skipEnvironment?:boolean;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationPlanV1>;
+ build(options:Omit<GenerationRefreshOptionsV1,"policy"|"only"|"builder"|"requestedAt">&{only?:ReadonlySet<string>;observedAtMs?:number;coverage?:import("./🔭️coverage/🟨️.mjs").CoverageV1;claim?:import("./🔐️custody/🟨️.mjs").SliceClaimV1}):Promise<{current:GenerationSealedV1;built:boolean;published:boolean;computed:number;plan:GenerationPlanV1;index?:GenerationIndexSizeV1;needsBuild?:boolean;pending?:GenerationPendingV1;merged?:number}>;
+ refresh(options:GenerationRefreshOptionsV1):Promise<GenerationRefreshResultV1>;
+ refreshClosure(options:Omit<GenerationRefreshOptionsV1,"only"|"policy">&{roots:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];policy?:GenerationGraphPolicyV1}):Promise<GenerationRefreshResultV1&{names:Set<string>}>;
+ closureOf(current:GenerationSealedV1|undefined,roots:readonly string[],options?:{neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];signal?:AbortSignal}):Promise<Set<string>>;
+ assembleStream(current:GenerationSealedV1,options?:{names?:readonly string[];externalInputs?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):{nodes():AsyncGenerator<[string,unknown],void,undefined>;finish():Promise<Omit<GenerationAssembledV1,"projects">>};
+ assemble(current:GenerationSealedV1,options?:{names?:readonly string[];externalInputs?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationAssembledV1>;
+ snapshot(options?:{roots?:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<{current:GenerationSealedV1;graph:GenerationAssembledV1}>;
+ retire(options?:{signal?:AbortSignal}):Promise<void>;invalidate(options?:{reason?:string;expected?:Pick<GenerationPointerV1,"generation"|"manifest">;signal?:AbortSignal}):Promise<boolean>;
+ publish(options:{manifestDigest:string|null;expectedGeneration:number;reason?:string;verified?:import("./🔭️coverage/🟨️.mjs").VerifiedStampV1;signal?:AbortSignal}):Promise<{published:boolean;pointer?:GenerationPointerV1}>;
+ readonly stats:{plansReused:number;holdCalls:number;rowsChecked:number;computed:number;published:number;casConflicts:number;merged:number;mergeConflicts:number;publishHeldMs:number[];indexLoads:number;indexViews:number;fragmentReads:number};
+}
+export function createGenerationStoreV1(options:GenerationStoreOptionsV1):GenerationStoreV1;
+export function createNodeFilePortV1():GenerationFilePortV1;
+export function createFileLeasePortV1(directory:string,options?:{staleMilliseconds?:number;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;onHold?:(row:{resource:string;heldMs:number;waitedMs:number})=>void}):GenerationLeasePortV1;
+export function readGenerationPointerV1(bytes:Uint8Array):GenerationPointerV1;
+export function readGenerationManifestV1(bytes:Uint8Array):GenerationManifestV1;
+export function readGenerationFragmentV1(value:unknown):GenerationFragmentV1;
+export function canonicalJsonV1(value:unknown):string;
+/** 📦️ Encodes one canonical document within the expanded and packed reader byte ceiling. */
+export function packGenerationDocumentV1(value:unknown,maximumBytes:number):Uint8Array;
+export function packFactIndexV1(index:FactIndexV1,maximumBytes:number):{bytes:Uint8Array;expandedBytes:number};
+export function unpackFactIndexV1(bytes:Uint8Array,maximumBytes:number):FactIndexV1;
+/** 🪶️ Opens a packed fact index for verification only: rows become objects when they are read. */
+export function openPackedFactIndexV1(bytes:Uint8Array,maximumBytes:number,name?:string):import("./🧮️fact-codec/🟨️.mjs").FactCodecOpenIndexV1;
+export function openRawFactIndexV1(raw:Uint8Array,maximumBytes:number,name?:string):import("./🧮️fact-codec/🟨️.mjs").FactCodecOpenIndexV1;
+export function packFactIndexBytesV1(raw:Uint8Array,maximumBytes:number):{bytes:Uint8Array;expandedBytes:number};
+export function compareCodePointsV1(a:string,b:string):number;
+export function rowKeyV1(row:GenerationRowV1):string;
+export const ROW_KEY_TEXT_LIMIT_V1:128;
+export function createFactIndexV1(ownerRows:ReadonlyMap<string,readonly GenerationRowV1[]>):FactIndexV1;
+export function patchFactIndexV1(index:FactIndexV1,change:{drop?:readonly string[];upserts?:ReadonlyMap<string,readonly GenerationRowV1[]>;append?:ReadonlyMap<string,readonly GenerationRowV1[]>},options?:{bulkRows?:number}):FactIndexV1;
+export function refineFactIndexV1(index:FactIndexV1):FactIndexV1;
+export function factConsumersV1(index:FactIndexV1):[string,string[]][];
+export function staleFactRowsV1(index:FactIndexV1,ids:readonly number[],hold:(rows:GenerationRowV1[],signal?:AbortSignal)=>Promise<boolean>,options?:{signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"];chunk?:number;parallel?:number;budget?:number}):Promise<{stale:Set<number>;calls:number}>;
+export function selectFactClassesV1(index:FactIndexV1,only?:ReadonlySet<string>):{classes:number[];ids:number[]};
+export function staleConsumersV1(index:FactIndexV1,classes:readonly number[],stale:ReadonlySet<number>):Set<string>;
+export function createFrontierV1(value:{directories:Iterable<[string,number,number]>;members:Iterable<[string,number]>;capturedAt:number}):FrontierV1;
+/** 0️⃣ Whether a recorded frontier fact (an inode or a member mode) agrees with a present one; `0` is the native scan's word for a fact the platform does not give it. */
+export function frontierFactHoldsV1(present:number,recorded:number):boolean;
+export function frontierHoldsV1(frontier:FrontierV1,stat:(path:string)=>Promise<{directory:boolean;file:boolean;mtimeMs:number;ino:number;mode:number}|undefined>,options?:{signal?:AbortSignal;concurrency?:number;racyMilliseconds?:number}):Promise<boolean>;
+export function diffFrontiersV1(before:FrontierV1,after:FrontierV1):MembershipChangeV1[];
+/** 🧱️ The directories whose entry sets are proven unchanged between two frontiers. */
+export function stableDirectoriesV1(before:FrontierV1,after:FrontierV1,options?:{racyMilliseconds?:number}):Set<string>;
+/** 🚧️ The untagged withheld owners that hold no fact about the source that withholds them, so they must be inferred again. */
+export function unfoundedWithheldOwnersV1(index:Pick<FactIndexV1,"owners"|"rows"|"classes">,owners:Readonly<Record<string,{kind:string;tag?:string;config?:string}>>,separator?:string):string[];
+
+/** 🔌️ Admits bounded consumer external input references. */
+export function readGenerationExternalInputsV1(value:unknown):readonly string[];
+/** 💽️ Whether a build failed because the volume has no room left. */
+export function diskFullFailureV1(error:unknown):boolean;
+/** 🏷️ Resolves one reference to its exact sealed external node key. */
+export function resolveGenerationExternalInputV1(nodes:Readonly<Record<string,unknown>>|undefined,name:string):string|undefined;
+export function scaledOwnerWaveV1(ownerWave:number,basisPoints:unknown):number;
+export const carriedStagesV1:Record<string,number>;
+export function nextOwnerWaveV1(input:{size:number;elapsedMilliseconds:number;inferred?:number;basisPoints?:unknown}):number;
+
+/** 🧮️ The answers of a generation store: the node store (absent when not durable) and the settler of derived questions. */
+export interface GenerationAnswersV1{readonly nodes:import("../🧮️derived-nodes/💾️store/🟨️.mjs").NodeStoreV1|undefined;readonly settler:ReturnType<typeof import("../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs").createClosureSettlerV1>}
+/** 🧠️ The answers of the derived questions of one store root: the node store under `root` (unless `durable` is false) and the settler that keeps the graph of the answers in memory, so the readers and the builder of one load ask each question once. */
+export function createAnswersV1(options: Readonly<{root:string;fs?:GenerationFilePortV1;durable?:boolean;workspaceRoot?:string}>): GenerationAnswersV1;

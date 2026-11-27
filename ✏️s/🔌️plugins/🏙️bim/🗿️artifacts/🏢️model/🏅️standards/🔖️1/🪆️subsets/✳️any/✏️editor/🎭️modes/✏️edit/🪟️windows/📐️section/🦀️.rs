@@ -18,7 +18,7 @@ use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "bim-edit-section";
+pub const WINDOW_KIND_ID: &str = crate::editor::bim::utilities::window_kinds::SECTION;
 pub const BODY_KEY: &str = "bim.edit.section";
 const SURFACE_ID: &str = "bim.edit.section2d/section";
 //#endregion 🔖️Constants

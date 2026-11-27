@@ -9,7 +9,7 @@ import { join, resolve } from "node:path";
 import type { Browser, Download, FileChooser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { ensureRepositoryBrowserPathV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, clickUncovered, dismissIntroduction, fillStagedArgument, mutateUndoRedo, readShell, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness } from "@semio-tech/framework-os-dev/testing/program-matrix";
+import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, fillStagedArgument, mutateUndoRedo, raiseHistory, readShell, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { REPO_ROOT, hexBytes, readMatrix, resolveSample, selectEditorProgram, type AcceptanceRow } from "../📇️matrix/🟦️.ts";
 import { judgeBytes, persistedContent } from "../🔬️oracles/🟦️.ts";
 import { detailsControlSelector } from "./🎯️details/🟦️.ts";
@@ -81,6 +81,10 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     while (Date.now() < deadline && (await windowIds(page)).some((id) => ids.includes(id))) { signal.throwIfAborted(); await page.waitForTimeout(250); }
     return (await windowIds(page)).filter((id) => ids.includes(id));
   };
+  const clearNotices = async (): Promise<void> => {
+    await page.evaluate(() => { for (const close of document.querySelectorAll("[data-semio-transient-notice] button")) (close as HTMLElement).click(); });
+    await page.waitForTimeout(200);
+  };
   const railIds = async (): Promise<string[]> => (await unfoldActionsRail(page), (await readShell(page)).actions.map((id) => id.replace(/^action\./u, "")));
   const spawnedPrograms = (): Promise<(Program & { id: string })[]> => page.evaluate(() => (window as unknown as { __semioOsCatalogProbe?: { spawned: (Program & { id: string })[] } }).__semioOsCatalogProbe?.spawned ?? []);
   const focusDocument = async (ids: readonly string[]): Promise<void> => {
@@ -93,6 +97,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     const button = keptDocument(id);
     await button.waitFor({ state: "visible", timeout: 120_000 });
     const before = new Set(await windowIds(page));
+    await clearNotices();
     const seen = (await notices()).length;
     await button.click();
     const deadline = Date.now() + 120_000;
@@ -128,6 +133,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     if (!rail.includes("openArtifactFile")) throw new Error("no openArtifactFile action in the owner editor");
     const before = await windowIds(page);
     const beforeOwners = new Set((await spawnedPrograms()).map((entry) => entry.id));
+    await clearNotices();
     const seen = (await notices()).length;
     choosers.next = bytes;
     choosers.name = name;
@@ -161,6 +167,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     const rail = await railIds();
     if (!rail.includes("saveArtifactFile")) throw new Error("no saveArtifactFile action in the owner editor");
     const cursor = downloads.length;
+    await clearNotices();
     const seen = (await notices()).length;
     await clickUncovered(page, '[data-slot="window-action-pane"] [id="action.saveArtifactFile"]');
     const deadline = Date.now() + 60_000;
@@ -231,8 +238,10 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
   let editedProof: string | null = null;
 
   const ownedControl = (selector: string) => page.locator(opened.map((id) => `[data-slot="window"][id=${JSON.stringify(id)}] [data-slot="window-body"] ${selector}`).join(",")).first();
+  let historyRaised = false;
   if (row.edit.mode === "rendered" && (row.edit.verb === "textEdit" || row.edit.verb === "set-page")) {
     const control = ownedControl(row.edit.control ?? ".semio-text-editor-host textarea:not([data-read-only])");
+    historyRaised = (await raiseHistory(page)) !== "already-open";
     const before = witness(await readShell(page));
     if ((await control.count()) === 0) steps.edit = no("no writable native text editor input");
     else {
@@ -258,6 +267,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     if (selector === undefined) throw new Error("rendered edit has no deterministic native control");
     const control = ownedControl(selector);
     const originalValue = await control.inputValue();
+    historyRaised = (await raiseHistory(page)) !== "already-open";
     const before = witness(await readShell(page));
     await control.click({ force: true });
     await control.fill(row.edit.value ?? "");
@@ -277,6 +287,10 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     const args = row.edit.verb && row.edit.args ? { [`${key}.${row.edit.verb}`]: row.edit.args } : {};
     const result = await mutateUndoRedo(page, refusals, key, verbs, args, {}, "@liveId", 1);
     steps.edit = result.mutation !== null && "mutated" in result && result.mutated ? ok(`${result.mutation}: ${JSON.stringify(result.mutationDetail ?? "applied and undo/redo differ")}`) : no(`${result.mutationDetail ?? "no verb moved the document"} (rail ${result.railRows} rows)`);
+  }
+  if (historyRaised) {
+    await click(page, '[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');
+    await page.waitForTimeout(500);
   }
   if (steps.edit?.status === "pass") {
     editedProof = persistedContent(await naturalExport("mutation"), row.persistence.comparison);
@@ -327,6 +341,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
   {
     choosers.next = hexBytes(row.invalid.bytes);
     choosers.name = `invalid${row.invalid.extension ?? row.extension}`;
+    await clearNotices();
     const seen = (await notices()).length;
     const faulted = faults.length;
     choosers.expectedInvalid = true;
@@ -337,7 +352,7 @@ async function drive(page: Page, row: AcceptanceRow, locale: "en"|"de", entry:En
     const raised = (await notices()).slice(seen);
     const pageErrors = faults.slice(faulted).filter((line) => line.startsWith("pageerror"));
     const afterInvalid = [...new Set(await windowIds(page))].sort();
-    const refused = raised.some((notice) => row.invalid.kind === "unsupported-format" ? notice.startsWith("shell.openFile.format-unresolved|") : notice.startsWith("shell.documentTransfer.file-open-failed|") || notice.startsWith("shell.openFile.format-unresolved|")) && !raised.some((notice) => notice.startsWith("shell.documentTransfer.file-opened|"));
+    const refused = raised.some((notice) => row.invalid.kind === "unsupported-format" ? notice.startsWith("shell.openFile.format-unresolved|") : notice.startsWith("shell.documentTransfer.file-open-failed|") || notice.startsWith("shell.openFile.content-mismatch|") || notice.startsWith("shell.openFile.format-unresolved|")) && !raised.some((notice) => notice.startsWith("shell.documentTransfer.file-opened|"));
     const uncorrupted = persistedContent(await naturalExport("after-refusal"), row.persistence.comparison) === expected;
     steps.invalid = choosers.next === null && refused && pageErrors.length === 0 && uncorrupted && JSON.stringify(beforeInvalid) === JSON.stringify(afterInvalid) ? ok(`${row.invalid.kind} natural file refused without changing document content or windows: ${JSON.stringify(raised.slice(0, 2))}`) : no(`${row.invalid.kind} open did not refuse cleanly: ${JSON.stringify(raised)}; ${pageErrors.length} page errors; content preserved=${uncorrupted}`);
   }

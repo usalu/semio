@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {chmodSync,cpSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {chmodSync,cpSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,relative,resolve} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};

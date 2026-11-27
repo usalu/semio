@@ -30,7 +30,7 @@ pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
     let dependency = semio_hub_stdio_catalog_definition::native_artifact_catalog_dependency()?;
     let catalog = semio_hub_stdio_catalog_definition::native_artifact_catalog_contribution()?;
     PluginBuilder::<_, VcsApps>::new("vcs")
-        .label("VCS")
+        .label(semio_plugin::LocalizedLabel::native("VCS", "VCS"))
         .version("0.1.0")
         .package_id("semio:vcs")
         .depends_on(dependency.plugin_id, dependency.version)

@@ -101,3 +101,7 @@ impl ArtifactOwnedToolJobFactory for LocalFileImportJobFactory {
         ArtifactToolPublicationContract { tool_id: geojson::FILE_ACTION, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

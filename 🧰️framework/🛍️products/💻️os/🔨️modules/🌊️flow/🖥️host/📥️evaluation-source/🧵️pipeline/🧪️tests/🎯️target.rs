@@ -9,11 +9,25 @@ use std::sync::Arc;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,OperationId,Generation,StepContext,close_original_effect_step};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll};
+/// 🪙️ The funded-step contract: a step is funded by its own quote, not by a fixed unit of fuel. Offers `step` the loans 1, 2, 4, … up to `ceiling` until one moves it, so the admitted loan is below twice the quote; every smaller loan must leave the receipt and the remaining fuel untouched (a clean refusal, never a partial mutation), and the admitted loan bounds the work the step performed. Answers the admitted loan, 0 when even `ceiling` moved nothing.
+/// @see [`StepContext::with_original_work_loan`]
+fn quoted_loan(cx:&mut StepContext<'_>,ceiling:u64,mut step:impl FnMut(&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<u64,OriginalTurnFailure>{
+ let deadline=cx.deadline_us();let mut loan=1;
+ loop{
+  let(progress,fuel)=(cx.retained_progress(),cx.original_total_fuel_remaining());
+  let(attempt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_original_work_loan(loan,deadline,|cx|step(cx)));attempt?;
+  if cx.retained_progress()==progress&&fuel==cx.original_total_fuel_remaining()&&(heap.requested_bytes!=0||heap.released_bytes!=0){eprintln!("[DEBUG] refused loan={loan} heap=({},{})",heap.requested_bytes,heap.released_bytes);}
+  let spent=fuel.saturating_sub(cx.original_total_fuel_remaining());
+  if cx.retained_progress()!=progress||spent!=0{assert!(spent<=loan,"a step funded by a loan of {loan} performed {spent} work");return Ok(loan)}
+  if loan>=ceiling{eprintln!("[DEBUG] ladder exhausted ceiling={ceiling} progress={:?}",cx.retained_progress());return Ok(0)}
+  loan=loan.saturating_mul(2).min(ceiling);
+ }
+}
 fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert!(!heap.overflowed);(value,heap.requested_bytes,heap.released_bytes)}
 struct TurnResult<T>{inner:Option<Result<T,OriginalTurnFailure>>,outer:Result<(),OriginalTurnFailure>}
 impl<T> TurnResult<T>{fn unwrap(self)->T{self.outer.unwrap();self.inner.expect("original closing callback must run").unwrap()}}
-fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,loan:Option<u64>,births:&mut usize,releases:&mut usize,cpu:&mut bool,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->TurnResult<T>{
- let mut inner=None;let before=caller.fuel_remaining();let(outer,b,f)=observe(||caller.turn_with_decoder(grant,decoder,|cx|{let body=|same:&mut StepContext<'_>|{inner=Some(run(same));Ok(())};if let Some(fuel)=loan{let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(fuel,deadline,body)}else{body(cx)}}));
+fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,loan:Option<u64>,births:&mut usize,releases:&mut usize,cpu:&mut bool,mut run:impl FnMut(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->TurnResult<T>{
+ let mut inner=None;let before=caller.fuel_remaining();let(outer,b,f)=observe(||caller.turn_with_decoder(grant,decoder,|cx|{let mut body=|same:&mut StepContext<'_>|{inner=Some(run(same));Ok(())};if let Some(ceiling)=loan{quoted_loan(cx,ceiling,body)?;Ok(())}else{body(cx)}}));
  let p=caller.receipt();assert_eq!((b,f),(p.retained_capacity_bytes,p.released_bytes));*births+=b;*releases+=f;*cpu&=loan.is_none_or(|fuel|before-caller.fuel_remaining()<=fuel);TurnResult{inner,outer}
 }
 #[derive(semio_framework_value::RetireOwned)]
@@ -24,7 +38,7 @@ fn close<T:RetireOwned>(value:T,caller:&mut OriginalJobFixtureCaller,decoder:&mu
 #[test]
 fn original_shared_pipeline_publishes_to_the_real_session_and_closes_with_the_existing_stock(){run(None)}
 #[test]
-fn original_shared_pipeline_keeps_the_existing_opportunity_under_one_fuel_and_512_items(){run(Some(1))}
+fn original_shared_pipeline_keeps_the_existing_opportunity_under_the_quoted_loan_and_512_items(){let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/⏱️opportunity/opportunity.json")).unwrap();run(law["originalWorkLoan"]["maximumQuote"].as_u64())}
 fn run(loan:Option<u64>){
  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🧵️work/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let policy:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
@@ -40,8 +54,8 @@ fn run(loan:Option<u64>){
   session.begin_close();for _ in 0..32768{if session.terminal_is_empty(){break}turns+=1;turn(&mut caller,&mut decoder,stock,loan,&mut births,&mut releases,&mut cpu,|cx|cx.with_original_retirement(|cx|{for _ in 0..512{let before=(cx.fuel_remaining(),cx.retained_progress());let copy=cx.retained_grant().maximum_copy_bytes;let d=RetirementDemand{copy_bytes:session.next_close_copy_byte_demand()?,capacity_bytes:session.next_close_capacity_byte_demand(copy)?,release_bytes:session.next_close_release_byte_demand()?,depth:session.next_close_depth_demand()?};close_original_effect_step(cx,d,|effect|RetainedWorkPoll::Complete(session.retire_source_step(effect)))?;if session.terminal_is_empty()||cx.should_yield()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(())})).unwrap();}assert!(session.terminal_is_empty());assert_eq!(observe(||drop(session)),((),0,0));
   let no_failure=sources.failure.is_none()&&sources.outer_failure.is_none();close(sources,&mut caller,&mut decoder,stock,loan,&mut births,&mut releases,&mut cpu,&mut turns);
   for _ in 0..32768{if registry_retirement.terminal_is_empty(){break}turns+=1;turn(&mut caller,&mut decoder,stock,loan,&mut births,&mut releases,&mut cpu,|cx|cx.with_original_retirement(|cx|{for _ in 0..512{let before=(cx.fuel_remaining(),cx.retained_progress());let copy=cx.retained_grant().maximum_copy_bytes;let d=RetirementDemand{copy_bytes:registry_retirement.next_copy_byte_demand()?,capacity_bytes:registry_retirement.next_capacity_byte_demand(copy)?,release_bytes:registry_retirement.next_release_byte_demand()?,depth:registry_retirement.next_depth_demand()?};close_original_effect_step(cx,d,|effect|registry_retirement.close_step(effect.grant().maximum_copy_bytes,effect))?;if registry_retirement.terminal_is_empty()||cx.should_yield()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(())})).unwrap();}assert!(registry_retirement.terminal_is_empty());
-  for _ in 0..32768{if decoder.terminal_is_empty(){break}turns+=1;let before=caller.fuel_remaining();let(result,b,f)=observe(||caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let mut run=|cx:&mut StepContext<'_>|{let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())};if let Some(fuel)=loan{let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(fuel,deadline,run)}else{run(cx)}})));let p=caller.receipt();assert_eq!((b,f),(p.retained_capacity_bytes,p.released_bytes));births+=b;releases+=f;cpu&=loan.is_none_or(|fuel|before-caller.fuel_remaining()<=fuel);result.unwrap();}
+  for _ in 0..32768{if decoder.terminal_is_empty(){break}turns+=1;let before=caller.fuel_remaining();let(result,b,f)=observe(||caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let mut run=|cx:&mut StepContext<'_>|{let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())};if let Some(ceiling)=loan{quoted_loan(cx,ceiling,run)?;Ok(())}else{run(cx)}})));let p=caller.receipt();assert_eq!((b,f),(p.retained_capacity_bytes,p.released_bytes));births+=b;releases+=f;cpu&=loan.is_none_or(|fuel|before-caller.fuel_remaining()<=fuel);result.unwrap();}
   assert!(decoder.terminal_is_empty());for _ in 0..32768{if caller.terminal_is_empty(){break}turns+=1;let d=caller.retirement_demands().unwrap();let(p,b,f)=observe(||caller.retire_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}).unwrap().progress());assert_eq!((b,f),(p.retained_capacity_bytes,p.released_bytes));births+=b;releases+=f;}
-  assert!(caller.terminal_is_empty());assert_eq!(caller.stock(),stock);assert_eq!(original+caller_birth+births,releases);assert!(matched&&unchanged&&no_failure&&cpu&&quoted);assert!(turns<=200,"original full controller and physical family exceeded its unchanged opportunity");
+  assert!(caller.terminal_is_empty());assert_eq!(caller.stock(),stock);assert_eq!(original+caller_birth+births,releases);eprintln!("[DEBUG] pipeline matched={matched} unchanged={unchanged} no_failure={no_failure} cpu={cpu} quoted={quoted} completed={completed} turns={turns} cancel={cancel_at:?}");assert!(matched&&unchanged&&no_failure&&cpu&&quoted);assert!(turns<=200,"original full controller and physical family exceeded its unchanged opportunity");
  }
 }

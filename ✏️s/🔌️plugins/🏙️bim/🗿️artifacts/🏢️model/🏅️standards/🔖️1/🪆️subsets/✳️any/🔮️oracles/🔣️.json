@@ -12415,6 +12415,30 @@
     },
     {
       "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-geometry-values",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📐️geometry-values/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-properties-values",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔍️properties-values/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-issues-values",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚨️issues-values/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-values",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💠️values/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
       "package": "semio-s-artifact-bim-model-schema",
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
       "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."

@@ -1,9 +1,9 @@
 /** 🏗 Composition root of `repo service host --foreground`: binds the graph loader to the per-host service and ties its lifetime to the process signals. */
-import {spawn,spawnSync} from "node:child_process";
+import {spawnSync} from "node:child_process";
 import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import {createHash} from "node:crypto";
 import {basename,dirname,join} from "node:path";
-import {mkdirSync,openSync,readdirSync,rmSync} from "node:fs";
+import {mkdirSync,readdirSync,rmSync} from "node:fs";
 import {homedir} from "node:os";
 import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {serviceRouteV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
@@ -19,6 +19,7 @@ import {ACCESS_PROOF_VERSION_V1,accessDirectoryV1,consentIdentityV1,createMountR
 import {ensureLauncherConsentV1,launchdRouteV1,listServiceJobsV1,startViaLaunchdV1} from "./🍎️launchd/🟨️.mjs";
 import {createResponsibilityWatchV1} from "../../🔐️consent/🧷️responsibility/🟨️.mjs";
 import {fileURLToPath} from "node:url";
+import {spawnDetachedV1} from "./🪂️detach/🟨️.mjs";
 
 const processLivesV1=pid=>processPidExistsV1(pid);
 
@@ -90,8 +91,9 @@ export async function runHostForegroundV1({implementation,loadGraph,loadSlice,id
  }
 }
 
-/** 🧷️ What belongs to the client that happened to start the service and must not follow it: its capacity grant (released when the client ends) and the plan child of its own run. */
-const CLIENT_BOUND_ENVIRONMENT_V1=Object.freeze(["SEMIO_HOST_CAPACITY_GRANT","SEMIO_HOST_CAPACITY_PLAN","SEMIO_HOST_CAPACITY_PHASE_MARKS","SEMIO_BUILD_GRAPH_PLAN_OUT","SEMIO_BUILD_GRAPH_YIELD_TICKET","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST"]);
+/** 🧷️ What belongs to the client that happened to start the service and must not follow it: its capacity grant (released when the client ends), the plan child of its own run, and the owner pid and admitted deadline of its Script process (the owner rule ends a process whose owner is gone, so a service that kept the starting client as its owner ended, with every slice worker it carried, the moment that client was killed).
+ * @see ../../🧪️tests/🛡️client-kill/🟦️.ts */
+const CLIENT_BOUND_ENVIRONMENT_V1=Object.freeze(["SEMIO_SCRIPT_PROCESS_OWNER","SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_HOST_CAPACITY_GRANT","SEMIO_HOST_CAPACITY_PLAN","SEMIO_HOST_CAPACITY_PHASE_MARKS","SEMIO_BUILD_GRAPH_PLAN_OUT","SEMIO_BUILD_GRAPH_YIELD_TICKET","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST"]);
 
 /** 🚫️ Why a service that a running service starts (`SEMIO_SERVICE_ROUTE_REQUIRED=launchd`, the reload) never starts directly on macOS below a protected folder: the direct child inherits the responsible app of the service that spawned it and loses the file access of the checkout the moment that one ends, so only a launchd job under the launcher may carry the service over; otherwise the next client starts it under its own access. */
 export const REPLACEMENT_REFUSAL_V1="A graph service is not started from inside a running service unless launchd runs it under the launcher: a direct child loses the file access of the checkout when the service that started it ends, so the next client starts it under its own access / Ein Graphdienst wird nicht aus einem laufenden Dienst gestartet, wenn ihn nicht launchd unter dem Launcher ausführt: ein direktes Kind verliert den Dateizugriff auf den Checkout, sobald der startende Dienst endet; der nächste Client startet ihn mit seinem eigenen Zugriff";
@@ -132,13 +134,12 @@ export function spawnHostServiceV1({command,environment=process.env,cwd=process.
    if(required)refuseDirect();
    if(consent.state!=="waiting")process.stderr.write("launchd did not run the graph service ("+outcome.reason+"); starting it directly / launchd hat den Graphdienst nicht gestartet ("+outcome.reason+"); er wird direkt gestartet\n");
   }
-  const log=openSync(runtime.log,"a",0o600),child=spawn(argv[0],argv.slice(1),{cwd,env:{...env,SEMIO_SERVICE_ROUTE:"direct"},stdio:["ignore",log,log],detached:true,windowsHide:true});
-  child.unref();
-  if(child.pid===undefined)return;
-  let placed=group!==undefined&&runsInServiceGroupV1(child.pid,group);
-  for(let wait=0;group!==undefined&&!placed&&wait<20;wait++){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);placed=runsInServiceGroupV1(child.pid,group);}
-  if(group!==undefined&&!placed)placed=placeServiceOutsideJobsV1(child.pid,service);
-  appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid:child.pid,...placed&&group?{cgroup:group,limitMegabytes:service.limitMegabytes}:{placed:false}});
-  return{pid:child.pid,alive:()=>processLivesV1(child.pid)};
+  const pid=spawnDetachedV1({argv,cwd,env:{...env,SEMIO_SERVICE_ROUTE:"direct"},log:runtime.log});
+  if(pid===undefined)return;
+  let placed=group!==undefined&&runsInServiceGroupV1(pid,group);
+  for(let wait=0;group!==undefined&&!placed&&wait<20;wait++){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);placed=runsInServiceGroupV1(pid,group);}
+  if(group!==undefined&&!placed)placed=placeServiceOutsideJobsV1(pid,service);
+  appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid,...placed&&group?{cgroup:group,limitMegabytes:service.limitMegabytes}:{placed:false}});
+  return{pid,alive:()=>processLivesV1(pid)};
  };
 }

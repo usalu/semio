@@ -200,6 +200,11 @@ impl LocalizedLabel {
         self.cells.iter().flatten().find_map(|cell|match cell{Cow::Owned(text) if text.capacity()!=0=>Some(text.capacity()),Cow::Borrowed(text) if !text.is_empty()=>Some(0),_=>None}).unwrap_or(0)
     }
 
+    /// 🧱️ Heap capacity of every owned cell; borrowed cells own nothing.
+    pub fn owned_bytes(&self) -> usize {
+        self.cells.iter().flatten().map(|cell| match cell { Cow::Owned(text) => text.capacity(), Cow::Borrowed(_) => 0 }).sum()
+    }
+
     /// 🧮️ Retained bytes of the WHOLE matrix. A label is a locale × terminology matrix now, so an
     /// artifact's fixed retained envelope pays for every cell, not for one string: a caller that
     /// used to admit `label.len()` admits this instead, and never under-counts the envelope by

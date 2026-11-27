@@ -2,7 +2,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use semio_os_kernel::os_store::test_support;
+use semio_os_store_test_support as test_support;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 #[test]

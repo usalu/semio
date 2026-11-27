@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { WebIO } from "@gltf-transform/core";
-import { KHRMaterialsUnlit, KHRMaterialsVariants } from "@gltf-transform/extensions";
+import { KHRMaterialsUnlit, KHRMaterialsVariants, KHRMeshQuantization } from "@gltf-transform/extensions";
 import validator from "gltf-validator";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -310,5 +310,52 @@ describe("🧪️ GLB oracles", () => {
       expect(primitive.solids!.length).toBeGreaterThan(0);
       expect(root.listMeshes()[m]!.listPrimitives()[p]!.getExtras().solids).toEqual(primitive.solids);
     }));
+  });
+
+  it("compact encoding writes quantized normals only where a lit material can read them and shares identical ones", async () => {
+    const f = JSON.parse(readFileSync(new URL("./🧫️fixtures/📉️compact-normals/🔣️.json", import.meta.url), "utf8")) as { positions: number[][]; normals: number[][]; vertexCount: number; toleranceRadians: number; normalByteStride: number; normalComponentType: number; extension: string };
+    const template = vectors.find((v) => v.name === "minimal-triangle")!;
+    const [grey] = template.document.materials;
+    const materials = [grey!, { ...grey!, id: "ink", unlit: true }, { ...grey!, id: "paper" }];
+    const cycle = (rows: number[][]): number[] => Array.from({ length: f.vertexCount }, (_, i) => rows[i % rows.length]!).flat();
+    const base = { mode: "triangles" as const, positions: cycle(f.positions), indices: Array.from({ length: f.vertexCount }, (_, i) => i), normals: cycle(f.normals) };
+    const primitives = [{ ...base, material: "grey" }, { ...base, material: "ink" }, { ...base, material: "grey" }];
+    const document = {
+      ...template.document, materials,
+      meshes: [{ ...template.document.meshes[0]!, primitives }],
+      variants: [{ id: "paper", title: { en: "Paper", de: "Papier" }, bindings: { "ink": "paper" } }],
+    };
+    const only = { ...document, variants: [] as typeof document.variants };
+    const compact = encodeGlb(only, { animations: false, variants: true, compact: true }, quiet);
+    const plain = encodeGlb(only, { animations: false, variants: true }, quiet);
+    const io = new WebIO().registerExtensions([KHRMaterialsUnlit, KHRMaterialsVariants, KHRMeshQuantization]);
+    const json = (await io.binaryToJSON(compact)).json;
+    const [lit, ink, twin] = json.meshes![0]!.primitives;
+    expect(json.extensionsUsed).toContain(f.extension);
+    expect(json.extensionsRequired).toEqual([f.extension]);
+    expect(lit!.attributes.NORMAL).toBeDefined();
+    expect(ink!.attributes.NORMAL).toBeUndefined();
+    expect(twin!.attributes.NORMAL).toBe(lit!.attributes.NORMAL);
+    expect(twin!.attributes.POSITION).toBe(lit!.attributes.POSITION);
+    const accessor = json.accessors![lit!.attributes.NORMAL!]!;
+    expect([accessor.componentType, accessor.type, accessor.normalized]).toEqual([f.normalComponentType, "VEC3", true]);
+    expect(json.bufferViews![accessor.bufferView!]!.byteStride).toBe(f.normalByteStride);
+    expect((await validator.validateBytes(compact, { uri: "compact.glb", maxIssues: 0 })).issues).toMatchObject({ numErrors: 0, numWarnings: 0 });
+    const angle = (a: ArrayLike<number>, b: number[]): number => Math.acos(Math.min(1, (a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!) / Math.hypot(a[0]!, a[1]!, a[2]!)));
+    const read = (await io.readBinary(compact)).getRoot().listMeshes()[0]!.listPrimitives()[0]!.getAttribute("NORMAL")!;
+    const gltf = await new Promise<any>((resolve, reject) => new GLTFLoader().parse(compact.buffer.slice(compact.byteOffset, compact.byteOffset + compact.byteLength) as ArrayBuffer, "", resolve, reject));
+    let geometry: any;
+    gltf.scene.traverse((node: any) => { if (geometry === undefined && node.geometry?.attributes.normal !== undefined) geometry = node.geometry; });
+    f.normals.forEach((normal, i) => {
+      expect(angle(read.getElement(i, []), normal)).toBeLessThan(f.toleranceRadians);
+      expect(angle([geometry.attributes.normal.getX(i), geometry.attributes.normal.getY(i), geometry.attributes.normal.getZ(i)], normal)).toBeLessThan(f.toleranceRadians);
+    });
+    const kept = (await io.binaryToJSON(encodeGlb(document, { animations: false, variants: true, compact: true }, quiet))).json.meshes![0]!.primitives;
+    expect(kept[1]!.attributes.NORMAL).toBeDefined();
+    const flat = (await io.binaryToJSON(plain)).json;
+    expect(flat.extensionsRequired).toBeUndefined();
+    const original = flat.accessors![flat.meshes![0]!.primitives[1]!.attributes.NORMAL!]!;
+    expect([original.componentType, original.normalized]).toEqual([5126, undefined]);
+    expect(compact.length).toBeLessThan(plain.length);
   });
 });

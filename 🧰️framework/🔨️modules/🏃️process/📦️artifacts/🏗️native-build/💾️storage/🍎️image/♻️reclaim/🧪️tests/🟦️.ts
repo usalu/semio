@@ -21,16 +21,16 @@ const protocol=imageSchema.definitions.ImageProtocol.const,MiB=1048576;
 const env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr);return row.stdout;};
 const scripted=(cycle:typeof fixture.cycles[number],log:string[])=>{
- const seen=new Map<string,number>(),scratch=()=>{const row=log.find(line=>/fstrim|mount -o|Mount-VHD/u.test(line));return row?.match(/(\/[^ ]*semio-reclaim-[^ ]*)$/u)?.[1]??"";};
+ const seen=new Map<string,number>(),outputs:Readonly<Record<string,readonly string[]|undefined>>=cycle.outputs,scratch=()=>{const row=log.find(line=>/fstrim|mount -o|Mount-VHD/u.test(line));return row?.match(/(\/[^ ]*semio-reclaim-[^ ]*)$/u)?.[1]??"";};
  return async(program:string,args:readonly string[])=>{
-  const name=basename(program),windows=name==="powershell.exe",script=windows?args.at(-1)!:"",key=windows?name+" "+script.split(" ")[0]:name+" "+args[0],values=(cycle.outputs as Record<string,string[]>)[key]??[""],index=seen.get(key)??0;seen.set(key,index+1);
+  const name=basename(program),windows=name==="powershell.exe",script=windows?args.at(-1)!:"",key=windows?name+" "+script.split(" ")[0]:name+" "+args[0],values=outputs[key]??[""],index=seen.get(key)??0;seen.set(key,index+1);
   log.push(name+" "+(windows?script:args.join(" ")));
   return values[Math.min(index,values.length-1)]!.replaceAll("<scratch>",scratch());
  };
 };
 const oracle=(...args:string[])=>{
  const python=testPythonV1();
- if(python===undefined)throw Error("Python required by the reclaim oracle");
+ if(!python)throw Error("Python required by the reclaim oracle");
  const result=spawnSync(python,["-I",join(import.meta.dir,"🐍️.py"),...args],{encoding:"utf8"});
  if(result.status!==0)throw result.error??Error(result.stderr);
  return result.stdout.trim();
@@ -225,7 +225,7 @@ test("a latched volume is detached with force after a busy refusal and an honest
   const device=await port.attachedDevice();
   expect(device).toBe("/dev/d");
   await port.detach(device!).catch(()=>{});
-  expect(seen).toEqual(calls);
+  expect(seen).toEqual([...calls]);
  }
 });
 

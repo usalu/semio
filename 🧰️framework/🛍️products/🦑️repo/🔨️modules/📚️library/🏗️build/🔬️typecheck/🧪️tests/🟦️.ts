@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
-import {spawnSync} from "node:child_process";
+import {spawn} from "node:child_process";
 import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import {CATALOG_LANGUAGES_V1,placeholdersV1,textV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
@@ -339,16 +339,20 @@ test("AMBIENT LAW policy: every ambient declaration exists, names known projects
  expect(typecheckProjectOfV1(policy.projects[0]!.roots[0]+"/🏗️build/🟦️.ts").id).toBe("library");
 });
 
-test("AMBIENT LAW programs: no program that is not allowed to load an ambient-global package (the build library, the CLI workspace, the server build tooling) reads its global declaration, and the allowed program does",()=>{
- const programFiles=(tsconfig:string)=>{
-  const result=spawnSync(process.execPath,[join(root,policy.compiler.script),"-p",join(root,tsconfig),"--listFilesOnly"],{cwd:root,encoding:"utf8",maxBuffer:1<<28,env:{...process.env,NO_COLOR:"1",NODE_OPTIONS:"--max-old-space-size=4096"}});
-  expect(result.status,tsconfig+" "+result.stderr).toBe(0);
-  return result.stdout.split(/\r?\n/u).filter(Boolean).map(file=>relative(root,file).split("\\").join("/"));
- };
- const programs=[...policy.projects.map(project=>({id:project.id,tsconfig:project.tsconfig})),{id:policy.fallback.id,tsconfig:policy.fallback.tsconfig}];
- for(const entry of policy.ambient){
-  for(const program of programs){
-   expect(programFiles(program.tsconfig).some(file=>file.endsWith("/"+entry.declaration)),`${program.id} loads ${entry.declaration}`).toBe(entry.projects.includes(program.id));
-  }
+test("AMBIENT LAW programs: no program that `repo typecheck` composes for the product (the build library, the CLI workspace, the server build tooling) and is not allowed to load an ambient-global package reads its global declaration, and the allowed program does",scratch(async directory=>{
+ const product="🧰️framework/🛍️products/🦑️repo",plan=planTypecheckV1(root,resolveTypecheckPathsV1(root,root,[product]),{noImporters:true},directory);
+ const programFiles=(id:string,project:Readonly<{id:string;tsconfig:string}>,files:readonly string[])=>new Promise<string[]>(finish=>{
+  const configuration=join(directory,id+".law.tsconfig.json");
+  writeFileSync(configuration,typecheckConfigurationV1(root,project,files,directory));
+  const child=spawn("node",[join(root,policy.compiler.script),"-p",configuration,"--listFilesOnly"],{cwd:root,stdio:["ignore","pipe","pipe"],env:{...process.env,NO_COLOR:"1",NODE_OPTIONS:"--max-old-space-size=4096"}});
+  let out="",err="";
+  child.stdout.on("data",chunk=>{out+=chunk;});
+  child.stderr.on("data",chunk=>{err+=chunk;});
+  child.on("close",status=>{expect(status,id+" "+err).toBe(0);finish(out.split(/\r?\n/u).filter(Boolean).map(file=>relative(root,file).split("\\").join("/")));});
+ });
+ expect([...plan.groups.keys()].sort()).toEqual([...policy.projects.map(row=>row.id),policy.fallback.id].sort());
+ for(const [id,group] of plan.groups){
+  const files=await programFiles(id,group.project,group.files);
+  for(const entry of policy.ambient)expect(files.some(file=>file.endsWith("/"+entry.declaration)),`${id} loads ${entry.declaration}`).toBe(entry.projects.includes(id));
  }
-},120000);
+}),600000);

@@ -64,7 +64,7 @@ impl semio_framework_value::FromValue for DagSnapshot {
             .run_settled(grant, work, |effect| factory_retire_owned(&factory, &mut content, effect))
             .expect("DAG child retirement effect").expect("DAG child retirement admission");
         let (mut cursor, _) = admission.result.expect("DAG child publishes its retirement owner");
-        store::test_support::drive_retirement(cursor.as_mut()).expect("DAG child closes with its exact owner");
+        semio_os_store_test_support::drive_retirement(cursor.as_mut()).expect("DAG child closes with its exact owner");
         assert!(cursor.terminal_is_empty());
     }
 }

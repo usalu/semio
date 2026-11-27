@@ -39,7 +39,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// the open document.
 pub fn plugin() -> Result<Plugin<MathematicalApps>, PluginAssemblyError> {
     PluginBuilder::<_, MathematicalApps>::new("mathematical")
-        .label("Mathematical")
+        .label(semio_plugin::LocalizedLabel::native("Mathematical", "Mathematisch"))
         .version("0.1.0")
         .package_id("semio:mathematical")
         .declare_artifact(crate::artifacts::equation::artifact())

@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-os-store-schema-exports"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Production schema exports of the Store's own document model: composed child, owner stamp, link and blob"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-schema-exports"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-registry = { workspace = true }

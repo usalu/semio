@@ -52,13 +52,15 @@ pub(super) fn initialize_drawing_mutation_arena_pool_for_test() {
     let mut job = DrawingMutationArenaBootstrapJob::new(None).expect("fixed Drawing arena bootstrap job admission");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
-    for _ in 0..1_000 {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let mut pending = 0;
+    while pending < 1_000 && std::time::Instant::now() < deadline {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         match job.step(&mut context) {
             DrawingMutationArenaBootstrapStep::Ready => return,
-            DrawingMutationArenaBootstrapStep::Pending { advanced_items } => assert_eq!(advanced_items, 1),
-            DrawingMutationArenaBootstrapStep::Blocked => {}
+            DrawingMutationArenaBootstrapStep::Pending { advanced_items } => { assert_eq!(advanced_items, 1); pending += 1; }
+            DrawingMutationArenaBootstrapStep::Blocked => std::thread::yield_now(),
             DrawingMutationArenaBootstrapStep::Cancelled => panic!("Drawing mutation arena bootstrap fixture was unexpectedly cancelled"),
             DrawingMutationArenaBootstrapStep::Fault(error) => panic!("Drawing mutation arena pool initialization faulted: {error}"),
         }
@@ -157,11 +159,12 @@ pub(super) fn close_candidate(authority: &mut DrawingMutationCandidateAuthority,
 }
 
 /// 🧮️ Borrows a candidate from the shared process pool the way the production initializer does: a
-/// transiently contended pool (another law holds it for one bounded borrow) is borrowed again.
+/// transiently contended or momentarily exhausted pool (parallel laws hold every fixed slot for one bounded operation) is borrowed again.
 pub(super) fn borrowed_candidate(replacement: Option<semio_framework_job::ReplacementIdentity>) -> Result<DrawingMutationCandidateAuthority, &'static str> {
-    for _ in 0..1_000_000 {
+    for _ in 0..10_000_000 {
         match DrawingMutationCandidateAuthority::try_new(replacement) {
             Err(DrawingMutationArenaBorrowError::Contended) => std::thread::yield_now(),
+            Err(DrawingMutationArenaBorrowError::Invalid("drawing-store.mutation-arena-pool-saturated")) => std::thread::sleep(std::time::Duration::from_micros(200)),
             other => return other.map_err(DrawingMutationArenaBorrowError::as_str),
         }
     }

@@ -18,6 +18,7 @@ use semio_plugin::MediaForm;
 use semio_plugin::MediaType;
 use crate::editor::bim::{BIM_RETAINED_PAYLOAD_SCHEMA, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS};
 use crate::editor::bim::*;
+use crate::editor::bim::commands::export_model;
 use semio_s_artifact_bim_model_tests::editor::bim::presence;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient;
 

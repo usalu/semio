@@ -145,6 +145,11 @@ where
         if self.state!=ActiveArtifactStoreReplacementState::Initializing{return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer awaits its actual replacement stage"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let business_cancelled=self.cancelled();
+        thread_local! { static DEBUG_INITIALIZER_CALLS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
+        let debug_call = DEBUG_INITIALIZER_CALLS.with(|calls| { calls.set(calls.get() + 1); calls.get() });
+        if debug_call % 32 == 1 {
+            eprintln!("[DEBUG] store initializer call={debug_call} outcome_pending={} resume_pending={} terminal_target={:?} rejected={} session_poll={:?} step_demand={:?} outcome_terminal={}", self.outcome_pending, self.resume_pending, self.terminal_target, self.session_rejected.is_some(), self.session.as_ref().map(|session| session.poll()), self.initializer_step_demand, self.outcome_terminal.is_some());
+        }
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.terminal_is_empty(){
                 let before=cx.retained_progress();
@@ -157,7 +162,20 @@ where
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 rejected.admit_pending(config,&mut self.session,cx)?;
-                return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+                let admitted_delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                if admitted_delta==RetainedCloneProgress::default(){
+                    thread_local! { static DEBUG_ADMISSION_ZEROS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
+                    let zeros=DEBUG_ADMISSION_ZEROS.with(|zeros|{zeros.set(zeros.get()+1);zeros.get()});
+                    if zeros%32==1{eprintln!("[DEBUG] store initializer admission zero run={zeros} phases={:?} pending={} should_yield={} grant={:?} fuel={} deadline_us={} now_us={:?} session={}",rejected.admission_phases(),rejected.admission_pending(),cx.should_yield(),cx.retained_grant(),cx.fuel_remaining(),cx.deadline_us(),cx.now_us(),self.session.is_some());}
+                }
+                if admitted_delta==RetainedCloneProgress::default() && rejected.admission_pending(){
+                    if store_initializer_worker_idle_is_dead(&mut self.worker_idle_since_us, cx.now_us()) {
+                        return Err(plugin_sdk_fault("store initializer worker admission made no progress within its idle ceiling").into());
+                    }
+                    return Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer awaits its worker session admission" });
+                }
+                self.worker_idle_since_us=None;
+                return Ok(PluginLifecycleStep::Progress(admitted_delta));
             }
 
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;

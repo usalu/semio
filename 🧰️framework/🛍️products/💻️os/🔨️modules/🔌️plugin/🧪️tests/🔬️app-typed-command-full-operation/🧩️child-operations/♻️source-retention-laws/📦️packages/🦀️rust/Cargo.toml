@@ -25,6 +25,7 @@ name = "semio-plugin-child-group-source-retention-laws"
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

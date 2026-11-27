@@ -227,6 +227,13 @@ describe.each(matrix.artifacts.map((row) => [`${row.batch}/${row.artifact}`, row
     const entries = await (catalog ??= projectedCatalog());
     expect(entries.some((plugin) => plugin.pluginId === row.plugin && plugin.activationEvents.includes(`on-artifact-kind:${row.kind}`))).toBe(true);
   }, 60_000);
+  test("pins the dialect editor that the sample content selects", () => {
+    if (row.artifact !== "xlsx") return;
+    const members = unzipSync(new Uint8Array(readFileSync(join(REPO_ROOT, row.sample))));
+    const main = new TextDecoder().decode(members["xl/workbook.xml"]!);
+    expect(main.includes("http://schemas.openxmlformats.org/spreadsheetml/2006/main")).toBe(true);
+    expect(row.ownerApp).toBe("s.stdio.xlsx@ecma-376/transitional#editor");
+  });
   test("has a natural-file sample accepted by its third-party oracle", () => {
     const candidates = candidateSamples(row);
     expect(candidates.length).toBeGreaterThan(0);

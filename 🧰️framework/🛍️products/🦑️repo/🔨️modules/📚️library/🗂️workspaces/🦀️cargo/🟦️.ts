@@ -15,6 +15,7 @@ import {readCargoPreparationProgramContextV1,readCargoPreparationSourceEditV1,ad
 import {cargoPreparationWitnessHoldsV1,cargoPriorListingV1,cargoStatTextV1,observeCargoPhysicalV1,type CargoPriorListingV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
+import cargoLaunchSchema from "../../🏃️process/🦀️cargo/🚪️launcher/🧬️schema/🔣️.json" with { type: "json" };
 import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, writeFileSync, type Dirent } from "node:fs";
 import workspaceModule from "../🟨️.cjs";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
@@ -465,6 +466,12 @@ export function cargoCommandRequiresOwnerPreparationV1(command: string): boolean
   return invocationSchema.allOf[0]!.if.properties.command.enum.includes(command);
 }
 
+/** 🪶️ Holds for an offline lockfile-only command (`update`, `generate-lockfile`): it resolves the manifests and compiles nothing, so no owner input has to be refreshed before it and it never queues behind the exclusive preparation of a workspace.
+ * @see ../../../🏗️build/🌡️host-capacity/🟦️.ts */
+export function cargoLockOnlyInvocationV1(args: readonly string[]): boolean {
+  return (cargoLaunchSchema.definitions.Configuration.const.subcommands.lock as readonly string[]).includes(args[0] ?? "") && args.some(arg => arg === "--offline" || arg === "--frozen");
+}
+
 /** 🦑️ Resolves the manifest selected by the repository's existing Cargo invocation grammar. */
 export function cargoInvocationManifestV1(args: readonly string[], cwd: string): string {
   const index = args.indexOf("--manifest-path"), inline = args.find(arg => arg.startsWith("--manifest-path="));
@@ -475,14 +482,15 @@ export function cargoInvocationManifestV1(args: readonly string[], cwd: string):
 export type CargoPreparationInvocationV1=Readonly<{command:string;args:readonly string[];cwd:string;environment:Readonly<Record<string,string>>}>;
 /** ▶️ Selects the current owned preparation launch without executing or borrowing a completed receipt. */
 export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationStorageV1,root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string,string|undefined>>):CargoPreparationInvocationV1|undefined {
-  parseCargoPreparationStorageV1(storage);if (!cargoCommandRequiresOwnerPreparationV1(args[0] ?? "")) return;
+  parseCargoPreparationStorageV1(storage);if (!cargoCommandRequiresOwnerPreparationV1(args[0] ?? "") || cargoLockOnlyInvocationV1(args)) return;
   const path = cargoInvocationManifestV1(args, cwd);
   if (environment.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${environment.SEMIO_CARGO_PREPARATION_ACTIVE}`);
   const names:string[]=[];
   for(let cursor=1;cursor<args.length && args[cursor]!=="--";cursor++){const arg=args[cursor]!;if(arg==="-p" || arg==="--package"){const name=args[++cursor];if(!name)throw Error("Cargo package selector requires a current name");names.push(name);}else if(arg.startsWith("--package="))names.push(arg.slice(10));else if(arg.startsWith("-p") && arg.length>2)names.push(arg.slice(2));}
   const selectedPackage=read(root,slash(relative(root,path))).package?.name;
-  if(!names.length && !args.includes("--workspace") && typeof selectedPackage==="string")names.push(selectedPackage);
-  const explicit=args.some(arg=>arg==="--manifest-path"||arg.startsWith("--manifest-path=")),rows=explicit||!names.length?[]:cargoPackageSelectionsNearV1(root,slash(relative(root,path)),names);
+  const named=names.length>0;
+  if(!named && !args.includes("--workspace") && typeof selectedPackage==="string")names.push(selectedPackage);
+  const explicit=!named||args.some(arg=>arg==="--manifest-path"||arg.startsWith("--manifest-path=")),rows=explicit||!names.length?[]:cargoPackageSelectionsNearV1(root,slash(relative(root,path)),names);
   if(new Set(rows.map(row=>row.workspace)).size>1)throw Error(`Cargo command selects packages from different workspaces: ${names.join(", ")}`);
   const owner = cargoWorkspaceForManifest(root, rows[0]?.manifest??slash(relative(root, path))), source = read(root, owner.manifest);
   if (source.workspace?.metadata?.semio?.repository === undefined)return;

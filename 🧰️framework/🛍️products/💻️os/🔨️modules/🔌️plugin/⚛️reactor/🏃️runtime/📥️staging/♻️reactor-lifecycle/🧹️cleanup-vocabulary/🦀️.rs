@@ -176,12 +176,17 @@ impl RuntimeCloseStatus {
 /// the instance, the variant slug, and the measured turn cost against the interactive ceiling.
 #[doc(hidden)]
 pub fn runtime_cleanup_fault(scope: &str, cause: RuntimeCleanupFault, instance_id: u32, elapsed_us: u64) -> Fault {
+    runtime_cleanup_fault_with_reading(scope, cause, instance_id, elapsed_us, "")
+}
+/// 🔎️ [`runtime_cleanup_fault`] naming the last maintenance reading (`blocked: <reason>`, `awaiting-input: <reason>`, `zero-progress receipt`) and the last instance owner that progressed, so a stall verdict says what it waited behind.
+#[doc(hidden)]
+pub fn runtime_cleanup_fault_with_reading(scope: &str, cause: RuntimeCleanupFault, instance_id: u32, elapsed_us: u64, reading: &str) -> Fault {
     let vector = cause.vector();
     let elapsed = if elapsed_us == RUNTIME_CLEANUP_UNMEASURED_US { "unmeasured".to_string() } else { format!("{elapsed_us}us") };
     Fault::new(
         FaultOrigin::Plugin,
         FaultCode::new(vector.code),
-        format!("runtime {scope} cleanup faulted for instance {instance_id}: {} [{}] (elapsed {elapsed}, ceiling {}us)", vector.detail, vector.slug, semio_framework_trace::INTERACTIVE_STEP_CEILING_US),
+        format!("runtime {scope} cleanup faulted for instance {instance_id}: {} [{}] (elapsed {elapsed}, ceiling {}us){}", vector.detail, vector.slug, semio_framework_trace::INTERACTIVE_STEP_CEILING_US, if reading.is_empty() { String::new() } else { format!(" (last reading: {reading})") }),
     )
 }
 /// 🚪️ Whether a wire fault code is one of the cleanup taxonomy's own verdicts — i.e. whether it

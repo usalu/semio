@@ -228,7 +228,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
             drop(instance);
             assert!(presence.is_empty());
             assert!(RENDER_CONTEXT_PROBE.with(|probe| probe.take()).is_none(), "a reserved section body key must never reach ArtifactApp::render");
-            let projected: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
+            let projected: Value = serde_json::from_str(&semio_plugin_testing_instance_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
             assert_eq!(projected["key"], section.body_key());
             assert_eq!(projected["component"]["type"], "container");
             let mut payload = String::new();

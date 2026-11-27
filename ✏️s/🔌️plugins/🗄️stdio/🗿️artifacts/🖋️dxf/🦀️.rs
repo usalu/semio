@@ -44,7 +44,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 pub(crate) fn register_sqlite_test_declaration() {
     static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
     REGISTERED.get_or_init(|| {
-        semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("DXF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();
+        semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label(semio_plugin::LocalizedLabel::native("DXF SQLite declaration", "DXF-SQLite-Deklaration")).version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();
     });
 }
 

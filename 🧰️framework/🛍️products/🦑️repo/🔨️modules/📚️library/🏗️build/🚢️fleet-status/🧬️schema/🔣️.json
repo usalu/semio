@@ -50,6 +50,58 @@
      "workerSwapWarnBasisPoints": 2500,
      "wardenOverheadBasisPoints": 500
     },
+    "rates": {
+     "windowsSeconds": [900, 3600, 86400],
+     "metrics": [
+      "build.units.compiled",
+      "build.units.restored.local",
+      "build.units.restored.fleet",
+      "build.units.stored",
+      "build.units.skipped",
+      "cache.local.hit",
+      "cache.local.miss",
+      "exec.offload.out",
+      "exec.offload.fellback",
+      "exec.refused",
+      "warden.cancelled",
+      "cache.skip.spool-full",
+      "cache.skip.upload-expired",
+      "cache.skip.upload-expired-down",
+      "cache.skip.upload-expired-denied",
+      "cache.skip.upload-entry-gone",
+      "cache.skip.upload-failed",
+      "cache.skip.upload-dropped",
+      "cache.skip.key-incomplete",
+      "cache.skip.path-dependent",
+      "cache.skip.read-only",
+      "cache.skip.diverged",
+      "cache.skip.breaker-denied",
+      "cache.skip.other",
+      "exec.decline.local-slot",
+      "exec.decline.cheap",
+      "exec.decline.unmapped-path",
+      "exec.decline.infrastructure",
+      "exec.decline.unmeasured",
+      "exec.decline.pin-failed",
+      "exec.decline.not-portable",
+      "exec.decline.worker-policy",
+      "exec.decline.no-idle-machine",
+      "exec.decline.queue-timeout",
+      "exec.decline.incomplete-inputs",
+      "exec.decline.other",
+      "cache.remote.ac.hit",
+      "cache.remote.ac.miss",
+      "cache.remote.ac.put",
+      "cache.remote.ac.conflict",
+      "cache.remote.cas.hit",
+      "cache.remote.cas.miss",
+      "cache.remote.cas.put",
+      "cache.remote.nx.hit",
+      "cache.remote.nx.miss",
+      "cache.remote.nx.put",
+      "cache.remote.refused"
+     ]
+    },
     "digestCharacters": 12
    }
   },
@@ -61,6 +113,7 @@
     "findings",
     "graph",
     "queues",
+    "rates",
     "readers",
     "runs",
     "version"
@@ -245,6 +298,15 @@
        "type": "integer",
        "minimum": 0
       }
+     }
+    },
+    "rates": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["windowsSeconds", "metrics"],
+     "properties": {
+      "windowsSeconds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+      "metrics": {"type": "array", "minItems": 1, "items": {"type": "string"}}
      }
     },
     "digestCharacters": {
@@ -548,8 +610,8 @@
      "de": "Der Arbeitsbaum änderte sich nach dem Image {entry} ({changed} Änderung(en))"
     },
     "finding.unit-cache-denied": {
-     "en": "{origin} is refused by the fleet cache ({count} unit(s) expired in the upload queue unshared): its credential is missing or wrong, a provisioning error, and nothing it builds seeds or uses the fleet",
-     "de": "{origin} wird vom Flotten-Cache abgewiesen ({count} Einheit(en) unverteilt in der Upload-Warteschlange verfallen): sein Zugangsschlüssel fehlt oder ist falsch, ein Einrichtungsfehler, und nichts, was es baut, speist oder nutzt die Flotte"
+     "en": "{origin} is refused by the fleet cache ({count} unit(s) expired in the upload queue unshared in the last {window}): its signed request is refused (clock off, registration missing or stale, server restarting); the agent re-publishes the registration by itself, and nothing it builds seeds or uses the fleet until it is accepted",
+     "de": "{origin} wird vom Flotten-Cache abgewiesen ({count} Einheit(en) in den letzten {window} unverteilt in der Upload-Warteschlange verfallen): seine signierte Anfrage wird abgewiesen (Uhr falsch, Registrierung fehlt oder veraltet, Server startet neu); der Agent veröffentlicht die Registrierung selbst neu, und nichts, was es baut, speist oder nutzt die Flotte, bis sie angenommen wird"
     },
     "finding.unit-key-machine-dependent": {
      "en": "{crate} has different unit keys on {origins} although the source is the same: differing key components {components}; the machines do not share this unit",
@@ -570,8 +632,8 @@
     "fleet.keysame": {"en": "same source", "de": "gleicher Quelltext"},
     "fleet.keyedit": {"en": "source differs", "de": "Quelltext verschieden"},
     "finding.unit-cache-read-only": {
-     "en": "{origin} may only read the fleet cache ({count} unit(s) compiled without sharing): everything it compiles stays local and never seeds the other machines",
-     "de": "{origin} darf den Flotten-Cache nur lesen ({count} Einheit(en) ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
+     "en": "{origin} may only read the fleet cache ({count} unit(s) compiled without sharing in the last {window}): everything it compiles stays local and never seeds the other machines",
+     "de": "{origin} darf den Flotten-Cache nur lesen ({count} Einheit(en) in den letzten {window} ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
     },
     "finding.source-failed": {
      "en": "The {section} reader failed: {reason}",
@@ -628,6 +690,14 @@
     "offload": {
      "en": "Offload: {local} running locally, {fleet} on the fleet; {out} offloaded, {refused} refused, {fellBack} fell back ({deadline} deadline, {lost} lost operation, {silent} silent)",
      "de": "Auslagerung: {local} laufen lokal, {fleet} auf der Flotte; {out} ausgelagert, {refused} abgelehnt, {fellBack} lokal nachgeholt ({deadline} Frist, {lost} verlorene Operation, {silent} still)"
+    },
+    "rates": {
+     "en": "Counters in the last {windows}:",
+     "de": "Zähler in den letzten {windows}:"
+    },
+    "rates.row": {
+     "en": "  {label}: {values} ({origins} machines)",
+     "de": "  {label}: {values} ({origins} Maschinen)"
     },
     "offload.spool": {
      "en": "  upload spool: {depth} units waiting for the fleet cache (a compile waits beyond {bound})",
@@ -801,8 +871,8 @@
      "de": "Worker {origin} ist auf Speicherstufe {level}: {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap} MB, Druck {pressure}"
     },
     "finding.worker-warden-intervened": {
-     "en": "worker {origin}: its warden intervened ({suspended} suspended, {resumed} resumed, {cancelled} cancelled); last: {alarm}",
-     "de": "Worker {origin}: sein Wächter hat eingegriffen ({suspended} angehalten, {resumed} fortgesetzt, {cancelled} abgebrochen); zuletzt: {alarm}"
+     "en": "worker {origin}: its warden cancelled {recent} operations in the last {window} ({suspended} suspended, {resumed} resumed, {cancelled} cancelled since it started); last: {alarm}",
+     "de": "Worker {origin}: sein Wächter hat in den letzten {window} {recent} Vorgänge abgebrochen ({suspended} angehalten, {resumed} fortgesetzt, {cancelled} abgebrochen seit dem Start); zuletzt: {alarm}"
     },
     "finding.worker-warden-absent": {
      "en": "worker {origin} lives but its warden is not visible: {reason}",
@@ -867,10 +937,6 @@
     "fleet.machine": {
      "en": "  {origin} {platform}: pressure {pressure}, load {load}/{cores} cores, {running} running, {queued} queued, worker {worker}{headroom}, in {offloadedIn} out {offloadedOut} refused {refused}, units {cacheHit} hit {cacheMiss} miss {cacheSkipped} skipped, report {age}",
      "de": "  {origin} {platform}: Druck {pressure}, Last {load}/{cores} Kerne, {running} laufen, {queued} warten, Worker {worker}{headroom}, ein {offloadedIn} aus {offloadedOut} abgelehnt {refused}, Einheiten {cacheHit} Treffer {cacheMiss} Fehlgriffe {cacheSkipped} übersprungen, Meldung {age}"
-    },
-    "fleet.skips": {
-     "en": "    {origin} compiled but did not share, by reason: {reasons}",
-     "de": "    {origin} kompilierte, ohne zu teilen, nach Grund: {reasons}"
     },
     "fleet.why": {
      "en": "    {origin} worker {worker}: {reason}",
@@ -1229,7 +1295,8 @@
       "workers",
       "memory",
       "cas",
-      "offload"
+      "offload",
+      "rates"
      ]
     },
     "ok": {
@@ -1875,6 +1942,9 @@
     },
     "offload": {
      "$ref": "#/definitions/OffloadFact"
+    },
+    "rates": {
+     "$ref": "#/definitions/RatesFact"
     }
    }
   },
@@ -3197,6 +3267,9 @@
     },
     "offload": {
      "$ref": "#/definitions/OffloadSection"
+    },
+    "rates": {
+     "$ref": "#/definitions/RatesSection"
     }
    }
   },
@@ -3710,6 +3783,26 @@
     "undeclared": {"type": "integer", "minimum": 0},
     "retired": {"type": "integer", "minimum": 0},
     "refused": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+   }
+  },
+  "RatesFact": {
+   "description": "What the cumulative counters of every machine added up to inside each trailing window, read from the multi-resolution metric rings the machines publish (a machine without rings has no entry); a counter that only ever adds up shows history, a window shows what goes on.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["windowsSeconds", "origins"],
+   "properties": {
+    "windowsSeconds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+    "origins": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "integer", "minimum": 0}}}}
+   }
+  },
+  "RatesSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["windowsSeconds", "origins", "fleet"],
+   "properties": {
+    "windowsSeconds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+    "origins": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "integer", "minimum": 0}}}},
+    "fleet": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "integer", "minimum": 0}}}
    }
   },
   "OffloadFact": {

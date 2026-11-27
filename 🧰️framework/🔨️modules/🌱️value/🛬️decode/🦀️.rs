@@ -126,6 +126,10 @@ impl<'a> NativeDecodeControl<'a> {
     }
 
 
+    /// 🫳️ Hands a completed, empty retirement owner back to its caller so a later turn may install its own.
+    pub fn take_retirement_owner(&mut self)->Option<Box<dyn ErasedSnapshotRetirement>>{self.retirement.as_mut().and_then(|recipient|recipient.owner.take())}
+    /// 🫴️ Returns an owner whose in-turn release was refused to the explicit recipient that retires it.
+    pub fn restore_retirement_owner(&mut self,owner:Option<Box<dyn ErasedSnapshotRetirement>>){if let Some(recipient)=self.retirement.as_mut(){*recipient.owner=owner}}
     /// ⏸️ Transfers cumulative admission without retaining the current hop's callback.
     pub fn pause(mut self)->Result<NativeDecodeContinuation,(ValueError,Self)>{
         if matches!(self.allocation,allocation::Binding::Forwarded(_))||self.retirement.is_some()||self.construction.is_some(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native decode continuation requires original allocation and retirement authority"),self));}

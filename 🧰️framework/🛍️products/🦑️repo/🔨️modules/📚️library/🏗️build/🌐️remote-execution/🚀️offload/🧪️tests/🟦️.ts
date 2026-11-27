@@ -35,7 +35,7 @@ function chain(label:string){
  return checkout;
 }
 const plan=(checkout:ReturnType<typeof chain>):OffloadPlanV1=>{
- const result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),HOME:"/Users/someone",PATH:"/x",SEMIO_UNIT_CACHE_ROOT:"/c",CARGO_MAKEFLAGS:"-j2"},cwd:checkout.root});
+ const result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),HOME:"/Users/someone",PATH:"/x",SEMIO_UNIT_CACHE_ROOT:"/c",CARGO_MAKEFLAGS:"-j2",RUSTC_ICE:"/tmp/ice"},cwd:checkout.root});
  if("declined" in result)throw Error(result.declined+" "+result.detail);
  return result;
 };
@@ -196,7 +196,7 @@ test("a plan is path-independent: two checkouts at different absolute paths yiel
  expect(a.arguments.join(" ")).not.toContain("-C incremental");
  expect(a.environment.PATH).toBe(OFFLOAD_POLICY_V1.environment.path);expect(a.environment.SEMIO_TOOL_RUSTC).toBeUndefined();
  expect(a.environment.SEMIO_ABSOLUTE).toBe("CARGO_MANIFEST_DIR");expect(a.environment.SEMIO_REL_CARGO_MANIFEST_DIR).toBe("pk/c");
- for(const denied of ["HOME","SEMIO_UNIT_CACHE_ROOT","CARGO_MAKEFLAGS"])expect(a.environment[denied],denied).toBeUndefined();
+ for(const denied of ["HOME","SEMIO_UNIT_CACHE_ROOT","CARGO_MAKEFLAGS","RUSTC_ICE"])expect(a.environment[denied],denied).toBeUndefined();
  expect(a.environment.CARGO_PKG_NAME).toBe("c");expect(a.environment.RUST_MIN_STACK).toBe("8388608");
  const files=[...a.files.keys()];
  expect(files).toContain("pk/c/src/lib.rs");expect(files).toContain(`${OFFLOAD_POLICY_V1.virtual.deps}/libb-${externHash("b")}.rlib`);expect(files).toContain(`${OFFLOAD_POLICY_V1.virtual.deps}/liba-${externHash("a")}.rmeta`);

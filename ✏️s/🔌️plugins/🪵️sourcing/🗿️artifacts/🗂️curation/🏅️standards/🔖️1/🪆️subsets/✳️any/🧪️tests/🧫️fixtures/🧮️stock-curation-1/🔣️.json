@@ -1,0 +1,41 @@
+{
+  "stock": "📦️expected-stock.json",
+  "filters": [
+    {"id": "all", "filters": {}, "ids": ["beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200", "beam-steel-hea160", "window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right"]},
+    {"id": "query-steel", "filters": {"query": "steel"}, "ids": ["beam-steel-ipe200", "beam-steel-hea160"]},
+    {"id": "query-trimmed-case-insensitive", "filters": {"query": "  WINDOW "}, "ids": ["window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140"]},
+    {"id": "modules-windows-slabs", "filters": {"moduleIds": ["windows", "slabs"]}, "ids": ["window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265"]},
+    {"id": "typology-prefix-steel", "filters": {"typologyPath": ["beams", "steel"]}, "ids": ["beam-steel-ipe200", "beam-steel-hea160"]},
+    {"id": "typology-prefix-root", "filters": {"typologyPath": ["reuse"]}, "ids": ["hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right"]},
+    {"id": "typology-longer-than-path", "filters": {"typologyPath": ["beams", "solid-timber", "glulam", "extra"]}, "ids": []},
+    {"id": "min-availability-20", "filters": {"minAvailability": 20}, "ids": ["beam-glulam-gl24h", "beam-kvh-c24", "slab-concrete-240", "slab-clt-160"]},
+    {"id": "combined", "filters": {"moduleIds": ["beams"], "typologyPath": ["beams"], "minAvailability": 10}, "ids": ["beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200"]},
+    {"id": "sort-availability-asc", "filters": {"sort": {"columnId": "availability", "direction": "asc"}}, "ids": ["beam-steel-hea160", "window-fixed-150x150", "beam-steel-ipe200", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right", "window-tilt-turn-120x140", "slab-hollow-core-265", "window-casement-100x120", "slab-clt-160", "beam-glulam-gl24h", "slab-concrete-240", "beam-kvh-c24"]},
+    {"id": "sort-availability-desc", "filters": {"sort": {"columnId": "availability", "direction": "desc"}}, "ids": ["beam-kvh-c24", "slab-concrete-240", "beam-glulam-gl24h", "slab-clt-160", "window-casement-100x120", "slab-hollow-core-265", "window-tilt-turn-120x140", "beam-steel-ipe200", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right", "window-fixed-150x150", "beam-steel-hea160"]},
+    {"id": "sort-name-asc", "filters": {"sort": {"columnId": "name", "direction": "asc"}}, "ids": ["slab-clt-160", "window-casement-100x120", "slab-concrete-240", "window-fixed-150x150", "beam-glulam-gl24h", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right", "slab-hollow-core-265", "beam-kvh-c24", "beam-steel-hea160", "beam-steel-ipe200", "window-tilt-turn-120x140"]},
+    {"id": "sort-module-asc", "filters": {"sort": {"columnId": "module", "direction": "asc"}}, "ids": ["beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200", "beam-steel-hea160", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265", "window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140"]},
+    {"id": "sort-module-desc", "filters": {"sort": {"columnId": "module", "direction": "desc"}}, "ids": ["window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right", "beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200", "beam-steel-hea160"]},
+    {"id": "sort-unknown-column-keeps-document-order", "filters": {"sort": {"columnId": "count", "direction": "desc"}}, "ids": ["beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200", "beam-steel-hea160", "window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265", "hexagonal-cut-concrete-forest-left", "hexagonal-cut-concrete-forest-right"]}
+  ],
+  "availability": {
+    "total": 236,
+    "byModule": {"beams": 104, "windows": 42, "slabs": 66, "reuse": 24},
+    "kindsAtLeast": [{"min": 0, "kinds": 12}, {"min": 15, "kinds": 6}, {"min": 60, "kinds": 1}, {"min": 61, "kinds": 0}]
+  },
+  "decisions": [
+    {"id": "delta-up", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-glulam-gl24h", "value": 5, "decision": {"kind": "changeCount", "count": 15}},
+    {"id": "delta-up-clamped-to-availability", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-glulam-gl24h", "value": 100, "decision": {"kind": "changeCount", "count": 24}},
+    {"id": "delta-to-zero-deletes", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-glulam-gl24h", "value": -10, "decision": {"kind": "delete"}},
+    {"id": "delta-below-zero-clamps-and-deletes", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-glulam-gl24h", "value": -50, "decision": {"kind": "delete"}},
+    {"id": "delta-zero-is-noop", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-glulam-gl24h", "value": 0, "decision": {"kind": "noOp"}},
+    {"id": "delta-up-absent-creates", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-kvh-c24", "value": 1, "decision": {"kind": "create", "count": 1}},
+    {"id": "delta-down-absent-is-noop", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "delta", "objectId": "beam-kvh-c24", "value": -1, "decision": {"kind": "noOp"}},
+    {"id": "delta-unknown-object-is-noop", "curated": [], "op": "delta", "objectId": "nope", "value": 3, "decision": {"kind": "noOp"}},
+    {"id": "set-same-is-noop", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "set", "objectId": "beam-glulam-gl24h", "value": 10, "decision": {"kind": "noOp"}},
+    {"id": "set-zero-deletes", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "set", "objectId": "beam-glulam-gl24h", "value": 0, "decision": {"kind": "delete"}},
+    {"id": "set-over-availability-clamps", "curated": [{"objectId": "beam-glulam-gl24h", "count": 10}], "op": "set", "objectId": "beam-glulam-gl24h", "value": 99, "decision": {"kind": "changeCount", "count": 24}},
+    {"id": "set-zero-absent-is-noop", "curated": [], "op": "set", "objectId": "beam-kvh-c24", "value": 0, "decision": {"kind": "noOp"}},
+    {"id": "set-absent-over-availability-creates-clamped", "curated": [], "op": "set", "objectId": "beam-kvh-c24", "value": 70, "decision": {"kind": "create", "count": 60}},
+    {"id": "set-clamped-equal-is-noop", "curated": [{"objectId": "beam-kvh-c24", "count": 60}], "op": "set", "objectId": "beam-kvh-c24", "value": 70, "decision": {"kind": "noOp"}}
+  ]
+}

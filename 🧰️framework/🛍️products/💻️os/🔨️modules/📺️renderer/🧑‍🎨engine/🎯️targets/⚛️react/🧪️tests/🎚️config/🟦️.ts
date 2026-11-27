@@ -20,6 +20,8 @@ const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
 const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
 const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts");
 const engineSuite = (name: string, extension = "ts") => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/${name}/🟦️.${extension}`);
+/** 📄️ A named suite file inside an engine test folder whose files are each a suite of their own (no `🟦️` entry per file). */
+const engineFile = (name: string, file: string) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/${name}/${file}`);
 // 🧱️ A suite co-located with the ELEMENT it covers, rather than under `🧑‍🎨engine/🧪️tests/`. These are not
 // reachable by this package's default `include` glob either, so every one of them must be named here — a
 // co-located suite that no runner includes is a gate that reads green while measuring nothing
@@ -111,6 +113,13 @@ const engineTestSuites = [
   engineSuite("🪝️extension-invocation"),
   engineSuite("🔁️refresh-coalescing"),
   engineSuite("🗃️shell-store-reducer"),
+  engineSuite("🪦️sealed-chrome-target"),
+  engineSuite("💾️saved-state", "tsx"),
+  engineFile("💾️saved-state", "🖼️canvas.tsx"),
+  engineFile("💾️saved-state", "🚪️lifecycle.tsx"),
+  engineFile("💾️saved-state", "🔑️runtime-key.ts"),
+  engineFile("💾️saved-state", "🧮️derivation.ts"),
+  engineSuite("🎥️tutorial-bridge"),
   engineSuite("🛰️framework-plugin-runtime"),
   engineSuite("📋️renderer-types-and-forms"),
   engineSuite("🎟️contributor-operations"),

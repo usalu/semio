@@ -157,8 +157,8 @@ export function boundsVerdict(asset: Asset, poses: readonly { readonly id: strin
   return { pose: mine.id, error: mine.error, miss: mine.miss, best: best.id, bestMiss: best.miss, ok: mine.miss <= 1 };
 }
 
-let assimp: Promise<{ FileList: new () => { AddFile(n: string, c: Uint8Array): void }; ConvertFileList(l: unknown, f: "assjson"): { IsSuccess(): boolean; GetErrorCode(): string; GetFile(i: number): { GetContent(): Uint8Array } } }> | undefined;
-const assimpModule = async () => (assimp ??= (async () => (await import(/* @vite-ignore */ "assimpjs" as string) as { default: () => Promise<any> }).default())());
+/** 🧩️ A fresh assimp instance per file: the WebAssembly heap of one instance only grows, so a long-lived instance aborts once many large FBX files have passed through it. */
+const assimpModule = async (): Promise<{ FileList: new () => { AddFile(n: string, c: Uint8Array): void; delete(): void }; ConvertFileList(l: unknown, f: "assjson"): { delete(): void; IsSuccess(): boolean; GetErrorCode(): string; GetFile(i: number): { GetContent(): Uint8Array } } }> => (await import(/* @vite-ignore */ "assimpjs" as string) as { default: () => Promise<any> }).default();
 
 /** 🎬️ What an FBX of one clip must contain. */
 export type FbxExpectation = { readonly clip: string; readonly durationS: number; readonly fps: number; readonly bones: readonly string[] };
@@ -209,11 +209,14 @@ export async function checkFbx(bytes: Uint8Array, item: string, expect: FbxExpec
   let assimpDurationS = NaN;
   let assimpChannels = 0;
   let meshBones = 0;
+  const native: { delete(): void }[] = [];
   try {
     const module = await assimpModule();
     const list = new module.FileList();
+    native.push(list);
     list.AddFile("model.fbx", bytes);
     const result = module.ConvertFileList(list, "assjson");
+    native.push(result);
     if (!result.IsSuccess()) findings.push({ check: "fbx", item, message: `assimp: ${result.GetErrorCode()}` });
     else {
       const scene = JSON.parse(new TextDecoder().decode(result.GetFile(0).GetContent())) as { rootnode: AssimpNode; meshes?: { bones?: unknown[] }[]; animations?: { name: string; duration: number; tickspersecond: number; channels: { positionkeys: [number, number[]][]; rotationkeys: [number, number[]][]; scalingkeys: [number, number[]][] }[] }[] };
@@ -239,6 +242,8 @@ export async function checkFbx(bytes: Uint8Array, item: string, expect: FbxExpec
     }
   } catch (error) {
     findings.push({ check: "fbx", item, message: `assimp: ${(error as Error).message}` });
+  } finally {
+    for (const object of native) object.delete();
   }
   return { facts: { bytes: bytes.length, triangles, bonesFound, threeBones, meshBones, tracks, durationS, assimpDurationS, assimpChannels }, findings };
 }

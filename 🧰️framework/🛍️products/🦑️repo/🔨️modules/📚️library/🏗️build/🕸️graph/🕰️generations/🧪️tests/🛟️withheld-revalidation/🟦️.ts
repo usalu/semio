@@ -9,7 +9,7 @@ const row=(path:string)=>({kind:"file",path:"/ws/"+path,fact:{sha256:"0".repeat(
 const setup=(reason?:()=>unknown)=>{
  let book:unknown,clock=5_000_000;const lines:string[]=[];
  const index=createFactIndexV1(new Map([["held",[row("h/c.ts")]],["plain",[row("p/c.ts")]]]) as never) as never;
- const manifest={identity:"i",global:"g",factIndex:"x",owners:{held:{root:"h",kind:"unavailable",config:"h/c.ts",fragment:"f1",bytes:1,edgesEnv:"e",targets:[]},plain:{root:"p",kind:"project",fragment:"f2",bytes:1,edgesEnv:"e",targets:[]}}};
+ const manifest={identity:"i",global:"g",factIndex:"x",env:"e",owners:{held:{root:"h",kind:"unavailable",config:"h/c.ts",fragment:"f1",bytes:1,edgesEnv:"e",targets:[]},plain:{root:"p",kind:"project",fragment:"f2",bytes:1,edgesEnv:"e",targets:[]}}};
  const plan=createGenerationPlanV1({
   readIndexView:async()=>index,fragmentNames:async()=>["g.json.br","f1.json.br","f2.json.br"],now:()=>clock,
   settler:{settle:async()=>({changed:new Map(),held:new Set(),kept:new Set(),failed:0,reused:0}),release:async()=>undefined} as never,

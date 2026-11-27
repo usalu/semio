@@ -1,5 +1,5 @@
 use super::{classic_graph_quote::{GraphLoan, GraphQuote, QUOTE_WORK}, classic_graph_writer::{AppendFrame, ClassicGraphWriter},
-    increment::{IncrementPlan, IncrementRoom, IncrementRows, OriginalBase, PAGE_WORK}};
+    increment::{Compact, IncrementPlan, IncrementRoom, IncrementRows, OriginalBase, PAGE_WORK}};
 
 use std::io::Write;
 use semio_framework_value::{ByteReadSource, RetainedCloneProgress, ValueError, ValueRefusalKind};
@@ -12,7 +12,7 @@ use crate::standards::v1_7::subsets::base::{
 use super::{graph::PinnedPdfGraph, exact_graph_proof::{COMPARE_WORK, ExactGraphProof, ExactGraphRefusal,
     ExactGraphTurn, ProjectionTrailer, projection_trailer, projection_trailer_extent},
     ordinary_graft::{GRAFT_WORK, OrdinaryGraft, OrdinaryRows}};
-use super::producer::{PdfEmissionTurn, PdfNativeSaveProgram, PlanDecision};
+use super::producer::{PdfEmissionTurn, PdfNativeSaveProgram, PlanDecision, SaveCause, cause_of};
 
 /// 🔁️ The reference reconciliation's quote must settle within this many funded turns, else the grant can never carry it.
 const REFERENCE_TURNS: usize = 256;
@@ -31,6 +31,7 @@ pub struct ClassicPdfSaveProgram {
     written: usize,
     route: Route,
     increment: Option<IncrementPlan>,
+    compact: Option<Compact>,
     entered: bool,
     graph: PinnedPdfGraph,
     maximum: usize,
@@ -60,7 +61,7 @@ pub struct ClassicPdfSaveProgram {
 impl ClassicPdfSaveProgram {
     /// 🗃️ Takes the exact current source after the caller has funded the reconciliation owner.
     pub fn new(graph: PinnedPdfGraph, maximum: usize) -> Self {
-        Self { original: None, document: None, appended: None, written: 0, route: Route::Undecided, increment: None, entered: false, graph, maximum, graft: Default::default(), graft_grant: None, revision: None, quote: None, scratch: None,
+        Self { original: None, document: None, appended: None, written: 0, route: Route::Undecided, increment: None, compact: None, entered: false, graph, maximum, graft: Default::default(), graft_grant: None, revision: None, quote: None, scratch: None,
             control_trailer: None, control_birth: Default::default(), control_ready: false,
             proof: ExactGraphProof::new(), proof_grant: None, proof_ready: false,
             scratch_birth: Default::default(), offsets: None, offsets_birth: Default::default(), prefix: 0, writer: None,
@@ -89,9 +90,12 @@ impl ClassicPdfSaveProgram {
         original_custody::rebase(document, RetainedOriginal { file, objects: plan.measured(), touched: plan.replaced() });
     }
 
+    /// 🧭️ Why the Save needs the whole-document reconciliation the grant cannot carry: the appended section's refusal, else the reconciliation's own memory.
+    fn cause(&self) -> SaveCause { self.compact.map_or(SaveCause::Memory, cause_of) }
+
     /// 🪂️ The bounded ordinary route hands every edit it cannot spell to one whole-document reconciliation; a second refusal is final.
     fn refuse(&mut self) -> PlanDecision {
-        if self.reference_wanted || self.route == Route::Increment { return PlanDecision::ReferenceRequired; }
+        if self.reference_wanted || self.route == Route::Increment { return PlanDecision::ReferenceRequired(self.cause()); }
         self.reference_wanted = true;
         self.quote = None;
         self.graft_grant = None;
@@ -165,7 +169,7 @@ impl PdfNativeSaveProgram<PdfSnapshot> for ClassicPdfSaveProgram {
                                 retained_capacity_bytes: turn.capacity, ..Default::default() })?;
                         }
                     }
-                    Err(_) => self.route = Route::Compact,
+                    Err(error) => { self.compact = Some(error); self.route = Route::Compact }
                 }
                 return Ok(PlanDecision::Pending);
             }
@@ -179,16 +183,16 @@ impl PdfNativeSaveProgram<PdfSnapshot> for ClassicPdfSaveProgram {
             let ceiling = cx.original_turn_ceiling().0;
             let Some(capacity) = PinnedPdfGraph::reference_extent(snapshot).filter(|capacity|
                 *capacity <= ceiling.maximum_capacity_bytes && capacity.saturating_add(frame) <= ceiling.maximum_copy_bytes)
-                else { return Ok(PlanDecision::ReferenceRequired); };
+                else { return Ok(PlanDecision::ReferenceRequired(self.cause())); };
             let work = (capacity / 16 + snapshot.objects.len()) as u64;
-            if work > cx.original_turn_ceiling().1 { return Ok(PlanDecision::ReferenceRequired); }
+            if work > cx.original_turn_ceiling().1 { return Ok(PlanDecision::ReferenceRequired(self.cause())); }
             cx.set_stage("pdf-save-reconcile");
             if cx.fuel_remaining() < work {
                 self.reference_waits += 1;
-                return Ok(if self.reference_waits > REFERENCE_WAITS { PlanDecision::ReferenceRequired } else { PlanDecision::Pending });
+                return Ok(if self.reference_waits > REFERENCE_WAITS { PlanDecision::ReferenceRequired(self.cause()) } else { PlanDecision::Pending });
             }
             self.reference_turns += 1;
-            if self.reference_turns > REFERENCE_TURNS { return Ok(PlanDecision::ReferenceRequired); }
+            if self.reference_turns > REFERENCE_TURNS { return Ok(PlanDecision::ReferenceRequired(self.cause())); }
             let ready = self.reference_birth.built(cx, &mut self.reference, OriginalConstructionDemand {
                 items: 1, copy_bytes: frame + capacity, capacity_bytes: capacity, release_bytes: 0, depth: 1,
             }, || {

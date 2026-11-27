@@ -1,0 +1,26 @@
+{
+  "description": "Language-agnostic contract of the module meta of a captured module: whichever engine runs the captured files, import.meta.{url,path,filename,dir,dirname,main} of every module names that module, not its neighbour, and a module's text is otherwise untouched. A row is a file tree (path to text); `probe` names the module whose meta the entry prints; `expected` is the output with {root} for the absolute root of the tree.",
+  "cases": [
+    {
+      "name": "every-member-names-its-own-module",
+      "files": {
+        "entry.ts": "import{meta as a}from\"./a.ts\";import{meta as b}from\"./sub/b.ts\";export async function runCapturedBuildSourceV1(){console.log(JSON.stringify({a,b}));}",
+        "a.ts": "export const meta={url:import.meta.url,path:import.meta.path,filename:import.meta.filename,dir:import.meta.dir,dirname:import.meta.dirname,main:import.meta.main};",
+        "sub/b.ts": "export const meta={url:import.meta.url,path:import.meta.path,filename:import.meta.filename,dir:import.meta.dir,dirname:import.meta.dirname,main:import.meta.main};"
+      },
+      "expected": {
+        "a": {"url": "file://{root}/a.ts", "path": "{root}/a.ts", "filename": "{root}/a.ts", "dir": "{root}", "dirname": "{root}", "main": false},
+        "b": {"url": "file://{root}/sub/b.ts", "path": "{root}/sub/b.ts", "filename": "{root}/sub/b.ts", "dir": "{root}/sub", "dirname": "{root}/sub", "main": false}
+      }
+    },
+    {
+      "name": "script-and-text-forms-are-untouched",
+      "files": {
+        "entry.ts": "import{shebang}from\"./shebang.js\";import{text}from\"./text.ts\";export async function runCapturedBuildSourceV1(){console.log(JSON.stringify({shebang,text}));}",
+        "shebang.js": "#!/usr/bin/env bun\nexport const shebang=import.meta.url.endsWith(\"/shebang.js\");",
+        "text.ts": "export const text=\"import.meta.url\";"
+      },
+      "expected": {"shebang": true, "text": "import.meta.url"}
+    }
+  ]
+}

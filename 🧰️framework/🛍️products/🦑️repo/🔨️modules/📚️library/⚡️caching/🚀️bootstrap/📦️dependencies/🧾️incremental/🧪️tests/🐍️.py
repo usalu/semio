@@ -159,6 +159,25 @@ def manifests(root, names):
     return {"count": count, "offenders": sorted(offenders)}
 
 
+def sync_rows(receipt, request):
+    rows = receipt["scopes"]
+    kind = request["kind"]
+    if kind == "recorded":
+        return [row["scope"] for row in rows]
+    if kind == "all":
+        return [row["scope"] for row in rows] if receipt["selection"] == "all" else None
+    have = {row["scope"] for row in rows}
+    return list(request["owners"]) if all(owner in have for owner in request["owners"]) else None
+
+
+def sync_merge(previous, rows, complete):
+    fresh = {row["scope"] for row in rows}
+    kept = [row for row in (previous["scopes"] if previous else []) if row["scope"] not in fresh]
+    selection = "all" if complete or (previous and previous["selection"] == "all") else "scopes"
+    merged = sorted(kept + rows, key=lambda row: row["scope"].encode("utf-8"))
+    return {"selection": selection, "scopes": merged}
+
+
 def main():
     command = sys.argv[1]
     if command == "ledger":
@@ -166,6 +185,10 @@ def main():
     elif command == "verify":
         request = json.loads(sys.stdin.read())
         print(json.dumps(verify(request["root"], request["device"], request["rows"])))
+    elif command == "sync-rows":
+        print(json.dumps(sync_rows(json.loads(sys.argv[2]), json.loads(sys.argv[3]))))
+    elif command == "sync-merge":
+        print(json.dumps(sync_merge(json.loads(sys.argv[2]), json.loads(sys.argv[3]), json.loads(sys.argv[4]))))
     elif command == "seal":
         print(sha(canonical(json.loads(sys.argv[2]))))
     elif command == "expect":

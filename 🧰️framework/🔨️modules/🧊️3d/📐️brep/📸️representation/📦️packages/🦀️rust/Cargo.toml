@@ -27,6 +27,7 @@ semio-framework-value-persistent.workspace = true
 semio-framework-value-derive.workspace = true
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros.workspace = true
 semio-framework-geometry.workspace = true
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

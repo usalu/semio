@@ -1,0 +1,20 @@
+{
+ "policy": {
+  "queueSaturatedMilliseconds": 120000,
+  "queueSaturatedFloorMilliseconds": 60000,
+  "queueSaturatedCapMilliseconds": 300000,
+  "queueSaturatedFactor": 10,
+  "queueSaturatedMinimumSamples": 20
+ },
+ "cases": [
+  {"measured": null, "expected": 120000},
+  {"measured": {"p90Milliseconds": 1732, "samples": 19}, "expected": 120000},
+  {"measured": {"p90Milliseconds": 1732, "samples": 42}, "expected": 60000},
+  {"measured": {"p90Milliseconds": 0, "samples": 20}, "expected": 60000},
+  {"measured": {"p90Milliseconds": 6000, "samples": 20}, "expected": 60000},
+  {"measured": {"p90Milliseconds": 8400, "samples": 100}, "expected": 84000},
+  {"measured": {"p90Milliseconds": 84236, "samples": 100}, "expected": 300000},
+  {"measured": {"p90Milliseconds": 30001, "samples": 100}, "expected": 300000},
+  {"measured": {"p90Milliseconds": 12345, "samples": 100}, "expected": 123450}
+ ]
+}

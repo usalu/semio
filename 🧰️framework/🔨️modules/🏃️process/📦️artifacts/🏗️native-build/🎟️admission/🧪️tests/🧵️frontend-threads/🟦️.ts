@@ -58,6 +58,11 @@ test("the scheduler binary hands the stand-in rustc exactly the corpus arguments
   const final=spawnSync(scheduler,[expanding,"@"+argfile],{env:{...process.env,SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined,SEMIO_COMPILER_PARALLELISM:"4"} as NodeJS.ProcessEnv,encoding:"utf8"});
   expect(final.status,final.stderr).toBe(0);
   expect(final.stdout).toContain("-Zthreads=1");expect(final.stdout).toContain("no-parallel-backend");
+  expect(final.stdout,"a final without a wasm target keeps the linker's own threads").not.toContain("link-arg=--threads");
+  writeFileSync(argfile,"--crate-type=cdylib\n--target\nwasm32-wasip2\n-Zthreads=0\nlib.rs\n");
+  const wasm=spawnSync(scheduler,[expanding,"@"+argfile],{env:{...process.env,SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined,SEMIO_COMPILER_PARALLELISM:"4"} as NodeJS.ProcessEnv,encoding:"utf8"});
+  expect(wasm.status,wasm.stderr).toBe(0);
+  expect(wasm.stdout,"a wasm final links on one wasm-ld thread").toContain("-C\nlink-arg=--threads=1");
  }finally{rmSync(scratch,{recursive:true,force:true});}
 },180000);
 

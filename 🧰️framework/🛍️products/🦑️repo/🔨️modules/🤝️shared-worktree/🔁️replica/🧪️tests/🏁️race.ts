@@ -392,7 +392,7 @@ for(const {name,deadlineMs,completionMs,stallMs,status} of fixture.materialisati
    await Bun.sleep(60);
   };
   const result=await guard.turn(signal=>followOnceV1(second,signal));
-  expect(result.status).toBe(status);
+  expect<unknown>(result.status).toBe(status);
   expect(beats).toBe(1+completionMs.length);
   if(status==="done"){
    expect(result).toMatchObject({value:{applied:count,queued:0}});
@@ -689,7 +689,7 @@ test("only committed outbound event batches renew the store guard",async()=>{
   await publishOnceV1(replica,undefined,[path]);
   const events=(await readEventsV1(store,a.originId,head??undefined)).events;
   const proof=database.query("select value from json_each(?1) order by key").all(JSON.stringify(durableFixture.committed)).map(row=>(row as {value:string}).value);
-  expect(events.map(row=>row.operation)).toEqual(proof);
+  expect<unknown>(events.map(row=>row.operation)).toEqual(proof);
   expect(beats).toHaveLength(proof.length);
   expect(beats[0]!).toBeGreaterThan(head!.bytes);
   expect(beats[1]!).toBe((await readHeadV1(store,a.originId))!.bytes);

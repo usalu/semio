@@ -1,6 +1,6 @@
-import{createMemoryPortsV1,selectGraphMemoryLanguagesV1}from"../🟨️.mjs";
+import{createMemoryPortsV1,selectGraphMemoryLanguagesV1,yieldGraphTurnV1}from"../🟨️.mjs";
 import{planStageLimitBytesV1}from"../🪜️plan-stage/🟨️.mjs";
-import{profileHeapOnceV1}from"./🔭️heap-profile/🟨️.mjs";
+import{profileHeapV1}from"./🔭️heap-profile/🟨️.mjs";
 import{boundedCacheStatsV1}from"../../🧊️bounded/🟨️.mjs";
 import{collectSliceCollectionsV1,registerSliceCollectionsV1}from"../📋️slice-report/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -28,13 +28,14 @@ const runtimeShrink=()=>{try{globalThis.Bun?.shrink?.();}catch{}};
 const stderrLine=line=>{try{process.stderr.write(line+"\n");}catch{}};
 
 /**
- * 🧽️ Gives back the memory a plan needed once it is answered: runs `release` (what the caller can drop), collects garbage, asks the runtime to shrink its heap (`Bun.shrink` returns freed pages to the operating system, a collection alone leaves them resident) and logs ONE line per language with the managed and resident megabytes and what the resident size fell by. Only on a machine that has a plan limit or with `SEMIO_GRAPH_PHASES=1` (a serving machine keeps its graph and is not touched) unless `force` is set; answers `undefined` when it did nothing.
+ * 🧽️ Gives back the memory a plan needed once it is answered: runs `release` (what the caller can drop), lets the event loop turn (a collection inside the call that dropped the memory still sees that call's stack and keeps what it dropped), collects garbage, asks the runtime to shrink its heap (`Bun.shrink` returns freed pages to the operating system, a collection alone leaves them resident) and logs ONE line per language with the managed and resident megabytes and what the resident size fell by. Only on a machine that has a plan limit or with `SEMIO_GRAPH_PHASES=1` (a serving machine keeps its graph and is not touched) unless `force` is set; answers `undefined` when it did nothing.
  * @param {{release?:()=>unknown;ports?:{sample:()=>number;collect:()=>void};resident?:()=>number;shrink?:()=>void;environment?:Record<string,string|undefined>;report?:(line:string)=>void;limitBytes?:number;force?:boolean}} [options]
  */
 export async function settleGraphMemoryV1({release,ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,shrink=runtimeShrink,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),force=false}={}){
  if(!force&&quiet(environment,limitBytes))return undefined;
  const managedBefore=ports.sample(),residentBefore=resident();
  await release?.();
+ await yieldGraphTurnV1();
  ports.collect();shrink();ports.collect();
  const managed=ports.sample(),after=resident();
  const result={managedBeforeMegabytes:megabytes(managedBefore),managedMegabytes:megabytes(managed),residentBeforeMegabytes:megabytes(residentBefore),residentMegabytes:megabytes(after),releasedMegabytes:Math.max(0,megabytes(residentBefore)-megabytes(after))};
@@ -60,9 +61,9 @@ export async function registerRetainedCollectionsV1(){
  }catch{registeredV1=false;}
 }
 
-/** 🔎️ Logs, between two waves of one read, the managed and resident megabytes and the bounded caches that hold the most bytes, so the log names what a wave leaves behind; quiet on a machine without a plan limit. */
-export function reportRetainedGraphMemoryV1({ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=retainedCollectionsV1}={}){
- const managed=ports.sample();profileHeapOnceV1({managedMegabytes:megabytes(managed)});
+/** 🔎️ Logs, after the event loop turned (a sample inside the call that ended the wave still sees its stack), between two waves of one read, the managed and resident megabytes and the bounded caches that hold the most bytes, so the log names what a wave leaves behind; quiet on a machine without a plan limit. */
+export async function reportRetainedGraphMemoryV1({signal,ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=retainedCollectionsV1}={}){
+ await yieldGraphTurnV1();const managed=ports.sample();profileHeapV1({managedMegabytes:megabytes(managed),signal});
  const caches=stats().filter(row=>row.entries>0).sort((a,b)=>b.bytes-a.bytes||b.entries-a.entries).slice(0,SETTLE_POLICY_V1.censusCaches).map(row=>row.name+" "+row.entries+" entries "+megabytes(row.bytes)+" MB").join(", ")||"-";
  for(const line of renderSettleMessageV1("retained",{managed:megabytes(managed),resident:megabytes(resident()),caches},environment))report(line);
 }

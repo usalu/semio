@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "resourcePrefix": "native-fixed-image:",
+        "maximumHoldMilliseconds": 2000,
+        "idleReleaseMilliseconds": 250,
+        "sampleWaitMilliseconds": 1000,
+        "sampleRefreshMilliseconds": 5000
+      }
+    },
+    "Texts": {
+      "const": {
+        "closed": {
+          "en": "The shared image reader is closed",
+          "de": "Der geteilte Image-Leser ist geschlossen"
+        }
+      }
+    }
+  }
+}

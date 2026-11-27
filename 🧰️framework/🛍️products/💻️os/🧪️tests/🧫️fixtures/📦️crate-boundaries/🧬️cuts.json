@@ -356,10 +356,10 @@
       "definition": "pub struct ChildDispatch"
     },
     {
-      "producer": "semio-os-store-test-support",
+      "producer": "semio-os-store-schema-exports",
       "consumer": "🔨️modules/🏪️store/🦀️.rs",
-      "canonical": "pub use semio_os_store_test_support as test_support;",
-      "definition": "pub fn mutation_report_json"
+      "canonical": "pub use semio_os_store_schema_exports::{STORE_SCHEMA_EXPORTS, register_store_schema_exports};",
+      "definition": "pub fn register_store_schema_exports"
     }
   ],
   "mutationOwners": [

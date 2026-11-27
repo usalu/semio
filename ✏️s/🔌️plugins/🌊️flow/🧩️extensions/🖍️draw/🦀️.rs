@@ -766,7 +766,7 @@ pub mod extension_guest {
         let manifest_json = build_manifest_json("draw", "Draw", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
-        let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
+        let bundle = ExtensionBundle::new("flow-extension-draw", semio_plugin::LocalizedLabel::native("Draw", "Zeichnen"), env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);

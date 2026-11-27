@@ -174,8 +174,8 @@ async fn writer_document_text_round_trips_through_the_store() {
     let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -189,7 +189,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests
 

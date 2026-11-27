@@ -163,7 +163,8 @@ test("a policy target changed after birth leaves an existing image at its own si
  const declared=policy.partitions.dependencies,unit=1048576,rows=[
   {id:"born-smaller",receipt:{maximumPhysicalBytes:8*2**30},expected:8*2**30},
   {id:"born-equal",receipt:{maximumPhysicalBytes:declared.capacityBytes},expected:declared.capacityBytes},
-  {id:"born-larger-than-declared",receipt:{maximumPhysicalBytes:declared.capacityBytes+unit},expected:declared.capacityBytes},
+  {id:"born-larger-than-declared",receipt:{maximumPhysicalBytes:declared.capacityBytes+unit},expected:declared.capacityBytes+unit},
+  {id:"born-above-image-cap",receipt:{maximumPhysicalBytes:36*2**30},expected:36*2**30},
   {id:"unaligned",receipt:{maximumPhysicalBytes:8*2**30+1},expected:declared.capacityBytes},
   {id:"below-minimum",receipt:{maximumPhysicalBytes:unit},expected:declared.capacityBytes},
   {id:"not-a-number",receipt:{maximumPhysicalBytes:"8589934592"},expected:declared.capacityBytes},
@@ -174,7 +175,7 @@ d,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
 out={}
 for r in rows:
     v=r["bytes"]
-    ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432 and v<=d
+    ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432
     out[r["id"]]=v if ok else (min(d,r["cap"]) if r["missing"] else d)
 print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(declared.capacityBytes),JSON.stringify(rows.map(row=>({id:row.id,cap:CAP,missing:row.receipt===null,bytes:row.receipt&&typeof row.receipt==="object"?row.receipt.maximumPhysicalBytes:null})))]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
@@ -194,7 +195,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  }
 });
 
-/** 📐️ An elastic image honours its receipt like a pinned one: clamped down to the rule maximum, never snapped up to the declared minimum, and compared with an independent Python model. */
+/** 📐️ An elastic image honours its receipt like a pinned one: never clamped to the rule maximum (a published image keeps its exact envelope), never snapped up to the declared minimum, and compared with an independent Python model. */
 test("elastic capacity reads image receipts like pinned capacity",()=>{
  const {effectiveCapacityV1}=require("../📐️elastic/🟦️.ts"),mib=1048576,minimum=64*mib,rule={needBytes:minimum,headroomPercent:0,hostFreeReservePercent:0,growHostFreeFloorBytes:0,growHostFreeFloorPercent:0,alignBytes:mib,maximumBytes:256*mib,automatic:true,pressureFreeBytes:0},
  rows=[{id:"smaller",bytes:32*mib},{id:"between",bytes:128*mib},{id:"above-maximum",bytes:512*mib},{id:"unaligned",bytes:128*mib+1},{id:"below-floor",bytes:mib},{id:"text",bytes:"x"},{id:"malformed",bytes:null}],
@@ -204,13 +205,25 @@ out={}
 for r in rows:
     v=r["bytes"]
     ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432
-    out[r["id"]]=min(v,x) if ok else m
+    out[r["id"]]=v if ok else m
 print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,String(minimum),String(rule.maximumBytes),JSON.stringify(rows)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
  for(const row of rows){
   const root=mkdtempSync(join(tmpdir(),"budget-elastic-"));
   try{writeFileSync(join(root,"image.json"),row.bytes===null?"{":JSON.stringify({maximumPhysicalBytes:row.bytes}));expect(effectiveCapacityV1(root,minimum,rule),row.id).toBe(independent[row.id]);}finally{rmSync(root,{recursive:true,force:true});}
  }
+});
+
+/** 🏔️ An image published above the image cap (born before the cap, 36 GiB dependencies and 96 GiB rust here) stays openable: the resolved budget carries its exact receipt envelope for the receiver, while the declared policy stays within the cap. */
+test("an image published above the image cap keeps its exact envelope in the resolved budget",()=>{
+ const root=mkdtempSync(join(tmpdir(),"budget-oversize-")),GiB=2**30,unit=1048576,write=(id:"rust"|"dependencies",bytes:number)=>{const directory=join(root,policy.partitions[id].directory);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"image.json"),JSON.stringify({maximumPhysicalBytes:bytes}));};
+ try{
+  mkdirSync(join(root,".cache","b"),{recursive:true});write("rust",96*GiB);write("dependencies",36*GiB);
+  const budget=repositoryCacheBudgetV1(root),strict=repositoryStrictStorageV1(root);
+  expect(budget.partitions.dependencies.capacityBytes).toBe(36*GiB);expect(budget.partitions.dependencies.filesystemBytes).toBe(36*GiB-unit);
+  expect(budget.partitions.rust.capacityBytes).toBe(96*GiB);expect(strict.capacityBytes).toBe(96*GiB);expect(strict.filesystemBytes).toBe(96*GiB-unit);
+  expect(()=>readRepositoryCacheBudgetV1({...structuredClone(policy),partitions:{...policy.partitions,dependencies:{...policy.partitions.dependencies,capacityBytes:36*GiB}}})).toThrow("Closed repository cache partition declaration required");
+ }finally{rmSync(root,{recursive:true,force:true});}
 });
 
 test("a tiny foreign receipt of one partition is ignored for that partition and never breaks the budget of the repository",()=>{
@@ -279,7 +292,7 @@ test("every partition has a bloat rule, the common one is schema-valid, and the 
  for(const name of Object.keys(policy.partitions))expect(repositoryPartitionReclaimRuleV1(name)).toEqual((policy.elastic as Record<string,unknown>)[name]??policy.reclaim);
  expect(policy.elastic.rust.needBytes).toBeLessThan(policy.elastic.rust.maximumBytes);
  expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,7*GiB)).toBe(policy.elastic.rust.minimumBytes);
- expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(Math.min(40*GiB,CAP));
+ expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(Math.min(Math.ceil(policy.elastic.rust.needBytes*(100+policy.elastic.rust.headroomPercent)/100),policy.elastic.rust.maximumBytes,CAP));
 });
 
 /** 🧮️ The disk policy is declared as fractions of the host: no absolute minimum exceeds what the host can create, every logical limit fits its capacity, and the images born on a 16 GB / 60 GB, a 32 GB / 200 GB and a Windows 256 GB / 5 GB-free machine add up to less than the host's free bytes; the elastic minimum agrees with an independent Python model. */

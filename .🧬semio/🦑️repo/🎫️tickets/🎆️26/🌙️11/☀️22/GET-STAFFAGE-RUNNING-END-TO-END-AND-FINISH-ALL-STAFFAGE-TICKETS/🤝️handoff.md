@@ -216,3 +216,10 @@ Goal of the dev: "Get staffage running end to end. Many assets were interrupted 
 - FINAL since 02:35: MA (13/13), MV-3 (11/11), MV-L1 (`hawthorn`), MV-L2 (6/6), MV-L3 (`field-maple`, `black-alder`, chairs 1:500: 21 of 22 cured, 1 `language-geometry` cell open), MX-3 (pocket and body-following rules live 08:34, `🧊️catalog-silhouette` 385/385 before and after; D62 to D70).
 - Every batch lane is FINAL; no lane writes the catalog. Manifest synced (375, 0 issues; re-run by MZ at the end).
 - Lane MZ (Sonnet) runs `🧰️closing/run.sh`: full matrix (`MM/full.sh`), proof sheets, every staffage suite, check CLI over all categories, React and site suites, release build and smoke, type checks. Report `closing.md`, multiview closing summary `K/📦️handoff.md`.
+
+## Added 2026-11-27 00:40: fifth chat (Opus 5.5 medium) took over the closing
+
+- Closing run of MZ: matrix FINAL (64,868 ok, 1 fail: `used-bentwood-dining-chairs` 1:1000 forces `language-geometry`), proof sheets done, every staffage suite green except `🧊️model-catalog`: 9 of 15 shards finished with 312 issues in 54 assets (`modelcat-issues.txt`). The even shard chain had died at shard 04; restarted 00:25 (`🗑️generated/closing/modelcat_b2.log`), shard 13 of the odd chain still running.
+- Brief: `📋️closing-2-brief.md`. Lanes: CX-ID (Sonnet, model JSON node ids > 64 chars), CX-FBX (Sonnet, assimp re-import), CX-GLB (Sonnet, GLB 8 MB per pose budget, writer first), CL-T1 (Fable, plant and human triangle budgets), CL-T2 (Fable, object triangle budgets, self-intersections, watertight boxes), CL-CH (Sonnet, the matrix cell), KH (Haiku, `K/📦️handoff.md` closing draft).
+- 00:40: shard 13 (odd chain) held 11.3 GB against its 3600 MB grant for 5.4 h and starved nine lane requests; stopped by pid, its JSON removed: shard 13 is to be rerun in the final model-catalog pass.
+- 01:05: baseline even shard chain stopped to give the fix lanes the queue (fleet offloads compile units only; test runs fall back locally). Shards 04, 06, 08, 10, 12, 13, 14 run in the final model-catalog pass after the lanes.

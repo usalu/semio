@@ -58,7 +58,7 @@ impl From<DrawViewerApp> for DrawApps {
 /// no evidence of long-running computation, large held buffers, or high-frequency timers.
 pub fn plugin() -> Result<Plugin<DrawApps>, PluginAssemblyError> {
     PluginBuilder::<_, DrawApps>::new("draw")
-        .label("Draw")
+        .label(semio_plugin::LocalizedLabel::native("Draw", "Zeichnen"))
         .version("0.1.0")
         .package_id("semio:draw")
         .declare_artifact(semio_s_artifact_draw_drawing::artifact())

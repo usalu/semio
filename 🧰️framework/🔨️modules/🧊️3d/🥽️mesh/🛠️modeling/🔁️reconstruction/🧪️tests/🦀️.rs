@@ -30,7 +30,7 @@ fn remap_configuration_is_closed_after_actual_advance(){
 /// 🪆️ The same original snapshot closes every admitted source, buffer and interruption with actual receipts.
 #[test]
 fn original_modeling_snapshot_frontier_preserves_same_source_and_actual_receipts(){
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛠️modeling/🎟️owners.json")).unwrap();let policy=&law["snapshotPreparation"];
     for flipped in [false,true] {for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|copy|copy.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(policy["cancelTurns"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){

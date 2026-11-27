@@ -277,7 +277,7 @@ fn every_variant_decodes_through_retained_structural_grants() {
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P3 retained mutation fixture encode");
         assert_decodes_to(&bytes, &mutation);
-        store::os_store::test_support::assert_op_text_binary_equivalence_cold(&mutation, |decoded| decoded.retire_cold());
+        semio_os_store_test_support::assert_op_text_binary_equivalence_cold(&mutation, |decoded| decoded.retire_cold());
         mutation.retire_cold();
     }
 }

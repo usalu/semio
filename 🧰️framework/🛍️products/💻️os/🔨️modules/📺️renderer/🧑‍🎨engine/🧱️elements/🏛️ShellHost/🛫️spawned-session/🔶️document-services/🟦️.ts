@@ -29,6 +29,8 @@ export function useDocumentServicesState({ core }: { readonly core: ShellCoreAft
     activeUtilityByWindowIdRef, activeToolIdRef, writeToolRegister, activeWindowIdRef, shellStateRef,
     injectActiveUtility, publishContributions, refreshUi
   } = core;
+  /** 🔁️ The instance each spawned program id last finished a full refresh for: a different instance under the same id means the program was replaced in place. */
+  const refreshedInstanceByProgramRef = useRef(new Map<string, number>());
   const refreshSpawnedUiPass = useCallback(
     async (spawned: SpawnedAppEntry, viewState: ViewModel) => {
       const loadedPlugins = loadedPluginsRef.current;
@@ -90,6 +92,11 @@ export function useDocumentServicesState({ core }: { readonly core: ShellCoreAft
       dispatch({ type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, panelStores)) });
       const toolMeasures = programKeyedEntriesV1(spawned.id, (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
       dispatch({ type: "SET_TOOL_MEASURES_BY_TOOL_ID", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(toolMeasures))) });
+      const refreshed = refreshedInstanceByProgramRef.current;
+      for (const programId of [...refreshed.keys()]) if (!spawnedIdsRef.current.includes(programId)) refreshed.delete(programId);
+      const replacedInstanceId = refreshed.get(spawned.id);
+      refreshed.set(spawned.id, spawned.instanceId);
+      if (replacedInstanceId !== undefined && replacedInstanceId !== spawned.instanceId) dispatch({ type: "PROGRAM_INSTANCE_REPLACED", programId: spawned.id, replacedInstanceId, liveWindowIds: Object.keys(uiByWindowId) });
     },
     [injectActiveUtility, publishContributions, uiLocale, uiTerminology],
   );

@@ -25,6 +25,8 @@ path = "../../🦀️.rs"
 semio-os-semio = { path = "../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }

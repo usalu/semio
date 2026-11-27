@@ -5,8 +5,8 @@ import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}fro
 import{nativeShardConsumerV1,nativeShardTextV1,readNativeShardsV1,relieveNativeShardsV1,type NativeShardConsumerV1}from"../../../🌡️host-capacity/🧹️disk-recovery/🧱️native-shards/🟦️.ts";
 import{volumeFactsTextV1}from"../../../🌡️host-capacity/🧹️disk-recovery/📊️volume-facts/🟦️.ts";
 import{nativeShardHoldV1}from"../../../🌡️host-capacity/🧹️disk-recovery/🧱️native-shards/🔒️hold/🟦️.ts";
-import{currentHostWardenMirrorV1,ensureHostWardenV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
-import type{HostWardenMirrorV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
+import{currentHostWardenMirrorV1,ensureHostWardenV1,readHostWardenCancelsSinceV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
+import{formatHostWardenCancelLineV1,type HostWardenCancelV1,type HostWardenMirrorV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import{createHash}from"node:crypto";
 import{execFile,spawn,spawnSync}from"node:child_process";
 import{closeSync,constants,existsSync,fstatSync,mkdirSync,openSync,readFileSync,readSync,readdirSync,realpathSync,renameSync,rmSync,statSync,writeFileSync,writeSync,type BigIntStats}from"node:fs";
@@ -16,6 +16,7 @@ import{StringDecoder}from"node:string_decoder";
 import{readToolSetupRefusalLineV1}from"../../../🧰️tool-setup/🛑️refusal/🟦️.ts";
 import{nxFailedTaskTailsV1}from"../../../🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{createPartitionCensusMirrorV1}from"./🧱️partition-census/🟦️.ts";
 import{fleetHostReadingV1}from"../../../🧠️memory/🟨️.mjs";
 import{READY_SLICE_REPORT_POLICY_V1,ownedSliceReportV1,prepareOwnedSliceReportV1}from"../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import{remoteExecutionOriginV1}from"../../🌡️load/🟦️.ts";
@@ -25,11 +26,12 @@ import{hostCapacityDirectoryV1}from"../../../../../../../../🔨️modules/🏃�
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import nativeBootstrap from"../../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json"with{type:"json"};
-import{readyCodeStopV1,readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyGraphCounterTrackerV1,readyAbsoluteDeadlineV1,readyReadingLiveV1,readyStallCountV1,readyWardenHoldsV1,readyGrantWaitV1,readySliceSilentV1,readyIdentityV1,readyPinStageRootV1,readyStageProcessVerdictV1,readyConfirmProcessReplacementV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
+import{readyCodeStopV1,readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyCpuOnlyStalledV1,readyGraphCounterTrackerV1,readyAbsoluteDeadlineV1,readyReadingLiveV1,readyStallCountV1,readyWardenHoldsV1,readyWardenCancelOfStageV1,readyGrantWaitV1,readySliceSilentV1,readySliceMovedSignatureV1,readyIdentityV1,readyPinStageRootV1,readyStageProcessVerdictV1,readyConfirmProcessReplacementV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
 import{CAS_RESERVE_FACTOR_V1}from"../../../🗄️cas/🧬️schema/🟦️.ts";
 import{readySliceSampleDueV1,readySliceSampleV1}from"./🌲️process-tree/🔬️sample/🟦️.ts";
 import{localMachineSpeedFactorV1,scaledMillisecondsV1}from"../../../🐢️speed/🟨️.mjs";
 import{inspectTypescriptCompilerV1}from"../../../🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
+import{NATIVE_IMAGE_SHARED_READ_POLICY_V1,withNativeImageSharedReadV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 import{discardDependencyGenerationsV1}from"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/♻️collection/🟦️.ts";
 import cachePolicy from"../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json"with{type:"json"};
 import{readyManifestDigestV1}from"./📦️manifest-digest/🟦️.ts";
@@ -54,7 +56,7 @@ const P=READY_POLICY_V1,ZERO="0".repeat(64),sha=(text:string|Uint8Array):string=
 
 export type ReadyStageV1=Readonly<{name:string;kind:"bootstrap"|"repo";arguments:readonly string[];timeoutMilliseconds:number;inputs:readonly string[];bootstrapInput:boolean;dependencyInputs?:true}>;
 export type ReadyPlatformV1="linux"|"macos"|"windows";
-export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"source-transient"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"disk-unfit"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
+export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"source-transient"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"disk-unfit"|"loop-failed"|"spawn-failed"|"interrupted"|"memory-cancelled"|"disk-guard"|"server";
 export type ReadyReasonCodeV1="first-run"|"inputs-changed"|"previous-failed"|"stalled"|"code-changed"|"code-stale"|"step-overdue"|"holder-silent"|"adopted"|"binary-missing"|"refreshing";
 export type ReadyReasonV1=Readonly<{code:ReadyReasonCodeV1;en:string;de:string}>;
 export type ReadyRefusalV1=Readonly<{code:ReadyCodeV1;en:string;de:string}>;
@@ -180,14 +182,66 @@ export function readyFilesystemFactsV1(path:string,options?:Omit<FreeSpaceOption
 
 /** 🧮️ The inodes a stage creates before it has ever been measured, derived from its own input: the dependency generations hold about `entriesPerLockfileLine` entries per line of the lockfile of each scope (the root and every top-level folder with a `bun.lock`; calibrated on the six real generations of this repository, 3.20 to 3.52, rounded up), so the cold need is the sum of the lockfile lines times that factor. `null` for any other stage or when no lockfile is readable. A pure function of the workspace folder.
  * @see ./🧪️tests/💽️disk-recovery/🟦️.ts */
-export function readyDerivedInodesV1(stage:string,root:string):number|null{
+export function readyDerivedInodesV1(stage:string,root:string,owners?:readonly string[]|null):number|null{
  const rule=P.diskDerivation;
  if(stage!==rule.stage)return null;
  let lines=0;
  const count=(path:string):void=>{try{const bytes=readFileSync(path);let at=-1;while((at=bytes.indexOf(10,at+1))!==-1)lines++;}catch{}};
- count(join(root,rule.lockfile));
- try{for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isDirectory()&&!entry.name.startsWith(".")&&entry.name!=="node_modules")count(join(root,entry.name,rule.lockfile));}catch{}
+ const chosen=owners===undefined||owners===null?undefined:new Set(owners);
+ if(chosen===undefined||chosen.has(P.scopeDerivation.rootOwner))count(join(root,rule.lockfile));
+ try{for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isDirectory()&&!entry.name.startsWith(".")&&entry.name!=="node_modules"&&(chosen===undefined||chosen.has(entry.name)))count(join(root,entry.name,rule.lockfile));}catch{}
  return lines===0?null:Math.ceil(lines*rule.entriesPerLockfileLine);
+}
+
+/** 🔍️ The owners a stage of the plan was given by `--scope` flags, `null` when it runs every owner. */
+export function readyScopesOfStageV1(stages:readonly ReadyStageV1[],name:string):readonly string[]|null{
+ const row=stages.find(stage=>stage.name===name),flag=P.scopeDerivation.flag;
+ if(row===undefined)return null;
+ const owners=row.arguments.flatMap((argument,index)=>argument===flag&&row.arguments[index+1]!==undefined?[row.arguments[index+1]!]:[]);
+ return owners.length===0?null:owners;
+}
+/** 🗂️ The dependency owners of a checkout: the root `.` and every top-level folder that holds its own manifest and lockfile (each one a generation of the dependency store). A pure function of the workspace folder.
+ * @see ./🧪️tests/🎯️scopes/🟦️.ts */
+export function readyScopeOwnersV1(root:string):readonly string[]{
+ const rule=P.scopeDerivation,owners=[rule.rootOwner];
+ try{for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isDirectory()&&!entry.name.startsWith(".")&&entry.name!=="node_modules"&&existsSync(join(root,entry.name,rule.ownerLockfile))&&existsSync(join(root,entry.name,rule.ownerManifest)))owners.push(entry.name);}catch{}
+ return Object.freeze(owners.sort());
+}
+/** 🧭️ The folder of every named project, read from the project files below the checkout (`name` of each `📋️project.json`; build outputs, caches, tickets and hidden folders are not walked): a name nobody declares is missing from the answer, and the walk stops after `maximumEntries` entries. A pure read of the tree.
+ * @see ./🧪️tests/🎯️scopes/🟦️.ts */
+export function readyProjectRootsV1(root:string,names:readonly string[]):ReadonlyMap<string,string>{
+ const rule=P.scopeDerivation,wanted=new Set(names),found=new Map<string,string>(),skip=new Set(rule.skip),stack=[""];let budget=rule.maximumEntries;
+ while(stack.length>0&&found.size<wanted.size&&budget>0){
+  const at=stack.pop()!;let entries:import("node:fs").Dirent[];
+  try{entries=readdirSync(join(root,at),{withFileTypes:true});}catch{continue;}
+  for(const entry of entries){
+   budget--;
+   if(entry.isDirectory()){if(!entry.name.startsWith(".")&&!skip.has(entry.name))stack.push(at===""?entry.name:at+"/"+entry.name);continue;}
+   if(entry.name!==rule.projectFile)continue;
+   try{const name=(JSON.parse(readFileSync(join(root,at,entry.name),"utf8")) as Record<string,unknown>)[rule.nameKey];if(typeof name==="string"&&wanted.has(name)&&!found.has(name))found.set(name,at);}catch{}
+  }
+ }
+ return found;
+}
+/** 🎯️ The dependency owners the stages of the plan need: the owner of a project folder is its first folder when that is an owner of the checkout, else the root; `null` (install every owner) when the plan names no projects, a project is not declared anywhere, or the owners are all of them. A pure function of the plan and the folder.
+ * @see ./🧪️tests/🎯️scopes/🟦️.ts */
+export function readyDependencyScopesV1(root:string,stages:readonly ReadyStageV1[]):readonly string[]|null{
+ const rule=P.scopeDerivation,source=stages.find(stage=>stage.name===rule.from);
+ if(source===undefined)return null;
+ const names=source.arguments.flatMap(argument=>argument.startsWith(rule.projectsPrefix)?argument.slice(rule.projectsPrefix.length).split(",").filter(name=>name!==""):[]);
+ if(names.length===0)return null;
+ const folders=readyProjectRootsV1(root,names),owners=readyScopeOwnersV1(root);
+ if(names.some(name=>!folders.has(name)))return null;
+ const needed=new Set<string>([rule.rootOwner]);
+ for(const name of names){const first=folders.get(name)!.split("/")[0]!;needed.add(owners.includes(first)?first:rule.rootOwner);}
+ return needed.size===owners.length?null:Object.freeze([...needed].sort());
+}
+/** 🪜️ The stage plan of this checkout: the dependency stage installs only the owners the workspace stage needs (`--scope` once per owner), every other stage and a plan without a derivable owner set stay as declared. Stage digests are over the inputs, not the arguments, so a machine that is ready stays ready.
+ * @see ./🧪️tests/🎯️scopes/🟦️.ts */
+export function readyStagesForRootV1(stages:readonly ReadyStageV1[],root:string):readonly ReadyStageV1[]{
+ const rule=P.scopeDerivation,owners=readyDependencyScopesV1(root,stages);
+ if(owners===null)return stages;
+ return stages.map(stage=>stage.name===rule.stage?{...stage,arguments:[...stage.arguments.filter(argument=>argument!=="--all"),...owners.flatMap(owner=>[rule.flag,owner])]}:stage);
 }
 
 /** 💽️ Whether the paths a stage writes to hold what it needs (`diskRequirements` of the schema, megabytes and inodes): the first resource that is short, `null` when all hold or nothing is known. Checked before the stage starts, so a full disk or an exhausted inode table is a typed refusal that names path, need and what is free, and not the raw database error the stage dies with half an hour later. A pure function of the facts provider.
@@ -203,6 +257,23 @@ export function readyDiskShortV1(input:Readonly<{stage:string;paths:readonly str
  return null;
 }
 
+/** 🛑️ The volume that crossed the floor of the disk guard: the resource (`space` in megabytes, `inodes`), the path, what is free and the floor. */
+export type ReadyDiskGuardHitV1=Readonly<{resource:"space"|"inodes";path:string;available:number;floor:number}>;
+/** 🛑️ Whether the volume is nearly full: free bytes below the larger of `diskGuard.floorMegabytes` and `floorBasisPoints` of the volume, or free inodes below the larger of `floorInodes` and `floorInodeBasisPoints` of the table, `null` when it is fine or unknown. The floor lies below every stage need, so a stopped stage is not started again before the collectors made room. A running stage is checked against it every `checkMilliseconds`; a writer of ours therefore cannot take the last bytes of a worker, however long it is stuck.
+ * @see ./🧪️tests/🛑️disk-guard/🟦️.ts */
+export function readyDiskGuardV1(path:string,facts:ReadyFilesystemFactsV1|null):ReadyDiskGuardHitV1|null{
+ if(facts===null)return null;
+ const rule=P.diskGuard,total=typeof facts.totalBytes==="number"?facts.totalBytes:0,totalInodes=typeof facts.totalInodes==="number"?facts.totalInodes:0;
+ const floorBytes=Math.max(rule.floorMegabytes*1048576,Math.floor(total*rule.floorBasisPoints/10000)),floorInodes=Math.max(rule.floorInodes,Math.floor(totalInodes*rule.floorInodeBasisPoints/10000));
+ if(typeof facts.freeBytes==="number"&&facts.freeBytes<floorBytes)return Object.freeze({resource:"space" as const,path,available:Math.floor(facts.freeBytes/1048576),floor:Math.ceil(floorBytes/1048576)});
+ if(typeof facts.freeInodes==="number"&&facts.freeInodes<floorInodes)return Object.freeze({resource:"inodes" as const,path,available:facts.freeInodes,floor:floorInodes});
+ return null;
+}
+/** 🗣️ The tail line of a stage the disk guard stopped, English and German, with the volume and its numbers. */
+export function readyDiskGuardLineV1(hit:ReadyDiskGuardHitV1):string{
+ const unit=hit.resource==="space"?"MB":"inodes";
+ return `disk guard stopped the stage: ${hit.path} has ${hit.available} ${unit} free, floor ${hit.floor} ${unit} / Plattenwächter hat die Stufe angehalten: ${hit.path} hat ${hit.available} ${unit} frei, Untergrenze ${hit.floor} ${unit}`;
+}
 /** 🕳️ The paths a stage writes to whose free bytes could not be measured (the provider answered nothing, or `freeBytes` is `null`, not finite or negative): the stage starts anyway with a warning, because "unknown" is not "full"; the gate of the stage and the write error itself stay. A pure function of the facts provider. */
 export function readyDiskUnknownV1(input:Readonly<{paths:readonly string[];facts(path:string):ReadyFilesystemFactsV1|null}>):readonly ReadyDiskUnknownV1[]{
  const rows:ReadyDiskUnknownV1[]=[];
@@ -410,7 +481,7 @@ export function createReadyStatusV1(input:Readonly<{store:string|undefined;origi
 }
 
 type ReadyEndEvidenceV1="exit-receipt"|"observed";
-export type ReadyRunResultV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;progressed?:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
+export type ReadyRunResultV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;wardenCancel?:Pick<HostWardenCancelV1,"reason"|"kind"|"pid"|"megabytes">;diskGuard?:ReadyDiskGuardHitV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;progressed?:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
 type ReadyLogMirrorV1=(stage:string,lines:readonly string[],owner?:string)=>void;
 export type ReadyPortsV1=Readonly<{
  server:boolean;stages?:readonly ReadyStageV1[];now():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;jitter:number;cores:number;
@@ -418,7 +489,7 @@ export type ReadyPortsV1=Readonly<{
  state:Readonly<{read():ReadyLocalStateV1;write(state:ReadyLocalStateV1):void}>;
  marker:Readonly<{exists():boolean;write():void}>;repoPresent():boolean;human():boolean;
  lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|null|undefined;units?():Readonly<Record<UnitCountKindV1,number>>|null;
- memory():Readonly<{availableMegabytes:number|null;ok:boolean;floorMegabytes?:number}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;sweep?(request:Readonly<{stage:string;neededMegabytes:number;scarce?:"inodes";signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;native?():NativeShardConsumerV1|null;relieve?(request:Readonly<{signal:AbortSignal;report(line:string):void}>):Promise<number>;freeMegabytes?():number|null;freeInodes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;discardDependencies?():Readonly<{receipts:number;generations:number}>;
+ memory():Readonly<{availableMegabytes:number|null;ok:boolean;floorMegabytes?:number}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;sweep?(request:Readonly<{stage:string;neededMegabytes:number;scarce?:"inodes";signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;native?():NativeShardConsumerV1|null;relieve?(request:Readonly<{signal:AbortSignal;report(line:string):void}>):Promise<number>;freeMegabytes?():number|null;freeInodes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;discardDependencies?():Promise<Readonly<{receipts:number;generations:number}>>;
  run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1}>):Promise<ReadyRunResultV1>;
  heal?(request:Readonly<{stage:string;signal:AbortSignal;report(line:string):void}>):Promise<ReadyHealV1>;
  tree?():string|null;root?:string;
@@ -456,7 +527,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
  const plan=ports.stages??READY_STAGES_V1,names=plan.map(stage=>stage.name);
  const stalls=new Map<string,number>(),warnedUnmeasured=new Set<string>(),swept=new Set<string>(),inodeSweptAt=new Map<string,number>(),discarded=new Set<string>();
  const unfit=new Map<string,ReadyDiskUnfitV1>(),unfitSaid=new Set<string>(),healedAt=new Map<string,number>(),healUnfit=new Map<string,Readonly<{atMs:number;availableMegabytes:number;short:ReadyDiskShortV1}>>();
- const discardDependencies=(digest:string):void=>{if(discarded.has(digest)||ports.discardDependencies===undefined)return;discarded.add(digest);try{const gone=ports.discardDependencies();ports.say(`the dependency store verified current but lacks the tooling compiler: ${gone.receipts} synchronization receipt(s) and ${gone.generations} ready marker(s) discarded, the next dependencies stage rebuilds them / der Abhängigkeitsspeicher galt als aktuell, es fehlt aber der Werkzeug-Compiler: ${gone.receipts} Synchronisationsbeleg(e) und ${gone.generations} Fertigmarkierung(en) verworfen, die nächste Stufe dependencies baut sie neu`);}catch{}};
+ const discardDependencies=async(digest:string):Promise<void>=>{if(discarded.has(digest)||ports.discardDependencies===undefined)return;discarded.add(digest);try{const gone=await ports.discardDependencies();ports.say(`the dependency store verified current but lacks the tooling compiler: ${gone.receipts} synchronization receipt(s) and ${gone.generations} ready marker(s) discarded, the next dependencies stage rebuilds them / der Abhängigkeitsspeicher galt als aktuell, es fehlt aber der Werkzeug-Compiler: ${gone.receipts} Synchronisationsbeleg(e) und ${gone.generations} Fertigmarkierung(en) verworfen, die nächste Stufe dependencies baut sie neu`);}catch{discarded.delete(digest);}};
  let memoryLowSince:number|undefined,memoryWaitSaid=false,refreshStage:string|null=null,treeSeen=null as Readonly<{stamp:string;changedMs:number}>|null;
  const status={update:(patch:Partial<ReadyStatusV1>):void=>{ports.status.update(readyRefreshingPatchV1(patch,refreshStage));}};
  let renew:ReturnType<typeof setInterval>|undefined,stalledStage:string|undefined,stalledReason:ReadyReasonCodeV1="stalled",lastContainment:ReadyContainmentV1|null=null;
@@ -470,7 +541,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     state={...stored,adopted:true,stages:Object.fromEntries(stages.map(stage=>[stage.name,{digest:stage.digest,doneMs:now}])),readyMs:now};
     ports.state.write(state);done=Object.fromEntries(stages.map(stage=>[stage.name,stage.digest]));
    }
-   if(done.dependencies!==undefined){const wrong=ports.compiler?.()??null;if(wrong!==null){const at=ports.now(),attempts=state.attempts+1,{dependencies:_dropped,...rest}=state.stages;state={...state,stages:rest,failure:{digest,stage:"dependencies",attempts,exit:null,code:"tooling-compiler",nextAttemptMs:at+readyBackoffV1(attempts,ports.jitter),atMs:at,tail:[wrong.en,wrong.de]},attempts};ports.state.write(state);delete done.dependencies;discardDependencies(digest);}}
+   if(done.dependencies!==undefined){const wrong=ports.compiler?.()??null;if(wrong!==null){const at=ports.now(),attempts=state.attempts+1,{dependencies:_dropped,...rest}=state.stages;state={...state,stages:rest,failure:{digest,stage:"dependencies",attempts,exit:null,code:"tooling-compiler",nextAttemptMs:at+readyBackoffV1(attempts,ports.jitter),atMs:at,tail:[wrong.en,wrong.de]},attempts};ports.state.write(state);delete done.dependencies;await discardDependencies(digest);}}
    refreshStage=readyRefreshV1({stages,done,doneMs:Object.fromEntries(Object.entries(state.stages).map(([name,row])=>[name,row.doneMs])),now,marker,repo,readyMs:state.readyMs,failure:state.failure})?.[0]??null;
    const memory=ports.memory(),lease=ports.lease.peek();
    if(memory.ok)memoryLowSince=undefined;else memoryLowSince??=ports.now();
@@ -645,10 +716,11 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
      continue;
     }
     const failedTail=wrong!==null?[wrong.en,wrong.de]:readyTailWithDiskCauseV1(result.tail,result.tail.some(line=>line.includes(P.sqliteOpenPattern))?ports.disk?.(row.name)??null:null,readyNoSpaceV1(result.tail)?ports.native?.()??null:null);
-    const attempts=state.attempts+1,code:ReadyCodeV1=wrong!==null?"tooling-compiler":stallExhausted?"stage-stall-exhausted":result.timedOut?"stage-timeout":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":readyStoreFullV1(failedTail)!==null?"store-full":readySourceTransientV1([...result.failure??[],...failedTail],ports.root??"")?"source-transient":"stage-failed",at=ports.now();
-    const next:ReadyFailureV1={digest,stage:row.name,attempts,exit:result.exit,signal:result.signal??null,code,nextAttemptMs:at+readyBackoffV1(result.exit===P.retryExit?1:attempts,ports.jitter),atMs:at,tail:failedTail.slice(-P.tailLines),...startTree===null?{}:{tree:startTree}};
+    const attempts=state.attempts+1,code:ReadyCodeV1=wrong!==null?"tooling-compiler":stallExhausted?"stage-stall-exhausted":result.timedOut?"stage-timeout":result.spawnFailed?"spawn-failed":result.diskGuard!==undefined?"disk-guard":result.cancelled?"interrupted":result.wardenCancel!==undefined?"memory-cancelled":readyStoreFullV1(failedTail)!==null?"store-full":readySourceTransientV1([...result.failure??[],...failedTail],ports.root??"")?"source-transient":"stage-failed",at=ports.now();
+    const wardenLines=result.wardenCancel===undefined?[]:(["en","de"] as const).map(language=>formatHostWardenCancelLineV1(language,result.wardenCancel!));
+    const next:ReadyFailureV1={digest,stage:row.name,attempts,exit:result.exit,signal:result.signal??null,code,nextAttemptMs:at+readyBackoffV1(result.exit===P.retryExit||code==="memory-cancelled"||code==="disk-guard"?1:attempts,ports.jitter),atMs:at,tail:[...failedTail,...wardenLines].slice(-P.tailLines),...startTree===null?{}:{tree:startTree}};
     ports.state.write({...state,failure:next,attempts,peakMegabytes:peak});
-    if(wrong!==null)discardDependencies(digest);
+    if(wrong!==null)await discardDependencies(digest);
     ports.mirror?.(`${row.name}-failed`,wrong!==null?next.tail:result.failure??next.tail);
     ports.say(`stage ${row.name} failed (${code}, ${readyEndingV1(result.exit,result.signal).en}), next attempt in ${Math.round((next.nextAttemptMs-at)/1000)} s / Stufe ${row.name} fehlgeschlagen (${readyEndingV1(result.exit,result.signal).de}), nächster Versuch in ${Math.round((next.nextAttemptMs-at)/1000)} s`);
     leave();
@@ -731,7 +803,7 @@ const stageProcessAliveV1=(directory:string,row:Readonly<{stage:string;pid:numbe
 /** 🧾️ The record of the stage in flight, `<worktree>/.cache/f/ready/running.json`: which stage, which process group, when it started, where its exit file and log are. */
 type ReadyWatchdogV1=Readonly<{
  toolsGrace?:ToolsCheckpoint|null;
- version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;watchedAt:number;unwatchedMilliseconds:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
+ version:1;owner:string;peakMegabytes:number;progressAt:number;cpuSince?:number;stallAt:number;watchedAt:number;unwatchedMilliseconds:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
  seen:readonly string[];step:ReadyStepWatchCheckpointV1;holderSince:number|null;holderEvidence:string|null;
  graphCounter?:number;semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;lastActivity?:ReadyOwnedActivityV1;
 }>;
@@ -920,7 +992,7 @@ function logTailV1(log:string,count:number=P.tailLines,width:number=P.tailCharac
 /** 🧹️ What a stage runner needs to find the orphans of earlier tries: the lease registry folder of the user, the windows of this worker's stopped tries and the working window of a person. */
 export type ReadyOrphanPortsV1=Readonly<{registryRoot:string;windows():readonly ReadyWindowV1[];human():ReadyPersonV1|null}>;
 
-type ReadyStageInputV1=Readonly<{completion?:ReadyStageCompletionV1;root:string;environment:Readonly<Record<string,string|undefined>>;stage:ReadyStageV1;signal:AbortSignal;jobs:number;home?:string;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1;tree?:typeof READY_TREE_POLICY_V1;orphans?:ReadyOrphanPortsV1;containment?:typeof READY_CONTAINMENT_POLICY_V1;speed?:number}>;
+type ReadyStageInputV1=Readonly<{completion?:ReadyStageCompletionV1;root:string;environment:Readonly<Record<string,string|undefined>>;stage:ReadyStageV1;signal:AbortSignal;jobs:number;home?:string;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1;facts?:(path:string)=>ReadyFilesystemFactsV1|null;tree?:typeof READY_TREE_POLICY_V1;orphans?:ReadyOrphanPortsV1;containment?:typeof READY_CONTAINMENT_POLICY_V1;speed?:number}>;
 type ReadyStageObserverV1=Pick<ReadyStageInputV1,"onLine"|"mirror"|"onStage"|"onActivity">;
 type ReadyStageWatchV1={stage:string;stop:AbortController;observers:Set<ReadyStageObserverV1>;result:Promise<ReadyRunResultV1>;line?:string;physical?:Readonly<{stage:string;adopted:boolean}>;snapshot?:()=>ReadyRunResultV1};
 const readyStageWatchesV1=new Map<string,ReadyStageWatchV1>();
@@ -1018,7 +1090,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   let awaitingProbe=observedAt<armedAt;
   const stageClaim=(()=>{try{return input.environment.SEMIO_FLEET_STORE_ROOT?createReadyStageClaimPublisherV1({directory:hostCapacityDirectoryV1(input.environment),stage:inflight.stage,pid:inflight.pid,totalMegabytes:Math.round(totalmem()/1048576),runs:()=>{try{return(JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs;}catch{return[];}}}):undefined;}catch{return undefined;}})();
   stageClaim?.observe(0);
-  let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,stallAt=prior?.stallAt??inflight.startedMs,unwatched=prior===undefined?0:prior.unwatchedMilliseconds+Math.max(0,observedAt-prior.watchedAt),
+  let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,cpuSince=prior?.cpuSince,stallAt=prior?.stallAt??inflight.startedMs,unwatched=prior===undefined?0:prior.unwatchedMilliseconds+Math.max(0,observedAt-prior.watchedAt),
    phase=prior?.phase??null,phaseAt=prior?.phaseAt??inflight.startedMs,phaseOffset=prior?.offset??0,holderEvidence=prior?.holderEvidence??null,
    lastActivity=prior?.lastActivity,cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
   if(prior===undefined&&!fresh){
@@ -1036,7 +1108,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    try{
     const held=readInflightV1(inflightFile);
     if(held===undefined||!sameReadyFlightV1(held,inflight))return;
-    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,watchedAt:Date.now(),unwatchedMilliseconds:unwatched,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,...graphCounter.snapshot()<0?{}:{graphCounter:graphCounter.snapshot()},cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
+    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,...cpuSince===undefined?{}:{cpuSince},stallAt,watchedAt:Date.now(),unwatchedMilliseconds:unwatched,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,...graphCounter.snapshot()<0?{}:{graphCounter:graphCounter.snapshot()},cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
     const text=JSON.stringify({...held,watchdog});
     if(Buffer.byteLength(text)>P.watchdogRecordBytes)return;
     const temporary=inflightFile+"."+process.pid+".tmp";
@@ -1044,7 +1116,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     if(!killed&&!finishing&&!input.signal.aborted&&stallAt>reportedActivityAt){reportedActivityAt=stallAt;input.onActivity?.();}
    }catch{}
   };
-  const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;unwatched=0;dirty=true;};let linesAt=Date.now();let tickedStepSeconds=-1;
+  const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;unwatched=0;cpuSince=undefined;dirty=true;};const movedByCpu=(now=Date.now()):void=>{const since=cpuSince??now;moved(now);cpuSince=since;};let linesAt=Date.now();let sliceSeen="";let tickedStepSeconds=-1;
   const holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
   let pinnedRoot=readyPinStageRootV1(inflight,[],readyReadTreeV1(directory,inflight.stage)?.root);
   const rootOf=():ReadyKnownV1=>pinnedRoot;
@@ -1062,8 +1134,8 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   checkpoint();
   let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
-  const progressEvery=Math.max(1,Math.round(P.progressMilliseconds/P.pollMilliseconds)),sampleEvery=Math.max(1,Math.round(P.samplerMilliseconds/P.pollMilliseconds)),mirrorEvery=Math.max(1,Math.round(P.mirrorMilliseconds/P.pollMilliseconds));
-  let settling:Promise<void>|undefined;
+  const progressEvery=Math.max(1,Math.round(P.progressMilliseconds/P.pollMilliseconds)),sampleEvery=Math.max(1,Math.round(P.samplerMilliseconds/P.pollMilliseconds)),mirrorEvery=Math.max(1,Math.round(P.mirrorMilliseconds/P.pollMilliseconds)),diskEvery=Math.max(1,Math.round(P.diskGuard.checkMilliseconds/P.pollMilliseconds));
+  let settling:Promise<void>|undefined,diskHit:ReadyDiskGuardHitV1|undefined;
   const settle=():Promise<void>=>settling??=(async()=>{
    if(!owns())return;
    const result=await readyStopV1({root:rootOf(),known,policy:contain,grace:killed?P.graceMilliseconds:contain.terminateGraceMilliseconds,spare,record:recorder(killed?killReason:"settle"),...windows?{}:{group:inflight.pid}});
@@ -1110,7 +1182,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   const complete=(result:ReadyRunResultV1,containTree:boolean,endedMs?:number):void=>{
    finishing=true;stageClaim?.clear();
    if(!killed&&owns())lastActivity=readyOwnedActivityV1(logSinceV1(inflight.log,phaseOffset).lines,lastActivity);
-   result={...result,...readyTimingWatchdogV1(lastActivity,evidenceAtStop),physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
+   result={...result,...diskHit===undefined?{}:{diskGuard:diskHit,tail:[...result.tail,readyDiskGuardLineV1(diskHit)]},...readyTimingWatchdogV1(lastActivity,evidenceAtStop),physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
    const publish=()=>{
     try{
      if(owns()){
@@ -1148,7 +1220,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
       const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
       if(sample!==undefined){
        windowsBefore=sample.checkpoint;
-       if(sample.progress)moved();
+       if(sample.progress)movedByCpu();
        if(sample.megabytes!==null)stageClaim?.observe(sample.megabytes,holder.snapshot()!==null);
        const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
        if(peakChanged)peak=sample.megabytes!;
@@ -1162,9 +1234,11 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     toolsGraceActive(toolsGrace,{stage:stage.name,started:inflight.startedMs,now:probeNow,soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:treePolicy.stallMilliseconds})?
     Math.min(probeNow+probeLimit,inflight.startedMs+5*stageTimeout):0;
    if(probeUntil>probeNow)sampleTree(probeUntil-probeNow);
+  const wardenEnd=():Pick<ReadyRunResultV1,"wardenCancel">=>{try{const row=readyWardenCancelOfStageV1(readHostWardenCancelsSinceV1(inflight.startedMs),inflight.pid);return row===undefined?{}:{wardenCancel:{reason:row.reason,kind:row.kind,pid:row.pid,megabytes:row.megabytes}};}catch{return{};}};
   const timer=setInterval(()=>{
    tick++;
    if(finishing)return;
+   if(!killed&&tick%diskEvery===0){const path=machinePathV1(input.root,".cache"),hit=readyDiskGuardV1(path,(input.facts??readyFilesystemFactsV1)(path));if(hit!==null&&kill("cancel")){diskHit=hit;say(readyDiskGuardLineV1(hit));}}
    if(existsSync(inflight.exitFile)){
     let exit:number|null=null,spawnFailed=false,signal:string|null=null,endedMs:number|undefined;
      try{
@@ -1172,7 +1246,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
       exit=row.exit;spawnFailed=row.spawnFailed;signal=row.signal??null;
       if(!validateJsonSchemaSubset(schema.definitions.Exit,row,schema).length)endedMs=row.endedMs;
      }catch{}
-    return complete({exit,signal,timedOut,spawnFailed,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...exit===0?{tail:logTailV1(inflight.log)}:ending(signal)},killed||signal!==null,endedMs);
+    return complete({exit,signal,timedOut,spawnFailed,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...exit===0||killed?{}:wardenEnd(),...exit===0?{tail:logTailV1(inflight.log)}:ending(signal)},killed||signal!==null,endedMs);
    }
    if(!alive(inflight.pid)){
     if(existsSync(inflight.exitFile))return;
@@ -1183,7 +1257,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     if(tick%mirrorEvery===0)mirror();
     if(tick%mirrorEvery===0&&!killed){
      let held=false;try{held=readyWardenHoldsV1(currentHostWardenMirrorV1(undefined,Date.now()) as never,new Set([inflight.pid,...known.map(member=>member.pid)]));if(held)moved();}catch{}
-     try{const slot=ownedSliceReportV1(input.root,ownerOf(inflight.stage,inflight.startedMs));if(slot!==undefined&&statSync(slot.file).size<=P.sliceReport.fileBytes){const report=JSON.parse(readFileSync(slot.file,"utf8"));if(!silentSampled&&!killed&&phase==="reading"&&readySliceSampleDueV1(report,Date.now(),inflight.startedMs)&&alive(report.pid)){silentSampled=true;void readySliceSampleV1({pid:report.pid,silentSeconds:Math.round((Date.now()-report.atMs)/1000)}).then(lines=>{if(lines.length>0)input.mirror?.(inflight.stage+"-sample",lines);});}if(readyGrantWaitV1(report,Date.now(),treePolicy))moved();else if(!held&&phase==="reading"&&Date.now()>=armedAt&&Date.now()-linesAt>=treePolicy.sliceSilentMilliseconds&&readySliceSilentV1(report,Date.now(),inflight.startedMs,treePolicy)){stalled=true;kill("stall");}}}catch{}
+     try{const slot=ownedSliceReportV1(input.root,ownerOf(inflight.stage,inflight.startedMs));if(slot!==undefined&&statSync(slot.file).size<=P.sliceReport.fileBytes){const report=JSON.parse(readFileSync(slot.file,"utf8"));if(!silentSampled&&!killed&&phase==="reading"&&readySliceSampleDueV1(report,Date.now(),inflight.startedMs)&&alive(report.pid)){silentSampled=true;void readySliceSampleV1({pid:report.pid,silentSeconds:Math.round((Date.now()-report.atMs)/1000)}).then(lines=>{if(lines.length>0)input.mirror?.(inflight.stage+"-sample",lines);});}const sliceSignature=readySliceMovedSignatureV1(report,inflight.startedMs);if(sliceSignature!==null&&sliceSignature!==sliceSeen){sliceSeen=sliceSignature;moved();}if(readyGrantWaitV1(report,Date.now(),treePolicy))moved();else if(!held&&phase==="reading"&&Date.now()>=armedAt&&Date.now()-linesAt>=treePolicy.sliceSilentMilliseconds&&readySliceSilentV1(report,Date.now(),inflight.startedMs,treePolicy)){stalled=true;kill("stall");}}}catch{}
     }
    const probeEnded=awaitingProbe&&Date.now()>=armedAt;if(probeEnded)awaitingProbe=false;
    if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if([tracker.observe(recent),graphCounter.observe(recent)].some(Boolean)){linesAt=Date.now();moved();}const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed)lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&watched.step!==undefined&&watched.step.seconds<=watched.step.bound&&watched.step.seconds>tickedStepSeconds){tickedStepSeconds=watched.step.seconds;moved();}else if(watched.step===undefined)tickedStepSeconds=-1;if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){
@@ -1192,10 +1266,10 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}const codeVerdict=():ReturnType<typeof readyCodeStopV1>=>readyCodeStopV1({holderWaitMs:waiting,phase,phaseAgeMs:Date.now()-phaseAt,quietMs:Date.now()-progressAt,policy:treePolicy});if(!killed&&codeVerdict()!==null&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const why=codeVerdict(),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&why!==null){codeFile=file;codeStale=why==="stale";stalled=true;kill("restart");}}}
    if(Date.now()>=nextSample&&!sampling&&!killed)sampleTree();
    let peakChanged=false;
-   if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}stageClaim?.observe(observedPeak,holder.snapshot()!==null);const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
+   if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}stageClaim?.observe(observedPeak,holder.snapshot()!==null);const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))movedByCpu();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
    checkpoint(peakChanged);
    const liveRead=readyReadingLiveV1({phase,record:phase==="reading"?readRecord():undefined,alive});
-   if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt-unwatched,treePolicy,liveRead)){stalled=true;kill("stall");}
+   if(!killed&&Date.now()>=armedAt&&(readyStalledV1(Date.now()-stallAt-unwatched,treePolicy,liveRead)||!liveRead&&readyCpuOnlyStalledV1(cpuSince,Date.now(),treePolicy))){stalled=true;kill("stall");}
    const elapsed=Date.now()-inflight.startedMs;
    if(elapsed>stageTimeout){
     const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:liveRead?0:Date.now()-progressAt,policy:treePolicy}),now=Date.now();
@@ -1270,7 +1344,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
  const recentRuns=():readonly ReadyTimingV1[]=>{try{return(JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs;}catch{return[];}};
  const owner=`${process.pid}:${Math.random().toString(16).slice(2)}`,jitter=parseInt(sha(input.origin).slice(0,8),16)/0x100000000;
   let lastSliceOwner:string|undefined,lastSliceReport:string|undefined;
- const plan=input.stages??READY_STAGES_V1,platform=readyPlatformV1(),home=input.home??homedir(),lease=createReadyLeaseV1({directory,owner});
+ const plan=input.stages??readyStagesForRootV1(READY_STAGES_V1,input.root),platform=readyPlatformV1(),home=input.home??homedir(),lease=createReadyLeaseV1({directory,owner});
  const measure=(stages:readonly ReadyStageV1[])=>{
   const measured=stages.map(stage=>{
    if(!stage.dependencyInputs)return stage;
@@ -1320,7 +1394,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
  };
 
  return{
-  server:isServer(input.origin,input.group),...input.stages===undefined?{}:{stages:input.stages},now:Date.now,jitter,cores:availableParallelism(),
+  server:isServer(input.origin,input.group),...input.stages===undefined&&plan===READY_STAGES_V1?{}:{stages:plan},now:Date.now,jitter,cores:availableParallelism(),
   sleep:(milliseconds,signal)=>new Promise<void>(done=>{
    if(signal.aborted)return done();
    const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);done();};
@@ -1336,7 +1410,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
   human:()=>readyHumanActiveV1(directory),
   lease,
   inflight:()=>{const row=readInflightV1(join(directory,P.inflightName));return row!==undefined&&(stageProcessAliveV1(directory,row)||existsSync(row.exitFile))?row.stage:undefined;},
-   disk:stage=>readyDiskShortV1({stage,paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1,runs:recentRuns(),derivedInodes:readyDerivedInodesV1(stage,input.root)}),
+   disk:stage=>readyDiskShortV1({stage,paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1,runs:recentRuns(),derivedInodes:readyDerivedInodesV1(stage,input.root,readyScopesOfStageV1(plan,stage))}),
    diskUnknown:()=>readyDiskUnknownV1({paths:[machinePathV1(input.root,".cache"),tmpdir()],facts:input.facts??readyFilesystemFactsV1}),
    freeInodes:()=>{const inodes=(input.facts??readyFilesystemFactsV1)(machinePathV1(input.root,".cache"))?.freeInodes;return typeof inodes==="number"?inodes:null;},
    units:()=>{try{return readBuildCountersV1(input.root).unit;}catch{return null;}},
@@ -1352,7 +1426,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
     const facts=input.facts??readyFilesystemFactsV1,path=machinePathV1(input.root,".cache"),reading=()=>{const row=facts(path);return row===null||row.freeBytes===null?undefined:{partition:path,totalBytes:row.totalBytes??row.freeBytes,freeBytes:row.freeBytes};};
     const{sweepDiskV1}=await import("../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts"),{realDiskWritersV1}=await import("../../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts");
     const writers=realDiskWritersV1({workspace:input.root,home:input.home??homedir(),tmp:tmpdir(),uid:process.getuid?.()??0,environment:input.environment,language:"both",report:request.report,free:()=>reading()?.freeBytes,pressure:{path,requiredFreeBytes:request.neededMegabytes*1048576}});
-    const outcome=await sweepDiskV1({facts:reading,needBytes:request.neededMegabytes*1048576,...request.scarce===undefined?{}:{scarce:request.scarce},writers,language:"both",report:request.report,signal:request.signal});
+    const outcome=await sweepDiskV1({facts:reading,needBytes:request.neededMegabytes*1048576,...request.scarce===undefined?{}:{scarce:request.scarce,census:{root:machinePathV1(input.root,".cache")}},writers,language:"both",report:request.report,signal:request.signal});
     return{fits:outcome.verdict!=="refuse",consumers:outcome.consumers};
    },
    native:()=>nativeShardConsumerV1(readNativeShardsV1(input.root))??null,
@@ -1366,9 +1440,9 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
     const unfit=rows.find(row=>row.state==="skipped"&&row.kind==="unfit");
     return{grown:rows.filter(row=>row.state==="grown").length,unfit:unfit?.state==="skipped"?{path:machinePathV1(input.root,...cachePolicy.partitions.dependencies.directory.split("/")),neededMegabytes:Number(unfit.values.needed),availableMegabytes:Number(unfit.values.free)}:null};
    },
-   discardDependencies:()=>discardDependencyGenerationsV1(join(input.root,...cachePolicy.partitions.dependencies.directory.split("/"),"m")),
+   discardDependencies:()=>{const directory=machinePathV1(input.root,...cachePolicy.partitions.dependencies.directory.split("/"));return withNativeImageSharedReadV1({leaseDirectory:machinePathV1(input.root,".cache/b/l/m/data"),imageDirectory:directory,signal:AbortSignal.timeout(NATIVE_IMAGE_SHARED_READ_POLICY_V1.sampleWaitMilliseconds*2),timeoutMs:NATIVE_IMAGE_SHARED_READ_POLICY_V1.sampleWaitMilliseconds},()=>discardDependencyGenerationsV1(join(directory,"m")));},
  memory:()=>{const reading=fleetHostReadingV1({environment:input.environment}),free=reading.availableMegabytes,floor=readyMemoryFloorMegabytesV1(reading.hostMegabytes);return{availableMegabytes:free,ok:free===null||free>=floor,floorMegabytes:floor};},
-  run:(stage,options)=>runReadyStageV1({completion,root:input.root,environment:input.environment,stage,...input.home===undefined?{}:{home:input.home},orphans:{registryRoot:readyRegistryRootV1(input.environment,process.platform,input.home??homedir()),windows:()=>{try{return readyStoppedWindowsV1(recentRuns().filter(run=>run.attempts!==null));}catch{return[];}},human:()=>{try{return readyHumanRecordV1(readFileSync(join(directory,P.humanName),"utf8"));}catch{return null;}}},...options}),
+  run:(stage,options)=>runReadyStageV1({completion,root:input.root,environment:input.environment,stage,...input.home===undefined?{}:{home:input.home},...input.facts===undefined?{}:{facts:input.facts},orphans:{registryRoot:readyRegistryRootV1(input.environment,process.platform,input.home??homedir()),windows:()=>{try{return readyStoppedWindowsV1(recentRuns().filter(run=>run.attempts!==null));}catch{return[];}},human:()=>{try{return readyHumanRecordV1(readFileSync(join(directory,P.humanName),"utf8"));}catch{return null;}}},...options}),
   status,say:input.say,
    mirror:(stage,lines,owner)=>{
    if(input.environment.SEMIO_FLEET_STORE_ROOT===undefined||input.environment.SEMIO_FLEET_STORE_ROOT==="")return;
@@ -1425,7 +1499,7 @@ export async function runReady(context:RemoteExecutionSidecarContextV1):Promise<
   try{await new Promise<void>(done=>{if(context.signal.aborted)done();else context.signal.addEventListener("abort",()=>done(),{once:true});});}finally{clearInterval(hold);stopMetrics();}
   return;
  }
- const mirror=createReadyMemoryMirrorV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin}),timer=setInterval(()=>{mirror.tick();},P.memoryMirrorPollMilliseconds);
+ const mirror=createReadyMemoryMirrorV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin}),census=createPartitionCensusMirrorV1({root:context.root,store:context.environment.SEMIO_FLEET_STORE_ROOT,origin,volume:()=>{const row=readyFilesystemFactsV1(machinePathV1(context.root,".cache")),whole=(value:number|null|undefined):number|null=>typeof value==="number"&&Number.isFinite(value)&&value>=0?Math.floor(value):null;return{freeBytes:whole(row.freeBytes),totalBytes:whole(row.totalBytes),freeInodes:whole(row.freeInodes),totalInodes:whole(row.totalInodes)};}}),timer=setInterval(()=>{mirror.tick();void census.tick();},P.memoryMirrorPollMilliseconds);
  timer.unref?.();mirror.tick();
  try{await runReadyV1(ports,context.signal);}finally{clearInterval(timer);stopMetrics();}
 }

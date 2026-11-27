@@ -131,8 +131,8 @@
       "de": "Die Skriptanbieter-Bezeichnung nennt keinen Port {port}"
     },
     "closure.provider-generated-import": {
-      "en": "The closure of script provider {port} imports generated outputs of {targets}: a provider closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead",
-      "de": "Der Abschluss des Skriptanbieters {port} importiert generierte Ausgaben von {targets}: ein Anbieterabschluss darf keine generierte Ausgabe importieren, weil die Projekte, die ihn nennen, nicht von ihrem Erzeuger abhängen können; importiere sie stattdessen im Befehl"
+      "en": "The closure of script provider {port} imports generated outputs of {targets} in {importers}: a provider closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead",
+      "de": "Der Abschluss des Skriptanbieters {port} importiert generierte Ausgaben von {targets} in {importers}: ein Anbieterabschluss darf keine generierte Ausgabe importieren, weil die Projekte, die ihn nennen, nicht von ihrem Erzeuger abhängen können; importiere sie stattdessen im Befehl"
     },
     "closure.tool-closures-refused": {
       "en": "{count} declared tool closures are refused before the graph read starts: {details}. A tool closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead or remove the tool from the shared closure policy",

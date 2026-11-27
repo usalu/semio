@@ -4,6 +4,7 @@ import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {DoctorPolicyV1,GraphFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1} from "../../🔌️ports/🟦️.ts";
+import {readUnderImageLeaseV1} from "../💾️storage/🔒️image-lease/🟦️.ts";
 import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 const SOURCE=/\.(ts|mjs|js|json)$/u;
@@ -31,25 +32,30 @@ export const graphProbeV1:DoctorProbeV1=Object.freeze({
  async read(ports,context){
   const mount=join(ports.root,...budget.partitions.graph.directory.split("/"),"m");
   if(!existsSync(mount))return {unavailable:"The graph image is not attached or was never created"};
-  const store=join(mount,"generations"),pointerPath=join(store,"current.json");
-  let stat;try{stat=lstatSync(pointerPath);}catch{
+  const facts=await readUnderImageLeaseV1(ports,budget.partitions.graph.directory,()=>{
+   const store=join(mount,"generations"),pointerPath=join(store,"current.json");
+   let stat;try{stat=lstatSync(pointerPath);}catch{return {kind:"absent"} as const;}
+   const pointer=readJsonFileV1(pointerPath,65536) as {version?:unknown;generation?:unknown;manifest?:unknown}|undefined,age=Math.max(0,Math.floor((ports.now()-stat.mtimeMs)/1000));
+   if(!pointer||pointer.version!==1||!Number.isSafeInteger(pointer.generation)||!(pointer.manifest===null||typeof pointer.manifest==="string"&&/^[a-f0-9]{64}$/u.test(pointer.manifest)))return {kind:"damaged",age} as const;
+   const generation=pointer.generation as number;
+   let manifest:GraphFactsV1["manifest"]="none",owners:number|null=null;
+   if(typeof pointer.manifest==="string"){
+    const path=join(store,"m",pointer.manifest+".json");
+    if(!existsSync(path))manifest="missing";
+    else{
+     const value=readJsonFileV1(path,268435456) as {owners?:unknown}|undefined;
+     if(value&&typeof value==="object"&&value.owners&&typeof value.owners==="object"){manifest="present";owners=Object.keys(value.owners).length;}else manifest="damaged";
+    }
+   }
+   return {kind:"present",generation,manifest,owners,age,publishedMs:stat.mtimeMs} as const;
+  });
+  if(facts==="busy")return {unavailable:"The graph image is held by a retirement, regrow or detach"};
+  if(facts.kind==="absent"){
    const absent:GraphFactsV1={pointer:"absent",generation:null,manifest:"none",owners:null,publishedAgeSeconds:null,implementationNewerSeconds:null};
    return {sections:{graph:absent}};
   }
-  const pointer=readJsonFileV1(pointerPath,65536) as {version?:unknown;generation?:unknown;manifest?:unknown}|undefined,age=Math.max(0,Math.floor((ports.now()-stat.mtimeMs)/1000));
-  if(!pointer||pointer.version!==1||!Number.isSafeInteger(pointer.generation)||!(pointer.manifest===null||typeof pointer.manifest==="string"&&/^[a-f0-9]{64}$/u.test(pointer.manifest)))
-   return {sections:{graph:{pointer:"damaged",generation:null,manifest:"none",owners:null,publishedAgeSeconds:age,implementationNewerSeconds:null}}};
-  const generation=pointer.generation as number;
-  let manifest:GraphFactsV1["manifest"]="none",owners:number|null=null;
-  if(typeof pointer.manifest==="string"){
-   const path=join(store,"m",pointer.manifest+".json");
-   if(!existsSync(path))manifest="missing";
-   else{
-    const value=readJsonFileV1(path,268435456) as {owners?:unknown}|undefined;
-    if(value&&typeof value==="object"&&value.owners&&typeof value.owners==="object"){manifest="present";owners=Object.keys(value.owners).length;}else manifest="damaged";
-   }
-  }
-  const newest=newestImplementationMillisecondsV1(context.libraryRoot,context.policy.graph),newer=newest===null?null:Math.max(0,Math.floor((newest-stat.mtimeMs)/1000));
-  return {sections:{graph:{pointer:"present",generation,manifest,owners,publishedAgeSeconds:age,implementationNewerSeconds:newer}}};
+  if(facts.kind==="damaged")return {sections:{graph:{pointer:"damaged",generation:null,manifest:"none",owners:null,publishedAgeSeconds:facts.age,implementationNewerSeconds:null}}};
+  const newest=newestImplementationMillisecondsV1(context.libraryRoot,context.policy.graph),newer=newest===null?null:Math.max(0,Math.floor((newest-facts.publishedMs)/1000));
+  return {sections:{graph:{pointer:"present",generation:facts.generation,manifest:facts.manifest,owners:facts.owners,publishedAgeSeconds:facts.age,implementationNewerSeconds:newer}}};
  },
 });

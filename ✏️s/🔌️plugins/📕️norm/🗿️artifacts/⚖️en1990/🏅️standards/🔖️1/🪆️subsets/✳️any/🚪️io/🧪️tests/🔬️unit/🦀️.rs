@@ -7,7 +7,7 @@ use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::Inference;
 
-use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
+use semio_os_store_test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_and_pack_wire_roundtrip_default() {

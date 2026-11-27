@@ -18,26 +18,31 @@
   "settleMs": 1000
  },
  {
+  "name": "arm instant cancel observer",
+  "js": "(async()=>{window.__cancel={seen:null,clicked:null,banner:null};const t0=performance.now();const find=()=>[...document.querySelectorAll('button')].find(b=>/Cancel replay|Wiedergabe abbrechen/.test(b.innerText||b.getAttribute('aria-label')||''));const mo=new MutationObserver(()=>{const c=window.__cancel;if(c.banner===null&&/Loading document/.test(document.body.innerText))c.banner=Math.round(performance.now()-t0);const b=find();if(b&&c.clicked===null){c.seen=Math.round(performance.now()-t0);b.click();c.clicked=Math.round(performance.now()-t0);mo.disconnect()}});mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true});window.__cancelMo=mo;return 'armed'})()",
+  "settleMs": 100
+ },
+ {
   "name": "start Concrete Forest load",
   "js": "(async()=>'p')()",
   "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
-  "settleMs": 20000
+  "settleMs": 200
  },
  {
   "name": "state while loading",
   "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()",
+  "settleMs": 50
+ },
+ {
+  "name": "cancel clicked while loading",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__cancel.clicked!==null))()",
+  "timeoutMs": 120000,
   "settleMs": 300
  },
  {
-  "name": "load banner appears",
-  "js": "(async()=>'w')()",
-  "until": "(async()=>String(/Loading document/.test(document.body.innerText)))()",
-  "timeoutMs": 300000,
-  "settleMs": 1500
- },
- {
-  "name": "Cancel replay",
-  "js": "(async()=>{const b=[...document.querySelectorAll('button')].find(b=>/Cancel replay|Wiedergabe abbrechen/.test(b.innerText||b.getAttribute('aria-label')||''));if(!b)return 'no cancel button';b.click();return 'clicked'})()",
+  "name": "cancel record",
+  "js": "(async()=>JSON.stringify(window.__cancel))()",
   "settleMs": 2000
  },
  {

@@ -1,6 +1,6 @@
 import {readFileSync,rmSync} from "node:fs";
 import {join} from "node:path";
-import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1,type SidecarRestartPolicyV1} from "./🧮️closure/🟦️.ts";
+import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1,type SidecarClosureMemoryV1,type SidecarRestartPolicyV1} from "./🧮️closure/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {applyServicePriorityV1,servicePriorityTextV1} from "./🪜️priority/🟦️.ts";
 import {startSidecarIdleCompactionV1} from "../../🧹️cache-gc/🛌️idle/⏲️loop/🟦️.ts";
@@ -98,9 +98,9 @@ export function remoteExecutionSidecarEntriesV1(role:RemoteExecutionSidecarRoleV
 }
 
 /** 🧬️ A watch that says when the code this role runs changed (closure digest over file contents), not when some file of the two modules was touched. */
-export function remoteExecutionSidecarWatchV1(role:RemoteExecutionSidecarRoleV1):ReturnType<typeof createSidecarClosureWatchV1>{
+export function remoteExecutionSidecarWatchV1(role:RemoteExecutionSidecarRoleV1,memory?:SidecarClosureMemoryV1):ReturnType<typeof createSidecarClosureWatchV1>{
  const {entries,staticOnly}=remoteExecutionSidecarEntriesV1(role);
- return createSidecarClosureWatchV1(entries,staticOnly,join(import.meta.dir,"..","..",".."));
+ return createSidecarClosureWatchV1(entries,staticOnly,join(import.meta.dir,"..","..",".."),memory);
 }
 
 /** ⏱️ How long the launcher waits before it starts a crashed child again: it doubles from `initialMilliseconds` to `maximumMilliseconds` and starts again from the beginning once a child ran for `stableMilliseconds`. */

@@ -28,10 +28,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// Foreign IO routes are published by each subset's canonical typed declaration.
 pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
     PluginBuilder::<_, PuzzleApps>::new("puzzle")
-        .label("Puzzle")
+        .label(semio_plugin::LocalizedLabel::native("Puzzle", "Puzzle"))
         .version("0.1.0")
         .package_id("semio:puzzle")
-        .declare_artifact(semio_s_artifact_puzzle_2d::artifact::<PuzzleApps>())
+        .declare_artifact(semio_s_artifact_puzzle_2d_pdf_export::artifact::<PuzzleApps>())
         .declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PuzzleApps>())
         .declare_artifact(semio_s_artifact_puzzle_5d::artifact::<PuzzleApps>())
         .editor_mutation_roster::<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp>()

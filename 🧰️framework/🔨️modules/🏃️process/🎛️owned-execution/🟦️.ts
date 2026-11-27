@@ -10,6 +10,7 @@ import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
 export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { ownedKillRecordLineV1, terminateOwnedChildTreeGracefullyV1 } from "../🪓️termination/🟦️.ts";
+import { deathCauseV1, findCrashReportV1, ownedDeathNoteV1 } from "./🪦️death-note/🟦️.ts";
 import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
@@ -39,7 +40,7 @@ export interface OwnedCommandOptions {
   readonly deadline?: ResourceLeaseControl;
   readonly input?: string | Uint8Array;
   readonly auxiliaryInput?: OwnedCommandAuxiliaryInputV1;
-  readonly output?: Readonly<{maximumBytes:number;maximumLines:number}>;
+  readonly output?: Readonly<{maximumBytes:number;maximumLines:number;overflow?:"refuse"|"elide"}>;
   readonly outputConsumer?: (bytes: Uint8Array, stream: OwnedCommandStreamV1) => unknown;
   readonly env?: Readonly<Record<string, string | undefined>>;
   readonly signal?: AbortSignal;
@@ -168,6 +169,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if(limits)stream.pipe(admitted as Transform);
   };
   for(const stream of[child.stdout,child.stderr])stream?.on("data",()=>noteScriptProcessActivityV1());
+  let stderrTail="";child.stderr?.on("data",(bytes:Buffer)=>{stderrTail=(stderrTail+bytes.toString("utf8")).slice(-8192);});
   if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:resultStreamV1(),options.stdout!=="ignore","stdout");
   forward(child.stderr!,process.stderr,true,"stderr");
   commandSignal?.addEventListener("abort", abort, { once: true });
@@ -214,6 +216,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if(auxiliary)requireIssuedResourceControlV1(options.control!);
     if (stopped&&stopped!=="output delivery refused") throw stopRefusal ?? new Error(`${label} stopped: ${stopped}`);
     if(stopped==="output delivery refused"&&status.signal!==null)throw deliveryFailure;
+    const death=deathCauseV1(status.signal,status.code);if(death!==undefined&&!stopped)try{const report=child.pid===undefined?undefined:await findCrashReportV1(child.pid);process.stderr.write(ownedDeathNoteV1({label,pid:child.pid,signal:death,status:status.code,stderrTail,...report===undefined?{}:{report}})+"\n");}catch{}
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;
   } finally {

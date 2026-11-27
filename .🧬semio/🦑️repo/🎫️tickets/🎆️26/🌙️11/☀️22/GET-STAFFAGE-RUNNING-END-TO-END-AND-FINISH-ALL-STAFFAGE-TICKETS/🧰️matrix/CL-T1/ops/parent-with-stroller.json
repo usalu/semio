@@ -1,0 +1,19 @@
+[
+ {
+  "remove": "joint-wrist-[lr]",
+  "list": "structure",
+  "scales": [
+   500
+  ]
+ },
+ {
+  "decision": {
+   "en": "Thermal: every region is the outer surface of its own masses; the outlets are 75 mm patches. Structure: skull, spine, shoulder and pelvic girdle and one 75 mm bone per limb segment, the toddler's spine, the stroller's tube runs, a hood bow and the rear axle; never the body masses themselves. The torso shows two paired rib courses and a sternal bar. The passenger has 2 paired rib courses on their own spine. The wrist joint spheres of 1:200 lie within the end of the 75 mm forearm bar and the start of the hand bar at this thickness and are merged into them.",
+   "de": "Thermik: Jede Region ist die Außenfläche ihrer eigenen Massen; die Auslässe sind 75-mm-Flächen. Tragwerk: Schädel, Wirbelsäule, Schulter- und Beckengürtel und ein 75-mm-Knochen je Gliedabschnitt, die Wirbelsäule des Kleinkinds, die Rohrzüge des Kinderwagens, ein Verdeckbügel und die Hinterachse; nie die Körpermassen selbst. Der Rumpf zeigt zwei beidseitige Rippenzüge und ein Brustbeinstab. Beim Kind sitzen 2 beidseitige Rippenzüge an seiner eigenen Wirbelsäule. Die Handgelenkkugeln von 1:200 liegen in dieser Stärke im Ende des 75 mm starken Unterarmstabs und im Anfang des Handstabs und gehen in ihnen auf."
+  },
+  "scales": [
+   500
+  ],
+  "instead": "Thermal: every region is the outer surface of its own masses"
+ }
+]

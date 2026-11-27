@@ -12,6 +12,8 @@ import {BUILD_HOST_CAPACITY_POLICY_V1,buildCapacityAskV1,buildCapacityDeferredV1
 import {newHostCapacityIdV1,sizeHostRequestV1,withHostCapacityV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {runCapacityCommandV1} from "../⌨️command/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
+import {retryAfterHostWardenCancelV1,requireNoHostWardenCancelBelowV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
+import {mkdirSync} from "node:fs";
 import toolRegistry from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🔣️.json";
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"hb-"));roots.push(root);return root;};
@@ -271,3 +273,20 @@ test("The grant carries a memory limit equal to its reservation, and a job stopp
  expect(killed.at(-1)!).toBeGreaterThan(measured.at(-1)!*2);
  await withBuildCapacityV1(["cache","status"],{LANG:"en_US.UTF-8"},async granted=>{expect(granted.limit).toBeUndefined();expect(granted.handle).toBeUndefined();granted.report({kind:"ok",enforcement:"fake",limitMegabytes:1,peakMegabytes:1,exitCode:0,signal:null,durationMilliseconds:1});},{directory:fresh(),policy:fast,strip});
 },60000);
+
+test("A build whose process the host warden cancelled for memory releases its grant and is admitted again through the gate, instead of failing",async()=>{
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_BUILD_PARALLEL:"10"},lines:string[]=[],reports:string[]=[],grants:number[]=[];
+ const folder=join(directory,"warden","cancelled");mkdirSync(folder,{recursive:true});
+ const sample=async()=>({host:host({availableMegabytes:14000}),swappedOutMegabytes:0});
+ const result=await retryAfterHostWardenCancelV1((attempt,startedMs)=>withBuildCapacityV1(["--tool=bazel","run","@x/y:typecheck","--parallel=10"],environment,async granted=>{
+  grants.push(readdirSync(join(directory,"grants")).length);
+  expect(granted.handle).toBeDefined();
+  if(attempt===1){writeFileSync(join(folder,`4711.${startedMs}.json`),JSON.stringify({version:1,pid:4711,start:"s",kind:"cargo",owner:"o",command:"bun ./script.ts generate",megabytes:216,atMs:startedMs+1,reason:"danger",ancestors:[process.pid]}));requireNoHostWardenCancelBelowV1(process.pid,startedMs,directory);}
+  return "built";
+ },{directory,policy:fast,strip,write:line=>lines.push(line),sample}),{directory,report:line=>reports.push(line),sleep:async()=>undefined});
+ expect(result).toBe("built");
+ expect(grants,"each attempt held exactly one grant, the first was released before the second").toEqual([1,1]);
+ expect(lines.filter(line=>/admitted run with/u.test(line))).toHaveLength(2);
+ expect(reports[0]).toContain("queued again for capacity admission");
+ expect(readdirSync(join(directory,"grants"))).toHaveLength(0);
+});

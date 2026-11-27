@@ -2065,6 +2065,12 @@
       "profile": "prototype"
     },
     {
+      "packageName": "semio-plugin-retained-command-operation",
+      "crateName": "semio_plugin_retained_command_operation",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
       "packageName": "semio-plugin-runtime-exchange",
       "crateName": "semio_plugin_runtime_exchange",
       "platform": "wasm32-wasip2",

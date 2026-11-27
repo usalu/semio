@@ -103,7 +103,7 @@ fn sample_workshop() -> Workshop {
 #[semio_framework_async_macros::async_test]
 async fn workshop_dsl_round_trips_through_document() {
     let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
-    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_store_test_support::assert_dsl_round_trip(&snapshot);
 }
 
 /// 🔤️ `ToValue`/`FromValue` (`semio_framework_value_derive`) over `semio_os_kernel::

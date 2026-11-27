@@ -3,6 +3,8 @@
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.txt"]
 }
+/// 📤️ The media kinds the gismap kind exports to; the pdf route itself is composed by
+/// `semio-s-artifact-gis-gismap-pdf-export` at the composition root.
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
 }
@@ -123,7 +125,8 @@ pub mod io_registry {
     const GISMAP_DIALECT: Dialect = Dialect { artifact_kind: "s.gis.gismap", standard: StandardId("1"), subset: SubsetId("*") };
     const GISMAP_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::GisMapSnapshot, ComposeError> {
+    /// 🔁️ The gismap snapshot an export row reads: the native source, else its json bridge.
+    pub fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::GisMapSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == GISMAP_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => GisMapAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -147,14 +150,6 @@ pub mod io_registry {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
-    const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
         })
     }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
@@ -205,7 +200,6 @@ pub mod io_registry {
                 vec![
                     composer_entry_of::<GisMapAnyComposer>(),
                     ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_svg },
-                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_pdf },
                     ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_png },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_json },
                     ComposerEntry { writes: EXPORT_GEOJSON_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_geojson },

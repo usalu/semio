@@ -38,9 +38,9 @@ use crate::Generation3dViewConfig;
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dViewConfig`.
 ///
-/// @see store::os_store::test_support::mutation_report_json
+/// @see semio_os_store_mutation_report::mutation_report_json
 pub fn generation3d_view_config_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    store::os_store::test_support::mutation_report_json::<Generation3dViewConfig, Generation3dViewConfigMutation>(base_json, mutation_json, after_json)
+    semio_os_store_mutation_report::mutation_report_json::<Generation3dViewConfig, Generation3dViewConfigMutation>(base_json, mutation_json, after_json)
 }
 }
 pub use mutations_wire_codec::*;

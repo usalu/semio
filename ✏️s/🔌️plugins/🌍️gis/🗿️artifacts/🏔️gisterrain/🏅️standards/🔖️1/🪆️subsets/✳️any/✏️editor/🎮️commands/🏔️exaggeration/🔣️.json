@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Set Terrain Exaggeration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "value": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 5,
+      "description": "Vertical exaggeration factor the terrain surface is drawn with; absent means no exaggeration."
+    }
+  }
+}

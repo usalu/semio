@@ -37,7 +37,7 @@ fn mini_graph() -> Graph {
     let graph = &fixture["graph"];
     let nodes = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["edges"].clone())).unwrap();
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), graph["manifestId"].as_str().unwrap().into(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
+    let fixture = JackSnapshot::with_content::<semio_os_store_test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), graph["manifestId"].as_str().unwrap().into(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_snapshot(fixture).unwrap()
 }
 
@@ -221,7 +221,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         }
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
-        let snapshot = graph.to_snapshot::<crate::test_support::FixtureComposition>();
+        let snapshot = graph.to_snapshot::<semio_os_store_test_support::FixtureComposition>();
         let content = content_of(&snapshot);
         let mut preparation = QueryExecutionPreparation::new(query);
         let mut preparation_turns = 0;
@@ -317,7 +317,7 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     let policy = &fixture["retainedExecution"];
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
-    let source = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
+    let source = mini_graph().to_snapshot::<semio_os_store_test_support::FixtureComposition>();
     let source_owner = source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source content owner");
     let query = parse("MATCH (a:Apartment) RETURN a.name").expect("query");
     let mut preparation = QueryExecutionPreparation::new(query);
@@ -368,7 +368,7 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     let property_bytes = fixture["retainedExecution"]["entityAdmission"]["oversizedPropertyBytes"].as_u64().expect("oversized property bytes") as usize;
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
-    let node_source = node_graph.to_snapshot::<crate::test_support::FixtureComposition>();
+    let node_source = node_graph.to_snapshot::<semio_os_store_test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&node_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
     let node_owner = content_of(&node_source);
     let nodes = node_owner.read();
@@ -377,7 +377,7 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     assert_eq!(source_node.properties.get("payload").and_then(PropertyValue::as_str).map(str::len), Some(property_bytes));
     let mut edge_graph = mini_graph();
     edge_graph.edges.get_mut("e1").expect("fixture edge").properties.insert("payload".into(), PropertyValue::String("e".repeat(property_bytes)));
-    let edge_source = edge_graph.to_snapshot::<crate::test_support::FixtureComposition>();
+    let edge_source = edge_graph.to_snapshot::<semio_os_store_test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&edge_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
     let edge_owner = content_of(&edge_source);
     let edges = edge_owner.read();

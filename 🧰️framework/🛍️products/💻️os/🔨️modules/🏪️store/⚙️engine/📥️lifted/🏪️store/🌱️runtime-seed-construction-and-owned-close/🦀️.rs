@@ -90,6 +90,11 @@ where
 
     pub async fn construct<C:ArtifactStorePublication<P>>(candidate: &mut Option<ArtifactEnvelope<P, Mutation>>, actor: ActorId) -> Result<Self, VcsError>
     where Mutation: semio_os_spr::ColdMutation<P> {
+        #[cfg(target_os = "macos")] #[repr(C)] struct DebugMstats { total: usize, chunks: usize, used: usize, free_chunks: usize, free: usize }
+        #[cfg(target_os = "macos")] extern "C" { fn mstats() -> DebugMstats; }
+        #[cfg(target_os = "macos")] let debug_h = || unsafe { mstats().used };
+        #[cfg(not(target_os = "macos"))] let debug_h = || 0usize;
+        let debug_0 = debug_h();
         let envelope = candidate.as_mut().expect("artifact store construction holds its candidate envelope");
         if actor.0.trim().is_empty() { return Err(VcsError::ValidationFailed("opened actor identity cannot be empty".into())); }
         validate_durable_history(envelope).await?;
@@ -98,6 +103,7 @@ where
         validate_history_lanes(envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
         let current = if loaded_applied_edit_ids.is_empty() { envelope.vcs.genesis.facts().share_snapshot() } else { Arc::new(Self::fold_history(envelope, &loaded_applied_edit_ids, &supersessions).await?) };
         let initial_digest = envelope.vcs.genesis.facts().digest();
+        let debug_a = debug_h();
         let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
         let ArtifactStoreInitializationOwnerCatalog { mut applied_edit_ids, mut redo_edit_ids, mut cursor_applied_edit_ids, mut cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
         cursor_applied_edit_ids.extend(loaded_applied_edit_ids.iter().cloned());
@@ -105,6 +111,7 @@ where
         applied_edit_ids.extend(loaded_applied_edit_ids);
         redo_edit_ids.extend(loaded_redo_edit_ids);
         envelope.cursor = Some(ArtifactCursor::new(cursor_applied_edit_ids, cursor_redo_edit_ids, current_checkpoint_id.clone()));
+        let debug_b = debug_h();
         let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
         let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
         revision_accumulator.reconcile::<P, Mutation>(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits, &supersessions, StackMirrorDirt::ALL, None);
@@ -114,9 +121,11 @@ where
             units.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
         }
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
+        let debug_c = debug_h();
         let generation = 0;
         let local_actor_id = actor;
         let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, fresh_replica_clock().actor)?;
+        let debug_d = debug_h();
         C::publish_native_snapshot().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
         let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
         if !rejected_seed_identities.is_empty() {
@@ -125,6 +134,7 @@ where
         let snapshot_read_leases = SnapshotReadLeaseRegistryOwner::new();
         assert!(snapshot_read_leases.publish_authority(generation, content_revision), "new Store must publish its exact snapshot authority");
         let envelope = candidate.take().expect("an accepted construction takes its validated envelope exactly once");
+        if std::env::var_os("SEMIO_DEBUG_BORN").is_some() { eprintln!("[DEBUG] store construct history {} catalog+cursor {} revision {} seed {} tail {}", debug_a as isize - debug_0 as isize, debug_b as isize - debug_a as isize, debug_c as isize - debug_b as isize, debug_d as isize - debug_c as isize, debug_h() as isize - debug_d as isize); }
         Ok(Self {
             log: StoreLog {
                 envelope: std::mem::ManuallyDrop::new(envelope),

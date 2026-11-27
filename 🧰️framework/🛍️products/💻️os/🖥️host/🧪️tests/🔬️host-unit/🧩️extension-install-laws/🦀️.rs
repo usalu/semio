@@ -30,7 +30,7 @@
         let manifest = store::extension::ExtensionPackageManifest {
             extension_id: extension_id.into(),
             directory_name: "🧩️sample-extension".into(),
-            label: extension_id.into(),
+            label: store::extension::LocalizedLabel::native(extension_id, extension_id),
             version: "0.1.0".into(),
             extends: extends.into(),
             capabilities,
@@ -77,7 +77,7 @@
         let mismatched_manifest = store::extension::ExtensionPackageManifest {
             extension_id: "ext-mismatch".into(),
             directory_name: "⚖️ext-mismatch".into(),
-            label: "Ext Mismatch".into(),
+            label: store::extension::LocalizedLabel::native("Ext Mismatch", "Erweiterungsabweichung"),
             version: "0.1.0".into(),
             extends: "flow".into(),
             capabilities: vec![],

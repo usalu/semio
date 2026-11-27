@@ -1,0 +1,20 @@
+{
+  "description": "Language-agnostic vectors of the wave admission: the decision of (footprint MB, grant MB, host) under the declared policy (holdPressure critical, swap-out 32 MB/s, floor 1024 MB, over-grant from 100 %). Swap USED never holds.",
+  "decisions": [
+    {"name": "calm host under the grant", "footprint": 2000, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 0, "swapUsed": 9600}, "expect": "admit"},
+    {"name": "swap used 9.6 of 11 GB but nothing moves", "footprint": 500, "grant": 3072, "host": {"pressure": "normal", "available": 6000, "swapOut": 0, "swapUsed": 9830}, "expect": "admit"},
+    {"name": "exactly at the grant", "footprint": 3072, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 0, "swapUsed": 0}, "expect": "overGrant"},
+    {"name": "4.6 GB against a 3 GB grant", "footprint": 4700, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 0, "swapUsed": 0}, "expect": "overGrant"},
+    {"name": "85 percent is not over", "footprint": 2610, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 0, "swapUsed": 0}, "expect": "admit"},
+    {"name": "swap-out rate at the limit", "footprint": 1000, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 32, "swapUsed": 0}, "expect": "hostBusy"},
+    {"name": "swap-out rate just below the limit", "footprint": 1000, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": 31, "swapUsed": 0}, "expect": "admit"},
+    {"name": "pressure critical", "footprint": 1000, "grant": 3072, "host": {"pressure": "critical", "available": 8000, "swapOut": 0, "swapUsed": 0}, "expect": "hostBusy"},
+    {"name": "pressure warn alone does not hold", "footprint": 1000, "grant": 3072, "host": {"pressure": "warn", "available": 8000, "swapOut": 0, "swapUsed": 0}, "expect": "admit"},
+    {"name": "available under the floor", "footprint": 1000, "grant": 3072, "host": {"pressure": "normal", "available": 1023, "swapOut": 0, "swapUsed": 0}, "expect": "hostBusy"},
+    {"name": "available at the floor", "footprint": 1000, "grant": 3072, "host": {"pressure": "normal", "available": 1024, "swapOut": 0, "swapUsed": 0}, "expect": "admit"},
+    {"name": "over grant wins over a busy host", "footprint": 4000, "grant": 3072, "host": {"pressure": "critical", "available": 10, "swapOut": 500, "swapUsed": 0}, "expect": "overGrant"},
+    {"name": "no rate known yet", "footprint": 1000, "grant": 3072, "host": {"pressure": "normal", "available": 8000, "swapOut": null, "swapUsed": null}, "expect": "admit"},
+    {"name": "no host sample", "footprint": 1000, "grant": 3072, "host": null, "expect": "admit"},
+    {"name": "no grant", "footprint": 9000, "grant": null, "host": null, "expect": "admit"}
+  ]
+}

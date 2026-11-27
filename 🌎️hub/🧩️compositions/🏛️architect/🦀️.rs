@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// longer embeds them, and the guest's validators read them through the schema registry's package-asset reader.
 pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
     let mut builder = PluginBuilder::<_, ArchitectApps>::new("architect")
-        .label("Architect")
+        .label(semio_plugin::LocalizedLabel::native("Architect", "Architect"))
         .version("0.1.0")
         .package_id("semio:architect")
         .artifact(crate::artifacts::program::declaration().map_err(PluginAssemblyError::definition)?)

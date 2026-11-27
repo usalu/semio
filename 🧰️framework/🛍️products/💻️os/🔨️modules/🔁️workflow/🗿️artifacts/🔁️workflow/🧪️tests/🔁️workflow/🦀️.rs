@@ -61,7 +61,7 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
         read_node("🧪️tests/🧫️fixtures/🧬️mutations/📤bind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
         read_node("🧪️tests/🧫️fixtures/🧬️mutations/⛔️unbind-output/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
-        store::os_store::test_support::assert_wire_witness::<WorkflowMutation>(witness);
+        semio_os_store_test_support::assert_wire_witness::<WorkflowMutation>(witness);
     }
 }
 
@@ -241,35 +241,35 @@ async fn empty_workflow_snapshot_matches_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn workflow_snapshot_dsl_pack_round_trips() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn workflow_operation_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode(AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode(RemoveNode { node_id: "n1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts(ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: "e1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode(MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RenameNode(RenameNode { node_id: "n1".into(), label: "Renamed".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None }) }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: "p1".into(), parameter: Box::new(WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false }) }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField(BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePorts(SetNodePorts { nodes: vec![WorkflowNodePorts { node_id: "n1".into(), inputs: Vec::new(), height: 74.0 }, WorkflowNodePorts { node_id: "n2".into(), inputs: Vec::new(), height: 56.0 }] }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddInput(AddInput {
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode(AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode(RemoveNode { node_id: "n1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts(ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: "e1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode(MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::RenameNode(RenameNode { node_id: "n1".into(), label: "Renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None }) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: "p1".into(), parameter: Box::new(WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false }) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField(BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePorts(SetNodePorts { nodes: vec![WorkflowNodePorts { node_id: "n1".into(), inputs: Vec::new(), height: 74.0 }, WorkflowNodePorts { node_id: "n2".into(), inputs: Vec::new(), height: 56.0 }] }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::AddInput(AddInput {
         input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many },
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput(UnbindInput { input_id: "in-1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["n1".into(), "n2".into()], dx: 40.0, dy: -12.5 }));
-    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePositions(SetNodePositions {
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput(UnbindInput { input_id: "in-1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["n1".into(), "n2".into()], dx: 40.0, dy: -12.5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePositions(SetNodePositions {
         positions: vec![WorkflowNodePosition { node_id: "n1".into(), x: 120.0, y: 40.0 }, WorkflowNodePosition { node_id: "n2".into(), x: -30.5, y: 260.0 }],
     }));
 }
@@ -277,20 +277,20 @@ async fn workflow_operation_op_text_round_trips_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn workflow_operation_backwards_restores_pre_state() {
     let document = sample_workflow_snapshot().await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode(AddNode { node: workflow_node("c", Vec::new(), Vec::new()).await })).await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode(MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 })).await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 })).await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::SetNodePositions(SetNodePositions { positions: vec![WorkflowNodePosition { node_id: "a".into(), x: 7.0, y: 8.0 }] })).await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true }) })).await;
-    store::os_store::test_support::assert_operation_round_trip(
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode(AddNode { node: workflow_node("c", Vec::new(), Vec::new()).await })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode(MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::SetNodePositions(SetNodePositions { positions: vec![WorkflowNodePosition { node_id: "a".into(), x: 7.0, y: 8.0 }] })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true }) })).await;
+    semio_os_store_test_support::assert_operation_round_trip(
         &document,
         WorkflowMutation::AddInput(AddInput { input: WorkflowInput { id: "in-2".into(), kind_id: "kind.b".into(), selector: "**/*".into(), required: false, multiplicity: PortMultiplicity::One } }),
     )
     .await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } })).await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } }))
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } }))
         .await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() })).await;
 }
 
 /// 🧵️ Removing the LAST element of each cascade-owning list keeps append-order stable, so this can
@@ -300,14 +300,14 @@ async fn workflow_operation_backwards_restores_pre_state() {
 #[semio_framework_async_macros::async_test]
 async fn remove_operations_backwards_restores_cascade_deleted_dependents() {
     let mut document = sample_workflow_snapshot().await;
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode(RemoveNode { node_id: "b".into() })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode(RemoveNode { node_id: "b".into() })).await;
 
     document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p4".into(), node_id: "a".into(), field_path: "/label".into() });
     document.graph = sync_workflow_parameter_ports(&document.graph, &document.parameter_bindings);
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p4".into() })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p4".into() })).await;
 
     document.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
-    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() })).await;
+    semio_os_store_test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() })).await;
 }
 
 /// 🎛️ A document whose middle node `b` and last node `c` have parameter bindings that were never resynced into their ports (`a` stays synced).
@@ -401,7 +401,7 @@ async fn independent_package_fixture_matches_json_oracle() {
     assert_eq!(oracle, fixture["expected"]);
     let decoded: WorkflowSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(&oracle).expect("oracle JSON"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("domain decoder");
     assert_eq!(decoded, document);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
 }
 
 //#region 🔖️GestureLeaves

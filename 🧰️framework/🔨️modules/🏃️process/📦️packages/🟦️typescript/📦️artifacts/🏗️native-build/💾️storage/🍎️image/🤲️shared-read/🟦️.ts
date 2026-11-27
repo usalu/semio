@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/process/artifacts/native-build/storage/image/shared-read` entry: explicit re-exports of the source module that owns each member. */
+export { NATIVE_IMAGE_SHARED_READ_POLICY_V1, createNativeImageSharedReaderV1, createNativeImageSharedSampleV1, nativeImageSharedLeasePortV1, nativeImageSharedReadResourceV1, withNativeImageSharedReadV1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
+export type { NativeImageSharedLeasePortV1, NativeImageSharedReaderInputV1, NativeImageSharedReaderV1, NativeImageSharedSampleV1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";

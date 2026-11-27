@@ -2,7 +2,7 @@ use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    semio_os_store_test_support::assert_dsl_round_trip(&En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -32,6 +32,6 @@ async fn high_strength_connection_example_fixture_parses_and_round_trips() {
     assert!(class >= 1 && class <= 3, "expected class 1–3 for HEB 260 S460, got {class}");
     assert!(document.load_cases.iter().any(|lc| lc.kind == semio_s_artifact_norm_en1993_model::ActionKind::Permanent));
     assert!(document.load_cases.iter().any(|lc| lc.kind == semio_s_artifact_norm_en1993_model::ActionKind::Imposed));
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 

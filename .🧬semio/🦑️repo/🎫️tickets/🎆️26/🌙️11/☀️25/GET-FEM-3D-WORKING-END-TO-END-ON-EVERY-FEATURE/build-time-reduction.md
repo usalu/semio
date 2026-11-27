@@ -65,6 +65,21 @@ Browser-only bugs, such as today's live-cleanup stall, need this loop several ti
 
 The repo build tools already have cache lanes (`cache_status`). Use them for the wasm target too, so a framework crate is compiled once for all 50+ machines. The native route used here bypasses them because `repo run` never got past the graph read; fix that first.
 
+## Measured after switching the ticket route to option 1
+
+| Build | Time |
+|---|---|
+| Full rebuild after the profile switch (744 crates) | 52 m 45 s |
+| Incremental, framework-root edit (652 crates) | 15 m 33 s |
+| Incremental, framework-root edit | 27 m 29 s |
+
+The 27 m 29 s build was slower than the earlier incremental one. It ran while peers' cargo builds were competing for CPU.
+
+**Pitfall:** Cargo never collects incremental session directories whose crate hash changed. With a framework that changes constantly, `C:\t\wdb\…\incremental` grew to **105 GB, with 1168 directories**, in one afternoon. That filled C: and broke every build on the machine.
+
+- The ticket route now prunes incremental directories older than 4 h before each build.
+- Option 1 in the repo build policy must ship with the same garbage collection, either `cargo clean gc` or a prune by age or crate hash, plus a size cap.
+
 ## Recommendation
 
 1. **Now:** option 1 for my own iteration builds (ticket-local profile), and option 2 as part of the live-cleanup fix, which adds async-host test vectors.

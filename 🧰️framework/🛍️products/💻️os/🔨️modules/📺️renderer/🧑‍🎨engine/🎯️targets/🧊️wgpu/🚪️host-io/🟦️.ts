@@ -22,6 +22,8 @@ import type { WgpuLocalCatalog } from "../🗂️local-catalog/🟦️.ts";
 import { createWgpuPickedFiles, wgpuFormatClaimsJson, type WgpuPickedFiles } from "../🛬️picked-files/🟦️.ts";
 import type { PickedFileFormatCatalogPortV1 } from "../../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts";
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
+import type { LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
+import { parseLocalizedLabelV1 } from "@semio-tech/framework-manifest/localized-labels";
 import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json" with { type: "json" };
 import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
 
@@ -124,7 +126,7 @@ export type WgpuInstalledExtensionRecord = {
   readonly extensionId: string;
   readonly directoryName: string;
   readonly version: string;
-  readonly label: string;
+  readonly label: LocalizedLabel;
   readonly extends: string;
   readonly moduleUrl: string;
   readonly packageHash: string;
@@ -228,9 +230,9 @@ function pickExtensionPackage(): Promise<Uint8Array<ArrayBuffer> | null> {
 function installedExtensionRecord(input: unknown): WgpuInstalledExtensionRecord {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("extension store returned no record");
   const row = input as Record<string, unknown>;
-  for (const key of ["extensionId", "directoryName", "version", "label", "extends", "moduleUrl", "packageHash"] as const) if (typeof row[key] !== "string" || (key !== "label" && row[key].length === 0)) throw new Error(`extension store returned invalid ${key}`);
+  for (const key of ["extensionId", "directoryName", "version", "extends", "moduleUrl", "packageHash"] as const) if (typeof row[key] !== "string" || row[key].length === 0) throw new Error(`extension store returned invalid ${key}`);
   if (!Number.isSafeInteger(row.installedAt) || Number(row.installedAt) < 0) throw new Error("extension store returned invalid installedAt");
-  return row as WgpuInstalledExtensionRecord;
+  return { ...row, label: parseLocalizedLabelV1(row.label, "extension store label") } as WgpuInstalledExtensionRecord;
 }
 
 async function extensionStoreFetch(init?: RequestInit, query = ""): Promise<unknown> {

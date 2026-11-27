@@ -21,7 +21,7 @@ use semio_plugin_window_kits::AppActionRegistry;
     use semio_plugin_testing_laws::artifact_app_laws;
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     use semio_plugin_reactor_app::PluginApp;
-    use semio_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+    use semio_plugin_retained_command_operation::typed_operation::PendingPublicationOutcome;
     #[doc(hidden)]
 pub async fn test_retained_keyed_dispatch<A, F, R>(
         mut registry: F,

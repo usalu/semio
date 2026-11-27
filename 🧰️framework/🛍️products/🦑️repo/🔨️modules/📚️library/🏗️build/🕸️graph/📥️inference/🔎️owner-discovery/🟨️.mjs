@@ -341,19 +341,18 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
  const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0);};
- const dbgT0=performance.now(),dbgMarks=[],dbg=name=>dbgMarks.push(name+"="+Math.round(performance.now()-dbgT0));
- await stage("declaration");dbg("stage");
+ await stage("declaration");
  askOwnerRegistryV1(workspaceRoot,registry,["row",owner.name]);
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
- const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));dbg("manifest");
- const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),dbgCargo=dbg("cargo-targets"),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
+ const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));;
+ const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
  if(json.name!==owner.name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
- json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot),...await printDocumentTargets(json,owner.root,workspaceRoot,scripts)};dbg("component-targets");
+ json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot),...await printDocumentTargets(json,owner.root,workspaceRoot,scripts)};;
  askOwnerRegistryV1(workspaceRoot,registry,["providers",owner.root,targets.length>0,[...inputNames]]);
- const contracts=ownerGeneratorContractsV1(workspaceRoot),providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),dbgP=dbg("providers"),shared=providers.length?await sharedCatalogV1(workspaceRoot,registry,providers,context):{contributions:[],files:[]},dbgS=dbg("shared-catalog"),catalogContributions=shared.contributions;
+ const contracts=ownerGeneratorContractsV1(workspaceRoot),providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),shared=providers.length?await sharedCatalogV1(workspaceRoot,registry,providers,context):{contributions:[],files:[]},catalogContributions=shared.contributions;
  scripts.generatedOutput=(path,context)=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context);
  const catalogFiles=shared.files;
- await stage("catalog-targets");dbg("end");if(performance.now()-dbgT0>500)process.stderr.write("[DEBUG] [owner-declaration] "+owner.name+" "+dbgMarks.join(" ")+"\n");
+ await stage("catalog-targets");
  if(catalogContributions.length&&targets.length){
   if(json.name==="@semio-tech/plugin-registry")json.targets={...json.targets,...playgroundSessionTargets(catalogFiles,workspaceRoot,catalogContributions)};
   if(json.name==="@semio-tech/framework-os-dev")json.targets={...json.targets,...await playgroundPreparationTargets(catalogFiles,workspaceRoot,owner.root,contracts,catalogContributions,context)};

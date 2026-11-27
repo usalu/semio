@@ -168,7 +168,7 @@ pub fn collect_tree_slots(tree: &semio_ui_retained_tree::tree::UiTree, window_id
                 if slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID && slot.params_json.len() <= PRESENTED_MEDIA_DESCRIPTOR_BYTES && slot.app_id == owner.controller_id {
                     if let Ok(props) = serde_json::from_str::<serde_json::Value>(&slot.params_json) {
                         let clip = intersect(rect, inherited_clip);
-                        if valid_bounds(rect) && valid_bounds(clip) && semio_ui_retained_tree::reconcile::media_transport_contract_valid(&props) && resource_matches_owner(&props, owner) {
+                        if valid_bounds(rect) && valid_bounds(clip) && semio_ui_retained_tree::reconcile::media_transport_contract_valid(&slot.params_json) && resource_matches_owner(&props, owner) {
                             if slots.len() == PRESENTED_MEDIA_SLOT_CAPACITY {
                                 return false;
                             }

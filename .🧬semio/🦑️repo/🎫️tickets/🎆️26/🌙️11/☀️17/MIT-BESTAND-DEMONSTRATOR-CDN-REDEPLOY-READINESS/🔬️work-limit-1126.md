@@ -50,3 +50,28 @@ Probe: `🗑️generated/work-limit-probe-agg.cjs` (the ticket's `bearbeiten-ing
 Per second, steady state after about 10 s: 620k to 730k work units, 33 to 41 receipts above 100 work (about 17,000 work, 60 copied items, 18 to 25 KB copied each) plus about 3,300 tiny receipts (about 5 work each). Cumulative work 37.4M at 61 s (rising about 650k/s), so the 50M lifetime stock is gone at about 80 s. Meanwhile the command never completes: 4,335 `command-pending` replies, the same 4 pages accepted, 8 `command-complete`. Items processed per second (about 2,300) are about 60 times what one parse of the 20 KB pack needs, so the guest repeats the same ingress work instead of progressing.
 
 Conclusion so far: the drain is repeated ingress work on an operation that is not progressing, not legitimate per-reply cost, and not a quadratic cost curve (work per big receipt is flat at about 17k). Renewing stock per settled reply would only hide it. Whether current source still repeats is decided by the native `lifetime_fuel` test (queued) and the lease fix noted in `🔬️koordinator-wc3-command-ingress.md`; both need guests rebuilt from current source.
+
+## Support build and overlay finding (2026-11-26 06:35)
+
+`repo run @semio-tech/framework-plugin-web:support` completed on the second attempt (the first was cancelled by the memory warden at about 35 min). Its output is only the `🧵️shard` worker and the preview2 shim under `.cache/b/p/m/browser/prototype/modules`. Neither contains the original-source / succession / reserve code (0 matches for `ORIGINAL_STOCK_FLOOR` and `requireStock`). That code is emitted into each guest's `🌉️bridge.js` by `component-bridge-source` through the materialization step that also writes `🛂️.descriptor.semio` and `🔣️.json` for the module (`🏗️materialization/🚀️commands/🟦️.ts`).
+
+Consequences:
+- The reserve fix reaches the browser only through regenerated `🌉️bridge.js` files, one per guest module. It needs a jco transpile / materialization of each already-compiled guest, not a Rust recompile. `support` and the shard worker do not carry it.
+- The staged guests (cad and process Nov 21, demonstrator Nov 23) have bridges without any stock gate at all, so an overlay probe on them cannot show the reserve behaviour; the browser measurement above is old-guest behaviour only.
+- Sequencing: any component already materialized from the earlier bridge source keeps the old behaviour until its bridge is regenerated. Components materialized after 2026-11-26 06:00 pick it up.
+
+Still open: the native `lifetime_fuel` test (stopped on request to free memory, not restarted). It decides whether current guest source still repeats the ingress work; the root-cause drain fix waits on it and on a fresh guest build.
+
+## Native measurement of current source (2026-11-26 08:05)
+
+`a_large_pack_settles_within_its_operation_lifetime_fuel` (isolated store, `-j 2`): the 26,538-byte Process pack settles in 4,378 host turns and 176,563 work units, 0.35% of the 50,000,000 stock, with the exact expected output. The staged Nov 23 guest spent 37,447,596 work in 61 s on the same kind of pack and never completed (4,335 `command-pending` replies). Fixture bound tightened to `maximumWorkUnits` 400,000.
+
+Decision: current source's host-configuration ingress does not drain the stock, so the browser drain on the old guest comes from guest code that predates the fixes already in source (armed command lease, pending-holder retention, the 32-step burst); it is not a per-reply cost that grows with the document and not a case for per-reply stock renewal. No Rust drain fix is made. Limits: this covers the Bearbeiten host-configuration path only. Koordinator's typed-operation ingress (`semio-plugin-instance` lease path) has native lease laws but no native work-budget measurement, and neither pane was verified in a browser against guests built from current source.
+
+Wrapper issue: a shared-store test build waited 30 min on claims held by five `components describe ... --facet browser` bun processes without naming them; `--store=isolated` ran immediately.
+
+## Koordinator setContributions host ingress (2026-11-26 08:50)
+
+Generated fixture case `cad-raw-contributions-lane-at-the-wire-ceiling` (CAD's own declaration shape: unbounded `RawText`, identity mutation; 1,890 x 26-byte units = 49,140 bytes, the largest cad pack the wire notes allow): settles in 386 host turns and 6,164 work units with byte-identical output, bound `maximumWorkUnits` 20,000 (fixture `🔣️.json`, schema `📐️.json`, test `a_large_pack_settles_within_its_operation_lifetime_fuel`, run `--store=isolated -j 2`). Work 0.012% of the 50M stock, so Koordinator's host-side ingress cannot drain it.
+
+Not covered natively: the typed-operation publication after ingress and Set Active Example (mounted owner / covering-grant path). Its native law `a_document_archive_load_and_its_typed_publication_complete_under_the_browser_mounted_grant` lives in the part-4 plugin test host, which did not compile on 2026-11-25 (115 errors from other included tests) and was not retried here. The old-guest Koordinator drain (21,570 replies, repeated `typed_operation`/`command_ingress` turns) is therefore attributed to the lease/pending-holder defect already fixed in source, by analogy with the Bearbeiten measurement, and remains unverified until a guest built from current source runs in the browser.

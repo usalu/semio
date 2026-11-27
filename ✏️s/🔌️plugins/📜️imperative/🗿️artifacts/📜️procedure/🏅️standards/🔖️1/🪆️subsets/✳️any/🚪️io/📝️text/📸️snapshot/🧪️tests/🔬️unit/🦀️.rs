@@ -12,7 +12,7 @@ fn step(id: &str, kind: &str) -> Step {
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_dsl_round_trips() {
     let document = parse_dsl(PROCEDURE_EXAMPLE_TEXT).expect("parse the demo asset");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 //#region DSL text round trips and error paths
@@ -31,8 +31,8 @@ async fn flow_content_round_trips_nested_control_bodies() {
 
     let seed = StdBTreeMap::from([("counter".into(), Value::Atom(Atom::Integer(1))), ("label".into(), Value::Atom(Atom::String("x".into())))]);
     let document = crate::procedure_snapshot_naming(&path, &seed);
-    store::os_store::test_support::assert_dsl_round_trip(&document);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
     assert_pack_keeps_the_handles(&document);
     neural_engine::ColdRetire::retire_cold(seed);
 }
@@ -51,8 +51,8 @@ async fn text_content_round_trips_dictionary_and_atom_variants() {
     let restored = crate::seed_from_text_content_snapshot(&crate::text_content_snapshot_from_seed(&seed));
     assert_eq!(restored, seed);
     let document = crate::procedure_snapshot_naming(&Path::new(), &seed);
-    store::os_store::test_support::assert_dsl_round_trip(&document);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
     assert_pack_keeps_the_handles(&document);
     neural_engine::ColdRetire::retire_cold(restored);
     neural_engine::ColdRetire::retire_cold(seed);
@@ -98,7 +98,7 @@ async fn the_demo_asset_names_the_default_program() {
 
 /// 🧬️ The derived pack declares its schema identity and carries the exact child handles.
 fn assert_pack_keeps_the_handles(document: &ProcedureSnapshot) {
-    store::os_store::test_support::assert_pack_schema_identity(document);
+    semio_os_store_test_support::assert_pack_schema_identity(document);
     let decoded: ProcedureSnapshot = pack::snapshot::ArtifactPack::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(document)).expect("decode");
     assert_eq!((decoded.flow.child_id.as_str(), decoded.text.child_id.as_str()), (document.flow.child_id.as_str(), document.text.child_id.as_str()));
 }

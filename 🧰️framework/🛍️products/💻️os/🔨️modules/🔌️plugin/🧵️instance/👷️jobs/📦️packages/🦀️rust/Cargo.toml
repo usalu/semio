@@ -39,6 +39,7 @@ semio-plugin-document-media = { path = "../../../../🗃️document/📦️packa
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust"}
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust"}
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }

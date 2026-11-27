@@ -6,7 +6,7 @@ use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, Not
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
     let document = parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -108,5 +108,5 @@ async fn note_dsl_round_trips_representative_document() {
             },
         ],
     };
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }

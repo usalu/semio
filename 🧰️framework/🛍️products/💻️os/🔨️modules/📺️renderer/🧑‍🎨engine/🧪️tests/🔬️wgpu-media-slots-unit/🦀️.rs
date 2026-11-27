@@ -3,6 +3,11 @@ use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiRevision};
 use semio_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
 use semio_ui_retained_tree::tree::{UiDocumentTree, UiTree};
 
+/// 🏟️ Opens the serialized UI arena scope that every retained tree of one law lives in.
+fn arena() -> semio_ui_contract_values::testkit::UiArenaFixture {
+    semio_ui_contract_values::testkit::UiArenaFixture::new()
+}
+
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap()
 }
@@ -69,6 +74,7 @@ pub(super) fn retire(mut tree: UiTree) {
 
 #[test]
 fn media_slot_fixture_composes_body_clip_and_exact_owner() {
+    let _arena = arena();
     let fixture = fixture();
     for vector in fixture["cases"].as_array().unwrap() {
         let mut props = props();
@@ -97,6 +103,7 @@ fn media_slot_fixture_composes_body_clip_and_exact_owner() {
 
 #[test]
 fn media_slot_caps_refuse_the_entire_overflow_publication() {
+    let _arena = arena();
     let fixture = fixture();
     let tree = tree(props(), &fixture["cases"][0]);
     let mut slots = Vec::new();
@@ -110,6 +117,7 @@ fn media_slot_caps_refuse_the_entire_overflow_publication() {
 
 #[test]
 fn media_slot_descriptor_byte_budget_refuses_oversized_publication() {
+    let _arena = arena();
     let fixture = fixture();
     let mut props = props();
     let budget = &fixture["descriptorBudget"];
@@ -144,6 +152,7 @@ fn media_slot_occlusion_vectors_include_foreground_window_chrome() {
 
 #[test]
 fn media_slot_concealment_preserves_the_accepted_transport_identity() {
+    let _arena = arena();
     let fixture = fixture();
     let vectors = fixture["cases"].as_array().unwrap();
     let visible = vectors.iter().find(|vector| vector["expectedCount"] == 1 && vector["expectedOccluded"] == false).unwrap();
@@ -182,6 +191,7 @@ fn media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_re
 
 #[test]
 fn media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority() {
+    let _arena = arena();
     let fixture = fixture();
     let vector = &fixture["cases"][0];
     let collect = |props, owner: &PresentedMediaOwner, vector: &serde_json::Value| {

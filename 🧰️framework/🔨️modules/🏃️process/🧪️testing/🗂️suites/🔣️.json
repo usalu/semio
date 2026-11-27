@@ -995,7 +995,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🦀️real/🟦️.ts"
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🦀️real/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📸️snapshot/🟦️.ts"
       ],
       "platforms": [
         "darwin",

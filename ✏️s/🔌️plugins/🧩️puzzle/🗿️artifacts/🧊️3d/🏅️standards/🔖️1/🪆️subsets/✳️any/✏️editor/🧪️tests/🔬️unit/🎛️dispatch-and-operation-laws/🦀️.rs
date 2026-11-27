@@ -235,7 +235,7 @@ async fn edited_document_survives_export_pack_and_history() {
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_play_projection_pack_round_trips() {
     let app = app().await;
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
 }
 
 /// 🧬️ Wave B9 lane 2: the TYPED half of the snapshot is the authority
@@ -431,7 +431,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

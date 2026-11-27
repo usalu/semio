@@ -153,7 +153,7 @@ test("the kit is exactly the sealed topology files with fresh checksums, verifie
  const checked=Bun.spawnSync(["shasum","-a","256","-c","SHA256SUMS"],{cwd:kit,stdout:"pipe",stderr:"pipe"});
  expect(checked.exitCode,checked.stdout.toString()+checked.stderr.toString()).toBe(0);
  expect(checked.stdout.toString().split("\n").filter(line=>line.endsWith(": OK")).length).toBe(expected.length);
- if(python!==undefined){
+ if(python!==null){
   expect(Bun.spawnSync([python,"-I",oracle,"kit",kit,snapshot],{stdout:"pipe"}).stdout.toString().trim()).toBe("ok");
   expect(Bun.spawnSync([python,"-I",oracle,"verify",snapshot],{stdout:"pipe"}).stdout.toString().trim()).toBe("ok");
  }
@@ -257,7 +257,7 @@ function oldCheckout(fleet:Awaited<ReturnType<typeof fleetStore>>,differ:number,
 test("an old checkout is brought to the sealed fleet code: differing files are kept under .cache/f/lost, missing ones are added, identical ones stay, and a second run changes nothing",async()=>{
  const fleet=await fleetStore(),tree=oldCheckout(fleet,3,2),total=fleet.files.length;
  const before=new Map(fleet.files.map(file=>[file.path,existsSync(join(tree,...file.path.split("/")))?readFileSync(join(tree,...file.path.split("/"))):undefined]));
- if(python!==undefined)expect(Bun.spawnSync([python,"-I",oracle,"overlay",fleet.snapshot,tree],{stdout:"pipe"}).stdout.toString().trim()).toBe("3 2 "+(total-5));
+ if(python!==null)expect(Bun.spawnSync([python,"-I",oracle,"overlay",fleet.snapshot,tree],{stdout:"pipe"}).stdout.toString().trim()).toBe("3 2 "+(total-5));
  put(tree,".git/HEAD","ref: refs/heads/main\n");
  const run=overlayRun({worktree:tree,archive:fleet.archive});
  expect(run.code,run.out).toBe(0);
@@ -286,10 +286,10 @@ test.skipIf(process.platform==="win32")("the overlay restores the sealed execute
  fleet.files.forEach((file,index)=>{const target=join(tree,...file.path.split("/"));if(existsSync(target))chmodSync(target,index%2===0?0o755:0o644);});
  const run=overlayRun({worktree:tree,archive:fleet.archive});
  expect(run.code,run.out).toBe(0);
- for(const file of fleet.files)expect(bitOf(join(tree,...file.path.split("/"))),file.path).toBe(flags.get(file.path));
+ for(const file of fleet.files)expect<unknown>(bitOf(join(tree,...file.path.split("/"))),file.path).toBe(flags.get(file.path));
  const again=overlayRun({worktree:tree,archive:fleet.archive});
  expect(counts(again.out)).toEqual([0,0,fleet.files.length]);
- for(const file of fleet.files)expect(bitOf(join(tree,...file.path.split("/"))),file.path).toBe(flags.get(file.path));
+ for(const file of fleet.files)expect<unknown>(bitOf(join(tree,...file.path.split("/"))),file.path).toBe(flags.get(file.path));
 });
 
 test("an old seal without the execute bit field is not intact and leaves the checkout alone; both scripts read the field and the shell and the PowerShell overlay name it",async()=>{
@@ -336,7 +336,7 @@ test("a damaged, tampered or unsafe seal changes nothing and the script goes on 
  writeFileSync(join(snapshot,"files",...first.path.split("/")),"tampered\n");
  let run=overlayRun({worktree:tree,archive:fleet.archive});
  expect(run.code).toBe(0);expect(run.out).toContain("not intact");expect(run.out).toContain("changed");unchanged();
- if(python!==undefined)expect(Bun.spawnSync([python,"-I",oracle,"verify",snapshot],{stdout:"pipe"}).stdout.toString().trim()).toStartWith("changed");
+ if(python!==null)expect(Bun.spawnSync([python,"-I",oracle,"verify",snapshot],{stdout:"pipe"}).stdout.toString().trim()).toStartWith("changed");
  expect(await verifyCodeSnapshotV1(snapshot)).toStartWith("changed");
  writeFileSync(join(snapshot,"files",...first.path.split("/")),snapshotBefore);
  rmSync(join(snapshot,"files",...fleet.files[1]!.path.split("/")));
@@ -349,7 +349,7 @@ test("a damaged, tampered or unsafe seal changes nothing and the script goes on 
   const victim=temp("victim"),outcome=overlayRun({worktree:victim,archive:bad.archive});
   expect(outcome.out,path).toContain("not intact");expect(outcome.out,path).toContain("unsafe path");
   expect(readdirSync(victim)).toEqual([]);expect(existsSync(join(dirname(victim),"escape.txt"))).toBe(false);
-  if(python!==undefined)expect(Bun.spawnSync([python,"-I",oracle,"verify",bad.snapshot],{stdout:"pipe"}).stdout.toString().trim()).toStartWith("unsafe");
+  if(python!==null)expect(Bun.spawnSync([python,"-I",oracle,"verify",bad.snapshot],{stdout:"pipe"}).stdout.toString().trim()).toStartWith("unsafe");
  }
  writeFileSync(sealFile,"not json");
  expect(overlayRun({worktree:temp("garbage"),archive:bad.archive}).out).toContain("not intact");

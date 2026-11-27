@@ -46,6 +46,7 @@ semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

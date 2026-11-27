@@ -26,11 +26,11 @@ pub fn nakagin_capsule() -> Block3dSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn block3d_definition_dsl_round_trips() {
     let empty = Block3dSnapshot::default();
-    store::os_store::test_support::assert_dsl_round_trip(&empty);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_store_test_support::assert_dsl_round_trip(&empty);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty);
     let definition = nakagin_capsule();
-    store::os_store::test_support::assert_dsl_round_trip(&definition);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&definition);
+    semio_os_store_test_support::assert_dsl_round_trip(&definition);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&definition);
 }
 
 /// ⚖️ LAW: the boot document is never empty and every representation it carries names a mesh —
@@ -63,6 +63,6 @@ async fn block3d_example_fixtures_only_name_catalogued_meshes() {
 async fn block3d_example_fixtures_parse_and_round_trip_as_dsl() {
     for dsl_text in [BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT, BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT] {
         let definition = parse_dsl(dsl_text).expect("example fixture parses as dsl");
-        store::os_store::test_support::assert_dsl_round_trip(&definition);
+        semio_os_store_test_support::assert_dsl_round_trip(&definition);
     }
 }

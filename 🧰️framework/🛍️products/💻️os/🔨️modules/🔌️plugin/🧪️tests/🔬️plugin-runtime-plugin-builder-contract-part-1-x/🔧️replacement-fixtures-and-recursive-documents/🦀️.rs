@@ -66,6 +66,7 @@ async fn composed_replacement_candidate(
 
 /// 🎟️ The fixture lends its authored maintenance policy without deriving authority from quotes.
 fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    semio_framework_job::testkit::renew_payload_page_grant(cx);
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
     let demand = app.maintenance_retirement_demands(body,cx.fuel_remaining())?;
     semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,COMPOSITION_MAINTENANCE_GRANT,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))

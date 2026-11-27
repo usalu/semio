@@ -257,6 +257,8 @@ pub struct PluginRuntime<PA: PluginApp> {
     pub live_cleanup_cursor: Cell<usize>,
     /// 🌡️ Whether the instance the last [`plugin_step_live_cleanup`] stepped reported maintenance pressure.
     pub live_cleanup_pressure: Cell<bool>,
+    /// 🔁️ Whether the next [`plugin_step_live_cleanup`] is a repeat pump of the reactor turn that already pumped once.
+    pub live_cleanup_repeat: Cell<bool>,
     pub typed_continuation_cursor: Cell<usize>,
     pub close_generation: Cell<u64>,
     pub local_interaction_query_generation: semio_plugin_interaction::live::LocalInteractionQueryGeneration,
@@ -285,6 +287,7 @@ impl<PA: PluginApp> PluginRuntime<PA> {
             close_cleanup_cursor: Cell::new(0),
             live_cleanup_cursor: Cell::new(0),
             live_cleanup_pressure: Cell::new(false),
+            live_cleanup_repeat: Cell::new(false),
             typed_continuation_cursor: Cell::new(0),
             close_generation: Cell::new(0),
             local_interaction_query_generation: Default::default(),

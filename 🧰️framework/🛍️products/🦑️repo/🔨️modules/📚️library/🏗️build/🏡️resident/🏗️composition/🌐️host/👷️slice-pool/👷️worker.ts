@@ -5,12 +5,22 @@ import{heapStats}from"bun:jsc";
 import{graphQueueYieldPolicyV1}from"../../../../🕸️graph/🕰️generations/🛌️yield/🟨️.mjs";
 import{READY_SLICE_REPORT_POLICY_V1}from"../../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import{sliceRecycleOfV1}from"../../../../🧠️memory/♻️recycle/🟨️.mjs";
+import{heapSnapshotControlV1,heapSnapshotDecisionV1,writeHeapSummaryV1}from"../../../../🧠️memory/📸️heap-snapshot/🟨️.mjs";
 /** 🛌 A slice worker is no front door: the yield ticket of the command that started the service (inherited through the service environment) is not read by anyone, so a worker that offered it left the graph queue with the restart code every 15 s and the pool restarted it for ever as if the code kept changing. Without the ticket it waits for the peer build in place and keeps reporting.
  * @see ../../../../🕸️graph/🕰️generations/🛌️yield/🟨️.mjs `graphQueueYieldsV1` */
 delete process.env[graphQueueYieldPolicyV1().environment.ticket];
-/** 🫀 The heap statistics walk every object of the heap, which cost an eighth of the time of a load (21 s of 173 s) when taken every heartbeat at gigabytes of heap: the next sample waits for `SAMPLE_SHARE` times the time the last one took, never less than a heartbeat. */
+/** 🫀 The heap statistics walk every object of the heap, which cost an eighth of the time of a load (21 s of 173 s) when taken every heartbeat at gigabytes of heap: the next sample waits for `SAMPLE_SHARE` times the time the last one took, never less than a heartbeat. The opt-in heap summary (declared environment or control file) is checked by its own cheap timer on `process.memoryUsage()`, not by this walk, whose pace stretches with the heap and would miss a fast growth.
+ * @see ../../../../🧠️memory/📸️heap-snapshot/🟨️.mjs */
 const MiB=1048576,SAMPLE_SHARE=200,pace=workerData.heartbeatMilliseconds??2000,sample=():number=>{const started=performance.now(),heap=heapStats();parentPort!.postMessage({type:"memory",heapMb:Math.round(heap.heapSize/MiB*10)/10,extraMb:Math.round(heap.extraMemorySize/MiB*10)/10,objectCount:heap.objectCount,objectTypes:Object.entries(heap.objectTypeCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([type,count])=>({type,count}))});return performance.now()-started;},schedule=(cost:number):void=>{setTimeout(()=>schedule(sample()),Math.max(pace,cost*SAMPLE_SHARE)).unref();};
 schedule(sample());
+let heapSummaryTaken=false;
+setInterval(()=>{
+ if(heapSummaryTaken)return;
+ const usage=process.memoryUsage(),snapshot=heapSnapshotDecisionV1({heapBytes:usage.heapUsed+usage.external,control:heapSnapshotControlV1()});
+ if(snapshot===undefined)return;
+ heapSummaryTaken=true;
+ try{process.stderr.write("[slice-heap] "+writeHeapSummaryV1({directory:snapshot.directory,extra:{heapMegabytes:snapshot.heapMegabytes,thresholdMegabytes:snapshot.thresholdMegabytes,heapUsedMegabytes:Math.round(usage.heapUsed/MiB),externalMegabytes:Math.round(usage.external/MiB),rssMegabytes:Math.round(usage.rss/MiB)}})+"\n");}catch(error){process.stderr.write("[slice-heap] failed: "+String((error as Error)?.message??error)+"\n");}
+},pace).unref();
 try{
 const{useProcessWideImplementationPinV1,withImplementationPinV1}=await import("../../../../📥️inputs/🔏️revision/🟨️.mjs");
 useProcessWideImplementationPinV1();

@@ -108,7 +108,9 @@
     "-Z",
     "threads=1",
     "-C",
-    "opt-level=0"
+    "opt-level=0",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -125,7 +127,9 @@
     "-C",
     "opt-level=0",
     "-Z",
-    "macro-backtrace"
+    "macro-backtrace",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -369,6 +373,92 @@
     "--target=wasm32-wasip2",
     "--crate-type=lib",
     "-Zthreads=5"
+   ]
+  },
+  {
+   "id": "wasm-final-separate",
+   "args": [
+    "--crate-type",
+    "cdylib",
+    "--target",
+    "wasm32-wasip2",
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 8,
+   "note": "a wasm final links on one wasm-ld thread whatever the grant",
+   "expected": [
+    "--crate-type",
+    "cdylib",
+    "--target",
+    "wasm32-wasip2",
+    "-Z",
+    "threads=1",
+    "a.rs",
+    "-Z",
+    "no-parallel-backend",
+    "-C",
+    "link-arg=--threads=1"
+   ]
+  },
+  {
+   "id": "wasm-final-joined-no-grant",
+   "args": [
+    "--crate-type=cdylib",
+    "--target=wasm32-wasip2",
+    "-Zthreads=0"
+   ],
+   "tokens": null,
+   "note": "the link thread bound does not depend on a grant",
+   "expected": [
+    "--crate-type=cdylib",
+    "--target=wasm32-wasip2",
+    "-Zthreads=1",
+    "-Z",
+    "no-parallel-backend",
+    "-C",
+    "link-arg=--threads=1"
+   ]
+  },
+  {
+   "id": "wasm-lib-unbounded-link",
+   "args": [
+    "--crate-type=lib",
+    "--target",
+    "wasm32-wasip2",
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 4,
+   "note": "only finals bound the linker; a wasm rlib has no link step",
+   "expected": [
+    "--crate-type=lib",
+    "--target",
+    "wasm32-wasip2",
+    "-Z",
+    "threads=4",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "native-final-keeps-linker",
+   "args": [
+    "--crate-type=cdylib",
+    "--target",
+    "aarch64-apple-darwin",
+    "a.rs"
+   ],
+   "tokens": 8,
+   "note": "a native final is not linked by wasm-ld",
+   "expected": [
+    "--crate-type=cdylib",
+    "--target",
+    "aarch64-apple-darwin",
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   }
  ]

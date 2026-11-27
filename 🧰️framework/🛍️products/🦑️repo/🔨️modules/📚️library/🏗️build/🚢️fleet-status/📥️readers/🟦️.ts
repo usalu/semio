@@ -252,7 +252,23 @@ export const readFleetOffloadV1:FleetReaderV1=async context=>{
 };
 
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:Required<FleetReadersV1>=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,memory:readFleetMemoryV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
+/** 🪟️ Rates: what the counters of every machine (the metrics of `policy.rates`) added up to in the trailing windows, from the metric rings each machine published to `<store>/v1/origins/<origin>/metrics/`; one machine at a time with a look at the loop in between, the machines read so far are kept when the deadline comes, a machine without rings has no entry. @see ../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🪟️windows/🟦️.ts */
+export const readFleetRatesV1:FleetReaderV1=async context=>{
+ const [{metricWindowTotalsV1},{fleetStoreRootV1}]=await Promise.all([import("../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/🪟️windows/🟦️.ts"),import("../../🌐️remote-cache/🛰️fleet/🟦️.ts")]);
+ const store=context.environment.SEMIO_FLEET_STORE_ROOT??fleetStoreRootV1(context.root);
+ if(store===undefined||store==="")return {};
+ const base=join(store,"v1","origins"),names=(()=>{try{return readdirSync(base).filter(name=>/^[a-z][a-z0-9-]{0,63}$/u.test(name)).sort().slice(0,512);}catch{return [] as string[];}})(),origins:Record<string,Record<string,readonly number[]>>={},at=context.now();
+ for(const origin of names){
+  if(context.signal?.aborted)break;
+  const found=metricWindowTotalsV1({directory:join(base,origin,"metrics"),ids:policy.rates.metrics,nowMs:at,windowsSeconds:policy.rates.windowsSeconds});
+  if(found!==null)origins[origin]={...found.totals};
+  context.publish?.({rates:{windowsSeconds:policy.rates.windowsSeconds,origins:{...origins}}});
+  await new Promise<void>(resolve=>setImmediate(resolve));
+ }
+ return Object.keys(origins).length===0?{}:{rates:{windowsSeconds:policy.rates.windowsSeconds,origins}};
+};
+
+export const FLEET_READERS_V1:Required<FleetReadersV1>=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,memory:readFleetMemoryV1,cas:readFleetCasV1,offload:readFleetOffloadV1,rates:readFleetRatesV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:Omit<FleetReaderContextV1,"signal"|"publish">,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

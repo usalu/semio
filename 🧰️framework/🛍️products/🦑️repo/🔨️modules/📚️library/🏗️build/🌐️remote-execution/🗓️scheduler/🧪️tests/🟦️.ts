@@ -460,3 +460,28 @@ test("closing the scheduler ends every open operation stream at once, queued or 
  scheduler.close();await Promise.all([queued.done,running.done]);
  expect(queued.rows.at(-1)!.outcome,"no outcome is invented: the client re-attaches by name").toBeUndefined();expect(running.rows.at(-1)!.stage).toBe("EXECUTING");
 });
+
+test("a restarted worker of one origin replaces the registration of its older process: the old id is dropped, its task is queued again without costing an attempt and runs on the new id, and an older process never replaces a younger one",async()=>{
+ const {memory,scheduler,events}=harness({maximumAttempts:1}),run=submit(scheduler,memory.action([],"restart"));
+ const old=scheduler.register({...profile("h-100"),origin:"m1",startedMs:1000});await Bun.sleep(20);
+ const task=(await polled(scheduler,old.id)).task!;expect(task.attempt).toBe(1);
+ const fresh=scheduler.register({...profile("h-200"),origin:"m1",startedMs:2000});
+ expect(fresh.id).not.toBe(old.id);expect(scheduler.status().workers.map(row=>row.id)).toEqual([fresh.id]);
+ expect(events.filter(row=>row.startsWith("worker-replaced"))).toHaveLength(1);expect(events.filter(row=>row.startsWith("worker-lost"))).toHaveLength(0);
+ const retry=(await polled(scheduler,fresh.id)).task!;expect(retry.attempt).toBe(2);
+ expect((await polled(scheduler,old.id,10)).known).toBe(false);
+ scheduler.report(fresh.id,retry.id,resultOf());await run.done;expect(run.rows.at(-1)!.outcome!.status.code).toBe(0);
+ const stale=scheduler.register({...profile("h-050"),origin:"m1",startedMs:500});
+ expect(scheduler.status().workers.map(row=>row.id).sort()).toEqual([fresh.id,stale.id].sort());
+ scheduler.register({...profile("x"),origin:"m2",startedMs:3000});expect(scheduler.status().workers).toHaveLength(3);
+ scheduler.register({...profile("h-300"),origin:"m1"});expect(scheduler.status().workers).toHaveLength(4);
+});
+
+test("a worker that leaves or abandons a task while it stops does not cost the task an attempt, a worker that is lost does",async()=>{
+ const {memory,scheduler,advance}=harness({maximumAttempts:1}),left=submit(scheduler,memory.action([],"left")),one=scheduler.register(profile("one"));await Bun.sleep(20);
+ const first=(await polled(scheduler,one.id)).task!;scheduler.deregister(one.id);
+ const two=scheduler.register(profile("two")),second=(await polled(scheduler,two.id)).task!;expect(second.attempt).toBe(2);
+ scheduler.report(two.id,second.id,{version:1,outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null});
+ const third=(await polled(scheduler,two.id)).task!;expect(third.attempt).toBe(3);expect(first.id).not.toBe(third.id);
+ advance(11);await left.done;expect(left.rows.at(-1)!.outcome!.status).toMatchObject({code:14});expect(left.rows.at(-1)!.outcome!.status.message).toMatch(/gave up after 1 attempt/u);
+});

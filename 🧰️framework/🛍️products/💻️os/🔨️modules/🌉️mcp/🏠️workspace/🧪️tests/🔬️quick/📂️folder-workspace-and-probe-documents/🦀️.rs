@@ -2,7 +2,7 @@
 
 #[test]
 fn open_folder_creates_the_directory_if_missing() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let target = dir.path().join("nested").join("space");
     let workspace = folder_test_workspace(target.clone(), vec!["workspace.read".to_string()]);
     assert!(target.is_dir());
@@ -11,14 +11,14 @@ fn open_folder_creates_the_directory_if_missing() {
 
 #[test]
 fn a_fresh_folder_workspace_lists_zero_artifacts() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     assert_eq!(workspace.workspace_artifact_ids().expect("list"), Vec::<String>::new());
 }
 
 #[tokio::test]
 async fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     let first = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "hello" }).into()).await.expect("seed");
     assert_eq!(first.artifact_id, "probe-a");
@@ -29,7 +29,7 @@ async fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
 
 #[tokio::test]
 async fn resolve_context_reports_the_open_probe_artifact_as_active() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), vec!["workspace.read".to_string()]);
     workspace.ensure_probe_artifact("probe-b", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let summary = workspace.resolve_context("agent:test", "de").expect("resolve");
@@ -40,7 +40,7 @@ async fn resolve_context_reports_the_open_probe_artifact_as_active() {
 
 #[tokio::test]
 async fn read_resource_artifact_returns_real_bytes_after_a_commit() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     workspace.ensure_probe_artifact("probe-c", serde_json::json!({ "n": 42 }).into()).await.expect("seed");
     let contents = workspace.read_resource("semio://artifact/probe-c").expect("read");
@@ -50,7 +50,7 @@ async fn read_resource_artifact_returns_real_bytes_after_a_commit() {
 
 #[test]
 fn read_resource_on_an_unknown_artifact_is_not_found_not_fabricated() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     let error = workspace.read_resource("semio://artifact/does-not-exist").expect_err("must not fabricate");
     assert_eq!(error.code, GatewayErrorCode::NotFound);
@@ -58,7 +58,7 @@ fn read_resource_on_an_unknown_artifact_is_not_found_not_fabricated() {
 
 #[test]
 fn prepare_action_on_an_unknown_capability_is_not_found_not_a_panic() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     let prepare_error = workspace.prepare_action("cad.editor.translateSelection", serde_json::json!({}), None).expect_err("unknown capability in an empty catalog");
     assert_eq!(prepare_error.code, GatewayErrorCode::NotFound);
@@ -71,7 +71,7 @@ fn prepare_action_on_an_unknown_capability_is_not_found_not_a_panic() {
 /// defect `📓️w8-capability-routing.md` fixes).
 #[test]
 fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     let invoke_error = workspace.invoke_action("prep_x", None).expect_err("unknown handle");
     assert_eq!(invoke_error.code, GatewayErrorCode::NotFound);
@@ -84,7 +84,7 @@ fn note_and_cad_catalog() -> Arc<Catalog> {
 #[tokio::test]
 async fn folder_canonical_snapshot_events_refuse_stale_writers_and_reopen_after_undo_redo() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/folder-custody.json")).expect("neutral folder vectors");
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     let mut last = None;
     for row in fixture["commits"].as_array().expect("commits") {
@@ -111,7 +111,7 @@ fn folder_schema_binding_requires_one_declared_owner() {
 
 #[tokio::test]
 async fn folder_snapshot_refuses_an_active_writer_and_io_failure_without_acknowledging() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     storage.write("artifact", "schema", b"pack0", b"spr0").await.expect("seed");
     let file = std::fs::OpenOptions::new().read(true).write(true).open(storage.event_path()).expect("log");
@@ -127,7 +127,7 @@ async fn folder_snapshot_refuses_an_active_writer_and_io_failure_without_acknowl
 
 #[tokio::test]
 async fn folder_create_uses_owner_spr_schema_instead_of_requested_kind_alias() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = folder_test_workspace(dir.path().to_path_buf(), Vec::new());
     workspace.ensure_probe_artifact("alias", serde_json::json!({"n":1}).into()).await.expect("actual canonical source");
     let (_, spr) = workspace.read_artifact_bytes("alias").expect("read").expect("pair");
@@ -150,7 +150,7 @@ fn folder_declared_kinds(row: &serde_json::Value) -> Vec<semio_os_mcp_routing::h
 #[tokio::test]
 async fn folder_schema_resource_reads_durable_owner_without_opening_an_artifact() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/folder-custody.json")).expect("neutral folder vectors");
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let path = dir.path().to_path_buf();
     let workspace = folder_test_workspace(path.clone(), Vec::new());
     workspace.ensure_probe_artifact("source", serde_json::json!({}).into()).await.expect("seed");

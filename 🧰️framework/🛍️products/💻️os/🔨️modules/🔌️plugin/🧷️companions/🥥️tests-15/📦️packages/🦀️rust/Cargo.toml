@@ -29,6 +29,7 @@ semio-os-command = { path = "../../../../../📡️spr/🎮️command/📦️pac
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-builder = { path = "../../../../🏗️builder/📦️packages/🦀️rust" }

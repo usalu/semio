@@ -68,7 +68,7 @@ test("native temporary aliases agree with the neutral corpus and independent sch
     if (row.expected === null) expect(() => nativeTemporaryPlanV1(row.target, row.candidates)).toThrow();
     else {
       const actual = nativeTemporaryPlanV1(row.target, row.candidates);
-      expect(actual).toEqual(row.expected);
+      expect<unknown>(actual).toEqual(row.expected);
       expect(Boolean(plan(actual))).toBe(true);
     }
   }
@@ -104,7 +104,7 @@ test("native setup commands agree with the neutral corpus and independent schema
   for (const row of corpus.commands) {
     expect(Boolean(oracle(row.arguments))).toBe(row.expected !== null);
     if (row.expected === null) expect(() => nativeBootstrapCommandV1(row.arguments)).toThrow();
-    else expect(nativeBootstrapCommandV1(row.arguments)).toBe(row.expected);
+    else expect<unknown>(nativeBootstrapCommandV1(row.arguments)).toBe(row.expected);
   }
 });
 

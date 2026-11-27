@@ -3,10 +3,20 @@
 //! gesture, one arm of `crate::editor::bim::gestures::build_tool`.
 
 use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::LabelOf;
-use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_plugin::UtilityDefinition;
 use semio_plugin::UtilityRef;
+use window_kinds::{PLAN, SECTION, SHEET, WORLD};
+
+//#region 🔖️WindowKinds
+/// 🪟️ The ids of the window kinds the registry addresses; each window crate publishes its own `WINDOW_KIND_ID` from here.
+pub mod window_kinds {
+    pub const PLAN: &str = "bim-edit-plan";
+    pub const SECTION: &str = "bim-edit-section";
+    pub const SHEET: &str = "bim-edit-sheet";
+    pub use semio_s_artifact_bim_model_window_config::world::WINDOW_KIND_ID as WORLD;
+}
+//#endregion 🔖️WindowKinds
 
 //#region 🔖️Registry
 /// 🪛️ One utility of the registry.
@@ -23,11 +33,11 @@ pub struct UtilityRow {
 /// 🪛️ The utility armed in a fresh window.
 pub const DEFAULT_UTILITY: &str = "select";
 
-const PLAN_WORLD: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID];
-const PLAN_WORLD_SECTION: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID];
-const PLAN_ONLY: &[&str] = &[plan::WINDOW_KIND_ID];
-const EVERYWHERE: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, sheet::WINDOW_KIND_ID];
-const SHEET_ONLY: &[&str] = &[sheet::WINDOW_KIND_ID];
+const PLAN_WORLD: &[&str] = &[PLAN, WORLD];
+const PLAN_WORLD_SECTION: &[&str] = &[PLAN, WORLD, SECTION];
+const PLAN_ONLY: &[&str] = &[PLAN];
+const EVERYWHERE: &[&str] = &[PLAN, WORLD, SECTION, SHEET];
+const SHEET_ONLY: &[&str] = &[SHEET];
 
 macro_rules! utilities {
     ($( $id:literal, $label:ident, $icon:literal, $group:literal, $windows:expr, $keys:expr, $arm:expr; )+) => {

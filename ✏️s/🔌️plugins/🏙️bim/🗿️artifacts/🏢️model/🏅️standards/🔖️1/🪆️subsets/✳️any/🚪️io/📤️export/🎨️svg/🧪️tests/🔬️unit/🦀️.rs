@@ -32,7 +32,7 @@ fn the_export_entry_turns_a_packed_model_into_svg_text() {
     let model = house();
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == SVG_DIALECT).expect("the SVG entry");
-    let produced = (entry.run)(&IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
+    let produced = semio_framework_test_original_snapshot_owners::run_entry(entry.run, &IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
     assert_eq!(produced.value, IoPayload::Text(svg(&model)));
     assert!(produced.diagnostics.is_empty());
 }

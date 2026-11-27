@@ -24,6 +24,7 @@
         "stallRestartBackoffMilliseconds": 30000,
         "stallRestartBackoffMaximumMilliseconds": 600000,
         "livenessCpuMilliseconds": 500,
+        "cpuOnlyStallMilliseconds": 1800000,
         "stallSeenMaximum": 4000,
         "normalisePatterns": ["\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?Z?", "\\b\\d{1,2}:\\d{2}:\\d{2}\\b", "\\b\\d+(?:\\.\\d+)? ?(?:ms|s|sec|secs|seconds|min|minutes|h|hours|Sekunden|Minuten|Stunden)\\b", "\"[A-Za-z]*(?:[Ee]lapsed|[Ww]aited|[Ss]ince|[Dd]uration|[Uu]ptime|Ms|Milliseconds|Seconds|Sec)\"\\s*:\\s*-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "\"\\w{1,40}\"\\s*:\\s*-?\\d+\\.\\d+(?:[eE][+-]?\\d+)?", "\\b1[5-9]\\d{11}\\b", "\\[repo leases\\] .*", "waiting for host capacity \\(.*", "warte auf Rechnerkapazität \\(.*"],
         "holderWaitPatterns": ["holds the dependency store since", "hält den Abhängigkeitsspeicher seit", "waiting for it \\(", "wird darauf gewartet \\(", "[Ww]aiting for (?:the )?(?:holder|lease)"],

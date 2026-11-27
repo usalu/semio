@@ -53,6 +53,7 @@ semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packa
 semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
 semio-os-mcp-routing = { path = "../../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-test-support = { path = "../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 
 [features]
 testkit = []

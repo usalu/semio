@@ -11,7 +11,7 @@ const ASSEMBLED: &[u8] = include_bytes!("../🧫️fixtures/🧫️descriptor-fr
 fn a_committed_descriptor_is_fresh_only_when_it_equals_the_assembled_one() {
     assert_eq!(descriptor_freshness_fault(ASSEMBLED, ASSEMBLED), None);
     let mut stale: PackageDescriptor = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(ASSEMBLED).expect("fixture wire")).expect("fixture shape");
-    stale.manifest.label.push('!');
+    stale.manifest.label.texts_mut().for_each(|text| text.push('!'));
     let stale = encode_package_descriptor(&stale);
     assert!(descriptor_freshness_fault(ASSEMBLED, &stale).is_some_and(|fault| fault.contains("stale")));
     assert!(descriptor_freshness_fault(ASSEMBLED, b"not a pack").is_some_and(|fault| fault.contains("committed")));

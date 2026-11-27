@@ -37,8 +37,8 @@ async fn a_store_opens_on_a_bundled_example_applies_an_edit_and_closes() {
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![change_seed(99)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the seed edit applies");
     assert_eq!(store.snapshot().expect("edited projection").seed, 99);
 
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     close_store(store).await;
 }
 
@@ -49,7 +49,7 @@ async fn the_tower_example_round_trips_through_a_live_store() {
     let document = crate::examples::tower_stack::snapshot();
     let store = open_store(document.clone()).await;
     assert_eq!(store.snapshot().expect("initial projection"), document);
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     close_store(store).await;
 }

@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }

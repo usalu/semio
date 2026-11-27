@@ -7,7 +7,7 @@ use crate::tests::every_mutation;
 #[semio_framework_async_macros::async_test]
 async fn cad_mutation_print_op_round_trips_every_variant_as_one_line() {
     for op in every_mutation() {
-        store::os_store::test_support::assert_op_line_round_trip(&op);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&op);
+        semio_os_store_test_support::assert_op_line_round_trip(&op);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&op);
     }
 }

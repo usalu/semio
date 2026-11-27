@@ -41,3 +41,4 @@ protocol = { path = "../../../../../🧰️framework/🔨️modules/📡️repli
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }

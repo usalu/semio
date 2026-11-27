@@ -87,7 +87,7 @@ test("an origin without a flat head (code that does not write it) is still follo
 },60000);
 
 test("an applied file is not treated as racy: the next walk finds nothing to hash, and the state says it was seen after its own timestamp",async()=>{
- const {machines:[a,b]}=await fleet(["a","b"]) as {machines:[Machine,Machine]};
+ const {machines:[a,b]}=await fleet(["a","b"]) as {store:string;machines:[Machine,Machine]};
  for(let index=0;index<20;index++)write(a,`bulk/f${index}.txt`,`content ${index}`);
  await publish(a);
  expect((await follow(b)).applied).toBe(20);
@@ -184,7 +184,7 @@ test("a large file reports progress while it is published and applied, and cance
  const data=Buffer.alloc(64*1024*1024+4096,3);data.writeUInt32LE(7,10);
  write(a,"big.bin",data);
  const controller=new AbortController(),before=a.events.length;
- a.replica!.say=((original)=>(event:ReplicaEventV1)=>{original(event);if(event.event==="progress"&&event.stage==="publish-blob"&&event.done!<event.total!)controller.abort();})(a.replica!.say);
+ Object.assign(a.replica!,{say:((original)=>(event:ReplicaEventV1)=>{original(event);if(event.event==="progress"&&event.stage==="publish-blob"&&event.done!<event.total!)controller.abort();})(a.replica!.say)});
  await expect(publishOnceV1(a.replica!,controller.signal,["big.bin"])).rejects.toThrow();
  expect(readdirSync(storePathsV1(store).tmp)).toEqual([]);
  expect(walk(storePathsV1(store).blobs).length).toBeGreaterThanOrEqual(0);

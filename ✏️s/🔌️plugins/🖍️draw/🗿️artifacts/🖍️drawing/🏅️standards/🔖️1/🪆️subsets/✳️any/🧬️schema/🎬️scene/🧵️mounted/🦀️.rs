@@ -37,7 +37,14 @@ impl State{
   let grant=effect.grant();
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
-  if let Some(child)=&mut self.paint_cleanup{
+  if let Some(child)=&mut self.returned{
+   if !child.terminal_is_empty(){return plugin_settle_poll(child.step(body,effect));}
+   plugin_pay_unit(effect)?;
+   self.returned=None;
+  }else if let Some(read)=self.cleanup.as_mut().and_then(DocumentVectorRetirement::take_snapshot_read){
+   plugin_pay_unit(effect)?;
+   self.returned=Some(ControlledRetirement::retain(read));
+  }else if let Some(child)=&mut self.paint_cleanup{
    if !child.terminal_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
    plugin_pay_unit(effect)?;
    self.paint_cleanup=None;
@@ -52,15 +59,7 @@ impl State{
   }else if let Some(child)=&mut self.cleanup{
    if !child.private_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
    plugin_pay_unit(effect)?;
-   if let Some(read)=child.take_snapshot_read(){
-    self.returned=Some(ControlledRetirement::retain(read));
-   }else{
-    self.cleanup=None;
-   }
-  }else if let Some(child)=&mut self.returned{
-   if !child.terminal_is_empty(){return plugin_settle_poll(child.step(body,effect));}
-   plugin_pay_unit(effect)?;
-   self.returned=None;
+   self.cleanup=None;
   }else{
    return Ok(RetainedCloneStep::Complete(Default::default()));
   }

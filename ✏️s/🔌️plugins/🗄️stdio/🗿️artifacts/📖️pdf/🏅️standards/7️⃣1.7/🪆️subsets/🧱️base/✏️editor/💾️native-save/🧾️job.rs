@@ -13,7 +13,7 @@ use semio_plugin::{ArtifactMediaExportJobRequest, ArtifactOutputChunks, Artifact
         OriginalTurnFailure, StepContext, close_original_retained_effect_step}};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use super::graph::PinnedPdfGraph;
-use super::{close::ProgramClose, producer::{FORMAT, PORT, PdfSaveProducer, TOOL},
+use super::{close::ProgramClose, producer::{FORMAT, PORT, PdfSaveProducer, SaveCause, TOOL},
     program::{ClassicPdfSaveProgram, admit_retained_candidate}};
 
 type Request<A> = ArtifactMediaExportJobRequest<A>;
@@ -121,6 +121,7 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot>> PdfGraphSaveJob<A> {
             return Ok(());
         }
         if PinnedPdfGraph::retained_control_extent(&original.snapshot).is_none() {
+            self.producer.cause = SaveCause::Control;
             self.complete = self.producer.decline(original, cx)?;
             return Ok(());
         }

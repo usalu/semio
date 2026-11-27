@@ -54,7 +54,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
             if let Ok(mut publication) = admitted {
                 let mut refused = false;
                 for _ in 0..262_144 {
-                    match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
+                    match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
                         Err(_) | Ok(ArtifactStoreOneItemAdvance::PreparationRefused) => { refused = true; break; }
                         Ok(ArtifactStoreOneItemAdvance::Published(_, _)) => panic!("{} published a rejected gesture", row["id"]),
                         Ok(_) => {}
@@ -69,7 +69,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
             let mut publication = admitted.unwrap_or_else(|rejected| panic!("{} admission: {}", row["id"], rejected.reason));
             let interrupt = row["interruptAfterTurns"].as_u64().expect("interrupt turns") as usize;
             for _ in 0..interrupt {
-                match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
+                match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
                     Ok(ArtifactStoreOneItemAdvance::Published(_, _)) => {
                         published = true;
                         break;
@@ -90,7 +90,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 "success" => {
                     let mut last = None;
                     for _ in 0..262_144 {
-                        let advance = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)).expect("retained clone success turn");
+                        let advance = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)).expect("retained clone success turn");
                         last = Some(advance);
                         match advance {
                             ArtifactStoreOneItemAdvance::Published(_, _) => {
@@ -108,7 +108,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 "cancel" => assert!(store.cancel_apply_batch(&mut publication)),
                 "stale" => {
                     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: initial + 1 })], transaction: None }).await.expect("superseding edit publishes");
-                    let error = match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
+                    let error = match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
                         Err(error) => error,
                         Ok(_) => panic!("retained clone publication must reject its stale base"),
                     };
@@ -117,7 +117,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 "fault" => {
                     let mut faulted = publication.fault().is_some();
                     for _ in 0..262_144 {
-                        match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
+                        match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
                             Err(error) => {
                                 assert!(error.to_string().contains("fixture edit fault"));
                                 faulted = true;
@@ -138,7 +138,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 "overBudget" => {
                     let mut refusal = None;
                     for _ in 0..262_144 {
-                        match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
+                        match receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)) {
                             Err(error) => {
                                 refusal = Some(error);
                                 break;
@@ -206,7 +206,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
     );
     for _ in 0..65_536 {
         let driver = publication.as_mut().expect("live publication driver");
-        assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(driver, row["closeGrant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::PreparationProgress(..))));
+        assert!(matches!(receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(driver, row["closeGrant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::PreparationProgress(..))));
         if driver.preparation.is_some() { break; }
     }
     assert!(publication.as_ref().is_some_and(|driver| driver.preparation.is_some()), "the driver is interrupted while it owns the retained preparation cursor");
@@ -268,7 +268,7 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
     let mut refusal = None;
     let mut last = None;
     for _ in 0..65_536 {
-        let advance = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving));
+        let advance = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, fixture["grant"]["maximumCopyBytes"].as_u64().unwrap()as usize, grant,receiving));
         last = Some(format!("{advance:?}"));
         match advance {
             Err(error) => {
@@ -326,7 +326,7 @@ async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_ge
         .expect("explicit domain factory admits");
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     let receipt = loop {
-        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded durable step") {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive_with_work(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded durable step") {
             break receipt;
         }
     };

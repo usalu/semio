@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn original_body_compaction_turns_own_all_physical_effects() {
     use {semio_framework_3d_brep_construction::primitives::make_box, semio_framework_3d_brep_representation::topology::history};
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     for cancel in std::iter::once(None).chain(law["compaction"]["cancelTurns"].as_array().unwrap().iter().map(|turn|Some(turn.as_u64().unwrap()as usize))) {

@@ -8,7 +8,7 @@ import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {beginAdmissionWaitV1,liveChildPidsV1,onScriptProcessWaitEdgeV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
-import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,hostUnderPressureV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,hostWaitDeadlineMillisecondsV1,hostRequestNeverFitsV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
+import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,hostUnderPressureV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,hostWaitDeadlineMillisecondsV1,hostRequestNeverFitsV1,hostAncestorDeadlockV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
 import {retainsHostReservationV1} from "../📏️decision/🟦️.ts";
 import type {HostReasonV1} from "../📏️decision/🟦️.ts";
@@ -27,7 +27,10 @@ const protocol=schema.definitions.Protocol.const,limits=schema.definitions.Limit
 export function newHostCapacityIdV1():string{return randomBytes(16).toString("base64url");}
 
 /** 🎟️ What an admitted operation holds and the environment its children inherit. */
-export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>}>;
+export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>;grow?:HostGrantGrowV1}>;
+
+/** 🌿️ Grows the reservation of a held grant in place, in the fair queue and never as a second grant: `megabytes` is the memory asked on top of what the grant reserves now, `minimumMegabytes` the least extra that is worth taking (what the free memory covers at least is taken, as a reduced upgrade); answers the megabytes added, rejects when the signal aborts or the grant ended. Calls of one grant run one after the other. */
+export type HostGrantGrowV1=(ask:Readonly<{megabytes:number;minimumMegabytes?:number;signal?:AbortSignal;queuedSinceMs?:number}>)=>Promise<number>;
 
 import type {HostCapacityOptionsV1,HostImageSweepV1,HostCapacityPortsV1,HostCapacityWaitV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
 export type {HostCapacityOptionsV1,HostCapacityPortsV1,HostCapacityWaitV1,HostLedgerPrimitivesV1,HostProcessIdentityV1,HostRunV1} from "./📋️contract/🟦️.ts";
@@ -46,6 +49,13 @@ export function readLiveHostCapacityPlanV1(environment:Readonly<Record<string,st
  if(plan===undefined)return undefined;
  const row=readJson(grantPath(hostCapacityDirectoryV1(environment),plan.id));
  return isHostCapacityV1("Grant",row)?followHostGrantPlanV1(plan,row as HostGrantV1):plan;
+}
+
+/** 🔎️ Reads the grant row `id` as the live grant it is (its holder runs, it is of this boot and fresh), undefined when the id is malformed, the row is gone or stale: how a nested request finds the grant it runs in. */
+export function readLiveHostGrantV1(environment:Readonly<Record<string,string|undefined>>,id:string,policy:HostCapacityPolicyV1):HostGrantV1|undefined{
+ if(!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(id))return undefined;
+ const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,id),row=readJson(path),at=Date.now();
+ return isHostCapacityV1("Grant",row)&&isCurrentHostGrantV1({grant:row,expectedId:id,pidAlive:alive((row as HostGrantV1).pid,(row as HostGrantV1).startMs),nowMs:at,bootAtMs:hostBootAtV1(directory,at),modifiedAtMs:modified(path)},policy)?row as HostGrantV1:undefined;
 }
 
 /** 🧾️ Reads actual same-id ledger reservation DATA; the larger tool envelope never attests resident capacity. */
@@ -166,6 +176,8 @@ export async function requestHostRebuildCapacityV1(environment:Readonly<Record<s
   }
  }finally{try{if(!retained)release();}finally{leave();}}
 }
+/** 🪢️ The ids of the processes above `first` (its parent chain), read once; empty where the platform cannot tell. */
+const ancestorPidsV1=(first:number):ReadonlySet<number>=>{try{return new Set(systemAncestryV1(process.platform,first,32).map(row=>row.pid).concat(first));}catch{return new Set([first]);}};
 /** 🛌️ Publishes that THIS process waits (in a lease, claim, headroom or capacity queue) to the grant its environment carries: one marker file `<grant>.wait.<pid>` holding the start of the wait episode, removed `waitReleaseGapMilliseconds` after the wait ends so the polls of one queue do not flicker. The holder of the grant reads the markers to see that its whole process tree only waits and lends the reservation (see `holdHostGrantV1`): a run whose child sits at an inner gate no longer idles on memory other runs need. Returns the function that unbinds the process; false-y environment (no grant) binds nothing. */
 export function bindHostCapacityWaitMarkerV1(environment:Readonly<Record<string,string|undefined>>=process.env,pid:number=process.pid):()=>void{
  const id=environment[protocol.grantEnvironment];
@@ -319,6 +331,11 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity,continuation:(()=>Promise<T>)|undefined,lastWait:HostDecisionV1["reason"]|undefined;
  let sweptAtMs=-Infinity,split:string|undefined;
  const endAdmissionWait=beginAdmissionWaitV1();
+ let ancestry:ReadonlySet<number>|undefined;
+ const ancestorsOf=(ledger:readonly HostGrantV1[])=>{
+  const parentPid=options.ppid??(pid===process.pid?process.ppid:undefined);ancestry??=parentPid===undefined?new Set():ancestorPidsV1(parentPid);
+  return ledger.filter(row=>row.id!==request.id&&(row.id===options.parentGrant||row.id===inheritedId||ancestry!.has(row.pid)));
+ };
  try{
   while(!grant){
    checkResourceLeaseControl(options.control);
@@ -348,6 +365,14 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
       const total=host.totalMegabytes,floor=evaluation.floorMegabytes,minimum=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes;
       const held=mine.reason==="starved"&&ledger.some(row=>row.id!==request.id&&row.lentSinceMs===undefined);
       throw hostCapacityErrorV1(mine.reason!=="starved"?"memoryNeverFits":held?"memoryWaitedOut":"memoryStarved",{operation:request.operation,minimum,total,floor,capacity:Math.floor(Math.max(0,total-floor)*policy.memory.budgetBasisPoints/10000),needed:minimum+floor,spare:Math.max(0,evaluation.headroomMegabytes),seconds:Math.round((at-arrivedAtMs)/1000),...held?{holders:describeHostBlockersV1(language,hostBlockersV1(policy,ledger,waiters,evaluation,request.id,at))}:{}},environment);
+     }
+     if(mine.verdict==="wait"){
+      const ancestors=ancestorsOf(ledger);
+      if(ancestors.length>0){
+       const minimum=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,live=ancestors.filter(row=>row.lentSinceMs===undefined),held=live.reduce((sum,row)=>sum+row.reservedMegabytes,0),others=ledger.filter(row=>row.lentSinceMs===undefined&&!ancestors.includes(row)&&row.id!==request.id).length;
+       const verdict=hostAncestorDeadlockV1(policy,{totalMegabytes:host.totalMegabytes,floorMegabytes:evaluation.floorMegabytes,minimumMegabytes:minimum,ancestors:ancestors.length,ancestorMegabytes:held,otherRunning:mine.reason==="memory"?others:Math.max(1,others),waitedMilliseconds:at-arrivedAtMs});
+       if(verdict.deadlocked)throw hostCapacityErrorV1("ancestorHolds",{operation:request.operation,minimum,holders:ancestors.map(row=>row.label??row.operation).join(", "),held,possible:verdict.possibleMegabytes,seconds:Math.round((at-arrivedAtMs)/1000),needed:minimum},environment);
+      }
      }
      const before=lastWait;if(mine.verdict==="wait")lastWait=mine.reason;
      if(mine.verdict==="admit"){
@@ -533,8 +558,24 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
   }catch{}
  },protocol.upgradePollMilliseconds);
  first.unref();timer.unref();lender.unref();watcher?.unref();grower?.unref();rebuildWatcher?.unref();
+ let growsBefore:Promise<unknown>=Promise.resolve();
+ const growInPlace:HostGrantGrowV1=ask=>{
+  const run=async():Promise<number>=>{
+   const extra=Math.max(0,Math.ceil(ask.megabytes));
+   if(!holding||stopped||state.quiet===true||!(extra>0))return 0;
+   const before=state.reservedMegabytes,least=Math.min(extra,Math.max(1,Math.ceil(ask.minimumMegabytes??extra))),signal=ask.signal===undefined?options.control.signal:AbortSignal.any([options.control.signal,ask.signal]),control:ResourceLeaseControl=Object.freeze({...options.control,signal});
+   const quote=Object.freeze({...request,id:state.id,minimumJobs:state.jobs,preferredJobs:state.jobs,fixedMegabytes:before+extra,perJobMegabytes:0,minimumMegabytes:before+least,cpuPerJob:Math.max(1,Math.ceil(state.cpu/state.jobs)),rampMilliseconds:state.rampMilliseconds??policy.memory.rampMilliseconds,rampSlot:state.rampSlot??false,...ask.queuedSinceMs===undefined?{}:{queuedSinceMs:Math.floor(ask.queuedSinceMs)}});
+   upgrading=true;
+   try{
+    await (await import("../🔼️upgrade/🟦️.ts")).upgradeHostGrantV1({ledger:Object.freeze({...custody(),readGrants,readWaiters,queuePath,sample:()=>currentSample(directory,policy,control,options,environment)}),directory,policy,request:quote,control,state:()=>state,publish,requested:()=>!signal.aborted,stopped:()=>stopped||!holding,now,pid,language:resolveHostCapacityLanguageV1(environment),write:options.write??(line=>process.stderr.write(line+"\n")),...options.session===undefined?{}:{session:options.session}});
+   }finally{upgrading=false;}
+   signal.throwIfAborted();
+   return Math.max(0,state.reservedMegabytes-before);
+  };
+  const next=growsBefore.then(run,run);growsBefore=next.catch(()=>undefined);return next;
+ };
  try{
-  return await body(Object.freeze({id:held.id,jobs:quiet||growable?full!.preferredJobs:held.jobs,cpu:quiet||growable?full!.preferredJobs*full!.cpuPerJob:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,adopted,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan),[protocol.marksEnvironment]:"on"})}));
+  return await body(Object.freeze({grow:growInPlace,id:held.id,jobs:quiet||growable?full!.preferredJobs:held.jobs,cpu:quiet||growable?full!.preferredJobs*full!.cpuPerJob:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,adopted,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan),[protocol.marksEnvironment]:"on"})}));
  }catch(error){
   failed=true;failure=error;
   try{parked=options.park!==undefined&&state.quiet!==true&&await options.park(error);}catch{parked=false;}

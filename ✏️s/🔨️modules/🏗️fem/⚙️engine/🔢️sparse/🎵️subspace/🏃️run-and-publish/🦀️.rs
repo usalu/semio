@@ -119,6 +119,10 @@ impl SubspaceIterationJob {
             context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
             return Ok(NumericalRun::Yield);
         }
+        if !self.publishes && (self.state.converged || (self.state.iteration >= self.state.max_iter && self.state.retiring_work.is_none())) {
+            self.terminal_published = true;
+            return Ok(NumericalRun::Complete);
+        }
         if self.state.converged || (self.state.iteration >= self.state.max_iter && self.state.retiring_work.is_none()) {
             context.set_stage("fem.subspace.terminal-page");
             if self.terminal_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
@@ -250,7 +254,7 @@ impl SubspaceIterationJob {
         if result.is_err() {
             return Ok(NumericalRun::Fault);
         }
-        if arithmetic&&context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<f64>(),..Default::default()}).is_err(){return Ok(NumericalRun::Fault)}        if context.is_cancelled() {
+        if arithmetic&&context.consume_retained(RetainedCloneProgress{copied_bytes:2*size_of::<f64>(),..Default::default()}).is_err(){return Ok(NumericalRun::Fault)}        if context.is_cancelled() {
             return Ok(NumericalRun::Cancelled);
         }
         Ok(NumericalRun::Yield)

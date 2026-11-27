@@ -39,6 +39,7 @@ members = [
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧱️model/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧭️save-cause/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧰️kit/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/📦️packages/🦀️rust",

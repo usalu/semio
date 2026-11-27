@@ -43,8 +43,7 @@ semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️m
 semio-ui-scene = { workspace = true }
 semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-snapshot = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
-serde = { workspace = true }
-serde_json = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 geo = { version = "0.31.0", default-features = false }

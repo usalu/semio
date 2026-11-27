@@ -1,0 +1,1052 @@
+{
+ "generator": "formulas 1.3.4 via openpyxl 3.1.5",
+ "cases": [
+  {
+   "id": "literal-number",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=42"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 42
+   }
+  },
+  {
+   "id": "literal-decimal",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1.5+0.25"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 1.75
+   }
+  },
+  {
+   "id": "literal-string",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"hello\""
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "hello"
+   }
+  },
+  {
+   "id": "literal-bool-true",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=TRUE"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "literal-bool-false",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=FALSE"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": false
+   }
+  },
+  {
+   "id": "unary-minus",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=-5+2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": -3
+   }
+  },
+  {
+   "id": "unary-minus-precedence-power",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=-2^2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 4
+   }
+  },
+  {
+   "id": "power-right-assoc",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=2^3^2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 64
+   }
+  },
+  {
+   "id": "percent-postfix",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=50%"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 0.5
+   }
+  },
+  {
+   "id": "percent-in-arithmetic",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=200*10%"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 20
+   }
+  },
+  {
+   "id": "precedence-mul-add",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1+2*3"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 7
+   }
+  },
+  {
+   "id": "precedence-parentheses",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=(1+2)*3"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 9
+   }
+  },
+  {
+   "id": "nested-parentheses",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=((2+3)*(4-1))/5"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3
+   }
+  },
+  {
+   "id": "division",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=7/2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3.5
+   }
+  },
+  {
+   "id": "concat-mixed",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"a\"&1&TRUE"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "a1TRUE"
+   }
+  },
+  {
+   "id": "cmp-equal",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1=1"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "cmp-not-equal",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1<>2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "cmp-less",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1<2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "cmp-greater",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1>2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": false
+   }
+  },
+  {
+   "id": "cmp-less-equal",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=2<=2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "cmp-greater-equal",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1>=2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": false
+   }
+  },
+  {
+   "id": "cmp-text-equal-case-insensitive",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"abc\"=\"ABC\""
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "precedence-concat-vs-add",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1+2&3+4"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "37"
+   }
+  },
+  {
+   "id": "precedence-compare-vs-concat",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"a\"&\"b\"=\"ab\""
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "ref-relative",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 3,
+      "A2": 4,
+      "Z1": "=A1+A2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 7
+   }
+  },
+  {
+   "id": "ref-absolute",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": 2,
+      "A3": 4,
+      "Z1": "=$A$1+A$2+$A3"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 7
+   }
+  },
+  {
+   "id": "range-sum",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": 2,
+      "A3": 3,
+      "Z1": "=SUM(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 6
+   }
+  },
+  {
+   "id": "range-2d-sum",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "B1": 2,
+      "A2": 3,
+      "B2": 4,
+      "Z1": "=SUM(A1:B2)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 10
+   }
+  },
+  {
+   "id": "sheet-ref",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "B1": "=Sheet2!A1*2"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 21
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!B1": 42
+   }
+  },
+  {
+   "id": "sheet-ref-quoted-range",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "B1": "=SUM('My Sheet'!A1:B2)"
+     }
+    },
+    {
+     "name": "My Sheet",
+     "cells": {
+      "A1": 1,
+      "B1": 2,
+      "A2": 3,
+      "B2": 4
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!B1": 10
+   }
+  },
+  {
+   "id": "fn-sum-mixed-args",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": 2,
+      "Z1": "=SUM(A1:A2,10,5)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 18
+   }
+  },
+  {
+   "id": "fn-average",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": 2,
+      "A3": 3,
+      "A4": 6,
+      "Z1": "=AVERAGE(A1:A4)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3
+   }
+  },
+  {
+   "id": "fn-min",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 5,
+      "A2": -2,
+      "A3": 9,
+      "Z1": "=MIN(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": -2
+   }
+  },
+  {
+   "id": "fn-max",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 5,
+      "A2": -2,
+      "A3": 9,
+      "Z1": "=MAX(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 9
+   }
+  },
+  {
+   "id": "fn-count",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": "x",
+      "A3": true,
+      "A4": 2,
+      "Z1": "=COUNT(A1:A4)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 2
+   }
+  },
+  {
+   "id": "fn-counta",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": "x",
+      "A4": true,
+      "Z1": "=COUNTA(A1:A4)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3
+   }
+  },
+  {
+   "id": "fn-if-three-args-true",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "Z1": "=IF(A1>0,\"pos\",\"neg\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "pos"
+   }
+  },
+  {
+   "id": "fn-if-three-args-false",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": -1,
+      "Z1": "=IF(A1>0,\"pos\",\"neg\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "neg"
+   }
+  },
+  {
+   "id": "fn-if-two-args-true",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "Z1": "=IF(A1>0,\"pos\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "pos"
+   }
+  },
+  {
+   "id": "fn-if-two-args-false",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": -1,
+      "Z1": "=IF(A1>0,\"pos\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": false
+   }
+  },
+  {
+   "id": "fn-and",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=AND(1<2,2<3,TRUE)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "fn-or",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=OR(1>2,FALSE,3>2)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "fn-not",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=NOT(FALSE)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": true
+   }
+  },
+  {
+   "id": "fn-round-positive-digits",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ROUND(3.14159,2)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3.14
+   }
+  },
+  {
+   "id": "fn-round-negative-digits",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ROUND(1234.5,-2)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 1200
+   }
+  },
+  {
+   "id": "fn-round-zero-digits",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ROUND(2.4,0)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 2
+   }
+  },
+  {
+   "id": "fn-round-half-away-positive",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ROUND(2.5,0)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3
+   }
+  },
+  {
+   "id": "fn-round-half-away-negative",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ROUND(-2.5,0)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": -3
+   }
+  },
+  {
+   "id": "fn-abs",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=ABS(-7.5)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 7.5
+   }
+  },
+  {
+   "id": "fn-concatenate",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=CONCATENATE(\"a\",1,TRUE,\"c\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "a1TRUEc"
+   }
+  },
+  {
+   "id": "fn-concat-range",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "p",
+      "A2": "q",
+      "Z1": "=CONCAT(A1:A2,\"x\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "pqx"
+   }
+  },
+  {
+   "id": "fn-len",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=LEN(\"héllo\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 5
+   }
+  },
+  {
+   "id": "fn-upper",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=UPPER(\"MiXed\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "MIXED"
+   }
+  },
+  {
+   "id": "fn-lower",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=LOWER(\"MiXed\")"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "mixed"
+   }
+  },
+  {
+   "id": "fn-product",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 2,
+      "A2": 3,
+      "A3": 4,
+      "Z1": "=PRODUCT(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 24
+   }
+  },
+  {
+   "id": "fn-iferror-caught",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=IFERROR(1/0,-1)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": -1
+   }
+  },
+  {
+   "id": "fn-iferror-passthrough",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=IFERROR(5,-1)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 5
+   }
+  },
+  {
+   "id": "empty-cell-arithmetic",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=A1+5"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 5
+   }
+  },
+  {
+   "id": "empty-cell-concat",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=A1&\"x\""
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": "x"
+   }
+  },
+  {
+   "id": "sum-ignores-text-in-range",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1,
+      "A2": "text",
+      "A3": 2,
+      "Z1": "=SUM(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 3
+   }
+  },
+  {
+   "id": "formula-chain",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "B1": 2,
+      "B2": "=B1*2",
+      "B3": "=B2+1",
+      "B4": "=B3*B2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!B2": 4,
+    "Sheet1!B3": 5,
+    "Sheet1!B4": 20
+   }
+  },
+  {
+   "id": "error-div-zero",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=1/0"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": {
+     "error": "#DIV/0!"
+    }
+   }
+  },
+  {
+   "id": "error-div-zero-ref",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 4,
+      "Z1": "=A1/A2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": {
+     "error": "#DIV/0!"
+    }
+   }
+  },
+  {
+   "id": "bool-arithmetic",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=TRUE+1"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 2
+   }
+  },
+  {
+   "id": "text-coercion-arithmetic",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"3\"+1"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": 4
+   }
+  },
+  {
+   "id": "text-not-coercible",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=\"abc\"+1"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": {
+     "error": "#VALUE!"
+    }
+   }
+  },
+  {
+   "id": "average-empty-range",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "Z1": "=AVERAGE(A1:A3)"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!Z1": {
+     "error": "#DIV/0!"
+    }
+   }
+  },
+  {
+   "id": "scenario-sum-and-double",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "B2": 1200.5,
+      "B3": 350.25,
+      "B4": "=SUM(B2:B3)",
+      "B5": "=B4*2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!B4": 1550.75,
+    "Sheet1!B5": 3101.5
+   }
+  },
+  {
+   "id": "scenario-sum-and-double-400",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "B2": 1200.5,
+      "B3": 400,
+      "B4": "=SUM(B2:B3)",
+      "B5": "=B4*2"
+     }
+    }
+   ],
+   "expected": {
+    "Sheet1!B4": 1600.5,
+    "Sheet1!B5": 3201
+   }
+  }
+ ]
+}

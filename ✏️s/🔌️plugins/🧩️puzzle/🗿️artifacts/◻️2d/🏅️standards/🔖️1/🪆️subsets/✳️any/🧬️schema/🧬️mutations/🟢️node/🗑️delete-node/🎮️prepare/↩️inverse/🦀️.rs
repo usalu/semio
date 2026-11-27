@@ -214,6 +214,8 @@ impl Puzzle2dDeleteNodeInverseCursor {
     }
 
     pub fn take(&mut self)->Option<PagedList<Puzzle2dMutation,{usize::MAX}>> {if self.closing || self.phase!=20 {return None;}self.phase=21;self.inverse.take()}
+    /// 🔄️ Reports whether the next step reverses the accumulated natural restoration order into the canonical consumed-in-reverse stack.
+    pub fn is_reversing(&self)->bool {self.phase==16}
     pub fn begin_close(&mut self) {self.closing=true;self.preparation.begin_close();}
 
     fn reverse_demand(&self)->Result<Option<(usize,RetirementDemand)>,ValueError>{

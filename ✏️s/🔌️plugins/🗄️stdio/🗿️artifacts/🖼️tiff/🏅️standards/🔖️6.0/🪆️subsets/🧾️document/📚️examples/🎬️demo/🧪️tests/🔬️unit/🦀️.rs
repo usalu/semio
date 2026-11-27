@@ -34,7 +34,7 @@ async fn inference_default_law() {
 //#region 🧪️SubsetRoundtrip
 struct TiffAnyRoundtrip;
 
-impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
+impl semio_os_store_test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
     type Snapshot = crate::TiffSnapshot;
     type Mutation = crate::TiffMutation;
     type Inference = crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
@@ -43,15 +43,15 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
         semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
     }
 
-    async fn fidelity() -> store::os_store::test_support::IoFidelityClass {
-        store::os_store::test_support::IoFidelityClass::Exact
+    async fn fidelity() -> semio_os_store_test_support::IoFidelityClass {
+        semio_os_store_test_support::IoFidelityClass::Exact
     }
 
     async fn drops() -> &'static [&'static str] {
         &[]
     }
 
-    async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+    async fn parse_native(asset: &semio_os_store_test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
         crate::standards::v6_0::subsets::document::io::decode_tiff(asset.bytes)
     }
 
@@ -85,7 +85,7 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
 
 #[semio_framework_async_macros::async_test]
 async fn demo_subset_integrated_roundtrip() {
-    let asset = store::os_store::test_support::ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff" };
-    store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None).await;
+    let asset = semio_os_store_test_support::ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff" };
+    semio_os_store_test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None).await;
 }
 //#endregion 🧪️SubsetRoundtrip

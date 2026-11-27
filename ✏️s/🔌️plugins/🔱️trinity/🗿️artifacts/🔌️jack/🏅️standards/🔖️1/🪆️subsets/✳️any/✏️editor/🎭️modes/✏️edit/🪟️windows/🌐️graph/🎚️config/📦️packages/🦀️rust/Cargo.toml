@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
@@ -58,6 +59,7 @@ serde_json = { workspace = true }
 testkit = ["semio-s-artifact-trinity-jack-model/testkit"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

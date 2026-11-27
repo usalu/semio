@@ -70,6 +70,7 @@ fn step_mounted_mesh(caller: &mut OriginalJobFixtureCaller, job: &mut MeshJob) -
 
 fn step_mesh_with_budget(caller: &mut OriginalJobFixtureCaller, job: &mut MeshJob, fuel: u64, deadline: u64) -> Seen {
     let mut observed = None;
+    job.units_per_turn = 1;
     caller.bare_turn(TEST_GRANT, |context| context.with_original_work_loan(fuel, deadline, |context| {
         observed = Some(seen_of(Ok::<_, OriginalTurnFailure>(job.step_plain(context)?)));
         Ok(())

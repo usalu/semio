@@ -253,7 +253,7 @@ export function planKeyActionV1(error,waited,restarted){
 export async function requestPlanV1(options){
  const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
  const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)],sliceReport=ownedSliceReportSinkV1(canonical,environment);
- const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
+ const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...(/^[A-Za-z0-9_-]{8,32}$/u.test(environment.SEMIO_HOST_CAPACITY_GRANT??"")?{grant:environment.SEMIO_HOST_CAPACITY_GRANT}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
  let last,reattached=0,keyWaits=0,keyRestarted=false,previous;
  const releasePrevious=()=>previous?.release();
  const retainForRetry=(socket,endpoint,milliseconds)=>{

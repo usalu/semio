@@ -277,9 +277,21 @@ export type CasUsageHintV1=Readonly<{bytes:number;atMs:number;automaticScope?:st
 const automaticScopePattern=new RegExp(schema.definitions.UsageHint.properties.automaticScope.pattern,"u");
 export async function readCasUsageHintV1(root:string):Promise<CasUsageHintV1|undefined>{
  try{
-  const row=JSON.parse(await readFile(casUsageHintPathV1(root),"utf8")) as {version?:unknown;bytes?:unknown;atMs?:unknown;automaticScope?:unknown};
-  return row.version===1&&typeof row.bytes==="number"&&Number.isSafeInteger(row.bytes)&&row.bytes>=0&&typeof row.atMs==="number"&&Number.isSafeInteger(row.atMs)&&row.atMs>0?Object.freeze({bytes:row.bytes,atMs:row.atMs,...typeof row.automaticScope==="string"&&automaticScopePattern.test(row.automaticScope)?{automaticScope:row.automaticScope}:{}}):undefined;
+  const row=JSON.parse(await readFile(casUsageHintPathV1(root),"utf8")) as {version?:unknown;bytes?:unknown;atMs?:unknown;automaticScope?:unknown;measuredBytes?:unknown;measuredAtMs?:unknown};
+  if(row.version!==1||typeof row.bytes!=="number"||!Number.isSafeInteger(row.bytes)||row.bytes<0||typeof row.atMs!=="number"||!Number.isSafeInteger(row.atMs)||row.atMs<=0)return undefined;
+  if(typeof row.measuredBytes==="number"&&Number.isSafeInteger(row.measuredBytes)&&row.measuredBytes>=0&&typeof row.measuredAtMs==="number"&&Number.isSafeInteger(row.measuredAtMs)&&row.measuredAtMs>row.atMs)return Object.freeze({bytes:row.measuredBytes,atMs:row.measuredAtMs});
+  return Object.freeze({bytes:row.bytes,atMs:row.atMs,...typeof row.automaticScope==="string"&&automaticScopePattern.test(row.automaticScope)?{automaticScope:row.automaticScope}:{}});
  }catch{return undefined;}
+}
+
+/** 📈️ Writes a plain measurement of the store next to the hint of the last collection, so every reader (admission, blob bound, status) judges the cap on bytes no older than the last walk instead of on the last finished collection, which a store above its cap may not finish for an hour; returns whether the file was written. */
+export async function recordCasMeasurementV1(root:string,bytes:number,atMs:number):Promise<boolean>{
+ const target=casUsageHintPathV1(root),temporary=`${target}.${process.pid}.measure.tmp`;
+ try{
+  const row=await readFile(target,"utf8").then(text=>JSON.parse(text) as Record<string,unknown>,()=>undefined),measured=Math.max(0,Math.round(bytes));
+  const next=row?.version===1&&typeof row.bytes==="number"&&typeof row.atMs==="number"?{...row,measuredBytes:measured,measuredAtMs:atMs}:{version:1,bytes:measured,atMs};
+  await writeFile(temporary,JSON.stringify(next));await rename(temporary,target);return true;
+ }catch{await unlink(temporary).catch(()=>undefined);return false;}
 }
 
 async function recordUsage(options:CasCollectOptionsV1,bytes:number,atMs:number,automaticScope?:string):Promise<boolean>{

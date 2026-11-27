@@ -70,6 +70,26 @@
         "external": 536870912
       },
       "expectedBytes": 2147483648
+    },
+    {
+      "name": "runtime-heap-contains-external-so-it-is-not-counted-twice",
+      "counters": {
+        "rss": 4380942336,
+        "heapUsed": 3221225472,
+        "external": 1073741824,
+        "heapSize": 3221225472
+      },
+      "expectedBytes": 3221225472
+    },
+    {
+      "name": "runtime-heap-size-wins-over-the-sum-when-heap-used-lags",
+      "counters": {
+        "rss": 1073741824,
+        "heapUsed": 0,
+        "external": 209715200,
+        "heapSize": 209715200
+      },
+      "expectedBytes": 209715200
     }
   ],
   "allocations": [

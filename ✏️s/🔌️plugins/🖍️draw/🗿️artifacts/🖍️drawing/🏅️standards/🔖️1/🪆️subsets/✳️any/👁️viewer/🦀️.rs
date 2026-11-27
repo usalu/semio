@@ -37,7 +37,7 @@ use semio_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToo
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 
-const DRAWING_VIEW_TOOL_IDS: &[&str] = &[canvas::SET_CAMERA_ACTION_ID];
+const DRAWING_VIEW_TOOL_IDS: &[&str] = &canvas::HOST_ACTION_IDS;
 const DRAWING_VIEW_PAYLOAD_SCHEMA: &str = "drawing.view-command.v1";
 const DRAWING_VIEW_RAW_BYTES: usize = 8_192;
 const DRAWING_VIEW_WORK_ITEMS: usize = 1;
@@ -46,6 +46,20 @@ const DRAWING_VIEW_WORK_ITEMS: usize = 1;
 pub enum DrawingViewCommand {
     #[dsl(key = "setCamera")]
     SetCamera { camera: String },
+    #[dsl(key = "canvasPointerDown")]
+    CanvasPointerDown,
+    #[dsl(key = "canvasPointerMove")]
+    CanvasPointerMove,
+    #[dsl(key = "canvasPointerUp")]
+    CanvasPointerUp,
+    #[dsl(key = "canvasDoubleClick")]
+    CanvasDoubleClick,
+    #[dsl(key = "canvasDragOver")]
+    CanvasDragOver,
+    #[dsl(key = "canvasDragLeave")]
+    CanvasDragLeave,
+    #[dsl(key = "canvasDrop")]
+    CanvasDrop,
 }
 
 impl Default for DrawingViewCommand {
@@ -58,6 +72,13 @@ impl DrawingViewCommand {
     pub fn action_id(&self) -> &'static str {
         match self {
             Self::SetCamera { .. } => canvas::SET_CAMERA_ACTION_ID,
+            Self::CanvasPointerDown => "canvasPointerDown",
+            Self::CanvasPointerMove => "canvasPointerMove",
+            Self::CanvasPointerUp => "canvasPointerUp",
+            Self::CanvasDoubleClick => "canvasDoubleClick",
+            Self::CanvasDragOver => "canvasDragOver",
+            Self::CanvasDragLeave => "canvasDragLeave",
+            Self::CanvasDrop => "canvasDrop",
         }
     }
 }
@@ -96,9 +117,9 @@ impl protocol::OpBinary for DrawingViewCommand {
     }
 }
 
-/// 📷️ Validates a viewer camera and publishes only the addressed local window configuration.
+/// 📷️ Validates a viewer camera and publishes only the addressed local window configuration; every host pointer or drag verb is inert.
 fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_plugin::ViewModel>) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let DrawingViewCommand::SetCamera { camera } = command;
+    let DrawingViewCommand::SetCamera { camera } = command else { return Ok(Emit::default()) };
     let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))?;
     camera.validate().map_err(|error| Fault::from(error.to_string()))?;
     let view = view.ok_or_else(|| Fault::from("drawing-viewer-window-required"))?;
@@ -107,6 +128,17 @@ fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_plugin::ViewMod
 }
 
 fn command_from_action(action: &str,args: Option<&semio_framework_value::DslValue>) -> Result<DrawingViewCommand,Fault> {
+    let inert = match action {
+        "canvasPointerDown" => Some(DrawingViewCommand::CanvasPointerDown),
+        "canvasPointerMove" => Some(DrawingViewCommand::CanvasPointerMove),
+        "canvasPointerUp" => Some(DrawingViewCommand::CanvasPointerUp),
+        "canvasDoubleClick" => Some(DrawingViewCommand::CanvasDoubleClick),
+        "canvasDragOver" => Some(DrawingViewCommand::CanvasDragOver),
+        "canvasDragLeave" => Some(DrawingViewCommand::CanvasDragLeave),
+        "canvasDrop" => Some(DrawingViewCommand::CanvasDrop),
+        _ => None,
+    };
+    if let Some(command) = inert { return Ok(command); }
     if action != canvas::SET_CAMERA_ACTION_ID { return Err(Fault::from("drawing-viewer-command-unsupported")); }
     let value = args.and_then(|args| args.get("camera")).ok_or_else(|| Fault::from("drawing-viewer-camera-required"))?;
     let pose = <store::Viewport2d as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
@@ -176,7 +208,16 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingViewCommandJobFactory 
     type Owner = ViewerApp<DrawingViewer>;
     const TOOL_IDS: &'static [&'static str] = DRAWING_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: canvas::SET_CAMERA_ACTION_ID, lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: canvas::SET_CAMERA_ACTION_ID, lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasDoubleClick", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasDragOver", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasDragLeave", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasDrop", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ];
 }
 
 
@@ -283,7 +324,7 @@ impl ArtifactViewer for DrawingViewer {
         factory: "DrawingViewCommandJobFactory",
         factory_type: DrawingViewCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 1, 1, 16_384, 7_500),
-        tools: ["setCamera"]
+        tools: ["setCamera", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasDragOver", "canvasDragLeave", "canvasDrop"]
     }
 
 

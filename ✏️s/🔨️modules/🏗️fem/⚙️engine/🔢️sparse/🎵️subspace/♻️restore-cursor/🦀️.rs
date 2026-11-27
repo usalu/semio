@@ -268,7 +268,7 @@ impl SubspaceRestoreCursor {
         if self.payload.is_none() {
             if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<SubspaceCheckpoint>() + size_of::<SubspaceIterationJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
             let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
-            return Ok(Some(SubspaceIterationJob { operation: self.operation, state, preview_writer: None, preview_page_cursor: 0, terminal_writer: None, terminal_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, branch: 0, desk: NumericalOutcomeDesk::default() }));
+            return Ok(Some(SubspaceIterationJob { operation: self.operation, state, preview_writer: None, preview_page_cursor: 0, terminal_writer: None, terminal_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, publishes: true, branch: 0, desk: NumericalOutcomeDesk::default() }));
         }
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;

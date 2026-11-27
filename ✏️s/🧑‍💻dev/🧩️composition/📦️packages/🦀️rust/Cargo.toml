@@ -24,11 +24,13 @@ name = "sequence-runtime"
 path = "../../🧪️tests/🎬️sequence-runtime/🦀️.rs"
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-testkit = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-2d-io-text = { workspace = true }
 semio-s-artifact-procedural-2d-io = { workspace = true }
+semio-s-artifact-procedural-generation2d-pdf-export = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-transient = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-presence = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-modes = { workspace = true }

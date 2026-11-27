@@ -1,0 +1,19 @@
+[
+ {
+  "remove": "joint-(clavicle|arm|hand|thigh)-[lr]|joint-foot-l|st-sole-l",
+  "list": "structure",
+  "scales": [
+   500
+  ]
+ },
+ {
+  "decision": {
+   "en": "Structure 1:500: the members of 1:200 at the printable thickness of this scale; the joint spheres that lie within the rounded ends of the 75 mm members they tie (collarbones, shoulders, wrists, hip joints and the ankle) and the sole strut within the end of the foot bar are merged into those members, the knobs at elbows, knees, hip bones, toe and along the column stay; the path still runs from the skull over column, basket and basin into both legs down to the feet. The shoulder girdle hangs on its own rig bones: each collarbone runs from the sternoclavicular joint beside the jugular notch 0.149 m out, 4 degrees up and 27 degrees back to the acromioclavicular joint and carries shoulder blade, glenoid and the upper arm; each hip bone runs from the sacroiliac joint to the hip joint and carries the thigh, so the limbs leave the trunk at the true breadths (hip joints 0.18 m, shoulder joints 0.36 m apart). Femur, tibia, humerus, radius and ulna keep their true shaft as slender members between the joint knobs, the femur leaves the hip joint over its neck and runs obliquely to the knee, and the pelvis is a basin that narrows from the iliac crests to the pubis. The spine is one true rod from the sacrum to the skull base and also the member of the neck; collarbone, shoulder blade and glenoid stay one 75 mm yoke per side because the 0.149 m collarbone is too short to print as a rod.",
+   "de": "Tragwerk 1:500: die Glieder von 1:200 in der druckbaren Stärke dieses Massstabs; die Gelenkkugeln, die in den gerundeten Enden der 75 mm starken Glieder liegen, die sie verbinden (Schlüsselbeine, Schultern, Handgelenke, Hüftgelenke und das Sprunggelenk), und die Sohlenstrebe im Ende des Fussstabs gehen in diesen Gliedern auf, die Knoten an Ellbogen, Knien, Hüftbeinen, Zehe und entlang der Wirbelsäule bleiben; der Pfad läuft weiterhin vom Schädel über Wirbelsäule, Korb und Schale in beide Beine bis in die Füsse. Der Schultergürtel hängt an eigenen Rig-Knochen: Jedes Schlüsselbein läuft vom Sternoklavikulargelenk neben der Drosselgrube 0,149 m nach aussen, 4 Grad aufwärts und 27 Grad nach hinten zum Akromioklavikulargelenk und trägt Schulterblatt, Gelenkpfanne und Oberarm; jedes Hüftbein läuft vom Iliosakralgelenk zum Hüftgelenk und trägt den Oberschenkel, sodass die Gliedmassen in den wahren Breiten vom Rumpf abgehen (Hüftgelenke 0,18 m, Schultergelenke 0,36 m auseinander). Femur, Tibia, Humerus, Radius und Ulna behalten als schlanke Stäbe zwischen den Gelenkknoten ihren wahren Schaft, der Femur verlässt das Hüftgelenk über den Schenkelhals und läuft schräg zum Knie, und das Becken ist eine Schale, die sich von den Darmbeinkämmen zum Schambein verjüngt. Die Wirbelsäule ist ein wahrer Stab vom Kreuzbein bis zur Schädelbasis und zugleich das Tragglied des Halses; Schlüsselbein, Schulterblatt und Gelenkpfanne bleiben je Seite ein 75 mm starkes Joch, weil das 0,149 m lange Schlüsselbein als Stab zu kurz zum Drucken ist."
+  },
+  "scales": [
+   500
+  ],
+  "instead": "Structure 1:500:"
+ }
+]

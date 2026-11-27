@@ -595,6 +595,7 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
         let displaced_content_retirements = std::mem::replace(&mut self.child_composition.child_content_retirements, replacement_content_retirements);
         let displaced_composition = std::mem::replace(&mut self.child_composition.composition, candidate_composition);
         let displaced_pins = std::mem::take(&mut self.child_composition.pending_child_pins);
+        displaced.revoke_snapshot_read_authority();
         *active.retained_store = Some(displaced);
         *active.candidate_children = Some(displaced_children);
         *active.candidate_content = Some(displaced_content);
@@ -635,6 +636,19 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
             let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));
             Ok((step, terminal))
         })
+    }
+
+    /// ⏳️ Ends every live whole-document load as a named `plugin.document-load.failed` fault once the ladder has read only host, worker or replacement waits for `waited_us`: a hung owner no longer waits silently. The fault names the phase, stage and member passes of each load; the load's own terminal turn then retires it.
+    pub fn expire_stalled_document_archive_loads(&mut self, waited_us: u64) {
+        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+            let Some(operation) = self.ingest.document_archive_loads.entry(index).map(|(operation, _)| *operation) else { continue };
+            let Some(mut load) = self.ingest.document_archive_loads.remove(operation) else { continue };
+            if !load.terminal() && load.terminal_target.is_none() {
+                let fault = document_load_fault(DOCUMENT_LOAD_FAILED_CODE, format!("document archive load made no progress for {waited_us}us (ceiling {DOCUMENT_ARCHIVE_WAIT_CEILING_US}us): its host, worker or replacement owner never answered; phase={:?} stage={} members_done={} state={:?}", load.phase, load.stage, load.members_done, load.state));
+                load.request_fault(&fault);
+            }
+            self.ingest.document_archive_loads.insert_admitted(operation, load);
+        }
     }
 
     fn drive_document_archive_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -684,6 +698,10 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
 /// 🧮️ One archive-load step may post many owned items in one receipt (the history decoder admission alone posts 6), so it never starts in a turn whose remaining item loan is smaller.
 #[doc(hidden)]
 pub const DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS:usize=16;
+
+/// ⏳️ How long a whole-document load may wait on its host, worker or replacement owner while nothing it reports moves (phase, count, fold, stage, member passes, decoded records). A hung host then ends the load as a named `plugin.document-load.failed` fault carrying the phase instead of waiting silently. The load keeps one wait witness, so real progress of any kind restarts the wait.
+#[doc(hidden)]
+pub const DOCUMENT_ARCHIVE_WAIT_CEILING_US:u64=120_000_000;
 
 impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🌡️ Pressure beats fairness: a displaced-owner or child retirement queue a quarter full is drained out of turn.
@@ -984,7 +1002,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
                 let demand = store_replacement_unit_demands::<A, M>(replacement, false, grant.maximum_copy_bytes);
                 let funded = demand.as_ref().ok().map(|demand| semio_plugin_ownership::bounded_ownership::plugin_grant_funds(*demand, grant));
                 let worker = replacement.session.as_ref().map(|session| session.poll());
-                lines.push(format!("replacement op={operation} state={:?} refusal={:?} cancelled={} committed={} mounted_genesis={} member_ingress={} worker={worker:?} outcome_pending={} resume_pending={} terminal_target={:?} terminal_empty={} store_close={} demand={demand:?} funded={funded:?}", replacement.state, replacement.refusal, replacement.cancelled(), replacement.committed, replacement.mounted_genesis.is_some(), replacement.member_ingress.is_some(), replacement.outcome_pending, replacement.resume_pending, replacement.terminal_target, replacement.terminal_is_empty(), replacement.retained_store.as_ref().map_or_else(|| "none".to_string(), |store| format!("{} leases_empty={}", store.close_owned_phase_witness(), store.snapshot_read_leases_terminal_is_empty()))));
+                lines.push(format!("replacement op={operation} state={:?} refusal={:?} cancelled={} committed={} mounted_genesis={} member_ingress={} worker={worker:?} outcome_pending={} resume_pending={} terminal_target={:?} terminal_empty={} store_close={} roots=[{}] demand={demand:?} funded={funded:?}", replacement.state, replacement.refusal, replacement.cancelled(), replacement.committed, replacement.mounted_genesis.is_some(), replacement.member_ingress.is_some(), replacement.outcome_pending, replacement.resume_pending, replacement.terminal_target, replacement.terminal_is_empty(), replacement.retained_store.as_ref().map_or_else(|| "none".to_string(), |store| format!("{} leases_empty={}", store.close_owned_phase_witness(), store.snapshot_read_leases_terminal_is_empty())), replacement.retained_store.as_ref().map_or_else(|| "none".to_string(), |store| store.close_owned_roots_witness())));
             }
         }
         format!("grant={grant:?} archive_target={:?} replacement_target={:?} waits_for_host={} [{}]", self.document_archive_target(false), self.store_replacement_target(false), self.document_archive_waits_for_host(), lines.join("; "))

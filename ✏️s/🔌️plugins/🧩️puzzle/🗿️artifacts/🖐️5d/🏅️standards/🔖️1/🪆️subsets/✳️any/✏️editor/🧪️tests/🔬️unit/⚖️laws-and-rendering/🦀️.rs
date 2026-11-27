@@ -318,7 +318,7 @@ async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
 #[semio_framework_async_macros::async_test]
 async fn puzzle5d_play_projection_pack_round_trips() {
     let app = app();
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
 }
 //#endregion 🔖️Pack
 

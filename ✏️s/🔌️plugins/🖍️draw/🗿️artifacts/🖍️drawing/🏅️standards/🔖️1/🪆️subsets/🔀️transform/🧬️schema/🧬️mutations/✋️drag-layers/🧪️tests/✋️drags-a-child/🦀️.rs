@@ -65,7 +65,7 @@ fn committed_json_is_canonical_and_codecs_round_trip() {
     }
     let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(*MUTATION).unwrap());
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
 }
 
 /// ⚠️ A missing or locked target is skipped with `mutation.partial`, the rest still moves; nothing left is

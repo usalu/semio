@@ -11,7 +11,7 @@
 import type { AuthoredRepresentation, Language, Text, ViewSection, Viewpoint } from "../../../🧬️schema/🟦️.ts";
 import { ANNOTATION_TEXT_MM } from "../../📐️units/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
-import { arrowOutline, commandsOf, type Vec } from "../📐️geometry/🟦️.ts";
+import { arrowOutline, commandsOf, sub, unit, type Vec } from "../📐️geometry/🟦️.ts";
 import { tx } from "../🖍️palette/🟦️.ts";
 
 /** 📏️ The largest scale denominator at which the side view shows the cut-line marker (1:100 and 1:50). */
@@ -87,7 +87,7 @@ export function drawSectionMarkers(canvas: Canvas, ctx: Ctx, sections: NonNullab
     const id = `section:${viewpoint}`;
     canvas.path("annotations", `${id}:line`, commandsOf([...marker.line], false), { stroke: { color: ink, widthMm: THIN_MM, cap: "butt" } });
     marker.ends.forEach((end, i) => canvas.path("annotations", `${id}:end-${i}`, commandsOf([...end], false), { stroke: { color: ink, widthMm: THICK_MM, cap: "butt" } }));
-    marker.arrows.forEach(([tail, head], i) => canvas.path("annotations", `${id}:arrow-${i}`, commandsOf(arrowOutline(tail, head, 0.3, SECTION_ARROW_HEAD.length, SECTION_ARROW_HEAD.width), true), { stroke: { color: ink, widthMm: 0.05, join: "miter" }, fill: { color: ink } }));
+    marker.arrows.forEach(([tail, head], i) => canvas.path("annotations", `${id}:arrow-${i}`, commandsOf(arrowOutline(head, unit(sub(head, tail)), SECTION_ARROW_MM, 0.3, SECTION_ARROW_HEAD.length, SECTION_ARROW_HEAD.width), true), { stroke: { color: ink, widthMm: 0.05, join: "miter" }, fill: { color: ink } }));
     const letters = sectionLetters(section.label[ctx.language]);
     marker.letters.forEach((letter, i) => canvas.text("annotations", `${id}:letter-${i}`, letter.at, letters[i]!, ANNOTATION_TEXT_MM, ink, { anchor: letter.anchor, weight: "bold" }));
   }

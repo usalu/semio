@@ -67,7 +67,7 @@ fn representative_drawing_document() -> DrawingSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_representative_document() {
-    store::os_store::test_support::assert_dsl_round_trip(&representative_drawing_document());
+    semio_os_store_test_support::assert_dsl_round_trip(&representative_drawing_document());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,7 +76,7 @@ async fn dsl_round_trips_document_without_assets_or_artboard() {
     doc.assets = Default::default();
     doc.artboard = None;
     doc.title = None;
-    store::os_store::test_support::assert_dsl_round_trip(&doc);
+    semio_os_store_test_support::assert_dsl_round_trip(&doc);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -85,7 +85,7 @@ async fn dsl_round_trips_semio_example_fixture() {
     assert_eq!(doc.id, "semio");
     assert!(doc.title.as_ref().is_some_and(|title| title.eq_str("Semio Emblem")));
     assert_eq!(doc.layers.len(), 1);
-    store::os_store::test_support::assert_dsl_round_trip(&doc);
+    semio_os_store_test_support::assert_dsl_round_trip(&doc);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,7 +1,10 @@
 import reportNameSchema from "../../../🏗️build/📊️reporting/🧬️schema/🔣️.json";
 import ts from "typescript";
 import {Database} from "bun:sqlite";
-import {readFileSync} from "node:fs";
+import {mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {writeTextAtomicV1} from "../🔏️atomic-write/🟦️.ts";
 import routes from "./🧫️fixtures/📬️route/🔣️.json";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
@@ -59,4 +62,22 @@ for (const row of routeInput.cases) test("schema command route "+row.id,()=>{
   db.query("INSERT INTO observed VALUES(?,?)").run(row.id,Number(actual));
   expect(db.query("SELECT id FROM observed WHERE valid<>1").all()).toEqual([]);
  }finally{db.close()}
+});
+
+test("atomic write: a failing write leaves the old file intact and no temporary behind", () => {
+  const directory = mkdtempSync(join(tmpdir(), "semio-schema-atomic-"));
+  try {
+    const path = join(directory, "catalog.json");
+    writeFileSync(path, "old");
+    expect(() => writeTextAtomicV1(path, "new", (temporary) => { writeFileSync(temporary, "ne"); throw new Error("disk full"); })).toThrow("disk full");
+    expect(readFileSync(path, "utf8")).toBe("old");
+    expect(readdirSync(directory)).toEqual(["catalog.json"]);
+    writeTextAtomicV1(path, "new");
+    expect(readFileSync(path, "utf8")).toBe("new");
+    expect(readdirSync(directory)).toEqual(["catalog.json"]);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("atomic write: the schema command sources never write a file non-atomically", () => {
+  for (const file of ["../🟦️.ts", "../🧬️twin-projection/🟦️.ts"]) expect(readFileSync(new URL(file, import.meta.url), "utf8")).not.toMatch(/\bwriteFileSync\(/u);
 });

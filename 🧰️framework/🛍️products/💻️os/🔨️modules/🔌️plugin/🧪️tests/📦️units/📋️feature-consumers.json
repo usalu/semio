@@ -46,7 +46,9 @@
     "semio-plugin-reactor-lifecycle",
     "semio-plugin-reactor-tasks",
     "semio-plugin-retained-command",
+    "semio-plugin-retained-command-operation",
     "semio-plugin-runtime-exchange",
+    "semio-plugin-runtime-instances",
     "semio-plugin-runtime-ops",
     "semio-plugin-store-lifecycle",
     "semio-plugin-testing-caller",
@@ -60,7 +62,7 @@
     "semio-ui-scene",
     "serde_json"
   ],
-  "absentRootCount": 62,
+  "absentRootCount": 45,
   "roots": [
     {
       "path": "Cargo.lock",
@@ -500,7 +502,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.lock",
@@ -648,7 +650,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock",
@@ -656,11 +658,11 @@
     },
     {
       "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
@@ -668,15 +670,15 @@
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.lock",
@@ -684,15 +686,15 @@
     },
     {
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock",
@@ -700,11 +702,11 @@
     },
     {
       "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/Cargo.lock",
@@ -716,19 +718,19 @@
     },
     {
       "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock",
@@ -748,7 +750,7 @@
     },
     {
       "path": "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
-      "present": false
+      "present": true
     },
     {
       "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",

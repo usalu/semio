@@ -19,7 +19,10 @@ pub trait OriginalSnapshotIntake<S>:Send {
 pub trait OriginalSnapshotIntakeProducer<S,Source> {
  type Intake:OriginalSnapshotIntake<S>+'static;
  type Rejected;
+ /// 📐️ Quotes the copy, capacity and depth of the whole source admission the constructor drives.
  fn source_demands(&self)->Result<RetirementDemand,ValueError>;
+ /// ⛽️ Quotes the items and Work of every stage of that admission beyond its physical demand.
+ fn source_steps(&self)->Result<(usize,u64),ValueError>;
  fn preserve_source(&self,source:Source)->Self::Rejected;
  fn admit(&self,source:Source,revision:[u8;32],source_generation:u64,cx:&mut StepContext<'_>)->Result<Self::Intake,(OriginalTurnFailure,Self::Rejected)>;
 }

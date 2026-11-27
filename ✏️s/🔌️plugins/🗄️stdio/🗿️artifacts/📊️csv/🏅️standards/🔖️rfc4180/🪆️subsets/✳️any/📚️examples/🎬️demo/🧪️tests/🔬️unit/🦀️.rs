@@ -4,7 +4,7 @@ use crate::standards::v_rfc4180::subsets::any::schema::inferences::CsvInference;
 use crate::{CsvMutation, CsvSnapshot};
 use protocol::Inference;
 
-use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
+use semio_os_store_test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {

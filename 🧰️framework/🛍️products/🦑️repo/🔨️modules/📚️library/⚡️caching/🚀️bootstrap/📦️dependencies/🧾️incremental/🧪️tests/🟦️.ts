@@ -60,6 +60,7 @@ test("incremental contract: Ajv accepts sealed receipts, constants equal the fix
  const ajv=new Ajv({strict:false}).addSchema(schema),validate=(name:string,value:unknown)=>{const check=ajv.getSchema(schema.$id+"#/$defs/"+name)!;expect(check(JSON.parse(JSON.stringify(value))),name+JSON.stringify(check.errors)).toBe(true);};
  const rows=collect(realpathSync(mkdtempSync(join(tmpdir(),"inc-contract-"))),Date.now()),{receipt}=receiptOf(rows);
  validate("InstalledReceipt",receipt);
+ validate("SyncReceipt",core.sealSyncReceiptV1({version:1,purpose:"dependency-sync-receipt",selection:"scopes",runtimeSha256:"c".repeat(64),scopes:[{scope:".",generation:"a".repeat(64),read:"b".repeat(64),installed:"d".repeat(64)}]}));
  validate("SyncReceipt",core.sealSyncReceiptV1({version:1,purpose:"dependency-sync-receipt",selection:"all",runtimeSha256:"c".repeat(64),scopes:[{scope:"✏️s",generation:"a".repeat(64),read:"b".repeat(64),installed:"d".repeat(64)}]}));
  validate("OwnershipReceipt",core.sealOwnershipReceiptV1({version:1,purpose:"dependency-ownership-index",evidence:{name:"a".repeat(64)+".ownership.ndjson",sha256:"a".repeat(64),bytes:0,rows:0}}));
  validate("LockReceipt",core.sealLockReceiptV1({version:1,purpose:"dependency-lock-converged-receipt",scope:".",generation:"a".repeat(64),lockSha256:"b".repeat(64),recipeSha256:"c".repeat(64),runtimeSha256:"d".repeat(64)}));
@@ -71,6 +72,25 @@ test("incremental contract: Ajv accepts sealed receipts, constants equal the fix
  expect(protocol.installed.settleMilliseconds).toBe(generation.settleMilliseconds);
  expect(protocol.execution.settleMilliseconds).toBe(generation.settleMilliseconds);
  expect(protocol.installed.maximumRelist).toBe(generation.maximumRelist);
+});
+
+/** 🧩️ The scoped receipt laws: which rows a request needs, and how a partial synchronization merges into the sealed state, equal an independent Python model over every roster and request. */
+test("scoped synchronization receipt laws equal the Python model",()=>{
+ const row=(scope:string,tag:string)=>({scope,generation:tag.repeat(64),read:"b".repeat(64),installed:"d".repeat(64)});
+ const receipts=[{selection:"all" as const,scopes:[row(".","a"),row("✏️s","e"),row("🌎️hub","f")]},{selection:"scopes" as const,scopes:[row(".","a"),row("✏️s","e")]},{selection:"scopes" as const,scopes:[row("🌎️hub","f")]}];
+ const requests=[{kind:"all"},{kind:"recorded"},{kind:"scopes",owners:["."]},{kind:"scopes",owners:[".","✏️s"]},{kind:"scopes",owners:["✏️s","🌎️hub"]},{kind:"scopes",owners:["🎓️teaching"]}] as const;
+ for(const receipt of receipts)for(const request of requests){
+  const full=core.sealSyncReceiptV1({version:1,purpose:"dependency-sync-receipt",runtimeSha256:"c".repeat(64),...receipt}),ours=core.syncRequestRowsV1(full,request);
+  expect(ours==="incomplete"?null:ours.map(item=>item.scope)).toEqual(oracle(["sync-rows",JSON.stringify(full),JSON.stringify(request)]));
+ }
+ for(const previous of [undefined,...receipts])for(const complete of [false,true]){
+  const rows=[row("✏️s","9"),row("🏢️semio-tech","8")],ours=core.mergeSyncScopesV1(previous,rows,complete);
+  expect(JSON.parse(JSON.stringify(ours))).toEqual(oracle(["sync-merge",JSON.stringify(previous??null),JSON.stringify(rows),JSON.stringify(complete)]));
+ }
+ const merged=core.mergeSyncScopesV1(receipts[0],[row("✏️s","9")],false);
+ expect(merged.selection).toBe("all");
+ expect(merged.scopes.map(item=>item.scope)).toEqual([".","✏️s","🌎️hub"]);
+ expect(merged.scopes.find(item=>item.scope==="✏️s")!.generation).toBe("9".repeat(64));
 });
 
 /** 🔏️ Reproduces every seal with an independent Python canonical JSON implementation and refuses tampered, reordered or unclosed receipts. */

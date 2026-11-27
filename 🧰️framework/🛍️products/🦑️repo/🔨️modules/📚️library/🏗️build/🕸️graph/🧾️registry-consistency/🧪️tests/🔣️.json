@@ -1,147 +1,492 @@
 {
   "version": 1,
-  "policy": { "collections": ["🧫️fixtures"], "moduleMember": "🔨️modules", "generated": ["node_modules", "target"] },
+  "policy": {
+    "collections": [
+      "🧫️fixtures"
+    ],
+    "moduleMember": "🔨️modules",
+    "generated": [
+      "node_modules",
+      "target"
+    ]
+  },
   "moveScopes": [
-    { "name": "no manifest moved", "moves": [["a/x.ts", "b/x.ts"]], "limit": 4, "scopes": [] },
-    { "name": "both sides of a moved module collapse to the outermost directories", "moves": [["old/p/📋️project.json", "new/p/📋️project.json"], ["old/p/nat/Cargo.toml", "new/p/nat/Cargo.toml"], ["old/p/package.json", "new/p/package.json"], ["old/p/src/a.ts", "new/p/src/a.ts"]], "limit": 4, "scopes": ["new/p", "old/p"] },
-    { "name": "a root manifest is the whole workspace", "moves": [["Cargo.toml", "x/Cargo.toml"]], "limit": 4, "scopes": ["."] },
-    { "name": "more outermost directories than the limit fall back to the whole workspace", "moves": [["a/Cargo.toml", "b/Cargo.toml"], ["c/Cargo.toml", "d/Cargo.toml"], ["e/Cargo.toml", "f/Cargo.toml"]], "limit": 5, "scopes": ["."] },
-    { "name": "a sibling prefix is not nested", "moves": [["a/Cargo.toml", "a-b/Cargo.toml"], ["a/c/Cargo.toml", "a/d/Cargo.toml"]], "limit": 8, "scopes": ["a", "a-b"] }
+    {
+      "name": "no manifest moved",
+      "moves": [
+        [
+          "a/x.ts",
+          "b/x.ts"
+        ]
+      ],
+      "limit": 4,
+      "scopes": []
+    },
+    {
+      "name": "both sides of a moved module collapse to the outermost directories",
+      "moves": [
+        [
+          "old/p/📋️project.json",
+          "new/p/📋️project.json"
+        ],
+        [
+          "old/p/nat/Cargo.toml",
+          "new/p/nat/Cargo.toml"
+        ],
+        [
+          "old/p/package.json",
+          "new/p/package.json"
+        ],
+        [
+          "old/p/src/a.ts",
+          "new/p/src/a.ts"
+        ]
+      ],
+      "limit": 4,
+      "scopes": [
+        "new/p",
+        "old/p"
+      ]
+    },
+    {
+      "name": "a root manifest is the whole workspace",
+      "moves": [
+        [
+          "Cargo.toml",
+          "x/Cargo.toml"
+        ]
+      ],
+      "limit": 4,
+      "scopes": [
+        "."
+      ]
+    },
+    {
+      "name": "more outermost directories than the limit fall back to the whole workspace",
+      "moves": [
+        [
+          "a/Cargo.toml",
+          "b/Cargo.toml"
+        ],
+        [
+          "c/Cargo.toml",
+          "d/Cargo.toml"
+        ],
+        [
+          "e/Cargo.toml",
+          "f/Cargo.toml"
+        ]
+      ],
+      "limit": 5,
+      "scopes": [
+        "."
+      ]
+    },
+    {
+      "name": "a sibling prefix is not nested",
+      "moves": [
+        [
+          "a/Cargo.toml",
+          "a-b/Cargo.toml"
+        ],
+        [
+          "a/c/Cargo.toml",
+          "a/d/Cargo.toml"
+        ]
+      ],
+      "limit": 8,
+      "scopes": [
+        "a",
+        "a-b"
+      ]
+    }
   ],
   "cases": [
     {
       "name": "reports stale rows, unregistered modules and shadowing Cargo rows, and the sync converges",
       "files": {
-        "a/📋️project.json": { "name": "@t/a" },
-        "a/package.json": { "name": "@t/a" },
-        "course/📋️project.json": { "name": "@t/course" },
-        "course/package.json": { "name": "@t/course" },
+        "a/📋️project.json": {
+          "name": "@t/a"
+        },
+        "a/package.json": {
+          "name": "@t/a"
+        },
+        "course/📋️project.json": {
+          "name": "@t/course"
+        },
+        "course/package.json": {
+          "name": "@t/course"
+        },
         "b/Cargo.toml": "[package]\nname = \"crate-b\"\n",
-        "b/📋️project.json": { "name": "@t/b" },
+        "b/📋️project.json": {
+          "name": "@t/b"
+        },
         "crate/Cargo.toml": "[package]\nname = \"crate-x\"\n\n[dependencies]\nname = \"other\"\n",
         "virt/Cargo.toml": "[workspace]\nmembers = []\n",
-        "x/🧫️fixtures/f/📋️project.json": { "name": "fixture" },
-        "n/node_modules/p/📋️project.json": { "name": "vendored" }
+        "x/🧫️fixtures/f/📋️project.json": {
+          "name": "fixture"
+        },
+        "n/node_modules/p/📋️project.json": {
+          "name": "vendored"
+        }
       },
       "registry": {
         "version": 1,
         "owners": [
-          { "name": "@t/a", "root": "a", "manifest": "a/📋️project.json", "packages": ["@t/a"] },
-          { "name": "crate-b", "root": "b", "manifest": "b/Cargo.toml", "packages": [] },
-          { "name": "@t/quiz", "root": "quiz", "manifest": "quiz/📋️project.json", "packages": ["@t/quiz"] }
+          {
+            "name": "@t/a",
+            "root": "a",
+            "manifest": "a/📋️project.json",
+            "packages": [
+              "@t/a"
+            ]
+          },
+          {
+            "name": "crate-b",
+            "root": "b",
+            "manifest": "b/Cargo.toml",
+            "packages": []
+          },
+          {
+            "name": "@t/quiz",
+            "root": "quiz",
+            "manifest": "quiz/📋️project.json",
+            "packages": [
+              "@t/quiz"
+            ]
+          }
         ],
         "catalogProviders": []
       },
-      "findings": ["cargo-row-shadows-project:crate-b", "cargo-without-row:crate/Cargo.toml", "missing-root:@t/quiz", "project-without-row:b/📋️project.json", "project-without-row:course/📋️project.json"],
-      "sync": { "owners": ["@t/a@a", "@t/b@b", "@t/course@course", "crate-x@crate"], "removed": ["@t/quiz"], "added": ["@t/course", "crate-x"], "renamed": ["crate-b>@t/b"], "relocated": [] }
+      "findings": [
+        "cargo-row-shadows-project:crate-b",
+        "cargo-without-row:crate/Cargo.toml",
+        "missing-root:@t/quiz",
+        "project-without-row:b/📋️project.json",
+        "project-without-row:course/📋️project.json"
+      ],
+      "sync": {
+        "owners": [
+          "@t/a@a",
+          "@t/b@b",
+          "@t/course@course",
+          "crate-x@crate"
+        ],
+        "removed": [
+          "@t/quiz"
+        ],
+        "added": [
+          "@t/course",
+          "crate-x"
+        ],
+        "renamed": [
+          "crate-b>@t/b"
+        ],
+        "relocated": []
+      }
     },
     {
       "name": "a moved module keeps its row and follows the new root",
       "files": {
-        "new/p/📋️project.json": { "name": "@t/p" },
-        "new/p/package.json": { "name": "@t/p" }
+        "new/p/📋️project.json": {
+          "name": "@t/p"
+        },
+        "new/p/package.json": {
+          "name": "@t/p"
+        }
       },
       "registry": {
         "version": 1,
-        "owners": [{ "name": "@t/p", "root": "old/p", "manifest": "old/p/📋️project.json", "packages": ["@t/p"] }],
+        "owners": [
+          {
+            "name": "@t/p",
+            "root": "old/p",
+            "manifest": "old/p/📋️project.json",
+            "packages": [
+              "@t/p"
+            ]
+          }
+        ],
         "catalogProviders": []
       },
-      "findings": ["missing-root:@t/p", "project-without-row:new/p/📋️project.json"],
-      "sync": { "owners": ["@t/p@new/p"], "removed": [], "added": [], "renamed": [], "relocated": ["@t/p:old/p>new/p"] }
+      "findings": [
+        "missing-root:@t/p",
+        "project-without-row:new/p/📋️project.json"
+      ],
+      "sync": {
+        "owners": [
+          "@t/p@new/p"
+        ],
+        "removed": [],
+        "added": [],
+        "renamed": [],
+        "relocated": [
+          "@t/p:old/p>new/p"
+        ]
+      }
     },
     {
       "name": "a renamed project at the same root takes the new name and package list",
       "files": {
-        "course/📋️project.json": { "name": "@t/course" },
-        "course/package.json": { "name": "@t/course-pkg" }
+        "course/📋️project.json": {
+          "name": "@t/course"
+        },
+        "course/package.json": {
+          "name": "@t/course-pkg"
+        }
       },
-      "registry": {
-        "version": 1,
-        "owners": [{ "name": "@t/quiz", "root": "course", "manifest": "course/📋️project.json", "packages": ["@t/quiz"] }],
-        "catalogProviders": []
-      },
-      "findings": ["name-mismatch:@t/quiz", "package-missing:@t/quiz", "package-stale:@t/quiz"],
-      "sync": { "owners": ["@t/course@course"], "removed": [], "added": [], "renamed": ["@t/quiz>@t/course"], "relocated": [] }
-    },
-    {
-      "name": "rows below an ignored generated directory are exempt while the directory is absent",
-      "files": { "a/📋️project.json": { "name": "@t/a" } },
-      "ignored": ["gen"],
       "registry": {
         "version": 1,
         "owners": [
-          { "name": "@t/a", "root": "a", "manifest": "a/📋️project.json", "packages": [] },
-          { "name": "gen-crate", "root": "gen/pkg", "manifest": "gen/pkg/Cargo.toml", "packages": [] }
+          {
+            "name": "@t/quiz",
+            "root": "course",
+            "manifest": "course/📋️project.json",
+            "packages": [
+              "@t/quiz"
+            ]
+          }
+        ],
+        "catalogProviders": []
+      },
+      "findings": [
+        "name-mismatch:@t/quiz",
+        "package-missing:@t/quiz",
+        "package-stale:@t/quiz"
+      ],
+      "sync": {
+        "owners": [
+          "@t/course@course"
+        ],
+        "removed": [],
+        "added": [],
+        "renamed": [
+          "@t/quiz>@t/course"
+        ],
+        "relocated": []
+      }
+    },
+    {
+      "name": "rows below an ignored generated directory are exempt while the directory is absent",
+      "files": {
+        "a/📋️project.json": {
+          "name": "@t/a"
+        }
+      },
+      "ignored": [
+        "gen"
+      ],
+      "registry": {
+        "version": 1,
+        "owners": [
+          {
+            "name": "@t/a",
+            "root": "a",
+            "manifest": "a/📋️project.json",
+            "packages": []
+          },
+          {
+            "name": "gen-crate",
+            "root": "gen/pkg",
+            "manifest": "gen/pkg/Cargo.toml",
+            "packages": []
+          }
         ],
         "catalogProviders": []
       },
       "findings": [],
-      "sync": { "owners": ["@t/a@a", "gen-crate@gen/pkg"], "removed": [], "added": [], "renamed": [], "relocated": [] }
+      "sync": {
+        "owners": [
+          "@t/a@a",
+          "gen-crate@gen/pkg"
+        ],
+        "removed": [],
+        "added": [],
+        "renamed": [],
+        "relocated": []
+      }
     },
     {
       "name": "a scope limits findings and sync to its subtree",
       "files": {
-        "s/in/📋️project.json": { "name": "@t/in" },
-        "o/out/📋️project.json": { "name": "@t/out" }
+        "s/in/📋️project.json": {
+          "name": "@t/in"
+        },
+        "o/out/📋️project.json": {
+          "name": "@t/out"
+        }
       },
       "scope": "s",
       "registry": {
         "version": 1,
         "owners": [
-          { "name": "@t/gone-in", "root": "s/gone", "manifest": "s/gone/📋️project.json", "packages": [] },
-          { "name": "@t/gone-out", "root": "o/gone", "manifest": "o/gone/📋️project.json", "packages": [] }
+          {
+            "name": "@t/gone-in",
+            "root": "s/gone",
+            "manifest": "s/gone/📋️project.json",
+            "packages": []
+          },
+          {
+            "name": "@t/gone-out",
+            "root": "o/gone",
+            "manifest": "o/gone/📋️project.json",
+            "packages": []
+          }
         ],
         "catalogProviders": []
       },
-      "findings": ["missing-root:@t/gone-in", "project-without-row:s/in/📋️project.json"],
-      "sync": { "owners": ["@t/gone-out@o/gone", "@t/in@s/in"], "removed": ["@t/gone-in"], "added": ["@t/in"], "renamed": [], "relocated": [] }
+      "findings": [
+        "missing-root:@t/gone-in",
+        "project-without-row:s/in/📋️project.json"
+      ],
+      "sync": {
+        "owners": [
+          "@t/gone-out@o/gone",
+          "@t/in@s/in"
+        ],
+        "removed": [
+          "@t/gone-in"
+        ],
+        "added": [
+          "@t/in"
+        ],
+        "renamed": [],
+        "relocated": []
+      }
     },
     {
       "name": "the root module and a module below a module member are owners while example collections are not",
       "files": {
-        "📋️project.json": { "name": "@t/root" },
-        "m/🔨️modules/🧫️fixtures/k/📋️project.json": { "name": "@t/mod-fixture" },
-        "m/🧫️fixtures/e/📋️project.json": { "name": "@t/example" }
+        "📋️project.json": {
+          "name": "@t/root"
+        },
+        "m/🔨️modules/🧫️fixtures/k/📋️project.json": {
+          "name": "@t/mod-fixture"
+        },
+        "m/🧫️fixtures/e/📋️project.json": {
+          "name": "@t/example"
+        }
       },
-      "registry": { "version": 1, "owners": [], "catalogProviders": [] },
-      "findings": ["project-without-row:m/🔨️modules/🧫️fixtures/k/📋️project.json", "project-without-row:📋️project.json"],
-      "sync": { "owners": ["@t/mod-fixture@m/🔨️modules/🧫️fixtures/k", "@t/root@."], "removed": [], "added": ["@t/mod-fixture", "@t/root"], "renamed": [], "relocated": [] }
+      "registry": {
+        "version": 1,
+        "owners": [],
+        "catalogProviders": []
+      },
+      "findings": [
+        "project-without-row:m/🔨️modules/🧫️fixtures/k/📋️project.json",
+        "project-without-row:📋️project.json"
+      ],
+      "sync": {
+        "owners": [
+          "@t/mod-fixture@m/🔨️modules/🧫️fixtures/k",
+          "@t/root@."
+        ],
+        "removed": [],
+        "added": [
+          "@t/mod-fixture",
+          "@t/root"
+        ],
+        "renamed": [],
+        "relocated": []
+      }
     },
     {
       "name": "a consistent registry with a native root has no findings and the sync changes nothing",
       "files": {
-        "a/📋️project.json": { "name": "@t/a" },
-        "a/package.json": { "name": "@t/a" },
+        "a/📋️project.json": {
+          "name": "@t/a"
+        },
+        "a/package.json": {
+          "name": "@t/a"
+        },
         "c/Cargo.toml": "[package]\nname = \"crate-c\"\n",
         "d/Cargo.toml": "[package]\nname = \"crate-d\"\n"
       },
       "registry": {
         "version": 1,
         "owners": [
-          { "name": "@t/a", "root": "a", "manifest": "a/📋️project.json", "packages": ["@t/a"], "nativeRoots": ["d"] },
-          { "name": "crate-c", "root": "c", "manifest": "c/Cargo.toml", "packages": [] }
+          {
+            "name": "@t/a",
+            "root": "a",
+            "manifest": "a/📋️project.json",
+            "packages": [
+              "@t/a"
+            ],
+            "nativeRoots": [
+              "d"
+            ]
+          },
+          {
+            "name": "crate-c",
+            "root": "c",
+            "manifest": "c/Cargo.toml",
+            "packages": []
+          }
         ],
         "catalogProviders": []
       },
       "findings": [],
-      "sync": { "owners": ["@t/a@a", "crate-c@c"], "removed": [], "added": [], "renamed": [], "relocated": [] }
+      "sync": {
+        "owners": [
+          "@t/a@a",
+          "crate-c@c"
+        ],
+        "removed": [],
+        "added": [],
+        "renamed": [],
+        "relocated": []
+      }
     },
     {
       "name": "catalog providers and native roots that point nowhere are reported and left for their authors",
-      "files": { "a/📋️project.json": { "name": "@t/a" } },
+      "files": {
+        "a/📋️project.json": {
+          "name": "@t/a"
+        }
+      },
       "registry": {
         "version": 1,
-        "owners": [{ "name": "@t/a", "root": "a", "manifest": "a/📋️project.json", "packages": [], "nativeRoots": ["nat"] }],
-        "catalogProviders": [{ "ownerRoot": "p", "sourcePath": "p/pub.ts", "consumerRoots": ["q"] }]
+        "owners": [
+          {
+            "name": "@t/a",
+            "root": "a",
+            "manifest": "a/📋️project.json",
+            "packages": [],
+            "nativeRoots": [
+              "nat"
+            ]
+          }
+        ],
+        "catalogProviders": [
+          {
+            "ownerRoot": "p",
+            "sourcePath": "p/pub.ts",
+            "consumerRoots": [
+              "q"
+            ]
+          }
+        ]
       },
-      "findings": ["missing-native-root:@t/a", "provider-consumer-root:q", "provider-owner-root:p", "provider-source:p/pub.ts"],
+      "findings": [
+        "missing-native-root:@t/a",
+        "provider-consumer-root:q",
+        "provider-owner-root:p",
+        "provider-source:p/pub.ts"
+      ],
       "sync": {
-        "owners": ["@t/a@a"],
+        "owners": [
+          "@t/a@a"
+        ],
         "removed": [],
         "added": [],
         "renamed": [],
         "relocated": [],
-        "residual": ["missing-native-root:@t/a", "provider-consumer-root:q", "provider-owner-root:p", "provider-source:p/pub.ts"]
+        "residual": [
+          "missing-native-root:@t/a",
+          "provider-consumer-root:q",
+          "provider-owner-root:p",
+          "provider-source:p/pub.ts"
+        ]
       }
     },
     {
@@ -681,6 +1026,137 @@
         "renamed": [],
         "relocated": []
       }
+    }
+  ],
+  "duplicates": [
+    {
+      "name": "two identical rows merge and the file is rewritten canonical",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        }
+      ],
+      "names": [
+        "@t/a"
+      ],
+      "healed": true
+    },
+    {
+      "name": "identical rows apart from each other merge too",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/b",
+          "root": "b",
+          "manifest": "b/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        }
+      ],
+      "names": [
+        "@t/a",
+        "@t/b"
+      ],
+      "healed": true
+    },
+    {
+      "name": "a canonical registry stays untouched",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/b",
+          "root": "b",
+          "manifest": "b/Cargo.toml",
+          "packages": []
+        }
+      ],
+      "names": [
+        "@t/a",
+        "@t/b"
+      ],
+      "healed": false
+    },
+    {
+      "name": "rows of one name with another root refuse naming both",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/a",
+          "root": "c",
+          "manifest": "c/Cargo.toml",
+          "packages": []
+        }
+      ],
+      "refusal": "Canonical build owner identity collision"
+    },
+    {
+      "name": "rows of one root with another name refuse naming both",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        },
+        {
+          "name": "@t/b",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": []
+        }
+      ],
+      "refusal": "Canonical build owner identity collision"
+    },
+    {
+      "name": "rows claiming one package refuse naming both",
+      "owners": [
+        {
+          "name": "@t/a",
+          "root": "a",
+          "manifest": "a/Cargo.toml",
+          "packages": [
+            "p"
+          ]
+        },
+        {
+          "name": "@t/b",
+          "root": "b",
+          "manifest": "b/Cargo.toml",
+          "packages": [
+            "p"
+          ]
+        }
+      ],
+      "refusal": "Canonical package owner collision"
     }
   ]
 }

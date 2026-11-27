@@ -9,7 +9,7 @@ import {machineNeutralRemapV1} from "../../🧭️remap/🟦️.ts";
 import {localKeyV1,localTextV1,portableKeyV1,portableRootsV1,portableTextV1,remoteKeyV1,toolRootsV1,type PlatformV1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
 import {buildRunKeyInputV1,buildScriptIdentityV1,markBuildScriptIdentityV1} from "../../🏗️buildscript/🔑️run-key/🟦️.ts";
 import {packRunV1,unpackRunV1,runFileNameV1,runFilePathV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
-import {compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
+import {canonicalDepInfoV1,compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
 import {manifestFilesV1,manifestOfV1,observedManifestV1,readManifestV1,writeManifestV1} from "../../🛰️fleet/📋️manifest/🟦️.ts";
 import type {BuildEntryV1} from "../../💾️store/🟦️.ts";
 import {buildKeyEnvironmentV1} from "../../🔏️key/🟦️.ts";
@@ -117,9 +117,9 @@ test("skipped units are counted under their reason, the reasons add up to the sk
 });
 
 test("a unit that was compiled but not shared says why: read-only or a full spool; the breaker is no reason, the upload waits",()=>{
- const unit=(upload:boolean)=>({client:{settings:{upload}}} as unknown as FleetUnitV1);
+ const unit=(upload:boolean)=>({root:directory("unshared-spool"),client:{settings:{upload}}} as unknown as FleetUnitV1);
  expect(unsharedReasonV1(unit(false))).toBe("read-only");
- expect(unsharedReasonV1(unit(true))).toBe("spool-full");
+ expect(unsharedReasonV1(unit(true)),"an empty spool is not full: the enqueue failed for another reason").toBe("spool-error");
 });
 
 test("the skipped count is the sum of the reason files, so no skip is unrecorded; the sum equals an independent python reading of the files",()=>{
@@ -287,4 +287,16 @@ test("the files a finished compilation read although the scan missed them are ke
   expect(keyGapV1({cwd:base,covered:new Set(keyed!.files.map(file=>resolve(file))),keyedNames:new Set(),depInfo:dep}),"the recorded file is covered now").toEqual([]);
   const moved=directory("gap-moved");expect(manifestFilesV1(readManifestV1(root,id)!.manifest,portableRootsV1({cwd:moved,workspace:moved}))[0]!.path).toBe(join(moved,"files","data.json"));
  });
+});
+
+test("the dependency file of one unit has the same bytes whichever run, process and lane wrote it: the observation files of the proc-macros are dropped from targets, `path:` lines and checksums",()=>{
+ const body=(stamp:string,pid:string,hash:string)=>{
+  const observation=(index:number)=>"@@semio-lane@@/semio-compiler-resources/"+stamp+"-"+pid+"-"+index+"/observation.json";
+  return "out/a.d: src/lib.rs src/mod.rs "+observation(0)+" "+observation(1)+"\n\nsrc/lib.rs:\nsrc/mod.rs:\n"+observation(0)+":\n"+observation(1)+":\n\n# env-dep:SEMIO_COMPILER_RESOURCE_ROOT=@@semio-lane@@/semio-compiler-resources\n# checksum:blake3=1111 file_len:5 src/lib.rs\n# checksum:blake3="+hash+" file_len:9 "+observation(0)+"\n# checksum:blake3="+hash+" file_len:9 "+observation(1)+"\n# checksum:blake3=2222 file_len:7 src/mod.rs\n";
+ };
+ const first=canonicalDepInfoV1(body("1795728666959","93248","aaaa")),second=canonicalDepInfoV1(body("1795728668855","28955","bbbb"));
+ expect(first).toBe(second);
+ expect(first).toBe("out/a.d: src/lib.rs src/mod.rs\n\nsrc/lib.rs:\nsrc/mod.rs:\n\n# env-dep:SEMIO_COMPILER_RESOURCE_ROOT=@@semio-lane@@/semio-compiler-resources\n# checksum:blake3=1111 file_len:5 src/lib.rs\n# checksum:blake3=2222 file_len:7 src/mod.rs\n");
+ expect(canonicalDepInfoV1(first)).toBe(first);
+ expect(sha256V1(first)).toBe(sha256V1(second));
 });

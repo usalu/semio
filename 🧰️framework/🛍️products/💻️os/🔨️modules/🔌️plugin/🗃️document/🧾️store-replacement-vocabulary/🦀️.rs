@@ -211,7 +211,7 @@ where
     pub terminal_target: Option<ActiveArtifactStoreReplacementState>,
     pub resume_pending: bool,
     /// ⏱️ Monotonic instant the initializer's worker first answered `Idle` in the current unbroken run (`None` = the worker is producing outcomes).
-    pub(super) worker_idle_since_us: Option<u64>,
+    pub worker_idle_since_us: Option<u64>,
     pub(super) initializer_step_demand: RetirementDemand,
     pub retained_store: ManuallyDrop<Option<Box<ArtifactStore<P, Mutation>>>>,
     pub retained_disposer: ManuallyDrop<ArtifactDisposal<ArtifactStore<P, Mutation>>>,

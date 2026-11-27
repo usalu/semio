@@ -274,7 +274,7 @@ function drawArrow(canvas: Canvas, ctx: Ctx, spec: ArrowSpec, labels: Labels): v
     const dir = { x: projection.arrow.x / inPlane, y: -projection.arrow.y / inPlane };
     const length = arrowLengthMm(inPlane, spec.max, spec.longest);
     tail = sub(spec.head, scaleVec(dir, length));
-    if (spec.drawn) canvas.path("forces", spec.id, commandsOf(arrowOutline(tail, spec.head, 0.3, Math.min(1.8, length * 0.6), 1.3), true), { fill: { color }, stroke: { color, widthMm: 0.12, ...(dash ? { dashMm: dash } : {}) }, value });
+    if (spec.drawn) canvas.path("forces", spec.id, commandsOf(arrowOutline(spec.head, dir, length, 0.3, Math.min(1.8, length * 0.6), 1.3), true), { fill: { color }, stroke: { color, widthMm: 0.12, ...(dash ? { dashMm: dash } : {}) }, value });
   }
   if (spec.drawn && projection.symbol !== null) crossSymbol(canvas, `${spec.id}:out`, spec.head, 0.9 + 1.6 * Math.sqrt(Math.abs(projection.outOfPlane) / Math.max(spec.max, 1e-9)), projection.symbol, color, dash, { ...value, value: Math.abs(projection.outOfPlane) });
   if (spec.label) {

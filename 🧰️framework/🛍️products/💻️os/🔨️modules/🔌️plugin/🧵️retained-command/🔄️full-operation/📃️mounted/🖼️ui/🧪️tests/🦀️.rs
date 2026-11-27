@@ -1,4 +1,4 @@
-use semio_plugin_retained_command::typed_operation::MountedUiCopy;
+use semio_plugin_retained_command_operation::typed_operation::MountedUiCopy;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_value::{RetainedWorkPoll,ValueError,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,RetireOwned};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

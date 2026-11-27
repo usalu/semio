@@ -13,7 +13,7 @@ async fn pack_round_trips_empty() {
 #[semio_framework_async_macros::async_test]
 async fn pack_schema_identity_is_derived_and_keeps_the_demo_parent() {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
-    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
+    semio_os_store_test_support::assert_pack_schema_identity(&snapshot);
     let back = <WiresSnapshot as semio_os_kernel::os_store::ArtifactPack>::decode_pack(&semio_os_kernel::os_store::ArtifactPack::encode_pack(&snapshot)).expect("decode");
     assert_eq!(back, snapshot);
 }

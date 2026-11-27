@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&Din4108Snapshot::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&Din4108Snapshot::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -14,7 +14,7 @@ async fn bundled_examples_preserve_pressure_tests_in_both_carriers() {
     ] {
         let document = parse_dsl(text).expect("parse bundled example");
         assert_eq!(document.cases.len(), 1);
-        store::os_store::test_support::assert_dsl_round_trip(&document);
+        semio_os_store_test_support::assert_dsl_round_trip(&document);
         let packed = crate::binary::snapshot::encode_din4108_pack(&document);
         assert_eq!(crate::binary::snapshot::decode_din4108_pack(&packed).expect("decode packed example"), document);
     }

@@ -11,8 +11,8 @@ fn image_edits_preserve_history_and_sparse_dimensions() {
     let before=semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
     let expected=&fixture["after"];
     let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation=semio_s_artifact_draw_drawing_style::update_image::mutation::update_image(id.clone(),expected["imageKey"].as_str().unwrap().into(),expected["width"].as_f64().unwrap(),expected["height"].as_f64().unwrap());
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
     let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());
     let mut after=protocol::apply_diff_cold(outcome.diff(),&before).unwrap();
     let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Image(image)=&after.layers[0] else{panic!()};

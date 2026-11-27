@@ -127,7 +127,7 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
         let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }

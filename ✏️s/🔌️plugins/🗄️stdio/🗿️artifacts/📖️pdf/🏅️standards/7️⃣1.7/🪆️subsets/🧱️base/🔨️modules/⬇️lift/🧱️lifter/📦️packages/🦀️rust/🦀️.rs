@@ -38,4 +38,4 @@ pub mod standards {
     }
 }
 
-pub use standards::v1_7::subsets::base::modules::lift::{lift_viewer_preferences, page_layout_from_name, page_mode_from_name, Category, DocumentLiftState, FontLift, FontStart, Lifter, CATALOG_KEYS};
+pub use standards::v1_7::subsets::base::modules::lift::{lift_viewer_preferences, page_layout_from_name, page_mode_from_name, Category, Claim, DocumentLiftState, FontLift, FontStart, Lifter, ResourceClaims, CATALOG_KEYS};

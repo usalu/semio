@@ -16,6 +16,7 @@ import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../
 import {publishFleetCacheFactsV1} from "../../../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
 import {syncFleetIdentityV1} from "../../../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {refreshFleetCacheFactsV1,remoteCacheFetchV1} from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {openOffloadSessionV1} from "../../../🟦️.ts";
 import {eventuallyV1,writeHostViewV1} from "../../../../🧪️tests/🧰️cluster/🟦️.ts";
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1,type TestCheckoutV1} from "../../🧰️workspace/🟦️.ts";
 
@@ -116,3 +117,12 @@ test.skipIf(diskFull)("signed end to end: an unsigned caller is refused, a unit 
  const secrets=readdirSync(store,{recursive:true,withFileTypes:true}).filter(entry=>entry.isFile()&&/fleet-auth|cache\.json/u.test(entry.name)).map(entry=>readFileSync(join(entry.parentPath,entry.name),"utf8")).join("\n");
  expect(secrets,"the store holds public keys only").not.toMatch(/"(private|secret|token)"/iu);
 },300000);
+
+test("a stale operator token of the environment never replaces the machine's signature at the scheduler the fleet facts publish; an explicit endpoint keeps the token",async()=>{
+ const stale=await machine("stale","g1-m13"),environment={...stale.environment,SEMIO_REMOTE_CACHE_TOKEN:"stale-operator-token"};
+ const signed=await openOffloadSessionV1({root:stale.cache,environment});
+ expect("decline" in signed?signed.detail:"").toBe("");
+ expect(signed).toMatchObject({token:"stale-operator-token",executionToken:undefined});
+ const explicit=await openOffloadSessionV1({root:stale.cache,environment:{...environment,SEMIO_REMOTE_EXECUTION_ENDPOINT:`grpc://127.0.0.1:${ports[0]}`}});
+ expect(explicit).toMatchObject({executionToken:"stale-operator-token"});
+},60000);

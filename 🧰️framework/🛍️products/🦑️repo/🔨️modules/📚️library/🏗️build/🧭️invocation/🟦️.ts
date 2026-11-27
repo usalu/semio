@@ -227,11 +227,12 @@ export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):Bui
 
 
 /** 📥️ An explicit dependency selection enters its original owner before any installed graph tool. */
-export type BuildDependencyInvocationV1=Readonly<{mode:"sync"|"lock"|"ensure";selection:Readonly<{kind:"all"}>|Readonly<{kind:"scope";owner:string}>}>;
+export type BuildDependencyInvocationV1=Readonly<{mode:"sync"|"lock"|"ensure";selection:Readonly<{kind:"all"}>|Readonly<{kind:"scope";owner:string}>|Readonly<{kind:"scopes";owners:readonly string[]}>}>;
 
 /** 🗝️ Admits only the schema-defined whole or scoped installer operation, or the selection-free ensure request. */
 export function readBuildDependencyInvocationV1(args:readonly string[]):BuildDependencyInvocationV1 {
-  const [command,mode,selection,owner]=args,value=mode==="ensure"?(args.length===2?{mode,selection:{kind:"all"}}:undefined):selection==="--all"&&args.length===3?{mode,selection:{kind:"all"}}:selection==="--scope"&&args.length===4?{mode,selection:{kind:"scope",owner}}:undefined;
-  if(command!=="dependencies"||value===undefined||validateJsonSchemaSubset(dependencySchema,value).length)throw Error("Expected repo dependencies sync|lock --all|--scope <owner>, or repo dependencies ensure");
+  const [command,mode,selection,owner]=args,owners=args.length>=4&&args.length%2===0&&args.slice(2).every((value,index)=>index%2===0?value==="--scope":true)?args.filter((_,index)=>index>=3&&index%2===1):[],
+    value=mode==="ensure"?(args.length===2?{mode,selection:{kind:"all"}}:undefined):selection==="--all"&&args.length===3?{mode,selection:{kind:"all"}}:selection==="--scope"&&args.length===4?{mode,selection:{kind:"scope",owner}}:selection==="--scope"&&owners.length>=2&&mode==="sync"?{mode,selection:{kind:"scopes",owners}}:undefined;
+  if(command!=="dependencies"||value===undefined||validateJsonSchemaSubset(dependencySchema,value).length)throw Error("Expected repo dependencies sync|lock --all|--scope <owner>, sync with repeated --scope <owner>, or repo dependencies ensure");
   return value as BuildDependencyInvocationV1;
 }

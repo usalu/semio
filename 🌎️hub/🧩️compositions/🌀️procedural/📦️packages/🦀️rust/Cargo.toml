@@ -31,6 +31,7 @@ semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-generation2d = { workspace = true }
+semio-s-artifact-procedural-generation2d-pdf-export = { workspace = true }
 semio-s-artifact-procedural-generation3d = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }

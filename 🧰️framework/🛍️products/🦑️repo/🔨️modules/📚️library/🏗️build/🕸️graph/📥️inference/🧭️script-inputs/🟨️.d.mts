@@ -31,6 +31,8 @@ export function closureCollectionsV1(): { name: string; entries: number; bytes: 
 /** 🌊️ Forgets the verdicts of the rounds of finished waves. */
 export function forgetRoundVerdictsV1(): void;
 export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number; fetched: number; reasked: number; reaskFailed: number; reaskEqual: number; reaskDifferent: number };
+/** 🔢️ The bytes one in-process closure entry is charged against the byte budget of the cache. */
+export function closureEntryChargeBytesV1(entry: { digests?: readonly unknown[]; rows: readonly unknown[]; value: unknown; layers?: readonly (readonly unknown[])[] }): number;
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
 export function flushClosureOffersV1(): Promise<void>;
 export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean, limits?: Readonly<Record<string, number>>): void;

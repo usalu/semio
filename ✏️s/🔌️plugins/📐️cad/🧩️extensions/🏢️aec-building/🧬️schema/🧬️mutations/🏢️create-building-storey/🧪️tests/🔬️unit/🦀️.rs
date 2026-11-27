@@ -18,7 +18,7 @@ fn storey_payload_vectors_match_the_json_oracle() {
 #[test]
 fn committed_wire_witness_is_the_canonical_rust_wire() {
     let witness = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏢️create-building-storey/🧾️wire-witness/🦠️mutation/🔣️.json");
-    let witnessed: CreateBuildingStorey = protocol::os_store::test_support::assert_wire_witness(witness);
+    let witnessed: CreateBuildingStorey = semio_os_store_test_support::assert_wire_witness(witness);
     assert_eq!(witnessed, serde_json::from_str::<CreateBuildingStorey>(witness).unwrap());
     assert_eq!(witnessed.storey_label(), "Level 0: Ground");
 }

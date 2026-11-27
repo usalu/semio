@@ -84,7 +84,7 @@ async fn merge_preserves_self_and_offsets_others_labels() {
 /// 🎟️ Original reachable membership allocations remain owned through independently granted physical closure.
 #[test]
 fn original_reach_set_owns_exact_physical_membership() {
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let orphan=make_vertex(&mut body,Pnt3::new(9.,9.,9.),Tol::DEFAULT,&mut rec);
@@ -108,7 +108,7 @@ fn original_reach_set_owns_exact_physical_membership() {
 /// 🧭️ The original body walk borrows each topology member under exact independent grants and retains all cancellation scratch.
 #[test]
 fn original_reachability_turns_preserve_source_and_actual_physical_receipts() {
-    use crate::test_support::observe_tessellation_system as observe;
+    use semio_os_store_test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let original=body.entity_counts();

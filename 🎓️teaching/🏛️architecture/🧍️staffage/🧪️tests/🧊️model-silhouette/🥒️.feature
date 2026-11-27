@@ -48,11 +48,11 @@ Feature: The volume agrees with the authored silhouettes
     When the frame folds
     Then the three-dimensional inspector and elevation drawing agree with the independently transformed vertices
 
-  Scenario: Retained physical sections of a goat horn
-    Given a measured horn loft at 1:50
-    When its 1:500 model retains the ends and an ordered selection of its cross sections
-    Then the digital feature keeps its real dimensions, including under a new solid name
-    And a narrower station, a displaced base or a changed material fails the physical correspondence check
+  Scenario: A goat horn is judged at its own scale
+    Given the authored goat horns at 1:500 and the thinnest drawing of their bone
+    When no horn section is thinner than the limit of that bone
+    Then the feature rule finds nothing, whatever the horn is translated or named
+    And a horn thinned below the limit is found once with its measured thickness
 
   Scenario: Scale preserves the working dimensions of household components
     Given the catalog fixture of timber stock, turned dowel, valve knob, bin floor, cover glass and steel wand dimensions

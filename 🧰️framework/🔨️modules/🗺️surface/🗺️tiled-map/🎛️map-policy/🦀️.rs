@@ -271,6 +271,11 @@ pub fn map_lod_scale_json(policy: &dyn MapPolicy) -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
+/// 🧾️ The policy's complete descriptor as the JSON object every tiled-map host installs on sync.
+pub fn map_policy_descriptor_json(policy: &dyn MapPolicy) -> String {
+    serde_json::to_string(policy.descriptor()).unwrap_or_else(|_| "{}".into())
+}
+
 /// 🎚️ JSON array of the layer ids that accept a weight slider at the band and tile render mode.
 pub fn map_layer_weight_slider_ids_json(policy: &dyn MapPolicy, band_id: &str, render_mode: &str) -> String {
     serde_json::to_string(&policy.slider_keys(band_id, MapTileMode::parse(render_mode))).unwrap_or_else(|_| "[]".into())

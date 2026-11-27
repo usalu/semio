@@ -32,9 +32,10 @@ import {repositoryCacheBudgetV1,repositoryPartitionReclaimRuleV1,repositoryParti
 import {createNativeImageReclaimPortV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimOutcomeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
 import {formatDiskBytesV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/💽️disk/🟦️.ts";
 import {createNativeImageKickPortV1,kickNativeImageV1,nativeImageKickDueV1,nativeImageKickIneffectiveTextV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts";
-import {measureNativeImageShardV1,nativeImageShardFoldV1,nativeImageShardLayoutsV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,type NativeImageShardLayoutV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+import {NATIVE_IMAGE_SHARD_V1,createNativeImageShardDarwinLifecycleV1,measureNativeImageShardV1,nativeImageShardFoldV1,nativeImageShardLayoutsV1,nativeImageShardSupportedV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,requireNativeImageShardRuleV1,type NativeImageShardLayoutV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 import {createNativeImageDarwinGrowPortV1,growNativeImageV1,nativeImageGrownReceiptV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts";
 import {COMPONENT_STORAGE_GATE_POLICY_V1,storageGrowDecisionV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/💾️storage-gate/🟦️.ts";
+import {relayoutRepositoryPartitionV1,type RepositoryRelayoutOutcomeV1} from "../../🧩️images/🟦️.ts";
 import cachePolicy from "../../🔣️policy.json" with {type:"json"};
 import {existsSync,lstatSync,statfsSync,statSync,readdirSync,readFileSync,writeFileSync,renameSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
@@ -271,6 +272,20 @@ async function kickRepositoryImageOnlineV1(given:Readonly<{directory:string;imag
  finally{lease.release();}
 }
 
+/** 🚚️ Gives every sub-area of a split partition its own image and moves the files of the home image into it, at the one moment nothing uses the partition: the exclusive whole-partition lease is taken without waiting, so a running build (which holds it shared) is never touched and the call answers `busy`; a stopped or refused run is resumed by the next one. A partition that is not split answers `disabled`. @see ../../🧩️images/🟦️.ts */
+export async function relayoutRepositoryPartitionIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:RepositoryCachePartitionIdV1,progress?:(done:number,total:number)=>void):Promise<RepositoryRelayoutOutcomeV1>{
+ requireIssuedResourceControlInvocationV1(control,invocation);
+ const workspace=callerRepositoryRootV1(invocation.capabilities),declared=repositoryCacheBudgetV1(workspace).partitions[partition],shards=declared.imageShards;
+ if(!shards?.enabled||!nativeImageShardSupportedV1(process.platform))return{status:"disabled",steps:[],movedBytes:0};
+ const directory=declared.directory,leaseDirectory=repositoryLeaseDirectoryV1(workspace),output={maximumBytes:1048576,maximumLines:32768};
+ let lease:Awaited<ReturnType<typeof acquireResourceLease>>;
+ try{lease=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0});}catch{checkResourceLeaseControl(control);return{status:"busy",steps:[],movedBytes:0};}
+ try{
+  const check=()=>checkResourceLeaseControl(control),lifecycle=createNativeImageShardDarwinLifecycleV1({run:(program,args)=>captureOwnedCommandV1(program,args,directory,{control,output}),check});
+  const lock=async<T>(body:()=>Promise<T>)=>{const ledger=await acquireResourceLease({directory:leaseDirectory,resource:NATIVE_IMAGE_SHARD_V1.ledgerLockResource+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:NATIVE_IMAGE_SHARD_V1.commandMilliseconds});try{return await body();}finally{ledger.release();}};
+  return await relayoutRepositoryPartitionV1({directory,rule:requireNativeImageShardRuleV1(shards),platform:process.platform,lifecycle,lock,hostFreeBytes:()=>{const row=statfsSync(directory);return row.bavail*row.bsize;},reserveBytes:cachePolicy.elastic.rust.pressureFreeBytes,now:Date.now,check,...progress===undefined?{}:{progress}});
+ }finally{lease.release();}
+}
 const shardKickedAtV1=new Map<string,number>();
 /** 🧩️ Returns the freed blocks of every image of a sharded partition (the home image and one image per key) while builds still hold them: each due image is kicked under its own nonwaiting shared lease, so an exclusive cycle of one image never blocks the others, an image that fails or whose lease is held is skipped, and the answer adds up over the kicked images. `undefined` when no image gave blocks back and the caller falls back to the exclusive cycle. @see ../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts */
 async function kickRepositoryShardsOnlineV1(given:Readonly<{directory:string;rule:NonNullable<ReturnType<typeof repositoryCacheBudgetV1>["partitions"][RepositoryCachePartitionIdV1]["imageShards"]>;reclaimRule:Parameters<typeof nativeImageKickDueV1>[0];leaseDirectory:string;control:ResourceLeaseControl;progress?:(done:number,total:number)=>void}>):Promise<NativeImageReclaimOutcomeV1|undefined>{
@@ -295,6 +310,7 @@ export async function reclaimImageIfQuiescentV1(invocation:ScriptInvocation,cont
   requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),directory=repositoryCacheBudgetV1(workspace).partitions[partition].directory;
   checkResourceLeaseControl(control);
   if(nativeRecomputableRetirementPendingV1(directory))return skip("retirement-pending");
+  if(!recovery&&repositoryCacheBudgetV1(workspace).partitions[partition].imageShards?.enabled)try{await relayoutRepositoryPartitionIfQuiescentV1(invocation,control,partition);}catch{checkResourceLeaseControl(control);}
   if(recovery?!imageSlack.reclaimProfiles.includes(partition):!repositoryPartitionReclaimDueV1(workspace,partition))return skip(recovery?"recovery-profile":"not-due");
   const leaseDirectory=repositoryLeaseDirectoryV1(workspace),resource="native-fixed-image:"+directory;
   const shards=repositoryCacheBudgetV1(workspace).partitions[partition].imageShards;

@@ -243,48 +243,48 @@ async fn scene_field_mutations_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn shooting_op_text_round_trips_every_variant() {
     let asset = sample_asset("a1");
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset { asset: asset.clone(), index: Some(0) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteAsset(crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset { id: "a1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameAsset(crate::standards::v1::subsets::any::schema::mutations::rename_asset::RenameAsset { id: "a1".into(), new_name: "Renamed".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeAssetUrl(crate::standards::v1::subsets::any::schema::mutations::change_asset_url::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderAssets(crate::standards::v1::subsets::any::schema::mutations::reorder_assets::ReorderAssets { id: "a1".into(), to_index: 2 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DragAssets(crate::standards::v1::subsets::any::schema::mutations::drag_assets::DragAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RotateAssets(crate::standards::v1::subsets::any::schema::mutations::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ScaleAssets(crate::standards::v1::subsets::any::schema::mutations::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset { asset: asset.clone(), index: Some(0) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::DeleteAsset(crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset { id: "a1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::RenameAsset(crate::standards::v1::subsets::any::schema::mutations::rename_asset::RenameAsset { id: "a1".into(), new_name: "Renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeAssetUrl(crate::standards::v1::subsets::any::schema::mutations::change_asset_url::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ReorderAssets(crate::standards::v1::subsets::any::schema::mutations::reorder_assets::ReorderAssets { id: "a1".into(), to_index: 2 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::DragAssets(crate::standards::v1::subsets::any::schema::mutations::drag_assets::DragAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::RotateAssets(crate::standards::v1::subsets::any::schema::mutations::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ScaleAssets(crate::standards::v1::subsets::any::schema::mutations::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }));
 
     let shot = sample_shot("s1");
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateShot(crate::standards::v1::subsets::any::schema::mutations::create_shot::CreateShot { shot: shot.clone(), index: Some(0) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteShot(crate::standards::v1::subsets::any::schema::mutations::delete_shot::DeleteShot { id: "s1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameShot(crate::standards::v1::subsets::any::schema::mutations::rename_shot::RenameShot { id: "s1".into(), new_label: "Hero".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotWidth(crate::standards::v1::subsets::any::schema::mutations::change_shot_width::ChangeShotWidth { id: "s1".into(), new_width: 512 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotHeight(crate::standards::v1::subsets::any::schema::mutations::change_shot_height::ChangeShotHeight { id: "s1".into(), new_height: 512 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotFormat(crate::standards::v1::subsets::any::schema::mutations::change_shot_format::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotShape(crate::standards::v1::subsets::any::schema::mutations::change_shot_shape::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderShots(crate::standards::v1::subsets::any::schema::mutations::reorder_shots::ReorderShots { id: "s1".into(), to_index: 1 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::CreateShot(crate::standards::v1::subsets::any::schema::mutations::create_shot::CreateShot { shot: shot.clone(), index: Some(0) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::DeleteShot(crate::standards::v1::subsets::any::schema::mutations::delete_shot::DeleteShot { id: "s1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::RenameShot(crate::standards::v1::subsets::any::schema::mutations::rename_shot::RenameShot { id: "s1".into(), new_label: "Hero".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotWidth(crate::standards::v1::subsets::any::schema::mutations::change_shot_width::ChangeShotWidth { id: "s1".into(), new_width: 512 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotHeight(crate::standards::v1::subsets::any::schema::mutations::change_shot_height::ChangeShotHeight { id: "s1".into(), new_height: 512 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotFormat(crate::standards::v1::subsets::any::schema::mutations::change_shot_format::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotShape(crate::standards::v1::subsets::any::schema::mutations::change_shot_shape::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ReorderShots(crate::standards::v1::subsets::any::schema::mutations::reorder_shots::ReorderShots { id: "s1".into(), to_index: 1 }));
 
     let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateSavedCamera(crate::standards::v1::subsets::any::schema::mutations::create_saved_camera::CreateSavedCamera { saved_camera: saved_camera.clone(), index: Some(0) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteSavedCamera(crate::standards::v1::subsets::any::schema::mutations::delete_saved_camera::DeleteSavedCamera { id: "cam1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameSavedCamera(crate::standards::v1::subsets::any::schema::mutations::rename_saved_camera::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(crate::standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::ReplaceSavedCameraView {
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::CreateSavedCamera(crate::standards::v1::subsets::any::schema::mutations::create_saved_camera::CreateSavedCamera { saved_camera: saved_camera.clone(), index: Some(0) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::DeleteSavedCamera(crate::standards::v1::subsets::any::schema::mutations::delete_saved_camera::DeleteSavedCamera { id: "cam1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::RenameSavedCamera(crate::standards::v1::subsets::any::schema::mutations::rename_saved_camera::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(crate::standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::ReplaceSavedCameraView {
         id: "cam1".into(),
         new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() },
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderSavedCameras(crate::standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::ReorderSavedCameras { id: "cam1".into(), to_index: 0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceShotCamera(crate::standards::v1::subsets::any::schema::mutations::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: ShootingCamera::default() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ReorderSavedCameras(crate::standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::ReorderSavedCameras { id: "cam1".into(), to_index: 0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceShotCamera(crate::standards::v1::subsets::any::schema::mutations::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: ShootingCamera::default() }));
 
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(crate::standards::v1::subsets::any::schema::mutations::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(crate::standards::v1::subsets::any::schema::mutations::set_active_shot::SetActiveShot { shot_id: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(crate::standards::v1::subsets::any::schema::mutations::set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(crate::standards::v1::subsets::any::schema::mutations::set_active_asset::SetActiveAsset { asset_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(crate::standards::v1::subsets::any::schema::mutations::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(crate::standards::v1::subsets::any::schema::mutations::set_active_shot::SetActiveShot { shot_id: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(crate::standards::v1::subsets::any::schema::mutations::set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(crate::standards::v1::subsets::any::schema::mutations::set_active_asset::SetActiveAsset { asset_id: None }));
 
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::ChangeSceneSunEnabled { new_enabled: true }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunAzimuth(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunElevation(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::ChangeSceneSunElevation { new_elevation: 45.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunIntensity(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::ChangeSceneSunIntensity { new_intensity: 5.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneAmbientIntensity(crate::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneShadowEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::ChangeSceneShadowEnabled { new_enabled: false }));
-    store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneMaterialRoughness(crate::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::ChangeSceneSunEnabled { new_enabled: true }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunAzimuth(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunElevation(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::ChangeSceneSunElevation { new_elevation: 45.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunIntensity(crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::ChangeSceneSunIntensity { new_intensity: 5.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneAmbientIntensity(crate::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneShadowEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::ChangeSceneShadowEnabled { new_enabled: false }));
+    semio_os_store_test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneMaterialRoughness(crate::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
 }
 //#endregion 🗣️OpText
 

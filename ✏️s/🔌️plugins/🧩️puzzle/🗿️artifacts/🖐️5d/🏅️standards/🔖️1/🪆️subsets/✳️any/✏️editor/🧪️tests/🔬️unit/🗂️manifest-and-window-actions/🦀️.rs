@@ -25,7 +25,7 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart,
     semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    ::semio_framework_async::poll::resolve_ready(semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
+    ::semio_framework_async::poll::resolve_ready(semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

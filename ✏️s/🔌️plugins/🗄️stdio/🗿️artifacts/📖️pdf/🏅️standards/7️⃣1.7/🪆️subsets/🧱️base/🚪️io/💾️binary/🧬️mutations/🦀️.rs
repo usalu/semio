@@ -21,4 +21,10 @@ impl OpBinary for PdfMutation {
 }
 
 dsl::original_pack_value_operation_receiving!(PdfMutation);
-dsl::artifact_persisted_binary_operation!(PdfMutation);
+
+impl store::ArtifactPersistedOperation for PdfMutation {
+    /// 🎒️ Persisted PDF operations are Pack Values whose conflict segments and original edit message the document's own Store catalog and its replacements share.
+    fn install_persisted_receiving(wire: store::ArtifactOperationWire<Self>) -> store::ArtifactOperationWire<Self> {
+        store::original_edit::with_original_edit_message(wire.with_original_pack_value_receiving().with_original_target(Self::original_conflict_target))
+    }
+}

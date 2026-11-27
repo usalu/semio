@@ -44,6 +44,7 @@ semio-framework-replication = { path = "../../../../../../../../../../../../../�
 testing = ["dep:serde", "semio-s-artifact-puzzle-3d-model/testing", "semio-s-artifact-puzzle-3d-mutations-catalog/testing", "semio-s-artifact-puzzle-3d-mutations-object/testing", "semio-s-artifact-puzzle-3d-mutations-pose/testing", "semio-s-artifact-puzzle-3d-mutations-reference/testing", "semio-s-artifact-puzzle-3d-mutations-selection/testing", "semio-s-artifact-puzzle-3d-mutations-volume/testing", "semio-s-artifact-puzzle-3d-mutations-vortex/testing"]
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

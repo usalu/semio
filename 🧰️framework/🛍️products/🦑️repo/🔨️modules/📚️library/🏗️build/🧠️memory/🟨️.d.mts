@@ -43,7 +43,7 @@ export function createGraphOwnerPeaksFileV1(path:string):GraphOwnerPeaksV1;
 export function graphParentManagedBytesV1(environment?:Readonly<Record<string,string|undefined>>,policy?:GraphMemoryPolicyV1):number;
 /** 🧹️ What one wave of the parent held: peak and surviving managed bytes, collections run and the milliseconds they took. */
 export interface ParentWaveMemoryV1{readonly peakBytes:number;readonly liveBytes:number;readonly collections:number;readonly collectMilliseconds:number}
-export interface ParentCollectorV1{afterProject():boolean;finish():ParentWaveMemoryV1;headroomBytes():number}
+export interface ParentCollectorV1{afterProject():boolean;afterProjectSettled():Promise<boolean>;finish():ParentWaveMemoryV1;settle():Promise<ParentWaveMemoryV1>;headroomBytes():number}
 export function createParentCollectorV1(options?:{ports?:MemoryPortsV1;policy?:GraphMemoryPolicyV1;budgetBytes?:number;baselineBytes?:number;now?:()=>number}):ParentCollectorV1;
 /** 🛰️ Asks the fleet to infer the pending projects `keys`; answers the keys it takes over. */
 export type GraphFleetPortV1=(ask:{keys:readonly string[];seconds:number})=>Promise<Iterable<string>|undefined>|Iterable<string>|undefined;
@@ -58,4 +58,6 @@ export interface GraphMemoryAllocationV1{readonly qualified:boolean;readonly res
 /** 🎫️ Partitions the qualified live reservation between the graph parent, fixed overhead and owned workers; an enlarged carried tool envelope cannot fund additional memory. An explicit parent budget leaves one minimum owned worker when the reservation can pay for that worker beside the parent, so a scaled-down grant still infers outside the parent. */
 export function graphMemoryAllocationV1(environment: Readonly<Record<string,string|undefined>>, policy?: GraphMemoryPolicyV1, hostMegabytes?: number): GraphMemoryAllocationV1;
 /** 📏️ Charges the managed bytes (heap in use plus external buffers), never the resident pages: with a small collector target the pages hold freed memory the allocator has not returned yet, which no admission can release; the host free-memory floor still guards the machine. */
-export function graphMemoryPressureBytesV1(counters: Readonly<{rss:number;heapUsed:number;external:number}>): number;
+export function graphMemoryPressureBytesV1(counters: Readonly<{rss:number;heapUsed:number;external:number;heapSize?:number}>): number;
+/** 🔁️ Lets the event loop turn before a collection that must not see the stack of the releasing call. */
+export function yieldGraphTurnV1(policy?:GraphMemoryPolicyV1):Promise<void>;

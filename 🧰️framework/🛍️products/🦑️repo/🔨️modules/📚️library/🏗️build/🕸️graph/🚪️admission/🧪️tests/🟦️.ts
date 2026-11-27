@@ -122,3 +122,19 @@ test("owners reached only through file edges are admitted ownership-only and obs
  calls.length=0;const promoted=await run(["hub"]);
  expect(calls.sort()).toEqual(["app","hub"]);expect(promoted.owners).toEqual(["app","hub","leaf"]);expect(promoted.files).toContain("leaf/c.ts");expect(promoted.files).toContain("leaf/📋️project.json");
 });
+
+const collisionMessageV1=(registry:unknown)=>{try{readBuildOwnerRegistryV1(registry);}catch(error){return (error as Error).message;}throw Error("Owner collision was not refused");};
+test("a build owner identity collision names the field, the colliding value and both owners",()=>{
+ const owner=(name:string,root:string)=>({name,root,manifest:root+"/Cargo.toml",packages:[]});
+ const byName=collisionMessageV1({version:1,owners:[owner("app","app"),owner("app","other")],catalogProviders:[]}),byRoot=collisionMessageV1({version:1,owners:[owner("a","shared"),owner("b","shared")],catalogProviders:[]});
+ expect(byName.split("\n")).toEqual(["Canonical build owner identity collision","field: name",'value: "app"','earlier owner: "app" (root "app")','current owner: "app" (root "other")']);
+ expect(byRoot.split("\n")).toEqual(["Canonical build owner identity collision","field: root",'value: "shared"','earlier owner: "a" (root "shared")','current owner: "b" (root "shared")']);
+});
+test("a native owner collision names the native root and both owners",()=>{
+ const owner=(name:string,root:string,nativeRoots:string[])=>({name,root,manifest:root+"/Cargo.toml",packages:[],nativeRoots});
+ expect(collisionMessageV1({version:1,owners:[owner("a","a",["native"]),owner("b","b",["native"])],catalogProviders:[]}).split("\n")).toEqual(["Canonical native owner collision","field: native root",'value: "native"','earlier owner: "a" (root "a")','current owner: "b" (root "b")']);
+});
+test("a package owner collision names the package and both owners",()=>{
+ const owner=(name:string,root:string,packages:string[])=>({name,root,manifest:root+"/Cargo.toml",packages});
+ expect(collisionMessageV1({version:1,owners:[owner("a","a",["lib"]),owner("b","b",["lib"])],catalogProviders:[]}).split("\n")).toEqual(["Canonical package owner collision","field: package",'value: "lib"','earlier owner: "a" (root "a")','current owner: "b" (root "b")']);
+});

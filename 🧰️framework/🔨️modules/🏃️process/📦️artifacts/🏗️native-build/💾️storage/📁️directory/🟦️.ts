@@ -89,11 +89,13 @@ export function probeNativeDirectoryExchangeV1(directory:string,port:NativeDirec
  try{const first=join(base,"a"),second=join(base,"b");mkdirSync(first);mkdirSync(second);exchangeNativeDirectoriesV1(first,second,port);}finally{rmSync(base,{recursive:true,force:true});}
 }
 
+/** 🚨️ The refusal of a directory partition that is full: the closed message and the marks of an exhausted quota (`space`, probe `EDQUOT`), so every holder that can retire its own idle state (the lease store, a cache) recognises it as a full store and reclaims in place instead of failing. */
+export function nativeDirectoryCapacityRefusalV1():Error{return Object.assign(Error(protocol.refusals.capacity),{space:true,probe:"EDQUOT"});}
 /** ⚖️ Bounds each payload request by its filesystem envelope and the journal and complete measured tree by their physical ceiling. */
 export function admitNativeDirectoryCapacityV1(value:unknown):Readonly<{remainingBytes:number}>{
  if(validateJsonSchemaSubset(schema.definitions.Admission,value,schema).length)throw Error("Closed directory capacity request required");
  const row=value as Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;reservedBytes:number;usedBytes:number;requestBytes:number}>;
- if(row.requestBytes>row.filesystemBytes||row.usedBytes+row.requestBytes>row.maximumPhysicalBytes||row.reservedBytes+row.requestBytes>row.maximumPhysicalBytes)throw Error(protocol.refusals.capacity);
+ if(row.requestBytes>row.filesystemBytes||row.usedBytes+row.requestBytes>row.maximumPhysicalBytes||row.reservedBytes+row.requestBytes>row.maximumPhysicalBytes)throw nativeDirectoryCapacityRefusalV1();
  return Object.freeze({remainingBytes:Math.min(row.maximumPhysicalBytes-row.usedBytes,row.maximumPhysicalBytes-row.reservedBytes)-row.requestBytes});
 }
 
@@ -106,7 +108,7 @@ export function createNativeDirectoryMeterV1(input:Readonly<{root:string;filesys
  const retained=()=>admitted-covered;
  const refresh=async(signal?:AbortSignal)=>{const before=admitted,order=++requested,bytes=await measure(signal);signal?.throwIfAborted();if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Finite exact measured directory bytes required");if(order>observed){measured=bytes;measuredAt=now();covered=before>covered?before:covered;observed=order;}return bytes;};
  const stale=()=>measured===undefined||now()-measuredAt>=limits.intervalMilliseconds;
- const gate=(requestBytes:number)=>{const used=BigInt(measured!)+retained();if(used>BigInt(input.maximumPhysicalBytes))throw Error(protocol.refusals.capacity);admitNativeDirectoryCapacityV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,reservedBytes:0,usedBytes:Number(used),requestBytes});};
+ const gate=(requestBytes:number)=>{const used=BigInt(measured!)+retained();if(used>BigInt(input.maximumPhysicalBytes))throw nativeDirectoryCapacityRefusalV1();admitNativeDirectoryCapacityV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,reservedBytes:0,usedBytes:Number(used),requestBytes});};
  return Object.freeze({admit:async(value:unknown,signal?:AbortSignal)=>{
   if(validateJsonSchemaSubset(schema.definitions.MeterRequest,value,schema).length)throw Error("Closed directory meter request required");
   signal?.throwIfAborted();const request=value as Readonly<{mode:"reserve"|"commit"|"recheck";requestBytes:number}>;

@@ -49,5 +49,5 @@ test("every random disagreement graph ends within a bounded number of removed pa
  const oracle=spawnSync("python3",["-I",join(import.meta.dir,"🐍️separation.py")],{input:JSON.stringify(cases),encoding:"utf8",maxBuffer:1<<28});
  expect(oracle.status,oracle.stderr).toBe(0);
  const expected=JSON.parse(oracle.stdout) as {victims:unknown[];ambiguous:string[]}[];
- cases.forEach((_,at)=>{expect(answers[at],`case ${at}`).toEqual(expected[at]!);});
+ cases.forEach((_,at)=>{expect<unknown>(answers[at],`case ${at}`).toEqual(expected[at]!);});
 });

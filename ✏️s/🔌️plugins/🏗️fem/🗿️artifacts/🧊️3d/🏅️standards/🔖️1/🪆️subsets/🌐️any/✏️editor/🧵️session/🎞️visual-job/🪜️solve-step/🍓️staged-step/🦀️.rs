@@ -17,7 +17,7 @@ mod modal_and_publication_stages;
 
 //#region 📦️PageVisualJob
 /// 🔁️ Most staged units one interactive turn advances back to back; the turn's fuel and deadline still stop it sooner.
-const NUMERICAL_UNITS_PER_TURN: usize = 4096;
+const NUMERICAL_UNITS_PER_TURN: usize = semio_s_fem_payload_turns::NUMERICAL_UNITS_PER_TURN;
 
 impl Fem3dNumericalChild {
     pub fn step(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
@@ -75,7 +75,7 @@ impl Fem3dNumericalChild {
                 return Err((b"fem3d.numerical-solid-admission".to_vec()).into());
             }
             let domain = self.solid_domain.take().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?;
-            self.mesh = Some(MeshJob::new_mounted_bounded(domain, MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 }, operation, maximum_points, maximum_triangles));
+            self.mesh = Some(MeshJob::new_mounted_bounded(domain, MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 }, operation, maximum_points, maximum_triangles).without_publication());
             self.stage = Fem3dNumericalStage::SolidMesh;
             return Ok(false);
         }

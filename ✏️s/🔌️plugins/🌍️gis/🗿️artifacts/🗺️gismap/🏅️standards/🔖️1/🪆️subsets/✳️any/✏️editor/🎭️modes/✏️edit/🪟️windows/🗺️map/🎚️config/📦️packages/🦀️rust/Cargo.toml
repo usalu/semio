@@ -50,6 +50,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 geo = { version = "0.31.0", default-features = false }
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }

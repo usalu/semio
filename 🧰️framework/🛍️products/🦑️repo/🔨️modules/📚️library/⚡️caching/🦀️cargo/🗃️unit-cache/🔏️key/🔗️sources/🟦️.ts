@@ -52,6 +52,18 @@ const WRITTEN=UNIT_CACHE_POLICY_V1.key.compilerWrittenFiles.map(pattern=>new Reg
 /** 🖊️ Whether a path of the dependency file is written by the compilation itself, so it is no input of it: the observation file a proc-macro writes under `semio-compiler-resources/<ms>-<pid>-<n>/` for the build receipt (`with_compiler_resources_v1` registers it with the compiler, so it appears in the dependency file, but nothing the compiler produces is a function of it). */
 export const compilerWrittenV1=(path:string):boolean=>WRITTEN.some(pattern=>pattern.test(path.replaceAll("\\","/")));
 
+/** 🧼️ The dependency file of a compilation without what the compilation itself wrote: the observation file of a proc-macro (a target-line entry, its `path:` line and its `# checksum:` line) lives under a directory named by the clock and the process id of that run, so two compilations of one unit, on one machine or two, listed other paths and other checksums and the stored `.d` of every unit with a proc-macro differed by origin. Everything else stays byte for byte; equal compilations give equal text. */
+export function canonicalDepInfoV1(text:string):string{
+ const written=(path:string):boolean=>compilerWrittenV1(path.replaceAll("\\ "," "));
+ return text.split("\n").flatMap(line=>{
+  if(line.startsWith("# checksum:")){const fields=line.split(" ");return fields.length>3&&written(fields.slice(3).join(" "))?[]:[line];}
+  if(line.startsWith("#"))return[line];
+  if(line.endsWith(":")&&!line.includes(": "))return written(line.slice(0,-1))?[]:[line];
+  const cut=line.indexOf(": ");if(cut<0)return[line];
+  return[line.slice(0,cut+2)+line.slice(cut+2).split(/(?<!\\) +/u).filter(path=>path===""||!written(path)).join(" ")];
+ }).join("\n");
+}
+
 /** 📦️ Whether a directory is the unpacked source of one version of a registry crate (`…/registry/src/<index>/<name>-<version>`): its content is fixed by the name and version that the lock file pins and that the compiler arguments already carry, so every file below it is covered by the key without being scanned. */
 export const registryCrateDirectoryV1=(directory:string):boolean=>/(^|\/)registry\/src\/[^/]+\/[^/]+$/u.test(directory.replaceAll("\\","/").replace(/\/+$/u,""));
 

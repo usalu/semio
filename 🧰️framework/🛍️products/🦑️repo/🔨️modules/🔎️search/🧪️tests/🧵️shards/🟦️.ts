@@ -93,7 +93,7 @@ test("neutral shard framing agrees with JSON.parse, strict Ajv and Node SHA256",
  const validate=new Ajv({strict:false}).compile(schema.$defs.IndexEvent);
  for(const row of vectors.framing){
   let accepted=true,sequence=0;const lines=row.body.split("\n");if(lines.at(-1)==="")lines.pop();
-  try{for(const line of lines){const event=JSON.parse(line);if(!validate(event)||event.seq!==++sequence)accepted=false;}}catch{accepted=false;}
+  try{for(const line of lines){const event:{seq?:number}=JSON.parse(line);if(!validate(event)||event.seq!==++sequence)accepted=false;}}catch{accepted=false;}
   expect(accepted).toBe(row.accepted);if(accepted)expect(sequence).toBe(row.events);
   expect(createHash("sha256").update(row.body).digest("hex")).toBe(row.sha256);
  }

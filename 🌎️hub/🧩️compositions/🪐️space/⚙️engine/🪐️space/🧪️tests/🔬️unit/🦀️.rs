@@ -374,7 +374,7 @@ async fn checkout_checkpoint_restores_projection() {
     let files = app.document_pack().await.expect("document pack");
     let parsed: store::os_store::text_format::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr).await.expect("parse document pack");
     let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-    store::os_store::test_support::retire_parsed_document(parsed);
+    semio_os_store_test_support::retire_parsed_document(parsed);
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
     let checkout_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "checkpointId": checkpoint_id }));

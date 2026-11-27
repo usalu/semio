@@ -82,7 +82,7 @@ fn empty_catalog() -> Arc<Catalog> {
 /// test's frame unwinds; dropping either one live aborts the whole process in its destructor.
 #[tokio::test]
 async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("agent opens");
     let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
     let shell_channels = shell_host
@@ -203,7 +203,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:mutation-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = match workspace.open_artifact_channel("note") {
         Ok(channel) => channel,
@@ -279,7 +279,7 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
         eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:command-response-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
 
@@ -324,7 +324,7 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
         eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:activation-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     match workspace.attempt_plugin_activation("note") {
         Ok(outcome) => {
@@ -436,7 +436,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
         eprintln!("skipped: the compiled catalog publishes no `note.….addBlock` capability");
         return;
     };
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:two-phase-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
     let input = serde_json::json!({ "kind": "text", "x": 40, "y": 40 });
@@ -537,7 +537,7 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
         eprintln!("skipped: the compiled catalog publishes no `note.….addBlock` capability");
         return;
     };
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:stepped-load-law".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
     let started = std::time::Instant::now();

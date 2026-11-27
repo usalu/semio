@@ -47,7 +47,7 @@ impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_raster_raster_viewer::Raster
 /// stamps onto the manifest.
 pub fn plugin() -> Result<Plugin<RasterApps>, PluginAssemblyError> {
     PluginBuilder::<_, RasterApps>::new("raster")
-        .label("Raster")
+        .label(semio_plugin::LocalizedLabel::native("Raster", "Raster"))
         .version("0.1.0")
         .package_id("semio:raster")
         .artifact(crate::artifacts::raster::declaration().map_err(PluginAssemblyError::definition)?)

@@ -86,7 +86,7 @@ pub fn yielded(step: PluginLifecycleStep) -> bool {
         let sealed = Arc::new(AtomicBool::new(false));
         let terminal = Arc::new(AtomicBool::new(false));
         let resource = Resource { value: Some(fixture["resource"].as_str().unwrap().into()), close: Default::default(), sealed: sealed.clone(), terminal: terminal.clone(), expected_bytes: fixture["resourceBytes"].as_u64().unwrap() as usize, released_bytes: 0, born_bytes: 0 };
-        let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+        let bundle = ExtensionBundle::new(id, semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native(id, id), "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         (bundle, sealed, terminal)
     }
 
@@ -224,7 +224,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         let fixture = extension_fixture();
         for (complete, key) in [(false, "exceeded"), (true, "falseComplete")] {
             let recover = Arc::new(AtomicBool::new(false));
-            let mut bundle = ExtensionBundle::new("hostile", "Hostile", "1").resource_owner(HostileResource { complete, recover: recover.clone() });
+            let mut bundle = ExtensionBundle::new("hostile", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Hostile", "Feindlich"), "1").resource_owner(HostileResource { complete, recover: recover.clone() });
             assert_eq!(close_bundle(&mut bundle,cx,grant_of(1,4)).unwrap_err().primary_value().unwrap().kind.as_str(),fixture["faults"][key].as_str().unwrap());
             assert!(bundle.resource_owner.is_some());
             assert!(!bundle.terminal_is_empty());
@@ -233,7 +233,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         }
         for exact_grant in [false,true] {
             let dropped = Arc::new(AtomicBool::new(false));
-            let mut bundle = ExtensionBundle::new("exact-grant", "Exact Grant", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant });
+            let mut bundle = ExtensionBundle::new("exact-grant", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Exact Grant", "Exakte Zusage"), "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant });
             let step = close_bundle(&mut bundle,cx,grant_of(1,4)).unwrap();
             assert_eq!(step,PluginLifecycleStep::Progress(if exact_grant { RetainedCloneProgress { copied_items: 1, copied_bytes: 4, retained_capacity_bytes: 4, released_bytes: 4 } } else { RetainedCloneProgress::default() }));
             assert!(bundle.resource_owner.is_some());
@@ -255,7 +255,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         let fixture = extension_fixture();
         let dropped = Arc::new(AtomicBool::new(false));
-        let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+        let mut bundle = ExtensionBundle::new("drop-boundary", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Drop Boundary", "Drop-Grenze"), "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         let address = &mut bundle as *mut ExtensionBundle;
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe { std::ptr::drop_in_place(address) }));
         let panic = result.unwrap_err();
@@ -267,11 +267,11 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         drain_bundle(&mut bundle,cx);
         assert_eq!(usize::from(dropped.load(Ordering::SeqCst)), fixture["dropBoundary"]["terminalOwnerDrops"].as_u64().unwrap() as usize);
         drop(bundle);
-        let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+        let mut cold = ExtensionBundle::new("cold", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Cold", "Kalt"), "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         cold.dispose_cold(cx).unwrap();
         assert!(cold.terminal_is_empty());
         drop(cold);
-        let manifest = ExtensionBundle::new("inspection", "Inspection", "1").into_manifest_cold(cx).unwrap();
+        let manifest = ExtensionBundle::new("inspection", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Inspection", "Inspektion"), "1").into_manifest_cold(cx).unwrap();
         assert_eq!(manifest.extension_id,"inspection");
 
         let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
@@ -296,7 +296,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         let owner = LargeOwner { padding: [0;4096], dropped: dropped.clone() };
         assert_eq!(owner.padding.len(),allocation["ownerPaddingBytes"].as_u64().unwrap() as usize);
         let shell_bytes = std::alloc::Layout::for_value(&owner).size();
-        let mut bundle = ExtensionBundle::new("allocation", "Allocation", "1").resource_owner(owner);
+        let mut bundle = ExtensionBundle::new("allocation", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Allocation", "Allokation"), "1").resource_owner(owner);
         bundle.begin_close();
         assert_eq!(bundle.retirement_demands(0).unwrap(),RetirementDemand { release_bytes: shell_bytes, depth: 1, ..Default::default() });
         assert!(yielded(close_bundle(&mut bundle,cx,grant_of(1,tiny)).unwrap()));
@@ -340,7 +340,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
         assert!(yielded(metadata.step(grant_of(1,vector_bytes-1)).unwrap()));
         assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: vector_bytes, ..Default::default() }));
         assert!(metadata.is_empty());
-        let mut cold = ExtensionBundle::new("inline", "Inline", "1").handler("echo", |bytes, cx| echo_step(bytes.to_vec(), cx));
+        let mut cold = ExtensionBundle::new("inline", semio_plugin_extension::extension_runtime_lift::LocalizedLabel::native("Inline", "Inline"), "1").handler("echo", |bytes, cx| echo_step(bytes.to_vec(), cx));
         assert_eq!(invoked(cold.invoke("echo", b"unchanged", cx)).unwrap(),b"unchanged");
         cold.dispose_cold(cx).unwrap();
         assert_eq!(cold.handlers.capacity(),0);
@@ -413,7 +413,7 @@ fn extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll()
             let allocation = &fixture["actorAllocation"];
             let small_bytes = allocation["smallBytes"].as_u64().unwrap() as u32;
             let adequate_bytes = allocation["adequateBytes"].as_u64().unwrap() as u32;
-            let oversized = ExtensionBundle::new("oversized","x".repeat(allocation["stringBytes"].as_u64().unwrap() as usize),"1");
+            let oversized = ExtensionBundle::new("oversized",semio_plugin_extension::extension_runtime_lift::LocalizedLabel::data("x".repeat(allocation["stringBytes"].as_u64().unwrap() as usize)),"1");
             assert!(install_extension_bundle(&mut Some(oversized)).await.unwrap());
             let small = semio_framework::kernel::Budget { retained: retained_turn(cx), fuel: 1, max_patch_bytes: small_bytes, ..budget };
             semio_plugin_reactor_turn::poll_kernel(&runtime,&mut Some(semio_framework::kernel::Event::SuspendRequest),&mut None,None,small, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();

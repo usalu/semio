@@ -23,6 +23,7 @@ const until=async(condition:()=>boolean|Promise<boolean>,milliseconds=20000):Pro
 const put=(root:string,path:string,text:string):void=>{const file=join(root,...path.split("/"));mkdirSync(dirname(file),{recursive:true});writeFileSync(file,text);};
 const git={present:true,head:"refs/heads/main",commit:"a".repeat(40),indexTree:"c".repeat(40)};
 const fast={pollMilliseconds:10,scanSeconds:1,debounceMilliseconds:5,persistMilliseconds:0,attestMilliseconds:100,restartStableMilliseconds:100,restartJitterMilliseconds:0,minimumUptimeMilliseconds:0,viewMilliseconds:300,viewDebounceMilliseconds:50,logFiles:[] as string[]};
+const headsOf=(heads:Readonly<Record<string,Readonly<{segment:number;bytes:number}>|undefined>>):Record<string,Readonly<{segment:number;bytes:number}>>=>Object.fromEntries(Object.entries(heads).flatMap(([origin,head])=>head===undefined?[]:[[origin,head]]));
 const code=(label:string):string=>{const root=temp(label);put(root,"x/🟦️.ts","export const a=1;\n");return root;};
 type Runner={name:string;options:ReplicaOptionsV1;events:ReplicaEventV1[];controller:AbortController;done?:Promise<void>};
 function runner(name:string,store:string,extra:Partial<ReplicaOptionsV1>={}):Runner{
@@ -239,7 +240,7 @@ test("the daemon still follows the peer journal while its own outbound journal r
     order by json_extract(value, '$.hlc') desc limit 1`).get(`[${journal.join(",")}]`,vector.inbound.path);
    const inbound=existsSync(file(vector.inbound.path))?readFileSync(file(vector.inbound.path)):null;
    expect(expected).not.toBeNull();
-   expect(inbound&&{sha256:Bun.CryptoHasher.hash("sha256",inbound,"hex"),bytes:inbound.byteLength}).toEqual(expected);
+   expect<unknown>(inbound&&{sha256:Bun.CryptoHasher.hash("sha256",inbound,"hex"),bytes:inbound.byteLength}).toEqual(expected);
    expect(inbound?.toString("utf8")).toBe(vector.inbound.text);
   }finally{sqlite.close();}
  }finally{try{await stop(receiver);}finally{await closeReplicaV1(peer);}}
@@ -421,21 +422,21 @@ const verdictCase=fixture.verdicts[0]!;
 const attestations=():Record<string,FleetAttestationV1>=>JSON.parse(JSON.stringify(verdictCase.attestations)) as Record<string,FleetAttestationV1>;
 
 test("the fleet verdict votes the code digest and does not trust a writer whose clock runs ahead",()=>{
- const same=judgeFleetV1({now:verdictCase.now,heads:verdictCase.heads,attestations:attestations(),retirements:{}});
+ const same=judgeFleetV1({now:verdictCase.now,heads:headsOf(verdictCase.heads),attestations:attestations(),retirements:{}});
  expect(same.ok).toBe(true);
  const mixed=attestations();
  mixed.b={...mixed.b!,code:"e".repeat(64)};
- const report=judgeFleetV1({now:verdictCase.now,heads:verdictCase.heads,attestations:mixed,retirements:{}});
+ const report=judgeFleetV1({now:verdictCase.now,heads:headsOf(verdictCase.heads),attestations:mixed,retirements:{}});
  expect(report.ok).toBe(false);
  expect(report.differing).toEqual([{originId:"b",field:"code",value:"e".repeat(64),expected:"d".repeat(64)}]);
  expect(report.rows.find(row=>row.originId==="b")).toMatchObject({verdict:"diverged",differs:["code"]});
  const ahead=attestations();
  ahead.c={...ahead.c!,wallMs:verdictCase.now+(skewSecondsV1+1)*1000};
- const skewed=judgeFleetV1({now:verdictCase.now,heads:verdictCase.heads,attestations:ahead,retirements:{}});
+ const skewed=judgeFleetV1({now:verdictCase.now,heads:headsOf(verdictCase.heads),attestations:ahead,retirements:{}});
  expect(skewed.rows.find(row=>row.originId==="c")).toMatchObject({verdict:"stale",fresh:false,ageSeconds:0});
  const slight=attestations();
  slight.c={...slight.c!,wallMs:verdictCase.now+10_000};
- expect(judgeFleetV1({now:verdictCase.now,heads:verdictCase.heads,attestations:slight,retirements:{}}).ok).toBe(true);
+ expect(judgeFleetV1({now:verdictCase.now,heads:headsOf(verdictCase.heads),attestations:slight,retirements:{}}).ok).toBe(true);
 });
 
 test("retire refuses an origin whose attestation exists but cannot be read, unless forced",async()=>{

@@ -181,6 +181,7 @@ pub struct LdltJob {
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
     pub(super) terminal_published: bool,
+    pub(super) publishes: bool,
 }
 
 pub(super) fn close_ldlt_checkpoint_step(state: &mut LdltCheckpoint, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
@@ -237,9 +238,12 @@ impl LdltJob {
             output_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
-            terminal_published: false, desk: NumericalOutcomeDesk::default(),
+            terminal_published: false, desk: NumericalOutcomeDesk::default(), publishes: true,
         }
     }
+
+    /// 🤐 Keeps the factor with its mounted owner, which transfers it in place: the job publishes no checkpoint or output payload.
+    pub fn without_publication(mut self) -> Self { self.publishes = false; self.state.checkpoint_floor = usize::MAX; self }
 
     /// 🪜️ Checkpoints once the factor holds `entries` entries (and again whenever it doubles), instead of the production floor.
     pub fn with_checkpoint_floor(mut self, entries: usize) -> Self { self.state.checkpoint_floor = entries.max(1); self }
@@ -280,7 +284,7 @@ impl LdltJob {
     fn admit_work(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, SparseError> {
         let copied_bytes = size_of::<LdltColumnCursor>() * 2 + bytes;
         if !numerical_grant_covers(context.retained_grant(), RetirementDemand { copy_bytes: copied_bytes, depth: depth.max(1), ..Default::default() }) { return Ok(false); }
-        context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }).map_err(|_| SparseError::DimensionMismatch)?;
+        context.consume_retained(RetainedCloneProgress { copied_bytes, ..Default::default() }).map_err(|_| SparseError::DimensionMismatch)?;
         Ok(true)
     }
 

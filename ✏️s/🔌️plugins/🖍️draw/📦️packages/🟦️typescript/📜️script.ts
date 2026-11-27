@@ -8,9 +8,17 @@ import Ajv from "ajv";
 import { runCmd } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🔎️ Strict checking for the owned path raster pipeline and its framework consumers. */
-function typecheckPathRaster(repoRoot:string,raster:string,ownedSources:string[]=[]):void {
-  runCmd(process.execPath, [join(repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", join(raster, "🟦️.ts"),...ownedSources], {cwd:repoRoot});
+const executedTests=new Set<string>();
+/** 🧪️ Runs bun test entries and remembers every TypeScript test file so the strict typecheck gate covers exactly what is executed. */
+function runTests(command:string,args:string[]):void {
+  for(const arg of args) if(arg.endsWith(".ts")) executedTests.add(arg);
+  runCmd(command,args);
+}
+/** 🔎️ Strict checking for the owned path raster pipeline, its framework consumers and every test file executed since the last check. */
+function typecheckPathRaster(repoRoot:string,raster:string|null,ownedSources:string[]=[]):void {
+  const tests=[...executedTests];executedTests.clear();
+  const roots=[...(raster===null?[]:[join(raster, "🟦️.ts")]),...ownedSources,...tests];
+  if(roots.length) runCmd(process.execPath, [join(repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...roots], {cwd:repoRoot});
 }
 
 /** 🌐️ Official pinned Unicode inputs produce reviewable immutable first-party shaping records. */
@@ -42,12 +50,17 @@ async function provisionUnicodeShapeTables(repoRoot:string):Promise<void>{
 }
 class TestScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
+    await this.execute(segments);
+    typecheckPathRaster(this.repoRoot,null);
+  }
+  private async execute(segments:string[]): Promise<void> {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any");
     if(segments.length===0||(segments.length===1&&segments[0]==="admission")){
       await runOwnedCommand(process.execPath,["test","--timeout","45000",join(subset,"🧬️schema/✅️validation/🧪️tests.mjs")],this.repoRoot,"draw:source-admission",45000,{env:process.env,signal:this.invocation.control.signal});
       if(segments.length)return;
     }
-    runCmd(process.execPath,["test",join(subset,"🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(subset,"🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts")]);
+    executedTests.add(join(subset,"🚪️io/🖼️image/🧪️tests/🟦️.ts"));
     await (await import(join(subset,"🚪️io/🖼️image/🧪️tests/🟦️.ts"))).testDrawingImageAdmission();
     const raster=join(subset,"🧬️schema/🧮️geometry/📷️raster");
     const sceneRaster=join(subset,"🧬️schema/🎬️scene/📷️raster");
@@ -63,90 +76,90 @@ class TestScript extends BundleScript {
     if(segments.length) {
       if(segments.length===1&&segments[0]==="io-descriptors") {await (await import(join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts"))).testArtifactIoDescriptorParity();typecheckPathRaster(this.repoRoot,join(subset,"🚪️io"),[join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts")]);return;}
       if(segments.length===2&&segments[0]==="font-shape"&&segments[1]==="unicode") {await provisionUnicodeShapeTables(this.repoRoot);return;}
-      if(segments.length===1&&segments[0]==="owned-export") {const writer=join(subset,"🚪️io/📤️export/📦️owned");runCmd(process.execPath,["test","--timeout","120000",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,join(writer,"🧪️tests"));return;}
-      if(segments.length===1&&segments[0]==="scene-text") {const text=join(subset,"🧬️schema/🎬️scene/🔤️text");runCmd(process.execPath,["test","--timeout","120000",join(text,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,text,[join(subset,"🧬️schema/🎬️scene/📋️prepare/🟦️.ts")]);return;}
-      if(segments.length===1&&segments[0]==="font-shape") {const shape=join(this.repoRoot,"🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape");runCmd(process.execPath,["test","--timeout","120000",join(shape,"🧪️tests/🟦️.ts"),join(shape,"🌐️unicode/🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,shape,[join(shape,"🌐️unicode/🟦️.ts")]);return;}
-      if(segments.length===1&&segments[0]==="font-outline") {const font=join(this.repoRoot,"🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font");runCmd(process.execPath,["test",join(font,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,font,[join(font,"🧵️outline/🟦️.ts"),join(font,"🤝️kerning/🟦️.ts"),join(font,"🧵️run/🟦️.ts"),join(font,"📇️catalog/🟦️.ts")]);return;}
-      if(segments.length===1&&segments[0]==="pdf-write") {const writer=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write");runCmd(process.execPath,["test","--timeout","120000",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,writer);return;}
-      if(segments.length===1&&segments[0]==="svg-write") {const writer=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write");runCmd(process.execPath,["test",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,writer);return;}
-      if(segments.length===1&&segments[0]==="png-export") {const exported=join(subset,"✏️editor/🎮️commands/📤️export-document");runCmd(process.execPath,["test",join(exported,"🧪️tests/🔬️unit/🟦️.ts")]);typecheckPathRaster(this.repoRoot,exported);return;}
-      if(segments.length===1&&segments[0]==="image-import") {const imported=join(subset,"✏️editor/🎮️commands/📥️import-image");runCmd(process.execPath,["test",join(imported,"🧪️tests/🔬️unit/🟦️.ts"),join(imported,"🧵️publication/🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,imported,[join(imported,"🧵️publication/🟦️.ts"),join(imported,"🧵️publication/🧪️tests/🟦️.ts")]);return;}
+      if(segments.length===1&&segments[0]==="owned-export") {const writer=join(subset,"🚪️io/📤️export/📦️owned");runTests(process.execPath,["test","--timeout","120000",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,join(writer,"🧪️tests"));return;}
+      if(segments.length===1&&segments[0]==="scene-text") {const text=join(subset,"🧬️schema/🎬️scene/🔤️text");runTests(process.execPath,["test","--timeout","120000",join(text,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,text,[join(subset,"🧬️schema/🎬️scene/📋️prepare/🟦️.ts")]);return;}
+      if(segments.length===1&&segments[0]==="font-shape") {const shape=join(this.repoRoot,"🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape");runTests(process.execPath,["test","--timeout","120000",join(shape,"🧪️tests/🟦️.ts"),join(shape,"🌐️unicode/🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,shape,[join(shape,"🌐️unicode/🟦️.ts")]);return;}
+      if(segments.length===1&&segments[0]==="font-outline") {const font=join(this.repoRoot,"🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font");runTests(process.execPath,["test",join(font,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,font,[join(font,"🧵️outline/🟦️.ts"),join(font,"🤝️kerning/🟦️.ts"),join(font,"🧵️run/🟦️.ts"),join(font,"📇️catalog/🟦️.ts")]);return;}
+      if(segments.length===1&&segments[0]==="pdf-write") {const writer=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write");runTests(process.execPath,["test","--timeout","120000",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,writer);return;}
+      if(segments.length===1&&segments[0]==="svg-write") {const writer=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write");runTests(process.execPath,["test",join(writer,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,writer);return;}
+      if(segments.length===1&&segments[0]==="png-export") {const exported=join(subset,"✏️editor/🎮️commands/📤️export-document");runTests(process.execPath,["test",join(exported,"🧪️tests/🔬️unit/🟦️.ts")]);typecheckPathRaster(this.repoRoot,exported);return;}
+      if(segments.length===1&&segments[0]==="image-import") {const imported=join(subset,"✏️editor/🎮️commands/📥️import-image");runTests(process.execPath,["test",join(imported,"🧪️tests/🔬️unit/🟦️.ts"),join(imported,"🧵️publication/🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,imported,[join(imported,"🧵️publication/🟦️.ts"),join(imported,"🧵️publication/🧪️tests/🟦️.ts")]);return;}
       if(segments.length===1&&segments[0]==="shape-coordinates") {
         const coordinates=join(subset,"🧬️schema/🔷️shape/✏️coordinates");
-        runCmd(process.execPath,["test",join(coordinates,"🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test",join(coordinates,"🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,coordinates);
         return;
       }
       if(segments.length===1&&segments[0]==="selection-actions") {
         const actions=join(subset,"✏️editor/📌️panels/🔍️properties/🎬️actions");
-        runCmd(process.execPath,["test",join(actions,"🧪️tests/🟦️.ts")]);
+        runTests(process.execPath,["test",join(actions,"🧪️tests/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,actions);
         return;
       }
       if(segments.length===1&&segments[0]==="field-history") {
         const patch=join(subset,"✏️editor/🎮️commands/🩹️patch-layer");
-        runCmd(process.execPath,["test",join(patch,"🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test",join(patch,"🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,patch);
         return;
       }
       if(segments.length===1&&segments[0]==="affine-rendering") {
         const affine=join(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine");
-        runCmd(process.execPath,["test",join(affine,"🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test",join(affine,"🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,affine);
         return;
       }
       if(segments.length===1&&segments[0]==="path-editing") {
         const editing=join(subset,"🧬️schema/🧮️geometry/✏️editing");
-        runCmd(process.execPath,["test",join(editing,"🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test",join(editing,"🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,editing);
         return;
       }
       if(segments.length===1&&segments[0]==="clipboard"){
         const clipboard=join(subset,"✏️editor/📋️clipboard");
-        runCmd(process.execPath,["test",join(clipboard,"🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test",join(clipboard,"🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,clipboard);
         return;
       }
       if(segments.length===1&&segments[0]==="scene-placement"){
         const placement=join(subset,"🧬️schema/🎬️scene/📍️placement");
-        runCmd(process.execPath,["test","--timeout","120000",join(placement,"🧪️tests/🔬️unit/🟦️.ts")]);
+        runTests(process.execPath,["test","--timeout","120000",join(placement,"🧪️tests/🔬️unit/🟦️.ts")]);
         typecheckPathRaster(this.repoRoot,placement,[join(scenePrepare,"🟦️.ts")]);
         return;
-      }      if(segments.length===1&&segments[0]==="image-host"){runCmd(process.execPath,["test","--timeout","120000",join(subset,"../../../../🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts")]);return;}
+      }      if(segments.length===1&&segments[0]==="image-host"){runTests(process.execPath,["test","--timeout","120000",join(subset,"../../../../🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts")]);return;}
       if(segments.length!==1||!['path-raster','scene-raster','scene-paint','scene-picking','selection-status','image-output'].includes(segments[0]!)) throw new Error("Unknown Draw test selection "+segments.join(" "));
       const selected=segments[0]==='image-output'?join(subset,'🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any'):segments[0]==='scene-raster'?sceneRaster:segments[0]==='scene-paint'?scenePaint:segments[0]==='scene-picking'?scenePicking:segments[0]==='selection-status'?selectionStatus:raster;
-      runCmd(process.execPath,["test","--timeout","120000",join(selected,"🧪️tests/🔬️unit/🟦️.ts"),...(selected===scenePaint?[join(scenePaint,"📋️prepare/🧪️tests/🔬️unit/🟦️.ts")]:[]),...(selected===sceneRaster?[join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"),join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts")]:[])]);
+      runTests(process.execPath,["test","--timeout","120000",join(selected,"🧪️tests/🔬️unit/🟦️.ts"),...(selected===scenePaint?[join(scenePaint,"📋️prepare/🧪️tests/🔬️unit/🟦️.ts")]:[]),...(selected===sceneRaster?[join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"),join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts")]:[])]);
       typecheckPathRaster(this.repoRoot,selected,selected===scenePaint?[join(scenePaint,"📋️prepare/🟦️.ts")]:selected===sceneRaster?[join(subset,"🚪️io/🖼️image/🟦️.ts"),join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(scenePaint,"🟦️.ts"),join(scenePaint,"📋️prepare/🟦️.ts"),join(scenePaint,"📋️prepare/🎯️query/🟦️.ts")]:[]);
       return;
     }
     await (await import(join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts"))).testArtifactIoDescriptorParity();typecheckPathRaster(this.repoRoot,join(subset,"🚪️io"),[join(subset,"🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts")]);
-    runCmd(process.execPath,["test",join(subset,"✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(subset,"✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,join(subset,"✏️editor/📋️clipboard"));
     const inspectorActions=join(subset,"✏️editor/📌️panels/🔍️properties/🎬️actions");
-    runCmd(process.execPath,["test",join(inspectorActions,"🧪️tests/🟦️.ts")]);
+    runTests(process.execPath,["test",join(inspectorActions,"🧪️tests/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,inspectorActions);
-    runCmd(process.execPath,["test",join(selectionStatus,"🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(selectionStatus,"🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,selectionStatus);
-    runCmd(process.execPath, ["test","--timeout","120000", join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️picking/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎛️handles/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"../🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"../🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"🧬️schema/🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️framing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts"), join(subset, "✏️editor/🎮️commands/➕️add-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↔️translation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🧪️tests/📐️bounds/🟦️.ts"), join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
+    runTests(process.execPath, ["test","--timeout","120000", join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️picking/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎛️handles/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"../🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"../🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🧪️tests/🔬️unit/🟦️.ts"), join(subset,"🧬️schema/🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️framing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts"), join(subset, "✏️editor/🎮️commands/➕️add-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↔️translation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🧪️tests/📐️bounds/🟦️.ts"), join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,raster,[join(subset,"🚪️io/🖼️image/🟦️.ts"),join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(scenePaint,"🟦️.ts"),join(scenePaint,"📋️prepare/🟦️.ts"),join(scenePaint,"📋️prepare/🎯️query/🟦️.ts"),join(sceneRaster,"🟦️.ts"),join(subset,"🧬️schema/🟦️.ts"),join(subset,"🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🟦️.ts"),join(subset,"🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),join(subset,"../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🟦️.ts"),join(subset,"../🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🦠️mutation/🟦️.ts"),join(subset,"../🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🦠️mutation/🟦️.ts"),join(subset,"✏️editor/🎮️commands/🩹️patch-layer/🟦️.ts")]);
-    runCmd(process.execPath,["test",join(subset,"✏️editor/🎮️commands/📥️import-image/🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(subset,"✏️editor/🎮️commands/📥️import-image/🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,join(subset,"✏️editor/🎮️commands/📥️import-image"));
     const placement=join(subset,"🧬️schema/🎬️scene/📍️placement");
-    runCmd(process.execPath,["test","--timeout","120000",join(placement,"🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test","--timeout","120000",join(placement,"🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,placement);    const exported=join(subset,"✏️editor/🎮️commands/📤️export-document");
-    runCmd(process.execPath,["test",join(exported,"🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(exported,"🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,exported);
-    const pdfWriter=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write");runCmd(process.execPath,["test","--timeout","120000",join(pdfWriter,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,pdfWriter);
+    const pdfWriter=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write");runTests(process.execPath,["test","--timeout","120000",join(pdfWriter,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,pdfWriter);
     const svgWriter=join(subset,"🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write");
-    runCmd(process.execPath,["test",join(svgWriter,"🧪️tests/🟦️.ts")]);
+    runTests(process.execPath,["test",join(svgWriter,"🧪️tests/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,svgWriter);
     const font=join(this.repoRoot,"🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font"),sceneText=join(subset,"🧬️schema/🎬️scene/🔤️text");
-    runCmd(process.execPath,["test","--timeout","120000",join(font,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,font,[join(font,"🧵️outline/🟦️.ts"),join(font,"🤝️kerning/🟦️.ts"),join(font,"🧵️run/🟦️.ts"),join(font,"📇️catalog/🟦️.ts")]);
-    runCmd(process.execPath,["test","--timeout","120000",join(sceneText,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,sceneText,[join(scenePrepare,"🟦️.ts")]);
+    runTests(process.execPath,["test","--timeout","120000",join(font,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,font,[join(font,"🧵️outline/🟦️.ts"),join(font,"🤝️kerning/🟦️.ts"),join(font,"🧵️run/🟦️.ts"),join(font,"📇️catalog/🟦️.ts")]);
+    runTests(process.execPath,["test","--timeout","120000",join(sceneText,"🧪️tests/🟦️.ts")]);typecheckPathRaster(this.repoRoot,sceneText,[join(scenePrepare,"🟦️.ts")]);
     const affine=join(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine");
-    runCmd(process.execPath,["test",join(affine,"🧪️tests/🔬️unit/🟦️.ts")]);
+    runTests(process.execPath,["test",join(affine,"🧪️tests/🔬️unit/🟦️.ts")]);
     typecheckPathRaster(this.repoRoot,affine);
-    runCmd(process.execPath, ["test", join(subset, "✏️editor/📬️completion/🎟️close/🧪️tests/🟦️.ts")]);
+    runTests(process.execPath, ["test", join(subset, "✏️editor/📬️completion/🎟️close/🧪️tests/🟦️.ts")]);
     await proveDrawPublicationAuthority(this.root, subset);
   }
 }

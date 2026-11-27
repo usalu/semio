@@ -19,5 +19,5 @@ fn sparse_camera_inverse_and_codecs_restore_the_base() {
     let next = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.camera_json, "next");
     assert_eq!(protocol::apply_diff_cold(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse"), base);
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
 }

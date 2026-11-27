@@ -4,8 +4,8 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {cacheRunnerPortsV1,mountedPartitionUsageV1,reportCacheLedgerV1} from "../../🏃️runner/🟦️.ts";
-import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import {cacheRunnerPortsV1,mountedPartitionUsageAsyncV1,mountedPartitionUsageV1,reportCacheLedgerV1} from "../../🏃️runner/🟦️.ts";
+import {nativeImageVolumeUsedBytesSyncV1,nativeImageVolumeUsedBytesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {planMachineBudgetV1,type MachinePolicyV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import usage from "./usage.json" with {type:"json"};
 
@@ -48,4 +48,18 @@ test("host-limited Darwin image availability does not become occupied cache byte
  const plan=(usedBytes:number)=>planMachineBudgetV1({totalBytes:quotaBytes,hostFreeBytes:expected.availableBytes,uses:[{id:"rust",usedBytes,envelopeBytes:facts.capacityBytes,evictableBytes:null}]},policy);
  expect(plan(facts.usedBytes!).evictBytes).toBe(0);
  expect(plan(facts.capacityBytes-expected.availableBytes).evictBytes).toBeGreaterThan(0);
+});
+
+test("the volume tool runs without blocking the loop, agrees with the blocking reading and a hung tool is cut short as an unknown use",async()=>{
+ const {mount,volume,plist,expected}=usage;
+ const read=`<plist version="1.0"><dict><key>MountPoint</key><string>${plist.MountPoint}</string><key>FilesystemType</key><string>${plist.FilesystemType}</string><key>CapacityInUse</key><integer>${plist.CapacityInUse}</integer></dict></plist>`;
+ const blocking=nativeImageVolumeUsedBytesSyncV1(mount,volume,"darwin",()=>read);
+ const asynchronous=await nativeImageVolumeUsedBytesV1(mount,volume,"darwin",async()=>read);
+ expect(asynchronous).toBe(blocking);expect(asynchronous).toBe(expected.usedBytes);
+ const hung=async(_program:string,_args:readonly string[],signal?:AbortSignal)=>new Promise<string|undefined>(resolve=>signal?.addEventListener("abort",()=>resolve(undefined),{once:true}));
+ const stop=new AbortController(),pending=nativeImageVolumeUsedBytesV1(mount,volume,"darwin",hung,stop.signal);
+ let beat=0;const timer=setInterval(()=>beat++,5);await new Promise(done=>setTimeout(done,40));clearInterval(timer);
+ expect(beat,"the loop kept running while the tool hung").toBeGreaterThan(2);
+ stop.abort();expect(await pending).toBeUndefined();
+ expect(await mountedPartitionUsageAsyncV1(mount,volume,"darwin",AbortSignal.abort())).toEqual({usedBytes:null,capacityBytes:expected.capacityBytes,partial:true});
 });

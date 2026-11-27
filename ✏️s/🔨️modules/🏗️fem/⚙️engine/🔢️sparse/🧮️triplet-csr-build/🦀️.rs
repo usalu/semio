@@ -4,6 +4,9 @@ use super::*;
 
 const CSR_TRIPLET_QUOTE: &[u8] = b"fem.triplet-csr-quote";
 
+/// 🔁️ Most in-place units one quoted step runs back to back; each unit is still quoted against the same grant, so a denied axis ends the batch.
+const CSR_UNITS_PER_STEP: usize = 256;
+
 /// 🧱️ One element-matrix contribution; its global assembly sequence orders duplicate coordinates so accumulation is deterministic.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SparseTriplet {
@@ -32,6 +35,13 @@ pub enum CsrTripletBuildStage {
     ReserveIndptr,
     Indptr,
     Complete,
+}
+
+impl CsrTripletBuildStage {
+    /// 🔁️ Whether every unit of the phase only reads and writes reserved slots, so one quoted step may batch several units without allocating.
+    fn is_in_place(self) -> bool {
+        matches!(self, Self::InitializeRows | Self::Sort | Self::CountUnique | Self::Merge | Self::Indptr)
+    }
 }
 
 /// 🧵️ Retained triplet to CSR conversion. Every heap-sort comparison and swap, duplicate merge, row count and output entry advances
@@ -262,8 +272,16 @@ impl CsrTripletBuild {
             return Ok((false, RetainedCloneProgress::default()));
         }
         let before = self.allocated_bytes();
-        let complete = self.advance(effect)?;
-        Ok((complete, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: self.allocated_bytes().saturating_sub(before), released_bytes: 0 }))
+        let mut copy_bytes = demand.copy_bytes;
+        let mut complete = self.advance(effect)?;
+        for _ in 1..CSR_UNITS_PER_STEP {
+            if complete || !self.stage.is_in_place() { break; }
+            let next = self.next_demands()?;
+            if !numerical_grant_covers(effect.grant(), next) { break; }
+            copy_bytes = copy_bytes.max(next.copy_bytes);
+            complete = self.advance(effect)?;
+        }
+        Ok((complete, RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, retained_capacity_bytes: self.allocated_bytes().saturating_sub(before), released_bytes: 0 }))
     }
 
     /// 🧾️ Quotes the copy of the finished matrix out of this build, or `None` before it exists.

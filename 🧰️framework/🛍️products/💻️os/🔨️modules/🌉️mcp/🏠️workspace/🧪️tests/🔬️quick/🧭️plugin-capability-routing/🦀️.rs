@@ -2,7 +2,7 @@
 
 #[test]
 fn resolve_plugin_for_capability_is_not_found_for_an_unknown_id() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let error = workspace.resolve_plugin_for_capability("totally.unknown.capability").expect_err("no such capability");
     assert_eq!(error.code, GatewayErrorCode::NotFound);
@@ -10,7 +10,7 @@ fn resolve_plugin_for_capability_is_not_found_for_an_unknown_id() {
 
 #[test]
 fn resolve_plugin_for_capability_is_plugin_unavailable_for_a_gateway_owned_id() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let error = workspace.resolve_plugin_for_capability("capabilities.search").expect_err("gateway-owned, not a plugin");
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
@@ -19,7 +19,7 @@ fn resolve_plugin_for_capability_is_plugin_unavailable_for_a_gateway_owned_id() 
 
 #[test]
 fn resolve_plugin_for_capability_routes_note_and_cad_to_different_plugins() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     assert_eq!(workspace.resolve_plugin_for_capability("note.editor.setGridVisible").expect("note-owned"), "note");
     assert_eq!(workspace.resolve_plugin_for_capability("cad.editor.addObject").expect("cad-owned"), "cad");
@@ -261,7 +261,7 @@ fn framework_capabilities_route_from_the_target_artifact_binding() {
 /// 🏛️ Without a target a framework capability is an input error naming the missing artifact, not a missing plugin.
 #[test]
 fn resolve_plugin_for_capability_asks_a_framework_capability_for_its_target_artifact() {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
     let error = workspace.resolve_plugin_for_capability("framework.undo").expect_err("framework-owned, no plugin of its own");
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);

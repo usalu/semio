@@ -39,6 +39,7 @@ semio-s-artifact-norm-vdi3805-schema = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

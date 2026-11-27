@@ -203,6 +203,19 @@ pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn F
 
 /// 🚏️ Executes a routed IO payload under original native and SQLite authorities, then closes both native directions. The decode and encode controls install their own Work and construction loans for the whole run, so both share the one lifetime the run's `IoRunControl` demands.
 pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
+    with_original_native(|native| {
+        let mut snapshot = SqliteSnapshotControl::new(progress, limits);
+        io_run_with_snapshot_control(route, &mut Some(payload), native, &mut snapshot).into_inner()
+    })
+}
+
+/// 🏃️ Runs one registered IO entry under original native decode and encode owners and closes both directions afterwards.
+pub fn run_entry(run: fn(&IoPayload, &mut IoRunControl<'_, '_>) -> IoResult<IoPayload>, payload: &IoPayload) -> IoResult<IoPayload> {
+    with_original_native(|native| run(payload, native))
+}
+
+/// 🧷️ Lends one original decode and encode owner pair, with their Work and construction loans, to `operation`, then closes both native directions.
+fn with_original_native<T>(operation: impl FnOnce(&mut IoRunControl<'_, '_>) -> T) -> T {
     let grant = original_grant();
     let mut receive = |_| true;
     let mut emit = |_| true;
@@ -210,6 +223,7 @@ pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseL
     let mut emit_recipient = NativeEncodeRetirementRecipient::new();
     let (mut decoding, mut encoding) = (Lent::new(), Lent::new());
     let mut result = None;
+    let mut operation = Some(operation);
     decoding.construction
         .with_loan(&mut (), |decode_construction| {
             decoding.work.with_loan(&mut (), |decode_work| {
@@ -226,8 +240,7 @@ pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseL
                         emit_control.install_work_recipient(&mut encode_work).expect("original encode work loan installs");
                         emit_control.install_construction_recipient(&mut encode_construction).expect("original encode construction loan installs");
                         let mut native = IoRunControl::new(&mut receive_control, &mut emit_control, grant);
-                        let mut snapshot = SqliteSnapshotControl::new(progress, limits);
-                        result = Some(io_run_with_snapshot_control(route, &mut Some(payload), &mut native, &mut snapshot).into_inner());
+                        result = Some((operation.take().expect("one operation"))(&mut native));
                         close_original(&mut native);
                         drop(native);
                         Ok::<(), ValueError>(())

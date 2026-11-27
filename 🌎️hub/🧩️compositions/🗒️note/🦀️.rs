@@ -36,7 +36,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// write access to persist edits.
 pub fn plugin() -> Result<Plugin<NoteApps>, PluginAssemblyError> {
     PluginBuilder::<_, NoteApps>::new("note")
-        .label("Note")
+        .label(semio_plugin::LocalizedLabel::native("Note", "Notiz"))
         .version("0.1.0")
         .package_id("semio:note")
         .declare_artifact(crate::artifacts::note::artifact())

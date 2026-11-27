@@ -15,7 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+
 [dependencies]
+semio-os-store-mutation-report = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📑️mutation-report/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
 semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
@@ -48,6 +50,7 @@ semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧬️schema/📸
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

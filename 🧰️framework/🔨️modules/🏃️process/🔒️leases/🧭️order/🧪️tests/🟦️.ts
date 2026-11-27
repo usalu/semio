@@ -5,7 +5,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import toolchain from "./🧫️fixtures/🦀️toolchain/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import authored from "../🔣️policy.json";
-import {checkHoldAndWaitV1,checkLeaseOrderV1,checkSelfDeadlockV1,classifyLeaseResourceV1,findLeaseCycleV1,formatLeaseViolationV1,leaseBlockersV1,leaseOrderPolicyV1,leaseProcessDependenciesV1,readLeaseOrderPolicyV1,type LeaseNodeV1,type LeaseViolationV1} from "../🟦️.ts";
+import {formatLeaseWaitNoticeV1,checkHoldAndWaitV1,checkLeaseOrderV1,checkSelfDeadlockV1,classifyLeaseResourceV1,findLeaseCycleV1,formatLeaseViolationV1,leaseBlockersV1,leaseOrderPolicyV1,leaseProcessDependenciesV1,readLeaseOrderPolicyV1,type LeaseNodeV1,type LeaseViolationV1} from "../🟦️.ts";
 
 const policy=readLeaseOrderPolicyV1(fixture.policy);
 const ajv=new Ajv({strict:true,allowUnionTypes:true});
@@ -315,4 +315,11 @@ test("the authored policy declares the tools image to tool singleton nesting and
  expect(checkLeaseOrderV1(live,held("cargo:registry:/w/.cache/b/r/m/cargo/home","shared"),request("cargo:configuration-view:2","shared"))?.kind).toBe("out-of-order");
  expect(checkLeaseOrderV1(live,held("cargo:configuration-view:2","shared"),request("cargo:registry:/w/.cache/b/r/m/cargo/home","shared"))).toBeUndefined();
  expect(checkLeaseOrderV1(live,held(image,"exclusive"),request("cargo:registry:/h","shared"))?.kind,"the edge is only for the tool singletons").toBe("out-of-order");
+});
+
+test("a lease wait notice names the holder process, its agent session and command in both languages",()=>{
+ const row={resource:"native-fixed-image:/cache",mode:"exclusive",seconds:45,blockerPid:4242,blockerHeldSeconds:90,blockerCommand:"repo cargo test; session ab12.c3"};
+ expect(formatLeaseWaitNoticeV1("en",row)).toBe("[lease] waiting 45 s for native-fixed-image:/cache (exclusive), held by process 4242 (repo cargo test; session ab12.c3) for 90 s");
+ expect(formatLeaseWaitNoticeV1("de",row)).toBe("[lease] warte seit 45 s auf native-fixed-image:/cache (exklusiv), gehalten von Prozess 4242 (repo cargo test; session ab12.c3) seit 90 s");
+ expect(ajv.validate({definitions:schema.definitions,$ref:"#/definitions/Policy"} as never,authored)).toBe(true);
 });

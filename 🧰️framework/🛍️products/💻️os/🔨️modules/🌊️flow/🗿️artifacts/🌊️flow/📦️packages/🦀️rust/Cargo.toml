@@ -23,3 +23,6 @@ protocol-laws = []
 semio-framework-artifact-flow-flow-model = { path = "../../🧱️model/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow-document = { path = "../../🧾️document/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow-copy = { path = "../../🧵️retained/📑️copy/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }

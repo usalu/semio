@@ -29,7 +29,7 @@ while IFS= read -r selector; do
 done <<< "$selectors"
 
 cd '🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust'
-target=(--offline --locked --lib --profile prototype --target wasm32-wasip2 --jobs "${PUZZLE_COMPONENT_JOBS:-1}" "${profile[@]}" --config profile.prototype.lto=false)
+target=(--offline --lib --profile prototype --target wasm32-wasip2 --jobs "${PUZZLE_COMPONENT_JOBS:-1}" "${profile[@]}" --config profile.prototype.lto=false)
 if [[ -n "${PUZZLE_HUB_CODEGEN_UNITS:-}" ]]; then
   target+=(--config "profile.prototype.package.semio-hub-puzzle.codegen-units=$PUZZLE_HUB_CODEGEN_UNITS")
 fi

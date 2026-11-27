@@ -243,9 +243,11 @@ def summarize(facts,language):
         if "blocked" in e: say("sealed-blocked","alert",e["entry"],{"entry":e["entry"],"first":e["blocked"].get("first",str(e["blocked"]["rows"]))})
         elif e["fresh"] is False: say("sealed-drifted","info",e["entry"],{"entry":e["entry"],"changed":e["changed"]})
     for m in (facts.get("fleet") or {}).get("machines",[]):
-        reasons=m.get("cacheSkipReasons") or {}
-        if reasons.get("upload-expired-denied",0)>0: say("unit-cache-denied","alert",m["origin"],{"origin":m["origin"],"count":reasons["upload-expired-denied"]})
-        if reasons.get("read-only",0)>0: say("unit-cache-read-only","warn",m["origin"],{"origin":m["origin"],"count":reasons["read-only"]})
+        rt=facts.get("rates")
+        recent=lambda i: ((rt or {}).get("origins",{}).get(m["origin"],{}).get(i) or [0])[0]
+        window=duration(language,rt["windowsSeconds"][0]) if rt else duration(language,0)
+        if recent("cache.skip.upload-expired-denied")>0: say("unit-cache-denied","alert",m["origin"],{"origin":m["origin"],"count":recent("cache.skip.upload-expired-denied"),"window":window})
+        if recent("cache.skip.read-only")>0: say("unit-cache-read-only","warn",m["origin"],{"origin":m["origin"],"count":recent("cache.skip.read-only"),"window":window})
     for d in ((facts.get("fleet") or {}).get("keys") or {}).get("diffs",[]):
         if d["sameSource"]: say("unit-key-machine-dependent","warn",d["crate"],{"crate":d["crate"],"origins":",".join(d["origins"]),"components":",".join(d["differs"])})
     for w in (facts.get("workers") or {}).get("rows",[]):
@@ -266,7 +268,8 @@ def summarize(facts,language):
         level=text(language,"workers.level."+r["level"])
         if r["level"] in ("guard","danger"): say("worker-memory-tight","alert" if r["level"]=="danger" else "warn",o,{"origin":o,"level":level,"available":r["availableMegabytes"],"guard":r["guardMegabytes"],"danger":r["dangerMegabytes"],"swap":"?" if r["swapUsedMegabytes"] is None else r["swapUsedMegabytes"],"pressure":r["pressure"]})
         c=r["counters"]
-        if c["suspended"]+c["cancelled"]>0: say("worker-warden-intervened","alert" if c["cancelled"]>0 else "warn",o,{"origin":o,"suspended":c["suspended"],"resumed":c["resumed"],"cancelled":c["cancelled"],"alarm":"-" if r["lastAlarm"] is None else r["lastAlarm"]["text"][language]})
+        recent=((facts.get("rates") or {}).get("origins",{}).get(o,{}).get("warden.cancelled") or [0])[0]
+        if recent>0: say("worker-warden-intervened","alert",o,{"origin":o,"recent":recent,"window":duration(language,facts["rates"]["windowsSeconds"][0]),"suspended":c["suspended"],"resumed":c["resumed"],"cancelled":c["cancelled"],"alarm":"-" if r["lastAlarm"] is None else r["lastAlarm"]["text"][language]})
         if r["mode"]=="observe": say("worker-warden-observing","info",o,{"origin":o,"level":level})
         if r["swapUsedMegabytes"] is not None and r["totalMegabytes"] is not None and r["swapUsedMegabytes"]*10000>r["totalMegabytes"]*POLICY["findings"]["workerSwapWarnBasisPoints"]: say("worker-swap-high","warn",o,{"origin":o,"swap":r["swapUsedMegabytes"],"percent":r["swapUsedMegabytes"]*100//r["totalMegabytes"],"total":r["totalMegabytes"]})
         h=r["overhead"]
@@ -292,7 +295,7 @@ def summarize(facts,language):
      "bazel":{"slots":len(servers),"live":len([s for s in servers if s["live"]]),"held":len([s for s in servers if s["held"]]),"rssMegabytes":sum(s["treeMegabytes"] or 0 for s in servers),"servers":servers},
      "storage":{"hostFreeBytes":st["hostFreeBytes"] if st else None,"hostFreeFloorBytes":st["hostFreeFloorBytes"] if st else 0,"machine":st["machine"] if st else {"totalBytes":0,"effectiveTotalBytes":0,"usedBytes":0,"footprintBytes":0,"overBytes":0,"evictBytes":0,"blockedBytes":0,"source":"default"},"overAreas":sorted(st["overAreas"]) if st else [],"images":images},
      "sealed":{"mode":(facts.get("sealed") or {}).get("mode","live"),"drifted":len([e for e in sealed if e["fresh"] is False]),"blocked":len([e for e in sealed if "blocked" in e]),"entries":sealed},
-     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"],**fleet_section(facts),**workers_section(facts),**cas_section(facts),**retention_section(facts),**offload_section(facts)}
+     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"],**fleet_section(facts),**workers_section(facts),**cas_section(facts),**retention_section(facts),**offload_section(facts),**rates_section(facts)}
 
 def fleet_section(facts):
     f=facts.get("fleet")
@@ -323,6 +326,14 @@ def retention_section(facts):
     r=fl.get("retention")
     if not r: return {"retention":None}
     return {"retention":{"mode":r["mode"],"sweptAt":r["sweptAt"],"ageSeconds":None if r["sweptAt"]==0 else max(0,(facts["atMs"]-r["sweptAt"])//1000),"entries":r["entries"],"judged":r["declared"],"live":r["live"],"grace":r["grace"],"stale":sum(r["stale"].values()),"staleByReason":r["stale"],"unreached":r["unreached"],"undeclared":max(0,r["entries"]-r["declared"]),"retired":r["retired"],"refused":r["refused"]}}
+
+def rates_section(facts):
+    f=facts.get("rates")
+    if not f: return {}
+    fleet={}
+    for o in sorted(f["origins"]):
+        for k,v in f["origins"][o].items(): fleet[k]=[(fleet[k][i] if k in fleet else 0)+x for i,x in enumerate(v)]
+    return {"rates":{"windowsSeconds":list(f["windowsSeconds"]),"origins":{o:f["origins"][o] for o in sorted(f["origins"])},"fleet":fleet}}
 
 def offload_section(facts):
     f=facts.get("offload")
@@ -402,7 +413,8 @@ def generate(seed,count):
                 if fr.random()<0.7:
                     reasons={name:fr.randint(1,40) for name in fr.sample(["upload-expired-denied","upload-expired-down","read-only","path-dependent","upload-dropped","root-key-failed"],fr.randint(0,4))}
                     m["cacheSkipped"]=sum(reasons.values());
-                    if reasons: m["cacheSkipReasons"]=reasons
+                    if reasons:
+                        m["cacheSkipReasons"]=reasons
                 return m
             facts["fleet"]={"scheduler":"http://cache.g1.semio.internal:8981","expireSeconds":15,"machines":[machine(n) for n in names],"queued":fr.randint(0,4),"executing":fr.randint(0,4),"offloadRejected":fr.randint(0,4),"refused":fr.randint(0,4),"retried":fr.randint(0,4)}
             if fr.random()<0.5: facts["fleet"]["cache"]={"hits":fr.randint(0,99),"misses":fr.randint(0,99),"puts":fr.randint(0,99)}
@@ -449,6 +461,10 @@ def generate(seed,count):
         if xr.random()<0.6:
             pids=xr.sample(range(1000,9000),xr.randint(0,4));builds=[{"pid":p,"local":xr.randint(0,9),"fleet":xr.randint(0,30)} for p in pids]
             facts["offload"]={"local":sum(b["local"] for b in builds),"fleet":sum(b["fleet"] for b in builds),"builds":builds,"out":xr.randint(0,9999),"refused":xr.randint(0,99),"fellBack":xr.randint(0,99),"reasons":{name:xr.randint(1,40) for name in xr.sample(["deadline","operation-lost","silent","infrastructure","no-idle-machine","worker-policy"],xr.randint(0,6))}}
+        rr=random.Random(seed*32452843+index)
+        if rr.random()<0.6:
+            ids=["build.units.compiled","build.units.skipped","cache.local.hit","exec.offload.out","warden.cancelled","cache.skip.read-only","cache.skip.upload-expired-denied","exec.decline.cheap"]
+            facts["rates"]={"windowsSeconds":[900,3600,86400],"origins":{o:{k:sorted(rr.randint(0,50) for _ in range(3)) for k in rr.sample(ids,rr.randint(0,5))} for o in rr.sample(["g1-m01","g1-m04","g1-m09","g1-m12","g1-server","g1-m20"],rr.randint(0,5))}}
         for s in facts["sources"]:
             if s["ok"]: s.pop("error",None)
         if facts["generation"] is None: del facts["generation"]

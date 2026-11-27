@@ -145,6 +145,21 @@ impl Reading {
         Ok(Self { lanes, ids, refs, page_refs, annotation_refs, seen: recording.seen })
     }
 
+    /// 🔭 Reads like [`Self::of`], continuing the resource ids of `claims` (the slices read before this one) so a name repeated across pages gets the id the whole-document lift gave it; `claims` is moved into the read and returned with this read's claims appended to its log.
+    pub fn of_claiming(source: impl ObjectSource, trailer: &[PdfDictEntry], declared_version: &str, claims: &mut ResourceClaims) -> PResult<Self> {
+        let mut recording = Recording { inner: source, seen: HashSet::new() };
+        let (lanes, ids, page_refs, annotation_refs, claimed) = {
+            let mut lifter = lift_document_claiming(trailer, declared_version, &mut recording, std::mem::take(claims));
+            if let Some(error) = lifter.admission_error.take() { *claims = lifter.take_claims(); return Err(error); }
+            let claimed = lifter.take_claims();
+            let ids = claimed.ids.clone();
+            (lifter.snapshot, ids, lifter.page_refs, lifter.annotation_refs, claimed)
+        };
+        *claims = claimed;
+        let refs = ids.iter().map(|((category, reference), id)| ((*category, id.clone()), *reference)).collect();
+        Ok(Self { lanes, ids, refs, page_refs, annotation_refs, seen: recording.seen })
+    }
+
     /// 🗺️ Where every resource this reading names lives, and every page in `pages` order.
     pub fn targets(&self, pages: &[ObjRef]) -> HashMap<(Category, String), ObjRef> {
         let mut refs = self.refs.clone();

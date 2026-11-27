@@ -67,6 +67,13 @@ export function offloadDeadlineMillisecondsV1(predictedMilliseconds:number|undef
  return Math.min(cap,Math.max(deadline.floorMilliseconds,Math.ceil(predictedMilliseconds*deadline.factor)));
 }
 
+/** ⏳️ How long a queued unit waits for a machine before it compiles here: `queueSaturatedFactor` times the scheduler's measured 90th percentile of the queue wait, at least the floor and at most the cap; without enough samples (`queueSaturatedMinimumSamples`) the fixed `queueSaturatedMilliseconds`. */
+export function offloadQueueWaitMillisecondsV1(measured:Readonly<{p90Milliseconds:number;samples:number}>|undefined):number{
+ const timeouts=OFFLOAD_POLICY_V1.timeouts;
+ if(measured===undefined||!Number.isFinite(measured.p90Milliseconds)||measured.p90Milliseconds<0||measured.samples<timeouts.queueSaturatedMinimumSamples)return timeouts.queueSaturatedMilliseconds;
+ return Math.min(timeouts.queueSaturatedCapMilliseconds,Math.max(timeouts.queueSaturatedFloorMilliseconds,Math.ceil(measured.p90Milliseconds*timeouts.queueSaturatedFactor)));
+}
+
 /** 📏️ What the compiler measured of one run after its admission (the broker's `UnitProvenanceV1`): wall, user and system milliseconds. */
 export type OffloadRunMeasureV1=Readonly<{wallMs:number;userMs:number;sysMs:number}>;
 
@@ -128,7 +135,7 @@ export const offloadKilledPeakMegabytesV1=(exitCode:number,placed:number,learned
 /** 🎛️ How a build treats offloading: `distribute` places every unit worth a round trip on any ready machine of the fleet (this machine's slots are one more worker), `pin` places every unit on the one named machine, `never` stays local. */
 export type OffloadModeV1="distribute"|"pin"|"never";
 /** 🧭️ Why a unit stays here or its offload failed. */
-export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"no-compatible-worker"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"remote-failed-local-redo"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"final-wait"|"pin-failed"|"beyond-host-refused"|"cancelled";
+export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"no-compatible-worker"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"remote-failed-local-redo"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"final-wait"|"pin-failed"|"beyond-host-local"|"cancelled";
 
 type Environment=Readonly<Record<string,string|undefined>>;
 

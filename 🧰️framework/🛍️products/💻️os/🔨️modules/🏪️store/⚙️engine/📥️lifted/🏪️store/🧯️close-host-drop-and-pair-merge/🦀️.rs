@@ -28,6 +28,8 @@ where
     P: PartialEq + semio_os_spr::StoreState,
     Mutation: semio_os_spr::StoreMutationFor<P>,
 {
+    /// [DEBUG] Names which owner keeps this displaced Store's roots from terminal-empty.
+    pub fn close_owned_roots_witness(&self) -> String { self.parts_ref().owned_roots_witness() }
     /// 🪞️ Delegates to [`StoreLive::enable_convergence_early_exit`].
     #[inline] pub fn enable_convergence_early_exit(&mut self) { self.live.enable_convergence_early_exit() }
 }
@@ -166,7 +168,7 @@ where
             return Err(VcsError::ValidationFailed(format!("the persisted pair holds document {}, not {}: a merge takes this document's own log only", history.doc_id, self.log.envelope.id)));
         }
         let ParsedDocumentText { envelope: foreign, snapshot } = parse_decoded_document_spr::<P, Mutation>(pack, history, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        retire_replayed_projection::<P, Mutation>(snapshot);
+        retire_shared_projection::<P, Mutation>(snapshot);
         let mut failure = None;
         let mut events = Vec::new();
         for edit in foreign.vcs.edits.iter() {

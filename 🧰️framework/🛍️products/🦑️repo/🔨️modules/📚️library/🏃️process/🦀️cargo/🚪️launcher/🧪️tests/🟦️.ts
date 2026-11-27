@@ -45,8 +45,8 @@ test("cache TestScript admits every branch through one original diagnostics call
 });
 
 test("isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released",async()=>{
- await withBuildTestInvocationV1(original=>withRepositoryTestArtifactsV1(repository.root,original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(repository.root);const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
- const parent=mkdtempSync(join(artifacts,"cl-")),directory=join(parent,"v"),leaseDirectory=join(repository.root,".cache/b/l/m/data");
+ await withBuildTestInvocationV1(original=>withRepositoryTestArtifactsV1(repository.root,original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(repository.root);const bounded=join(repository.root,fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
+ const parent=await repository.scratch("cl-"),directory=join(parent,"v"),leaseDirectory=join(repository.root,".cache/b/l/m/data");
  await withBuildTestInvocationV1(async original=>{
   const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativeImageStorageV1(options),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
   const storage=await acquireNativeStorageV1({policy,control,port:nativeStorageRetirementPortV1(image.port,async()=>{}),owner:"repo:cargo:isolated-law",kind:"compiler-workspace",bytes:8388608}),base=join(image.root,"cargo","prototype"),isolated=join(base,REPOSITORY_CARGO_LAUNCH_POLICY_V1.isolatedDirectory);
@@ -70,7 +70,7 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
     if(row.outcome==="return")expect(await settlement).toBe(row.name);else await expect(settlement).rejects.toThrow();
     expect(present(root),row.name).toBe(!row.removedAfterOwner);
    }
-   expect(spawnSync(testPythonV1()??"python3",["-c","import os,sys;print(len([n for n in os.listdir(sys.argv[1])]))",isolated],{encoding:"utf8"}).stdout.trim()).toBe("0");
+   expect(spawnSync(testPythonV1()??"python3",["-c","import os,sys;print(len([n for n in os.listdir(sys.argv[1]) if os.path.isdir(os.path.join(sys.argv[1],n))]))",isolated],{encoding:"utf8"}).stdout.trim()).toBe("0");
   }finally{db.close();await storage.retire();await image.close();await retireNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control});rmSync(parent,{recursive:true,force:true});}
  });
 }));

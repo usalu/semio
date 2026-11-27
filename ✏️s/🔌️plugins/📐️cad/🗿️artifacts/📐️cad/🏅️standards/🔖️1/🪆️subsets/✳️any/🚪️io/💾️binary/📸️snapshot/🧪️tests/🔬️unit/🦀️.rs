@@ -7,7 +7,7 @@ use semio_s_artifact_cad_cad_testing::sample_scene;
 
 #[semio_framework_async_macros::async_test]
 async fn cad_scene_round_trips_through_pack() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&sample_scene());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample_scene());
     let bytes = encode(&sample_scene());
     assert_eq!(decode(&bytes).expect("decode"), sample_scene());
 }
@@ -17,7 +17,7 @@ async fn cad_pack_schema_identity_preserves_literal_children_and_rejects_foreign
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut scene = sample_scene();
-    store::os_store::test_support::assert_pack_schema_identity(&scene);
+    semio_os_store_test_support::assert_pack_schema_identity(&scene);
     scene.drawings.push(store::os_store::artifact_child::ArtifactChild::new("drawing-1".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("other-id!s.stdio.semio@v1/drawing").expect("uri")));
     assert_eq!(decode(&encode(&scene)).unwrap(),scene);
     scene.drawings.last_mut().unwrap().target.dialect.subset="model".into();
@@ -45,6 +45,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let sample = sample_model_child("command-envelope-1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<CadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<CadSnapshot, CadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<CadSnapshot, CadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests

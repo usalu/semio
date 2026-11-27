@@ -39,6 +39,14 @@ const cases:{lines:string[];root:string;want:boolean}[]=[
  {lines:["The resident service met an unexpected failure (reference 92b15f61): ConcurrentEditErrorV1: Cache charge receipt file changed while it was open / Cache-Belastungsbeleg Datei hat sich geändert, während sie offen war: /x/y.json"],root,want:true},
  {lines:["The resident service met an unexpected failure (reference 92b15f62): ConcurrentEditErrorV1: Retiring closure leaf file was replaced again while it was opened by name / Abzuräumendes Abschlussblatt Datei wurde beim Öffnen über den Namen erneut ersetzt: /x/y.json"],root,want:true},
  {lines:["The file changed while it was open in another editor"],root,want:false},
+ {lines:["ReferenceError: nativeImageShardMountedV1 is not defined"],root,want:true},
+ {lines:["Internal error: Bundle failed: No matching export in \"semio-captured-source:/x/y/🟦️.ts\" for import \"nativeImageVolumeUsedBytesV1\" (reference 0eae3eda)"],root,want:true},
+ {lines:["Bundle failed: Could not resolve a thing in the user project"],root,want:false},
+ {lines:["\u001b[31merror\u001b[0m\u001b[2m:\u001b[0m cannot find type `OriginalCancelRootIdentity` in the crate root"],root,want:true},
+ {lines:["error[E0425]: cannot find type `OriginalCancelRootIdentity` in the crate root"],root,want:true},
+ {lines:["error[E0308]: mismatched types"],root,want:false},
+ {lines:["the ReferenceError: x is not defined was logged by a user script"],root,want:false},
+ {lines:["Internal error: Authorizer sources changed while the authorizer bundle was built, it is not published: 🧰️framework/x/🟦️.ts"],root,want:true},
 ];
 test("the source-transient classification equals an independent Python implementation",()=>{
  const expected=oracle("classify",cases.map(row=>({lines:row.lines,root:row.root,patterns:P.sourceTransientPatterns})));

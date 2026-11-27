@@ -3,12 +3,13 @@
   "emoji": "🧺",
   "status": "open",
   "description": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
-  "summary": "CDN archive ready: .cache/deploy/site-20261125T134801Z.tar.gz (597 MB, 1,815 files, SHA256SUMS), byte-identical to the site verified by the official static matrix. All eight apps run in English and German; 10 of 16 strict boots pass. Aussuchen and Bearbeiten fail only on one leftover debug console line, Generator's 3D preview is empty. Koordinator, Aggregator, Bearbeiten and Verfolgen were re-pointed through runtimeVariant (Bearbeiten stays on the bundled guest) and eight cad and process extensions are withheld. Stale shard worker and surface wasm republished. No guest was rebuilt: the demonstrator and process finals exceed the 4,096 MB link budget and the policy was left unchanged. Details: 📊️status-2026-11-25.md.",
+  "summary": "Enforced a 32 GiB per-image schema bound and split the Rust partition into several images (lanes, unit cache sealed/w, cargo, components) via the existing shard model, with a relayout step that only runs under the exclusive partition lease. Live re-layout not performed because builds hold the Rust image; one command documented.",
   "goal": "runningdemonstrator",
   "sessions": [
     "058433d9-45c4-4cd3-a90e-f80054e511e4",
     "9f06210d-4265-49f6-9c6c-d141489a3344",
-    "0d1bc55f-65d2-45c8-a53c-b995b7b717ee"
+    "0d1bc55f-65d2-45c8-a53c-b995b7b717ee",
+    "a7cad14b-b57e-41b7-abd5-c7aa8ef72ad2"
   ],
   "interactions": [
     {
@@ -141,6 +142,70 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Continue end to end: rebuild the guests with the pending fixes (procedural preview first), carve the process and demonstrator finals below the link budget without changing the policy, rerun the matrix and repackage. Review side effects of the previous run.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-26 14:18:59",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "9c8a98ec2349cd952e1195429a42dc041a3a31d0",
+      "summary": "Enforced a 32 GiB per-image schema bound and split the Rust partition into several images (lanes, unit cache sealed/w, cargo, components) via the existing shard model, with a relayout step that only runs under the exclusive partition lease. Live re-layout not performed because builds hold the Rust image; one command documented.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️💾️storage🗃️🍎️image🗃️🧩️shard🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️💾️storage🗃️🍎️image🗃️🧩️shard💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️💾️storage🗃️🍎️image🗃️🧩️shard🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo📃📓️buildguide"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️📥️opening🗃️♻️reset⚙️📋️project"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️📥️opening🗃️♻️reset💻📜️script"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️📥️opening🗃️♻️reset💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget⚙️🔣️policy"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️🧪️tests🗃️🧩️shards💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️📦️budget🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🧾️ledger🗃️🎚️machine⚙️🔣️policy"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-26 14:19:18",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Reopened: a subagent closed the ticket prematurely. The release queue (playbook and 20 more modules), site build, EN/DE acceptance and packaging are still pending.",
       "llm": "opus-5-5",
       "effort": "medium"
     }

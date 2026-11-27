@@ -22,7 +22,7 @@ use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReserved
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
 use crate::jobs_instance_root::OriginalRenderTreeIdentity;
 use crate::jobs_lease::OriginalToolLeaseAdmission;
@@ -208,7 +208,7 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub tool_cancellations: semio_plugin_operation::ToolCancellationIssuer,
     pub live_runtime_instance_id: Option<u32>,
     pub tool_operations: ArtifactFixedRegistry<Box<MountedTypedCommandFullOperation<A>>>,
-    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_plugin_retained_command_operation::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
     pub original_emission_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     pub original_emission_construction:Option<semio_framework_job::OriginalConstructionAdmission>,
     /// 🧾️ The receipt result, built once and held across turns until the emission construction it was built under has retired.

@@ -17,7 +17,7 @@ async fn sample_manifest() -> ExtensionPackageManifest {
     ExtensionPackageManifest {
         extension_id: "flow.math".into(),
         directory_name: "🧮️flow-math".into(),
-        label: "Flow Math".into(),
+        label: LocalizedLabel::native("Flow Math", "Flow-Mathematik"),
         version: "0.1.0".into(),
         extends: "flow".into(),
         capabilities: vec!["flow.operator".into()],
@@ -52,7 +52,7 @@ async fn dependencies_default_absent_on_the_wire() {
     let bare = object([
         ("extensionId".to_string(), Value::from("flow.math")),
         ("directoryName".to_string(), Value::from("🧮️flow-math")),
-        ("label".to_string(), Value::from("Flow Math")),
+        ("label".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&LocalizedLabel::native("Flow Math", "Flow-Mathematik")))),
         ("version".to_string(), Value::from("0.1.0")),
         ("extends".to_string(), Value::from("")),
         ("capabilities".to_string(), Value::Array(Vec::new())),

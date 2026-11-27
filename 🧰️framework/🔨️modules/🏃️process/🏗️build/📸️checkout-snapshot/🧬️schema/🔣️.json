@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/build/checkout-snapshot/v1",
+  "title": "Checkout snapshot: one immutable, content-addressed source generation of the shared worktree",
+  "description": "A release build takes hours while the shared worktree changes every few seconds. The snapshot copies the files a build reads into a short-rooted directory below the machine state directory exactly once, as ONE stable tree state (every file consumed once, two listings agree to the byte of every stamp, edits younger than the settle window are waited out), names the directory after the digest of what it holds and makes the files read-only. A build that runs with that directory as its workspace root and the live machine state directory reads one generation from start to end, and its receipts name paths relative to the root, so the source tree digest of the receipt is the digest of what was compiled.",
+  "definitions": {
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Row": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "sha256",
+            "bytes",
+            "executable"
+          ],
+          "properties": {
+            "kind": {
+              "const": "file"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "$ref": "#/definitions/Hex"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "executable": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "target"
+          ],
+          "properties": {
+            "kind": {
+              "const": "link"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "origin",
+        "digest",
+        "files",
+        "links",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/definitions/Hex"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "directory": "s",
+        "idCharacters": 12,
+        "maximumRootCharacters": 160,
+        "maximumFiles": 1000000,
+        "retained": 3,
+        "receiptName": ".snapshot.json",
+        "progressEvery": 4096,
+        "hashInMemoryBytes": 8388608,
+        "environment": {
+          "root": "SEMIO_WORKSPACE_ROOT",
+          "state": "SEMIO_MACHINE_STATE_DIRECTORY",
+          "digest": "SEMIO_SOURCE_SNAPSHOT_DIGEST",
+          "origin": "SEMIO_SOURCE_SNAPSHOT_ORIGIN"
+        },
+        "excludeRootEntries": [
+          ".git",
+          ".cache",
+          ".nx",
+          ".venv",
+          ".claude",
+          ".codex",
+          ".agents",
+          ".🧬semio",
+          "🎓️teaching",
+          "🗑️generated",
+          ".DS_Store"
+        ],
+        "excludeEverywhere": [
+          ".git",
+          "target",
+          "🗑️generated",
+          ".DS_Store"
+        ],
+        "linkEverywhere": [
+          "node_modules"
+        ],
+        "texts": {
+          "en": {
+            "created": "Snapshot {id} captured: {files} files, {mebibytes} MiB in {seconds} s after {attempts} observation(s); build root {root}.",
+            "reused": "Snapshot {id} reused: the tree is unchanged since it was captured ({files} files); build root {root}.",
+            "progress": "Snapshot {phase}: {files} files, {mebibytes} MiB.",
+            "pruned": "Snapshot {id} removed.",
+            "tooLong": "Snapshot root {root} has {length} characters; at most {maximum} are allowed.",
+            "notSnapshot": "{root} is not a checkout snapshot of {origin}."
+          },
+          "de": {
+            "created": "Schnappschuss {id} erfasst: {files} Dateien, {mebibytes} MiB in {seconds} s nach {attempts} Beobachtung(en); Build-Wurzel {root}.",
+            "reused": "Schnappschuss {id} wiederverwendet: der Baum ist seit der Erfassung unverändert ({files} Dateien); Build-Wurzel {root}.",
+            "progress": "Schnappschuss {phase}: {files} Dateien, {mebibytes} MiB.",
+            "pruned": "Schnappschuss {id} entfernt.",
+            "tooLong": "Die Schnappschuss-Wurzel {root} hat {length} Zeichen; erlaubt sind höchstens {maximum}.",
+            "notSnapshot": "{root} ist kein Checkout-Schnappschuss von {origin}."
+          }
+        },
+        "rowsName": ".snapshot.rows",
+        "maximumTotalBytes": 8589934592,
+        "minimumFreeBytes": 21474836480,
+        "holdersName": ".holders",
+        "stepPrefix": ".step-",
+        "closureRootEntries": [
+          "🧰️framework",
+          "🌎️hub",
+          "✏️s",
+          ".cargo",
+          "Cargo.toml",
+          "Cargo.lock",
+          "rust-toolchain.toml",
+          "rustfmt.toml",
+          "package.json",
+          "bunfig.toml",
+          "tsconfig.json",
+          "📋️project.json",
+          "🔒️dependencies.json",
+          "📋️build-owners.json",
+          "📜️script.ts"
+        ]
+      }
+    }
+  }
+}

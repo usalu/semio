@@ -161,6 +161,6 @@ fn keyword_owned_record_codec_is_forwarded_once() {
 #[doc(hidden)]
 #[test]
 pub fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::semio_os_store_test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️DependencyContributionLaws

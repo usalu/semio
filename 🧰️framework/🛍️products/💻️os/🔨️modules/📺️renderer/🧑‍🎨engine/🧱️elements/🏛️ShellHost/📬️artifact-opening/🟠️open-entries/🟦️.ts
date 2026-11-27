@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, AppRouter, type AppRouterManifest, SemioFaultError, SURFACE_FAULT_CODES, type Conflict, type Fault, type MergeReport, type Severity } from "@semio-tech/framework";
 import { programPluginIdV1, sessionProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { resolveManifestLabel, shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { groupOpenWithEntries } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { isPluginInstanceRetiredV1 } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { liveInstanceWindowFaultV1 } from "../../🩺️fault/🟦️.ts";
@@ -44,14 +44,14 @@ export function useOpenEntriesState({ session, loadedPluginsRef, dispatch, plugi
     if (catalogModule === undefined) return groupOpenWithEntries(appRouter, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, (role) => pinnedAppFor(session.app.dialect, role), pluginLabelById);
     const programs = sessionProgramsV1(loadedPlugins, session.pluginId);
     const router = AppRouter.build(programs.map((entry): AppRouterManifest => ({ pluginId: entry.handle.pluginId, apps: entry.manifest.apps as unknown as Record<string, unknown>[], artifactKinds: entry.manifest.artifactKinds, dependencies: entry.manifest.dependencies })));
-    const labels = new Map(programs.map((entry) => [entry.handle.pluginId, entry.manifest.label || programPluginIdV1(entry)]));
+    const labels = new Map(programs.map((entry) => [entry.handle.pluginId, resolveManifestLabel(entry.manifest.label, core.uiTerminology, core.uiLocale) || programPluginIdV1(entry)]));
     const pinned = (role: AppRole): AppRef | undefined => {
       const pin = pinnedAppFor(session.app.dialect, role);
       const peer = pin === undefined ? undefined : catalogModule.peers[pin.pluginId];
       return pin === undefined || peer === undefined ? pin : { ...pin, pluginId: peer };
     };
     return groupOpenWithEntries(router, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, pinned, labels);
-  }, [session, appRouter, loadedPlugins, pinnedAppFor, pluginLabelById]);
+  }, [session, appRouter, loadedPlugins, pinnedAppFor, pluginLabelById, core.uiTerminology, core.uiLocale]);
   const hasOpenArtifactSurfaces = (openWithEntries?.viewer.length ?? 0) + (openWithEntries?.editor.length ?? 0) > 0;
 
   const transientNoticeIdRef = useRef(0);

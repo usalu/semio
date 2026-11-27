@@ -11,6 +11,7 @@
         "consumerCount": 5,
         "measureEntryLimit": 2000000,
         "environmentChild": "SEMIO_DISK_RECOVERY_CHILD",
+        "environmentBunCache": "SEMIO_DISK_RECOVERY_BUN_CACHE",
         "namedConsumers": ["image-slack", "replica-store"]
       }
     },
@@ -43,7 +44,7 @@
         "class": {"enum": ["derivable", "recoverable", "content", "store", "image"]},
         "relief": {"enum": ["host", "image", "none"]},
         "root": {"type": "string", "minLength": 1},
-        "collector": {"enum": ["ledger", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "native-shards", "image-reset", "store-compaction", "manual"]},
+        "collector": {"enum": ["ledger", "bun-cache", "cas-lru", "staging-sweep", "image-sweep", "age-prune", "log-rotate", "native-shards", "image-reset", "store-compaction", "manual"]},
         "command": {"type": "string", "minLength": 1},
         "bound": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
       }
@@ -67,7 +68,8 @@
         {"id": "cas-lru", "priority": 70, "class": "content", "relief": "host", "root": "{home}/.cache/semio/cas", "collector": "cas-lru", "command": "repo cache cas gc", "bound": {"en": "Capped at capBytes, least recently accessed first, down to the derived low share.", "de": "Auf capBytes begrenzt, die am längsten ungenutzten zuerst, bis zum abgeleiteten unteren Anteil."}},
         {"id": "replica-lost", "priority": 80, "class": "recoverable", "relief": "host", "root": "{workspace}/.cache/f/lost", "collector": "age-prune", "command": "repo cache gc", "bound": {"en": "Files the replica overwrote are kept for maximumAgeMilliseconds, the newest keepNewest stay.", "de": "Vom Replikat überschriebene Dateien bleiben maximumAgeMilliseconds, die neuesten keepNewest bleiben."}},
         {"id": "replica-store", "priority": 85, "class": "store", "relief": "host", "root": "{store}", "collector": "store-compaction", "command": "cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica && repo ./📜️script.ts compaction --apply", "bound": {"en": "Only on the group server: unreferenced blobs, retired journal segments and superseded snapshots go by the store's own liveness rules (snapshot reference plus safetyHours), under the store-wide compaction lock.", "de": "Nur auf dem Gruppenserver: unreferenzierte Blobs, ablösbare Journalsegmente und abgelöste Schnappschüsse gehen nach den eigenen Lebendigkeitsregeln des Speichers (Schnappschuss-Verweis plus safetyHours), unter der speicherweiten Verdichtungssperre."}},
-        {"id": "image-slack", "priority": 90, "class": "image", "relief": "host", "root": "{workspace}/.cache/b", "collector": "image-reset", "command": "repo run repo-cache-reset:cache-regrow-<partition>", "bound": {"en": "Blocks a fixed image freed are never returned to the host; an idle recomputable elastic image (graph, products, rust) with slack above the floor is retired by the product's exclusive non-waiting regrow, and skipped with a named reason while any command holds it mapped.", "de": "Von einem festen Image freigegebene Blöcke gehen nie an den Host zurück; ein untätiges, neu berechenbares elastisches Image (Graph, Produkte, Rust) mit Überhang über der Schwelle wird durch das ausschließliche, nicht wartende Neuwachsen des Produkts abgeräumt und mit benanntem Grund übersprungen, solange ein Befehl es eingehängt hält."}}
+        {"id": "image-slack", "priority": 90, "class": "image", "relief": "host", "root": "{workspace}/.cache/b", "collector": "image-reset", "command": "repo run repo-cache-reset:cache-regrow-<partition>", "bound": {"en": "Blocks a fixed image freed are never returned to the host; an idle recomputable elastic image (graph, products, rust) with slack above the floor is retired by the product's exclusive non-waiting regrow, and skipped with a named reason while any command holds it mapped.", "de": "Von einem festen Image freigegebene Blöcke gehen nie an den Host zurück; ein untätiges, neu berechenbares elastisches Image (Graph, Produkte, Rust) mit Überhang über der Schwelle wird durch das ausschließliche, nicht wartende Neuwachsen des Produkts abgeräumt und mit benanntem Grund übersprungen, solange ein Befehl es eingehängt hält."}},
+        {"id": "bun-cache", "priority": 91, "class": "derivable", "relief": "host", "root": "{workspace}/.cache/b/d/m/bun-cache", "collector": "bun-cache", "command": "repo cache gc --area=dependencies", "bound": {"en": "The shared Bun package cache of the dependency store (regenerable by the next install, one inode per cached file): removed last, and only while no install holds the exclusive build lease, so an install never loses an entry it reads.", "de": "Der gemeinsame Bun-Paketcache des Abhängigkeits-Speichers (vom nächsten Install neu erzeugbar, ein Inode je gecachter Datei): wird zuletzt entfernt und nur, solange kein Install die exklusive Build-Sperre hält, damit ein Install nie einen Eintrag verliert, den er liest."}}
       ]
     },
     "Messages": {
@@ -83,6 +85,14 @@
           "recovery.collector-start": {
             "en": "Starting collector {id}.",
             "de": "Sammler {id} startet."
+          },
+          "recovery.inode-holder": {
+            "en": "Inode holder {root}: {entries} entries{partial}.",
+            "de": "Inode-Halter {root}: {entries} Einträge{partial}."
+          },
+          "recovery.inode-census-none": {
+            "en": "Inode census found no holder below {root}.",
+            "de": "Die Inode-Zählung fand keinen Halter unter {root}."
           },
           "recovery.consumer-measure": {
             "en": "Measuring disk consumer {id}.",

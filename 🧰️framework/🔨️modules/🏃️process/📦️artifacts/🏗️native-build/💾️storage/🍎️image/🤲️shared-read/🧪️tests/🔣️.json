@@ -1,0 +1,9 @@
+{
+  "timelines": [
+    {"name": "one burst", "maximum": 2000, "idle": 250, "ops": [[0, 10], [20, 10], [40, 10], [60, 10]]},
+    {"name": "idle gap releases", "maximum": 2000, "idle": 250, "ops": [[0, 10], [100, 10], [400, 10], [420, 10]]},
+    {"name": "maximum hold forces a new lease", "maximum": 2000, "idle": 250, "ops": [[0, 10], [200, 10], [400, 10], [2100, 10], [2200, 10], [4100, 10]]},
+    {"name": "idle exactly at the limit", "maximum": 2000, "idle": 250, "ops": [[0, 10], [260, 10], [510, 10]]},
+    {"name": "long operations keep the hold", "maximum": 1000, "idle": 100, "ops": [[0, 300], [350, 300], [700, 300], [1050, 300]]}
+  ]
+}

@@ -15,6 +15,7 @@ use semio_framework::kernel::{ActivationEvent, CapabilityRequest, CapabilityRequ
 use semio_framework::{AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration};
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
+pub use semio_ui_locale::LocalizedLabel;
 
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
@@ -32,7 +33,7 @@ pub struct Ready;
 pub struct PluginBuilder<State, PA: PluginApp = semio_plugin_reactor_app::NoPluginApp> {
     pub plugin_id: String,
     pub package_id: Option<String>,
-    pub label: Option<String>,
+    pub label: Option<LocalizedLabel>,
     pub version: Option<String>,
     artifacts: Vec<ArtifactDeclaration>,
     /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
@@ -120,12 +121,12 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
         }
     }
 
-    /// 🏷️ Sets the human-readable plugin label.
-    pub fn label(self, label: impl Into<String>) -> PluginBuilder<NeedsVersion, PA> {
+    /// 🏷️ Sets the plugin label in every terminology and locale — no default language.
+    pub fn label(self, label: LocalizedLabel) -> PluginBuilder<NeedsVersion, PA> {
         PluginBuilder {
             plugin_id: self.plugin_id,
             package_id: self.package_id,
-            label: Some(label.into()),
+            label: Some(label),
             version: None,
             artifacts: self.artifacts,
             hosted_artifacts: self.hosted_artifacts,

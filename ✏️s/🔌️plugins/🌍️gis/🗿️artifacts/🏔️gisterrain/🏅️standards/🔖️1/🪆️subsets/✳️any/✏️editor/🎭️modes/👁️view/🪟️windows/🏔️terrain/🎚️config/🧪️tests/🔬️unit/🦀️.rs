@@ -49,13 +49,13 @@ fn gis3d_camera_returns_to_the_overview_after_a_geographic_frame_change() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_config_dsl_round_trips_default_and_populated() {
-    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainWindowConfig::default());
+    semio_os_store_test_support::assert_dsl_round_trip(&GisTerrainWindowConfig::default());
     let populated = GisTerrainWindowConfig {
         camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into(),
         brush: Some(TerrainBrushSettings { radius: 7, elevation_step_millimetres: 31, smooth_strength: 65 }),
     };
-    store::os_store::test_support::assert_dsl_round_trip(&populated);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
+    semio_os_store_test_support::assert_dsl_round_trip(&populated);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&populated);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -115,7 +115,7 @@ async fn terrain_brush_diff_applies_reverses_and_refuses_an_invalid_change() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_config_operation_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }));
 }
 
 fn block_on_terrain_window_config<F: std::future::Future>(future: F) -> F::Output {

@@ -68,7 +68,8 @@ async fn the_owner_closes_empty() {
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
     assert!(!semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4 };
-    assert!(matches!(semio_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, grant), Ok(semio_plugin::PluginLifecycleStep::Complete(_))));
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    assert!(matches!(semio_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, scope.cx(), grant), Ok(semio_plugin::PluginLifecycleStep::Complete(_))));
     assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }
 

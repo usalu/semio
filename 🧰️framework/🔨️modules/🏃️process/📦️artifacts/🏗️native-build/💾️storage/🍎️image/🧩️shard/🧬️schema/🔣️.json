@@ -115,7 +115,7 @@
           "description": "The working set of one key, from which its image gets the headroom.",
           "type": "integer",
           "minimum": 1048576,
-          "maximum": 137438953472
+          "maximum": 34359738368
         }
       }
     },
@@ -136,7 +136,7 @@
         "maximumImageBytes": {
           "type": "integer",
           "minimum": 1073741824,
-          "maximum": 137438953472
+          "maximum": 34359738368
         },
         "headroomPercent": {
           "type": "integer",

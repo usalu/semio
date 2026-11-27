@@ -30,7 +30,8 @@ test("build bootstrap receives the defining dependency module while its executab
 });
 test("original direct dependency CLI admits explicit whole or scoped selections and refuses installer overrides",()=>{
   const oracle=new(require("ajv"))({strict:true}).compile(dependencyInvocationSchema);
-  for(const row of fixture.dependencyInvocations.cases){const selected=readBuildDependencyInvocationV1(row.args);assert.deepEqual(selected,row.value);expect(oracle(selected),row.name).toBe(true);expect(selected.selection.kind==="all"?["--all"]:["--scope",selected.selection.owner]).toEqual(row.forwarded);}
+  for(const row of fixture.dependencyInvocations.cases){const selected=readBuildDependencyInvocationV1(row.args);assert.deepEqual(selected,row.value);expect(oracle(selected),row.name).toBe(true);expect(selected.selection.kind==="all"?["--all"]:selected.selection.kind==="scope"?["--scope",selected.selection.owner]:selected.selection.owners.flatMap(owner=>["--scope",owner])).toEqual(row.forwarded);}
+  for(const args of [["dependencies","lock","--scope",".","--scope","x"],["dependencies","sync","--scope",".","--scope","."],["dependencies","sync","--scope",".","--scope"],["dependencies","sync","--scope",".","--all"],["dependencies","ensure","--scope",".","--scope","x"]])expect(()=>readBuildDependencyInvocationV1(args)).toThrow("Expected repo dependencies");
   for(const args of fixture.dependencyInvocations.refused)expect(()=>readBuildDependencyInvocationV1(args)).toThrow("Expected repo dependencies sync|lock --all|--scope <owner>");
   for(const value of [{mode:"unknown",selection:{kind:"all"}},{mode:"sync",selection:{kind:"all",owner:"."}},{mode:"lock",selection:{kind:"scope"}},{mode:"sync",selection:{kind:"scope",owner:""}},{mode:"sync",selection:{kind:"scope",owner:"\0"}}])expect(oracle(value)).toBe(false);
 });

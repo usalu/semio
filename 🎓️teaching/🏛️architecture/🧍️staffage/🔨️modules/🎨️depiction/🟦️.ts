@@ -379,8 +379,7 @@ export function modelScene(state: EvaluatedState, options: ModelSceneOptions): M
       if (mag < 1e-9 || max <= 0) return [];
       const dir = { x: f.flat.x / mag, y: f.flat.y / mag };
       const length = Math.max(0.05 * height, (mag / max) * 0.5 * height);
-      const tail = { x: f.where.x - dir.x * length, y: f.where.y - dir.y * length };
-      return [{ points: arrowOutline(tail, f.where, 0.004 * height, 0.06 * height, 0.04 * height), closed: true }];
+      return [{ points: arrowOutline(f.where, dir, length, 0.004 * height, 0.06 * height, 0.04 * height), closed: true }];
     });
     if (arrows.length) layers.push({ name: "ANALYSIS-ARROWS", aci: 1, lineweight: 25, polylines: arrows, texts: [] });
     const diagrams = (options.diagrams ?? ["moment"]).flatMap((kind) => {

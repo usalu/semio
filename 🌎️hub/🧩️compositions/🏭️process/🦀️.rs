@@ -39,7 +39,7 @@ impl From<Process3dViewerApp> for ProcessApps {
 /// write access to persist edits.
 pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
     PluginBuilder::<_, ProcessApps>::new("process")
-        .label("Process")
+        .label(semio_plugin::LocalizedLabel::native("Process", "Prozess"))
         .version("0.1.0")
         .package_id("semio:process")
         .artifact(semio_s_artifact_process_process3d::declaration().map_err(PluginAssemblyError::definition)?)

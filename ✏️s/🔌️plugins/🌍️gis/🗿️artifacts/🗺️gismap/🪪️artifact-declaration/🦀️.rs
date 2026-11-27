@@ -56,11 +56,6 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "16:s.gis.gismap@1/*17:s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.pdf")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.pdf@1.4/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "16:s.gis.gismap@1/*17:s.stdio.pdf@1.4/*")?)?,
-        )?
-        .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::composition_route(), "16:s.gis.gismap@1/*17:s.stdio.png@1.2/*")?)?,
@@ -97,14 +92,20 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         )
 }
 
-/// 🔖️ Assembles s.gis.gismap's typed runtime declaration.
+/// 🔖️ Assembles s.gis.gismap's typed runtime declaration from its own leaves.
 pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
-    semio_plugin::ArtifactDeclaration::builder(definition()?)
+    declaration_from(definition()?, &[])
+}
+
+/// 🧩️ Assembles the declaration from `definition` and the composer rows a composition root adds on top of this
+/// artifact's own leaves (each row's capability must be in `definition`), e.g. the pdf route of
+/// `semio-s-artifact-gis-gismap-pdf-export`.
+pub fn declaration_from(definition: semio_plugin::ArtifactDefinition, composers: &[&'static [semio_plugin::io::ComposerEntry]]) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    let builder = semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .inference_services([gis_map_inference_service()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)
-        .try_build()
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries());
+    composers.iter().fold(builder, |builder, rows| builder.composers(rows)).document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT).try_build()
 }
 //#endregion 🔖️Register

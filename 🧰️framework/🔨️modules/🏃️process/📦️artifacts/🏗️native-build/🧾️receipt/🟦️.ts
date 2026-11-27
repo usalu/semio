@@ -170,6 +170,20 @@ export type CargoCompilerResourcesV1 = Readonly<{
   resources: readonly CargoResourceWitnessV1[];
 }>;
 
+/** 🪪️ Reads a compiler resource capture's producer or caller identity, or null when the capture is partial (a unit killed mid-write) or malformed, so a row never carries a field the schema cannot encode.
+ * @see ./🧬️schema/🔣️.json
+ */
+export function cargoCompilerIdentityV1(value: unknown, caller: true): CargoCompilerResourcesV1["caller"];
+export function cargoCompilerIdentityV1(value: unknown, caller: false): CargoCompilerResourcesV1["producer"];
+export function cargoCompilerIdentityV1(value: unknown, caller: boolean): CargoCompilerResourcesV1["producer"] | CargoCompilerResourcesV1["caller"] {
+  const row = value as Record<string, unknown> | null | undefined;
+  const text = (field: string): string | null => (typeof row?.[field] === "string" && (row[field] as string).length > 0 ? (row[field] as string) : null);
+  const manifest = text("manifest"), source = text("source"), crate = text("crate");
+  if (manifest === null || source === null) return null;
+  if (!caller) return { manifest, source };
+  return crate === null ? null : { manifest, crate, source };
+}
+
 /** 🎚️ One Cargo configuration input digest. */
 export type CargoInvocationInputV1 = Readonly<{ path: string; sha256: string | null }>;
 

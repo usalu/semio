@@ -287,6 +287,11 @@
               "type": "integer",
               "minimum": 10,
               "maximum": 60000
+            },
+            "noticeMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
             }
           }
         },
@@ -667,6 +672,10 @@
         "cycle": {
           "en": "Deadlock detected: {cycle}. This request was chosen to fail so the others can proceed.",
           "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewählt, damit die anderen fortfahren können."
+        },
+        "waiting": {
+          "en": "[lease] waiting {seconds} s for {resource} ({mode}){blocker}",
+          "de": "[lease] warte seit {seconds} s auf {resource} ({mode}){blocker}"
         },
         "timeout": {
           "en": "Waited {seconds} s for {resource} ({mode}) and it did not become free in time{blocker}. Run the command again once the holder has finished; a holder that is still running and renewing its claim is working, not stuck.",

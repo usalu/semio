@@ -15,7 +15,7 @@ impl StepContext<'_>{
     /// 🧲️ See `README.md`.
     pub fn with_original_native_weak_parent<T:'static,R:Copy>(&mut self,parent:&Arc<T>,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         self.original_source_parent()?;
-        let ticket=NEXT_NATIVE_WEAK_SCOPE.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original scoped Weak receiver epochs are exhausted"))?;
+        let ticket=NEXT_NATIVE_WEAK_SCOPE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original scoped Weak receiver epochs are exhausted"))?;
         let slot=NATIVE_WEAK_SCOPES.with(|slots|slots.iter().position(|slot|{if slot.get()!=0{return false}slot.set(ticket);true})).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original scoped Weak receiver slots are busy"))?;
         let restore=OriginalNativeWeakLoan{target:std::ptr::addr_of_mut!(*self),previous:self.native_weak_parent,identity:OriginalRetainedLoanIdentity::capture(self),cancel:self.original_cancel_token()as*const _ as usize,epoch:self.source_epoch,slot,ticket};
         self.native_weak_parent=Some(OriginalNativeWeakParent{allocation:Arc::as_ptr(parent)as usize,source_type:TypeId::of::<T>(),slot,ticket,identity:OriginalRetainedLoanIdentity::capture(self),cancel:self.original_cancel_token()as*const _ as usize,epoch:self.source_epoch});

@@ -13,7 +13,8 @@ use crate::host::owned::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::mutations::create_tile;
 
-use store::{os_store::test_support, os_store::store_schema::ArtifactCommand};
+use semio_os_store_test_support as test_support;
+use store::os_store::store_schema::ArtifactCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn presentation_deck_materializes() {

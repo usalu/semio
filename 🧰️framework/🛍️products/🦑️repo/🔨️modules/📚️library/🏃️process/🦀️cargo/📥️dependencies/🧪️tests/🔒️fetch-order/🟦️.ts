@@ -1,7 +1,11 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import {readFileSync} from "node:fs";
+import {mkdtempSync,readFileSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {randomBytes} from "node:crypto";
+import {acquireQueuedResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {fileURLToPath} from "node:url";
 import{loadProductFunctionsSyncV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 import ts from "typescript";
@@ -53,4 +57,52 @@ test("Cargo registry input is consumed once even when readiness moves afterward"
    expect({attempts,consumptions},row.change).toEqual({attempts:row.attempts,consumptions:row.consumptions});
   }
  }finally{db.close();}
+});
+
+const variable=(file:ts.SourceFile,name:string):ts.VariableDeclaration=>{let found:ts.VariableDeclaration|undefined;const visit=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text===name)found=node;ts.forEachChild(node,visit);};visit(file);if(!found)throw Error("missing "+name);return found;};
+
+/** 🔒️ A lock resolution (`cargo update`, `generate-lockfile`) runs its body under the registry and the shared compiler writer custody (image), so that body requests no Cargo build-directory custody (a lower-ranked lease); only the resolve command, which holds no writer around its body, takes it. */
+test("the lock resolution body of the Cargo launcher takes no build lease under the compiler writer, and only the resolve body does",()=>{
+ const launcher=source("../../../🚪️launcher/🟦️.ts"),lock=calls(launcher,"withRepositoryCargoResolutionV1");
+ expect(lock.length).toBe(1);
+ expect(lock[0]!.arguments[1]!.getText()).toBe("resolution");
+ expect(calls(variable(launcher,"resolution"),"acquireCargoBuildLeaseV1").length).toBe(0);
+ expect(calls(variable(launcher,"resolved"),"acquireCargoBuildLeaseV1").length).toBe(1);
+ expect(calls(variable(launcher,"resolved"),"resolution").length).toBe(1);
+ expect(calls(fn(source("../../🟦️.ts"),"withRepositoryCargoResolutionOwnedV1"),"acquireCargoBuildLeaseV1").length).toBe(0);
+});
+
+/** 🪶️ A lock resolution takes the registry as a shared cohort reader only, offline or online, and enters the compiler writer after it and leaves it before. */
+test("the lock resolution holds the registry shared, never exclusive, around the compiler writer",async()=>{
+ for(const args of [["fetch","--locked","--offline"],["fetch","--locked"]]){
+  const trace:string[]=[],taken:Record<string,unknown>[]=[];
+  const own=loadProductFunctionsSyncV1(new URL("../../🟦️.ts",import.meta.url),["withRepositoryCargoResolutionOwnedV1"],{
+   admitRepositoryCargoInputsV1:async()=>({requests:[{args}],leaseOptions:{directory:"leases",resource:"cargo:registry:/home"}}),
+   acquireQueuedResourceLease:async(options:Record<string,unknown>)=>{taken.push(options);trace.push(String(options.resource)+" "+String(options.mode));return{release:()=>{trace.push(String(options.resource)+" release");}};},
+   withCompilerWorkspaceSharedWriteV1:async(_storage:unknown,_directory:string,_control:unknown,run:()=>Promise<unknown>)=>{trace.push("writer");try{return await run();}finally{trace.push("writer release");}},
+   randomBytes:(size:number)=>Buffer.alloc(size)
+  }).withRepositoryCargoResolutionOwnedV1 as (...values:unknown[])=>Promise<unknown>;
+  expect(await own({storage:{recheck:async()=>{}},control:{}},{selections:[]},async()=>{trace.push("body");return"done";}),args.join(" ")).toBe("done");
+  expect(trace,args.join(" ")).toEqual(["cargo:registry:/home shared","writer","body","writer release","cargo:registry:/home release"]);
+  expect(taken[0]!.sharedCohort,args.join(" ")).toBe(true);
+ }
+});
+
+/** ⏳️ Regression: a build or test that holds the registry as a reader for its whole run (a 42 minute `cargo test` did) never blocks a concurrent resolution, offline or online,. */
+test("a long-running registry reader does not block a concurrent online or offline lock resolution",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"reg-")),resource="cargo:registry:/home",signal=new AbortController().signal;
+ const reader=await acquireQueuedResourceLease({directory,resource,mode:"shared",sharedCohort:true,owner:"long-build",signal});
+ try{
+  for(const args of [["fetch","--locked","--offline"],["fetch","--locked"]]){
+   const own=loadProductFunctionsSyncV1(new URL("../../🟦️.ts",import.meta.url),["withRepositoryCargoResolutionOwnedV1"],{
+    admitRepositoryCargoInputsV1:async()=>({requests:[{args}],leaseOptions:{directory,resource,signal,control:undefined}}),
+    acquireQueuedResourceLease,
+    withCompilerWorkspaceSharedWriteV1:async(_storage:unknown,_directory:string,_control:unknown,run:()=>Promise<unknown>)=>run(),
+    randomBytes
+   }).withRepositoryCargoResolutionOwnedV1 as (...values:unknown[])=>Promise<unknown>;
+   const started=Date.now();
+   expect(await Promise.race([own({storage:{recheck:async()=>{}},control:{}},{selections:[]},async()=>"resolved"),new Promise(done=>setTimeout(()=>done("blocked"),5000))]),args.join(" ")).toBe("resolved");
+   expect(Date.now()-started).toBeLessThan(5000);
+  }
+ }finally{reader.release();rmSync(directory,{recursive:true,force:true});}
 });

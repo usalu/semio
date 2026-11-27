@@ -23,6 +23,7 @@ import {casObjectPathV1,casRootV1} from "../../🗄️cas/🗃️store/🟦️.t
 import {casReserveBytesV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1} from "../../🗄️cas/🧬️schema/🟦️.ts";
 import {remoteExecutionDiskNeedBytesV1} from "../🛰️agent/💽️disk/🟦️.ts";
+import type {NativeImageSharedReaderV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 
 const EMPTY_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -80,7 +81,15 @@ async function limited<T>(items:readonly T[],limit:number,work:(item:T)=>Promise
  if(failure!==undefined)throw failure;
 }
 
-const BLOB_PROTECT_MILLISECONDS_V1=600000,FETCH_CONCURRENCY_V1=32;
+const BLOB_PROTECT_MILLISECONDS_V1=600000,FETCH_CONCURRENCY_V1=32,IMAGE_STEP_ENTRIES_V1=32;
+
+/** 👓️ What a collection asks of the cache image its home lives in: `run` executes one short step under the shared lease of that image (without a reader the step runs as it is). */
+export type RemoteExecutionImageReaderV1=Pick<NativeImageSharedReaderV1,"run">;
+/** 🖼️ The readers of the cache images of a workspace: the reader of the image a path lies in. */
+export type RemoteExecutionImagesV1=Readonly<{reader(path:string):RemoteExecutionImageReaderV1}>;
+/** 🔭️ Where a collection step runs and how it is cancelled. */
+export type RemoteExecutionImageScopeV1=Readonly<{reader?:RemoteExecutionImageReaderV1;signal?:AbortSignal}>;
+const direct:RemoteExecutionImageReaderV1=Object.freeze({run:async<T>(body:()=>T|Promise<T>):Promise<T>=>body()});
 
 /** 📥️ Where the input files of one action came from: the worker's blob cache (`cached`), the machine's own content store (`local`, a copy on this disk) or the network (`fetched`), in files and bytes. */
 export type RemoteExecutionInputFetchV1={cachedFiles:number;cachedBytes:number;localFiles:number;localBytes:number;fetchedFiles:number;fetchedBytes:number};
@@ -150,22 +159,27 @@ export class RemoteExecutionBlobCacheV1{
   return file;
  }
 
- /** 🧹️ Removes the least recently used blobs until the cache fits its bound. */
- async prune(dryRun=false):Promise<number>{
-  const rows:{path:string;size:number;time:number}[]=[];let total=0;
-  for(const shard of await readdir(this.directory).catch(()=>[] as string[])){
-   for(const name of await readdir(join(this.directory,shard)).catch(()=>[] as string[])){
-    const path=join(this.directory,shard,name),info=await stat(path).catch(()=>undefined);
-    if(!info)continue;
-    if(name.endsWith(".tmp")){if(Date.now()-info.mtimeMs>3600000)await rm(path,{force:true});continue;}
-    rows.push({path,size:info.size,time:info.mtimeMs});total+=info.size;
-   }
+ /** 🧹️ Removes the least recently used blobs until the cache fits its bound. Inside a cache image every step (the shard listing, one shard with its sizes, one batch of removals) runs under its shared lease, so the cache never holds the image longer than one step and a cancellation ends it between steps. */
+ async prune(dryRun=false,scope:RemoteExecutionImageScopeV1={}):Promise<number>{
+  const reader=scope.reader??direct,rows:{path:string;size:number;time:number}[]=[];let total=0;
+  for(const shard of await reader.run(()=>readdir(this.directory).catch(()=>[] as string[]))){
+   scope.signal?.throwIfAborted();
+   await reader.run(async()=>{
+    for(const name of await readdir(join(this.directory,shard)).catch(()=>[] as string[])){
+     const path=join(this.directory,shard,name),info=await stat(path).catch(()=>undefined);
+     if(!info)continue;
+     if(name.endsWith(".tmp")){if(Date.now()-info.mtimeMs>3600000)await rm(path,{force:true});continue;}
+     rows.push({path,size:info.size,time:info.mtimeMs});total+=info.size;
+    }
+   });
   }
   rows.sort((left,right)=>left.time-right.time);let removed=0;
   const bound=Math.min(this.maximumBytes,this.room?.(total)??Infinity);
   if(total<=bound)return 0;
   const protectedAfter=Date.now()-BLOB_PROTECT_MILLISECONDS_V1;
-  for(const row of rows){if(total<=bound*0.9||row.time>protectedAfter)break;if(!dryRun)await rm(row.path,{force:true});total-=row.size;removed++;}
+  const victims:{path:string}[]=[];
+  for(const row of rows){if(total<=bound*0.9||row.time>protectedAfter)break;victims.push(row);total-=row.size;removed++;}
+  if(!dryRun)for(let at=0;at<victims.length;at+=IMAGE_STEP_ENTRIES_V1){scope.signal?.throwIfAborted();await reader.run(()=>Promise.all(victims.slice(at,at+IMAGE_STEP_ENTRIES_V1).map(row=>rm(row.path,{force:true}))));}
   return removed;
  }
 }
@@ -179,19 +193,34 @@ export async function claimRemoteExecutionWorkV1(work:string,pid:number=process.
  await writeFile(join(work,WORK_OWNER_FILE_V1),JSON.stringify({version:1,pid,...pid===process.pid?{startMs:ownProcessIdentityV1().startMs}:{},startedMs:now}));
 }
 
+/** 🧺️ Removes one folder tree in short steps (one listing, one batch of files, one emptied directory), each under the shared lease of its image through `reader`: a long removal never holds the image, a link is removed and never entered, and a cancellation ends it between steps. */
+async function removeTreeInStepsV1(root:string,reader:RemoteExecutionImageReaderV1,signal:AbortSignal|undefined):Promise<void>{
+ const stack:{path:string;visited:boolean}[]=[{path:root,visited:false}];
+ while(stack.length){
+  signal?.throwIfAborted();const top=stack[stack.length-1]!;
+  if(top.visited){stack.pop();await reader.run(()=>rm(top.path,{recursive:true,force:true,maxRetries:3}).catch(()=>{}));continue;}
+  top.visited=true;const files:string[]=[];
+  for(const child of await reader.run(()=>readdir(top.path,{withFileTypes:true}).catch(()=>[])))child.isDirectory()?stack.push({path:join(top.path,child.name),visited:false}):files.push(join(top.path,child.name));
+  for(let at=0;at<files.length;at+=IMAGE_STEP_ENTRIES_V1){signal?.throwIfAborted();await reader.run(()=>Promise.all(files.slice(at,at+IMAGE_STEP_ENTRIES_V1).map(file=>rm(file,{force:true,maxRetries:3}).catch(()=>{}))));}
+ }
+}
+
 /** 🪦️ Retires the private action roots of dead workers: every folder below `work/` except `keep` whose owner record names a process that is gone is removed at once, one without a readable record once it was untouched for `ownerlessSeconds`; a folder of a live owner is never touched (a pid that answers `EPERM` is alive). Answers how many worker folders and action roots went; with `dryRun` nothing is removed. Event-driven: a worker runs it when it starts and whenever an action ended, `repo cache gc` runs it for a machine without a worker. @see 👷️worker */
-export async function retireRemoteExecutionWorkV1(work:string,rules:Readonly<{keep?:string;ownerlessSeconds:number;alive?:(pid:number,startMs?:number)=>boolean;now?:number;dryRun?:boolean;signal?:AbortSignal}>):Promise<Readonly<{workers:number;roots:number}>>{
- const alive=rules.alive??processAliveV1,now=rules.now??Date.now();let workers=0,roots=0;
- for(const name of await readdir(work).catch(()=>[] as string[])){
-  if(rules.signal?.aborted===true)break;
+export async function retireRemoteExecutionWorkV1(work:string,rules:Readonly<{keep?:string;ownerlessSeconds:number;alive?:(pid:number,startMs?:number)=>boolean;now?:number;dryRun?:boolean;signal?:AbortSignal;reader?:RemoteExecutionImageReaderV1}>):Promise<Readonly<{workers:number;roots:number}>>{
+ const alive=rules.alive??processAliveV1,now=rules.now??Date.now(),reader=rules.reader??direct,cancelled=():boolean=>rules.signal?.aborted===true;let workers=0,roots=0;
+ for(const name of await reader.run(()=>readdir(work).catch(()=>[] as string[]))){
+  if(cancelled())break;
   if(name===rules.keep)continue;
-  const folder=join(work,name),info=await lstat(folder).catch(()=>undefined);
-  if(info===undefined||!info.isDirectory())continue;
-  const owner=await readFile(join(folder,WORK_OWNER_FILE_V1),"utf8").then(text=>{try{return JSON.parse(text) as {pid?:unknown;startMs?:unknown};}catch{return undefined;}},()=>undefined);
-  const pid=typeof owner?.pid==="number"&&Number.isSafeInteger(owner.pid)?owner.pid:undefined;
+  const folder=join(work,name),seen=await reader.run(async()=>{
+   const info=await lstat(folder).catch(()=>undefined);
+   if(info===undefined||!info.isDirectory())return undefined;
+   return{info,owner:await readFile(join(folder,WORK_OWNER_FILE_V1),"utf8").then(text=>{try{return JSON.parse(text) as {pid?:unknown;startMs?:unknown};}catch{return undefined;}},()=>undefined)};
+  });
+  if(seen===undefined)continue;
+  const{info,owner}=seen,pid=typeof owner?.pid==="number"&&Number.isSafeInteger(owner.pid)?owner.pid:undefined;
   if(pid!==undefined?alive(pid,typeof owner?.startMs==="number"?owner.startMs:undefined):now-info.mtimeMs<rules.ownerlessSeconds*1000)continue;
-  const tasks=(await readdir(folder).catch(()=>[] as string[])).filter(entry=>entry!==WORK_OWNER_FILE_V1).length;
-  if(rules.dryRun!==true)await rm(folder,{recursive:true,force:true,maxRetries:3}).catch(()=>{});
+  const tasks=(await reader.run(()=>readdir(folder).catch(()=>[] as string[]))).filter(entry=>entry!==WORK_OWNER_FILE_V1).length;
+  if(rules.dryRun!==true)try{await removeTreeInStepsV1(folder,reader,rules.signal);}catch(error){if(cancelled())break;throw error;}
   workers++;roots+=tasks;
  }
  return Object.freeze({workers,roots});
@@ -446,17 +475,17 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
 }
 
 /** 🧾️ Collects the workers' home for `repo cache gc`: trims the shared blob cache to its bound and retires the private input roots of workers that are gone (their owner record names a dead process; a folder without one after `ownerlessWorkSeconds`); answers one language-neutral line for the ledger report. The home of the area `remote-execution-worker` (the sidecar agents' home inside its partition image) is the one the agents write, the area `remote-execution` is the checkout directory of the policy; a home whose image is not attached answers `absent`. */
-export async function collectRemoteExecutionForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal,area:string="remote-execution"):Promise<string>{
+export async function collectRemoteExecutionForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal,area:string="remote-execution",images?:RemoteExecutionImagesV1):Promise<string>{
  const policy=readRemoteExecutionPolicyV1().worker;
  let home:string;
  if(area==="remote-execution-worker"){
   try{home=(await import("../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts")).cacheAreaHomeV1(workspace,area).directory;}catch{return "absent";}
  }else home=isAbsolute(policy.directory)?policy.directory:join(workspace,policy.directory);
- const cache=new RemoteExecutionBlobCacheV1(join(home,"blobs"),undefined as never,policy.maximumBlobBytes);
- if(!await stat(home).then(info=>info.isDirectory(),()=>false))return "absent";
- const retired=await retireRemoteExecutionWorkV1(join(home,"work"),{ownerlessSeconds:policy.ownerlessWorkSeconds,dryRun,signal});
+ const reader=images?.reader(home)??direct,cache=new RemoteExecutionBlobCacheV1(join(home,"blobs"),undefined as never,policy.maximumBlobBytes);
+ if(!await reader.run(()=>stat(home).then(info=>info.isDirectory(),()=>false)))return "absent";
+ const retired=await retireRemoteExecutionWorkV1(join(home,"work"),{ownerlessSeconds:policy.ownerlessWorkSeconds,dryRun,signal,reader});
  if(signal.aborted)return "cancelled";
- const removed=await cache.prune(dryRun);
+ let removed:number;try{removed=await cache.prune(dryRun,{reader,signal});}catch(error){if(signal.aborted)return "cancelled";throw error;}
  return `${dryRun?"would remove":"removed"} ${removed} blobs and ${retired.roots} input roots of ${retired.workers} dead workers`;
 }
 
@@ -488,7 +517,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  const registerOnce=async():Promise<void>=>{
   for(let delay=250;!options.signal.aborted;delay=Math.min(delay*2,5000)){
    try{
-    const answer=await call<RemoteExecutionWorkerRegisteredV1>("POST","/v1/workers",{version:1,name,host:hostname(),platform,properties,concurrency:options.concurrency,sandbox:sandbox.name,runtime:`${runtimeIdentityV1().id} ${runtimeIdentityV1().version}`,origin,...resumable.size>0?{resumed:[...resumable].map(([task,row])=>({task,instance:row.instance,action:row.action}))}:{},capacity:options.capacity??{cores:Math.max(1,availableParallelism()),memoryMegabytes:Math.max(1,Math.floor(totalmem()/1048576))},confinement,network},options.signal);
+    const answer=await call<RemoteExecutionWorkerRegisteredV1>("POST","/v1/workers",{version:1,name,host:hostname(),platform,properties,concurrency:options.concurrency,sandbox:sandbox.name,runtime:`${runtimeIdentityV1().id} ${runtimeIdentityV1().version}`,origin,startedMs:Math.round(Date.now()-process.uptime()*1000),...resumable.size>0?{resumed:[...resumable].map(([task,row])=>({task,instance:row.instance,action:row.action}))}:{},capacity:options.capacity??{cores:Math.max(1,availableParallelism()),memoryMegabytes:Math.max(1,Math.floor(totalmem()/1048576))},confinement,network},options.signal);
     requireRemoteExecutionShapeV1("WorkerRegistered",answer,"Closed registration answer required");
     registered=answer!;
     if(!options.content){

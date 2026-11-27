@@ -3,13 +3,13 @@ use semio_framework_test_fixtures::manifest_dir;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips_the_reference_fixture() {
-    store::os_store::test_support::assert_dsl_round_trip(&semio_s_artifact_norm_vdi3805_model::reference_fixture());
+    semio_os_store_test_support::assert_dsl_round_trip(&semio_s_artifact_norm_vdi3805_model::reference_fixture());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bundled_example_fixture_parses_and_round_trips() {
     let document = parse_dsl(REFERENCE_EXAMPLE_TEXT).expect("parse bundled example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -72,11 +72,54 @@ SEMIO_BUILD_MODE = { value = "prototype", force = false }
 RUSTC_ICE = { value = ".cache/rustc-ice", relative = true }
 
 # 🪟️ Compile the five BIM window owners within the library worker's memory grant.
-[profile.dev.package.semio-s-artifact-bim-model-kit]
+[profile.dev.package.semio-s-artifact-bim-model-window-plan]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-window-world]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-window-section]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-window-schedule]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-window-sheet]
 opt-level = 1
 codegen-units = 64
 
 # 🧬️ Keep BIM record code generation within the library worker memory grant.
-[profile.dev.package.semio-s-artifact-bim-model-schema]
+[profile.dev.package.semio-s-artifact-bim-model-geometry-values]
 opt-level = 1
 codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-properties-values]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-issues-values]
+opt-level = 1
+codegen-units = 64
+
+[profile.dev.package.semio-s-artifact-bim-model-values]
+opt-level = 1
+codegen-units = 64
+
+# 🚀️ The in-repo guest interpreter is the hot loop of every native guest turn: at `opt-level = 0` a cold `Event::InstanceOpen`
+# of a real plugin component executes ~4 M guest instructions per second and exhausts the 210 s open wall budget with
+# 838 M instructions spent and zero completed turns. Only the executing crates are optimised; the surrounding host stays unoptimised.
+[profile.dev.package.semio-plugin-interpreter]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-interpreter-runtime]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-interpreter-numeric]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-interpreter-imports]
+opt-level = 3

@@ -7,9 +7,10 @@ def gate(row, threshold):
     if row["expensive"]:
         if row["fits"]: return (True, True, "final")
         return (True, True, "final-beyond-host") if row.get("beyondHost") else (False, False, "final-wait")
-    if row["slotNow"]: return (False, False, "local-slot")
+    pressured = row["slotNow"] and row["host"] == "wait"
+    if row["slotNow"] and not pressured: return (False, False, "local-slot")
     if row["worth"] == "cheap": return (False, False, "cheap")
-    if row["worth"] == "unmeasured" and row["slotWait"]: return (False, False, "unmeasured")
+    if row["worth"] == "unmeasured" and not row["slotNow"] and row["slotWait"]: return (False, False, "unmeasured")
     if row["door"]: return (True, True, "door")
     if row["slotQueueMilliseconds"] >= threshold: return (True, True, "slot-queue")
     if row["host"] == "wait": return (True, True, "host-wait")

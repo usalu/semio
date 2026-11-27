@@ -1,0 +1,5 @@
+[
+  { "name": "mask-without-bpc", "dict": "/W 8 /H 1 /IM true", "raw": [165], "bitsPerComponent": 1, "samples": [1, 0, 1, 0, 0, 1, 0, 1] },
+  { "name": "mask-with-bpc", "dict": "/W 8 /H 1 /IM true /BPC 1", "raw": [165], "bitsPerComponent": 1, "samples": [1, 0, 1, 0, 0, 1, 0, 1] },
+  { "name": "mask-with-decode", "dict": "/W 8 /H 1 /IM true /D [1 0]", "raw": [165], "bitsPerComponent": 1, "samples": [1, 0, 1, 0, 0, 1, 0, 1] }
+]

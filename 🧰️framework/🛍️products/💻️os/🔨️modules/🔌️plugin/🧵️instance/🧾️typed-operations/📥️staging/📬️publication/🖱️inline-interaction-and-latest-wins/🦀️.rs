@@ -102,7 +102,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if !pending.construction.terminal_is_empty(){let result=semio_plugin_job::original_steps::unbuilt(cx,&mut pending.construction);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
 
             let mut demand=MountedTypedCommandFullOperation::<A>::original_emission_birth_demands();
-            demand.copy_bytes+=2*size_of::<semio_plugin_retained_command::typed_operation::pending_result_page::PublicationPagePlan>();
+            demand.copy_bytes+=2*size_of::<semio_plugin_retained_command_operation::typed_operation::pending_result_page::PublicationPagePlan>();
             let mut admitted=false;
             cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,demand,|_|{let result:Result<_,semio_framework_value::ValueError>=(||{
             let mut mounted=Box::write(Box::<MountedTypedCommandFullOperation<A>>::new_uninit(),MountedTypedCommandFullOperation::<A>{
@@ -137,14 +137,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 terminal_seen: true,
                 worker_resume_pending: false,
                 publication: None,
-                tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                tool_stage:semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                 pending_child_publication: None,
                 owned_child_group: None,
                 owned_child_committed: false,
                 owned_child_result_pending: false,
                 captured_child_content:None,
                 captured_child_content_generation: 0,
-                page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None,
+                page_publication:semio_plugin_retained_command_operation::typed_operation::MountedPagePublication::new(),result_page:None,
                 diagnostics: None,
                 result_page_presented: false,
                 result_sequence: 0,
@@ -167,7 +167,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 retained_close_fault: None, retained_close_fault_retirement:None,retained_close_fault_refusal:None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
             });
-            mounted.page_publication.plan=Some(semio_plugin_retained_command::typed_operation::pending_result_page::PublicationPagePlan{token:mounted.next_token(),intent:semio_plugin_retained_command::typed_operation::pending_result_page::PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:semio_plugin_retained_command::typed_operation::pending_result_page::PublicationRawReason::AdmissionCancelled}});
+            mounted.page_publication.plan=Some(semio_plugin_retained_command_operation::typed_operation::pending_result_page::PublicationPagePlan{token:mounted.next_token(),intent:semio_plugin_retained_command_operation::typed_operation::pending_result_page::PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:semio_plugin_retained_command_operation::typed_operation::pending_result_page::PublicationRawReason::AdmissionCancelled}});
             self.tools.tool_operations.insert_admitted(operation_id,mounted);admitted=true;
             Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;Ok(())})?;
             if !admitted{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(())}

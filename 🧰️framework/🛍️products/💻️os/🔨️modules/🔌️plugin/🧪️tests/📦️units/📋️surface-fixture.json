@@ -29,28 +29,28 @@
       "functions": [
         {
           "name": "parse_op",
-          "sha256": "4d29450dde301c8fe16cfbee58cdb139376809c9da64230091c8acad10758a1f",
+          "sha256": "169ac5c23d167c08802c4b98ac510bf76c638916bcea35bb614ea502294439c5",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
         },
         {
           "name": "print_op",
-          "sha256": "b9d158bad5e975f940db6d18195a43c2485deac9f8878f904df81aa537ba5a1d",
+          "sha256": "55df58c8e9b8c931e5d581b2fb5a63ee934548bf5da97951616353980f28fa3a",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
         },
         {
           "name": "encode_op",
-          "sha256": "a8953c314ce5352dfbbb8f8803afe13a027a2c2d2799af8697b8544cf9cece38",
+          "sha256": "81f3c9f35d84304ce43b055d3ab9aa28b0ec3dff322d2b1756fe1dcf3b84ea5b",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
         },
         {
           "name": "decode_op",
-          "sha256": "27dcb7bc67a1c177c0e63ed5cf4fd1a13a9283413b8565b36048ffb5e6e1c34b",
+          "sha256": "e4884af21a9b30fb1520253d3cae5226dd3a01575f1199a3b75c1b1eddabef5d",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
@@ -349,8 +349,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs",
-      "sha256": "af599d5a2479f7c1d5f14116b5eb6458bf4bab98a54f320150eba8b9e7cb0c38",
-      "bytes": 1563,
+      "sha256": "d9c739902da54a666b58109cb38f151cda480dae774a49a6b313638e91443be6",
+      "bytes": 1569,
       "assertions": 0,
       "functions": [
         {
@@ -590,8 +590,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs",
-      "sha256": "014fc445e3499b2cfe18c392b861d7add436b30255e0820788d3b99eb251381a",
-      "bytes": 13461,
+      "sha256": "a2ddd1c2cdb34321eb60f90f34f90f8a6ad193fa282d73937e45faf6eaf398ae",
+      "bytes": 13467,
       "assertions": 0,
       "functions": [
         {
@@ -708,7 +708,7 @@
         },
         {
           "name": "build_latest_wins_command_disposer",
-          "sha256": "560a4099e133680c7501288481fc84da235b9487c804063868a9a53ac6d86424",
+          "sha256": "ffed318b6ce9e02f16fd6670b1a14705e84cc3b4cee35ea7b5cef622a265e63c",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs"
@@ -780,8 +780,8 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs",
-      "sha256": "f236c6f5f48f51f923727cba970cc08ad26f9f3b22726a146536e4af3047f2dc",
-      "bytes": 17328,
+      "sha256": "a836edef3bac1b1338fb83896983396525ef07392bf63b9e46782607cbc6d8dc",
+      "bytes": 17412,
       "assertions": 1,
       "functions": [
         {
@@ -884,21 +884,21 @@
         },
         {
           "name": "build_document_store_disposer",
-          "sha256": "e9f47020097fe0953161736fff71badcd34e31b66ff5893aa44d24bba88e93d3",
+          "sha256": "ec781c6a9c8929f0b47222456915fc39ddb2fd7bdc7c823b472926acf2d09754",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
         },
         {
           "name": "build_config_store_disposer",
-          "sha256": "ffc2c01cda5dd867ebcec20de718b9a40ae6df6883b583e1f439f1d771fa700c",
+          "sha256": "609601ed3c0ce9fd5e0390dde0a459c92b11e291f9eafbe41799a28f551c4726",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
         },
         {
           "name": "build_draft_store_disposer",
-          "sha256": "de77579699946f90058d5f9c4b92d67b92256552ecf1b78a661840c8dc455b2e",
+          "sha256": "d9c50048c4cd8ab28188281fa7469e24f5546e432fc978dd4405c3d72d3e82ed",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
@@ -926,14 +926,14 @@
         },
         {
           "name": "build_presence_store_disposer",
-          "sha256": "eae0db4374e7dbbc5b5c9a729234053b28c32a1cc02690a86e2c52424ae2bb5b",
+          "sha256": "45a176d982e83c56fc3647af18e242369e16c73ebc8eeb50de4ba4caacb049a3",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
         },
         {
           "name": "build_transient_store_disposer",
-          "sha256": "ea030f7824ce2bc1b75afbc26958d2cc168d19f125c865f3716cba7f35ec0bd8",
+          "sha256": "ab6ee61ce1b59e5ffbb35888a8faaafc6f3d5216464d4502d289dcda176bc5ef",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
@@ -1024,14 +1024,14 @@
         },
         {
           "name": "build_document_store_disposer",
-          "sha256": "e9f47020097fe0953161736fff71badcd34e31b66ff5893aa44d24bba88e93d3",
+          "sha256": "ec781c6a9c8929f0b47222456915fc39ddb2fd7bdc7c823b472926acf2d09754",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
         },
         {
           "name": "build_config_store_disposer",
-          "sha256": "ffc2c01cda5dd867ebcec20de718b9a40ae6df6883b583e1f439f1d771fa700c",
+          "sha256": "609601ed3c0ce9fd5e0390dde0a459c92b11e291f9eafbe41799a28f551c4726",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
@@ -1059,14 +1059,14 @@
         },
         {
           "name": "build_presence_store_disposer",
-          "sha256": "eae0db4374e7dbbc5b5c9a729234053b28c32a1cc02690a86e2c52424ae2bb5b",
+          "sha256": "45a176d982e83c56fc3647af18e242369e16c73ebc8eeb50de4ba4caacb049a3",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
         },
         {
           "name": "build_transient_store_disposer",
-          "sha256": "ea030f7824ce2bc1b75afbc26958d2cc168d19f125c865f3716cba7f35ec0bd8",
+          "sha256": "ab6ee61ce1b59e5ffbb35888a8faaafc6f3d5216464d4502d289dcda176bc5ef",
           "assertions": 0,
           "law": false,
           "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🪟️editor-and-viewer-fixtures/🦀️.rs"
@@ -1740,6 +1740,13 @@
     {
       "name": "semio-plugin-retained-command",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-plugin-retained-command-operation",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]

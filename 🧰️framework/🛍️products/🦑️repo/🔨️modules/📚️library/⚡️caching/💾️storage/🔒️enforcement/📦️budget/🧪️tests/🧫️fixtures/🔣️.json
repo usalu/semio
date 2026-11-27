@@ -1,7 +1,7 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 186362363904,
-  "expectedHeadroomBytes": 19787677696,
+  "expectedPartitionBytes": 182067396608,
+  "expectedHeadroomBytes": 24082644992,
   "cases": [
     {
       "id": "authored",
@@ -209,39 +209,39 @@
   "elasticRustCapacity": [
     {
       "id": "host-ample",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 139586437120,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "this host: 123 GiB free",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 132070244352,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "host-free-binds",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 85899345920,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "host-free-below-minimum",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 64424509440,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "host-full",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 0,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "host-huge",
-      "minimumBytes": 51539607552,
+      "minimumBytes": 34359738368,
       "hostFreeBytes": 2147483648000,
-      "capacityBytes": 51539607552
+      "capacityBytes": 34359738368
     },
     {
       "id": "this host 2026-11-13: 91 GiB free, below the 96 GiB declared capacity",
@@ -269,5 +269,5 @@
     }
   ],
   "imageCap": [{"id": "darwin-cap", "platform": "darwin", "receipt": null, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-at-cap", "platform": "darwin", "receipt": 34359738368, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-one-unit-above", "platform": "darwin", "receipt": 34360786944, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-live-rust", "platform": "darwin", "receipt": 57982058496, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-missing", "platform": "darwin", "receipt": "missing", "capBytes": 34359738368, "oversize": false}, {"id": "darwin-unreadable", "platform": "darwin", "receipt": "unreadable", "capBytes": 34359738368, "oversize": false}, {"id": "linux-live-rust", "platform": "linux", "receipt": 57982058496, "capBytes": 137438953472, "oversize": false}, {"id": "linux-above", "platform": "linux", "receipt": 138512695296, "capBytes": 137438953472, "oversize": true}, {"id": "windows-above", "platform": "win32", "receipt": 69793218560, "capBytes": 68719476736, "oversize": true}, {"id": "without-images", "platform": "freebsd", "receipt": 106300440576, "capBytes": null, "oversize": false}],
-  "imageCapGrowth": [{"id": "ample-host", "capacityBytes": 17179869184, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 103079215104, "platform": "darwin", "growthBytes": 25769803776}, {"id": "clamped-at-cap", "capacityBytes": 25769803776, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 103079215104, "platform": "darwin", "growthBytes": 34359738368}, {"id": "at-cap-stays", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 103079215104, "platform": "darwin", "growthBytes": 34359738368}, {"id": "linux-grows-on", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 103079215104, "platform": "linux", "growthBytes": 51539607552}, {"id": "oversize-live-never-shrinks", "capacityBytes": 57982058496, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 103079215104, "platform": "darwin", "growthBytes": 57982058496}]
+  "imageCapGrowth": [{"id": "ample-host", "capacityBytes": 17179869184, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 25769803776}, {"id": "clamped-at-cap", "capacityBytes": 25769803776, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "at-cap-stays", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "linux-grows-on", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "linux", "growthBytes": 34359738368}, {"id": "oversize-live-never-shrinks", "capacityBytes": 57982058496, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 57982058496}]
 }

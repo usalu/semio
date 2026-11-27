@@ -12,7 +12,7 @@ async fn session_grid_settings_follow_neutral_values_and_restore_exactly() {
         assert_eq!(next.image_grid, grid);
         let inverse = operation.inverse(&base).unwrap();
         assert_eq!(protocol::apply_diff_cold(inverse[0].diff(&next).diff(), &next).unwrap(), base);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     }
 }
 
@@ -31,7 +31,7 @@ async fn session_filter_options_follow_neutral_bounds_and_restore_exactly() {
         let inverse = operation.inverse(&base).unwrap();
         let restored = protocol::apply_diff_cold(inverse[0].diff(&next).diff(), &next).unwrap();
         assert_eq!(restored, base);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     }
     for row in fixture["invalid"].as_array().unwrap() {
         let kind = row["filter"].as_str().unwrap();
@@ -56,11 +56,11 @@ async fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn raster_config_operation_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: 40.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity(SetBrushOpacityEdit { value: 0.5 }));
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) }));
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCamera(SetCameraEdit { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: 40.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity(SetBrushOpacityEdit { value: 0.5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCamera(SetCameraEdit { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -73,7 +73,7 @@ async fn raster_config_default_matches_brush_controls() {
 #[semio_framework_async_macros::async_test]
 async fn raster_config_dsl_round_trips() {
     let config = RasterConfig { brush_size: 40.0, brush_opacity: 0.5, brush_color: "#e07020".into(), brush_hardness: 0.25,paint_target:"mask".into(),mask_value:96,fill_tolerance:40,filter_kind:"gamma".into(),filter_amount:1.25,image_grid:RasterImageGrid::default(),pixel_selection:None,composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }), camera: RasterCamera { x: 5.0, y: -3.0, zoom: 2.0 } };
-    store::os_store::test_support::assert_dsl_round_trip(&config);
+    semio_os_store_test_support::assert_dsl_round_trip(&config);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,8 +97,8 @@ async fn brush_style_shared_vectors_preserve_session_state_and_reject_invalid_va
         assert_eq!(next, expected);
         let restored=protocol::apply_diff_cold(hardness_op.inverse(&colored).unwrap()[0].diff(&next).diff(),&next).unwrap();
         assert_eq!(protocol::apply_diff_cold(color_op.inverse(&base).unwrap()[0].diff(&restored).diff(),&restored).unwrap(),base);
-        store::os_store::test_support::assert_op_line_round_trip(&color_op);
-        store::os_store::test_support::assert_dsl_round_trip(&next);
+        semio_os_store_test_support::assert_op_line_round_trip(&color_op);
+        semio_os_store_test_support::assert_dsl_round_trip(&next);
     }
     for color in fixture["invalidColors"].as_array().unwrap() {
         assert!(!valid_brush_color(color.as_str().unwrap()));
@@ -112,7 +112,7 @@ async fn brush_style_shared_vectors_preserve_session_state_and_reject_invalid_va
 async fn mask_paint_config_shared_vectors_round_trip_and_restore(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️mask-paint/🔣️.json")).unwrap();let base=RasterConfig::default();
     for row in fixture["cases"].as_array().unwrap(){
-        let target=RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit {value:row["target"].as_str().unwrap().into()});let value=RasterConfigMutation::SetMaskValue(SetMaskValueEdit {value:row["value"].as_u64().unwrap() as u32});let targeted=protocol::apply_diff_cold(target.diff(&base).diff(),&base).unwrap();let next=protocol::apply_diff_cold(value.diff(&targeted).diff(),&targeted).unwrap();assert_eq!(next.paint_target,row["target"].as_str().unwrap());assert_eq!(next.mask_value,row["value"].as_u64().unwrap() as u32);let restored=protocol::apply_diff_cold(value.inverse(&targeted).unwrap()[0].diff(&next).diff(),&next).unwrap();assert_eq!(protocol::apply_diff_cold(target.inverse(&base).unwrap()[0].diff(&restored).diff(),&restored).unwrap(),base);store::os_store::test_support::assert_dsl_round_trip(&next);store::os_store::test_support::assert_op_line_round_trip(&target);store::os_store::test_support::assert_op_line_round_trip(&value);
+        let target=RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit {value:row["target"].as_str().unwrap().into()});let value=RasterConfigMutation::SetMaskValue(SetMaskValueEdit {value:row["value"].as_u64().unwrap() as u32});let targeted=protocol::apply_diff_cold(target.diff(&base).diff(),&base).unwrap();let next=protocol::apply_diff_cold(value.diff(&targeted).diff(),&targeted).unwrap();assert_eq!(next.paint_target,row["target"].as_str().unwrap());assert_eq!(next.mask_value,row["value"].as_u64().unwrap() as u32);let restored=protocol::apply_diff_cold(value.inverse(&targeted).unwrap()[0].diff(&next).diff(),&next).unwrap();assert_eq!(protocol::apply_diff_cold(target.inverse(&base).unwrap()[0].diff(&restored).diff(),&restored).unwrap(),base);semio_os_store_test_support::assert_dsl_round_trip(&next);semio_os_store_test_support::assert_op_line_round_trip(&target);semio_os_store_test_support::assert_op_line_round_trip(&value);
     }
     for value in fixture["invalidTargets"].as_array().unwrap(){assert_eq!(RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit {value:value.as_str().unwrap().into()}).diff(&base).diff(),&RasterConfigDiff::default());}
     assert_eq!(RasterConfigMutation::SetMaskValue(SetMaskValueEdit {value:256}).diff(&base).diff(),&RasterConfigDiff::default());
@@ -131,8 +131,8 @@ async fn fill_tolerance_shared_vectors_round_trip_and_restore() {
         let next = protocol::apply_diff_cold(op.diff(&base).diff(),&base).unwrap();
         assert_eq!(next.fill_tolerance, value);
         assert_eq!(protocol::apply_diff_cold(op.inverse(&base).unwrap()[0].diff(&next).diff(),&next).unwrap(),base);
-        store::os_store::test_support::assert_op_line_round_trip(&op);
-        store::os_store::test_support::assert_dsl_round_trip(&next);
+        semio_os_store_test_support::assert_op_line_round_trip(&op);
+        semio_os_store_test_support::assert_dsl_round_trip(&next);
     }
     for value in fixture["invalidValues"].as_array().unwrap().iter().filter_map(serde_json::Value::as_u64) {
         assert_eq!(RasterConfigMutation::SetFillTolerance(SetFillToleranceEdit { value: value as u32 }).diff(&base).diff(), &RasterConfigDiff::default());

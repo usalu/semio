@@ -1,0 +1,11 @@
+{
+  "key": "c53457c0000000000000000000000000000000000000000000000000000000c1",
+  "events": {
+    "holderReady": "holder:lane-held",
+    "scopeEntered": "waiter:scope-entered",
+    "scopeLeft": "waiter:scope-left",
+    "laneTaken": "waiter:lane-taken"
+  },
+  "invariant": "between the first scope-entered that ends in scope-left without lane-taken and the lane-taken event, the waiter holds nothing while the holder owns the lane",
+  "holders": {"pattern": "pid [0-9]+, agent .+, session .+, command .+, [0-9]+ min"}
+}

@@ -49,6 +49,7 @@ semio-s-artifact-vcs-vcs-inferences = { path = "../../💡️inferences/📦️p
 semio-s-artifact-vcs-vcs-mutations = { path = "../../🧬️mutations/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 calamine = { version = "0.36.1", default-features = false }

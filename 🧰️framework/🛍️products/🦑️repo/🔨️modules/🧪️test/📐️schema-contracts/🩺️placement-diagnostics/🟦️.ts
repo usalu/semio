@@ -5,6 +5,7 @@ import { ecmaStringValue, ecmaTokens } from "../../../../../../🔨️modules/�
 import { testFilenameForKind, testTaxonomy } from "../../🗂️taxonomy/🟦️.ts";
 import { forbiddenSchemaPlacements, isFixtureOwnedPath, matchesTaxonomyPathPattern, readSchemaCatalog, schemaDiagnostic, type SchemaDiagnostic, schemaJsonDialect, schemaModuleDirName } from "../🟦️.ts";
 import { isDeclaredDialectDefinition, readJson, readSchemaDefinition, schemaScopeEligibility, schemaTreeFiles } from "../🏗️scope-eligibility-and-tree/🟦️.ts";
+import { schemaDefinitionModulePaths } from "../../../📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
 
 //#region 🧬️SchemaContracts
 /**
@@ -55,18 +56,15 @@ function schemaModuleDirOf(dirSegments: readonly string[], moduleDirName: string
   return at < 0 ? null : dirSegments.slice(0, at + 1).join("/");
 }
 
-/** 📁️ Every `🧬️schema/` module directory the FILE WALK reaches that carries a schema definition. */
+/** 📁️ Every `🧬️schema/` module directory the FILE WALK reaches that carries a schema definition: the generator's own predicate `schemaDefinitionModulePaths`, so the rule and the catalog generator cannot disagree on what a definition is. */
 export function schemaModuleDirectoriesOnDisk(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot)): ReadonlySet<string> {
-  const moduleDirName = schemaModuleDirName(repoRoot);
-  const found = new Set<string>();
-  for (const rel of files) {
-    const segments = rel.split("/");
-    if (!segments[segments.length - 1]!.endsWith(".json")) continue;
-    const moduleDir = schemaModuleDirOf(segments.slice(0, -1), moduleDirName);
-    if (moduleDir === null || found.has(moduleDir)) continue;
-    if (readSchemaDefinition(join(repoRoot, rel)) !== undefined) found.add(moduleDir);
-  }
-  return found;
+  return schemaDefinitionModulePaths(files, schemaModuleDirName(repoRoot), (rel) => {
+    try {
+      return readFileSync(join(repoRoot, rel), "utf8");
+    } catch {
+      return undefined;
+    }
+  }, (modulePath) => isFixtureOwnedPath(repoRoot, modulePath));
 }
 
 /**

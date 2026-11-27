@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {recordHostPhasesV1,updateHostEstimateStoreV1,hostCapacityDirectoryV1,readHostEstimateStoreV1,hostClassBoundV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {jobEstimateV1} from "../../🧱️job-limits/🟦️.ts";
@@ -32,13 +33,30 @@ export async function recordHostServicePeakV1(environment:NodeJS.ProcessEnv,peak
 /** 🏷️ The capacity class of one slice load of the host graph service: the only place the peak of a slice is learned (the host estimate store, with its decay, quantile and outlier rules), so no second file can disagree with the gate. */
 export const HOST_SLICE_CLASS_V1="slice:graph";
 
-/** 🍰 The peak, in megabytes, a slice load of this host was measured to need, once enough runs back it, never above `ceilingMegabytes` (what the gate can ever grant a slice on this machine) and 0 while nothing is measured or the store cannot be read: a stored history never makes the host unable to start. */
-export function learnedHostSlicePeakV1(environment:NodeJS.ProcessEnv,ceilingMegabytes:number,now:()=>number=Date.now):number{
- try{const bound=hostClassBoundV1(BUILD_HOST_CAPACITY_POLICY_V1,readHostEstimateStoreV1(hostCapacityDirectoryV1(environment)),[HOST_SLICE_CLASS_V1],now());return bound.source==="measured"?Math.max(0,Math.min(bound.megabytes,ceilingMegabytes)):0;}catch{return 0;}
+/** 🧭️ The capacity classes of one slice load, general to specific: all slice loads, then the loads of one scope (its root), so a scope books what it itself was measured to need and a scope never measured falls back to the host-wide class. */
+export function hostSliceLineageV1(scope?:string):readonly string[]{
+ return scope===undefined?[HOST_SLICE_CLASS_V1]:[HOST_SLICE_CLASS_V1,`${HOST_SLICE_CLASS_V1}/${createHash("sha256").update(scope).digest("hex").slice(0,12)}`];
+}
+
+/** 🕒️ How many of the newest runs of a scope speak for its peak: a scope books what it needed lately, so stale history of an older, larger shape never pins the booking at the cap. */
+export const HOST_SLICE_RECENT_RUNS_V1=5;
+
+/** 🍰 The peak, in megabytes, a slice load of this host was measured to need, never above `ceilingMegabytes` (what the gate can ever grant a slice on this machine) and 0 while nothing is measured or the store cannot be read: a stored history never makes the host unable to start. For a `scope` that has at least `estimates.minimumSamples` runs it is the largest peak of its newest {@link HOST_SLICE_RECENT_RUNS_V1} runs (recency-weighted: older runs no longer count); a scope with fewer runs reads the host-wide class (decayed quantile of the store). */
+export function learnedHostSlicePeakV1(environment:NodeJS.ProcessEnv,ceilingMegabytes:number,now:()=>number=Date.now,scope?:string):number{
+ try{
+  const store=readHostEstimateStoreV1(hostCapacityDirectoryV1(environment));
+  if(scope!==undefined){
+   const lineage=hostSliceLineageV1(scope),recent=(store.classes[lineage[lineage.length-1]!]?.samples??[]).filter(sample=>sample.peakMegabytes!==undefined).sort((left,right)=>right.atMs-left.atMs).slice(0,HOST_SLICE_RECENT_RUNS_V1);
+   if(recent.length>=BUILD_HOST_CAPACITY_POLICY_V1.estimates.minimumSamples)return Math.max(0,Math.min(Math.max(...recent.map(sample=>sample.peakMegabytes!)),ceilingMegabytes));
+   return learnedHostSlicePeakV1(environment,ceilingMegabytes,now);
+  }
+  const bound=hostClassBoundV1(BUILD_HOST_CAPACITY_POLICY_V1,store,hostSliceLineageV1(),now());
+  return bound.source==="measured"?Math.max(0,Math.min(bound.megabytes,ceilingMegabytes)):0;
+ }catch{return 0;}
 }
 
 /** 🍰 Records the peak one slice load reached, bounded by `ceilingMegabytes`, so one spike or a killed load cannot teach a booking above what the machine can give. */
-export async function recordHostSlicePeakV1(environment:NodeJS.ProcessEnv,peakMegabytes:number,ceilingMegabytes:number,now:()=>number=Date.now):Promise<void>{
+export async function recordHostSlicePeakV1(environment:NodeJS.ProcessEnv,peakMegabytes:number,ceilingMegabytes:number,now:()=>number=Date.now,scope?:string):Promise<void>{
  const bounded=Math.max(1,Math.min(Math.round(peakMegabytes),Math.round(ceilingMegabytes)));
- await updateHostEstimateStoreV1(hostCapacityDirectoryV1(environment),BUILD_HOST_CAPACITY_POLICY_V1,store=>recordHostPhasesV1(BUILD_HOST_CAPACITY_POLICY_V1,store,[HOST_SLICE_CLASS_V1],"slice",bounded,{jobs:1,peakMegabytes:bounded,activeMilliseconds:1000,peakAtMilliseconds:0,endedAtMs:now(),keepPeak:true}),{now});
+ await updateHostEstimateStoreV1(hostCapacityDirectoryV1(environment),BUILD_HOST_CAPACITY_POLICY_V1,store=>recordHostPhasesV1(BUILD_HOST_CAPACITY_POLICY_V1,store,hostSliceLineageV1(scope),"slice",bounded,{jobs:1,peakMegabytes:bounded,activeMilliseconds:1000,peakAtMilliseconds:0,endedAtMs:now(),keepPeak:true}),{now});
 }

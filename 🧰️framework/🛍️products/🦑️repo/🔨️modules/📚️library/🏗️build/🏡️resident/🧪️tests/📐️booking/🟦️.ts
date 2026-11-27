@@ -7,14 +7,14 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
-import {sliceBookingV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
+import {sliceBookingV1,sliceLeanMegabytesV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../🟨️.mjs";
 import {GRAPH_MEMORY_POLICY_V1} from "../../../🧠️memory/🟨️.mjs";
 import {renderSliceReservationV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};
 
-const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
+const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number;leanBasisPoints:number};
 const base={maximum:elasticity.maximumMegabytes,capBasisPoints:elasticity.hostCapBasisPoints,minimum:elasticity.minimumMegabytes,unlearned:HOST_POLICY_V1.sliceUnlearnedMegabytes,declared:null as number|null};
 const cases=[{...base,host:16384,learned:6627},{...base,host:16384,learned:8192},{...base,host:16384,learned:0},{...base,host:32768,learned:6627},{...base,host:32768,learned:20000},{...base,host:4096,learned:6627},{...base,host:8192,learned:6627},{...base,host:16384,learned:0,declared:3540},{...base,host:0,learned:6627}];
 
@@ -23,6 +23,15 @@ test("the booking equals an independent Python oracle on 4, 8, 16 and 32 GB host
  const expected=JSON.parse(run.stdout) as [number,number][];
  cases.forEach((item,index)=>{const got=sliceBookingV1({declaredMegabytes:item.declared??undefined,learnedMegabytes:item.learned,unlearnedMegabytes:item.unlearned,maximumMegabytes:item.maximum,hostMegabytes:item.host,hostCapBasisPoints:item.capBasisPoints,minimumMegabytes:item.minimum});expect([got.wantedMegabytes,got.minimumMegabytes],JSON.stringify(item)).toEqual(expected[index]!);});
  expect(expected[0]).toEqual([6553,2048]);expect(expected[1]).toEqual([6553,2048]);expect(expected[2]).toEqual([2048,2048]);expect(expected[3]).toEqual([6627,2048]);expect(expected[4]).toEqual([8192,2048]);expect(expected[5]).toEqual([2048,2048]);
+});
+
+test("the least a measured load starts with follows its booking, never goes below the floor or above the booking, and equals an independent oracle",()=>{
+ const lean=elasticity.leanBasisPoints;
+ const rows=[{booked:5918,floor:2048,lean},{booked:5026,floor:2048,lean},{booked:6553,floor:2048,lean},{booked:2048,floor:2048,lean},{booked:1500,floor:2048,lean},{booked:5918,floor:2048,lean:10000},{booked:5918,floor:0,lean:0}];
+ const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url)),"lean"],{input:JSON.stringify(rows),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+ const expected=JSON.parse(run.stdout) as number[];
+ rows.forEach((row,index)=>expect(sliceLeanMegabytesV1({bookedMegabytes:row.booked,floorMegabytes:row.floor,leanBasisPoints:row.lean})).toBe(expected[index]));
+ expect(expected.slice(0,3).every(value=>value>=2048&&value<6000)).toBe(true);expect(expected[3]).toBe(2048);expect(expected[4]).toBe(1500);expect(expected[5]).toBe(5918);
 });
 
 test("a slice uses its actual grant for the worker budget whether or not the booking shrank",async()=>{
@@ -38,7 +47,7 @@ test("a slice uses its actual grant for the worker budget whether or not the boo
    const listeners:Record<string,(value:unknown)=>void>={};
    const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,learned:{read:()=>row.learned,write:()=>undefined},
     reserve:row.grant===null?undefined:async({megabytes,minimumMegabytes}:{megabytes:number;minimumMegabytes:number})=>{
-     expect({megabytes,minimumMegabytes}).toEqual({megabytes:row.learned===0?2048:6553,minimumMegabytes:2048});return{megabytes:row.grant!,attach:()=>undefined,release:()=>undefined};
+     expect({megabytes,minimumMegabytes}).toEqual(row.learned===0?{megabytes:6553,minimumMegabytes:2048}:{megabytes:6553,minimumMegabytes:Math.ceil(6553*elasticity.leanBasisPoints/10000)});return{megabytes:row.grant!,attach:()=>undefined,release:()=>undefined};
     },createWorker:(_url:unknown,_data:unknown,env:Record<string,string|undefined>)=>{started.push(env[variable]===undefined?null:Number(env[variable]));queueMicrotask(()=>listeners.message?.({type:"done",graph:{}}));return{pid:4242,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
    try{await pool.run({root:tmpdir()});}finally{await pool.close();}
   }

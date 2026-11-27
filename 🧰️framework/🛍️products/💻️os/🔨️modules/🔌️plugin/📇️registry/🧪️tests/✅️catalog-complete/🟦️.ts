@@ -336,7 +336,7 @@ describe("strict plugin catalog completion", () => {
       expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostile, null, 2)}\n`), encodePackValue(hostile))).toThrow(/executionProtocol/);
     }
     const divergent = structuredClone(descriptor);
-    divergent.manifest.label = "a different label";
+    divergent.manifest.label = { native: { en: "A different label", de: "Eine andere Bezeichnung" }, reuse: { en: "A different label", de: "Eine andere Bezeichnung" } };
     expect(() => verifySemanticDescriptorPairBytesV1(json, encodePackValue(divergent))).toThrow(/JSON and pack forms disagree/);
     expect(() => verifySemanticDescriptorPairBytesV1(json, new Uint8Array([...bytes, 0]))).toThrow();
     for (const identity of [{ pluginId: "empty", version: "1.0.0" }, { pluginId: "cad-extension-spatial-shape", version: "0.0.0" }]) {

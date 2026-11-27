@@ -17,9 +17,15 @@ export type RepositoryCachePartitionIdV1="rust"|"tools"|"graph"|"dependencies"|"
 export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumArtifactBytes:number;readonly maximumLogicalBytes:number;readonly usableBytes:number;readonly hostSharePercent?:number;readonly needBytes?:Readonly<Record<string,number>>;readonly imageShards?:Readonly<{enabled:boolean;maximumImageBytes?:number;headroomPercent:number;hostFreeReservePercent:number;roots:readonly Readonly<{prefix:string;pattern:string;needBytes:number}>[]}>}
 /** 📏️ Accounts all fixed backing envelopes plus their finite bootstrap-control allowance. */
 export interface RepositoryCacheBudgetV1 {readonly version:1;readonly maximumBytes:number;readonly maximumControlBytes:number;readonly partitionBytes:number;readonly headroomBytes:number;readonly partitions:Readonly<Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>>}
+/** 🧱️ The declaration as its schema judges an existing image: a partition of one image whose published receipt exceeds the image cap is judged at the cap, because the cap bounds the images the policy births, never the published envelope of an image already born (it keeps working until its governed recreation). */
+function withoutExistingImageOversizeV1(value:unknown):unknown{
+ const declaration=value as {partitions?:Record<string,{capacityBytes?:number;imageShards?:{enabled?:boolean}}>},cap=schema.$defs.imageCap.const.maximumImageBytes;
+ if(!declaration||typeof declaration!=="object"||!declaration.partitions||typeof declaration.partitions!=="object")return value;
+ return {...declaration,partitions:Object.fromEntries(Object.entries(declaration.partitions).map(([id,row])=>[id,row&&typeof row==="object"&&typeof row.capacityBytes==="number"&&!row.imageShards?.enabled?{...row,capacityBytes:Math.min(row.capacityBytes,cap)}:row]))};
+}
 /** 📋️ Validates the entire partition ledger before any physical provisioning or cache write. */
-export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudgetV1{
- if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed repository cache partition declaration required");
+export function readRepositoryCacheBudgetV1(value:unknown,existing:boolean=false):RepositoryCacheBudgetV1{
+ if(validateJsonSchemaSubset(schema,existing?withoutExistingImageOversizeV1(value):value).length)throw Error("Closed repository cache partition declaration required");
  const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumArtifactBytes?:number;maximumLogicalBytes:number;hostSharePercent?:number;needBytes?:Record<string,number>;imageShards?:RepositoryCachePartitionV1["imageShards"]}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,overhead=schema.$defs.filesystemOverhead.const,paths:string[]=[];let partitionBytes=0;
  for(const[id,partition]of Object.entries(declaration.partitions)){
   const directory=partition.directory,path=directory.toLowerCase();
@@ -85,10 +91,10 @@ export function repositoryCacheBudgetV1(workspace:string):RepositoryCacheBudgetV
   const rule=(policy.elastic as Record<string,ElasticRuleV1>|undefined)?.[id],capacity=rule?effectiveCapacityV1(machinePathV1(root,declared.directory),rule.minimumBytes,rule):pinnedCapacityV1(machinePathV1(root,declared.directory),declared.capacityBytes,(declared as {hostSharePercent?:number}).hostSharePercent,partitionNeedBytesV1(policy as never,id));
   if(capacity!==declared.capacityBytes){
    const logical=Math.min(declared.maximumLogicalBytes+capacity-declared.capacityBytes,capacity-1048576),artifact=(declared as {maximumArtifactBytes?:number}).maximumArtifactBytes,candidate={...declared,capacityBytes:capacity,maximumLogicalBytes:logical,...artifact===undefined?{}:{maximumArtifactBytes:Math.min(artifact,capacity-1048576)}};
-   try{readRepositoryCacheBudgetV1({...policy,maximumBytes:policy.maximumBytes+capacity-declared.capacityBytes,partitions:{...policy.partitions,[id]:candidate}});maximumBytes+=capacity-declared.capacityBytes;partitions[id]=candidate;}catch{}
+   try{readRepositoryCacheBudgetV1({...policy,maximumBytes:policy.maximumBytes+capacity-declared.capacityBytes,partitions:{...policy.partitions,[id]:candidate}},true);maximumBytes+=capacity-declared.capacityBytes;partitions[id]=candidate;}catch{}
   }
  }
- const budget=readRepositoryCacheBudgetV1(maximumBytes===policy.maximumBytes?policy:{...policy,maximumBytes,partitions}),resolved=Object.fromEntries(Object.entries(budget.partitions).map(([id,partition])=>[id,Object.freeze({...partition,directory:requireMaterializedPathV1(machinePathV1(root,partition.directory))})])) as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,rust=repositoryStrictStorageV1(root);
+ const budget=readRepositoryCacheBudgetV1(maximumBytes===policy.maximumBytes?policy:{...policy,maximumBytes,partitions},true),resolved=Object.fromEntries(Object.entries(budget.partitions).map(([id,partition])=>[id,Object.freeze({...partition,directory:requireMaterializedPathV1(machinePathV1(root,partition.directory))})])) as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,rust=repositoryStrictStorageV1(root);
  if(resolved.rust.directory!==rust.directory||resolved.rust.capacityBytes!==rust.capacityBytes||resolved.rust.filesystemBytes!==rust.filesystemBytes)throw Error("Rust cache envelope disagrees with repository total budget");
  return Object.freeze({...budget,partitions:Object.freeze(resolved),controlDirectory:requireMaterializedPathV1(machinePathV1(root,".cache/b/c"))});
 }

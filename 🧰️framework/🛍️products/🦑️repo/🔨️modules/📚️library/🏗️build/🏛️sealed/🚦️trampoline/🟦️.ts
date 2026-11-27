@@ -3,7 +3,7 @@ import{closeSync,createReadStream,fstatSync,openSync}from"node:fs";
 import{constants as osConstants}from"node:os";
 import{relative}from"node:path";
 import{fileURLToPath}from"node:url";
-import{repositoryCommandKernelV1,repositoryCommandReadsGraphV1}from"../../⌨️command/🧭️selection/🟦️.ts";
+import{repositoryCommandKernelV1,repositoryCommandMemoryCappedV1}from"../../⌨️command/🧭️selection/🟦️.ts";
 import{graphChildEnvironmentV1}from"../../🧠️memory/🐏️child-environment/🟨️.mjs";
 import kernelSchema from"../../⌨️command/🧭️selection/🧬️schema/🔣️.json"with{type:"json"};
 import{acquirePartitionGroupV1,adoptPartitionPinV1,partitionGroupV1,partitionUsableV1,readPartitionPinV1,releasePartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
@@ -88,7 +88,7 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
  if(inheritedGroup&&inheritedToken){try{pin=adoptPartitionPinV1(root,inheritedToken,policy);}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
  else if(allKernels.length){try{const candidate=promotionAccepted&&pointer&&selectedPointers.length===allKernels.length?partitionGroupV1(pointer,selectedPointers):undefined,admission=acquirePartitionGroupV1(root,entry,allKernels,candidate,policy);pin=admission.token;pointer=admission.group.door;if(mode==="promote"){releasePartitionPinV1(root,pin,policy);process.exitCode=admission.committed?0:1;return;}}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
  const loader=pointer&&readSealedLoaderV1(store,pointer);
- let readsGraph=false;try{readsGraph=repositoryCommandReadsGraphV1(kernelArgs,environment);}catch{}
+ let readsGraph=false;try{readsGraph=repositoryCommandMemoryCappedV1(kernelArgs,environment);}catch{}
  if(!pointer||loader===undefined){if(pin){releasePartitionPinV1(root,pin,policy);say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
  try{
  let snapshot:number|undefined;

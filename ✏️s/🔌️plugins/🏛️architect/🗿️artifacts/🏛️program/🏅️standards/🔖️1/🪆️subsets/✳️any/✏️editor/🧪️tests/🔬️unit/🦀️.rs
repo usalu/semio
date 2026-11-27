@@ -313,7 +313,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     for command in every_command() {
-        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
         let keyword = printed.split_whitespace().next().unwrap_or_default().to_string();
         assert!(keyword.contains('-') || keyword == "search", "row {} printed a non-kebab keyword {printed:?}", command.command_id());

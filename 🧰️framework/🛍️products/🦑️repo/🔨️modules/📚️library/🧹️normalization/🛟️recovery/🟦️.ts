@@ -521,9 +521,14 @@ export function referenceEditResult(repoRoot: string, plan: TaxonomyPlan, journa
   return { bytes: Buffer.from(applyEditsToContent(readFileSync(join(absolutePath(repoRoot, journal.backupRoot), backup.backupPath), "utf8"), edits)), preimage };
 }
 
-export function applyReferenceEditAtomically(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, path: string, preparationName: (identity: string, pid: number, token: string) => string, writePreparationName: (pid: number, token: string) => string, writeCandidateName: string): void {
+export function applyReferenceEditAtomically(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, path: string, preparationName: (identity: string, pid: number, token: string) => string, writePreparationName: (pid: number, token: string) => string, writeCandidateName: string, ownWriter?: (target: string, expected: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>, bytes: Buffer) => void): void {
   const target = absolutePath(repoRoot, path), identity = sha256(path).slice(0, 24), result = referenceEditResult(repoRoot, plan, journal, path);
   if (canonicalJson(leafPreimage(target)) !== canonicalJson(result.preimage)) throw new Error(`Reference edit preimage changed: ${path}`);
+  if (ownWriter) {
+    ownWriter(target, result.preimage, result.bytes);
+    journal.probe?.("transaction-edit-canonical-exchange", path);
+    return;
+  }
   const root = join(absolutePath(repoRoot, journal.stagingRoot), preparationName(identity, process.pid, randomUUID()));
   const leaf = join(root, `${identity}.edit`);
   const preLeaf = join(root, `${identity}.pre`);

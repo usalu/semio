@@ -394,7 +394,7 @@ macro_rules! shard_host {
         let definition = $definition;
         let app_id = definition.id.clone();
         let json = serde_json::to_value(&definition).expect("the app definition serializes as the descriptor does");
-        let plugin = semio_plugin::plugin_app_close_prelude::PluginBuilder::<_, App>::new("stdio").label("Stdio").version("0.0.1").package_id("semio:stdio")
+        let plugin = semio_plugin::plugin_app_close_prelude::PluginBuilder::<_, App>::new("stdio").label(semio_plugin::LocalizedLabel::native("Stdio", "Stdio")).version("0.0.1").package_id("semio:stdio")
             .document_app::<semio_plugin::EditorApp<$editor>>(semio_plugin::App { definition, examples: Vec::new() }).try_build().expect("the PDF editor plugin assembles");
         let runtime = semio_plugin::plugin_runtime::PluginRuntime::<App>::new(semio_s_artifact_stdio_contract::testing::mounted_policy()).expect("plugin runtime");
         semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, plugin);
@@ -791,7 +791,7 @@ async fn save_natural_bytes_under(app: &mut semio_plugin::VcsArtifactApp<semio_p
             other => panic!("registered PDF Save did not produce its segmented output: {other:?}"),
         }
     }
-    let result = completed.expect("registered PDF Save completes");
+    let result = completed.unwrap_or_else(|| panic!("registered PDF Save completes within {} turns: {}", laws::OriginalFixtureCaller::maximum_turns(), app.typed_operation_diagnostic()));
     assert_eq!(result.schema, format_kind);
     assert_eq!(result.mime_type, media_type);
     let status = laws::retain_fixture_media_export_result(app, &handle, result, scope.cx()).await.expect("PDF Save publishes download status");
@@ -2069,6 +2069,8 @@ async fn real_world_round_trip(name: &str, input: &[u8], append_limit: usize) ->
     let mut scope = laws::OriginalFixtureScope::admit();
     let (mut app, cost) = try_open_registered_pdf_with(input.to_vec(), pages, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, turn_limit).await.unwrap_or_else(|reason| panic!("{name}: {reason}"));
     println!("{name}: {} bytes; open {cost:?}", input.len());
+    assert_eq!((REAL_WORLD_BASE_COPY, REAL_WORLD_COPY_PER_BYTE, REAL_WORLD_LIFT_PER_DECODED_BYTE + REAL_WORLD_PREPARE_PER_DECODED_BYTE + REAL_WORLD_PACK_PER_DECODED_BYTE), (4 << 20, 24, 400), "the open-copy bound is 4 MiB + 24 x file + 400 x decoded");
+    println!("{name}: open copied {} of {copy_limit} bytes (4 MiB + 24 x {} + 400 x {decoded})", cost.copied_bytes, input.len());
     assert!(cost.copied_bytes <= copy_limit, "{name}: the open copied {} bytes, above {copy_limit} for a {}-byte file with {decoded} decoded stream bytes", cost.copied_bytes, input.len());
     let mounted = app.snapshot().unwrap().clone();
     assert_eq!(mounted.pages, cold.pages, "{name}: pages");
@@ -2095,7 +2097,8 @@ async fn real_world_round_trip(name: &str, input: &[u8], append_limit: usize) ->
     assert_eq!((after[0].1, after[0].2), (before[0].1 + 1, before[0].2), "{name}: lopdf reads one more text operator and the same paints on page 1");
     assert_eq!(reference_navigation(&saved).unwrap(), navigation, "{name}: lopdf reads every navigation lane unchanged");
 
-    let (mut reopened_app, reopen) = try_open_registered_pdf_with(saved, pages, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, turn_limit).await.unwrap_or_else(|reason| panic!("{name}: reopen: {reason}"));
+    let mut reopen_scope = laws::OriginalFixtureScope::admit();
+    let (mut reopened_app, reopen) = try_open_registered_pdf_with(saved, pages, &mut reopen_scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, turn_limit).await.unwrap_or_else(|reason| panic!("{name}: reopen: {reason}"));
     println!("{name}: reopen {reopen:?}");
     let reopened = reopened_app.snapshot().unwrap().clone();
     assert_eq!(reopened.info.title.as_deref(), Some(format!("Edited {name}").as_str()));
@@ -2104,7 +2107,7 @@ async fn real_world_round_trip(name: &str, input: &[u8], append_limit: usize) ->
     assert_eq!((&reopened.images, &reopened.forms), (&mounted.images, &mounted.forms), "{name}: images and forms");
     for font in &mounted.fonts { assert!(reopened.fonts.contains(font), "{name}: {} is retained", font.id); }
     assert!(crate::editor::page::objects(&reopened).iter().any(|object| object.page == 0 && object.text == "Hello"), "{name}: inserted text");
-    laws::close_registered_fixture_app(&mut reopened_app, policy, scope.cx()).expect("reopened editor closes");
+    laws::close_registered_fixture_app(&mut reopened_app, policy, reopen_scope.cx()).expect("reopened editor closes");
     laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("editor closes");
     cost
 }

@@ -17,7 +17,27 @@ import { reduceArtifactCreationProgressUiV1 } from "../../🌱️artifact-creati
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { logUnlessRetiredV1, requiredHostPanelLeafId } from "../../🧱️built-node-stores/🟦️.ts";
+import { pluginInstanceWasRetiredV1 } from "../../../🔌️PluginRuntime/🪦️instance-retirement/🟦️.ts";
 import type { ShellCoreAfterApplyHostEffects } from "../../⚡️host-effects/🟦️.ts";
+
+/** 🎯️ The session an export or sync addresses: the active spawned program, unless its instance is RETIRED (its windows closed, its channel disposed), in which case the primary session stays the target. */
+export function resolveSyncTargetSessionV1({ session, panel, hostMode, loadedPlugins, retired }: {
+  readonly session: ActiveSession | null;
+  readonly panel: ReturnType<typeof parsePanelState> | null | undefined;
+  readonly hostMode: boolean;
+  readonly loadedPlugins: ReadonlyArray<{ readonly handle: { readonly pluginId: string }; readonly manifest: { readonly apps: ReadonlyArray<ActiveSession["app"]> } }>;
+  readonly retired: (pluginId: string, instanceId: number) => boolean;
+}): ActiveSession | null {
+  if (!session) return null;
+  if (hostMode && panel?.activeSpawnedId) {
+    const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+    if (spawned && !retired(spawned.pluginId, spawned.instanceId)) {
+      const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
+    }
+  }
+  return session;
+}
 
 /** 🔷 Builds scope, localDocumentOwnerRegistry, hostConfig, hostMode of useShellUriAndDocuments. */
 export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHostEffects }) {
@@ -219,16 +239,6 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterApplyHost
     requestSessionRoute(route);
   }, [applyShellUri, loadedPlugins.length, shellUri, hostMode, session?.pluginId, session?.instanceId, identityResolution, requestSessionRoute]);
 
-  const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
-    if (!session) return null;
-    if (hostMode && panel?.activeSpawnedId) {
-      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-      if (spawned) {
-        const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
-      }
-    }
-    return session;
-  }, [loadedPlugins, panel, session, hostMode]);
+  const resolveSyncTargetSession = useCallback((): ActiveSession | null => resolveSyncTargetSessionV1({ session, panel, hostMode, loadedPlugins, retired: pluginInstanceWasRetiredV1 }), [loadedPlugins, panel, session, hostMode]);
   return { resolveSyncTargetSession, loadedPlugins, ensureBackboneWorker, identityRef, hubEnv, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, retireBrowserActorUi, shellActorIdRef, socketActorReadyRef, postBrowserActorViewState, retireDocumentAttachment, spaceDirectoryHistoriesRef, directoryScopedOwnersRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, documentAttachmentLane, bindDocumentBackbone, dispatch, backboneWorkerRef, closeDocumentRef, openDocumentRef, sessionRef, activeToolId, activeUtilityByWindowId, extraWindowInstances, session, cancelSpaceArtifactCreationsForRuntime, backgroundSpaceIndexSessionsRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, tutorialDrivenRef, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, scope, showTransientNoticeRef, syncBackboneUri, uiLocaleRef, hostApp, updateSpacePanel, updateSpacePanelFrom, loadedPluginsRef };
 }

@@ -113,6 +113,15 @@ impl<PA: PluginApp> Drop for BackgroundInstanceGuard<'_, PA> {
         self.cell.background_holds.fetch_sub(1, Ordering::SeqCst);
     }
 }
+/// 📈️ Which owner last advanced an instance (any host crossing: archive load polls, ingest, render and projection reads, media), named in stall diagnostics.
+#[doc(hidden)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(u8)]
+pub enum InstanceProgressOwner { None = 0, HostCrossing = 1, ArchiveLoadAdmission = 2, ArchiveLoadPoll = 3 }
+impl InstanceProgressOwner {
+    pub const fn from_repr(repr: u8) -> Self { match repr { 1 => Self::HostCrossing, 2 => Self::ArchiveLoadAdmission, 3 => Self::ArchiveLoadPoll, _ => Self::None } }
+    pub const fn name(self) -> &'static str { match self { Self::None => "none", Self::HostCrossing => "host-crossing", Self::ArchiveLoadAdmission => "archive-load-admission", Self::ArchiveLoadPoll => "archive-load-poll" } }
+}
 #[doc(hidden)]
 pub struct RuntimeAppCell<PA: PluginApp> {
     pub id: u32,
@@ -126,11 +135,17 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     pub maintenance_stalled_steps: AtomicU32,
     /// ⏱️ Monotonic instant the current zero-progress run of the live pump began (`0` = the pump is moving).
     pub maintenance_stall_since_us: AtomicU64,
+    /// 🌫️ Whether the last live reading was starved of funding, so the reactor stops repeating the pressure pump for a stock that cannot fund a unit.
+    pub maintenance_starved: AtomicBool,
+    /// 🔁️ Whether the pump now stepped is a repeat of the same reactor turn: its empty readings are the first pump's echo and buy no stall debt, so the stall is counted per turn.
+    pub maintenance_repeat: AtomicBool,
     /// ⏱️ Stall credit actually spent when a `ZeroProgress` verdict was stored, so the emitted fault quotes the measured stall instead of the last turn's unrelated cost.
     pub maintenance_stall_credit_spent_us: AtomicU64,
     /// 📈️ Bumped whenever another owner of this instance advances (a whole-document archive load is admitted or polled); a live pump that sees it move is waiting behind progress, not stalled.
     pub instance_progress_epoch: AtomicU64,
     pub maintenance_seen_progress_epoch: AtomicU64,
+    pub instance_progress_owner: AtomicU8,
+    pub maintenance_last_reading: std::sync::Mutex<String>,
     /// 🛎️ How many HOST crossings currently want or hold [`Self::instance`]. A background lane
     /// reads it before it touches the mutex and yields its whole turn while it is non-zero, so
     /// the host lane — which has nothing to yield to — is never made to wait on maintenance it
@@ -165,9 +180,13 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             maintenance_generation: AtomicU64::new(0),
             maintenance_stalled_steps: AtomicU32::new(0),
             maintenance_stall_since_us: AtomicU64::new(0),
+            maintenance_starved: AtomicBool::new(false),
+            maintenance_repeat: AtomicBool::new(false),
             maintenance_stall_credit_spent_us: AtomicU64::new(0),
             instance_progress_epoch: AtomicU64::new(0),
             maintenance_seen_progress_epoch: AtomicU64::new(0),
+            instance_progress_owner: AtomicU8::new(0),
+            maintenance_last_reading: std::sync::Mutex::new(String::from("none")),
             host_crossings: AtomicU32::new(0),
             background_holds: AtomicU32::new(0),
             maintenance_pressure: AtomicBool::new(false),
@@ -177,6 +196,15 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             #[cfg(any(test, feature = "cleanup-probes"))]
             maintenance_probe_input_waits: AtomicU64::new(0),
         }
+    }
+    /// 📈️ Records that `owner` advanced this instance: bumps [`Self::instance_progress_epoch`] so a live pump waiting behind it restarts its stall run.
+    pub fn note_instance_progress(&self, owner: InstanceProgressOwner) {
+        self.instance_progress_owner.store(owner as u8, Ordering::SeqCst);
+        self.instance_progress_epoch.fetch_add(1, Ordering::SeqCst);
+    }
+    /// 🔎️ The last owner recorded by [`Self::note_instance_progress`] and the last live maintenance reading, for stall diagnostics.
+    pub fn stall_reading(&self) -> String {
+        format!("{}; last progressing owner: {}", self.maintenance_last_reading.lock().map(|reading| reading.clone()).unwrap_or_default(), InstanceProgressOwner::from_repr(self.instance_progress_owner.load(Ordering::SeqCst)).name())
     }
     /// 🛎️ Takes the app for a HOST crossing, which outranks every background lane. Registering
     /// the crossing BEFORE the try-lock stops a background lane from starting a new turn on
@@ -191,7 +219,10 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
         self.host_crossings.fetch_add(1, Ordering::SeqCst);
         for _ in 0..RUNTIME_HOST_CONTENTION_YIELDS {
             match self.instance.try_lock() {
-                Ok(instance) => return Some(HostInstanceGuard { cell: self, instance: Some(instance) }),
+                Ok(instance) => {
+                    self.note_instance_progress(InstanceProgressOwner::HostCrossing);
+                    return Some(HostInstanceGuard { cell: self, instance: Some(instance) });
+                }
                 Err(std::sync::TryLockError::Poisoned(_)) => break,
                 Err(std::sync::TryLockError::WouldBlock) => {
                     if self.background_holds.load(Ordering::SeqCst) == 0 {

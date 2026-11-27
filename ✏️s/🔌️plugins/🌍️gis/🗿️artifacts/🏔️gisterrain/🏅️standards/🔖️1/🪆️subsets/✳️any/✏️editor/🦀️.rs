@@ -396,7 +396,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
             import_elevation::fault_notices().iter().chain(geojson::fault_notices()).chain(contours::fault_notices())
-                .cloned().chain(configure_terrain_brush::fault_notices()).collect()
+                .chain(overlays::fault_notices()).cloned().chain(configure_terrain_brush::fault_notices()).collect()
         });
         NOTICES.as_slice()
     }
@@ -560,11 +560,11 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
         let args = args.as_ref().unwrap_or(&DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(DslValue::as_str).map(str::to_string)) };
-        let number = |key| args.get(key).and_then(DslValue::as_f64).ok_or_else(|| Fault::from(format!("Missing or invalid {key}")));
-        let feature_id = || str_arg(&["id"]).ok_or_else(|| Fault::from("Missing overlay identifier"));
+        let number = |key| args.get(key).and_then(DslValue::as_f64).ok_or_else(|| overlays::OverlayFault::number(key).fault());
+        let feature_id = || str_arg(&["id"]).ok_or_else(|| overlays::OverlayFault::IdentifierMissing.fault());
         let label = || -> Result<Option<String>, Fault> {
             let Some(value) = args.get("label").filter(|value| !matches!(value, DslValue::Null)) else { return Ok(None); };
-            let label = value.as_str().ok_or_else(|| Fault::from("Invalid overlay label"))?.trim();
+            let label = value.as_str().ok_or_else(|| overlays::OverlayFault::LabelInvalid.fault())?.trim();
             Ok((!label.is_empty()).then(|| label.to_owned()))
         };
         match action {
@@ -604,7 +604,7 @@ impl ArtifactEditor for Gis3dPlayApp {
                 id: feature_id()?,
                 kind: str_arg(&["kind"]).unwrap_or_else(|| "route".into()),
                 mode: str_arg(&["mode"]).unwrap_or_else(|| "replace".into()),
-                coordinates: str_arg(&["coordinates"]).ok_or_else(|| Fault::from("Missing WGS84 vertices"))?,
+                coordinates: str_arg(&["coordinates"]).ok_or_else(|| overlays::OverlayFault::VerticesMissing.fault())?,
                 label: label()?,
             })),
             "moveOverlayPosition" => Ok(Gis3dCommand::MoveOverlayPosition(move_overlay_position::MoveOverlayPosition {
@@ -646,7 +646,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, terrain::config::current(cfg), view_state).map(semio_plugin::built_to_component_tree),
             terrain_data::BODY => terrain_data::render(doc.snapshot, view_state).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(LocalizedLabel::native(&format!("Unknown body: {body_key}"), &format!("Unbekannter Body: {body_key}")).resolve(view_state.terminology, view_state.locale))),
         }
     }
 }

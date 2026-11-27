@@ -56,6 +56,7 @@ semio-s-artifact-stdio-zip = { workspace = true }
 semio-s-space-core = { path = "../../../../../../../../../../../../🫀️catalog-documents/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

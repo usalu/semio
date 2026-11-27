@@ -25,7 +25,7 @@ use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedTo
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation;
 use store::Mutation;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -87,7 +87,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     fn original_reserved_prepares(&self)->bool{self.media.reserved_mount.is_none()&&self.media.reserved_receipt.is_none()}
     /// 🎞️ Retains the issued producer through mounted publication and paid source return.
     async fn advance_original_reserved_mount(&mut self,verb:&str,meta:&ActionMeta,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier};
+        use semio_plugin_retained_command_operation::typed_operation::original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier};
         use semio_plugin_job::original_emission::OriginalEmissionReceipt;
         use semio_framework_job::{close_original_retained_turn,close_original_retained_step};
         use semio_framework_value::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};

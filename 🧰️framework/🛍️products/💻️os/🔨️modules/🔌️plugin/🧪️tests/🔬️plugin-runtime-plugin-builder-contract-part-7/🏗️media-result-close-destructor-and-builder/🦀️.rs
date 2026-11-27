@@ -89,7 +89,7 @@
     async fn plugin_builder_builds_bundle_from_fluent_spec() {
         let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
         assert_eq!(bundle.manifest.plugin_id, "test");
-        assert_eq!(bundle.manifest.label.as_str(), "Synthetic");
+        assert_eq!(bundle.manifest.label, LocalizedLabel::native("Synthetic", "Synthetisch"));
         assert_eq!(bundle.manifest.version, "0.0.1");
         assert!(bundle.manifest.apps.iter().any(|app| app.id == TestApp::<false>::APP_ID));
     }

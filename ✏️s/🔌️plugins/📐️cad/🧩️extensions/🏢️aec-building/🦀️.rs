@@ -92,7 +92,7 @@ fn computers_manifest() -> JsonValue {
 // that same file); bridged here via `semio_os_kernel::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 pub fn bundle() -> ExtensionBundle {
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
+    let bundle = ExtensionBundle::new(EXTENSION_ID, semio_plugin::LocalizedLabel::native("CAD AEC Building", "CAD AEC Gebäude"), env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     let bundle = bundle.mode(ExecutionMode::Declarative);
     let bundle = bundle.contributes_topic(
         "cad.computer",

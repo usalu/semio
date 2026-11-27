@@ -188,7 +188,7 @@ fn expand_inline_value(key: &str, value: PdfObject) -> PdfObject {
     }
 }
 
-/// 🔢️ Reads an inline-image dictionary integer within the typed image domain.
+/// 🔢️ Reads an inline-image dictionary integer within the typed image domain; an image mask is one bit per sample whether or not `/BPC` is spelled, so the writer may omit it and a re-read still equals the typed value.
 fn inline_image_integer(dict: &[PdfDictEntry], key: &str, default: Option<u32>) -> PResult<u32> {
     let value = match dict_get(dict, key) {
         Some(PdfObject::Int(value)) => u32::try_from(*value).ok().filter(|value| *value > 0),
@@ -457,8 +457,8 @@ fn parse_inline_image(data: &[u8], tokens: &mut ContentTokenCursor, resources: &
     }
     let width = inline_image_integer(&entries, "Width", None)?;
     let height = inline_image_integer(&entries, "Height", None)?;
-    let bits_per_component = inline_image_integer(&entries, "BitsPerComponent", Some(0))?;
     let image_mask = dict_get(&entries, "ImageMask").and_then(PdfObject::as_bool) == Some(true);
+    let bits_per_component = if image_mask { 1 } else { inline_image_integer(&entries, "BitsPerComponent", Some(0))? };
     let color_space = dict_get(&entries, "ColorSpace").map(lift_colour_space_inline);
     let components = if image_mask { 1 } else { color_space.as_ref().and_then(|color| color.components()).unwrap_or(1) };
     let sample_bits = if image_mask { 1 } else { bits_per_component };
@@ -588,8 +588,8 @@ fn inline_image_extent(data: &[u8], tokens: &mut ContentTokenCursor) -> Option<u
     }
     let width = inline_image_integer(&entries, "Width", None).ok()?;
     let height = inline_image_integer(&entries, "Height", None).ok()?;
-    let bits_per_component = inline_image_integer(&entries, "BitsPerComponent", Some(0)).ok()?;
     let image_mask = dict_get(&entries, "ImageMask").and_then(PdfObject::as_bool) == Some(true);
+    let bits_per_component = if image_mask { 1 } else { inline_image_integer(&entries, "BitsPerComponent", Some(0)).ok()? };
     let components = if image_mask { 1 } else { dict_get(&entries, "ColorSpace").map(lift_colour_space_inline).and_then(|color| color.components()).unwrap_or(1) };
     let (_, packed) = packed_image_geometry(width, height, components, if image_mask { 1 } else { bits_per_component }).ok()?;
     let filter = match dict_get(&entries, "Filter") {

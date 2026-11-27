@@ -46,7 +46,9 @@ test("a fleet-only pass has no headroom to wait for: the wrapper goes on at once
 });
 
 test("the wrapper asks for headroom before it acquires the compile slot",()=>{
- const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8");
- expect(source.indexOf("awaitBrokerHeadroomV1(environment,facts)")).toBeGreaterThan(0);
- expect(source.indexOf("awaitBrokerHeadroomV1(environment,facts)")).toBeLessThan(source.indexOf("slot=await acquireSlotV1("));
+ const source=readFileSync(new URL("../../⏳️admit/🟦️.ts",import.meta.url),"utf8"),wrapper=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8");
+ expect(source.indexOf("awaitBrokerHeadroomV1(world.environment")).toBeGreaterThan(0);
+ expect(source.indexOf("awaitBrokerHeadroomV1(world.environment")).toBeLessThan(source.indexOf("slot=await acquireSlotV1("));
+ expect(wrapper).toContain("awaitCompileAdmissionV1(");
+ expect(wrapper).not.toContain("slot=await acquireSlotV1(");
 });

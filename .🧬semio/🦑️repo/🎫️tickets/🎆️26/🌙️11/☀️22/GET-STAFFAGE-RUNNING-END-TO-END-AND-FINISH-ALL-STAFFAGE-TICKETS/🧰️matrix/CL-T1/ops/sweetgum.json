@@ -1,0 +1,32 @@
+[
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16
+ },
+ {
+  "decision": {
+   "en": "Budget: every soft mass (leaf lobe, transpiration outlet) and every joint and mass sphere of the structure is a faceted lobe, a polyhedron with the facets of its ellipsoid at 16 segments around and 8 rings (224 triangles), sized so that its outline straddles the outline the checks of the volumes measure the ellipsoid at; the lobes of this tree are too many for the 24 facets of that measure, and far too many for the 2000 to 4000 triangles a smooth ellipsoid costs at this scale.",
+   "de": "Budget: Jede weiche Masse (Laubballen, Transpirationsauslass) und jede Gelenk- und Massenkugel des Tragwerks ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 16 Segmenten im Umfang und 8 Ringen (224 Dreiecke), so bemessen, dass sein Umriss den Umriss umspielt, mit dem die Prüfungen der Volumen das Ellipsoid messen; die Ballen dieses Baums sind zu viele für die 24 Facetten dieses Maßes und viel zu viele für die 2000 bis 4000 Dreiecke, die ein glattes Ellipsoid in diesem Maßstab kostet."
+  }
+ }
+]

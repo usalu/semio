@@ -631,7 +631,7 @@ async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
     let commands = every_command();
     assert_eq!(commands.len(), keywords.len(), "the keyword list must cover every row");
     for (command, keyword) in commands.iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(command);
         assert!(command.print_op().starts_with(keyword), "row must print its wire keyword {keyword}, got {:?}", command.print_op());
     }
 }

@@ -594,3 +594,56 @@ async fn edit_layout_titles_come_from_the_localized_window_kind_label() {
     let semio_plugin::WindowLayoutNode::Stack { children, .. } = edit::layout().root else { panic!("expected a stack layout") };
     assert!(children.iter().all(|window| matches!(window, semio_plugin::WindowLayoutNode::Window { title: None, .. })));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn editing_an_input_recalculates_dependent_formula_caches_in_one_undoable_command_and_the_saved_xlsx() {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
+    use std::io::Read;
+    let cached = |value: f64| XlsxCellValue::Formula { expr: "SUM(B2:B3)".into(), cached: Some(Box::new(XlsxCellValue::Number(value))) };
+    let cell = |row, col, value| XlsxCell { row, col, value };
+    let base = build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![cell(2, 1, XlsxCellValue::Number(1200.5)), cell(3, 1, XlsxCellValue::Number(350.25)), cell(4, 1, cached(1550.75))] }],
+        ..Default::default()
+    });
+    let revision = |snapshot: &XlsxSnapshot, row| xlsx_cell_address(snapshot, "Sheet1", row, 1).unwrap().revision;
+    let set = XlsxEditorCommand::SetCell { sheet_name: "Sheet1".into(), row: 3, column: 1, revision: revision(&base, 3), value: "400".into() };
+    let emitted = xlsx_set_cell_emit(&base, &set, None).unwrap().artifact_mutations;
+    assert_eq!(emitted.len(), 2, "the user's edit plus one recalculated formula cache");
+    let XlsxMutation::SetCell(follow_up) = &emitted[1] else { panic!("recalculated cache must be a SetCell") };
+    assert_eq!(follow_up.value, cached(1600.5));
+    assert_eq!(follow_up.node, None);
+    let mut edited = base.clone();
+    for mutation in &emitted {
+        apply_xlsx_mutation(&mut edited, mutation);
+    }
+    let projected = edited.project_workbook().unwrap();
+    assert_eq!(projected.sheets[0].cells.iter().find(|cell| cell.row == 4).unwrap().value, cached(1600.5));
+    let mut undone = edited.clone();
+    for mutation in emitted.iter().rev() {
+        let mut before = base.clone();
+        for earlier in emitted.iter().take_while(|earlier| *earlier != mutation) {
+            apply_xlsx_mutation(&mut before, earlier);
+        }
+        for inverse in <XlsxMutation as protocol::ColdMutation<XlsxSnapshot>>::inverse(mutation, &before).unwrap() {
+            apply_xlsx_mutation(&mut undone, &inverse);
+        }
+    }
+    assert_eq!(undone, base, "undoing the one command reverts the edit and the recalculated caches");
+
+    let vacancy = xlsx_cell_vacancy_address(&edited, "Sheet1", 5, 1).unwrap();
+    let typed = XlsxEditorCommand::SetCell { sheet_name: "Sheet1".into(), row: 5, column: 1, revision: vacancy.worksheet.revision.clone(), value: "=B4*2".into() };
+    let inserted = xlsx_set_cell_emit(&edited, &typed, None).unwrap().artifact_mutations;
+    assert!(matches!(inserted[0], XlsxMutation::InsertCell(_)));
+    for mutation in &inserted {
+        apply_xlsx_mutation(&mut edited, mutation);
+    }
+    let projected = edited.project_workbook().unwrap();
+    assert_eq!(projected.sheets[0].cells.iter().find(|cell| cell.row == 5).unwrap().value, XlsxCellValue::Formula { expr: "B4*2".into(), cached: Some(Box::new(XlsxCellValue::Number(3201.0))) });
+
+    let bytes = XlsxEditor::encode_natural_file(&edited).unwrap();
+    let mut sheet = String::new();
+    zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap().by_name("xl/worksheets/sheet1.xml").unwrap().read_to_string(&mut sheet).unwrap();
+    assert!(sheet.contains("<f>SUM(B2:B3)</f><v>1600.5</v>"), "{sheet}");
+    assert!(sheet.contains("<f>B4*2</f><v>3201</v>"), "{sheet}");
+}

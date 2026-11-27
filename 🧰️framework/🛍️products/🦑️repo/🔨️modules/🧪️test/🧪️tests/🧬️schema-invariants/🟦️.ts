@@ -598,7 +598,7 @@ describe("🔎️ per-format export presence", () => {
           ? statement.exportClause.elements.map((entry) => ({ name: entry.name.text, runtime: !statement.isTypeOnly && !entry.isTypeOnly }))
           : []);
       expect(publications.some((entry) => entry.name === row.export)).toBe(row.present);
-      expect(publications.some((entry) => entry.name === `parse${row.export}` && entry.runtime)).toBe((row as { parser?: boolean }).parser);
+      expect<unknown>(publications.some((entry) => entry.name === `parse${row.export}` && entry.runtime)).toBe((row as { parser?: boolean }).parser);
     }
   });
 

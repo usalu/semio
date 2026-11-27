@@ -20,6 +20,7 @@ struct TerrainSceneStyleJson<'a> {
     overlays: &'a TerrainOverlays,
 }
 
+/// 🏷️ Provider credit shown beside bundled terrain: `label` is the provider's proper noun, identical in English and German, so the scene payload stays locale-free.
 #[derive(ToValue)]
 struct TerrainAttribution {
     label: &'static str,

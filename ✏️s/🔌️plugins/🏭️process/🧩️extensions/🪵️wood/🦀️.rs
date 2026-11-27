@@ -176,7 +176,7 @@ const HOST_APP_ID: &str = "process3d-play";
 // reversion already applied to `ExtensionBundle::new`/`.extends`/`.depends_on` in that same impl block.
 pub fn bundle() -> ExtensionBundle {
     let catalog = WoodCatalog;
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", env!("CARGO_PKG_VERSION")).extends("process").depends_on("process", semio_framework::tree_pin!());
+    let bundle = ExtensionBundle::new(EXTENSION_ID, semio_plugin::LocalizedLabel::native("Process Wood Machines", "Prozess Holzmaschinen"), env!("CARGO_PKG_VERSION")).extends("process").depends_on("process", semio_framework::tree_pin!());
     let bundle = bundle.mode(semio_plugin::ExecutionMode::Declarative);
     bundle.contributes_topic(
         "process.machines",

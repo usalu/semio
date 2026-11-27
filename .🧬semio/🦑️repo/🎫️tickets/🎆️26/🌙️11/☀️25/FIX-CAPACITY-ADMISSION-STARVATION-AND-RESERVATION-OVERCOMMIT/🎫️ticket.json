@@ -1,7 +1,7 @@
 {
   "title": "Fix Capacity Admission Starvation and Reservation Overcommit",
   "emoji": "🚦",
-  "status": "closed",
+  "status": "open",
   "description": "Fix host capacity admission at its cause: (1) starvation of large waiting requests (starving-first head-of-line ordering), (2) overcommit by full reservations of long-running grants that really hold a fraction (settled charge floor was rampIdleKeepMegabytes 3072 so no grant under 3072 MB was ever reduced), (3) session cap must be work-conserving (bind only while another session waits). Test-driven with python oracle; no row schema change so live grants and old processes stay valid.",
   "summary": "Reclosed: the two red tests are not from the admission change (verified with the ordering and cap changes switched off). Fixed at cause: exactGrantRequired test value map gained the new placeholders; end-to-end envelope test now derives the expected memory from the real host sizing instead of assuming a 32 GB host. All 29 related test files pass. Details in result.md.",
   "github": {
@@ -10,7 +10,8 @@
   "goal": "AI-OPTIMIZED-REPO",
   "sessions": [
     "2729826d-c12d-4d43-92fa-e4a75e7fb36f",
-    "47123928-626f-44cb-9274-07b3203a835d"
+    "47123928-626f-44cb-9274-07b3203a835d",
+    "c41571ef-348c-458e-8cfb-0b5c9a3f4f8a"
   ],
   "interactions": [
     {
@@ -88,6 +89,15 @@
           "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌡️hostcapacity🗃️🧪️tests🗃️🌤️followup💻🟦️"
         }
       ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-27 01:32:45",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Lane CAP-GP: one process held seven concurrent graph-plan grants (base + 6 stacked growth grants, 0 MB observed). Fix at the cause: slice-pool growth books into the same grant in place; add test."
     }
   ]
 }

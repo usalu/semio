@@ -92,3 +92,19 @@ test("a text catalogue below a texts folder is words only: editing it every few 
  appendFileSync(schema," ");expect(watch.changed(),"a schema beside it").toBe(true);
  expect(sidecarClosureIgnoredV1("/x/y/📖️texts/🔣️.json")).toBe(true);expect(sidecarClosureIgnoredV1("/x/y/📖️textsX/a.json")).toBe(false);expect(sidecarClosureIgnoredV1("C:\\x\\📖️texts\\a.json")).toBe(true);
 });
+
+test("a watch with memory hashes only what moved: the digest equals the one of a watch without memory, a stamped record is believed, a changed file is read again",()=>{
+ const root=directory();
+ const main=write(root,"main.ts",'import {a} from "./a.ts";\nexport const run=a;\n'),other=write(root,"a.ts","export const a=1;\n");
+ let stored:Record<string,any>|undefined,writes=0;
+ const memory={read:()=>stored,write:(records:Record<string,any>)=>{stored=records;writes++;}};
+ const plain=createSidecarClosureWatchV1([main],[],root).baseline,first=createSidecarClosureWatchV1([main],[],root,memory);
+ expect(first.baseline).toBe(plain);expect(writes).toBe(1);expect(Object.keys(stored!).sort()).toEqual([main,other].sort());
+ const second=createSidecarClosureWatchV1([main],[],root,memory);
+ expect(second.baseline).toBe(plain);expect(writes,"nothing moved, nothing written").toBe(1);
+ const poisoned={...stored!,[other]:{...stored![other],sha256:"0".repeat(64)}};stored=poisoned;
+ expect(createSidecarClosureWatchV1([main],[],root,memory).baseline,"a record with the live stamp is not hashed again").not.toBe(plain);
+ appendFileSync(other,"//x\n");
+ const edited=createSidecarClosureWatchV1([main],[],root,memory).baseline;
+ expect(edited).toBe(createSidecarClosureWatchV1([main],[],root).baseline);expect(edited).not.toBe(plain);
+});

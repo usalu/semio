@@ -108,7 +108,7 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
             let mut cancelled=Puzzle2dDeleteNodeInverseCursor::default();
             let mut swapped=false;
             for turn in 0..2_000_000 {
-                let reversing=cancelled.phase==16;
+                let reversing=cancelled.is_reversing();
                 let permit=grant(&cancelled,source.borrow(&base),turn);
                 let step=observed(permit,||test_source_custody::run(permit,|effect|cancelled.advance(source.borrow(&base),mutation.borrow(&payload),4096,effect)));
                 assert!(!matches!(step,RetainedCloneStep::Complete(_)));

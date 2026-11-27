@@ -29,12 +29,12 @@ def admission(policy,total,holder,available,waited,hard):
     floor=floor_mb(policy,total);capacity=total-floor
     fixed,minimum=learned_command(policy,capacity)
     room=min(available-floor,capacity-holder)
-    starved=policy["wait"]["starvedMilliseconds"]
+    starved=policy["wait"]["starvedMilliseconds"];infeasible=minimum>capacity*policy["memory"]["budgetBasisPoints"]//10000
     if hard:
-        return ["wait",0,"starved" if waited>=starved else "pressure-critical"]
+        return ["wait",0,"starved" if infeasible and waited>=starved else "pressure-critical"]
     if fixed<=room:return ["admit",fixed,"fits"]
     if room>=minimum:return ["admit",min(fixed,room),"shrunk"]
-    return ["wait",0,"starved" if waited>=starved else "memory"]
+    return ["wait",0,"starved" if infeasible and waited>=starved else "memory"]
 
 def phase_size(policy,peak):
     e=policy["estimates"];ratio=max(1,int(peak*10000/e["phaseReferenceMegabytes"]+0.5));learned=int(ratio*(10000+e["marginBasisPoints"])*e["phaseReferenceMegabytes"]/10000/10000+0.5)

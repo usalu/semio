@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "writers": [
+    {
+      "id": "build-owner-registry",
+      "fileName": "📋️build-owners.json",
+      "authority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️registry-consistency/🔏️writer/🟦️.ts"
+    }
+  ]
+}

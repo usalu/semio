@@ -15,7 +15,7 @@ async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
         for field in ["x","y","a","b","c","d"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
         let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut document.layers[0] {*target=Some(mask);}
-        store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document,semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
+        semio_os_store_test_support::assert_dsl_pack_equivalence_cold(&document,semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
         semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
     }
 }
@@ -23,7 +23,7 @@ async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
+    semio_os_store_test_support::assert_dsl_pack_equivalence_cold(&document, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
     let bytes = encode(&document);
     let decoded = decode(&bytes).expect("decode");
     assert_eq!(decoded, document);
@@ -101,7 +101,7 @@ async fn pack_round_trips_representative_document() {
             RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
+    semio_os_store_test_support::assert_dsl_pack_equivalence_cold(&document, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
     let spec = <RasterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
     assert_ne!(pack::record::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
@@ -160,8 +160,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         .await
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
-    store::os_store::test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🔖️CommandEnvelopeTests
 

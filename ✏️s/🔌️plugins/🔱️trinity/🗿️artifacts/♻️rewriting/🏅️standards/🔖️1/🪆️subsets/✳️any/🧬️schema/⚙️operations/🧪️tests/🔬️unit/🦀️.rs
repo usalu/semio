@@ -17,7 +17,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_parameter_bind
 use crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::remove_rule_layout_point;
 
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
-use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+use ::semio_os_store_test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 use semio_framework_graph_manifest::PropertyValue;
 
@@ -80,7 +80,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs::<RewriteRuleMutation>(crate::standards::v1::subsets::any::schema::rule::Lhs::default())], &mut identity).await.unwrap();
     let edit: &Edit<RewriteRuleMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    ::store::os_store::test_support::assert_command_envelope_round_trip::<RewritingSnapshot, RewriteRuleMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    ::semio_os_store_test_support::assert_command_envelope_round_trip::<RewritingSnapshot, RewriteRuleMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 
 //#region 🔖️MutationLaws

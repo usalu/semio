@@ -11,7 +11,7 @@ fn shape_coordinates_preserve_sparse_history() {
  for edit in fixture["edits"].as_array().unwrap(){
   let field=semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::parse(edit["field"].as_str().unwrap()).unwrap();let value=edit["value"].as_f64().unwrap();
   let mutation:semio_s_artifact_draw_drawing_mutations::DrawingMutation=semio_s_artifact_draw_drawing_transform::shape_coordinate::mutation::set_shape_coordinate(id.clone(),field,None,value);
-  store::os_store::test_support::assert_op_line_round_trip(&mutation);store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+  semio_os_store_test_support::assert_op_line_round_trip(&mutation);semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
   let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());
   let patch=&outcome.diff().layers.as_ref().unwrap().modified[0].patch;assert_eq!(patch.shape_coordinates.len(),1);assert!(patch.layer.is_none()&&patch.transform.is_none());
   let mut after=protocol::apply_diff_cold(outcome.diff(),&before).unwrap();let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Shape(shape)=&after.layers[0] else{panic!()};assert_eq!(semio_s_artifact_draw_drawing_model::shape_geometry::shape_coordinate(shape,&field,None).unwrap(),value);

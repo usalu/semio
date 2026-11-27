@@ -17,14 +17,20 @@ pub enum NumericalRun {
 }
 
 /// 🔁️ Most bounded units one interactive turn runs back to back; the turn's fuel and deadline still stop it sooner.
-pub const NUMERICAL_RUN_UNITS_PER_TURN: usize = 4096;
+pub const NUMERICAL_RUN_UNITS_PER_TURN: usize = semio_s_fem_payload_turns::NUMERICAL_UNITS_PER_TURN;
 
-/// 🏃️ Repeats one bounded `run` while it only yields and the turn still has fuel and time, so a job spends its whole turn instead of one unit.
+/// 💤️ Consecutive runs without retained or fuel progress after which a turn stops repeating `run`.
+pub const NUMERICAL_IDLE_RUNS_PER_TURN: usize = 16;
+
+/// 🏃️ Repeats one bounded `run` while it only yields and the turn still has fuel and time, so a job spends its whole turn instead of one unit; a run of `NUMERICAL_IDLE_RUNS_PER_TURN` yields that neither spent a retained grant nor more than one fuel ends the turn, because only the next turn's grant can fund more.
 pub fn run_turn<E>(cx: &mut StepContext<'_>, mut run: impl FnMut(&mut StepContext<'_>) -> Result<NumericalRun, E>) -> Result<NumericalRun, E> {
     let mut outcome = run(cx)?;
+    let mut idle = 0;
     for _ in 1..NUMERICAL_RUN_UNITS_PER_TURN {
-        if outcome != NumericalRun::Yield || cx.should_yield() || cx.is_cancelled() { break; }
+        if outcome != NumericalRun::Yield || cx.should_yield() || cx.is_cancelled() || idle == NUMERICAL_IDLE_RUNS_PER_TURN { break; }
+        let (fuel, progress) = (cx.fuel_remaining(), cx.retained_progress());
         outcome = run(cx)?;
+        idle = if cx.retained_progress() == progress && fuel.saturating_sub(cx.fuel_remaining()) <= 1 { idle + 1 } else { 0 };
     }
     Ok(outcome)
 }

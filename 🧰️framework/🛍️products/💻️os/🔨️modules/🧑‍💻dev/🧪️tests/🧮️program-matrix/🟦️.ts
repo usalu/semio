@@ -122,7 +122,7 @@ export function resolvePins(repoRoot: string, pins: MatrixPins, programs: readon
 export const FAULT = /unreachable|trapped|\btrap\b|panicked|fault|refused|dropped action|not-ui-safe|missing-owned|invalid-args|unsupported|pageerror|Uncaught|dispatch-failed/i;
 export const NOISE = /staged plugin module\(s\) are behind their source|\[stale\]|Failed to load resource: the server responded with a status of 404|Download the (React|Vue) DevTools|typed-operation slots/;
 
-/** 🧾️ The whole shell surface in one evaluation: ledger rows, check-in count, panes, bodies, rail rows. */
+/** 🧾️ The whole shell surface in one evaluation: ledger rows, check-in count, panes, bodies, rail rows; the history ledger and its check-in row are read from the legacy flat ids and from the panel-scoped ids of the plugin-contract history body. */
 type ShellReading = Readonly<{
   windowIds: readonly string[];
   checkin: string | null;
@@ -136,10 +136,10 @@ type ShellReading = Readonly<{
 export const readShell = (page: Page): Promise<ShellReading> =>
   page.evaluate(() => {
     const text = (element: Element | null): string => ((element as HTMLElement | null)?.innerText ?? "").replace(/\s+/gu, " ").trim();
-    const entries = [...document.querySelectorAll('[id^="framework.history.entry."]')]
+    const entries = [...document.querySelectorAll('[id*="framework.history.entry."]')]
       .filter((element) => !element.id.endsWith(".revert"))
       .map((element) => ({ id: element.id, label: text(element).slice(0, 60), dimmed: element.className.includes("opacity") || element.getAttribute("data-dimmed") === "true" }));
-    const checkin = document.querySelector("#s-checkin");
+    const checkin = document.querySelector("#s-checkin") ?? [...document.querySelectorAll('[id$="/framework.history.checkin"]')].find((element) => element instanceof HTMLElement && element.offsetParent !== null) ?? null;
     return {
       windowIds: [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")).filter((id): id is string => typeof id === "string"),
       checkin: checkin === null ? null : text(checkin),
@@ -268,7 +268,7 @@ export async function unfoldActionsRail(page: Page, budgetMs = 25_000): Promise<
 }
 
 /** 🕰️ Raises the History panel only when it is not already open (its tab toggles). */
-async function raiseHistory(page: Page): Promise<string> {
+export async function raiseHistory(page: Page): Promise<string> {
   const open = await page.evaluate(() => [...document.querySelectorAll('[data-slot="panel"]')].some((element) => element instanceof HTMLElement && element.offsetParent !== null && /framework\.panel\.history/u.test(element.id)));
   if (open) return "already-open";
   const clicked = await click(page, '[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');
@@ -303,14 +303,14 @@ const errorLine = (key: string, error: unknown): string => `${key}:${String(erro
 export async function fillStagedArgument(page: Page, key: string, value: string, liveId: string): Promise<string> {
   const live = value === liveId;
   for (const scope of [`[data-slot="window-action-pane"] `, ""]) {
-    const select = page.locator(`${scope}select[id$=".arg.${key}"], ${scope}select[id$="${key}"], ${scope}select[name="${key}"]`).first();
+    const select = page.locator(`${scope}select[id$=".arg.${key}"], ${scope}select[id$=".arg.${key}.input"], ${scope}select[id$="${key}"], ${scope}select[name="${key}"]`).first();
     if ((await select.count()) > 0) {
       const options = await select.evaluate((element) => [...(element as HTMLSelectElement).options].map((option) => option.value).filter((option) => option.length > 0));
       const chosen = live ? options[0] : options.includes(value) ? value : (options[0] ?? value);
       if (chosen === undefined) return `${key}:no-live-option`;
       return select.selectOption(chosen).then(() => `${key}=${chosen}${chosen === value ? "" : "(live)"}`).catch((error: unknown) => errorLine(key, error));
     }
-    const combobox = page.locator(`${scope}[role="combobox"][id$=".arg.${key}"], ${scope}[role="combobox"][id="${key}"], ${scope}[role="combobox"][id$=".${key}"]`).first();
+    const combobox = page.locator(`${scope}[role="combobox"][id$=".arg.${key}"], ${scope}[role="combobox"][id$=".arg.${key}.input"], ${scope}[role="combobox"][id="${key}"], ${scope}[role="combobox"][id$=".${key}"]`).first();
     if ((await combobox.count()) > 0) {
       if (!(await combobox.click({ timeout: 8_000, force: true }).then(() => true).catch(() => false))) return `${key}:combobox-unclickable`;
       await page.waitForTimeout(500);
@@ -321,7 +321,7 @@ export async function fillStagedArgument(page: Page, key: string, value: string,
       const label = ((await option.textContent()) ?? "").trim().slice(0, 40);
       return option.click({ timeout: 8_000, force: true }).then(() => `${key}=${label}(live)`).catch((error: unknown) => errorLine(key, error));
     }
-    const input = page.locator(`${scope}[id$=".arg.${key}"]:is(input,textarea), ${scope}[id$="${key}"]:is(input,textarea), ${scope}[name="${key}"]`).first();
+    const input = page.locator(`${scope}[id$=".arg.${key}"]:is(input,textarea), ${scope}[id$=".arg.${key}.input"]:is(input,textarea), ${scope}[id$="${key}"]:is(input,textarea), ${scope}[name="${key}"]`).first();
     if ((await input.count()) === 0) continue;
     if (live) {
       const candidates = await liveDocumentIds(page);
@@ -475,7 +475,7 @@ export async function mutateUndoRedo(page: Page, refusals: readonly string[], ke
 /** 🇩🇪️ Seats the shell locale through the Settings surface's own language control and reports what it reached. */
 export async function seatLocale(page: Page, wanted: string): Promise<string> {
   if(wanted!=="en"&&wanted!=="de")throw new Error("locale seating requires en or de");
-  if ((await click(page, '[id="os.openSettings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings")')) === "absent") return `${wanted}:no-settings-control`;
+  if ((await clickUncovered(page, '[id="os.openSettings"], [id="framework.settings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings"), button:has-text("Einstellungen")')) === "absent") return `${wanted}:no-settings-control`;
   await page.waitForTimeout(3_000);
   const language = page.locator('[role="tab"], [role="button"], button').filter({ hasText: /language|sprache/iu }).first();
   if ((await language.count()) > 0) {

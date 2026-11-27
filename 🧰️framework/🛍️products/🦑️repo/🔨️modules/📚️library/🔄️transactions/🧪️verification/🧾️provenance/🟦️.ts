@@ -13,7 +13,7 @@ export function transactionV2IdentityPaths(repoRoot: string): Record<string, str
     suite: join(repoRoot, library, "🧪️tests/🔄️transaction-v2/🟦️.ts"),
     normalization: join(repoRoot, library, "🧹️normalization/🚀️apply/🟦️.ts"),
     discovery: join(repoRoot, library, "🔍️discovery/🔐️taxonomy-authority/🟦️.ts"),
-    taxonomy: join(repoRoot, library, "🔣️taxonomy.json"),
+    taxonomy: join(repoRoot, library, "🧪️tests/🧫️fixtures/🌳️transaction-taxonomy-snapshot/🔣️.json"),
     ledgerBoundaries: join(repoRoot, library, "🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json"),
     harness: join(repoRoot, library, "🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json"),
   };

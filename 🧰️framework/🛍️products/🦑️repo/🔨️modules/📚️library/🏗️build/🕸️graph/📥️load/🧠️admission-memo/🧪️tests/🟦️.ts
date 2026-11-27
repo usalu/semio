@@ -1,4 +1,4 @@
-/** 🧠️ Contract: the closed owner admission of a selected read and the facts of each of its owners are remembered on the machine, keyed by the scope and the admission format (the hash of the discovery and admission modules and schemas only, never of the whole graph implementation); the admission is served again only while every fact it was derived from holds, a memo that no longer holds still lends the facts of the owners whose own rows hold, and a corrupt, foreign, other-format or oversized memo is a miss, never an error.
+/** 🧠️ Contract: the closed owner admission of a selected read and the facts of each of its owners are remembered on the machine, keyed by the scope and the admission format (the hash of the admission modules and schemas and of the declared inferrer stamps only, never of the whole graph implementation or of the bytes of a discovery module); the admission is served again only while every fact it was derived from holds, a memo that no longer holds still lends the facts of the owners whose own rows hold, and a corrupt, foreign, other-format or oversized memo is a miss, never an error.
  * @see ../🟦️.ts */
 import{expect,test}from"bun:test";
 import{mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
@@ -10,7 +10,7 @@ import{Database}from"bun:sqlite";
 import cases from"./🧫️cases.json";
 import{ownersOfAdmissionMemoV1,packAdmissionMemoV1,readAdmissionMemoV1,writeAdmissionMemoV1,type AdmissionMemoV1}from"../🟦️.ts";
 import{observeOwnerWithRetryV1}from"../../🛟️owner-isolation/🟦️.ts";
-import{graphAdmissionFormatHashV1,graphAdmissionFormatUrlsV1,graphSelfUrlsV1}from"../../../🔐️authority/🟦️.ts";
+import{graphAdmissionFormatHashV1,graphAdmissionFormatUrlsV1,graphAdmissionStampsV1,graphSelfUrlsV1}from"../../../🔐️authority/🟦️.ts";
 
 const format="a".repeat(64);
 const row=(path:string,version=1)=>({kind:"file",path,fact:{version}});
@@ -59,22 +59,27 @@ test("a memo above the limit is not written and a write leaves no temporary file
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("the admission format changes with a discovery or admission module and keeps with every other graph module",()=>{
- const hashes=(changed:string[])=>graphAdmissionFormatHashV1(path=>(changed.some(name=>path.endsWith(name))?"changed:":"same:")+path);
+test("the admission format changes with an admission module or a declared stamp and keeps with every other graph module and with the bytes of a discovery module",()=>{
+ const hashes=(changed:string[],stamps=graphAdmissionStampsV1())=>graphAdmissionFormatHashV1(path=>(changed.some(name=>path.endsWith(name))?"changed:":"same:")+path,stamps);
  const base=hashes([]),formatPaths=graphAdmissionFormatUrlsV1().map(url=>fileURLToPath(url));
- const unrelated=[...graphSelfUrlsV1().map(url=>fileURLToPath(url)),fileURLToPath(new URL("../../../../👁️observation/🟨️.mjs",import.meta.url))].filter(path=>!formatPaths.includes(path));
+ const discovery=[fileURLToPath(new URL("../../../../📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url)),fileURLToPath(new URL("../../../../📥️inference/🔎️owner-discovery/🕸️wasm-outputs/🟦️.ts",import.meta.url))];
+ const unrelated=[...graphSelfUrlsV1().map(url=>fileURLToPath(url)),fileURLToPath(new URL("../../../../👁️observation/🟨️.mjs",import.meta.url)),...discovery].filter(path=>!formatPaths.includes(path));
  expect(unrelated.length).toBeGreaterThan(5);
  for(const path of unrelated)expect(hashes([path]),path).toBe(base);
  for(const path of formatPaths)expect(hashes([path]),path).not.toBe(base);
- expect(formatPaths.some(path=>path.includes("owner-discovery"))).toBe(true);expect(formatPaths.some(path=>path.endsWith("admission.json"))).toBe(true);
+ expect(formatPaths.some(path=>path.includes("owner-discovery"))).toBe(false);expect(formatPaths.some(path=>path.endsWith("admission.json"))).toBe(true);
+ const stamps=graphAdmissionStampsV1();
+ expect(stamps.length).toBeGreaterThan(10);expect(stamps).toEqual([...stamps].sort());expect(stamps.some(stamp=>stamp==="owner-discovery=semio.graph-inferrer.owner-discovery/1"||/^owner-discovery=semio\.graph-inferrer\.owner-discovery\/[1-9][0-9]*$/.test(stamp))).toBe(true);
+ for(const index of stamps.keys())expect(hashes([],stamps.map((stamp,at)=>at===index?stamp+"+":stamp)),stamps[index]).not.toBe(base);
+ expect(hashes([],[...stamps].reverse().sort())).toBe(base);
 });
 
 test("a memo of another admission format misses after a format change and hits after an unrelated one",async()=>{
  const root=directory();try{
   const path=join(root,"s.admission.json"),at=(changed:string[])=>graphAdmissionFormatHashV1(file=>(changed.some(name=>file.endsWith(name))?"changed:":"same:")+file);
-  const [unrelated]=graphSelfUrlsV1().map(url=>fileURLToPath(url)),[format0]=graphAdmissionFormatUrlsV1().map(url=>fileURLToPath(url)),remembered=at([]);
+  const [unrelated]=graphSelfUrlsV1().map(url=>fileURLToPath(url)),discovery=fileURLToPath(new URL("../../../../📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url)),[format0]=graphAdmissionFormatUrlsV1().map(url=>fileURLToPath(url)),remembered=at([]);
   await writeAdmissionMemoV1(path,{...record(),format:remembered},1<<20);
-  const kept=await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([unrelated!]));expect(kept).toBeDefined();await kept!.close();
+  for(const edited of [unrelated!,discovery]){const kept=await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([edited]));expect(kept,edited).toBeDefined();await kept!.close();}
   expect(await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([format0!]))).toBeUndefined();
  }finally{rmSync(root,{recursive:true,force:true});}
 });

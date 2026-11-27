@@ -55,6 +55,7 @@ semio-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-plugin-host-configuration = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
@@ -79,10 +80,6 @@ name = "original_host_configuration"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🏛️host-configuration/🦀️.rs"
 
 [[test]]
-name = "aussuchen_pane_smoke"
-path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪧️pane-smoke/🦀️.rs"
-
-[[test]]
 name = "persisted_receiving_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📥️persisted-receiving/🦀️.rs"
 
@@ -93,7 +90,3 @@ path = "../../🧪️tests/🧪️format-laws/🦀️.rs"
 [[test]]
 name = "sqlite_snapshot"
 path = "../../🧪️tests/🪶️sqlite-snapshot/🦀️.rs"
-
-[[test]]
-name = "history_acceptance"
-path = "../../🧪️tests/⏮️history-acceptance/🦀️.rs"

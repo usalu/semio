@@ -20,7 +20,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `s.bim.model` document opens, isolated execution, and document write access to persist edits.
 pub fn plugin() -> Result<Plugin<BimApps>, PluginAssemblyError> {
     PluginBuilder::<_, BimApps>::new("bim")
-        .label("BIM")
+        .label(semio_plugin::LocalizedLabel::native("BIM", "BIM"))
         .version("0.1.0")
         .package_id("semio:bim")
         .declare_artifact(crate::artifacts::model::artifact())

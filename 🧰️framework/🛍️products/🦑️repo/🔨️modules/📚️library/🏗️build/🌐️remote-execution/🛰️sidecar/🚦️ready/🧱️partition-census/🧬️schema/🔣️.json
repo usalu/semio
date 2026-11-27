@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "EN: What a worker tells the fleet about the partitions below its `.cache/b`: per partition the bytes (logical and allocated), the files and the biggest holders, in `<store>/v1/origins/<origin>/partitions.json`, so a full partition of a machine nobody can reach is read from the store instead of guessed. DE: Was ein Worker der Flotte über die Partitionen unter seinem `.cache/b` meldet: je Partition die Bytes (logisch und belegt), die Dateien und die größten Halter, in `<Store>/v1/origins/<Herkunft>/partitions.json`, damit eine volle Partition eines unerreichbaren Rechners aus dem Store gelesen statt geraten wird.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "fileName": "partitions.json",
+        "directory": [".cache", "b"],
+        "firstDelayMilliseconds": 30000,
+        "intervalMilliseconds": 600000,
+        "entryBudget": 400000,
+        "timeBudgetMilliseconds": 120000,
+        "extraRows": 100,
+        "yieldEvery": 1000,
+        "topHolders": 6,
+        "holderKeyLimit": 20000,
+        "clusterBytes": 4096
+      }
+    },
+    "Holder": {
+      "type": "object", "additionalProperties": false, "required": ["path", "files", "bytes", "allocatedBytes"],
+      "properties": {"path": {"type": "string", "maxLength": 300}, "files": {"type": "integer", "minimum": 0}, "bytes": {"type": "integer", "minimum": 0}, "allocatedBytes": {"type": "integer", "minimum": 0}}
+    },
+    "Partition": {
+      "type": "object", "additionalProperties": false, "required": ["name", "files", "directories", "bytes", "allocatedBytes", "partial", "top"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 100},
+        "files": {"type": "integer", "minimum": 0},
+        "directories": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "allocatedBytes": {"type": "integer", "minimum": 0},
+        "partial": {"type": "boolean"},
+        "top": {"type": "array", "maxItems": 16, "items": {"$ref": "#/definitions/Holder"}}
+      }
+    },
+    "Record": {
+      "type": "object", "additionalProperties": false, "required": ["version", "origin", "platform", "atMs", "elapsedMs", "partitions"],
+      "properties": {
+        "version": {"const": 1},
+        "origin": {"type": "string", "minLength": 1, "maxLength": 100},
+        "platform": {"enum": ["darwin", "linux", "win32"]},
+        "atMs": {"type": "integer", "minimum": 0},
+        "elapsedMs": {"type": "integer", "minimum": 0},
+        "partitions": {"type": "array", "maxItems": 200, "items": {"$ref": "#/definitions/Partition"}},
+        "volume": {"type": "object", "additionalProperties": false, "required": ["freeBytes", "totalBytes", "freeInodes", "totalInodes"], "properties": {"freeBytes": {"type": ["integer", "null"], "minimum": 0}, "totalBytes": {"type": ["integer", "null"], "minimum": 0}, "freeInodes": {"type": ["integer", "null"], "minimum": 0}, "totalInodes": {"type": ["integer", "null"], "minimum": 0}}}
+      }
+    }
+  }
+}

@@ -456,28 +456,40 @@ pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plug
 /// through the runtime's archive-load entry points — admit, poll to terminal, acknowledge — the path a checkpoint restore
 /// takes.
 pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
-    plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
-    let mut archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
-    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    plugin_admit_document_load(runtime, instance_id, files, identity, cx).await?;
     let mut polls = 0usize;
-    let fresh = OriginalFixtureCaller::turn_fuel();
-    let (fresh_grant, _) = cx.original_turn_ceiling();
-    let mut admitted = false;
-    for _ in 0..OriginalFixtureCaller::maximum_turns() {
-        fixture_renew_turn(cx, fresh, fresh_grant)?;
-        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { admitted = true; break }
-    }
-    if !admitted { return Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into()) }
     let status = loop {
-        fixture_renew_turn(cx, fresh, fresh_grant)?;
-        cx.consume_fuel(1);plugin_exchange_idle(runtime,instance_id,identity,cx).await?;
-        let status = semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
+        let status = plugin_poll_document_load(runtime, instance_id, identity, cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
         }
     };
     semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION).await?;
     law_load_outcome(status).map_err(Into::into)
+}
+
+/// 🛬️ Admits `files` as the whole-document archive load of one instance of a live runtime and returns once the original admission funded its handoff, so a law can step the load itself between its own live maintenance turns.
+pub async fn plugin_admit_document_load<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+    plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
+    let mut archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    let fresh = OriginalFixtureCaller::turn_fuel();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
+        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { return Ok(()) }
+    }
+    Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into())
+}
+
+/// 📊️ One exchange turn and one poll of the law document load of [`plugin_admit_document_load`]; the caller judges the status and acknowledges a terminal load.
+pub async fn plugin_poll_document_load<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus,semio_framework_job::OriginalTurnFailure> {
+    let fresh = OriginalFixtureCaller::turn_fuel();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
+    fixture_renew_turn(cx, fresh, fresh_grant)?;
+    cx.consume_fuel(1);
+    plugin_exchange_idle(runtime,instance_id,identity,cx).await?;
+    semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await.map_err(Into::into)
 }
 
 /// 📜️ [`plugin_load_document`] for a text pair typed by `S`/`Mutation`: parsed and printed to the pack and SPR the archive

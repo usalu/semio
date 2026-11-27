@@ -17,6 +17,8 @@ import { noFollowTreeDigest } from "../../../🌳️tree-digests/🟦️.ts";
 import { emptySourceParents, injectFailure, inventoryAfterSourceParentPruning } from "../../../⏪️rollback-reconciliation/🟦️.ts";
 import { type TransactionLeaseHandle } from "../../../🔐️transaction-lease/🟦️.ts";
 import { applyReferenceEditAtomically, backupPath, validateResumeTuples } from "../../../🛟️recovery/🟦️.ts";
+import { ownFileWriterFor } from "../../../✍️own-file-writers/🟦️.ts";
+import { applyEditsToContent } from "../../../✂️reference-edits/🟦️.ts";
 import { cleanupCommittedTransaction } from "../../../🚿️transaction-cleanup/🟦️.ts";
 import { actualAffectedDigest } from "../../../🗃️affected-state/🟦️.ts";
 import { artifactProjectionPostApplyViolations, projectionStaleViolations } from "../../../♻️projection-staleness/🟦️.ts";
@@ -208,9 +210,11 @@ export function applyReferenceEditGroups({ plan, repoRoot, options, journal, bac
       const preimages = new Map(edits.map((edit) => [canonicalJson(edit.preimage), edit.preimage]));
       const preimage = [...preimages.values()][0];
       if (preimages.size !== 1 || !preimage || canonicalJson(leafPreimage(absolutePath(repoRoot, path))) !== canonicalJson(preimage)) throw new Error(`Reference edit preimage changed: ${path}`);
+      const ownWriter = ownFileWriterFor(path);
+      ownWriter?.check(applyEditsToContent(readFileSync(absolutePath(repoRoot, path), "utf8"), edits));
       backupPath(repoRoot, path, absolutePath(repoRoot, journal.backupRoot), journal, preimage, backupPreparationName, backupWritePreparationName, backupWriteCandidateName);
       persistJournal(repoRoot, journalPath, journal);
-      applyReferenceEditAtomically(repoRoot, plan, journal, path, editPreparationName, editWritePreparationName, editWriteCandidateName);
+      applyReferenceEditAtomically(repoRoot, plan, journal, path, editPreparationName, editWritePreparationName, editWriteCandidateName, ownWriter?.publish);
       journal.appliedEditPaths.push(path);
       persistJournal(repoRoot, journalPath, journal);
     }

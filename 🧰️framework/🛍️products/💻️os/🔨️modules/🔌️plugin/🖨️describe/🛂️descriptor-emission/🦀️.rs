@@ -561,7 +561,7 @@ async fn describe_model_component(wasm_path: &Path, out_dir: &Path, prepare_acto
     let final_bytes = descriptor_pack(&CanonicalDescriptorValue::new(final_value));
 
     if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
-        return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));
+        return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::En))));
     }
     let identity_faults = kind_identity_faults(&descriptor_kind_identity_apps(&descriptor));
     if !identity_faults.is_empty() {

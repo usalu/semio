@@ -15,6 +15,10 @@ impl PcgJob {
             return Ok(NumericalRun::Fault);
         }
         if self.terminal_published { return Ok(NumericalRun::Yield); }
+        if !self.publishes && self.state.stage == PcgStage::Complete {
+            self.terminal_published = true;
+            return Ok(NumericalRun::Complete);
+        }
         let publication_kind = self.publication.as_ref().map(|publication| publication.kind).or_else(|| {
             if self.state.stage == PcgStage::Complete { Some(PcgPublicationKind::Complete) }
             else if self.state.preview_due { Some(PcgPublicationKind::Preview) }
@@ -33,7 +37,8 @@ impl PcgJob {
         let mut units = 0;
         while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
             let advanced = self.state.advance_one();
-            self.state.checkpoint_due &= self.publish_checkpoints;
+            self.state.checkpoint_due &= self.publishes;
+            self.state.preview_due &= self.publishes;
             units += advanced;
             context.consume_fuel(advanced as u64);
             if context.is_cancelled() {

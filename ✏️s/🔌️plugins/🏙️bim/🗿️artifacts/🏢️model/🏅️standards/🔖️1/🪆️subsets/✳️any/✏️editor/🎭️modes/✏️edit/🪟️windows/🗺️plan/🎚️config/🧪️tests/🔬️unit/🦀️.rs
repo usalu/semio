@@ -5,7 +5,7 @@ use protocol::{DiffAlgebra, ColdMutation, Mutation, OpBinary, OpText};
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn pinned() -> BimPlanWindowConfig {
-    BimPlanWindowConfig { view: "v-first".into(), framed: true, viewport: store::Viewport2d { x: 3.0, y: -2.0, zoom: 55.0 } }
+    BimPlanWindowConfig { view: "v-first".into(), framed: true, selected_options: Vec::new(), workset_visibility: Vec::new(), viewport: store::Viewport2d { x: 3.0, y: -2.0, zoom: 55.0 } }
 }
 
 fn replace(config: BimPlanWindowConfig) -> BimPlanWindowConfigMutation {

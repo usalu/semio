@@ -2212,7 +2212,7 @@
        ],
        "rx": 0.03,
        "ry": 0.008,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2228,7 +2228,7 @@
        ],
        "rx": 0.056,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2244,7 +2244,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2260,7 +2260,7 @@
        ],
        "rx": 0.0935,
        "ry": 0.034,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2372,7 +2372,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2388,7 +2388,7 @@
        ],
        "rx": 0.0465,
        "ry": 0.015,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -2416,7 +2416,7 @@
        ],
        "rx": 0.081,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2432,7 +2432,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2448,7 +2448,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2464,7 +2464,7 @@
        ],
        "rx": 0.07,
        "ry": 0.03,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2480,7 +2480,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2496,7 +2496,7 @@
        ],
        "rx": 0.042,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2512,7 +2512,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2528,7 +2528,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -2540,11 +2540,11 @@
        "at": [
         0.24735,
         0.00425,
-        0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.012,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -3268,7 +3268,7 @@
        ],
        "rx": 0.03,
        "ry": 0.009,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3284,7 +3284,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3300,7 +3300,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3364,7 +3364,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3380,7 +3380,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3396,7 +3396,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3412,7 +3412,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3428,7 +3428,7 @@
        ],
        "rx": 0.021,
        "ry": 0.01,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -3456,7 +3456,7 @@
        ],
        "rx": 0.027,
        "ry": 0.011,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3472,7 +3472,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3488,7 +3488,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3552,7 +3552,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3564,11 +3564,11 @@
        "at": [
         0.16751,
         -0.00965,
-        0.0
+        0
        ],
        "rx": 0.045,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3580,11 +3580,11 @@
        "at": [
         0.18504,
         0.0001,
-        0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3596,11 +3596,11 @@
        "at": [
         0.19747,
         0.01135,
-        0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -3612,11 +3612,11 @@
        "at": [
         0.20605,
         0.02138,
-        0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.013,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -5220,7 +5220,7 @@
        ],
        "rx": 0.03,
        "ry": 0.008,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5236,7 +5236,7 @@
        ],
        "rx": 0.056,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5252,7 +5252,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5268,7 +5268,7 @@
        ],
        "rx": 0.0935,
        "ry": 0.034,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5380,7 +5380,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5396,7 +5396,7 @@
        ],
        "rx": 0.0465,
        "ry": 0.015,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -5424,7 +5424,7 @@
        ],
        "rx": 0.081,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5440,7 +5440,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5456,7 +5456,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5472,7 +5472,7 @@
        ],
        "rx": 0.07,
        "ry": 0.03,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5488,7 +5488,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5504,7 +5504,7 @@
        ],
        "rx": 0.042,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5520,7 +5520,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5536,7 +5536,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -5548,11 +5548,11 @@
        "at": [
         0.24735,
         0.00425,
-        -0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.012,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -6276,7 +6276,7 @@
        ],
        "rx": 0.03,
        "ry": 0.009,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6292,7 +6292,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6308,7 +6308,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6372,7 +6372,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6388,7 +6388,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6404,7 +6404,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6420,7 +6420,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6436,7 +6436,7 @@
        ],
        "rx": 0.021,
        "ry": 0.01,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -6464,7 +6464,7 @@
        ],
        "rx": 0.027,
        "ry": 0.011,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6480,7 +6480,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6496,7 +6496,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6560,7 +6560,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6572,11 +6572,11 @@
        "at": [
         0.16751,
         -0.00965,
-        -0.0
+        0
        ],
        "rx": 0.045,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6588,11 +6588,11 @@
        "at": [
         0.18504,
         0.0001,
-        -0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6604,11 +6604,11 @@
        "at": [
         0.19747,
         0.01135,
-        -0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -6620,11 +6620,11 @@
        "at": [
         0.20605,
         0.02138,
-        -0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.013,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -8228,7 +8228,7 @@
        ],
        "rx": 0.03,
        "ry": 0.028,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -8244,7 +8244,7 @@
        ],
        "rx": 0.052,
        "ry": 0.057,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -8318,28 +8318,12 @@
       },
       {
        "at": [
-        0.0502,
-        -0.08695,
+        0.05020047,
+        -0.08694921,
         0
        ],
        "rx": 0.124,
        "ry": 0.1555,
-       "exponent": 2.1,
-       "rotation": [
-        0.20490853,
-        0.6767662,
-        -0.20490853,
-        0.6767662
-       ]
-      },
-      {
-       "at": [
-        0.0821,
-        -0.12023,
-        0
-       ],
-       "rx": 0.136,
-       "ry": 0.1655,
        "exponent": 2.1,
        "rotation": [
         0.20490853,
@@ -8370,9 +8354,9 @@
        "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8386,9 +8370,9 @@
        "ry": 0.1655,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8402,9 +8386,9 @@
        "ry": 0.172,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8418,9 +8402,9 @@
        "ry": 0.177,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8434,41 +8418,25 @@
        "ry": 0.1795,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
       {
        "at": [
-        0.262,
-        -0.1455,
+        0.26199944,
+        -0.14550365,
         0
        ],
        "rx": 0.149,
        "ry": 0.1785,
        "exponent": 2.15,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
-        0.70710678
-       ]
-      },
-      {
-       "at": [
-        0.317,
-        -0.146,
-        0
-       ],
-       "rx": 0.146,
-       "ry": 0.178,
-       "exponent": 2.15,
-       "rotation": [
-        0.0,
-        0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -8494,11 +8462,11 @@
        ],
        "rx": 0.09,
        "ry": 0.088,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8512,9 +8480,9 @@
        "ry": 0.129,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8528,9 +8496,9 @@
        "ry": 0.15,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8544,9 +8512,9 @@
        "ry": 0.1605,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8560,9 +8528,9 @@
        "ry": 0.164,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8576,9 +8544,9 @@
        "ry": 0.161,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8592,9 +8560,9 @@
        "ry": 0.152,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8608,9 +8576,9 @@
        "ry": 0.1315,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -8622,11 +8590,11 @@
        ],
        "rx": 0.095,
        "ry": 0.092,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -8728,7 +8696,7 @@
        ],
        "rx": 0.113,
        "ry": 0.1815,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8744,7 +8712,7 @@
        ],
        "rx": 0.102,
        "ry": 0.1775,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8760,7 +8728,7 @@
        ],
        "rx": 0.093,
        "ry": 0.167,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8776,7 +8744,7 @@
        ],
        "rx": 0.083,
        "ry": 0.152,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8792,7 +8760,7 @@
        ],
        "rx": 0.071,
        "ry": 0.133,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8808,7 +8776,7 @@
        ],
        "rx": 0.057,
        "ry": 0.109,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8824,7 +8792,7 @@
        ],
        "rx": 0.04,
        "ry": 0.081,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -8840,7 +8808,7 @@
        ],
        "rx": 0.02,
        "ry": 0.052,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -10781,7 +10749,7 @@
       {
        "at": [
         -5e-05,
-        0.0,
+        0,
         0
        ],
        "rx": 0.021,
@@ -11227,7 +11195,7 @@
       {
        "at": [
         0.33869,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11243,7 +11211,7 @@
       {
        "at": [
         0.32024,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11259,7 +11227,7 @@
       {
        "at": [
         0.29666,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11275,7 +11243,7 @@
       {
        "at": [
         0.27698,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11291,7 +11259,7 @@
       {
        "at": [
         0.25571,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11307,7 +11275,7 @@
       {
        "at": [
         0.23057,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11323,7 +11291,7 @@
       {
        "at": [
         0.20093,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11339,7 +11307,7 @@
       {
        "at": [
         0.16402,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11355,7 +11323,7 @@
       {
        "at": [
         0.12399,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11371,7 +11339,7 @@
       {
        "at": [
         0.08272,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11387,7 +11355,7 @@
       {
        "at": [
         0.04424,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11403,7 +11371,7 @@
       {
        "at": [
         0.01196,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -11419,7 +11387,7 @@
       {
        "at": [
         -0.01036,
-        0.0,
+        0,
         0
        ],
        "rx": 0.014,
@@ -21925,8 +21893,8 @@
    ],
    "decisions": [
     {
-     "en": "Body (smallest feature 7.5 mm): a horned dairy doe, 0.76 m at the withers, 55 kg, 1.28 m from muzzle to pin bones. The trunk is cut at vertical stations: chest 0.25 m wide at the heart girth and 0.36 m deep with the withers 15 mm above the back, loin level, croup falling from the hooks to the pin bones, and a belly lobe that puts the greatest breadth of 0.32 m low behind the last rib as on a doe with a full rumen. Udder with two teats, neck with the throat line, head and jaw with eyes and nostrils, beard, scimitar horns, leaf ears, two tail pieces.",
-     "de": "Körper (kleinstes Merkmal 7,5 mm): eine gehörnte Milchziege, 0,76 m Widerristhöhe, 55 kg, 1,28 m von der Schnauze bis zu den Sitzbeinhöckern. Der Rumpf ist an senkrechten Stationen geschnitten: Brust am Herzgurt 0,25 m breit und 0,36 m tief, Widerrist 15 mm über dem Rücken, ebene Lende, Kruppe von den Hüfthöckern zu den Sitzbeinhöckern abfallend, und ein Bauchkörper, der die größte Breite von 0,32 m tief hinter die letzte Rippe legt wie bei einer Ziege mit vollem Pansen. Euter mit zwei Zitzen, Hals mit Kehllinie, Kopf und Unterkiefer mit Augen und Nüstern, Bart, Säbelhörner, Blattohren, zwei Schwanzstücke."
+     "en": "Body (smallest feature 7.5 mm): a horned dairy doe, 0.76 m at the withers, 55 kg, 1.28 m from muzzle to pin bones. The trunk is cut at vertical stations: chest 0.25 m wide at the heart girth and 0.36 m deep with the withers 15 mm above the back, loin level, croup falling from the hooks to the pin bones, and a belly lobe that puts the greatest breadth of 0.32 m low behind the last rib as on a doe with a full rumen. Udder with two teats, neck with the throat line, head and jaw with eyes and nostrils, beard, scimitar horns, leaf ears, two tail pieces. Croup, loin and chest meet in one shared section each, so the three barrels close on each other without a doubled station.",
+     "de": "Körper (kleinstes Merkmal 7,5 mm): eine gehörnte Milchziege, 0,76 m Widerristhöhe, 55 kg, 1,28 m von der Schnauze bis zu den Sitzbeinhöckern. Der Rumpf ist an senkrechten Stationen geschnitten: Brust am Herzgurt 0,25 m breit und 0,36 m tief, Widerrist 15 mm über dem Rücken, ebene Lende, Kruppe von den Hüfthöckern zu den Sitzbeinhöckern abfallend, und ein Bauchkörper, der die größte Breite von 0,32 m tief hinter die letzte Rippe legt wie bei einer Ziege mit vollem Pansen. Euter mit zwei Zitzen, Hals mit Kehllinie, Kopf und Unterkiefer mit Augen und Nüstern, Bart, Säbelhörner, Blattohren, zwei Schwanzstücke. Kruppe, Lende und Brust treffen sich in je einem gemeinsamen Schnitt, sodass die drei Rumpfkörper ohne doppelte Station aneinander schließen."
     },
     {
      "en": "Legs: ham and gaskin are cut at horizontal stations so the rear line runs unbroken from the pin bone over the hamstrings and the Achilles tendon to the point of the hock, and the stifle stands in front of the flank; the trunk is narrower than the thighs between them. The shoulder is the flat muscle sheet over the blade, cut at horizontal stations from the withers to the point of the shoulder 0.21 m apart, the arm the triceps wedge from the rear border of the blade to the olecranon; the breastbone ends 25 mm in front of the point of the shoulder. Below them forearm, carpus, cannon bones with thickened ends, pastern, two claws and two dewclaws per foot. Every segment overlaps its neighbour beyond the joint so walking, rearing and climbing stay closed.",
@@ -23062,7 +23030,7 @@
        ],
        "rx": 0.03,
        "ry": 0.008,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -23078,7 +23046,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -23094,7 +23062,7 @@
        ],
        "rx": 0.0935,
        "ry": 0.034,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -23206,7 +23174,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -23222,7 +23190,7 @@
        ],
        "rx": 0.0465,
        "ry": 0.015,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -23250,7 +23218,7 @@
        ],
        "rx": 0.081,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23266,7 +23234,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23282,7 +23250,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23298,7 +23266,7 @@
        ],
        "rx": 0.07,
        "ry": 0.03,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23314,7 +23282,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23330,7 +23298,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23346,7 +23314,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23358,11 +23326,11 @@
        "at": [
         0.24735,
         0.00425,
-        0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.012,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -23770,7 +23738,7 @@
        ],
        "rx": 0.03,
        "ry": 0.009,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23786,7 +23754,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23802,7 +23770,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23866,7 +23834,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23882,7 +23850,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23898,7 +23866,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23914,7 +23882,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23930,7 +23898,7 @@
        ],
        "rx": 0.021,
        "ry": 0.01,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -23958,7 +23926,7 @@
        ],
        "rx": 0.027,
        "ry": 0.011,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -23974,7 +23942,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -23990,7 +23958,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24054,7 +24022,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24066,11 +24034,11 @@
        "at": [
         0.16751,
         -0.00965,
-        0.0
+        0
        ],
        "rx": 0.045,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24082,11 +24050,11 @@
        "at": [
         0.18504,
         0.0001,
-        0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24098,11 +24066,11 @@
        "at": [
         0.19747,
         0.01135,
-        0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24114,11 +24082,11 @@
        "at": [
         0.20605,
         0.02138,
-        0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.013,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -24874,7 +24842,7 @@
        ],
        "rx": 0.03,
        "ry": 0.008,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -24890,7 +24858,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -24906,7 +24874,7 @@
        ],
        "rx": 0.0935,
        "ry": 0.034,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -25018,7 +24986,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -25034,7 +25002,7 @@
        ],
        "rx": 0.0465,
        "ry": 0.015,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -25062,7 +25030,7 @@
        ],
        "rx": 0.081,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25078,7 +25046,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25094,7 +25062,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25110,7 +25078,7 @@
        ],
        "rx": 0.07,
        "ry": 0.03,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25126,7 +25094,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25142,7 +25110,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25158,7 +25126,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25170,11 +25138,11 @@
        "at": [
         0.24735,
         0.00425,
-        -0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.012,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -25582,7 +25550,7 @@
        ],
        "rx": 0.03,
        "ry": 0.009,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25598,7 +25566,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25614,7 +25582,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25678,7 +25646,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25694,7 +25662,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25710,7 +25678,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25726,7 +25694,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25742,7 +25710,7 @@
        ],
        "rx": 0.021,
        "ry": 0.01,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -25770,7 +25738,7 @@
        ],
        "rx": 0.027,
        "ry": 0.011,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25786,7 +25754,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25802,7 +25770,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25866,7 +25834,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25878,11 +25846,11 @@
        "at": [
         0.16751,
         -0.00965,
-        -0.0
+        0
        ],
        "rx": 0.045,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25894,11 +25862,11 @@
        "at": [
         0.18504,
         0.0001,
-        -0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25910,11 +25878,11 @@
        "at": [
         0.19747,
         0.01135,
-        -0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -25926,11 +25894,11 @@
        "at": [
         0.20605,
         0.02138,
-        -0.0
+        0
        ],
        "rx": 0.019,
        "ry": 0.013,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -27662,7 +27630,7 @@
        ],
        "rx": 0.03,
        "ry": 0.028,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -27678,7 +27646,7 @@
        ],
        "rx": 0.052,
        "ry": 0.057,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -27736,12 +27704,12 @@
       },
       {
        "at": [
-        0.0821,
-        -0.12023,
+        0.05020047,
+        -0.08694921,
         0
        ],
-       "rx": 0.136,
-       "ry": 0.1655,
+       "rx": 0.124,
+       "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
         0.20490853,
@@ -27772,9 +27740,9 @@
        "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27788,9 +27756,9 @@
        "ry": 0.172,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27804,9 +27772,9 @@
        "ry": 0.177,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27820,25 +27788,25 @@
        "ry": 0.1795,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
       {
        "at": [
-        0.317,
-        -0.146,
+        0.26199944,
+        -0.14550365,
         0
        ],
-       "rx": 0.146,
-       "ry": 0.178,
+       "rx": 0.149,
+       "ry": 0.1785,
        "exponent": 2.15,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -27864,11 +27832,11 @@
        ],
        "rx": 0.09,
        "ry": 0.088,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27882,9 +27850,9 @@
        "ry": 0.129,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27898,9 +27866,9 @@
        "ry": 0.15,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27914,9 +27882,9 @@
        "ry": 0.164,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27930,9 +27898,9 @@
        "ry": 0.161,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27946,9 +27914,9 @@
        "ry": 0.152,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27962,9 +27930,9 @@
        "ry": 0.1315,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -27976,11 +27944,11 @@
        ],
        "rx": 0.095,
        "ry": 0.092,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -28066,7 +28034,7 @@
        ],
        "rx": 0.113,
        "ry": 0.1815,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28082,7 +28050,7 @@
        ],
        "rx": 0.102,
        "ry": 0.1775,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28098,7 +28066,7 @@
        ],
        "rx": 0.093,
        "ry": 0.167,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28114,7 +28082,7 @@
        ],
        "rx": 0.083,
        "ry": 0.152,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28130,7 +28098,7 @@
        ],
        "rx": 0.071,
        "ry": 0.133,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28146,7 +28114,7 @@
        ],
        "rx": 0.057,
        "ry": 0.109,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28162,7 +28130,7 @@
        ],
        "rx": 0.04,
        "ry": 0.081,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -28178,7 +28146,7 @@
        ],
        "rx": 0.02,
        "ry": 0.052,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -29525,7 +29493,7 @@
       {
        "at": [
         -5e-05,
-        0.0,
+        0,
         0
        ],
        "rx": 0.019,
@@ -31104,14 +31072,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      0.0
+      0,
+      0
      ],
      "r0": 0.009,
      "r1": 0.009,
@@ -31126,14 +31094,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      -0.0
+      0,
+      0
      ],
      "r0": 0.009,
      "r1": 0.009,
@@ -33682,7 +33650,7 @@
        ],
        "rx": 0.056,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -33698,7 +33666,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -33778,7 +33746,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -33806,7 +33774,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -33822,7 +33790,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -33838,7 +33806,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -33854,7 +33822,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -33870,7 +33838,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34082,7 +34050,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34098,7 +34066,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34130,7 +34098,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34146,7 +34114,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34162,7 +34130,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34178,7 +34146,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -34206,7 +34174,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -34222,7 +34190,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -34254,7 +34222,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -34266,11 +34234,11 @@
        "at": [
         0.18504,
         0.0001,
-        0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -34282,11 +34250,11 @@
        "at": [
         0.19747,
         0.01135,
-        0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -34498,7 +34466,7 @@
        ],
        "rx": 0.056,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -34514,7 +34482,7 @@
        ],
        "rx": 0.078,
        "ry": 0.027,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -34594,7 +34562,7 @@
        ],
        "rx": 0.075,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -34622,7 +34590,7 @@
        ],
        "rx": 0.1,
        "ry": 0.031,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34638,7 +34606,7 @@
        ],
        "rx": 0.091,
        "ry": 0.033,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34654,7 +34622,7 @@
        ],
        "rx": 0.053,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34670,7 +34638,7 @@
        ],
        "rx": 0.0355,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34686,7 +34654,7 @@
        ],
        "rx": 0.03,
        "ry": 0.018,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -34898,7 +34866,7 @@
        ],
        "rx": 0.0435,
        "ry": 0.016,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -34914,7 +34882,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -34946,7 +34914,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -34962,7 +34930,7 @@
        ],
        "rx": 0.0545,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -34978,7 +34946,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.026,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -34994,7 +34962,7 @@
        ],
        "rx": 0.034,
        "ry": 0.019,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -35022,7 +34990,7 @@
        ],
        "rx": 0.05,
        "ry": 0.022,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -35038,7 +35006,7 @@
        ],
        "rx": 0.066,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -35070,7 +35038,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.029,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -35082,11 +35050,11 @@
        "at": [
         0.18504,
         0.0001,
-        -0.0
+        0
        ],
        "rx": 0.0375,
        "ry": 0.023,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -35098,11 +35066,11 @@
        "at": [
         0.19747,
         0.01135,
-        -0.0
+        0
        ],
        "rx": 0.0295,
        "ry": 0.02,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -35314,7 +35282,7 @@
        ],
        "rx": 0.03,
        "ry": 0.028,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -35330,7 +35298,7 @@
        ],
        "rx": 0.052,
        "ry": 0.057,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -35372,28 +35340,12 @@
       },
       {
        "at": [
-        0.0502,
-        -0.08695,
+        0.05020047,
+        -0.08694921,
         0
        ],
        "rx": 0.124,
        "ry": 0.1555,
-       "exponent": 2.1,
-       "rotation": [
-        0.20490853,
-        0.6767662,
-        -0.20490853,
-        0.6767662
-       ]
-      },
-      {
-       "at": [
-        0.0821,
-        -0.12023,
-        0
-       ],
-       "rx": 0.136,
-       "ry": 0.1655,
        "exponent": 2.1,
        "rotation": [
         0.20490853,
@@ -35424,9 +35376,9 @@
        "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35440,9 +35392,9 @@
        "ry": 0.172,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35456,25 +35408,25 @@
        "ry": 0.1795,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
       {
        "at": [
-        0.317,
-        -0.146,
+        0.26199944,
+        -0.14550365,
         0
        ],
-       "rx": 0.146,
-       "ry": 0.178,
+       "rx": 0.149,
+       "ry": 0.1785,
        "exponent": 2.15,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -35502,9 +35454,9 @@
        "ry": 0.129,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35518,9 +35470,9 @@
        "ry": 0.15,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35534,9 +35486,9 @@
        "ry": 0.164,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35550,9 +35502,9 @@
        "ry": 0.152,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -35566,9 +35518,9 @@
        "ry": 0.1315,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -35638,7 +35590,7 @@
        ],
        "rx": 0.113,
        "ry": 0.1815,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -35654,7 +35606,7 @@
        ],
        "rx": 0.102,
        "ry": 0.1775,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -35670,7 +35622,7 @@
        ],
        "rx": 0.083,
        "ry": 0.152,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -35686,7 +35638,7 @@
        ],
        "rx": 0.071,
        "ry": 0.133,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -35702,7 +35654,7 @@
        ],
        "rx": 0.04,
        "ry": 0.081,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -35718,7 +35670,7 @@
        ],
        "rx": 0.02,
        "ry": 0.052,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -36587,7 +36539,7 @@
       {
        "at": [
         -5e-05,
-        0.0,
+        0,
         0
        ],
        "rx": 0.02,
@@ -37522,14 +37474,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      0.0
+      0,
+      0
      ],
      "r0": 0.0155,
      "r1": 0.0155,
@@ -37544,14 +37496,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      -0.0
+      0,
+      0
      ],
      "r0": 0.0155,
      "r1": 0.0155,
@@ -39318,7 +39270,7 @@
        ],
        "rx": 0.056,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -39334,7 +39286,7 @@
        ],
        "rx": 0.078,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -39398,7 +39350,7 @@
        ],
        "rx": 0.075,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -39426,7 +39378,7 @@
        ],
        "rx": 0.1,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -39442,7 +39394,7 @@
        ],
        "rx": 0.07,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -39458,7 +39410,7 @@
        ],
        "rx": 0.042,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -39474,7 +39426,7 @@
        ],
        "rx": 0.038,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -39654,7 +39606,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -39686,7 +39638,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -39702,7 +39654,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.58060249,
         0.28197458,
@@ -39730,7 +39682,7 @@
        ],
        "rx": 0.066,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -39762,7 +39714,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -39774,11 +39726,11 @@
        "at": [
         0.18504,
         0.0001,
-        0.0
+        0
        ],
        "rx": 0.038,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097821,
         0.59569746,
@@ -39958,7 +39910,7 @@
        ],
        "rx": 0.056,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -39974,7 +39926,7 @@
        ],
        "rx": 0.078,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -40038,7 +39990,7 @@
        ],
        "rx": 0.075,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.62276344,
         0.33491147,
@@ -40066,7 +40018,7 @@
        ],
        "rx": 0.1,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -40082,7 +40034,7 @@
        ],
        "rx": 0.07,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -40098,7 +40050,7 @@
        ],
        "rx": 0.042,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -40114,7 +40066,7 @@
        ],
        "rx": 0.038,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.37418606,
         0.59998733,
@@ -40294,7 +40246,7 @@
        ],
        "rx": 0.0535,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -40326,7 +40278,7 @@
        ],
        "rx": 0.0605,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -40342,7 +40294,7 @@
        ],
        "rx": 0.0455,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.64845226,
         0.40360965,
@@ -40370,7 +40322,7 @@
        ],
        "rx": 0.066,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -40402,7 +40354,7 @@
        ],
        "rx": 0.0525,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -40414,11 +40366,11 @@
        "at": [
         0.18504,
         0.0001,
-        -0.0
+        0
        ],
        "rx": 0.038,
        "ry": 0.038,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.38097893,
         0.59569723,
@@ -40598,7 +40550,7 @@
        ],
        "rx": 0.03,
        "ry": 0.028,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         0.20490853,
         0.6767662,
@@ -40656,12 +40608,12 @@
       },
       {
        "at": [
-        0.0821,
-        -0.12023,
+        0.05020047,
+        -0.08694921,
         0
        ],
-       "rx": 0.136,
-       "ry": 0.1655,
+       "rx": 0.124,
+       "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
         0.20490853,
@@ -40692,9 +40644,9 @@
        "ry": 0.1555,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -40708,25 +40660,25 @@
        "ry": 0.177,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
       {
        "at": [
-        0.317,
-        -0.146,
+        0.26199944,
+        -0.14550365,
         0
        ],
-       "rx": 0.146,
-       "ry": 0.178,
+       "rx": 0.149,
+       "ry": 0.1785,
        "exponent": 2.15,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -40754,9 +40706,9 @@
        "ry": 0.129,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -40770,9 +40722,9 @@
        "ry": 0.1605,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -40786,9 +40738,9 @@
        "ry": 0.161,
        "exponent": 2.1,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       },
@@ -40802,9 +40754,9 @@
        "ry": 0.1315,
        "exponent": 2.05,
        "rotation": [
-        0.0,
+        0,
         0.70710678,
-        -0.0,
+        0,
         0.70710678
        ]
       }
@@ -40858,7 +40810,7 @@
        ],
        "rx": 0.113,
        "ry": 0.1815,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -40874,7 +40826,7 @@
        ],
        "rx": 0.102,
        "ry": 0.1775,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -40890,7 +40842,7 @@
        ],
        "rx": 0.083,
        "ry": 0.152,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -40906,7 +40858,7 @@
        ],
        "rx": 0.057,
        "ry": 0.109,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -40922,7 +40874,7 @@
        ],
        "rx": 0.04,
        "ry": 0.081,
-       "exponent": 2.0,
+       "exponent": 2,
        "rotation": [
         -0.0613063,
         0.70444413,
@@ -41698,7 +41650,7 @@
       {
        "at": [
         -5e-05,
-        0.0,
+        0,
         0
        ],
        "rx": 0.0378,
@@ -43357,14 +43309,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      0.0
+      0,
+      0
      ],
      "r0": 0.0378,
      "r1": 0.0378,
@@ -43379,14 +43331,14 @@
      "role": "body",
      "tone": 0.9,
      "p0": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
      ],
      "p1": [
       0.11935,
-      -0.0,
-      -0.0
+      0,
+      0
      ],
      "r0": 0.0378,
      "r1": 0.0378,

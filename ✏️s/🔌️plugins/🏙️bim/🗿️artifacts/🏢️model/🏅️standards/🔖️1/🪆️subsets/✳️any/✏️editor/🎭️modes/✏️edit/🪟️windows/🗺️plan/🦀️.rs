@@ -23,7 +23,7 @@ use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "bim-edit-plan";
+pub const WINDOW_KIND_ID: &str = crate::editor::bim::utilities::window_kinds::PLAN;
 pub const BODY_KEY: &str = "bim.edit.plan";
 const SURFACE_ID: &str = "bim.edit.plan2d/plan";
 const HOVERED: Rgba = [0.36, 0.65, 0.98, 1.0];

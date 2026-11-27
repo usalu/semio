@@ -91,7 +91,7 @@ pub fn print_plugin(assets:&ChartSchemaAssets)->Result<semio_plugin::app::Plugin
     use semio_plugin::app::{Plugin,NoPluginApp,PluginAssemblyError};
     use semio_plugin::app::PluginBuilder;
     let declaration=chart_artifact_declaration(assets).map_err(|error|PluginAssemblyError::new("print.chart.declaration",error.to_string()))?;
-    let plugin=PluginBuilder::<_, NoPluginApp>::new("print").label("Print").version(env!("CARGO_PKG_VERSION")).package_id("semio:print").artifact(declaration).try_build()?;
+    let plugin=PluginBuilder::<_, NoPluginApp>::new("print").label(semio_plugin::LocalizedLabel::native("Print", "Druck")).version(env!("CARGO_PKG_VERSION")).package_id("semio:print").artifact(declaration).try_build()?;
     register_chart_inference(assets).map_err(|error|PluginAssemblyError::new("print.chart.inference-registration",error.to_string()))?;
     semio_framework_schema_registry::register_referenced_schema_documents(&[assets.artifact.json_schema,assets.mutations.json_schema]);
     Ok(plugin)

@@ -592,6 +592,7 @@ export function useShellCoreState({
   if (!treeWindowSchedulerRef.current) {
     treeWindowSchedulerRef.current = createTreeWindowSchedulerV1({
       refresh: (bodyKey) => {
+        console.log("[DEBUG] tree-window refresh", bodyKey, sessionRef.current?.app.windowKinds.map((kind) => kind.bodyKey));
         const live = sessionRef.current;
         const refresh = refreshUiRef.current;
         if (!live || !refresh) {
@@ -610,6 +611,7 @@ export function useShellCoreState({
       openStatesFor: (bodyKey) => treeWindowSchedulerRef.current!.openStatesFor(bodyKey),
       setFormPage: (bodyKey, windowId, page) => treeWindowSchedulerRef.current!.setFormPage(bodyKey, windowId, page),
       setOpen: (bodyKey, nodeKey, open) => {
+        console.log("[DEBUG] tree-window setOpen", bodyKey, nodeKey, open);
         treeWindowSchedulerRef.current!.setOpen(bodyKey, nodeKey, open);
         setTreeWindowGeneration((generation) => generation + 1);
       },

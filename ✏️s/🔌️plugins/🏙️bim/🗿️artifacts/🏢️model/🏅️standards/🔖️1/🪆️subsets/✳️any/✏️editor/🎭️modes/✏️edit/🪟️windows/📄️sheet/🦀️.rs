@@ -20,7 +20,7 @@ use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "bim-edit-sheet";
+pub const WINDOW_KIND_ID: &str = crate::editor::bim::utilities::window_kinds::SHEET;
 pub const BODY_KEY: &str = "bim.edit.sheet";
 const SURFACE_ID: &str = "bim.edit.sheet2d/sheet";
 /// 🖼️ The air around the paper when the window frames a sheet, in pixels.

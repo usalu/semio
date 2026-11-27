@@ -8,7 +8,7 @@ use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, Not
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
@@ -62,7 +62,7 @@ async fn pack_round_trips_representative_document() {
             },
         ],
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -81,6 +81,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-    store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests

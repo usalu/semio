@@ -463,3 +463,20 @@ test("both close fault observations retain the measured clock", async () => {
   expect(lifetime).toContain("state.close_fault(cause)");
   expect(cleanup).toContain("state.close_fault(cause)");
 });
+
+test("live maintenance readings are judged by their cause", async () => {
+  const law = await Bun.file(new URL("🧫️fixtures/🩻️live-stall-reading/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const reading = db.query(`SELECT CASE
+      WHEN $step IN ('blocked', 'awaiting') THEN 'waiting'
+      WHEN $starved AND $step IN ('empty', 'none') THEN 'starved'
+      WHEN $step = 'empty' THEN 'fruitless'
+      ELSE 'progress' END AS reading`);
+    for (const row of law.cases) expect(reading.get({ $step: row.step, $starved: Number(row.starved) })).toEqual({ reading: row.reading });
+    for (const sequence of law.sequences) {
+      const { reading: cause } = reading.get({ $step: sequence.step, $starved: Number(sequence.starved) }) as { reading: string };
+      expect(cause === "fruitless" && sequence.count >= law.zeroProgressLimit && sequence.spanUs >= law.stallCreditUs).toBe(sequence.faults);
+    }
+  } finally { db.close(); }
+});

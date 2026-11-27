@@ -1,0 +1,41 @@
+{
+  "title": "Get Sourcing Plugin Working End to End",
+  "emoji": "🪵",
+  "status": "closed",
+  "description": "Get the sourcing plugin (✏️s/🔌️plugins/🪵️sourcing, curation artifact, sourcing-editor/viewer apps in 🌎️hub compositions, dev variant) to work end to end: builds, tests pass, loads in s, artifacts editable/viewable in the browser, events persisted and replayed.",
+  "summary": "Duplicate of the open ticket 26/09/01/SOURCING-END-TO-END, which already covers getting sourcing working end to end with every feature; the work continues there (agent rules and coordination plan copied as 📓️agent-rules-2026-11-27.md and 🗺️coordination-plan-2026-11-27.md).",
+  "goal": "🎯runningsourcing",
+  "sessions": [
+    "abda7830-f04d-4fff-915b-95930ecffc8e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 00:29:47",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the sourcing plugin (✏️s/🔌️plugins/🪵️sourcing, curation artifact, sourcing-editor/viewer apps in 🌎️hub compositions, dev variant) to work end to end: builds, tests pass, loads in s, artifacts editable/viewable in the browser, events persisted and replayed.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-27 00:32:28",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "9c8a98ec2349cd952e1195429a42dc041a3a31d0",
+      "summary": "Duplicate of the open ticket 26/09/01/SOURCING-END-TO-END, which already covers getting sourcing working end to end with every feature; the work continues there (agent rules and coordination plan copied as 📓️agent-rules-2026-11-27.md and 🗺️coordination-plan-2026-11-27.md).",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/SOURCING-END-TO-END/📓️agent-rules-2026-11-27.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/SOURCING-END-TO-END/🗺️coordination-plan-2026-11-27.md"
+        }
+      ]
+    }
+  ]
+}

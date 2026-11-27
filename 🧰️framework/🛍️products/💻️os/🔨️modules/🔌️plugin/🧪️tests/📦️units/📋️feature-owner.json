@@ -121,43 +121,43 @@
   "remainingFunctions": [
     {
       "name": "assert_heap_witness_installed",
-      "sha256": "952c2ce1ea1b941302bc7508418099c54e4273898fe90e9462fa92f54ae574e3"
+      "sha256": "9ac5855ff5890ecee96785aff0a61be91e64b691eb644b78329dcd8e55459f85"
     },
     {
       "name": "run_fixture_effect",
-      "sha256": "cff843c8c9bc2f928e0c05df72948bc30783712b51e7d10325562e6df336274f"
+      "sha256": "99c1d3e130d37359ef04f39b88347c1d517bbb682b83f7e857608ecbd89c6689"
     },
     {
       "name": "run_fixture_result_effect",
-      "sha256": "6182a6991cd1e2b12032a061ccc942cd6ef22bb2a397eddeb2f1efcd976f4c92"
+      "sha256": "7f13dbfcfcf8b8f05afbf4c1b270dc920e2ec37b0ec7bc2bfde312cad72f0b60"
     },
     {
       "name": "take_fixture_result_turn",
-      "sha256": "5f7065698e8c3d3f4d1e233fe39701ee4b77544a5179aeb8d309a6fe629bf232"
+      "sha256": "1a2bd4a086e1e863185d1d8292d8f19cfdb0e98dea1f0354773fed5ab782d695"
     },
     {
       "name": "take_fixture_result_turn_observed",
-      "sha256": "681ad0dad5d6ca1bdd6ac7e1f0dc0a06e0f415b612206b9d76810582381f8bbd"
+      "sha256": "650404fe41577b735c3b4428f64f6c126cbaf7498b53e23b93c01c751ba3b48d"
     },
     {
       "name": "take_fixture_result_page",
-      "sha256": "2ba6ed35e59feffc9a5dbf87fa4bfaa42e68f9b596b60b191aa6df88fb1e89ef"
+      "sha256": "f9d6b663caed0ccd7c28cb0465703891a8dddd6c1f43ffa87690f0096ff49e42"
     },
     {
       "name": "close_fixture_result_page",
-      "sha256": "0ac80d2a324a661dfb78f5006b9995e133d9efdcdf85ae3d2edb85304bb53b10"
+      "sha256": "a7b7c7a627f1cce05f7972363ec6de96fd6afff728ea9aab9a6e3c5d5d8cc189"
     },
     {
       "name": "retire_fixture_owned",
-      "sha256": "ab324b9fec9d4153209c55ba5bfc5b003b0596ebb5786c92e1f51385715e39ae"
+      "sha256": "4a120772d5cc1b2bba364e5a5c95de8e8d9483083648dfbf8e7b2268317a2da7"
     },
     {
       "name": "present_fixture_mounted_page",
-      "sha256": "ff1c40137109b2535e03f6eaa61e51af30a9bae96a97c30501be13eb8818fcd7"
+      "sha256": "43fd30e7490475400034b4f31d3eb2e662e7e3068e0a0ba313f60ca780d4e364"
     },
     {
       "name": "retire_fixture_acknowledged_mounted_page",
-      "sha256": "c908ed0005a1a9f96d966f5ff5c5239e301e89f8989daa715a1aafdc7cb7048c"
+      "sha256": "6817e99b9eb7cb9ec6899ada6c131718c80c9bd1ed44efac03d06d1b7c203362"
     },
     {
       "name": "drop",
@@ -209,7 +209,7 @@
     },
     {
       "name": "fixture_renew_turn",
-      "sha256": "70d77cf771c51d186932410c8b98ab5638ab09c5b698bd232228307e7e2eb3c7"
+      "sha256": "8ac85676519a7a3e105dab4a3d274f21863a6e10acc6705d7b1330ddafcdb4de"
     },
     {
       "name": "ensure_fixture_cancellation_issuer",
@@ -300,36 +300,8 @@
       "sha256": "acfec8fd017ab7de403d4907b06e46628e91ef1616fafc552735dcae97919d0d"
     },
     {
-      "name": "validate_context",
-      "sha256": "d53f1022411aacf721682d52843623398300aef2458b00aca63285ba38d65544"
-    },
-    {
-      "name": "source_turn",
-      "sha256": "562e719077e8829aeecb31e8a351e0472e4edcd39c174aa23bbd8027d786ef1c"
-    },
-    {
-      "name": "admits",
-      "sha256": "c2333f23b77d6b386c6ded1e39b6e0bdceef85632e381e2d0608f94410b630d2"
-    },
-    {
-      "name": "settle_partial",
-      "sha256": "ff82cd0fd5385ba41c153cef88f517de814be1b473c0242d1c181e6af00c1612"
-    },
-    {
-      "name": "recover_partial",
-      "sha256": "cfe182038f1a6bfef4dad1bb4b0ceb572dbc24c9f4ed88dc99e44abc9343de75"
-    },
-    {
-      "name": "lend",
-      "sha256": "b2ea99d1a514d15097eb22f56724cb824c980481ab1f2391eb4af57eb16de539"
-    },
-    {
       "name": "lend",
       "sha256": "9391842fc0e33279c255c3d5b2c93d85f12c179abc64f8d7adf26db586ff380f"
-    },
-    {
-      "name": "fixture_identity",
-      "sha256": "8dbd078c54961c0a2fd5204152144959eb9fb5479365f14662a8bab911ce25a3"
     },
     {
       "name": "admit_document_archive_load",
@@ -549,11 +521,11 @@
     },
     {
       "name": "settle_registered_typed_operation_within",
-      "sha256": "d19ce413c82be94d2a6dc57f54da8ebcb74d7451de8841a56f8e7f34c802df61"
+      "sha256": "8ec40937ee7c30bde1cef9592ff5527dfed319ab1e59064dccbfc24c7510c993"
     },
     {
       "name": "typed_operation_settlement_refusal",
-      "sha256": "28dd8b8c870d91b52010b92006d2d6c68bdd98467c88c73c2256b88ded9babfa"
+      "sha256": "1dead7cbcd1aa198ffbe16d64d1351771cff003d9bb4caf353fcaaf664eaa23f"
     },
     {
       "name": "retain_registered_ownership_receipts",
@@ -565,11 +537,11 @@
     },
     {
       "name": "retain_original_ownership_receipts",
-      "sha256": "7fd523d742d39d026504e3c467ee345a5aa4a1d5a69926ee205f4d2d09156a5b"
+      "sha256": "7cb127299809e804512e8e4a887e05323a58182dc2c9742916b8e9a68c7a2c50"
     },
     {
       "name": "settle_extension_invocations",
-      "sha256": "75c2147d1634c6817472eac16d87af7cb2b046e9d1252b43ca4fcaaefa26b135"
+      "sha256": "025a53e280fdb76c0c20e55b985f6c7c6a29d3dc42d2fa8fa322a306be7e2a1a"
     },
     {
       "name": "fixture_close_grant",
@@ -578,6 +550,22 @@
     {
       "name": "close_registered_fixture_app",
       "sha256": "3b300af49967d149a68efe34c5faa5bae4fcaeb449355c6d165e72c74213f5da"
+    },
+    {
+      "name": "admit",
+      "sha256": "8bc902213b3a39a1b77c83324cad3e13ca7d4a4f90c930910f571d508c0c0328"
+    },
+    {
+      "name": "app",
+      "sha256": "60b09712a59164921aebb5da1f3e9447fd8a7454e8bf835c8de23fb1cabc11b5"
+    },
+    {
+      "name": "pump",
+      "sha256": "c0ab97ad0164255232e14532fa2296d1c30aee08cea9518c9a7b54dca505ff28"
+    },
+    {
+      "name": "retire",
+      "sha256": "d8fe0ebb7fe20c0208df429c1cb604553dbc1501425ff47516b10742969f420d"
     },
     {
       "name": "publish_fixture_presence_roster",
@@ -609,19 +597,19 @@
     },
     {
       "name": "build_document_store_disposer",
-      "sha256": "c7c6395c2660718f77ae01430b93ba58b4a930ca56941818a9220e4589e756e8"
+      "sha256": "6d1d61823cfa610d09b367483b1d1daa5712b469c9be0abe122c832b06d253be"
     },
     {
       "name": "build_config_store_disposer",
-      "sha256": "54e7d9672b42593014e39c6a67b6121f7aa65b3c81140ce53128936c9ea94982"
+      "sha256": "035a07283e8fa7f0648127ea8d5158214fa692fbfcd106341b1bdf10de37a159"
     },
     {
       "name": "build_presence_store_disposer",
-      "sha256": "f9fbe219f336789f78ba82164d01445ee521cd90d935be98a81fb56521ab6824"
+      "sha256": "02e55a70e999d91487cb7560946f952a14797da6a340378c10697590a10bb181"
     },
     {
       "name": "build_transient_store_disposer",
-      "sha256": "7dbc2bc1a3db03e01cc4f5d07a95fc22bbb4b7d83527b2b5fe3c410d6433bdd8"
+      "sha256": "67e5f2274272781c3d8b98fa215d367e426301340dfb057d0b8d496785822716"
     },
     {
       "name": "build_presence_peer_retirement_factory",

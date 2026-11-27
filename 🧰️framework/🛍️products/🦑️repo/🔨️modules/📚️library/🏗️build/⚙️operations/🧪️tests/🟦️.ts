@@ -13,6 +13,7 @@ import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResour
 import { buildExecPlanV1, runBuildCacheOperationV1 } from "../🟦️.ts"; import type { BuildCacheToolV1 } from "../📋️contract/🟦️.ts";
 import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1,type BuildHelpRequestV1} from "../📖️help/🟦️.ts";
 import {buildExecEnvironmentV1} from "../🌱️exec-environment/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {cacheArgumentsV1} from "../../🧹️cache-gc/⌨️command/🟦️.ts";
 import {validateBuildTaskArgumentsV1} from "../../🧭️selection/🟦️.ts";
 import snapshots from "./🧫️fixtures/📖️help/🔣️.json" with {type:"json"};
@@ -198,7 +199,7 @@ test("the real CLI prints the own help of a command, also for preflight, without
   expect(result.status,args.join(" ")+result.stderr).toBe(0);
   expect(result.stdout.includes(expected),args.join(" ")+"\n"+result.stdout).toBe(true);
  }
-},120_000);
+},stretchedBudgetMillisecondsV1(120_000));
 
 test("the help request reader skips the value of every option with a required value in either spelling",()=>{
  expect(readBuildHelpRequestV1(help,["--workers","on","cache","clear","--help"])).toEqual({operation:"cache",subcommand:"clear"});

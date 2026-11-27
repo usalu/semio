@@ -658,6 +658,18 @@
   {
    "id": "listed-ifc2x3-family-variance",
    "command": "rustc --crate-name semio_s_artifact_stdio_ifc2x3_catalog_entities_00 --edition=2021 /w/v.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-gis-gismap-host-library-declared-budget",
+   "command": "rustc --crate-name semio_s_artifact_gis_gismap --edition=2024 /w/gis.rs --crate-type lib"
+  },
+  {
+   "id": "listed-gis-gismap-host-test-executable-declared-budget",
+   "command": "rustc --crate-name semio_s_artifact_gis_gismap --edition=2024 /w/gis.rs --test"
+  },
+  {
+   "id": "listed-gis-gismap-other-target-is-unlisted",
+   "command": "rustc --crate-name semio_s_artifact_gis_gismap --edition=2024 /w/gis.rs --crate-type lib --target wasm32-wasip2"
   }
  ]
 }

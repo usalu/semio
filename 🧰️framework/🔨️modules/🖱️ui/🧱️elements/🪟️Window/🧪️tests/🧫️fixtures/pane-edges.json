@@ -14,9 +14,9 @@
   "folds": [true, false],
   "insetPx": 0,
   "windowPanes": [
-    { "slot": "utility-bar-overlay", "edges": ["bottom", "left"] },
-    { "slot": "window-engagement-overlay", "edges": ["top", "left"] },
-    { "slot": "window-measures-overlay", "edges": ["top", "right"] },
-    { "slot": "window-search-overlay", "edges": ["top"] }
+    { "slot": "utility-bar-overlay", "edges": ["bottom", "left"], "maxHeight": "calc(100% - (0px * 2))" },
+    { "slot": "window-engagement-overlay", "edges": ["top", "left"], "maxHeight": "calc(100% - (0px * 2) - var(--chip-row-height))" },
+    { "slot": "window-measures-overlay", "edges": ["top", "right"], "maxHeight": "calc(100% - (0px * 2) - var(--chip-row-height))" },
+    { "slot": "window-search-overlay", "edges": ["top"], "maxHeight": "calc(100% - (0px * 2) - var(--chip-row-height))" }
   ]
 }

@@ -13,7 +13,7 @@ async fn weight_entries_default_to_one_and_honour_explicit_overrides() {
     let defaults = layer_weight_entries(&config, labels);
     assert!(defaults.iter().all(|(_, _, value)| *value == 1.0));
     let Some((first_id, _, _)) = defaults.first().cloned() else { return };
-    config.layer_stroke_scale.insert(first_id.clone(), 2.0);
+    config.layer_stroke_scale.cold_insert(first_id.clone(), 2.0);
     let overridden = layer_weight_entries(&config, gis2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
     assert_eq!(overridden.iter().find(|(id, _, _)| id == &first_id).map(|(_, _, value)| *value), Some(2.0));
 }
@@ -51,7 +51,7 @@ async fn the_group_carries_one_toggle_per_declared_layer() {
 #[semio_framework_async_macros::async_test]
 async fn hiding_a_layer_unpresses_just_that_toggle() {
     let mut config = MapWindowConfig::default();
-    config.layer_visibility.insert("water".into(), false);
+    config.layer_visibility.cold_insert("water".into(), false);
     let WindowMeasure::Group { children, .. } = measure(&config, gis2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))) else {
         panic!("layers is a group measure");
     };

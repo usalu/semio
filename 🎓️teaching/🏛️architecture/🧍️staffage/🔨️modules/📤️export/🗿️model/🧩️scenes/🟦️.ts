@@ -1,12 +1,13 @@
 /** 🧩️ A multi-scene model tessellated scene by scene, each at the quality of its own scale, and joined again into one resolved document.
  *
  * The kernel tessellates a document at one quality, or one scene of it (`tessellate(document, quality, operation, { scene })`, which returns that scene as a self-contained document). A model of one asset holds a scene per scale and mode (`s50-body`, `s100-thermal`, …) and a coarser scale is tessellated more coarsely (see `qualityOf`): {@link resolveScenes} tessellates every scene on its own and {@link joinScenes} puts the results back together:
- * rigid meshes keep their node ids (the scene-specific mesh nodes are unique), the skinned mesh, skin and node a scene gets are renamed `<scene>-<id>` so no two scenes collide, materials, variants, poses and clips of the source are kept, and every scene lists its resolved nodes.
+ * rigid meshes keep their node ids (the scene-specific mesh nodes are unique), the skinned mesh, skin and node a scene gets are renamed `<scene>-<id>` (`scopedId`, bounded to 64 characters) so no two scenes collide, materials, variants, poses and clips of the source are kept, and every scene lists its resolved nodes.
  *
  * @see ../../../🧊️volume/⏱️job/🟦️.ts — `qualityOf`
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🎞️scenes/🟦️.ts — scenes
  */
 import { type ModelDocument, type Node, type Operation, type Quality, type Scene, type Skin, type Mesh, type Slug, scenesOf, tessellate } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { scopedId } from "../../../🧊️volume/🪪️ids/🟦️.ts";
 
 /** 🔢️ The denominator of a scene id `s<scale>-<mode>`; `undefined` for any other id. */
 export function scaleOfScene(sceneId: Slug): number | undefined {
@@ -24,12 +25,12 @@ export function joinScenes(source: ModelDocument, parts: readonly { readonly sce
   for (const { scene, document } of parts) {
     const renamed = new Map<Slug, Slug>();
     const added = document.nodes.filter((n) => !known.has(n.id));
-    for (const node of added) renamed.set(node.id, `${scene}-${node.id}`);
+    for (const node of added) renamed.set(node.id, scopedId(scene, node.id));
     const meshRename = new Map<Slug, Slug>();
     const skinRename = new Map<Slug, Slug>();
     for (const node of added) {
-      if (node.mesh !== undefined) meshRename.set(node.mesh, `${scene}-${node.mesh}`);
-      if (node.skin !== undefined) skinRename.set(node.skin, `${scene}-${node.skin}`);
+      if (node.mesh !== undefined) meshRename.set(node.mesh, scopedId(scene, node.mesh));
+      if (node.skin !== undefined) skinRename.set(node.skin, scopedId(scene, node.skin));
     }
     for (const node of document.nodes) {
       if (known.has(node.id)) {

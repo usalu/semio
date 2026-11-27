@@ -10,7 +10,7 @@ import {systemDarwinFootprintPortV1,type DarwinFootprintPortV1} from "../../🍏
 import type {HostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import {readHostProcessRowsV1} from "../../🧺️unmanaged/🟦️.ts";
 import {buildScriptOutputDirectoryV1,type CompileBudgetPolicyV1} from "../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
-import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,applyWardenClaimsV1,formatHostWardenRequeueV1,hostWardenCancelRetryableV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenClaimV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
 
 const MEGABYTE=1048576;
 
@@ -68,6 +68,32 @@ const listCancels=(directory:string|undefined,nowMs:number):HostWardenCancelV1[]
  return found;
 };
 
+/** 🛟️ Writes the claim of an owner on one of its processes (schema `Claim`): the memory it holds for it at the capacity gate and whether the owner itself stopped it while it waits for more. The warden shelters a process within its grant and does not treat a process the owner stopped as suspended by it; the owner calls this again when the grant or the stop changes and {@link releaseHostWardenClaimV1} when the process ends. */
+export function claimHostWardenSubjectV1(pid:number,claim:Readonly<{grantMegabytes?:number;stopped:boolean;owner?:string}>,directory?:string,nowMs:number=Date.now()):void{
+ const folder=join(hostWardenDirectoryV1(directory),POLICY.claimsDirectory);
+ mkdirSync(folder,{recursive:true});
+ writeAtomic(join(folder,`${pid}.json`),JSON.stringify({version:1,pid,atMs:nowMs,stopped:claim.stopped,...claim.grantMegabytes===undefined?{}:{grantMegabytes:Math.floor(claim.grantMegabytes)},...claim.owner===undefined?{}:{owner:claim.owner}}));
+}
+
+/** 🛟️ Removes the claim of a process that ended. */
+export function releaseHostWardenClaimV1(pid:number,directory?:string):void{
+ rmSync(join(hostWardenDirectoryV1(directory),POLICY.claimsDirectory,`${pid}.json`),{force:true});
+}
+
+/** 🛟️ Reads the claims of the owners by pid (validated, not older than `claimMaximumMilliseconds`). */
+export function readHostWardenClaimsV1(directory?:string,nowMs:number=Date.now()):ReadonlyMap<number,HostWardenClaimV1>{
+ return readClaimsOfV1(hostWardenDirectoryV1(directory),nowMs);
+}
+
+const readClaimsOfV1=(wardenDirectory:string,nowMs:number):ReadonlyMap<number,HostWardenClaimV1>=>{
+ const folder=join(wardenDirectory,POLICY.claimsDirectory),found=new Map<number,HostWardenClaimV1>();
+ try{for(const name of readdirSync(folder)){
+  const value=readJson(join(folder,name));
+  if(isHostWardenV1("Claim",value)&&nowMs-(value as HostWardenClaimV1).atMs<=POLICY.claimMaximumMilliseconds)found.set((value as HostWardenClaimV1).pid,value as HostWardenClaimV1);
+ }}catch{}
+ return found;
+};
+
 /** 🚫️ Reads the cancel record of a pid when the warden cancelled it less than `cancelRecordMaximumAgeMilliseconds` ago, so its owner can requeue instead of failing; null otherwise. */
 export function readHostWardenCancelV1(pid:number,directory?:string,nowMs:number=Date.now()):HostWardenCancelV1|null{
  let best:HostWardenCancelV1|null=null;
@@ -85,17 +111,54 @@ export function readHostWardenCancelsBelowV1(ancestor:number,sinceMs:number,dire
  return readHostWardenCancelsSinceV1(sinceMs,directory,nowMs).filter(record=>record.ancestors.includes(ancestor));
 }
 
-/** 🧯️ The typed failure of a build whose processes the warden cancelled (`code` `host-warden-cancelled`): its message is the English and the German text of `formatHostWardenCancelFailureV1`, `cancels` the records, so the caller ends with a clear message and never retries. */
+/** 🧯️ The typed failure of a build whose processes the warden cancelled (`code` `host-warden-cancelled`): its message is the English and the German text of `formatHostWardenCancelFailureV1`, `cancels` the records and `retries` the times it was already queued again (see {@link retryAfterHostWardenCancelV1}). */
 export class HostWardenCancelledErrorV1 extends Error{
  readonly code="host-warden-cancelled" as const;
  readonly cancels:readonly HostWardenCancelV1[];
- constructor(cancels:readonly HostWardenCancelV1[]){super(["en","de"].map(language=>formatHostWardenCancelFailureV1(language as "en"|"de",cancels)).join("\n"));this.name="HostWardenCancelledErrorV1";this.cancels=cancels;}
+ readonly retries:number;
+ constructor(cancels:readonly HostWardenCancelV1[],retries:number=0){super(["en","de"].map(language=>formatHostWardenCancelFailureV1(language as "en"|"de",cancels,retries)).join("\n"));this.name="HostWardenCancelledErrorV1";this.cancels=cancels;this.retries=retries;}
 }
 
 /** 🧯️ Throws {@link HostWardenCancelledErrorV1} when the warden cancelled a process below `ancestor` since `sinceMs`; returns otherwise. */
 export function requireNoHostWardenCancelBelowV1(ancestor:number,sinceMs:number,directory?:string,nowMs:number=Date.now()):void{
  const cancels=readHostWardenCancelsBelowV1(ancestor,sinceMs,directory,nowMs);
  if(cancels.length>0)throw new HostWardenCancelledErrorV1(cancels);
+}
+
+/** 🔁️ What {@link retryAfterHostWardenCancelV1} needs besides the work: the warden directory, the report line sink, the cancel signal and the clock and sleep (tests replace them). */
+export type HostWardenRetryOptionsV1=Readonly<{directory?:string;report:(line:string)=>void;signal?:AbortSignal;policy?:HostWardenPolicyV1;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>}>;
+
+const sleepAbortable=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise((resolve,reject)=>{
+ if(signal?.aborted){reject(signal.reason);return;}
+ const abort=():void=>{clearTimeout(timer);reject(signal!.reason);},timer=setTimeout(()=>{signal?.removeEventListener("abort",abort);resolve();},milliseconds);
+ signal?.addEventListener("abort",abort,{once:true});
+});
+
+/** 🔁️ Runs `run` and, when the warden cancelled a process of the run for the memory the host lacked ({@link hostWardenCancelRetryableV1}), queues it again instead of failing: the run reports the bilingual line, waits for a calm host (the state of the warden is polled every `requeuePollMilliseconds`, progress is reported each poll and the wait is cancellable through `signal`, at most `requeueCalmMaximumSeconds`; an absent warden counts as calm) and calls `run` again, which admits itself through the capacity gate again. After `requeueMaximumAttempts` attempts, for a cancel of a cap or a ceiling and for every other error, the failure is thrown (the typed failure carries the number of retries). `run` receives the attempt number and the time that attempt started, the `sinceMs` of {@link requireNoHostWardenCancelBelowV1}.
+ * @see ./../🧬️schema/🔣️.json */
+export async function retryAfterHostWardenCancelV1<T>(run:(attempt:number,startedMs:number)=>Promise<T>,options:HostWardenRetryOptionsV1):Promise<T>{
+ const policy=options.policy??POLICY,now=options.now??Date.now,sleep=options.sleep??sleepAbortable,maximum=policy.requeueMaximumAttempts;
+ for(let attempt=1;;attempt++){
+  const startedMs=now();
+  try{return await run(attempt,startedMs);}
+  catch(error){
+   if(!(error instanceof HostWardenCancelledErrorV1))throw error;
+   if(attempt>=maximum||!hostWardenCancelRetryableV1(error.cancels))throw attempt>1?new HostWardenCancelledErrorV1(error.cancels,attempt-1):error;
+   const kinds=[...new Set(error.cancels.map(record=>record.kind))].join(", ");
+   options.report(formatHostWardenRequeueV1("wait",{count:error.cancels.length,kinds,attempt:attempt+1,maximum}));
+   const limit=policy.requeueCalmMaximumSeconds,waitStart=now();
+   for(;;){
+    if(options.signal?.aborted)throw options.signal.reason;
+    const state=readHostWardenStateV1(options.directory,now());
+    if(state===null||state.level==="calm"&&!state.hold)break;
+    const seconds=Math.floor((now()-waitStart)/1000);
+    if(seconds>=limit)break;
+    options.report(formatHostWardenRequeueV1("waiting",{seconds,limit}));
+    await sleep(policy.requeuePollMilliseconds,options.signal);
+   }
+   options.report(formatHostWardenRequeueV1("admit",{attempt:attempt+1,maximum}));
+  }
+ }
 }
 
 /** 🪞️ The record a worker mirrors to the group store: the fresh state of the warden as written, else `{"version":1,"atMs":<now>,"absent":true}`, so the coordinator tells no warden from no record. */
@@ -301,7 +364,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
     const owned=new Map<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>(),protect=protectList(),found=classifyWardenSubjectsV1(rows,tables,{owned,protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since,...options.ceilings===undefined?{}:{ceilings:options.ceilings}});
     const stopped=new Map(rows.filter(row=>row.stopped).map(row=>[row.pid,row]));
     const excluded=stopped.size>0?exclusion(rows):undefined;
-    const subjects=withHistory(await measure(found,now),now).map(subject=>{
+    const claimed=applyWardenClaimsV1(found,readClaimsOfV1(directory,now),now,policy),subjects=withHistory(await measure(claimed,now),now).map(subject=>{
      if(!subject.suspended||excluded===undefined)return subject;
      const members=planWardenSignalsV1(rows,{pid:subject.pid,scope:subject.scope??"tree"},tables,excluded).flatMap(pid=>stopped.get(pid)??[]);
      if(members.some(row=>row.nonresidentKilobytes===undefined)){
@@ -338,7 +401,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
        signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;{const known=flaps.get(subject.id)??{suspends:[]};known.resumedAtMs=now;flaps.set(subject.id,known);}writeState(host,decision,subjects);
       }else{
        const command=rows.find(row=>row.pid===subject.pid)?.command??"",buildScriptOutput=buildScriptOutputDirectoryV1(command);
-       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:command.slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...buildScriptOutput&&buildScriptOutput.length<=256?{buildScriptOutput}:{},...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
+       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:command.slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...buildScriptOutput&&buildScriptOutput.length<=256?{buildScriptOutput}:{},...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...subject.grantMegabytes===undefined?{}:{grantMegabytes:subject.grantMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
        writeAtomic(join(cancelled,`${subject.pid}.${createHash("sha256").update(start).digest("hex").slice(0,8)}.json`),JSON.stringify(record));
        const signal=subject.signal??"SIGKILL";
        signalTree(rows,{pid:subject.pid,scope},signal==="SIGTERM"?[signal,"SIGCONT"]:[signal]);

@@ -13,13 +13,13 @@ async fn dag_config_default_matches_dag_camera_implicit_default() {
 #[semio_framework_async_macros::async_test]
 async fn dag_config_dsl_pack_round_trip() {
     let config = DagConfig { camera_x: 12.5, camera_y: -3.0, camera_zoom: 2.25 };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&config);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&config);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dag_config_operation_text_binary_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::ReplaceConfig(ReplaceConfig { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0 } }));
-    store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::ChangeCamera(ChangeCamera { x: 12.5, y: -3.0, zoom: 2.25 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagConfigMutation::ReplaceConfig(ReplaceConfig { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0 } }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DagConfigMutation::ChangeCamera(ChangeCamera { x: 12.5, y: -3.0, zoom: 2.25 }));
 }
 
 #[semio_framework_async_macros::async_test]

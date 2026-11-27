@@ -158,14 +158,14 @@ fn sample_spec() -> PlaybookSpec {
 
 #[test]
 fn empty_playbook_snapshot_dsl_round_trips() {
-    store::test_support::assert_dsl_round_trip(&empty_playbook_snapshot());
-    store::test_support::assert_dsl_pack_equivalence(&empty_playbook_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&empty_playbook_snapshot());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&empty_playbook_snapshot());
 }
 
 #[test]
 fn sample_spec_dsl_round_trips() {
-    store::test_support::assert_dsl_round_trip(&sample_spec());
-    store::test_support::assert_dsl_pack_equivalence(&sample_spec());
+    semio_os_store_test_support::assert_dsl_round_trip(&sample_spec());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&sample_spec());
 }
 
 //#endregion 🔖️DslAndOpText

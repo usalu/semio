@@ -4,6 +4,7 @@ import { rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyTaxonomyPlan } from "../../../🧹️normalization/🚀️apply/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
+import { CASE_TIMEOUT_MS } from "../📜️boundary-contracts/🟦️.ts";
 import { plan, referenceFixture, retainFixture, snapshot, transactionRoot } from "../🏗️fixture-builders/🟦️.ts";
 import { attemptJournal, expectBoundaryGolden, expectTerminalAttempts } from "../💥️child-control/🟦️.ts";
 
@@ -35,7 +36,7 @@ export function registerKeepsDoublePlanBytesTests(): void {
       expect(snapshot(transactionRoot(committed))).toEqual(committedTransaction);
       expect(snapshot(committed.workspace)).toEqual(committedWorkspace);
     } finally { retainFixture(stable.root); retainFixture(cancelled.root); retainFixture(committed.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("recovers caught allocation and journal previous-image callback failures", () => {
     const preparation = referenceFixture("caught-preparation"), published = referenceFixture("caught-published"), previous = referenceFixture("caught-previous");
     try {
@@ -54,5 +55,5 @@ export function registerKeepsDoublePlanBytesTests(): void {
       expectTerminalAttempts(previous, "rolled-back");
       expectBoundaryGolden(snapshot(transactionRoot(previous)), snapshot(previous.workspace), "rolledback:caught-journal-previous-exchanged", previous.root);
     } finally { retainFixture(preparation.root); retainFixture(published.root); retainFixture(previous.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
 }

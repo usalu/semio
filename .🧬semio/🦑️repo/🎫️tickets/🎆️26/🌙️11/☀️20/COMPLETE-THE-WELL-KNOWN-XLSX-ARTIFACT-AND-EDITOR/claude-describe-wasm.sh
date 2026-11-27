@@ -8,5 +8,5 @@ cargo build -j 4 -p semio-plugin-describe || exit $?
 for id in stdio stdio_bim stdio_semio; do
   src=$W/semio_hub_${id}_component.wasm
   [ -f $src ] || { echo "[DEBUG] missing $src (not built in the shared target)"; continue; }
-  $N/target/debug/semio-plugin-describe $src --out $N/out/$id || echo "[DEBUG] describe $id failed $?"
+  $N/target/debug/semio-plugin-describe describe $src --out $N/out/$id || echo "[DEBUG] describe $id failed $?"
 done

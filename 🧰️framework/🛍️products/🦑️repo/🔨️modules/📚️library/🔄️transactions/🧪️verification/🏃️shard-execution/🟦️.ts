@@ -35,7 +35,6 @@ export type TransactionV2ShardOptions = Readonly<{
   bundle: string;
   bundleRoot: string;
   normalizationBundle: string;
-  schemaSnapshot: string;
   runId: string;
   runRoot: string;
   filterWaves: readonly (readonly string[])[];
@@ -101,7 +100,6 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
         ...process.env,
         SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry,
         SEMIO_TRANSACTION_V2_MODULE: options.normalizationBundle,
-        SEMIO_TRANSACTION_V2_SCHEMA: options.schemaSnapshot,
         SEMIO_TRANSACTION_V2_PID_REGISTRY: registry,
         SEMIO_TRANSACTION_V2_RUN_ID: options.runId,
         SEMIO_TRANSACTION_V2_RUN_ROOT: options.runRoot,

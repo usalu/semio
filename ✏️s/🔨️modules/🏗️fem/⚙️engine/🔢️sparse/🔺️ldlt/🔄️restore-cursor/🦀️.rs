@@ -111,7 +111,7 @@ impl LdltRestoreCursor {
         if self.payload.is_none() {
             if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<LdltCheckpoint>() + size_of::<LdltJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
             let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
-            return Ok(Some(LdltJob { operation: self.operation, state, output_writer: None, output_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, desk: NumericalOutcomeDesk::default() }));
+            return Ok(Some(LdltJob { operation: self.operation, state, output_writer: None, output_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, desk: NumericalOutcomeDesk::default(), publishes: true }));
         }
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;

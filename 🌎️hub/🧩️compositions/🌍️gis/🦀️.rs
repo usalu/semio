@@ -38,7 +38,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
     let dependency = semio_hub_stdio_catalog_definition::native_artifact_catalog_dependency()?;
     let catalog = semio_hub_stdio_catalog_definition::native_artifact_catalog_contribution()?;
     PluginBuilder::<_, GisApps>::new("gis")
-        .label("GIS")
+        .label(semio_plugin::LocalizedLabel::native("GIS", "GIS"))
         .version("0.1.0")
         .package_id("semio:gis")
         .depends_on(dependency.plugin_id, dependency.version)
@@ -46,7 +46,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .contributes_topic(TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, semio_framework_value::ToValue::to_value(&semio_s_artifact_gis_gismap::inference_client::declaration())))
         .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
         .artifact_kind(semio_s_artifact_gis_gisterrain::artifact_kind())
-        .artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(semio_s_artifact_gis_gismap_pdf_export::declaration().map_err(PluginAssemblyError::definition)?)
         .artifact(semio_s_artifact_gis_gisterrain::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::two_d_svg_export(
             "s.gis.host-media.two-d-svg",

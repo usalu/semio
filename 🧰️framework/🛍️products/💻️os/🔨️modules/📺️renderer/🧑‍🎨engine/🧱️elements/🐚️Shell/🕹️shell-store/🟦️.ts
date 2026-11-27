@@ -52,11 +52,12 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
   const nextSession = pluginRuntime.session;
   const ownerChanged = previousSession?.pluginId !== nextSession?.pluginId || previousSession?.instanceId !== nextSession?.instanceId || previousSession?.app.id !== nextSession?.app.id;
   const layout = shellLayoutReducer(state.layout, action);
+  const primaryRetired: ShellAction | null = ownerChanged && previousSession !== null ? { type: "WINDOWS_RETIRED", windowIds: primaryWindowIdsV1(state), programIds: [] } : null;
   const next: ShellState = {
     pluginRuntime,
-    windowUi: windowUiReducer(state.windowUi, action),
+    windowUi: windowUiReducer(primaryRetired === null ? state.windowUi : windowUiReducer(state.windowUi, primaryRetired), action),
     spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
-    actionPane: actionPaneReducer(state.actionPane, action),
+    actionPane: actionPaneReducer(primaryRetired === null ? state.actionPane : actionPaneReducer(state.actionPane, primaryRetired), action),
     commandPanel: commandPanelReducer(state.commandPanel, action),
     layout: ownerChanged ? { ...layout, windowTitlesById: {}, windowIconsById: {} } : layout,
     overlays: overlayReducer(state.overlays, action),
@@ -67,6 +68,12 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     merge: mergeReducer(state.merge, action),
   };
   return shellStateUnchanged(state, next) ? state : next;
+}
+
+/** 🪦️ The window ids the session's own program owns in the per-window slices — every key outside a spawned program's `${id}::` namespace. A session owner change retires exactly these, so a replaced program leaves no window state behind. */
+function primaryWindowIdsV1(state: ShellState): readonly string[] {
+  const keys = [state.windowUi.windowUiByWindowId, state.windowUi.windowEngagementsByWindowId, state.windowUi.windowMeasuresByWindowId, state.actionPane.foldedByWindowId, state.actionPane.expandedByWindowId, state.actionPane.activeUtilityByWindowId].flatMap((record) => Object.keys(record));
+  return [...new Set(keys.filter((key) => !key.includes("::")))];
 }
 
 /** 🪞️ True when every slice kept its identity. */

@@ -152,17 +152,18 @@ impl StepContext<'_>{
       Some((grant, work)) => (G { maximum_depth: if whole.maximum_depth==0 { grant.maximum_depth } else { grant.maximum_depth.min(whole.maximum_depth) }, ..grant }, work),
       None => (unquoted_receiving_grant(whole), unquoted_receiving_work(self.fuel_remaining)),
   };
-  let Some(mut plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
+  let Some(mut plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{eprintln!("[DEBUG] outcome false: no plan existing={existing:?} quantum={quantum:?} fresh={:?} fuel={} loaned={owner_loaned}",self.retained_grant(),self.fuel_remaining());return Ok(false)};
+  eprintln!("[DEBUG] plan ready={} wanted={:?} quantum={:?} qwork={} setup={:?} existing={existing:?} fresh={:?}",plan.ready,plan.wanted,plan.quantum,plan.quantum_work,plan.setup,self.retained_grant());
   let reserved_receipt=typed||plan.recovering_pending;
   if !plan.recovering_pending&&plan.ready&&quote.is_some(){let limit=self.native_scope_quantum();let limit=if limit.maximum_depth==0{self.retained_grant()}else{limit};if plan.quantum.restricted_by(limit)!=plan.quantum||plan.quantum_work>self.fuel_remaining{return Ok(false)}}
   if retirement&&plan.ready&&!reserved_receipt{self.receiving.open(self.retained_grant())?}
-  let claiming=!owner_loaned;let epoch=self.original_source_epoch().unwrap_or(0);let mut admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let mut reclaimed=false;if admitted.is_none()&&self.reclaim_original_escrow_slot()?{reclaimed=true;admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?}}let Some((progress,work))=admitted else{if reclaimed{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if claiming{self.pay_original_scope_control(plan.control,plan.control_work)?}if !plan.ready{return Ok(false)}
+  let claiming=!owner_loaned;let epoch=self.original_source_epoch().unwrap_or(0);let mut admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let mut reclaimed=false;if admitted.is_none()&&self.reclaim_original_escrow_slot()?{reclaimed=true;admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?}}let Some((progress,work))=admitted else{if reclaimed{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if claiming{self.pay_original_scope_control(plan.control,plan.control_work)?}if !plan.ready{eprintln!("[DEBUG] outcome false: plan not ready");return Ok(false)}
   if !plan.recovering_pending {
    let limit=self.native_scope_quantum();let limit=if limit.maximum_depth==0{self.retained_grant()}else{limit};let grant = plan.quantum.restricted_by(limit);
    let work = plan.quantum_work.min(self.fuel_remaining);
    if grant.maximum_items == 0 || grant.maximum_depth == 0 || work == 0
        || quote.is_some() && (grant != plan.quantum || work != plan.quantum_work) {
-    return Ok(false);
+    eprintln!("[DEBUG] outcome false: grant/work {grant:?} {work} vs {:?} {}",plan.quantum,plan.quantum_work);return Ok(false);
    }
    plan.quantum = grant;
    plan.quantum_work = work;

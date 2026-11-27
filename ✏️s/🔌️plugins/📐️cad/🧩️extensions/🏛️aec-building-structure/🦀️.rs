@@ -70,7 +70,7 @@ fn computers_manifest() -> JsonValue {
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
 // bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 pub fn bundle() -> ExtensionBundle {
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Structure", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
+    let bundle = ExtensionBundle::new(EXTENSION_ID, semio_plugin::LocalizedLabel::native("CAD AEC Building Structure", "CAD AEC Gebäudetragwerk"), env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     let bundle = bundle.mode(ExecutionMode::Declarative);
     bundle.contributes_topic(
         "cad.computer",

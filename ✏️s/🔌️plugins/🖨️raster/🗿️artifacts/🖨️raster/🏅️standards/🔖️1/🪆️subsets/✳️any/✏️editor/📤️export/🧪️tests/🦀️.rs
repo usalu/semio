@@ -139,7 +139,7 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, export_png};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
     let command=<RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());let instance=meta.instance_id;
     let admission=semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();assert!(admission.mutations.is_empty());

@@ -14,8 +14,14 @@ export function markReadParentV1(alive = () => true) {
 /** 🚧️ Runs `body` as the parent of one read: everything it starts, however deep and however late, is refused the computations of a farm child once the read arms its scope with the liveness of its farm (`scope.arm(alive)`, answers the function that disarms it). A flow of the same process that the read did not start is not in the scope.
  * @param {(scope: { arm: (alive: () => boolean) => () => void }) => Promise<unknown>} body */
 export function withReadParentScopeV1(body) {
-  const scope = { alive: undefined, arm(alive) { scope.alive = alive; return () => { if (scope.alive === alive) scope.alive = undefined; }; } };
+  const scope = readScopeV1();
   return scopes.run(scope, () => body(scope));
+}
+
+/** 🪶️ The scope object of one read, made where no other variable lives: every async context the read starts keeps this object alive for as long as a timer, a pending promise or a cached continuation holds the context, and a closure environment shared with the read body would keep the body, its options and its inputs alive with it, wave after wave. */
+function readScopeV1() {
+  const scope = { alive: undefined, arm(alive) { scope.alive = alive; return () => { if (scope.alive === alive) scope.alive = undefined; }; } };
+  return scope;
 }
 
 function liveV1(alive) { try { return alive() === true; } catch { return false; } }

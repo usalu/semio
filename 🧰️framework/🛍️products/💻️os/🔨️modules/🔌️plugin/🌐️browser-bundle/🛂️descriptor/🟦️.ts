@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../📦️packages/🟦️typescript/🟦️.ts";
 import { PLUGIN_HOST_IMPORT } from "../🏗️materialization/🧾️contract/🟦️.ts";
+import type { LocalizedLabel } from "@semio-tech/framework-manifest/generated/ui-axes";
 
 const DESCRIPTOR_ROOT = dirname(fileURLToPath(import.meta.url));
 
@@ -79,9 +80,9 @@ process.stdout.write(Buffer.from(bytes).toString("base64"));
  * pack carrying any byte binding of its own are refused, since the module's `🧾️receipt.json` alone names its bytes. Answers the
  * canonical pack and its exact JSON form. */
 export function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string): { pack: Uint8Array; json: string } {
-  const descriptor = decodePackValue(bytes) as unknown as Record<string, unknown> & { manifest?: { pluginId?: string; label?: string } };
+  const descriptor = decodePackValue(bytes) as unknown as Record<string, unknown> & { manifest?: { pluginId?: string; label?: LocalizedLabel } };
   if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor)) throw new Error("Plugin descriptor is not an object");
-  if (descriptor.manifest?.pluginId === "assembly-failed") throw new Error(`Plugin descriptor assembly failed: ${descriptor.manifest.label ?? "no fault message"}`);
+  if (descriptor.manifest?.pluginId === "assembly-failed") throw new Error(`Plugin descriptor assembly failed: ${descriptor.manifest.label?.native?.en ?? "no fault message"}`);
   if (descriptor.manifest?.pluginId !== pluginId) throw new Error("Plugin descriptor identity mismatch");
   if ("hashes" in descriptor) throw new Error("Plugin descriptor carries a byte binding; a semantic descriptor names no bytes");
   const pack = encodePackValue(descriptor as unknown as PackValue);

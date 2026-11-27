@@ -28,12 +28,21 @@ export function registerKeepsLanguageNeutralGoldenTests(): void {
       }));
       ts.forEachChild(node, visitLauncher);
     };
-    const visitTests = (node: import("typescript").Node): void => {
-      if (ts.isCallExpression(node) && ["test", "test.concurrent"].includes(node.expression.getText(testSource)) && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) staticTitles.push(node.arguments[0].text);
-      ts.forEachChild(node, visitTests);
+    const visitTests = (source: import("typescript").SourceFile): void => {
+      const visit = (node: import("typescript").Node): void => {
+        if (ts.isCallExpression(node) && ["test", "test.concurrent"].includes(node.expression.getText(source)) && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) staticTitles.push(node.arguments[0].text);
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
     };
+    const caseModules = testSource.statements.filter(ts.isImportDeclaration).map((node) => (node.moduleSpecifier as import("typescript").StringLiteral).text).filter((specifier) => specifier.startsWith("./"));
+    expect(caseModules.length).toBeGreaterThan(0);
     visitLauncher(launcher);
     visitTests(testSource);
+    for (const specifier of caseModules) {
+      const path = join(dirname(join(getWorkspaceRoot(), harness.testPath)), specifier);
+      visitTests(ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true));
+    }
     expect(filterWaves).toEqual([[harness.shards.map((entry: { filter: string }) => entry.filter)]]);
     expect(staticTitles).toHaveLength(14);
     const stages = FAILURE_STAGES.map((stage) => ({ title: `rolls back ${stage} with non-empty phase authority`, boundaries: [`rolledback:${stage}`] }));

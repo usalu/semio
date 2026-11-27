@@ -40,7 +40,8 @@ pub struct ActionSet {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PluginManifest {
     pub plugin_id: String,
-    pub label: String,
+    /// 🏷️ The plugin name in every terminology and locale — no default language.
+    pub label: LocalizedLabel,
     pub version: String,
     pub apps: Vec<AppDefinition>,
     pub examples: Vec<ExampleDefinition>,

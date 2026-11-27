@@ -84,6 +84,9 @@ test("the runtime ceiling of every corpus command line equals the independent Py
  expect(by("family-wrong-target-is-unlisted")).toMatchObject({megabytes:1536,listed:false});
  expect(by("listed-ifc2x3-family-variance")).toEqual({unit:"semio_s_artifact_stdio_ifc2x3_catalog_entities_00|wasm32-wasip2",kind:"library",megabytes:3630,listed:true,measuredMegabytes:3440});
  expect(by("listed-pdf-model-drifted-budget")).toMatchObject({megabytes:3720,measuredMegabytes:3525});
+ expect(by("listed-gis-gismap-host-library-declared-budget"),"the gismap unit peaks at 4584 MB, above the final budget, so the warden admits it by its measured peak").toEqual({unit:"semio_s_artifact_gis_gismap|host",kind:"library",megabytes:5043,listed:true,measuredMegabytes:4584});
+ expect(by("listed-gis-gismap-host-test-executable-declared-budget")).toEqual({unit:"semio_s_artifact_gis_gismap|host",kind:"final",megabytes:5043,listed:true,measuredMegabytes:4584});
+ expect(by("listed-gis-gismap-other-target-is-unlisted")).toMatchObject({megabytes:1536,listed:false});
  expect(by("listed-bim-model-snapshot-library-declared-budget")).toMatchObject({kind:"library",megabytes:3190,measuredMegabytes:3016});
  for(const id of ["unlisted-test-executable-host","unlisted-bin-host","unlisted-staticlib-wasm"])expect(by(id),id).toMatchObject({kind:"final",megabytes:4096,listed:false});
  expect(compileUnitOfCommandV1("rustc --crate-name a --crate-type rlib --crate-type cdylib")).toEqual({crate:"a",target:"host",types:["rlib","cdylib"]});

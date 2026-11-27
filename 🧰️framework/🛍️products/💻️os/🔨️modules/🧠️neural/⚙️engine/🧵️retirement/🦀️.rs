@@ -513,8 +513,6 @@ macro_rules! original_retirement_cursor {
         fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
     }};
 }
-/// ⛽️ Bounds one operator field admission: a root handoff performs one unit, a queued frame two.
-const OPERATOR_FIELD_ADMISSION_WORK:u64=2;
 /// 🪪️ Closes one boxed operator's retained fields through admitted retirement grants.
 pub struct OperatorRetirement {pub operator:Option<Box<dyn Operator>>,pub values:ValueRetirement}
 impl OperatorRetirement {
@@ -528,10 +526,10 @@ impl OperatorRetirement {
         self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(size_of_val(value.as_ref()))}else{value.next_retire_release_byte_demand()})
     }
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_depth_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(1)}else{value.next_retire_depth_demand()})}}
-    /// ⛽️ Quotes the pending field handoff or shell release; a field admission performs at most two units.
+    /// ⛽️ Quotes the pending field handoff or shell release, or the nested retirement the operator itself quotes.
     pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError> {
         if !self.values.terminal_is_empty() {return self.values.next_computational_work(body);}
-        Ok(match self.operator.as_ref() {None=>0,Some(value) if value.retirement_is_empty()=>1,Some(_)=>OPERATOR_FIELD_ADMISSION_WORK})
+        match self.operator.as_ref() {None=>Ok(0),Some(value) if value.retirement_is_empty()=>Ok(1),Some(value)=>value.next_retire_work_demand(body)}
     }
     pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         let grant=effect.grant();let empty=RetainedCloneProgress::default();

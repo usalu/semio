@@ -28,7 +28,7 @@ export async function writeGlbDetailed(asset: Asset, options: GlbFileOptions, co
     const procedural = await modelOfAsset(asset, { ...rest, at: { kind: "pose", pose }, poses: [pose], clips: [] }, job.operation(0));
     const edged = await resolvedOf(asset, procedural, job, 1, { shareVertices: true });
     const operation = job.operation(3);
-    const bytes = encodeGlb(edged, { pose, animations: false, variants: true }, operation);
+    const bytes = encodeGlb(edged, { pose, animations: false, variants: true, compact: true }, operation);
     job.finish();
     return { bytes, triangles: trianglesOf(edged) };
   });

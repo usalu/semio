@@ -186,3 +186,39 @@ Built from the most recent log of each component crate across all check, emit an
 Never run in phase 1 or phase 2 (the plugin extension crates and the host test component): semio-hub-stdio-pdf-component, semio-plugin-host-test-component, semio-s-plugin-cad-aec-building-component, semio-s-plugin-cad-aec-energy-component, semio-s-plugin-cad-aec-structure-component, semio-s-plugin-cad-spatial-shape-component, semio-s-plugin-flow-bim-component, semio-s-plugin-flow-brep-component, semio-s-plugin-flow-dictionary-component, semio-s-plugin-flow-draw-component, semio-s-plugin-flow-list-component, semio-s-plugin-flow-logic-component, semio-s-plugin-flow-math-component, semio-s-plugin-flow-primitive-component, semio-s-plugin-flow-text-component, semio-s-plugin-imperative-control-component, semio-s-plugin-imperative-effect-component, semio-s-plugin-imperative-logic-component, semio-s-plugin-imperative-math-component, semio-s-plugin-imperative-text-component, semio-s-plugin-playbook-procedural-component, semio-s-plugin-process-concrete-component, semio-s-plugin-process-metal-component, semio-s-plugin-process-robotic-component, semio-s-plugin-process-wood-component, semio-s-plugin-sourcing-beams-component, semio-s-plugin-sourcing-slabs-component, semio-s-plugin-sourcing-windows-component.
 
 Paused: every queued descriptor run was stopped at the coordinator's request (PDF-critical runs share the memory gate). In flight at the pause: the `r3` strict-check chain. Held and to be resubmitted afterwards: `ck17` (full recheck of the 28 earlier failures), `c9` stdio family emits, `c13`/`c14` (`flow`, `stdio-semio`), `c15`..`c18` (`puzzle`, `wfc`, `playbook`), then the 22 extension crates.
+
+## State at the disk pause (2026-11-26 18:05, 17 GB free)
+
+The descriptor sweep is paused at the coordinator's request after the in-flight job (`pid 50389`) exits; no new job is submitted until told. The coordinator removes the `semio-hub-*-component` build units of verified plugins to reclaim space; they rebuild on demand.
+
+### Confirmed green by the strict `descriptor_is_fresh` (committed pair equals the assembly)
+
+`animate`, `note`, `dag`, `cad`, `procedural`, `stdio-media`, `stdio-mesh`, `stdio-office` (the last three were already current), plus `stdio-pdf` (settled earlier).
+
+### Settled but not yet confirmed by a later strict run
+
+| Plugin | Committed JSON / pack bytes |
+| --- | --- |
+| gis | 1,760,499 / 729,968 |
+| reasoning | 210,907 / 67,201 (re-emit blocked by the test-support rollout below) |
+| space | 566,224 / 155,877 (same) |
+
+### Blocked, not mine (files edited within the last 15 minutes by other sessions)
+
+| Plugin | Blocker | Owner |
+| --- | --- | --- |
+| space, reasoning, trinity and the other plugins with text-mutation codecs | 47 `🚪️io/📝️text/🧬️mutations/🦀️.rs` files gained `semio_os_store_test_support::mutation_report_json` calls (uncommitted, 17:28); the crates do not depend on `semio-os-store-test-support` | case-adapter rollout in progress |
+| stdio, draw, stdio-semio, demonstrator, energy | pack document-cursor `DEBUG_PHASE` static; `stdio-pdf-presence-lane` compile error | pack and PDF agents |
+| flow, stdio-semio | emit killed by the memory warden, retry alone | scheduled `rs2` (held) |
+| writer | typing fold: retained-work protocol migration (needs an `OriginalConstructionAdmission` state field and work quotes) | deferred |
+| puzzle | `wasm-bindgen` gated to wasm32 in 55 manifests; rebuild pending | held `rs1` |
+
+### Held, to resubmit one at a time after the pause
+
+`rs1` remainder (`energy`, `draw`, `demonstrator`, `playbook`, `puzzle`, `wfc`), `rs2` (`flow`, `stdio-semio`), then `ck18`: the phase 1 recheck of the 28 earlier failures and the 22 extension crates plus the host test component, which were never run.
+
+### Root-cause fixes landed and verified
+
+- `descriptor_is_fresh` can no longer pass vacuously (law passes, 4 cases).
+- `dyn_enum_close!`: the proc macro rewrites `crate::` to `$crate::` in captured signatures; `semio-plugin-tests-05` compiles with it.
+- `package_descriptor_lists_its_io_mechanism_rows_with_their_native_side` and its sibling no longer depend on process-global IO registries; `semio-plugin-tests-06-2` is 27/27.

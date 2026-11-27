@@ -7,7 +7,7 @@ import { applyTaxonomyPlan } from "../../../🧹️normalization/🚀️apply/�
 import { parseTaxonomyPlan } from "../../../🧹️normalization/📃️plan-document/🟦️.ts";
 import { taxonomyPlanDigest } from "../../../🧹️normalization/🗃️affected-state/🟦️.ts";
 import { type TaxonomyPlan } from "../../../🧹️normalization/📜️plan-contracts/🟦️.ts";
-import { KILL_PHASES, LATE_KILL_PHASES, LEASE_PHASES, NORMALIZATION_MODULE, RESTORE_PHASES, SCHEMA_REL, registerChild } from "../📜️boundary-contracts/🟦️.ts";
+import { CASE_TIMEOUT_MS, KILL_PHASES, LATE_KILL_PHASES, LEASE_PHASES, NORMALIZATION_MODULE, RESTORE_PHASES, SCHEMA_REL, registerChild } from "../📜️boundary-contracts/🟦️.ts";
 import { embeddedFixture, generatorFixture, git, journalPaths, plan, referenceFixture, retainFixture, snapshot, symlinkFixture, transactionRoot, writePlan } from "../🏗️fixture-builders/🟦️.ts";
 import { activeReferenceFixture, attemptJournal, boundedExit, expectBoundaryGolden, expectBoundaryTuple, expectCompleteSnapshot, expectEmptyPlan, expectTerminalAttempts, killTree, killedAt, killedMixedGenerator, waitFor } from "../💥️child-control/🟦️.ts";
 
@@ -53,7 +53,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
         expectEmptyPlan(row);
       }
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   for (const phase of KILL_PHASES) test.concurrent(`recovers parent-killed ${phase}`, async () => {
     const active = LATE_KILL_PHASES.has(phase), row = active ? await activeReferenceFixture(`kill-${phase}`) : referenceFixture(`kill-${phase}`);
     try {
@@ -67,7 +67,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       expectTerminalAttempts(row, "rolled-back");
       expectBoundaryGolden(snapshot(transactionRoot(row)), snapshot(row.workspace), `recovered:${phase}`, row.root);
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   for (const phase of RESTORE_PHASES) test.concurrent(`recovers parent-killed ${phase}`, async () => {
     const row = await activeReferenceFixture(`kill-${phase}`);
     try {
@@ -78,7 +78,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       expectTerminalAttempts(row, "rolled-back");
       expectBoundaryGolden(snapshot(transactionRoot(row)), snapshot(row.workspace), `recovered:${phase}`, row.root);
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   for (const phase of LEASE_PHASES) test.concurrent(`recovers parent-killed ${phase}`, async () => {
     const row = await activeReferenceFixture(`kill-${phase}`);
     try {
@@ -90,7 +90,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       expectTerminalAttempts(row, "rolled-back");
       expectBoundaryGolden(snapshot(transactionRoot(row)), snapshot(row.workspace), `recovered:${phase}`, row.root);
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("recovers parent-killed committed and rolled-back backup-only terminal cleanup", async () => {
     const committed = referenceFixture("terminal-committed"), rolledBack = referenceFixture("terminal-rolled-back");
     try {
@@ -107,7 +107,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       for (const journal of journalPaths(rolledBack)) expect(readdirSync(dirname(journal))).toEqual(["🔣️.json"]);
       expectBoundaryGolden(snapshot(transactionRoot(rolledBack)), snapshot(rolledBack.workspace), "recovered:transaction-terminal-rolled-back-stage-removed", rolledBack.root);
     } finally { retainFixture(committed.root); retainFixture(rolledBack.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("rolls back a process-tree-killed mixed generator and commits ordinal two", async () => {
     const row = generatorFixture("mixed-generator");
     try {
@@ -128,7 +128,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       expectEmptyPlan(row);
       expectBoundaryGolden(snapshot(transactionRoot(row)), snapshot(row.workspace), "committed:process-tree-mixed-generator", row.root);
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("elects exactly one synchronized stale-lease contender and permits committed retry", async () => {
     const row = await activeReferenceFixture("contenders");
     let contenders: ChildProcess[] = [];
@@ -161,7 +161,7 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       for (const contender of contenders) expect(contender.exitCode !== null || contender.signalCode !== null).toBe(true);
       retainFixture(row.root);
     }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
   test.concurrent("restores a quarantined stale lease exactly when acquisition callback throws", async () => {
     const row = await activeReferenceFixture("stale-lease-restoration");
     try {
@@ -171,5 +171,5 @@ export function registerRejectsIncompletePlansPlanTests(): void {
       expect(snapshot(transactionRoot(row))).toEqual(beforeTransaction);
       expect(snapshot(row.workspace)).toEqual(beforeWorkspace);
     } finally { retainFixture(row.root); }
-  }, 15_000);
+  }, CASE_TIMEOUT_MS);
 }

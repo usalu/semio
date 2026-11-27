@@ -28,8 +28,9 @@ const full:MetricsSourcesV1={
  warden:()=>({atMs:BASE,totalMegabytes:16384,availableMegabytes:5000,swapUsedMegabytes:1000,swapOutMegabytesPerSecond:2.5,compressedMegabytes:3000,pressure:"warn",level:"guard",subjects:{count:10,megabytes:4000,cpuSeconds:10,byKind:{cargo:{count:3,megabytes:1800},"local-unit":{count:6,megabytes:2000},"remote-unit":{count:1,megabytes:100},"pool-child":{count:2,megabytes:70}}},headroomMegabytes:9000,cancelled:4}),
  gate:()=>({totalMegabytes:16384,availableMegabytes:4000,swapUsedMegabytes:null,swapOutMegabytesPerSecond:null,compressedMegabytes:null,pressure:"normal",openFiles:6000,attachedImages:19}),
  volumes:()=>[{freeBytes:900,totalBytes:1000},{freeBytes:40,totalBytes:500}],queueDepth:()=>3,
+ skipReasons:()=>({"read-only":5,"spool-full":3,"bypass-incremental":7,"run-x":2}),offloadReasons:()=>({cheap:4,"pin-failed":1,"deadline":6,"silent":2}),
  unitCounters:()=>({localHit:11,remoteHit:12,miss:13,stored:14,skipped:15}),cacheCounters:()=>({localHit:21,localMiss:22,bytes:23}),
- remoteCache:()=>({groups:{ac:{hits:1,misses:2,puts:3,conflicts:4},cas:{hits:5,misses:6,puts:7},nx:{hits:8,misses:9,puts:10}}}),remoteCacheStatus:()=>({entries:11,bytes:12}),
+ remoteCache:()=>({groups:{ac:{hits:1,misses:2,puts:3,conflicts:4,refused:13},cas:{hits:5,misses:6,puts:7},nx:{hits:8,misses:9,puts:10}}}),remoteCacheStatus:()=>({entries:11,bytes:12}),
  offload:()=>({out:31,refused:32,fellBack:33}),remoteExecution:()=>({running:2,queued:1,offloadedIn:34}),
  pool:()=>({units:752,claimed:44,published:7,failed:2,rssMegabytes:900}),phase:()=>({done:300,total:600}),facts:()=>1234,
  ready:()=>({stageIndex:3,state:"running",attempts:2}),journal:()=>({events:99,bytes:4096}),
@@ -119,6 +120,12 @@ test("counter files: unit, local cache, remote cache, offload, pool, graph phase
  expect(run("remote-cache-status",full)).toEqual({"cache.remote.entries":11,"cache.remote.bytes":12});
  expect(run("remote-cache",full)).not.toHaveProperty("cache.remote.entries");
  expect(run("remote-cache",{remoteCache:()=>({groups:{ac:{hits:1}}})})).toEqual({"cache.remote.ac.hit":1});
+ expect(run("remote-cache",{remoteCache:()=>({groups:{ac:{refused:2},cas:{refused:1},nx:{hits:4}}})})).toMatchObject({"cache.remote.refused":3,"cache.remote.nx.hit":4});
+ const skips=run("cache-skip-reasons",full),declines=run("offload-reasons",full);
+ expect(skips).toMatchObject({"cache.skip.read-only":5,"cache.skip.spool-full":3,"cache.skip.upload-failed":0,"cache.skip.other":9});
+ expect(Object.values(skips).reduce((sum,value)=>sum+value,0),"every counted unit lands in exactly one id").toBe(5+3+7+2);
+ expect(declines).toMatchObject({"exec.decline.cheap":4,"exec.decline.pin-failed":1,"exec.decline.no-idle-machine":0,"exec.decline.other":8});
+ expect(Object.values(declines).reduce((sum,value)=>sum+value,0)).toBe(4+1+6+2);
  expect(run("offload-counters",full)).toEqual({"exec.offload.out":31,"exec.offload.fellback":33,"exec.refused":32});
  expect(run("remote-execution",full)).toEqual({"exec.queue.running":2,"exec.queue.queued":1,"exec.offload.in":34});
  expect(run("owner-pool",full)).toEqual({"graph.read.owners":600,"graph.read.owners.done":300,"graph.pool.claimed":44,"graph.pool.published":7,"graph.pool.failed":2,"graph.pool.memory":900*MEGABYTE});
@@ -128,7 +135,7 @@ test("counter files: unit, local cache, remote cache, offload, pool, graph phase
  expect(run("ready",{ready:()=>null})).toEqual({"ready.state":0});
  expect(run("ready",{ready:()=>({stageIndex:0,state:"backoff",attempts:5})})["ready.state"]).toBe(1);
  expect(run("journal",full)).toEqual({"replica.journal.events":99,"replica.journal.bytes":4096});
- for(const name of ["unit-counters","local-cache","remote-cache","remote-cache-status","offload-counters","remote-execution","owner-pool","graph-service","journal","warden","queue","volumes"])expect(run(name,{}),name).toEqual({});
+ for(const name of ["unit-counters","local-cache","remote-cache","remote-cache-status","offload-counters","cache-skip-reasons","offload-reasons","remote-execution","owner-pool","graph-service","journal","warden","queue","volumes"])expect(run(name,{}),name).toEqual({});
 });
 
 test("self: the collector's CPU share is the CPU spent inside its own steps, the readiness process is reported separately, memory is what the collector retains", () => {

@@ -35,6 +35,7 @@ semio-s-artifact-remodel-remodeling-mut-params = { workspace = true }
 semio-s-artifact-remodel-remodeling-mut-results = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 base64_codec = { workspace = true }

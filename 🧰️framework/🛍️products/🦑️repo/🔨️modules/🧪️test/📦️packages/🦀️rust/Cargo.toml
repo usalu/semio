@@ -23,3 +23,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-process-routing-workspace = { path = "../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }

@@ -4,13 +4,13 @@ use crate::{default_snapshot, SequenceStep, SlotRef, StepParams};
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_default_snapshot() {
     let fixture = neural_engine::ColdOwner::new(default_snapshot());
-    store::os_store::test_support::assert_dsl_round_trip(&*fixture);
+    semio_os_store_test_support::assert_dsl_round_trip(&*fixture);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn default_sequence_example_dsl_round_trips() {
     let snapshot = parse_dsl(SEQUENCE_EXAMPLE_TEXT).expect("🎬️default.sequence must parse");
-    store::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_store_test_support::assert_dsl_round_trip(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -31,5 +31,5 @@ async fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
         collapsed: false,
     });
     let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture));
-    store::os_store::test_support::assert_dsl_round_trip(&*snapshot);
+    semio_os_store_test_support::assert_dsl_round_trip(&*snapshot);
 }

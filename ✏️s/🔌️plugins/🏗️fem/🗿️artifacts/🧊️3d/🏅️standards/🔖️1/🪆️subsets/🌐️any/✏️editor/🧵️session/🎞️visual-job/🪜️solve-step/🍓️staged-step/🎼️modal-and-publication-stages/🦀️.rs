@@ -70,7 +70,7 @@ impl Fem3dNumericalChild {
         let Some(((stiffness, mass), progress)) = self.modal_build.as_mut().and_then(|owner| owner.take_complete(context.retained_grant())) else { return Ok(false); };
         context.consume_retained(progress).map_err(|_| b"fem3d.numerical-modal-transfer".to_vec())?;
         self.modal_mass = Some(mass);
-        self.ldlt = Some(LdltJob::new(operation, stiffness));
+        self.ldlt = Some(LdltJob::new(operation, stiffness).without_publication());
         self.stage = Fem3dNumericalStage::Ldlt;
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }

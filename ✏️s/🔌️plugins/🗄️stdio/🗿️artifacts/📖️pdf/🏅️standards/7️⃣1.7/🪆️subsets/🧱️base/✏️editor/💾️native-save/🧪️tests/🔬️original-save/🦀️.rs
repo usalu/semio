@@ -143,7 +143,7 @@ fn drive_save(snapshot: &PdfSnapshot, turn: RetainedCloneGrant, cancel_after: Op
         match source.turn_with_decoder(turn, &mut decoder, |cx| program.prepare_original(&snapshot, revision, cx)) {
             Ok(PlanDecision::Pending) | Err(_) => None,
             Ok(PlanDecision::Ready) => Some(true),
-            Ok(PlanDecision::ReferenceRequired) => Some(false),
+            Ok(PlanDecision::ReferenceRequired(_)) => Some(false),
         }
     });
     assert!(ready == Some(true) || cancelled, "the Save plan settles or is cancelled: {ready:?}");

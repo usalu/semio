@@ -106,7 +106,7 @@ pub mod app {
     #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub mod history_edit_acceptance {
-        pub use semio_plugin_testing_acceptance::{__EditorApp, acceptance_changes, block_on_acceptance};
+        pub use semio_plugin_testing_acceptance::{__EditorApp, acceptance_changes, assert_mounted_history_overwrite, block_on_acceptance};
     }
     pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use semio_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
@@ -228,6 +228,7 @@ pub mod plugin_app_close_prelude {
     pub use semio_plugin_decl_media::original_media::{RawMediaPicker, runtime::RawLiveDocument};
     pub use semio_plugin_decl_views;
     pub use semio_plugin_document_media;
+    pub use semio_plugin_retained_command_operation;
     pub use semio_plugin_ownership;
     pub use semio_plugin_store_lifecycle;
     pub use semio_plugin_transient_publication;

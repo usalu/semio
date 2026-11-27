@@ -518,6 +518,11 @@
         "network"
       ],
       "properties": {
+        "startedMs": {
+          "description": "When the process of the worker started (epoch milliseconds): a registration of the same origin by a younger process replaces the registration of an older one, so a restart leaves no dead worker behind that the scheduler could still place an action on.",
+          "type": "integer",
+          "minimum": 1
+        },
         "resumed": {
           "description": "The tasks a worker is still running when it joins again after the scheduler lost its state (a restart): the scheduler adopts them instead of running the same actions a second time.",
           "type": "array",

@@ -269,8 +269,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub(crate) fn tool_source_busy(&self,operation:u64)->bool{self.tool_machines.operation_tag(operation).is_some_and(|tag|match tag{ToolTag::Scrub(tag)=>self.tool_machines.presses.retained_read_pending(&tag.window),ToolTag::Typing(_)=>false})}
 
     /// 🔁️ A writer whose admission waits on the tool follow's retained read drives that follow one funded step, the same step the maintenance ladder's `ToolOverlay` rung takes, so the waiting publication releases its own blocker.
-    pub fn follow_before_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>,writer:&str)->Result<semio_plugin_retained_command::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
+    pub fn follow_before_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>,writer:&str)->Result<semio_plugin_retained_command_operation::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_retained_command_operation::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
         let grant=cx.retained_grant();let demand=self.shared().tool_overlay_retirement_demand(grant.maximum_copy_bytes,cx.fuel_remaining())?;
         let ceiling=cx.original_turn_ceiling().0;
         if let Some((resource,demanded,granted))=semio_plugin_ownership::bounded_ownership::plugin_grant_shortfall(demand,ceiling){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,format!("the tool follow retirement that precedes the {writer} writer needs {demanded} {resource} but no turn grants more than {granted}")).into())}
@@ -287,8 +287,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// of the press the window already closed stays silent on every lane. One ledger step decides every lane, so a refused
     /// input leaves the press, its overlays and its held config exactly as they were until a retry or a host abort decides.
     /// Answers whether `emit` publishes the press.
-    pub fn settle_press<D>(&mut self,tag:&mut Option<ScrubTag>,base:&[u8;32],actor:&str,emit:&mut Emit<A::Mutation,A::ConfigMutation,D>,cx:&mut semio_framework_job::StepContext<'_>,result:&mut Option<bool>)->Result<semio_plugin_retained_command::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
+    pub fn settle_press<D>(&mut self,tag:&mut Option<ScrubTag>,base:&[u8;32],actor:&str,emit:&mut Emit<A::Mutation,A::ConfigMutation,D>,cx:&mut semio_framework_job::StepContext<'_>,result:&mut Option<bool>)->Result<semio_plugin_retained_command_operation::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_retained_command_operation::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
         if result.is_some(){return Ok(Unit::Complete)}
         if self.tools.original_press_settlement.is_none(){
             if tag.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original press requires its retained tag").into())}
@@ -313,8 +313,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// the window's run; nothing publishes while the run is open, and a run the edit ended (idle lapse, caret jump, another
     /// buffer) publishes in this emit as ONE edit stamped with its own `TransactionRef`. An emit that carries no transaction
     /// logs no history row; every other lane of the emit (effects, events, UI scope) publishes as usual.
-    pub fn settle_tool_operation(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_retained_command::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
+    pub fn settle_tool_operation(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_retained_command_operation::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_retained_command_operation::typed_operation::{PublicationWait,ToolSettlementUnit as Unit};
         let (work,retained)=(cx.original_work_units_spent(),cx.retained_progress());
         let unit=self.settle_tool_operation_unit(operation,base,actor,publication,stage,result,command_logged,cx)?;
         Ok(match unit{
@@ -325,8 +325,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 🛠️ One unit of [`Self::settle_tool_operation`]; every return that is not `Complete` says whether it ran a step or why it ran none.
-    fn settle_tool_operation_unit(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_retained_command::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::{PublicationWait,OriginalToolSettlementStage as Stage,ToolSettlementUnit as Unit};
+    fn settle_tool_operation_unit(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_plugin_retained_command_operation::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_retained_command_operation::typed_operation::ToolSettlementUnit,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_retained_command_operation::typed_operation::{PublicationWait,OriginalToolSettlementStage as Stage,ToolSettlementUnit as Unit};
         if *stage==Stage::Complete{return Ok(Unit::Complete)}
         if *stage==Stage::Capture{
             if self.tool_machines.refold_owed&&self.tools.original_tool_follow.as_ref().is_some_and(|follow|follow.reads_gestures(&self.tool_machines)){return self.follow_before_writer(cx,"gesture")}

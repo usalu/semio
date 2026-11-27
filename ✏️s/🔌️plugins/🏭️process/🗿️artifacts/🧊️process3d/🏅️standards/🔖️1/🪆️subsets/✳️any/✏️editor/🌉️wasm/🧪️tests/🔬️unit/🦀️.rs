@@ -189,8 +189,8 @@ async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
         .await
         .expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("commit");
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     close_store(store);
 }
 //#endregion 🔖️DocumentTextTests

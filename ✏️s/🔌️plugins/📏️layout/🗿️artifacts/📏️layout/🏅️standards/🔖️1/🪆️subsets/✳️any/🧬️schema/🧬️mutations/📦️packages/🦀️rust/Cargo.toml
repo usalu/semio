@@ -42,6 +42,7 @@ semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-job-testing-caller = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-framework-job-context = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust" }

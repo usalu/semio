@@ -1,0 +1,99 @@
+{
+ "description": "Language-agnostic table of the memory cap of a command process: `capped` is true when the process runs under the collector cap and the allocator purge (commands that read the graph, and the cargo and cache kernels that keep a long run alive).",
+ "cases": [
+  {
+   "args": [
+    "run",
+    "project:target"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "show",
+    "projects"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "exec",
+    "tool"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "build"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "cache",
+    "status"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "cache",
+    "gc",
+    "--reclaim=1"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "tools",
+    "list"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "doctor"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "capacity"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "leases"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "cargo",
+    "--help"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts",
+    "component",
+    "--manifest",
+    "m/Cargo.toml"
+   ],
+   "capped": true
+  },
+  {
+   "args": [
+    "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts",
+    "component"
+   ],
+   "capped": true
+  }
+ ]
+}

@@ -4,16 +4,18 @@ import {join} from "node:path";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {classifyFailureV1,createTrustTrackerV1,decideTrustV1,requireTrustShapeV1,sourcePathV1,trustPolicyV1,type TrustV1} from "../🟦️.ts";
+import {classifyFailureV1,createTrustTrackerV1,decideTrustV1,requireTrustShapeV1,sourcePathV1,trustPolicyV1,type TrustPartV1,type TrustV1} from "../🟦️.ts";
 
 setDefaultTimeout(60_000);
+type Step=Readonly<{at:number;do:string;key?:string;kind?:string;part?:string;startedMs?:number;trust?:unknown;tier?:string}>;
+const isPart=(part:string|undefined):part is TrustPartV1=>part==="file"||part==="directory"||part==="walk";
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),python=testPythonV1();
 
 test("the fixture satisfies the closed schema and the Python oracle agrees with every vector",()=>{
  const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Fixture"});
  expect(validate(fixture),JSON.stringify(validate.errors?.[0])).toBe(true);
  requireTrustShapeV1("Fixture",fixture,"fixture");
- if(python===undefined)return;
+ if(python===null)return;
  const result=Bun.spawnSync([python,"-I",join(import.meta.dirname,"🐍️.py")],{stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stdout.toString()+result.stderr.toString()).toBe(0);
 });
@@ -29,26 +31,27 @@ test("the scope of every path of the fixture is decided as declared",()=>{
 
 test("every failure key of the fixture is classified as declared",()=>{
  expect(fixture.failures.length).toBeGreaterThan(30);
- for(const item of fixture.failures)expect(classifyFailureV1(item.key),item.name).toBe(item.class);
+ for(const item of fixture.failures)expect<unknown>(classifyFailureV1(item.key),item.name).toBe(item.class);
 });
 
 test("every health file of the fixture gets its tier",()=>{
- for(const item of fixture.tiers)expect(decideTrustV1(item.health as never,item.now,()=>item.alive),item.name).toBe(item.expected);
+ for(const item of fixture.tiers)expect<unknown>(decideTrustV1(item.health as never,item.now,()=>item.alive),item.name).toBe(item.expected);
 });
 
 test("every tracker sequence of the fixture yields the declared statement and tier",()=>{
  for(const item of fixture.trackers){
   let now=0;
   const tracker=createTrustTrackerV1(()=>now);
-  for(const [index,step] of item.steps.entries()){
+  const steps:readonly Step[]=item.steps;
+  for(const [index,step] of steps.entries()){
    now=step.at;
    const label=`${item.name} #${index}`;
    if(step.do==="failure")tracker.failure(step.key!);
    else if(step.do==="lost")tracker.lost(step.kind!);
-   else if(step.do==="verified")tracker.verified(step.part!,step.startedMs!);
+   else if(step.do==="verified"){if(!isPart(step.part))throw new Error(label);tracker.verified(step.part,step.startedMs!);}
    else{
     expect(tracker.record(),label).toEqual(step.trust as TrustV1);
-    expect(decideTrustV1({wallMs:now,pid:1,store:"ok",trust:tracker.record()},now,()=>true),label).toBe(step.tier!);
+    expect<unknown>(decideTrustV1({wallMs:now,pid:1,store:"ok",trust:tracker.record()},now,()=>true),label).toBe(step.tier!);
    }
   }
  }

@@ -3,7 +3,7 @@
   "title": "Build Owner Registry Consistency Cases V1",
   "description": "Language-agnostic cases for the law that every manifest-bearing module has exactly one row in the build owner registry and every row names a live manifest. A file value is raw text, or a JSON value that is serialized as the file text. A finding is written `kind:subject` where the subject is the owner name when the finding has one and the path otherwise.",
   "type": "object",
-  "required": ["version", "policy", "moveScopes", "cases"],
+  "required": ["version", "policy", "moveScopes", "cases", "duplicates"],
   "additionalProperties": false,
   "properties": {
     "version": { "const": 1 },
@@ -29,6 +29,23 @@
           "moves": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 } }, "description": "`[sourcePath, destinationPath]` pairs of an applied move plan." },
           "limit": { "type": "integer", "minimum": 1 },
           "scopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "The subtrees the sync is scoped to, in byte order." }
+        }
+      }
+    },
+    "duplicates": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Registry files with repeated rows: identical rows merge on every read (and the reconcile rewrites the file canonical, `healed`), conflicting rows are refused with the named collision error and leave the file unchanged.",
+      "items": {
+        "type": "object",
+        "required": ["name", "owners"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "owners": { "type": "array", "items": { "type": "object" } },
+          "healed": { "type": "boolean" },
+          "names": { "type": "array", "items": { "type": "string" } },
+          "refusal": { "type": "string", "minLength": 1 }
         }
       }
     },

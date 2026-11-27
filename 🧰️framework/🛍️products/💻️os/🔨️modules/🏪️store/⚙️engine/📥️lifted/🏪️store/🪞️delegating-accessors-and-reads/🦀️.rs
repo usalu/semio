@@ -257,6 +257,8 @@ where
 
     /// 🪞️ Delegates to [`StoreOwners::snapshot_read_leases_terminal_is_empty`].
     #[inline] pub fn snapshot_read_leases_terminal_is_empty(&self) -> bool { self.owners.snapshot_read_leases_terminal_is_empty() }
+    /// 🚫️ Revokes the commit authority of every snapshot read lease of this Store, which a displaced Store does before it retires.
+    #[inline] pub fn revoke_snapshot_read_authority(&self) { self.owners.snapshot_read_leases.revoke_authority() }
     /// 🪞️ Delegates to [`StoreOwners::snapshot_read_leases_await_return`].
     #[inline] pub fn snapshot_read_leases_await_return(&self) -> bool { self.owners.snapshot_read_leases_await_return() }
 

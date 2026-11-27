@@ -3,7 +3,7 @@ use semio_s_plugin_norm_compliance::AnnexChoice;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    semio_os_store_test_support::assert_dsl_round_trip(&En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -12,5 +12,5 @@ async fn aluminium_roof_purlin_example_fixture_parses_and_round_trips() {
     assert!(!document.materials.is_empty());
     assert_eq!(document.annex, AnnexChoice::De);
     assert!(document.materials.iter().any(|m| m.designation.to_lowercase().contains("6082")));
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }

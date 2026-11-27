@@ -40,6 +40,7 @@ fn effect<T>(control: &mut NativeDecodeControl<'_>, grant: RetainedCloneGrant, r
 #[derive(Debug)]
 struct Unpaid {
     turn: usize,
+    phase: &'static str,
     actual: (usize, usize),
     reported: RetainedCloneProgress,
 }
@@ -48,6 +49,7 @@ struct Probe {
     caller: OriginalJobFixtureCaller,
     decoder: OriginalJobDecodeOwner,
     turn: usize,
+    phase: &'static str,
     unpaid: Option<Unpaid>,
 }
 
@@ -57,7 +59,7 @@ impl Probe {
         caller.retain_dispatch().unwrap();
         caller.admit_return_table();
         let decoder = caller.admitted_decoder();
-        let mut probe = Self { caller, decoder, turn: 0, unpaid: None };
+        let mut probe = Self { caller, decoder, turn: 0, phase: "new", unpaid: None };
         probe.run(RetainedCloneGrant::default(), |_| ((), RetainedCloneProgress::default()));
         let grant = retained(semio_framework_value::original_failure_storage_birth_demand());
         probe.run(grant, |control| {
@@ -98,12 +100,13 @@ impl Probe {
         assert!(progress.fits(grant), "original replay exceeded its physical grant");
         let actual = (heap.requested_bytes, heap.released_bytes);
         if actual != (progress.retained_capacity_bytes, progress.released_bytes) && self.unpaid.is_none() {
-            self.unpaid = Some(Unpaid { turn: self.turn, actual, reported: progress });
+            self.unpaid = Some(Unpaid { turn: self.turn, phase: self.phase, actual, reported: progress });
         }
         value
     }
 
     fn retire<T: RetireOwned>(&mut self, value: T) {
+        self.phase = "retire";
         let mut owner = ControlledRetirement::new(value).map_err(|(error, _)| error).unwrap();
         for _ in 0..100_000 {
             if owner.terminal_is_empty() {
@@ -127,6 +130,7 @@ impl Probe {
     }
 
     fn retire_snapshot(&mut self, snapshot: Arc<En1990Snapshot>) {
+        self.phase = "retire-snapshot";
         assert_eq!(Arc::weak_count(&snapshot), 0);
         let released_bytes = semio_framework_value::shared_retirement_allocation_bytes::<En1990Snapshot>();
         let grant = retained(RetirementDemand { release_bytes: released_bytes, ..Default::default() });
@@ -140,6 +144,7 @@ impl Probe {
     }
 
     fn finish(mut self) -> Option<Unpaid> {
+        self.phase = "finish";
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WORK as usize, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_value::original_failure_storage_birth_demand().capacity_bytes, maximum_depth: 1 };
         self.run(grant, |control| {
             let step = effect(control, grant, |control, effect| {
@@ -225,6 +230,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             let snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<En1990Snapshot>> = Arc::new(semio_framework_value::OwnedValueRetirementFactory::<En1990Snapshot>::default());
             let mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<En1990Mutation>> = Arc::new(semio_framework_value::OwnedValueRetirementFactory::<En1990Mutation>::default());
             let grant = retained(ArtifactMutationSource::<En1990Mutation>::constructor_demand());
+            probe.phase = "source-admit";
             let mut source = probe.run(grant, |_| {
                 let (source, progress) = ArtifactMutationSource::admit(&mut original, &mutations, grant).unwrap().unwrap();
                 (source, progress)
@@ -233,9 +239,11 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             for _ in 0..maximum {
                 let grant = retained(source.demands(body).unwrap());
                 if source.ready() {
+                    probe.phase = "source-take";
                     probe.run(grant, |_| ((), source.take(&mut input, grant).unwrap().unwrap()));
                     break;
                 }
+                probe.phase = "source-advance";
                 probe.run(grant, |control| ((), source.advance_chained(control, grant).unwrap().progress()));
             }
             let registry = SnapshotReadRegistryHandle::new();
@@ -244,6 +252,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             let request = ArtifactReplayPreparationRequest { base: SnapshotRead::new(Arc::clone(&root), lease), input: input.take().unwrap(), context, snapshots: Arc::clone(&snapshots), mutations: Arc::clone(&mutations) };
             let factory = RetainedColdMutationApplyFactory::<En1990Snapshot, En1990Mutation>::default();
             let birth = retained(ArtifactReplayPreparationFactory::preparation_birth_demand(&factory));
+            probe.phase = "replay-birth";
             let mut owner = probe.run(birth, |control| {
                 assert!(control.prepare_work(1).unwrap());
                 control.admit_turn_capacity(birth.maximum_capacity_bytes).unwrap();
@@ -265,7 +274,8 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             let mut stagnant_turns = 0;
             for turn in 0..maximum.min(cancel_after.unwrap_or(maximum)) {
                 let before = owner.advance_demands(body, WORK).unwrap();
-                assert!(retained_clone_grant_admits(funded, before), "operation {index}, cancellation {cancel_after:?}, turn {turn}: replay demand {before:?} exceeds {funded:?}; first heap mismatch {:?}", probe.unpaid);
+                assert!(retained_clone_grant_admits(funded, before), "operation {index}, cancellation {cancel_after:?}, turn {turn}: replay demand {before:?} exceeds {funded:?}; last advance {last_advance:?}; size_of snapshot {} mutation {} option snapshot {}; first heap mismatch {:?}", std::mem::size_of::<En1990Snapshot>(), std::mem::size_of::<En1990Mutation>(), std::mem::size_of::<Option<En1990Snapshot>>(), probe.unpaid);
+                probe.phase = "replay-denied";
                 let blocked = probe.run(funded, |control| {
                     let step = owner.advance(body, denied, control).unwrap();
                     (step, step.progress())
@@ -273,6 +283,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
                 assert_eq!(blocked, ArtifactReplayPreparationStep::Blocked, "denial at operation {index}, cancellation {cancel_after:?}, turn {turn}");
                 assert_eq!(owner.last_turn_work(), 0, "work on denial at operation {index}, turn {turn}");
                 assert_eq!(owner.advance_demands(body, WORK).unwrap(), before, "quote after denial at operation {index}, turn {turn}");
+                probe.phase = "replay-funded";
                 let (step, receiving) = probe.run(funded, |control| {
                     let limits = (control.available_work_hint(), control.owned_bytes(), control.maximum_bytes(), control.has_retirement_failure_storage());
                     let step = owner.advance(body, grant, control).unwrap();

@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dwg::v_ac1018::any as dwg_out, dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dwg::v_ac1018::any as dwg_out, dxf::v_r12::any as dxf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{dwg::v_ac1018::any as dwg_in, dxf::v_r12::any as dxf_in, txt::v_utf_8::any as txt_in};
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::{GisMapSnapshot, MapFeature};
@@ -71,8 +71,6 @@ fn dwg_carries_every_feature_in_world_coordinates() {
 fn page_formats_are_real_files_of_their_format() {
     let svg = String::from_utf8(svg_out::serialize_bytes(&map()).expect("svg")).expect("utf-8");
     assert!(svg.contains("<svg") && svg.matches("<path").count() == 4, "{svg}");
-    let pdf = pdf_out::serialize_bytes(&map()).expect("pdf");
-    assert!(pdf.starts_with(b"%PDF-1.4"));
     let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&png_out::serialize_bytes(&map()).expect("png")).expect("decodes as png");
     let preview = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_preview(&png).expect("owned PNG preview");
     assert_eq!((preview.width, preview.height), (256, 256));

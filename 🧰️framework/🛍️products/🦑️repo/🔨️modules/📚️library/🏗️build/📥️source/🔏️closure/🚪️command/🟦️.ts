@@ -11,12 +11,12 @@ import{staleImplementationV1}from"../../../../../../../../🔨️modules/📁️
 import{implementationPinnedV1}from"../../../📥️inputs/🔏️revision/🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
-import{repositoryCommandReadsGraphV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
+import{repositoryCommandMemoryCappedV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
 import{graphChildEnvironmentV1}from"../../../🧠️memory/🐏️child-environment/🟨️.mjs";
 
-/** 🐏️ The environment of the process that runs one command of the build tool: a command that reads the project graph gets the collector target and the allocator purge of a graph child (`graphChildEnvironmentV1`), exactly as the trampoline gives them to its door; without them the runtime sizes its garbage by the memory of the host (32 GB: one synchronous stretch of the inference allocated 25 GB before its first full collection) and keeps freed pages in the footprint. */
+/** 🐏️ The environment of the process that runs one command of the build tool: a command that reads the project graph or keeps a Cargo run alive (`repositoryCommandMemoryCappedV1`) gets the collector target and the allocator purge of a graph child (`graphChildEnvironmentV1`), exactly as the trampoline gives them to its door; without them the runtime sizes its garbage by the memory of the host (32 GB: one synchronous stretch of the inference allocated 25 GB before its first full collection) and keeps freed pages in the footprint. */
 export function implementationProcessEnvironmentV1(args:readonly string[],base:Readonly<Record<string,string|undefined>>,environment:Readonly<Record<string,string|undefined>>=base):Record<string,string|undefined>{
- let reads=false;try{reads=repositoryCommandReadsGraphV1(args,environment);}catch{}
+ let reads=false;try{reads=repositoryCommandMemoryCappedV1(args,environment);}catch{}
  return{...base,...(reads?graphChildEnvironmentV1():{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"};
 }
 /** 🔏️ Carries only the authenticated loader context of one captured command process. */

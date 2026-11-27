@@ -85,15 +85,15 @@ fn drawing_action_bridge_round_trips_every_command() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_command_op_text_round_trips_every_variant() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_line_round_trip(&command);
+        semio_os_store_test_support::assert_op_line_round_trip(&command);
     }
-    store::os_store::test_support::assert_op_line_round_trip(&DrawingCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&DrawingCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_command_op_binary_round_trips_every_variant() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 

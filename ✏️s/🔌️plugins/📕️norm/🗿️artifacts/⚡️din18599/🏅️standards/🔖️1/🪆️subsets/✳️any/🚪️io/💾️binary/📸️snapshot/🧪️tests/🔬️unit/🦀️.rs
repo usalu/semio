@@ -2,7 +2,7 @@ use crate::binary::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_pack_equivalence() {
-    store::os_store::test_support::assert_dsl_pack_equivalence(&Din18599Snapshot::default());
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&Din18599Snapshot::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -14,5 +14,5 @@ async fn pack_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_schema_identity_is_derived() {
-    store::os_store::test_support::assert_pack_schema_identity(&Din18599Snapshot::default());
+    semio_os_store_test_support::assert_pack_schema_identity(&Din18599Snapshot::default());
 }

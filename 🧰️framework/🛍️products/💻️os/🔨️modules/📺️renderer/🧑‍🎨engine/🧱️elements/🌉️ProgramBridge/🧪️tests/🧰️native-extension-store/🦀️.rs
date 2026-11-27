@@ -41,7 +41,7 @@ fn sample_package(component: &[u8]) -> Vec<u8> {
     let manifest = semio_os_extension::ExtensionPackageManifest {
         extension_id: "flow.math".into(),
         directory_name: "🧮️flow-math".into(),
-        label: "Flow Math".into(),
+        label: semio_os_extension::LocalizedLabel::native("Flow Math", "Flow-Mathematik"),
         version: "0.1.0".into(),
         extends: "flow".into(),
         capabilities: vec!["flow.operator".into()],
@@ -92,7 +92,7 @@ fn the_door_refuses_what_the_browser_door_refuses() {
     assert!(answer(&store, serde_json::json!({ "op": "extension-store-install-file", "path": garbage })).unwrap_err().contains("extension package"));
     let mismatched = store.join("📥️wrong");
     std::fs::create_dir_all(&mismatched).unwrap();
-    std::fs::write(mismatched.join(NATIVE_EXTENSION_INSTALL_META), r#"{"extensionId":"x","directoryName":"other","version":"1","label":"X","extends":"flow","moduleUrl":"/m","packageHash":"h","installedAt":1}"#).unwrap();
+    std::fs::write(mismatched.join(NATIVE_EXTENSION_INSTALL_META), r#"{"extensionId":"x","directoryName":"other","version":"1","label":{"native":{"en":"X","de":"X"},"reuse":{"en":"X","de":"X"}},"extends":"flow","moduleUrl":"/m","packageHash":"h","installedAt":1}"#).unwrap();
     assert!(answer(&store, serde_json::json!({ "op": "extension-store-list" })).unwrap_err().contains("identity mismatch"), "a record must name its own directory");
 }
 

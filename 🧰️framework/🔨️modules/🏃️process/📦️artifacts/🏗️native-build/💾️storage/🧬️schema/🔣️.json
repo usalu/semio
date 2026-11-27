@@ -172,6 +172,34 @@
           "additionalProperties": false,
           "required": [
             "type",
+            "expectedSequence",
+            "allocation",
+            "bytes"
+          ],
+          "properties": {
+            "type": {
+              "const": "regrown"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
             "id"
           ],
           "properties": {
@@ -643,6 +671,34 @@
       }
     },
     "RebudgetRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "expectedSequence",
+        "allocation",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocation": {
+          "$ref": "#/definitions/Allocation"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "RegrowRequest": {
       "type": "object",
       "additionalProperties": false,
       "required": [

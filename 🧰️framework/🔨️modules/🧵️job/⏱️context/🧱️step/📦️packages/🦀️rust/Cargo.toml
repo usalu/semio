@@ -1,0 +1,60 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-context-step"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Step context custody: the genuine original caller context with its source authority, prepaid continuation and retained protocol custody."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-context-step"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_context_step"
+path = "🦀️.rs"
+
+[features]
+testkit = ["semio-framework-async/testkit", "semio-framework-job-receiving/testkit", "semio-framework-job-failure/testkit"]
+
+[dependencies]
+semio-framework-value-native-outcome = { path = "../../../../../🌱️value/🛬️decode/📬️outcome/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-frame = { path = "../../../../../🌱️value/🛬️decode/🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust" }
+semio-framework-job-return-book = { path = "../../../../📬️outcome/⏸️continuation/🎟️source/📒️book/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-call = { path = "../../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
+semio-framework-job-outcome-borrow = { path = "../../../../📬️outcome/🤝️loan/📦️packages/🦀️rust" }
+semio-framework-job-work-grant = { path = "../../../../🏃️work/🎟️grant/📦️packages/🦀️rust" }
+semio-framework-job-return-escrow-publication = { path = "../../../../📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust" }
+semio-framework-job-return-budget = { path = "../../../../📬️outcome/🪙️budget/📦️packages/🦀️rust" }
+semio-framework-job-failure = { workspace = true }
+semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job-receiving = { workspace = true }
+semio-framework-job-clock = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-job-replacement = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-framework-job-outcome = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-value-shared-issuance = { path = "../../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-job-receiving = { workspace = true, features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

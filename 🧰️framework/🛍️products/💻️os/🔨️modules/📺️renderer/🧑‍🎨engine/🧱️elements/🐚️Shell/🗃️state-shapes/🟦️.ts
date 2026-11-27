@@ -269,5 +269,42 @@ export const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof 
 export function withField<S extends object, K extends keyof S>(state: S, key: K, value: S[K]): S {
   return Object.is(state[key], value) ? state : { ...state, [key]: value };
 }
+
+/** 🪦️ The windows a retirement event removes: the exact shell window instance ids plus every program id whose `${programId}::` namespace goes with it. */
+export type RetiredWindowsV1 = Readonly<{ windowIds: readonly string[]; programIds: readonly string[] }>;
+
+/** 🪦️ True when `key` is a window instance id (or a panel/tool key namespaced under a program) that `retired` removes. */
+export function windowKeyRetiredV1(key: string, retired: RetiredWindowsV1): boolean {
+  return retired.windowIds.includes(key) || retired.programIds.some((programId) => key.startsWith(`${programId}::`));
+}
+
+/** 🪦️ True when a `${windowId}:${actionId}` staging key belongs to a window that `retired` removes. */
+export function stageKeyRetiredV1(key: string, retired: RetiredWindowsV1): boolean {
+  return retired.windowIds.some((windowId) => key.startsWith(`${windowId}:`) && !key.startsWith(`${windowId}::`)) || retired.programIds.some((programId) => key.startsWith(`${programId}::`));
+}
+
+/** 🪦️ `record` without the entries `doomed` selects, keeping the identity when none match so downstream memos still bail. */
+export function withoutRetiredKeysV1<T>(record: Readonly<Record<string, T>>, doomed: (key: string) => boolean): Readonly<Record<string, T>> {
+  const kept = Object.entries(record).filter(([key]) => !doomed(key));
+  return kept.length === Object.keys(record).length ? record : Object.fromEntries(kept);
+}
+
+/** 🔁️ What a program keeps when a new instance replaces its old one under the SAME program id: the windows the new instance declared and has just refreshed. Everything else under `${programId}::` belonged to the old instance. */
+export type ReplacedInstanceV1 = Readonly<{ programId: string; liveWindowIds: readonly string[] }>;
+
+/** 🔁️ True when `key` is old-instance state in a refresh-owned slice: inside the program's namespace but not a live window. */
+export function staleAfterReplacementV1(key: string, replaced: ReplacedInstanceV1): boolean {
+  return key.startsWith(`${replaced.programId}::`) && !replaced.liveWindowIds.includes(key);
+}
+
+/** 🔁️ True when `key` is old-instance state in a user-owned slice (active utility, fold, expansion, staged args): the whole namespace, live windows included, because the choice was made against the old instance. */
+export function ownedByReplacedInstanceV1(key: string, replaced: ReplacedInstanceV1): boolean {
+  return key.startsWith(`${replaced.programId}::`);
+}
+
+/** 🪦️ `state` with `patch` applied, or `state` itself when every patched field keeps its identity. */
+export function withFieldsV1<S extends object>(state: S, patch: Partial<S>): S {
+  return (Object.keys(patch) as (keyof S)[]).every((key) => Object.is(state[key], patch[key])) ? state : { ...state, ...patch };
+}
 //#endregion actions
 //#endregion 🧮️ShellStore

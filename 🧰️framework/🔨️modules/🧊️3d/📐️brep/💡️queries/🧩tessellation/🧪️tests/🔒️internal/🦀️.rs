@@ -1,7 +1,7 @@
 //! 🔒️ Native tessellation tests that inspect owned backing directly.
 
 use super::*;
-use crate::test_support::{observe_tessellation_system,watch_released_pointers,MESH_RELEASES,OBSERVED_MESH,OBSERVED_RELEASE_BYTES,OBSERVED_SAMPLE,SAMPLE_RELEASES};
+use semio_os_store_test_support::{observe_tessellation_system,watch_released_pointers,MESH_RELEASES,OBSERVED_MESH,OBSERVED_RELEASE_BYTES,OBSERVED_SAMPLE,SAMPLE_RELEASES};
 use semio_framework_3d_brep_construction::euler::{add_face,make_edge,make_vertex};
 use semio_framework_3d_brep_curve::Curve2;
 use semio_framework_3d_brep_representation::{arena::ArenaId,topology::{make_loop,history::OpRecorder}};

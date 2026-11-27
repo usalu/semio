@@ -33,6 +33,12 @@
       "maxLength": 256,
       "pattern": "^[^\\u0000]+$"
     },
+    "sourceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
     "artifactDirectory": {
       "type": "string",
       "minLength": 1,

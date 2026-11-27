@@ -55,7 +55,7 @@ pub fn plugin()->Result<Plugin<FixtureApps>,PluginAssemblyError> {
     let pair=LanguagePair{text:None,binary:None};
     let subset=SubsetDeclaration {dialect:DIALECT,schema:SchemaDeclaration{descriptor,inferences:&[],inference_services:Vec::new()},io:IoDeclaration{native:NativeCodecs{snapshot:pair,diff:pair,mutations:pair,inferences:None,codec:store::bare_artifact_codec::<crate::Snapshot,crate::Mutation>(KIND)},entries:&[]},editor:surface::<false>(),viewer:surface::<true>(),examples:&[]};
     let artifact=DeclaredArtifact{kind:semio_framework_artifact_reference::ArtifactKindId::parse(KIND).map_err(|error|PluginAssemblyError::new("fixture.kind",error))?,localization:&[],standards:vec![StandardDeclaration{id:StandardId("1"),media:MediaDeclaration{mimes:&[],extensions:&["neutral-host-fixture"]},subsets:vec![subset]}]};
-    PluginBuilder::<_, FixtureApps>::new("neutral-host-fixture").label("Neutral Host Fixture").version("1.0.0").package_id("semio:neutral-host-fixture").declare_artifact(artifact).declare_artifact(refusal_artifact()?).try_build()
+    PluginBuilder::<_, FixtureApps>::new("neutral-host-fixture").label(LocalizedLabel::native("Neutral Host Fixture", "Neutrale Host-Testvorlage")).version("1.0.0").package_id("semio:neutral-host-fixture").declare_artifact(artifact).declare_artifact(refusal_artifact()?).try_build()
 }
 
 use semio_plugin_host_test_component_refusal as refusal;

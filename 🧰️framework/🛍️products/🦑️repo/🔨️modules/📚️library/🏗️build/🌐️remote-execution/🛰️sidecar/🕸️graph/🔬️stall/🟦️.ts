@@ -1,6 +1,7 @@
 import{listLeaseRegistryDirectoriesV1,leaseRegistryRootV1,readLeaseRegistryEntriesV1,type LeaseRegistryEntryV1}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import{readNativeImageRetirementFileV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import{lstatSync}from"node:fs";
+import type{NativeImageSharedReaderV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 import{join,resolve}from"node:path";
 import{CUSTODY_POLICY_V1,readCustodyClaimV1}from"../../../../🕸️graph/🕰️generations/🔐️custody/🟨️.mjs";
 import{isDeposedV1,readAskV1}from"../../../../🕸️graph/🕰️generations/🪧️door-board/🟨️.mjs";
@@ -14,6 +15,10 @@ export function readGraphLeaseEntriesV1(environment:Readonly<Record<string,strin
  try{for(const directory of listLeaseRegistryDirectoriesV1(root))found.push(...readLeaseRegistryEntriesV1(root,directory,nowMs,false));}catch{}
  return found;
 }
+
+/** 🔒️ Asks {@link graphRefreshCustodyHeldV1} under the shared lease of the graph image, so the custody files are never read while a retirement, regrow or detach holds the image exclusively; a lease the reader cannot take (a writer holds or awaits the image) defers: the image is in maintenance and no graph read should start on it.
+ * @see ../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts */
+export async function graphRefreshDeferredV1(reader:NativeImageSharedReaderV1,input:Parameters<typeof graphRefreshCustodyHeldV1>[0]):Promise<boolean>{try{return await reader.run(()=>graphRefreshCustodyHeldV1(input));}catch{return true;}}
 
 /** 🛑️ Defers opportunistic refresh only for a positively observed held structural claim in this local generation namespace. */
 export function graphRefreshCustodyHeldV1(input:Readonly<{generationsRoot:string;leaseDirectory:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal}>,entries=readLeaseRegistryEntriesV1):boolean{

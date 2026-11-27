@@ -7,18 +7,34 @@ use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError}
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_os_kernel::os_store::snapshot_read::settle_close_poll;
 use semio_plugin::app::{plugin_typed_owner_demand, plugin_typed_owner_original};
-use super::{page::{admit_pdf_save_page, donate_pdf_save_page}, window::write_pdf_original_turn};
+use super::{increment::Compact, page::{admit_pdf_save_page, donate_pdf_save_page}, window::write_pdf_original_turn};
 
 pub const PORT: &str = "artifact:native";
 pub const TOOL: &str = "export-media:artifact:native";
 pub const FORMAT: &str = "s.stdio.pdf@1.7";
 pub const MIME: &str = "application/pdf";
-/// 🚨️ The coded refusal the shell localizes through the PDF fault catalog (`stdio.pdf.save-declined`); the English developer detail never reaches the user.
-pub(crate) const REFERENCE_REQUIRED: &str = "stdio.pdf.save-declined";
+/// 🧭️ The cause a declined Save carries, with the appended-section refusal it reports.
+pub use semio_s_artifact_stdio_pdf_save_cause::SaveCause;
+
+/// 📎️ The decline cause of an appended-section refusal.
+pub const fn cause_of(refusal: Compact) -> SaveCause {
+    match refusal {
+        Compact::Original(_) => SaveCause::Original,
+        Compact::Encrypted => SaveCause::Encrypted,
+        Compact::Root => SaveCause::Root,
+        Compact::Baseline => SaveCause::Baseline,
+        Compact::Retained => SaveCause::Retained,
+        Compact::Tree => SaveCause::Tree,
+        Compact::Document => SaveCause::Document,
+        Compact::Page => SaveCause::Page,
+        Compact::Resources => SaveCause::Resources,
+        Compact::Extent => SaveCause::Extent,
+    }
+}
 pub(crate) const MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Data, form: MediaForm::Document };
 
 /// 📜️ The graph planner binds the authoritative source and proves coverage, total extent and the ordinary-object bound.
-pub(crate) enum PlanDecision { Pending, Ready, ReferenceRequired }
+pub(crate) enum PlanDecision { Pending, Ready, ReferenceRequired(SaveCause) }
 
 pub(crate) trait PdfNativeSaveProgram<S> {
     fn prepare_original(&mut self, snapshot: &S, revision: [u8; 32], cx: &mut StepContext<'_>) -> Result<PlanDecision, OriginalTurnFailure>;
@@ -45,6 +61,7 @@ pub struct PdfSaveProducer {
     result_ready: bool,
     encoded: bool,
     sealed: bool,
+    pub(crate) cause: SaveCause,
 }
 
 impl PdfSaveProducer {
@@ -69,7 +86,7 @@ impl PdfSaveProducer {
             match program.prepare_original(&request.snapshot, request.canonical_base_revision, cx)? {
                 PlanDecision::Pending => return Ok(false),
                 PlanDecision::Ready => self.ready = true,
-                PlanDecision::ReferenceRequired => return self.decline(request, cx),
+                PlanDecision::ReferenceRequired(cause) => { self.cause = cause; return self.decline(request, cx) }
             }
         }
         if self.result_ready || self.published {
@@ -139,7 +156,8 @@ impl PdfSaveProducer {
         }
         if self.pending.is_none() && !self.published {
             if cx.should_yield() || cx.is_cancelled() { return Ok(false); }
-            let capacity = PORT.len() + REFERENCE_REQUIRED.len();
+            let code = self.cause.code();
+            let capacity = PORT.len() + code.len();
             let bytes = size_of::<Result<ArtifactMediaExportResult, MediaError>>() + capacity;
             self.construction.built(cx, &mut self.pending, OriginalConstructionDemand {
                 items: 1, copy_bytes: bytes, capacity_bytes: capacity, release_bytes: 0, depth: 1,
@@ -147,9 +165,9 @@ impl PdfSaveProducer {
                 let mut port = String::new();
                 let mut reason = String::new();
                 port.try_reserve_exact(PORT.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "PDF export refusal allocation refused"))?;
-                reason.try_reserve_exact(REFERENCE_REQUIRED.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "PDF export refusal allocation refused"))?;
+                reason.try_reserve_exact(code.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "PDF export refusal allocation refused"))?;
                 port.push_str(PORT);
-                reason.push_str(REFERENCE_REQUIRED);
+                reason.push_str(code);
                 let retained_capacity_bytes = port.capacity() + reason.capacity();
                 Ok((Err(MediaError::Payload(port, reason)), RetainedCloneProgress {
                     copied_items: 1, copied_bytes: bytes, retained_capacity_bytes, ..Default::default()

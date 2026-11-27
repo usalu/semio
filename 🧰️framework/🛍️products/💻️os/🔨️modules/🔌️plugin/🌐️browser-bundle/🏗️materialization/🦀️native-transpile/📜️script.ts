@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { withCapturedCargoArtifactsTaskV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildAdmittedCargoArtifactsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
@@ -12,13 +12,14 @@ import { withRepositoryCacheStoreV1 } from "../../../../../../🦑️repo/🔨�
 import { readNativeCallerAuthorityV1, stageRepositoryArtifacts, withArtifactDestinationTaskV1, withArtifactScratchV1, withRepositoryArtifactDestinationV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { nativeTranspileBinaryNameV1, nativeTranspileBinaryV1, nativeTranspilePublicationPathV1, nativeTranspileRequiresBuildV1 } from "./🟦️.ts";
 
-async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvocation, platform: string, control: CompilerAdmissionControl = scriptCompilerAdmissionControlV1(invocation, "cargo:build", buildBudgetMs())): Promise<void> {
+async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvocation, platform: string, control: CompilerAdmissionControl = scriptCompilerAdmissionControlV1(invocation, "cargo:build", buildBudgetMs()), sourceRoot: string = workspace): Promise<void> {
   const authority = readNativeCallerAuthorityV1(invocation.capabilities);
   if (workspace !== authority.repositoryRoot) throw Error("Actual native transpile workspace required");
   const name = nativeTranspileBinaryNameV1(platform);
   const destination = nativeTranspilePublicationPathV1(workspace, authority.original.buildMode, platform);
-  await buildAdmittedCargoArtifactsV1(join(import.meta.dirname, "Cargo.toml"), ["--bin", "semio-native-transpile"], workspace, {
+  await buildAdmittedCargoArtifactsV1(join(sourceRoot, relative(workspace, import.meta.dirname), "Cargo.toml"), ["--bin", "semio-native-transpile"], workspace, {
     producer: "artifact",
+    sourceRoot,
     invocation,
     control,
     consume: capture => withCapturedCargoArtifactsTaskV1(capture, async view => {
@@ -37,11 +38,11 @@ async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvoc
 }
 
 /** 🥾️ Ensures the playground's actual build mode has a runnable native transpiler before component admission. */
-export async function ensureNativeTranspileV1(workspace: string, invocation: ScriptInvocation, control: CompilerAdmissionControl, environment: Readonly<Record<string, string | undefined>> = process.env): Promise<void> {
+export async function ensureNativeTranspileV1(workspace: string, invocation: ScriptInvocation, control: CompilerAdmissionControl, environment: Readonly<Record<string, string | undefined>> = process.env, sourceRoot: string = workspace): Promise<void> {
   const mode = readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode;
   const platform = process.platform;
   if (!nativeTranspileRequiresBuildV1(workspace, mode, environment, platform)) return;
-  await buildNativeTranspileV1(workspace, invocation, platform, requestedCompilerAdmissionControlV1(control, buildBudgetMs()));
+  await buildNativeTranspileV1(workspace, invocation, platform, requestedCompilerAdmissionControlV1(control, buildBudgetMs()), sourceRoot);
   nativeTranspileBinaryV1(workspace, mode, environment, platform);
 }
 

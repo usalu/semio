@@ -1,0 +1,11 @@
+{
+  "claimMilliseconds": 20000,
+  "retryMilliseconds": 2000,
+  "cases": [
+    {"name": "a worker takes the action on the third try", "attempts": ["no-idle-machine", "infrastructure", "done"], "result": "done", "tries": 3},
+    {"name": "a worker accepts the connection but never takes the action: the unclaimed attempt ends at the deadline", "attempts": ["queue-timeout"], "result": "beyond-host-local", "tries": 1},
+    {"name": "no worker is compatible", "attempts": ["no-compatible-worker"], "result": "beyond-host-local", "tries": 1},
+    {"name": "the fleet stays unreachable until the deadline", "attempts": ["infrastructure"], "repeat": true, "result": "beyond-host-local", "minimumTries": 2},
+    {"name": "cancelled during the first attempt", "attempts": ["cancelled"], "result": "cancelled", "tries": 1}
+  ]
+}

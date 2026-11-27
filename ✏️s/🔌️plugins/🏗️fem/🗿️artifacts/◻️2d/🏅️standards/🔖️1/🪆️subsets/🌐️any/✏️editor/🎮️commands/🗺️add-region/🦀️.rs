@@ -48,6 +48,13 @@ pub struct AddRegion {
 }
 
 pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    let refuse = |code: &'static str, message: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message);
+    if !doc.snapshot.materials.iter().any(|material| material.id.as_str() == payload.material_id) {
+        return Err(refuse("fem2d.region.material-unknown", format!("'{}' is not a material of this document", payload.material_id)).with_param("material", payload.material_id.as_str()));
+    }
+    if ![payload.width, payload.height].iter().all(|extent| extent.is_finite() && *extent > 0.0) {
+        return Err(refuse("fem2d.region.extent", "a region needs a positive width and height".into()));
+    }
     let id = doc.operation()?.entity_id("r", "regions")?;
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
     let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };

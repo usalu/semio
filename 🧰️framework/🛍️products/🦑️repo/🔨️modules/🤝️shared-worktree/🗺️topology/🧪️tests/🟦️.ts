@@ -1036,7 +1036,7 @@ const nativeStep=(options:{repoExit:number;needed?:number;toolchain?:boolean;lau
 
 const NOW=1_800_000_000_000,GIB=2**30;
 const GUARDS:GitGuardsV1={version:"2.47.3",pins:gitPinsHashV1(),volume:{caseInsensitive:false,normalisationInsensitive:false,symlinks:true,longPaths:null},infoExclude:0,caseIgnore:0,caseMismatch:0,trackedIgnored:0,trackedRefused:0,links:0,overBudget:0,modeMismatch:0,samples:[]};
-const HEALTHY:StatusReportV1={version:1,originId:"a1-m01",groupId:"a1",storeRoot:"/mnt/semio-store",reachable:true,daemon:{running:true,pid:42},sync:true,files:270000,queue:{incoming:0,outgoing:0},lost:0,refused:null,origins:[{origin:"a1-server",behindEvents:0,behindBytes:0,lastHlc:null,ageSeconds:1,rejoinRequired:false}]};
+const HEALTHY:StatusReportV1={version:1,originId:"a1-m01",groupId:"a1",storeRoot:"/mnt/semio-store",reachable:true,daemon:{running:true,pid:42},sync:true,files:270000,queue:{incoming:0,outgoing:0},lost:0,refused:null,origins:[{origin:"a1-server",behindEvents:0,behindBytes:0,lastHlc:null,ageSeconds:1,rejoinRequired:false,retired:false}],refusedPaths:{version:1,total:0,recent:[]},git:{shared:true,reason:"shared",indexTree:null},latency:null,retired:null,health:null,store:null};
 const NFS_OPTIONS="rw,vers=4.2,rsize=262144,wsize=262144,namlen=255,hard,proto=tcp,nconnect=4,timeo=600,retrans=2,sec=sys,acregmin=1,acregmax=1,acdirmin=1,acdirmax=1,lookupcache=none,local_lock=none";
 const mountinfo=(options:string=NFS_OPTIONS,type:string="nfs4",source:string="nfs.a1.example.test:/srv/store-a",mount:string="/mnt/semio-store"):string=>`36 35 0:41 / ${mount} rw,noatime shared:7 - ${type} ${source} ${options}\n`;
 const linuxFiles=(extra:Record<string,string>={},origin:string="a1-m01"):Record<string,string>=>({"/home/test/semio/.cache/f/machine.json":JSON.stringify({originId:origin,groupId:"a1",storeRoot:"/mnt/semio-store"}),"/proc/self/mountinfo":mountinfo(),"/proc/sys/fs/inotify/max_user_watches":"1048576\n","/proc/sys/fs/inotify/max_user_instances":"1024\n",...extra});
@@ -1442,7 +1442,7 @@ test("every group declares the ports of its services and the network policy, lin
  expect(()=>readTopologyV1(withAccess({enforceNetwork:false,transport:{crossGroup:"plain"}})),"a request of another group is never plain").toThrow();
  expect(()=>readTopologyV1(withAccess({enforceNetwork:false,transport:{inGroup:"clear"}}))).toThrow();
  const python=testPythonV1();
- if(python!==undefined){const run=spawnSync(python,["-I",join(import.meta.dirname,"🐍️.py"),"check"],{encoding:"utf8"});expect(run.status,run.stdout+run.stderr).toBe(0);}
+ if(python!==null){const run=spawnSync(python,["-I",join(import.meta.dirname,"🐍️.py"),"check"],{encoding:"utf8"});expect(run.status,run.stdout+run.stderr).toBe(0);}
 });
 
 test("every service definition declares its scheduling class: ProcessType on macOS (plutil reads it back), Nice and scheduling policy on Linux, Priority in the Windows task",()=>{
@@ -1483,7 +1483,7 @@ test("a crashed Windows service restarts although the headless console host hide
  const windows=workerPartsV1(topology,"c3","windows"),server=serverPartsV1(topology,"c3");
  for(const xml of [windows["definition"]!,server["cache-unit"]!,server["relay-unit"]!]){
   const script=hostedScript(xml);
-  expect(script).toStartWith("do{& ");expect(script).toContain(" --% ");expect(script).toContain("$c=$LASTEXITCODE;if($c -eq 0){exit 0};Start-Sleep -Seconds 5}while($true)");
+  expect(script).toStartWith("do{\n& ");expect(script).toContain(" --% ");expect(script).toContain("\n$c=$LASTEXITCODE\nif($c -eq 0){exit 0}\nStart-Sleep -Seconds 5\n}while($true)");
   expect(xml).toContain("<RestartOnFailure>");
   const python=testPythonV1();
   if(python){
@@ -1493,4 +1493,17 @@ test("a crashed Windows service restarts although the headless console host hide
  }
  for(const xml of [windows["mount-definition"]!,windows["compact-definition"]!])expect(xml).not.toContain("-EncodedCommand");
  expect(windows["mount-definition"]).toContain("<Arguments>--headless cmd.exe ");
+});
+
+test("every hosted Windows service script puts each statement on its own line, so the verbatim argument tail of the stop-parsing symbol ends at the line and the exit status check always runs, and its command line stays below the limit of a process start",()=>{
+ const windows=workerPartsV1(topology,"c3","windows"),server=serverPartsV1(topology,"c3");
+ for(const xml of [windows["definition"]!,server["cache-unit"]!,server["relay-unit"]!]){
+  const lines=hostedScript(xml).split("\n");
+  expect(lines[0]).toBe("do{");expect(lines.at(-1)).toBe("}while($true)");
+  const call=lines.findIndex(line=>line.startsWith("& "));expect(call).toBe(1);expect(lines[call]).toContain(" --% ");
+  expect(lines.slice(2)).toEqual(["$c=$LASTEXITCODE","if($c -eq 0){exit 0}","Start-Sleep -Seconds 5","}while($true)"]);
+  expect(lines.filter(line=>line.includes("--%"))).toHaveLength(1);
+  const arguments_=/<Arguments>([^<]*)<\/Arguments>/u.exec(xml)![1]!;
+  expect(("conhost.exe "+arguments_).length).toBeLessThan(32_000);
+ }
 });

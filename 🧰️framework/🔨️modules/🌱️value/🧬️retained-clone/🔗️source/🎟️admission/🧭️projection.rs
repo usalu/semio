@@ -100,6 +100,35 @@ impl<T:Sync+'static,A:OriginalSourceProjection<T>+RetireOwned+Sync,B:RetireOwned
  pub fn projection_stage_quote(&self,frame:&Option<OriginalProjectionFrame<T,A>>,stage:u8)->Result<(RetirementDemand,u64),ValueError>{
   match(stage,frame.as_ref()){(1,_)=>Ok((self.begin_projection_demand(),1)),(2,Some(f))=>Ok((f.projection_demand(),f.projection_work_demand()?)),(3,Some(f))=>Ok((f.producer_transfer_demand()?,1)),(4,Some(f))=>Ok((self.projection_answer_demand(f)?,2)),(5,_)=>Ok((self.finish_projection_demand(),1)),_=>Err(ValueError::invariant("original projection stage changed"))}
  }
+ /// 📐️ Quotes one whole staged admission before it exists: the copy bytes of every stage summed, the deepest stage, one item per stage and the Work of every stage, so a constructor funds the admission it creates and not only its first stage. Every stage sits at its own quote; the projection producer quotes its owner's one bounded unit and its own record.
+ /// @see [`Self::next_demand`], [`Self::projection_stage_quote`], [`Self::advance_work_demand`]
+ pub fn staged_admission_quote()->Result<(RetirementDemand,usize,u64),ValueError>{
+  use crate::shared_issuance::SealedSharedBirth;
+  let unit=|copy_bytes:usize|RetirementDemand{copy_bytes,depth:1,..Default::default()};
+  let stages=[
+   (SealedShared::<A>::source_admission_demand()?,SealedShared::<A>::source_admission_work_demand()),
+   (unit(SealedShared::<A>::duplicate_copy_bytes()),SealedShared::<A>::DUPLICATE_WORK),
+   (unit(size_of::<Option<NonNull<SourcePayload<A,B>>>>()),1),
+   (unit(size_of::<SourcePayload<A,B>>()+size_of::<Option<SealedShared<A>>>()+size_of::<Option<B>>()+size_of::<Option<NonNull<SourcePayload<A,B>>>>()+size_of::<Option<Box<SourcePayload<A,B>>>>()),4),
+   (SealedShared::<RetainedCloneLeaseOwner>::prepare_birth_demand()?,SealedShared::<RetainedCloneLeaseOwner>::prepare_birth_work_demand()),
+   (unit(size_of::<Option<u64>>()+size_of::<u64>()),1),
+   (unit(size_of::<Option<SealedShared<A>>>()+size_of::<Option<OriginalProjectionFrame<T,A>>>()+size_of::<bool>()),1),
+   (OriginalProjectionProducer::<T,A>::demand(),2),
+   (OriginalEffectAuthority::<OriginalProjectionProducer<T,A>>::producer_transfer_demand()?,1),
+   (OriginalProjectionProducer::<T,A>::transfer_demand(),2),
+   (unit(size_of::<Option<OriginalProjectionFrame<T,A>>>()+2*size_of::<bool>()),1),
+   (unit(size_of::<Option<Box<SourcePayload<A,B>>>>()+size_of::<Option<RetainedCloneLeaseOwner>>()),1),
+   (SealedSharedBirth::<RetainedCloneLeaseOwner>::publication_demand(),SealedSharedBirth::<RetainedCloneLeaseOwner>::publication_work_demand()),
+   (unit(size_of::<Option<SealedSharedBirth<RetainedCloneLeaseOwner>>>()),1),
+   (unit(size_of::<Option<SealedShared<A>>>()+size_of::<Option<SealedShared<RetainedCloneLeaseOwner>>>()+size_of::<Option<Result<NonNull<T>,ValueError>>>()+size_of::<Option<RetainedCloneSource<T,A>>>()),4),
+   (unit(size_of::<Option<RetainedCloneSource<T,A>>>()+size_of::<Option<u64>>()),1),
+   (unit(2*size_of::<Option<SealedShared<A>>>()+2*size_of::<Option<RetainedCloneBinding>>()+2*size_of::<Option<u64>>()),1),
+  ];
+  let overflow=||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"original staged admission quote overflows");
+  let steps=stages.len();let mut total=RetirementDemand::default();let mut work=0u64;
+  for(stage,stage_work) in stages{total.copy_bytes=total.copy_bytes.checked_add(stage.copy_bytes).ok_or_else(overflow)?;total.depth=total.depth.max(stage.depth);work=work.checked_add(stage_work).ok_or_else(overflow)?;}
+  Ok((total,steps,work))
+ }
  /// 🧭️ Runs one staged projection stage; a driven producer left unsettled reports Pending with its performed Work.
  pub fn project_staged(&mut self,frame:&mut Option<OriginalProjectionFrame<T,A>>,action:&mut Option<crate::retained_clone::OriginalEffectAction<crate::RetainedCloneStep,ValueError>>,stage:u8,effect:&mut RetainedAllocationEffect<'_>)->crate::RetainedWorkPoll<crate::RetainedCloneStep,ValueError>{
   use crate::{RetainedCloneStep,RetainedWorkPoll::{Complete,Pending}};

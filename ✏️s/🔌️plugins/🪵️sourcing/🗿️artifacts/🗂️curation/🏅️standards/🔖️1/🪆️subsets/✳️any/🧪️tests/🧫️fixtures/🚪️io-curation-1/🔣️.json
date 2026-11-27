@@ -1,0 +1,111 @@
+{
+  "sqlite": {
+    "kit": "🗂️mutate-curation-1/🔣️.snapshot.json",
+    "kitRows": {
+      "curation_document": 1,
+      "curation_catalog": 1,
+      "curation_stock_extra": 10,
+      "curation_typology_segment": 24,
+      "curation_geometry": 10,
+      "curation_box": 4,
+      "curation_frame": 3,
+      "curation_slab": 3,
+      "curation_mesh": 0,
+      "curation_glb": 0,
+      "curation_mesh_position": 0,
+      "curation_mesh_normal": 0,
+      "curation_mesh_index": 0,
+      "curation_curated": 3
+    }
+  },
+  "json": {
+    "members": [
+      "catalog",
+      "stockExtra",
+      "curated"
+    ],
+    "stock": 10,
+    "curated": 3,
+    "refused": [
+      "{\"a\":NaN}",
+      "{\"a\":Infinity}",
+      "{\"a\":1,}",
+      "{'a':1}",
+      "[1,2",
+      "{\"a\":01}"
+    ]
+  },
+  "zip": {
+    "entry": "curation.json",
+    "archive": {
+      "dslPrefix": "snapshot.",
+      "dslSuffix": ".semio",
+      "jsonMember": "snapshot.json",
+      "methods": [
+        0,
+        8
+      ]
+    }
+  },
+  "text": {
+    "samples": [
+      {
+        "text": "",
+        "utf8Bytes": 0,
+        "scalars": 0,
+        "utf16Units": 0
+      },
+      {
+        "text": "Glulam GL24h 200×400",
+        "utf8Bytes": 21,
+        "scalars": 20,
+        "utf16Units": 20
+      },
+      {
+        "text": "Tür 🧱",
+        "utf8Bytes": 9,
+        "scalars": 5,
+        "utf16Units": 6
+      },
+      {
+        "text": "\u0000😀",
+        "utf8Bytes": 5,
+        "scalars": 2,
+        "utf16Units": 3
+      },
+      {
+        "text": "😀\u0000!@/",
+        "utf8Bytes": 8,
+        "scalars": 5,
+        "utf16Units": 6
+      },
+      {
+        "text": "äöüß",
+        "utf8Bytes": 8,
+        "scalars": 4,
+        "utf16Units": 4
+      },
+      {
+        "text": "日本語 €",
+        "utf8Bytes": 13,
+        "scalars": 5,
+        "utf16Units": 5
+      }
+    ],
+    "malformed": [
+      "c0af",
+      "eda080",
+      "ff",
+      "e282",
+      "f4908080"
+    ]
+  },
+  "fidelity": {
+    "s.sourcing.curation@1/* -> s.stdio.zip@2.0/*": "Exact",
+    "s.stdio.zip@2.0/* -> s.sourcing.curation@1/*": "Exact",
+    "s.sourcing.curation@1/* -> s.stdio.json@rfc8259/*": "Exact",
+    "s.stdio.json@rfc8259/* -> s.sourcing.curation@1/*": "Exact",
+    "s.sourcing.curation@1/* -> framework.io.text@utf-8/*": "Exact",
+    "framework.io.text@utf-8/* -> s.sourcing.curation@1/*": "Exact"
+  }
+}

@@ -232,7 +232,7 @@ pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Op
 //#endregion 🔖️CanvasRecords
 
 pub use semio_s_artifact_bim_model_window_config::{OptionSelection, WorksetVisibility};
-pub(crate) use semio_s_artifact_bim_model_window_config::window_config;
+pub use semio_s_artifact_bim_model_window_config::window_config;
 
 /// 🎚️ The selected option for one group in a window.
 pub fn selected_option<'a>(selections: &'a [OptionSelection], group: &str) -> Option<&'a str> {

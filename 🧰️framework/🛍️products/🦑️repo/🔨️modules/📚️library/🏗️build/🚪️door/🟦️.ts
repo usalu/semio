@@ -13,7 +13,7 @@ import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process
 export type BuildDoorCatalogueV1=Readonly<{languages:readonly string[];flags:readonly Readonly<{name:string;aliases?:readonly string[];value:string;valueName?:string;operations?:readonly string[]}>[];operations:readonly Readonly<{name:string;requires:string;synopsis?:string;subcommands?:readonly Readonly<{name:string}>[]}>[]}>;
 
 /** 🛅️ Which commands run without the build implementation, which subcommand sets are closed and the refusal texts. */
-export type BuildDoorPolicyV1=Readonly<{version:1;liveness:Readonly<{delaysSeconds:readonly number[];repeatSeconds:number;unknownPhase:string;texts:Readonly<Record<"en"|"de",string>>}>;passthrough:readonly string[];fullTargetPrefixes:readonly string[];environment:Readonly<Record<"--tool"|"--workers",string>>;light:readonly Readonly<{operation:string;export:string;call:"root-args-environment"|"args-options"}>[];closedSubcommands:readonly string[];refusedExitCode:number;texts:Readonly<Record<BuildDoorRefusalIdV1,Readonly<Record<string,string>>>>}>;
+export type BuildDoorPolicyV1=Readonly<{version:1;liveness:Readonly<{delaysSeconds:readonly number[];repeatSeconds:number;unknownPhase:string;texts:Readonly<Record<"en"|"de",string>>}>;passthrough:readonly string[];fullTargetPrefixes:readonly string[];environment:Readonly<Record<"--tool"|"--workers",string>>;light:readonly Readonly<{operation:string;export:string;call:"root-args-environment"|"args-options"}>[];closedSubcommands:readonly string[];refusedExitCode:number;quiet:readonly Readonly<{command:string;subcommand:string;option:string}>[];texts:Readonly<Record<BuildDoorRefusalIdV1,Readonly<Record<string,string>>>>}>;
 
 /** 🚧️ The refusals the front door can state before any storage, lease or graph exists. */
 export type BuildDoorRefusalIdV1="unknownCommand"|"unknownSubcommand"|"invalidValue"|"missingArgument";
@@ -117,6 +117,14 @@ export type BuildDoorPortsV1=Readonly<{write:(line:string)=>void;error:(line:str
 /** 🖥️ The ports of the real process. */
 export function buildDoorProcessPortsV1():BuildDoorPortsV1{
  return {write:writeResultLineV1,error:line=>console.error(line),exit:code=>{process.exitCode=code;},load:operation=>{const loader=buildDoorLightLoadersV1[operation];if(!loader)throw Error(`No light loader for ${operation}`);return loader();}};
+}
+
+/** 🤫️ Tells whether one command line keeps its stderr free of the door's own liveness lines: the queries the policy names under `quiet` (`tools exec --light`) are short, and their output is hashed as an input by the build tool (Nx hashes stdout and stderr of a `runtime` input), so a line that depends on the load, the seconds waited or the language would give every task a hash of its own on every machine and run. */
+export function buildDoorStaysQuietV1(typed:readonly string[],environment:NodeJS.ProcessEnv,source:BuildDoorCatalogueV1=catalogue as BuildDoorCatalogueV1,rules:BuildDoorPolicyV1=policy as BuildDoorPolicyV1):boolean{
+ const selection=selectBuildDoorArgumentsV1(normalizeBuildOptionsV1(typed,source).slice(typed[0]==="repo"?1:0),environment,source,rules);
+ if("refused" in selection)return false;
+ const boundary=selection.args.indexOf("--"),head=selection.args.slice(0,boundary<0?undefined:boundary);
+ return rules.quiet.some(row=>head[0]===row.command&&head[1]===row.subcommand&&head.includes(row.option));
 }
 
 /** 💓️ Says every few seconds what the front door works on until the build script reports itself: the first sentence after 5 s, then after 10 s and 20 s, then every 30 s, in the chosen language or in both when none is chosen; the phase is the one the profile started last. Returns the call that stops it. */

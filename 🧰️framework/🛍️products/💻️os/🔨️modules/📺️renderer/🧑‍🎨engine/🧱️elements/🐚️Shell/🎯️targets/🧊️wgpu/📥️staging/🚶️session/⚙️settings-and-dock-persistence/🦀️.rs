@@ -126,7 +126,7 @@ impl<'ctx> SessionCtx<'ctx> {
             } else {
                 "plugins.status.available"
             };
-            let label = resident.map(|entry| entry.manifest.label.clone()).unwrap_or_else(|| plugin_id.to_string());
+            let label = resident.map(|entry| entry.manifest.label.resolve(self.prefs.active_terminology(), self.prefs.active_locale()).to_string()).unwrap_or_else(|| plugin_id.to_string());
             let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
             let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
             let target = semio_renderer_wgpu_host_base::action_args_json!({ "pluginId": plugin_id });

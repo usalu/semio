@@ -32,3 +32,9 @@ The glTF output schema types the envelope exactly and the leaf `value` as a `Glt
 - Hub-site GIS execution is unchanged (raw pack through `infer_gis_map_controlled`).
 - The bound pack is the `pack` half of the canonical pair; `spr` is not replayed by these guests (pre-existing behaviour of the guests).
 - The stale glTF unit test signature (`service.infer(&request)`) was left as found apart from the result decode.
+
+## Status: not yet verified
+
+- `repo run workspace:components -- describe stdio gis cad-extension-aec-building` was cancelled by its own 3000 s timeout (exit 124) while still reading the project graph: the host had no free memory (gate: 0 MB above the 2048 MB floor). No component was built, so the committed `🔣️.json` descriptors (`🌎️hub/🧩️compositions/🗄️stdio`, `🌎️hub/🧩️compositions/🌍️gis`, `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building`) are NOT regenerated and still lack the contracts.
+- Nothing has been compiled or tested: the Rust changes, the new conformance test and the glTF unit test are unverified. The conformance test will fail until the descriptors are regenerated, by design.
+- Next steps once memory is free: rerun the describe command above, then `repo test semio-os-mcp` (quick level) and the glTF/GIS/aec-building crate tests.

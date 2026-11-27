@@ -269,6 +269,15 @@ test("caches: only publications of processes that do not exist and were quiet ar
  await expect(repair.run(ports(root,{signal:aborted.signal}),context(),false)).rejects.toBeDefined();
 });
 
+test("graph and dependencies: a retirement, regrow or detach that holds the image exclusively is never read behind its lease, and a free image reads again",async()=>{
+ const root=fresh(),library=fresh(),leaseDirectory=join(root,".cache","b","l","m","data");mkdirSync(leaseDirectory,{recursive:true});
+ for(const[probe,id]of[[graphProbeV1,"graph"],[dependenciesProbeV1,"dependencies"]]as const){
+  const directory=partitionDirectory(root,id);mkdirSync(join(directory,"m"),{recursive:true});
+  const held=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+requireMaterializedPathV1(directory),mode:"exclusive",signal:new AbortController().signal,timeoutMs:0});
+  try{expect(await probe.read(ports(root),context({libraryRoot:library}))).toEqual({unavailable:expect.stringContaining("retirement, regrow or detach")});}finally{held.release();}
+  expect("sections" in await probe.read(ports(root),context({libraryRoot:library}))).toBe(true);
+ }
+},60000);
 test("graph: the pointer, its manifest and whether the implementation is newer are read from the generation store",async()=>{
  const root=fresh(),library=fresh(),mount=join(partitionDirectory(root,"graph"),"m"),store=join(mount,"generations");
  expect("unavailable" in await graphProbeV1.read(ports(root),context({libraryRoot:library}))).toBe(true);

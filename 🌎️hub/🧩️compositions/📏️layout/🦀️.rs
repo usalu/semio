@@ -21,7 +21,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🔌️ Registers Layout and its editor, viewer, document-write capability, and font assets.
 pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
     let mut builder = PluginBuilder::<_, LayoutApps>::new("layout")
-        .label("Layout")
+        .label(semio_plugin::LocalizedLabel::native("Layout", "Layout"))
         .version("0.1.0")
         .package_id("semio:layout")
         .artifact(semio_s_artifact_layout_layout::declaration().map_err(PluginAssemblyError::definition)?)

@@ -13,8 +13,8 @@ static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(||
 fn group_isolation_fixture_applies_and_inverts_through_all_owned_codecs() {
     let before:DrawingSnapshot=serde_json::from_str(*BEFORE).unwrap();
     let after:DrawingSnapshot=serde_json::from_str(*AFTER).unwrap();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&before);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&after);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&before);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&after);
     let mutation:DrawingMutation=serde_json::from_str(*MUTATION).unwrap();
     let result=mutation.diff(&before);
     assert!(result.messages().is_empty());
@@ -28,8 +28,8 @@ fn group_isolation_fixture_applies_and_inverts_through_all_owned_codecs() {
     for step in inverse {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored,&step).unwrap();}
     assert_eq!(restored,before);
     for (snapshot,text) in [(&before,*BEFORE),(&restored,*BEFORE)] {assert_eq!(serde_json::to_value(snapshot).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());}
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
 }
 #[test]
 fn unchanged_and_missing_group_isolation_targets_do_not_mutate() {

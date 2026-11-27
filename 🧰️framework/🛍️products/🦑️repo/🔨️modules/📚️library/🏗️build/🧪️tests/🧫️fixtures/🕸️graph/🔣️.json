@@ -3210,6 +3210,12 @@
           "--scope",
           "apps/owner"
         ]
+      },
+      {
+        "name": "scoped sync of two owners",
+        "args": ["dependencies", "sync", "--scope", ".", "--scope", "✏️s"],
+        "value": {"mode": "sync", "selection": {"kind": "scopes", "owners": [".", "✏️s"]}},
+        "forwarded": ["--scope", ".", "--scope", "✏️s"]
       }
     ],
     "refused": [

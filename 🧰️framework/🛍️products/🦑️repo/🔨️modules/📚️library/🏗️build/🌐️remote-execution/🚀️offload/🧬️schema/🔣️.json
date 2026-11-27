@@ -37,7 +37,7 @@
         "unmeasured",
         "final-wait",
         "pin-failed",
-        "beyond-host-refused",
+        "beyond-host-local",
         "cancelled"
       ]
     },
@@ -223,6 +223,10 @@
             "requestMilliseconds",
             "rideThroughMilliseconds",
             "queueSaturatedMilliseconds",
+            "queueSaturatedFloorMilliseconds",
+            "queueSaturatedCapMilliseconds",
+            "queueSaturatedFactor",
+            "queueSaturatedMinimumSamples",
             "pinQueueMilliseconds"
           ],
           "properties": {
@@ -263,6 +267,27 @@
               "minimum": 1
             },
             "queueSaturatedMilliseconds": {
+              "description": "How long a queued unit waits for a machine while the scheduler has no queue-wait measurement yet (fewer than queueSaturatedMinimumSamples samples).",
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueSaturatedFloorMilliseconds": {
+              "description": "The least a queued unit waits once the scheduler measures the queue wait.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueSaturatedCapMilliseconds": {
+              "description": "The most a queued unit waits once the scheduler measures the queue wait.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueSaturatedFactor": {
+              "description": "A queued unit waits this many times the measured 90th percentile of the queue wait, between the floor and the cap.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueSaturatedMinimumSamples": {
+              "description": "How many queue-wait samples the scheduler needs before its percentile is trusted.",
               "type": "integer",
               "minimum": 1
             },
@@ -572,10 +597,10 @@
         "beyondHost": {
           "type": "object",
           "additionalProperties": false,
-          "description": "A unit beyond the host of its requester (known to need more memory than a machine of the requester's class carries, see `unitBeyondHostV1`) never compiles on the requester: it waits for a machine that can carry it, up to `timeoutMilliseconds`, and reports its place in the queue, who holds the machine and when it can start every `progressMilliseconds`, in English and German; after the timeout, or when no machine can take it, it fails with the refusal `beyond-host-refused`. A requester that is itself a large host compiles it locally.",
-          "required": ["timeoutMilliseconds", "progressMilliseconds", "retryMilliseconds"],
+          "description": "A unit beyond the host of its requester (known to need more memory than a machine of the requester's class carries, see `unitBeyondHostV1`) is offered to the fleet first, but never waits passively for it: if no worker claims the action (its execution has not started) within `claimMilliseconds`, or no worker can take it at all, it falls back to a local attempt under the memory warden that runs alone on the host (`beyond-host-local`). It reports its wait every `progressMilliseconds`, in English and German, retries a busy or unreachable fleet after `retryMilliseconds` within the claim deadline and honours cancellation. A requester that is itself a large host compiles it locally.",
+          "required": ["claimMilliseconds", "progressMilliseconds", "retryMilliseconds"],
           "properties": {
-            "timeoutMilliseconds": {"type": "integer", "minimum": 1},
+            "claimMilliseconds": {"type": "integer", "minimum": 1, "maximum": 60000},
             "progressMilliseconds": {"type": "integer", "minimum": 1},
             "retryMilliseconds": {"type": "integer", "minimum": 1}
           }
@@ -910,6 +935,10 @@
       "requestMilliseconds": 50000,
       "rideThroughMilliseconds": 60000,
       "queueSaturatedMilliseconds": 120000,
+      "queueSaturatedFloorMilliseconds": 60000,
+      "queueSaturatedCapMilliseconds": 300000,
+      "queueSaturatedFactor": 10,
+      "queueSaturatedMinimumSamples": 20,
       "pinQueueMilliseconds": 3600000
     },
     "deadline": {
@@ -992,6 +1021,7 @@
         "RUSTC",
         "RUSTC_WRAPPER",
         "RUSTC_WORKSPACE_WRAPPER",
+        "RUSTC_ICE",
         "RUSTDOC",
         "RUSTUP_TOOLCHAIN",
         "RUSTUP_HOME",
@@ -1063,9 +1093,9 @@
       }
     },
     "beyondHost": {
-      "timeoutMilliseconds": 3600000,
-      "progressMilliseconds": 30000,
-      "retryMilliseconds": 5000
+      "claimMilliseconds": 20000,
+      "progressMilliseconds": 5000,
+      "retryMilliseconds": 2000
     },
     "finals": {
       "minimumMilliseconds": 120000,
@@ -1198,9 +1228,10 @@
       "reason.local-slot": "a compile slot of this machine is free",
       "reason.unmeasured": "its local cost is not measured yet, so it compiles here first",
       "reason.final-wait": "it is expensive but no other machine had the memory for it in time",
-      "reason.beyond-host-refused": "it needs more memory than this machine carries and no larger machine took it",
-      "beyondHost.waiting": "Unit {crate} needs more memory than this machine carries and waits for a larger one: {queued} waiting in the queue, running on {holders}, typically {typical} s, at most {remaining} min more.",
-      "beyondHost.refused": "Unit {crate} needs more memory than this machine carries and no larger machine took it ({reason}): it is not compiled here to spare this machine.",
+      "reason.beyond-host-local": "it needs more memory than this machine carries and no larger machine claimed it in time, so it compiles here alone",
+      "beyondHost.waiting": "Unit {crate} needs more memory than this machine carries and waits for a larger one: {queued} waiting in the queue, running on {holders}, typically {typical} s, {remaining} s left until it compiles here instead.",
+      "beyondHost.fallback": "Unit {crate} needs more memory than this machine carries and no larger machine claimed it within {seconds} s ({reason}): it compiles here alone under the memory warden.",
+      "beyondHost.alone": "Unit {crate} compiles here alone: every compile slot of this machine is held for it until it is done, under the memory warden.",
       "reason.pin-failed": "the pinned machine could not take or finish it"
     },
     "de": {
@@ -1233,9 +1264,10 @@
       "reason.local-slot": "ein Kompilierplatz dieser Maschine ist frei",
       "reason.unmeasured": "ihre lokalen Kosten sind noch nicht gemessen, daher wird sie zuerst hier kompiliert",
       "reason.final-wait": "sie ist teuer, aber keine andere Maschine hatte rechtzeitig den Speicher dafür",
-      "reason.beyond-host-refused": "sie braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie übernommen",
-      "beyondHost.waiting": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und wartet auf eine größere: {queued} in der Warteschlange, es laufen {holders}, üblich {typical} s, höchstens {remaining} min weiter.",
-      "beyondHost.refused": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie übernommen ({reason}): sie wird hier nicht gebaut, um diese Maschine zu schonen.",
+      "reason.beyond-host-local": "sie braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie rechtzeitig übernommen, daher wird sie hier allein gebaut",
+      "beyondHost.waiting": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und wartet auf eine größere: {queued} in der Warteschlange, es laufen {holders}, üblich {typical} s, noch {remaining} s, dann wird sie hier gebaut.",
+      "beyondHost.fallback": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie innerhalb von {seconds} s übernommen ({reason}): sie wird hier allein unter dem Speicherwächter gebaut.",
+      "beyondHost.alone": "Einheit {crate} wird hier allein gebaut: jeder Kompilierplatz dieser Maschine ist für sie belegt, bis sie fertig ist, unter dem Speicherwächter.",
       "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
     }
   }

@@ -43,7 +43,7 @@ for(const row of cases)test(row.name,async()=>{
 });
 for(const row of invalid)test("refuse encoded scene "+row.name,()=>{
  let job:RasterSceneJob|undefined;expect(()=>{job=new RasterSceneJob(hostile<RasterSceneInput>(row.input));while(!job.advance(4096,stock(4096)).done){}job.result();}).toThrow();
- if(job){expect(()=>job!.result()).toThrow();expect(()=>job!.advance(1)).toThrow();}
+ if(job){expect(()=>job!.result()).toThrow();expect(()=>job!.advance(1,stock(1))).toThrow();}
 });
 test("asset admission counts UTF-8 source bytes and abort covers every live preparation phase",async()=>{
  const value=sceneInput(cases[5]!.input),probe=new RasterSceneJob(value),seen=new Set<string>();let steps=0;

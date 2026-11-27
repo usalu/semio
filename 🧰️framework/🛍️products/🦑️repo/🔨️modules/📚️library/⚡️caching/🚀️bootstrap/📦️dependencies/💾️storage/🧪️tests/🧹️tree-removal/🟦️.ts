@@ -101,3 +101,32 @@ test("scope directories of the lock are made in the cache, and a relative target
   expect(rows[0]).toMatchObject({to:"bun-cache/@noble/hashes@1.8.0@@host@@@1",toExists:false,toParentExists:true,from:"tmp/gone",fromExists:false,sameDevice:true});
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+/** 🪟️ Contract: a file a running program maps (Windows refuses to unlink a mapped esbuild.exe with EPERM, a rename is allowed) never fails the removal of its generation: it moves aside, the tree is gone, and a later removal unlinks it once the program has ended. Windows semantics are simulated by an unlink that refuses the mapped path; the independent oracle is the Python standard library listing the directories. */
+test("a mapped executable is moved aside and unlinked by the next removal",async()=>{
+ const{removeJavascriptDependencyTreeV1:remove}=await import("../../🟦️.ts"),parent=mkdtempSync(join(tmpdir(),"tree-removal-")),root=join(parent,".x420f71600f321d023284"),bin=join(root,"node_modules","@esbuild","win32-x64");
+ try{
+  mkdirSync(bin,{recursive:true});writeFileSync(join(bin,"esbuild.exe"),"MZ");writeFileSync(join(bin,"other.js"),"x");
+  const{unlinkSync}=await import("node:fs");let mapped=true;
+  const unlink=(path:string)=>{if(mapped&&path.endsWith("esbuild.exe")){throw Object.assign(new Error("EPERM: operation not permitted, unlink"),{code:"EPERM"});}unlinkSync(path);};
+  await remove(root,async()=>{},true,unlink);
+  expect(existsSync(root)).toBe(false);
+  expect(readdirSync(join(parent,".busy"))).toHaveLength(1);
+  const oracle=Bun.spawnSync(["python3","-I","-c","import os,sys;print(sum(len(f) for _,_,f in os.walk(sys.argv[1])))",parent]);
+  expect(oracle.stdout.toString().trim()).toBe("1");
+  mapped=false;
+  const next=join(parent,".x0000000000000000000a");mkdirSync(next);writeFileSync(join(next,"f"),"x");
+  await remove(next,async()=>{},true,unlink);
+  expect(existsSync(join(parent,".busy"))).toBe(false);
+  expect(readdirSync(parent)).toHaveLength(0);
+ }finally{rmSync(parent,{recursive:true,force:true});}
+});
+
+test("a permission error that is not a busy file is still refused", async()=>{
+ const{removeJavascriptDependencyTreeV1:remove}=await import("../../🟦️.ts"),parent=mkdtempSync(join(tmpdir(),"tree-removal-")),root=join(parent,"t");
+ try{
+  mkdirSync(root);writeFileSync(join(root,"f"),"x");
+  const deny=()=>{throw Object.assign(new Error("EIO"),{code:"EIO"});};
+  await expect(remove(root,async()=>{},true,deny)).rejects.toThrow("EIO");
+ }finally{rmSync(parent,{recursive:true,force:true});}
+});

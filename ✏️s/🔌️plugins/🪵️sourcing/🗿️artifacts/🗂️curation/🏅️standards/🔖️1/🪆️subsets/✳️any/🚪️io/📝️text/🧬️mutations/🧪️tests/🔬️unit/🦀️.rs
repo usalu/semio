@@ -12,17 +12,17 @@ fn every_mutation() -> Vec<SourcingMutation> {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_create_curated_item() {
-    store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 }, index: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 }, index: None }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_delete_curated_item() {
-    store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_curated_item_count() {
-    store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }));
 }
 
 /// ⚖️ Every variant, not just the three hand-picked above — full-coverage `OpText` round trip
@@ -30,6 +30,6 @@ async fn op_text_round_trips_change_curated_item_count() {
 #[semio_framework_async_macros::async_test]
 async fn every_variant_op_text_round_trips() {
     for mutation in every_mutation() {
-        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        semio_os_store_test_support::assert_op_line_round_trip(&mutation);
     }
 }

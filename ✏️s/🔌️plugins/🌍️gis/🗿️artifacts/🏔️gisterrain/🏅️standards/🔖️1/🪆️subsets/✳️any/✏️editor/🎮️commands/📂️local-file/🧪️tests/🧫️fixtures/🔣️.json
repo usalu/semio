@@ -1,0 +1,19 @@
+{
+  "limits": {"geoJsonBytes": 24576, "elevationBytes": 65536, "wireBytes": 135168},
+  "fileActions": ["importElevationGridFile", "importGeoJsonFile"],
+  "callbacks": [
+    {"name": "singleton", "args": {"payload": "{}", "chunk": 0, "chunkCount": 1}, "accepted": true},
+    {"name": "bare payload", "args": {"payload": "{}"}, "accepted": true},
+    {"name": "file name member", "args": {"payload": "{}", "name": "a.geojson", "chunk": 0, "chunkCount": 1}, "accepted": true},
+    {"name": "empty payload", "args": {"payload": ""}, "accepted": false},
+    {"name": "missing payload", "args": {"chunk": 0, "chunkCount": 1}, "accepted": false},
+    {"name": "numeric payload", "args": {"payload": 7}, "accepted": false},
+    {"name": "second chunk of two", "args": {"payload": "{}", "chunk": 1, "chunkCount": 2}, "accepted": false},
+    {"name": "first chunk of two", "args": {"payload": "{}", "chunk": 0, "chunkCount": 2}, "accepted": false},
+    {"name": "lone later chunk", "args": {"payload": "{}", "chunk": 1, "chunkCount": 1}, "accepted": false},
+    {"name": "ascii at the limit", "args": {"chunk": 0, "chunkCount": 1}, "repeat": {"text": "a", "count": 24576}, "accepted": true},
+    {"name": "ascii past the limit", "args": {"chunk": 0, "chunkCount": 1}, "repeat": {"text": "a", "count": 24577}, "accepted": false},
+    {"name": "two-byte text at the limit", "args": {}, "repeat": {"text": "é", "count": 12288}, "accepted": true},
+    {"name": "two-byte text past the limit", "args": {}, "repeat": {"text": "é", "count": 12289}, "accepted": false}
+  ]
+}

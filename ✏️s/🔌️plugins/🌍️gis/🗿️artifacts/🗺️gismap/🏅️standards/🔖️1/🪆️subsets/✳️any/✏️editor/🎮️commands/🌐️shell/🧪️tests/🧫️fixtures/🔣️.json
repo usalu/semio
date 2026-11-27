@@ -1,0 +1,22 @@
+{
+  "positions": [
+    {"id": "snake", "data": {"id": "snake", "lon": 6.13, "lat": 49.61, "source_url": "https://example.org/snake"}},
+    {"id": "camel", "data": {"id": "camel", "lon": 6.14, "lat": 49.62, "sourceUrl": "https://example.org/camel"}},
+    {"id": "both", "data": {"id": "both", "lon": 6.15, "lat": 49.63, "source_url": "https://example.org/snake-wins", "sourceUrl": "https://example.org/camel-loses"}},
+    {"id": "plain", "data": {"id": "plain", "lon": 6.16, "lat": 49.64}},
+    {"id": "numeric", "data": {"id": "numeric", "lon": 6.17, "lat": 49.65, "source_url": 7}}
+  ],
+  "routes": [
+    {"id": "road", "data": {"id": "road", "points": [[6.1, 49.6], [6.2, 49.7]], "source_url": "https://example.org/road"}}
+  ],
+  "cases": [
+    {"name": "snake-case member", "command": {"featureId": "snake"}, "url": "https://example.org/snake"},
+    {"name": "camel-case member", "command": {"featureId": "camel"}, "url": "https://example.org/camel"},
+    {"name": "snake-case member wins", "command": {"featureId": "both"}, "url": "https://example.org/snake-wins"},
+    {"name": "position without a link", "command": {"featureId": "plain"}, "url": null},
+    {"name": "non-text link", "command": {"featureId": "numeric"}, "url": null},
+    {"name": "route links are not opened", "command": {"featureId": "road"}, "url": null},
+    {"name": "unknown feature", "command": {"featureId": "absent"}, "url": null}
+  ],
+  "invalidCommands": [{}, {"featureId": ""}, {"featureId": 3}]
+}

@@ -26,8 +26,8 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
     for step in inverse {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored,&step).unwrap();}
     assert_eq!(restored,before);
     for (snapshot,text) in [(&before,*BEFORE),(&restored,*BEFORE)] {assert_eq!(serde_json::to_value(snapshot).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());}
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
 }
 #[test]
 fn unchanged_and_missing_fill_rule_targets_do_not_mutate() {

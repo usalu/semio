@@ -2,7 +2,7 @@
 async fn lowpoly_pack_schema_identity_is_derived_and_keeps_the_mesh_child() {
     let mut snapshot = crate::standards::v1::subsets::any::io::component::text::snapshot::snapshot_from_mesh_json("{\"vertices\":[]}", "cube", "Cube");
     snapshot.objects[0].paint_layers[0].pixels = [1, 2, 3, 255].repeat(crate::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE * crate::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE);
-    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
+    semio_os_store_test_support::assert_pack_schema_identity(&snapshot);
     let decoded: crate::snapshot::LowpolySnapshot = pack::snapshot::ArtifactPack::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&snapshot)).expect("decode");
     assert_eq!(decoded.objects[0].mesh, snapshot.objects[0].mesh);
     assert_eq!(decoded.objects[0].paint_layers, snapshot.objects[0].paint_layers);

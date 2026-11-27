@@ -20,8 +20,8 @@ fn authored_elevation_operation_and_snapshot_round_trip() {
     let operation = |new_elevation_source| GisTerrainMutation::ReplaceElevationSource(
         crate::mutations::ReplaceElevationSource { new_elevation_source }
     );
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation(Some(authored.clone())));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation(None));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation(Some(authored.clone())));
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation(None));
     let previous_unit = FieldValue::Record({
         let mut record = semio_framework_dsl_record::RecordValue::default();
         record.fields.insert(0, DslField::to_value(&authored.bounds));
@@ -30,7 +30,7 @@ fn authored_elevation_operation_and_snapshot_round_trip() {
     });
     assert!(<crate::schema::snapshot::ElevationSource as DslField>::from_value(&previous_unit).is_err());
     let snapshot = GisTerrainSnapshot { elevation_source: Some(authored), ..Default::default() };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&snapshot);
     let replacement = operation(Some(crate::schema::snapshot::ElevationSource {
         missing_samples: None,
         bounds: [7.1, 46.0, 7.2, 46.1],
@@ -41,10 +41,10 @@ fn authored_elevation_operation_and_snapshot_round_trip() {
     let mut only_mask = replaced.elevation_source.clone().unwrap();
     only_mask.missing_samples = Some("04".into());
     let mask_change = operation(Some(only_mask.clone()));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&mask_change);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&mask_change);
     let masked = protocol::apply_diff_cold(mask_change.diff(&replaced).diff(), &replaced).unwrap();
     assert_eq!(masked.elevation_source.as_ref(), Some(&only_mask));
-    store::os_store::test_support::assert_dsl_pack_equivalence(&masked);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&masked);
     let unmask = mask_change.inverse(&replaced).unwrap();
     let unmasked = protocol::apply_diff_cold(unmask[0].diff(&masked).diff(), &masked).unwrap();
     assert_eq!(unmasked.elevation_source, replaced.elevation_source);
@@ -57,19 +57,19 @@ fn authored_elevation_operation_and_snapshot_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let operation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_change_exaggeration_op_line_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 3.0 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 3.0 }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_change_imported_features_op_line_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[]}"#).unwrap()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[]}"#).unwrap()) }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,8 +79,8 @@ async fn gis3d_terrain_document_text_round_trips_through_store() {
     let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisTerrainSnapshot, GisTerrainMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     use semio_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<GisTerrainSnapshot, GisTerrainMutation>::new();
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;

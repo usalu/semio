@@ -355,12 +355,12 @@ const DOOR: Readonly<Record<Scale, { readonly ext: DoorSide; readonly int: DoorS
   500: { ext: { grips: 0, wheelSets: 0 }, int: { grips: 0, wheelSets: 0 }, words: /floor guide, floor seal, beads and handles are left out/ },
 };
 
-/** 🧱️ The bonded brick wall: the bands of its body per scale (twelve bed joints apart, twelve courses in two repeated bands that touch, six bond bands that touch, one wall). */
+/** 🧱️ The bonded brick wall: the bands of its body per scale (twelve bed joints apart, twelve courses in two repeated bands that touch, six bond bands in two repeated bands that touch, one wall). */
 const BRICK_WALL: Readonly<Record<Scale, Resolves>> = {
   50: { parts: /^bed-joint$/, count: 1, spans: 12, present: ["plaster", "render"] },
   100: { parts: /^course-[ab]$/, count: 2, copies: 12, spans: 1, present: ["render"], absent: [/^plaster$/, /^bed-joint$/], words: /every course is one band of 83 mm with its bed joint in it/ },
-  200: { parts: /^bond-band$/, count: 1, copies: 6, spans: 1, absent: [/^plaster$/, /^render$/, /^bed-joint$/, /^course-/], words: /the wall is six bond bands of 167 mm/ },
-  500: { parts: /^wall$/, count: 1, spans: 1, absent: [/^plaster$/, /^render$/, /^bed-joint$/, /^course-/, /^bond-band$/], words: /the wall is one homogeneous 400 mm body/ },
+  200: { parts: /^bond-band-[ab]$/, count: 2, copies: 6, spans: 1, absent: [/^plaster$/, /^render$/, /^bed-joint$/, /^course-/], words: /the wall is six bond bands of 167 mm/ },
+  500: { parts: /^wall$/, count: 1, spans: 1, absent: [/^plaster$/, /^render$/, /^bed-joint$/, /^course-/, /^bond-band/], words: /the wall is one homogeneous 400 mm body/ },
 };
 
 /** 🪝️ The tied canopy in the structure list: the end fittings of the tie (`joints` ids per end) and the studs behind the pads. */

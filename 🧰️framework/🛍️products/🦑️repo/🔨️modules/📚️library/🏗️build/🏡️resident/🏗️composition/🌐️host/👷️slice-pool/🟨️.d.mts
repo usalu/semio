@@ -1,5 +1,5 @@
 /** 🚦️ What the host asks one slice pool to load (any further field travels to the worker as its data); loads with the same root, arguments, tool and policy share one worker. */
-export type SliceLoadRequestV1=Readonly<{root:string;arguments?:readonly string[];tool?:string;graphPolicy?:"fresh"|"current";priority?:number}&Readonly<Record<string,unknown>>>;
+export type SliceLoadRequestV1=Readonly<{root:string;arguments?:readonly string[];tool?:string;graphPolicy?:"fresh"|"current";grant?:string;priority?:number}&Readonly<Record<string,unknown>>>;
 /** 📣️ How a caller hears the counted phases of a load it waits for. */
 export type SliceLoadObserverV1=Readonly<{signal?:AbortSignal;onProgress?:(...row:never[])=>void;wantsReport?:()=>boolean}>;
 /** 🏊️ The ports of one pool: every one has a default of the running host, so a test replaces only what it observes. */
@@ -9,11 +9,11 @@ export type SlicePoolOptionsV1=Readonly<{
  headroom?:()=>Readonly<{limitBytes:number;currentBytes:number;availableBytes?:number}>;
  sampleMilliseconds?:number;note?:()=>void;
  createWorker?:(url:URL,data:SliceLoadRequestV1&Readonly<{heartbeatMilliseconds:number}>,environment:Readonly<Record<string,string|undefined>>)=>unknown;
- pressure?:()=>unknown;limiter?:unknown;learned?:Readonly<{read():number;write(megabytes:number):void}>;
- reserve?:(request:Readonly<{megabytes:number;minimumMegabytes:number;signal?:AbortSignal;onWait:(facts:unknown)=>void}>)=>unknown;
+ pressure?:()=>unknown;limiter?:unknown;learned?:Readonly<{read(scope?:string):number;write(megabytes:number,scope?:string):void}>;
+ reserve?:(request:Readonly<{megabytes:number;minimumMegabytes:number;parentGrant?:string;signal?:AbortSignal;onWait:(facts:unknown)=>void}>)=>unknown;
  observe?:(pid:number)=>unknown;unlearnedMegabytes?:number;hostMegabytes?:number;graceMilliseconds?:number;reaper?:unknown;
  planGuard?:unknown;restartPolicy?:unknown;quietPolicy?:unknown;implementationStamps?:unknown;wallNow?:()=>number;cutPolicy?:unknown;recycle?:unknown;
- hostPressure?:()=>unknown;report?:(line:string)=>void;now?:()=>number;planLimitMegabytes?:number;
+ hostPressure?:()=>unknown;claims?:Readonly<{claim(pid:number,claim:Readonly<{grantMegabytes?:number;stopped:boolean;owner?:string}>):void;release(pid:number):void}>;report?:(line:string)=>void;now?:()=>number;planLimitMegabytes?:number;
 }>;
 /** 🔢️ Clamps a request priority to 0..9; 5 when it is no such integer. */
 export function slicePriorityV1(priority:unknown):number;

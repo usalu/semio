@@ -5,13 +5,13 @@ use crate::schema;
 #[semio_framework_async_macros::async_test]
 async fn jack_example_dsl_round_trips() {
     let document = parse_dsl(JACK_EXAMPLE_TEXT).expect("parse jack example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dag_jack_example_dsl_round_trips() {
     let document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).expect("parse dag.jack example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
@@ -21,8 +21,8 @@ fn jack_snapshot() -> WriterSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn writer_dsl_round_trips_empty_and_jack_snapshots() {
-    store::os_store::test_support::assert_dsl_round_trip(&schema::empty_writer_snapshot());
-    store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&schema::empty_writer_snapshot());
+    semio_os_store_test_support::assert_dsl_round_trip(&jack_snapshot());
 }
 
 /// 📄️ The derived text prints every persistent scalar readably and `document` as its two-string

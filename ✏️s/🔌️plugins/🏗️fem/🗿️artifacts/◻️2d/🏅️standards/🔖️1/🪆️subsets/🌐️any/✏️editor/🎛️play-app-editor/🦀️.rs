@@ -17,10 +17,34 @@ fn fem2d_transient_transfer(mutation: <Fem2dPlayApp as ArtifactEditor>::Transien
     transient
 }
 
+/// 📣️ The EN/DE notices of every refusal the FEM 2D editor raises: the gumball and canvas table it shares with FEM 3D, the `patch*`, `focusEntity`, `setCamera` and results refusals, then the `addCombination` terms and `addRegion` refusals.
+fn fem2d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+        let notice = LocalizedLabel::native;
+        let mut table = crate::editor::fem2d::commands::gumball::fem_fault_notices().to_vec();
+        table.extend(crate::editor::fem2d::commands::gumball::fem_editor_fault_notices("fem2d", &[("node", "node", "Knoten"), ("element", "element", "Element"), ("material", "material", "Material"), ("section", "section", "Querschnitt"), ("support", "support", "Lager"), ("region", "region", "Bereich"), ("load", "load", "Last"), ("load-case", "load case", "Lastfall"), ("combination", "combination", "Kombination")]));
+        table.extend([
+            ("fem2d.combination.terms-unreadable", notice("The terms '{terms}' could not be read. Write load case ids with factors, for example dead:1.35, live:1.5 or dead=1.35, live=1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]].", "Die Terme '{terms}' konnten nicht gelesen werden. Gib Lastfall-Kennungen mit Faktoren an, zum Beispiel dead:1.35, live:1.5 oder dead=1.35, live=1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]].")),
+            ("fem2d.combination.terms-empty", notice("A combination needs at least one term, for example dead:1.35.", "Eine Kombination braucht mindestens einen Term, zum Beispiel dead:1.35.")),
+            ("fem2d.combination.terms-case-unknown", notice("'{case}' is not a load case of this document.", "'{case}' ist kein Lastfall dieses Dokuments.")),
+            ("fem2d.combination.terms-case-repeated", notice("The load case '{case}' appears more than once.", "Der Lastfall '{case}' kommt mehrfach vor.")),
+            ("fem2d.combination.terms-factor-invalid", notice("The factor of '{case}' is not a finite number.", "Der Faktor von '{case}' ist keine endliche Zahl.")),
+            ("fem2d.region.material-unknown", notice("'{material}' is not a material of this document. Add a material first or use the id of an existing one.", "'{material}' ist kein Material dieses Dokuments. Füge zuerst ein Material hinzu oder nutze die Kennung eines vorhandenen.")),
+            ("fem2d.region.extent", notice("A region needs a positive width and height.", "Ein Bereich braucht positive Breite und Höhe.")),
+            ("fem2d.interaction.identity", notice("The selection no longer matches the document. Select again.", "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut.")),
+            ("fem2d.remove-selection.combination-cycle", notice("Nothing was removed: a combination would refer to itself.", "Nichts wurde entfernt: Eine Kombination würde auf sich selbst verweisen.")),
+            ("fem2d.remove-selection.empty", notice("Nothing is selected to remove. Select something in the model first.", "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus.")),
+            ("fem2d.camera.invalid", notice("This camera is not valid.", "Diese Kamera ist nicht gültig.")),
+        ]);
+        table
+    });
+    &NOTICES
+}
+
 impl ArtifactEditor for Fem2dPlayApp {
-    /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12).
+    /// 📢️ The localized notices of every FEM 2D refusal (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        crate::editor::fem2d::commands::gumball::fem_fault_notices()
+        fem2d_fault_notices()
     }
 
     type Snapshot = Fem2dSnapshot;
@@ -388,7 +412,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 mesh_size: number("meshSize"),
             })),
             "addLoadCase" => Ok(Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: text("name").unwrap_or_default(), self_weight: flag("selfWeight").unwrap_or(false) })),
-            "addCombination" => Ok(Fem2dCommand::AddCombination(add_combination::AddCombination { name: text("name").unwrap_or_default(), terms: Vec::new() })),
+            "addCombination" => Ok(Fem2dCommand::AddCombination(add_combination::AddCombination { name: text("name").unwrap_or_default(), terms: text("terms").unwrap_or_default() })),
             "setSelfWeight" => Ok(Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: text("caseId").unwrap_or_default(), enabled: flag("enabled").unwrap_or(false) })),
             "setAnalysisSettings" => Ok(Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings {
                 modal_count: number("modalCount").map(|value| value.max(0.0) as u32),
@@ -517,7 +541,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 };
                 scale_selection::handle(&payload, doc, cfg)
             }
-            Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view_state.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
+            Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
             Fem2dCommand::SetResultDisplay(payload) => {
                 set_result_display::handle_window(&set_result_display::resolved(payload, doc), cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?)
@@ -574,10 +598,11 @@ impl ArtifactEditor for Fem2dPlayApp {
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_measures(_doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    /// 🎛️ The model window's utility options: the transform gumball's handle flags, read from the captured model-window config.
+    fn window_measures(_doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = fem2d_labels(view_state);
-        let measures = crate::editor::fem2d::window_measures::fem2d_window_measures(view_state, labels);
-        HashMap::from([(model_window::WINDOW_KIND_ID.into(), measures.clone()), (results_window::WINDOW_KIND_ID.into(), measures)])
+        let gumball = model_window::config::captured(cfg).map(|window| window.gumball).unwrap_or_default();
+        HashMap::from([(model_window::WINDOW_KIND_ID.into(), crate::editor::fem2d::window_measures::fem2d_window_measures(&gumball, labels))])
     }
 }
 
@@ -615,7 +640,7 @@ impl Fem2dPlayApp {
                 let window_id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, model_window::WINDOW_KIND_ID);
                 let active_utility = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
                 semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| {
-                    model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility, view_state.locale)
+                    model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility, &window.gumball, view_state.locale)
                 })
             }
             results_window::BODY_KEY => {

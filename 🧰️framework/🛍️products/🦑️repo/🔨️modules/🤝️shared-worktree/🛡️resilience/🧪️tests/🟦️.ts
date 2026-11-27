@@ -2,6 +2,7 @@ import {afterAll,expect,setDefaultTimeout,spyOn,test} from "bun:test";
 import * as fsPromises from "node:fs/promises";
 import Ajv from "ajv";
 import {appendFileSync,chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync,existsSync,readdirSync,openSync,writeSync,closeSync} from "node:fs";
+import type {BigIntStats,PathLike,StatOptions,Stats} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -29,7 +30,7 @@ const digestOf=(moduleRoot:string):Promise<string>=>codeDigestV1(moduleRoot);
 test("the fixture satisfies the closed schema and the Python oracle agrees with every vector",()=>{
  const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Fixture"});
  expect(validate(fixture),JSON.stringify(validate.errors?.[0])).toBe(true);
- if(python===undefined)return;
+ if(python===null)return;
  const result=Bun.spawnSync([python,"-I",join(import.meta.dirname,"🐍️.py")],{stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stdout.toString()+result.stderr.toString()).toBe(0);
 });
@@ -59,10 +60,14 @@ test("shared relative import targets need only one physical admission probe",asy
  const root=temp("closure-probe"),module=join(root,"mod"),target=join(root,"shared","x.ts");
  for(const file of item.files)put(root,file.path,file.text);
  let reads=0;
- const stat=fsPromises.stat,watch=spyOn(fsPromises,"stat").mockImplementation((path,options)=>{
+ const stat=fsPromises.stat,watch=spyOn(fsPromises,"stat").mockImplementation(counted);
+ function counted(path:PathLike,options?:StatOptions&{bigint?:false}):Promise<Stats>;
+ function counted(path:PathLike,options:StatOptions&{bigint:true}):Promise<BigIntStats>;
+ function counted(path:PathLike,options?:StatOptions):Promise<Stats|BigIntStats>;
+ function counted(path:PathLike,options?:StatOptions):Promise<Stats|BigIntStats>{
   if(path===target)reads++;
   return stat(path,options);
- });
+ }
  try{
   expect(await importClosureV1(module,item.entries)).toEqual(item.expected);
   expect(reads).toBe(1);
@@ -152,7 +157,7 @@ test("a seal mirrors the checked closure, verifies its digest, keeps the newest 
  expect(again.created).toBe(false);
  write(9);
  const stale=await sealCodeV1({root,moduleRoot:module,digest:digests[2]!,digestOf:async()=>"f".repeat(64),now:()=>++clock});
- expect(stale.created).toBe(true===false);
+ expect(stale.created).toBe(false);
  const changed=await sealCodeV1({root,moduleRoot:module,digest:"e".repeat(64),digestOf,now:()=>++clock});
  expect(changed).toEqual({created:false,directory:null,reason:"code-changed-while-copying"});
  expect(existsSync(join(codeDirectoryV1(root),"e".repeat(64)))).toBe(false);
@@ -396,7 +401,7 @@ test("the beat of a live daemon is read while the file is fresh and the process 
  const root=temp("beat"),now=Date.now(),beat={version:1,...ownProcessIdentityV1(),parent:1,startedMs:now-5000,wallMs:now,phase:"run",base:"/x",source:"snapshot",lagMs:42_000};
  put(root,".cache/f/boot/beat.json",JSON.stringify(beat));
  requireResilienceShapeV1("Beat",beat,"Closed beat required");
- expect(await readBeatV1(root,now)).toEqual(beat);
+ expect<unknown>(await readBeatV1(root,now)).toEqual(beat);
  expect(await readBeatV1(root,now+30_000)).toBeUndefined();
  put(root,".cache/f/boot/beat.json",JSON.stringify({...beat,pid:2_000_000_000}));
  expect(await readBeatV1(root,now)).toBeUndefined();

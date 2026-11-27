@@ -144,7 +144,34 @@
             "cache.remote.ac.miss",
             "cache.remote.ac.put",
             "cache.remote.cas.hit",
-            "cache.remote.cas.miss"
+            "cache.remote.cas.miss",
+            "cache.remote.cas.put",
+            "cache.remote.nx.hit",
+            "cache.remote.nx.miss",
+            "cache.remote.nx.put",
+            "cache.remote.refused"
+          ]
+        },
+        {
+          "id": "skips",
+          "label": {
+            "en": "Units not shared",
+            "de": "Nicht geteilte Einheiten"
+          },
+          "metrics": [
+            "cache.skip.spool-full",
+            "cache.skip.upload-expired",
+            "cache.skip.upload-expired-down",
+            "cache.skip.upload-expired-denied",
+            "cache.skip.upload-entry-gone",
+            "cache.skip.upload-failed",
+            "cache.skip.upload-dropped",
+            "cache.skip.key-incomplete",
+            "cache.skip.path-dependent",
+            "cache.skip.read-only",
+            "cache.skip.diverged",
+            "cache.skip.breaker-denied",
+            "cache.skip.other"
           ]
         },
         {
@@ -160,6 +187,27 @@
             "exec.refused",
             "exec.queue.running",
             "exec.queue.queued"
+          ]
+        },
+        {
+          "id": "declines",
+          "label": {
+            "en": "Offload declined",
+            "de": "Auslagerung abgelehnt"
+          },
+          "metrics": [
+            "exec.decline.local-slot",
+            "exec.decline.cheap",
+            "exec.decline.unmapped-path",
+            "exec.decline.infrastructure",
+            "exec.decline.unmeasured",
+            "exec.decline.pin-failed",
+            "exec.decline.not-portable",
+            "exec.decline.worker-policy",
+            "exec.decline.no-idle-machine",
+            "exec.decline.queue-timeout",
+            "exec.decline.incomplete-inputs",
+            "exec.decline.other"
           ]
         },
         {

@@ -70,8 +70,8 @@ async fn authored_seed_and_pins_survive_actual_pack_spr_replay() {
     let pin = observed.pinned.iter().find(|pin| pin.x == 1 && pin.y == 0 && pin.z == 0).expect("authored pin");
     let projection = serde_json::json!({ "seed": observed.seed, "pin": { "x": pin.x, "y": pin.y, "z": pin.z, "tileId": pin.tile_id }, "geometry": { "width": observed.width, "height": observed.height, "depth": observed.depth } });
     assert_eq!(projection, case["expected"]);
-    store::os_store::test_support::assert_document_text_round_trip(&store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_text_round_trip(&store).await;
+    semio_os_store_test_support::assert_document_pack_round_trip(&store).await;
     let mut turns = 0;
     while !store.close_owned_terminal_is_empty() {
         store.close_owned_step_cold(semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 }).expect("replay store closes through original owners");

@@ -7,7 +7,7 @@ import {casEnforceTickV1,resetCasGuardsV1} from "../../🚦️guard/🟦️.ts";
 import {casPartitionPolicyForV1} from "../../🌡️partition/🟦️.ts";
 import {casReserveBytesV1} from "../../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1} from "../../🧬️schema/🟦️.ts";
-import {casUsageHintPathV1,type CasCollectionV1} from "../../🧹️collector/🟦️.ts";
+import {casUsageHintPathV1,readCasUsageHintV1,type CasCollectionV1} from "../../🧹️collector/🟦️.ts";
 
 const roots:string[]=[],GIB=1024**3;
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -48,4 +48,15 @@ test("a failing relief never stops the tick, a cancelled one does, and a tick wi
  await expect(casEnforceTickV1({...ports,signal:abort.signal,relieve:async request=>{request.signal?.throwIfAborted();}})).rejects.toBeDefined();
  resetCasGuardsV1();
  await casEnforceTickV1(ports);
+});
+
+test("a stale hint is replaced by a measurement before the relief and the collection run, and the measurement is recorded for every reader",async()=>{
+ resetCasGuardsV1();
+ const root=hinted();writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:1,atMs:Date.now()-3600000}));
+ const order:string[]=[];
+ await casEnforceTickV1({root,policy:CAS_POLICY_V1,partition:()=>({...volume,freeBytes:reserve*1.2}),usage:async()=>{order.push("measure");return 7*GIB;},collect:async()=>{order.push("collect");return stub;},relieve:async()=>{order.push("relieve");}});
+ expect(order.slice(0,2)).toEqual(["measure","relieve"]);
+ const hint=await readCasUsageHintV1(root);
+ expect(hint?.bytes).toBe(7*GIB);
+ expect(hint?.atMs).toBeGreaterThan(Date.now()-60000);
 });

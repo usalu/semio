@@ -38,7 +38,7 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
 #[test]
 fn committed_wire_witness_is_the_canonical_rust_wire(){
     let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
-    let witnessed:RasterMutation=store::os_store::test_support::assert_wire_witness(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-layer-transform/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    let witnessed:RasterMutation=semio_os_store_test_support::assert_wire_witness(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️change-layer-transform/🧾️wire-witness/🦠️mutation/🔣️.json"));
     let expected=RasterMutation::ChangeLayerTransform(ChangeLayerTransform{layer_id:"ink".into(),expected:semio_framework_pack_json::from_json_str(&fixture["identity"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),transform:semio_framework_pack_json::from_json_str(&fixture["cases"][0]["transform"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()});
     assert_eq!(witnessed,expected);
 }

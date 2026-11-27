@@ -34,14 +34,30 @@ side.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
+
+Standalone use (no test host needed), replaying the feature's own scenarios against the fixtures:
+
+    python 🐍️.py check <path to 🧫️fixtures>
 """
 
 # region 🔖️Imports
 import json
-
-from semio_repo_test import Adapter, Context, Outcome
+import re
+import sys
+from pathlib import Path
 
 # endregion 🔖️Imports
+
+
+# region 🔖️Outcome
+class Outcome:
+    """📤️ A projection with its raw serialized artifact; the harness's own type when `semio_repo_test` is present."""
+
+    def __init__(self, value, raw=b""):
+        self.value, self.raw = value, raw
+
+
+# endregion 🔖️Outcome
 
 
 # region 🔖️Vocabulary
@@ -351,16 +367,96 @@ def identity_handler(ctx):
 
 
 # region 🔖️Registration
+def handlers():
+    """🧭️ Every handler by FULL expanded scenario id."""
+    table = {"identity-round-trip": identity_handler}
+    for kind in KINDS:
+        table["mutate-%s" % kind] = mutate_handler(kind)
+        table["inverse-%s" % kind] = inverse_handler(kind)
+        table["spec-vector-%s" % kind] = spec_vector_handler(kind)
+    return table
+
+
 def adapter():
     """🧭️ Registration by FULL expanded scenario id, in the ORACLE role only — registering these
     handlers as subjects too would make the reference its own subject and manufacture a green
     self-comparison."""
+    from semio_repo_test import Adapter
+
     built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
-        built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
-        built = built.oracle("spec-vector-%s" % kind, spec_vector_handler(kind))
-    return built.oracle("identity-round-trip", identity_handler)
+    for identifier, handler in handlers().items():
+        built = built.oracle(identifier, handler)
+    return built
 
 
 # endregion 🔖️Registration
+
+
+# region 🔖️Standalone
+class Standalone:
+    """🧫️ The scenario context the handlers read, backed by the committed fixtures instead of the harness."""
+
+    def __init__(self, root, scenario):
+        self.root, self.scenario = root, scenario
+
+    def input_bytes(self, uri):
+        return (self.root / uri.split("://", 1)[1]).read_bytes()
+
+
+def scenarios(feature):
+    """🥒️ Expands every `Scenario Outline` of the feature file into `(id, scenario)` pairs, row by row."""
+    blocks = re.split(r"\n(?=[ \t]*@id-)", feature)[1:]
+    found = []
+    for block in blocks:
+        name = re.match(r"\s*@id-(\S+)", block).group(1)
+        lines = [line.strip() for line in block.splitlines()]
+        steps, doc, rows, open_doc = [], [], [], False
+        for line in lines:
+            if line == '"""':
+                open_doc = not open_doc
+            elif open_doc:
+                doc.append(line)
+            elif re.match(r"(Given|When|Then|And) ", line):
+                steps.append(line.split(" ", 1)[1])
+            elif line.startswith("|"):
+                rows.append([cell.strip() for cell in line.strip("|").split("|")])
+        document = "".join(doc)
+        columns = rows[0] if rows else []
+        for row in rows[1:] or [[]]:
+            fill = dict(zip(columns, row))
+            def put(text):
+                return re.sub(r"<(\w+)>", lambda hit: fill[hit.group(1)], text)
+            kind = fill.get("id", "")
+            identifier = "identity-round-trip" if name == "identity-round-trip" else "%s-%s" % (name, kind)
+            found.append((identifier, {"id": identifier, "steps": [{"text": put(step), "docString": put(document) if index == 1 and document else None} for index, step in enumerate(steps)]}))
+    return found
+
+
+def main(arguments):
+    """🏃️ `check` replays every scenario of the feature through the handlers against the committed fixtures."""
+    if len(arguments) != 2 or arguments[0] != "check":
+        print("usage: python 🐍️.py check <path to 🧫️fixtures>")
+        return 2
+    root, table, failures = Path(arguments[1]), handlers(), []
+    feature = (Path(__file__).parent / "🥒️.feature").read_text(encoding="utf-8")
+    found = scenarios(feature)
+    for identifier, scenario in found:
+        try:
+            outcome = table[identifier](Standalone(root, scenario))
+            json.loads(outcome.raw.decode("utf-8"))
+            print("[PASS] %s" % identifier)
+        except (AssertionError, KeyError, ValueError, OSError) as problem:
+            failures.append(identifier)
+            print("[FAIL] %s: %s" % (identifier, problem))
+    expected = {"identity-round-trip", *("%s-%s" % (mode, kind) for mode in ("mutate", "inverse", "spec-vector") for kind in KINDS)}
+    if {identifier for identifier, _ in found} != expected:
+        failures.append("scenario-set")
+        print("[FAIL] the feature expands to %r, not %r" % (sorted(identifier for identifier, _ in found), sorted(expected)))
+    print("check: %s" % ("%d problem(s)" % len(failures) if failures else "oracle agrees on %d scenarios" % len(found)))
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
+
+# endregion 🔖️Standalone

@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-sourcing-curation-history-edits"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-sourcing-curation: the edits history acceptance law"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-sourcing-curation = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-plugin = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-testing-acceptance = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+serde_json.workspace = true

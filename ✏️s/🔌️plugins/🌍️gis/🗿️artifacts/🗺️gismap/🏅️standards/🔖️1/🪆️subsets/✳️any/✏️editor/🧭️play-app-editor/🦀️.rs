@@ -55,7 +55,7 @@ impl Gis2dPlayApp {
             document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::GIS2D_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
             catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
             inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(semio_ui_locale::LocalizedLabel::native(&format!("Unknown body: {body_key}"), &format!("Unbekannter Body: {body_key}")).resolve(view_state.terminology, view_state.locale))),
         }
     }
 }

@@ -250,7 +250,7 @@ export function toolPinAwaitsDependenciesV1(row: ToolRowV1, context: Pick<ToolCo
 }
 
 /** 📥️ Provisions every tool of a selection that does not match its pin, then verifies it again; a tool installed by the bootstrap script is reported, not installed, and a provisioned tool that still differs fails the whole setup. */
-export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolContextV1, provision: ToolProvisionerV1, signal: AbortSignal, log: (line: string) => void): Promise<readonly ToolReportV1[]> {
+export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolContextV1, provision: ToolProvisionerV1, signal: AbortSignal, log: (line: string) => void, deadlineMilliseconds: number = document.provision.deadlineSeconds * 1000): Promise<readonly ToolReportV1[]> {
   const reports: ToolReportV1[] = [];
   for (const row of rows) {
     signal.throwIfAborted();
@@ -275,7 +275,14 @@ export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolCont
       continue;
     }
     log(toolSetupMessageV1("step", {tool: row.id, pin: before.pin}, context.environment));
-    await provision(row, before.pin, signal);
+    const bounded = AbortSignal.any([signal, AbortSignal.timeout(deadlineMilliseconds)]);
+    try {
+      await provision(row, before.pin, bounded);
+    } catch (error) {
+      signal.throwIfAborted();
+      if (!bounded.aborted) throw error;
+      throw new Error(toolSetupMessageV1("deadline", {tool: row.id, pin: before.pin, seconds: Math.round(deadlineMilliseconds / 1000)}, context.environment), {cause: error});
+    }
     const after = await verifyToolV1(row, context, signal);
     if (after.status !== "ok") throw new Error(toolSetupMessageV1("mismatch", {tool: row.id, found: after.found ?? "-", pin: after.pin}, context.environment) + (after.message === undefined ? "" : toolSetupMessageV1("mismatchReason", {message: after.message}, context.environment)));
     log(toolSetupMessageV1("done", {tool: row.id, found: after.found ?? after.pin}, context.environment));

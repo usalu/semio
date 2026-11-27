@@ -252,9 +252,9 @@ use crate::standards::v1::subsets::any::schema::mutations::unpin_slot::unpin_slo
 /// 🌉️ The language-neutral report of one committed specification vector — decoded, diffed, applied and inverted
 /// through this subset's production JSON codec and `Mutation` implementation — that the `mutate-wfc3d` case's
 /// subject half judges with `law::vector`. Its signature names only `str`, so a generated test host reaches it.
-/// @see store::os_store::test_support::mutation_report_json
+/// @see semio_os_store_mutation_report::mutation_report_json
 pub fn wfc3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    store::os_store::test_support::mutation_report_json::<Wfc3dSnapshot, Wfc3dMutation>(base_json, mutation_json, after_json)
+    semio_os_store_mutation_report::mutation_report_json::<Wfc3dSnapshot, Wfc3dMutation>(base_json, mutation_json, after_json)
 }
 }
 pub use mutations_codec::*;

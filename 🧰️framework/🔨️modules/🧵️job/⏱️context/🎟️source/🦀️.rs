@@ -2,17 +2,8 @@
 use super::*;
 use semio_framework_value_retained_clone::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
-use crate::original_job_continuation::{OriginalReturnSource,OriginalReturnSourceInput,OriginalReturnBudgetReference};
+use crate::original_job_continuation::{OriginalReturnSource,OriginalReturnBudgetReference};
 
-#[path="🏭️return-origin/🦀️.rs"]
-mod return_origin;
-pub use return_origin::OriginalReturnBirthState;
-#[path="🏭️admission/🦀️.rs"]
-mod source_admission;
-pub use source_admission::OriginalCallerSourceAdmission;
-#[path="🏭️close/🦀️.rs"]
-mod source_close_producer;
-pub use source_close_producer::{OriginalSourceCloseContext,OriginalSourceCloseProducer,source_loan_transfer_demand};
 #[path="🏠️native/🦀️.rs"]
 mod native;
 pub use native::{ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
@@ -23,9 +14,10 @@ type SourceClockLoan<'a>=semio_framework_value_retained_clone::retirement::contr
 fn borrow_source_clock(clock:&SourceClockOwner)->Result<SourceClockLoan<'_>,ValueError>{clock.try_lock().map_err(|_|refused("original Source clock is currently lent"))}
 pub use semio_framework_job_failure::OriginalSourceCloseFailure;
 static ORIGINAL_RETURN_BIRTH:std::sync::atomic::AtomicU32=std::sync::atomic::AtomicU32::new(1);
-struct SourceRoots{turns:OriginalSourceTurnIssuer,authority:JobPayloadAuthority,cancel:CancelToken,returns:OriginalReturnSource,native:native::NativeSources,clock:SourceClockOwner}
+#[doc(hidden)]
+pub struct SourceRoots{turns:OriginalSourceTurnIssuer,authority:JobPayloadAuthority,cancel:CancelToken,returns:OriginalReturnSource,native:native::NativeSources,clock:SourceClockOwner}
 impl SourceRoots{fn issuer()->SharedIssuer<Self>{let mut issuer=SharedIssuer::owned();issuer.transfer_copy_bytes=|_|0;issuer}}
-struct SourceRetirement{authority:JobPayloadAuthority,cancel:CancelTokenRetirement,returns:OriginalReturnSource,clock:SourceClockOwner}
+pub struct SourceRetirement{authority:JobPayloadAuthority,cancel:CancelTokenRetirement,returns:OriginalReturnSource,clock:SourceClockOwner}
 impl SourceRetirement{
  fn clock_demand(&self)->Result<Option<RetirementDemand>,ValueError>{borrow_source_clock(&self.clock)?.retirement_demand()}
  fn clock_work(&self)->Result<Option<u64>,ValueError>{borrow_source_clock(&self.clock)?.retirement_work()}
@@ -74,13 +66,13 @@ impl OriginalCallerSourceParent{
  pub fn issue_dispatch(&self)->Result<OriginalSourceTurn,ValueError>{self.original.as_ref().ok_or_else(||refused("original parent has no source to lend"))?.get().turns.issue().map_err(ValueError::from)}
  pub fn borrow_context_for_turn<'turn>(&'turn self,turn:&'turn OriginalSourceTurn,budget:StepBudget,now_us:fn()->Option<u64>,sequence:&'turn mut u64,recipient:&'turn mut RetainedCloneProgress)->Result<StepContext<'turn>,ValueError>{if self.borrowed_cancel{return Err(refused("inherited original child context requires its live parent budget loan"))}let returns=self.return_source()?.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return source already lends its budget"))?;self.borrow_context_with_return(budget,now_us,sequence,recipient,returns,Some(turn))}
  pub(crate) fn borrow_context_with_return<'turn>(&'turn self,budget:StepBudget,now_us:fn()->Option<u64>,sequence:&'turn mut u64,recipient:&'turn mut RetainedCloneProgress,returns:OriginalReturnBudgetReference<'turn>,turn:Option<&'turn OriginalSourceTurn>)->Result<StepContext<'turn>,ValueError>{let roots=self.original.as_ref().ok_or_else(||refused("original parent source has entered physical retirement"))?.get();let ledger=roots.authority.original().ok_or_else(||refused("original parent payload source has closed"))?;let mut cx=StepContext::with_payload_authority(ledger.operation,ledger.generation,budget,&roots.cancel,now_us,sequence,recipient,&roots.authority)?;cx.source_parent=Some(self);cx.source_turn=Some(match turn{Some(turn)=>{roots.turns.validate(turn).map_err(ValueError::from)?;SourceTurnReference::Borrowed(turn)},None=>SourceTurnReference::Owned(roots.turns.issue().map_err(ValueError::from)?)});cx.attach_original_return_budget(returns)?;if let Some((binding,clock,deadline))=self.clock_authority{if !std::ptr::fn_addr_eq(clock,now_us)||budget.deadline_us>deadline{return Err(refused("borrowed original source changed its clock or widened its absolute deadline"))}cx.original_clock_binding=Some(binding);cx.original_absolute_deadline=deadline;}Ok(cx)}
- /// 🔁️ Carries this Source's return stock into a verified successor tenure; its identity, clock, deadline and claims stay.
+ /// 🔁️ Carries this Source's return stock into a verified successor tenure; identity, clock, deadline and claims stay.
  pub fn succeed_return_stock(&self,granted:RetainedCloneGrant,fuel:u64)->Result<(),ValueError>{self.return_source()?.succeed(granted,fuel)}
  pub fn return_source(&self)->Result<&OriginalReturnSource,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original return source has entered retirement"))?.get().returns)}
- /// 👁️ Reports whether the committed origin already serves this exact Source turn; births run only through the resident birth driver.
+ /// 👁️ Reports whether the committed origin already serves this exact Source turn; births run only via the resident birth driver.
  pub(crate) fn admit_return_origin(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate_borrowed_context(cx)?;let turn=cx.original_source_turn_identity();Ok(cx.return_budget.as_ref().ok_or_else(||refused("original return source has no live budget loan"))?.get().origin().is_some_and(|origin|semio_framework_job_return_budget::OriginalReturnOrigin::source_turn(&origin)==turn))}
  pub fn validate_borrowed_context(&self,cx:&StepContext<'_>)->Result<(),ValueError>{let original=self.original.as_ref().ok_or_else(||refused("original source parent has entered physical retirement"))?;if !matches_roots(original.get(),cx){return Err(refused("owned original reply requires its genuine source receiver"))}Ok(())}
- /// 🕰️ Installs the system host clock into this Source's resident clock under a Source-carrying Work effect.
+ /// 🕰️ Installs the system host clock into this Source's resident clock.
  pub fn admit_system_clock(&self,cx:&StepContext<'_>,host:&mut Option<semio_framework_job_clock::OriginalClockAuthority<semio_framework_job_clock::OriginalHostClock<semio_framework_job_clock::OriginalSystemClock>>>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{
   let fail=|error|RetainedWorkOutcome{result:Err(error),work:0};if host.is_none(){let Some(original)=self.original.as_ref()else{return fail(refused("original Source clock entered retirement"))};*host=Some(semio_framework_job_clock::OriginalClockAuthority::new(semio_framework_job_clock::OriginalHostClock::new(&original.get().turns,semio_framework_job_clock::OriginalSystemClock::new(&original.get().turns))))}
   let context=match self.recorded_clock_context(cx){Ok(context)=>context,Err(error)=>return fail(error)};let mut clock=match self.source_clock(){Ok(clock)=>clock,Err(error)=>return fail(error)};clock.admit(&context,host,effect)
@@ -99,11 +91,11 @@ impl OriginalCallerSourceParent{
  /// 🎯️ Derives a deadline from the same Source clock original reading.
  pub fn recorded_clock_deadline(&self,cx:&StepContext<'_>,observation:semio_framework_job_clock::OriginalClockObservation,duration:u64)->Result<semio_framework_job_clock::OriginalClockDeadline,ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.deadline(&context,observation,duration)}
  /// 🚦️ Drives the same recorded deadline decision across Pending and unwind.
- pub fn poll_recorded_clock_decision(&self,cx:&StepContext<'_>,deadline:semio_framework_job_clock::OriginalClockDeadline,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->Result<semio_framework_job_clock::OriginalClockDecisionStatus,ValueError>{let mut context=self.recorded_clock_context(cx)?;self.source_clock()?.poll_decision(&mut context,effect,deadline,cx.fuel_remaining())}
+ pub fn poll_recorded_clock_decision(&self,cx:&StepContext<'_>,deadline:semio_framework_job_clock::OriginalClockDeadline,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->Result<semio_framework_job_clock::OriginalClockDecisionStatus,ValueError>{let mut context=self.recorded_clock_context(cx)?;self.source_clock()?.poll_decision(&mut context,effect,deadline,cx.original_turn_fuel_remaining())}
  /// 🛂️ Checks the actual resident clock decision against this Source wallet.
- pub fn recorded_clock_allows(&self,cx:&StepContext<'_>)->Result<bool,ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.allows(&context,cx.fuel_remaining())}
+ pub fn recorded_clock_allows(&self,cx:&StepContext<'_>)->Result<bool,ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.allows(&context,cx.original_turn_fuel_remaining())}
  /// 📤️ Transfers the original decision directly to the caller-owned slot.
- pub fn take_recorded_clock_decision(&self,cx:&StepContext<'_>,output:&mut Option<bool>)->Result<bool,ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.take_decision(&context,cx.fuel_remaining(),output)}
+ pub fn take_recorded_clock_decision(&self,cx:&StepContext<'_>,output:&mut Option<bool>)->Result<bool,ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.take_decision(&context,cx.original_turn_fuel_remaining(),output)}
  /// 🏁️ Finishes the exact original deadline decision after transfer.
  pub fn finish_recorded_clock_decision(&self,cx:&StepContext<'_>)->Result<(),ValueError>{let context=self.recorded_clock_context(cx)?;self.source_clock()?.finish_decision(&context)}
  /// ↩️ Clears only a decision whose original producer never started.
@@ -159,9 +151,12 @@ impl OriginalCallerSourceParent{
   if self.borrowed_cancel&&!self.terminal_is_empty(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(OriginalSourceCloseFailure::Value(refused("child source physical close requires its still-retained original parent witness"))),work:0})}
   self.close_witnessed(effect,None)
  }
- fn clock_retirement_selected(&self)->Result<bool,ValueError>{if self.lending_open||self.original.is_some()||self.pending_owner.is_some()||self.pending_roots.is_some(){return Ok(false)}match self.retiring.as_ref(){Some(retiring)if !retiring.terminal_is_empty()=>Ok(borrow_source_clock(&retiring.clock)?.retirement_demand()?.is_some()),_=>Ok(false)}}
- fn close_clock_retirement_into<'reply>(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,recover:bool)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{let retiring=self.retiring.as_mut().ok_or_else(||refused("original Source clock retirement is absent"))?;if recover{retiring.clock.get_mut().recover_retirement_into(effect,reply)}else{retiring.clock.get_mut().retirement_into(effect,reply)}}
- fn close_witnessed(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,witness:Option<&CancelToken>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,OriginalSourceCloseFailure>{
+ #[doc(hidden)]
+ pub fn clock_retirement_selected(&self)->Result<bool,ValueError>{if self.lending_open||self.original.is_some()||self.pending_owner.is_some()||self.pending_roots.is_some(){return Ok(false)}match self.retiring.as_ref(){Some(retiring)if !retiring.terminal_is_empty()=>Ok(borrow_source_clock(&retiring.clock)?.retirement_demand()?.is_some()),_=>Ok(false)}}
+ #[doc(hidden)]
+ pub fn close_clock_retirement_into<'reply>(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,recover:bool)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{let retiring=self.retiring.as_mut().ok_or_else(||refused("original Source clock retirement is absent"))?;if recover{retiring.clock.get_mut().recover_retirement_into(effect,reply)}else{retiring.clock.get_mut().retirement_into(effect,reply)}}
+ #[doc(hidden)]
+ pub fn close_witnessed(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,witness:Option<&CancelToken>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,OriginalSourceCloseFailure>{
   use semio_framework_value_control_contract::RetainedWorkPoll;
   let done=|result,work|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
   if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
@@ -222,11 +217,9 @@ impl OriginalCallerSourceLoan{
 }
 impl Drop for OriginalCallerSourceLoan{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original static source loan reached Drop before paid borrowed-parent return")}}
 fn matches_roots(roots:&SourceRoots,cx:&StepContext<'_>)->bool{if cx.original_source_turn().map_or(true,|turn|roots.turns.validate(turn).is_err()){return false}roots.authority.original().is_some_and(|ledger|Arc::ptr_eq(ledger,&cx.payload_ledger)&&ledger.operation==cx.operation()&&ledger.generation==cx.generation())&&roots.cancel.is_same_node(cx.original_cancel_token())}
-fn cancel_refusal(error:CancelTokenRetirementError)->ValueError{match error{CancelTokenRetirementError::Refused(error)=>error,CancelTokenRetirementError::Blocked(blocked)=>ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{semio_framework_async::CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",semio_framework_async::CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",semio_framework_async::CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",semio_framework_async::CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"})}}
+#[doc(hidden)]
+pub fn cancel_refusal(error:CancelTokenRetirementError)->ValueError{match error{CancelTokenRetirementError::Refused(error)=>error,CancelTokenRetirementError::Blocked(blocked)=>ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{semio_framework_async::CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",semio_framework_async::CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",semio_framework_async::CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",semio_framework_async::CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"})}}
 
-#[path="👶️child/🦀️.rs"]
-mod child_source;
-pub use child_source::{OriginalCallerChildSource,OriginalChildTurnReturn};
 
 /// 🪢️ See `README.md`.
 #[derive(Debug,semio_framework_value_derive::RetireOwned)]
@@ -234,13 +227,72 @@ pub use child_source::{OriginalCallerChildSource,OriginalChildTurnReturn};
 #[value(send_only)]
 pub struct OriginalCallerCloseReturn{original:Result<InteractiveJobCloseStep,OriginalTurnFailure>,receipt_refusal:Option<ValueError>}
 impl OriginalCallerCloseReturn{pub fn new(original:Result<InteractiveJobCloseStep,OriginalTurnFailure>,receipt_refusal:Option<ValueError>)->Self{Self{original,receipt_refusal}}pub fn admitted(&self)->Option<&Result<InteractiveJobCloseStep,OriginalTurnFailure>>{self.receipt_refusal.is_none().then_some(&self.original)}pub fn receipt_refusal(&self)->Option<&ValueError>{self.receipt_refusal.as_ref()}pub fn into_original(self)->Result<Result<InteractiveJobCloseStep,OriginalTurnFailure>,Self>{if self.receipt_refusal.is_some(){Err(self)}else{Ok(self.original)}}}
-fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
-fn metadata_fits(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();grant.maximum_items>0&&grant.maximum_depth>0}
-fn refused(message:&'static str)->ValueError{ValueError::invariant(message)}
-fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{let subtract=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||refused("original caller cumulative receipt moved backwards"));Ok(RetainedCloneProgress{copied_items:subtract(after.copied_items,before.copied_items)?,copied_bytes:subtract(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:subtract(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:subtract(after.released_bytes,before.released_bytes)?})}
+#[doc(hidden)]
+pub fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
+#[doc(hidden)]
+pub fn metadata_fits(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();grant.maximum_items>0&&grant.maximum_depth>0}
+#[doc(hidden)]
+pub fn refused(message:&'static str)->ValueError{ValueError::invariant(message)}
+#[doc(hidden)]
+pub fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{let subtract=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||refused("original caller cumulative receipt moved backwards"));Ok(RetainedCloneProgress{copied_items:subtract(after.copied_items,before.copied_items)?,copied_bytes:subtract(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:subtract(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:subtract(after.released_bytes,before.released_bytes)?})}
 
 #[cfg(test)]
 mod source_clock_loan_tests{
  use super::*;
  #[test]fn actual_clock_loan_keeps_its_address_and_releases_after_unwind(){let owner=SourceClockOwner::new(semio_framework_job_clock::OriginalSourceClock::new());let pointer={let loan=borrow_source_clock(&owner).unwrap();std::ptr::from_ref(&*loan)};let interrupted=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{let loan=borrow_source_clock(&owner).unwrap();assert!(std::ptr::eq(&*loan,pointer));assert!(loan.terminal_is_empty());assert!(borrow_source_clock(&owner).is_err());panic!("original clock callback unwound")}));assert!(interrupted.is_err());let loan=borrow_source_clock(&owner).unwrap();assert!(std::ptr::eq(&*loan,pointer));assert!(loan.terminal_is_empty());drop(loan);assert!(borrow_source_clock(&owner).is_ok());}
+}
+impl OriginalCallerSourceLoan{
+ /// ⏱️ Settles the exact same-Source Core receipt before returning its borrowed reply.
+ pub fn settle_original_work<'receipt>(&self,cx:&mut StepContext<'_>,check:semio_framework_value_control_contract::OriginalWorkPartialCheck<'receipt>)->semio_framework_value_control_contract::OriginalWorkPartialCheckComplete<'receipt>{let result=(||{self.validate_retirement_context(cx)?;let turn=cx.original_source_turn_identity().ok_or_else(||refused("original Source Work turn is absent"))?;if check.source_turn()!=Some(turn){return Err(refused("original Source Work receipt changed its turn"))}cx.settle_original_work_exact(check.delta())})();check.complete(result)}
+}
+impl StepContext<'_>{
+ /// 👶️ Lends this context's live clock, work, stock and return budget to one child turn over the same paid child parent and settles what that turn spent.
+ #[doc(hidden)]
+ pub fn lend_child_turn<T>(&mut self,child_parent:&OriginalCallerSourceParent,requested:RetainedCloneGrant,run:impl for<'turn> FnOnce(&mut StepContext<'turn>)->Result<T,OriginalTurnFailure>)->Result<(Result<T,OriginalTurnFailure>,Option<ValueError>,RetainedCloneProgress,RetainedCloneProgress),OriginalTurnFailure>{
+  let cx=self;let before=cx.retained_progress();let original=OriginalRetainedLoanIdentity::capture(cx);let grant=narrowed_ceiling(cx,requested)?;let fuel=cx.fuel_remaining;let work=cx.work_units_spent;let clock=cx.clock.get();let source_epoch=cx.source_epoch;let payload_page_granted=cx.payload_page_granted;let stage=cx.stage;let reserved_progress=cx.reserved_return_progress;let reserved_work=cx.reserved_return_work;let total_fuel=cx.original_total_fuel_remaining();let absolute_deadline=cx.original_absolute_deadline_us();let budget=StepBudget{fuel,deadline_us:cx.deadline_us,retained:grant};
+  let(result,matched,remaining,returned_clock,returned_page,returned_stage,returned_cpu,returned_reserved_progress,returned_reserved_work)={let returns=OriginalReturnBudgetReference::Borrowed(cx.return_budget.as_mut().ok_or_else(||refused("original child requires its same live source budget loan"))?.get_mut());let mut child=child_parent.borrow_context_with_return(budget,cx.now_us,cx.preview_sequence,cx.retained_progress,returns,None)?;if !std::ptr::eq(child.original_source_parent()?,child_parent){return Err(refused("original child context accessor changed its actual paid parent").into())}child.work_units_spent=work;child.reserved_return_progress=reserved_progress;child.reserved_return_work=reserved_work;child.clock.set(clock);child.source_epoch=source_epoch;child.original_retirement=cx.original_retirement;child.original_clock_binding=cx.original_clock_binding;child.original_total_fuel=total_fuel;child.original_total_work_start=work.saturating_sub(u128::from(reserved_work));child.original_absolute_deadline=absolute_deadline;child.original_total_retained=cx.original_total_retained;child.original_total_retained_start=cx.original_total_retained_start;child.retained_policy=cx.retained_policy;if matches!(cx.cancel,StepCancelReference::Observed(_)){child.observe_original_cancellation()?;}child.payload_page_granted=payload_page_granted;child.stage=stage;let identity=OriginalRetainedLoanIdentity::capture(&child);let result=run(&mut child);let matched=identity.matches(&child)&&child.source_epoch==source_epoch&&child.fuel_remaining<=fuel&&matches_roots(child_parent.original.as_ref().ok_or_else(||ValueError::invariant("original absent"))?.get(),&child);(result,matched,child.fuel_remaining,child.clock.get(),child.payload_page_granted,child.stage,child.work_units_spent,child.reserved_return_progress,child.reserved_return_work)};
+  let after=cx.retained_progress();let receipt_refusal=if !matched||!original.matches(cx){Some(refused("original child callback replaced its live source, recipient or incoming authority"))}else{delta(before,after).err().or_else(||delta(returned_reserved_progress,after).and_then(|current|if current.fits(grant){Ok(())}else{Err(refused("original child callback exceeded its actual parent loan ceiling"))}).err())};if matched&&original.matches(cx){cx.fuel_remaining=remaining;cx.work_units_spent=returned_cpu;cx.reserved_return_progress=returned_reserved_progress;cx.reserved_return_work=returned_reserved_work;cx.clock.set(returned_clock);cx.payload_page_granted=returned_page;cx.stage=returned_stage;};Ok((result,receipt_refusal,before,after))
+ }
+}
+pub(crate) fn narrowed_ceiling(cx:&StepContext<'_>,requested:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{let posted=delta(cx.reserved_return_progress,cx.retained_progress())?;if !posted.fits(cx.retained){return Err(refused("original child parent recipient already exceeds its incoming ceiling"))}let remaining=cx.retained_grant();let add=|paid:usize,wanted:usize,available:usize|paid.checked_add(wanted.min(available)).ok_or_else(||refused("original child loan ceiling overflow"));Ok(RetainedCloneGrant{maximum_items:add(posted.copied_items,requested.maximum_items,remaining.maximum_items)?,maximum_copy_bytes:add(posted.copied_bytes,requested.maximum_copy_bytes,remaining.maximum_copy_bytes)?,maximum_capacity_bytes:add(posted.retained_capacity_bytes,requested.maximum_capacity_bytes,remaining.maximum_capacity_bytes)?,maximum_release_bytes:add(posted.released_bytes,requested.maximum_release_bytes,remaining.maximum_release_bytes)?,maximum_depth:remaining.maximum_depth.min(requested.maximum_depth)})}
+impl OriginalCallerSourceParent{
+ /// 🧳️ Whether the strong source is still held.
+ #[doc(hidden)]
+ pub fn original_is_held(&self)->bool{self.original.is_some()}
+ /// 🪪️ Authenticates the still-retained initiating roots of a child source against this live context and names them.
+ #[doc(hidden)]
+ pub fn child_witness(&self,cx:&StepContext<'_>)->Result<usize,ValueError>{let witness=self.original.as_ref().ok_or_else(||refused("original child parent source has already entered retirement"))?;if !matches_roots(witness.get(),cx){return Err(refused("original child source requires its same still-retained initiating parent"))}Ok(witness.identity())}
+ /// 🌿️ Whether the borrowed cancellation alias of this child parent is still lent.
+ #[doc(hidden)]
+ pub fn borrowed_cancel(&self)->bool{self.borrowed_cancel}
+ /// 🌿️ Records that this child parent lends the cancellation of its initiating parent.
+ #[doc(hidden)]
+ pub fn lend_borrowed_cancel(&mut self){self.borrowed_cancel=true}
+}
+impl OriginalCallerSourceLoan{
+ /// 🪪️ Names the strong source this loan still holds.
+ #[doc(hidden)]
+ pub fn retained_identity(&self)->Option<usize>{self.original.as_ref().map(|original|original.identity())}
+}
+impl SourceRoots{
+ /// 🏗️ Assembles fresh Source roots from the caller-owned payload and cancellation owners, taking them only once the birth identity exists.
+ #[doc(hidden)]
+ pub fn assemble(authority:&mut Option<JobPayloadAuthority>,cancel:&mut Option<CancelToken>)->Result<Self,ValueError>{let birth=ORIGINAL_RETURN_BIRTH.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).map(u64::from).map_err(|_|refused("Source birth identity exhausted"))?;let turns=OriginalSourceTurnIssuer::new();let returns=OriginalReturnSource::empty(birth);let native=native::NativeSources::new();let clock=SourceClockOwner::new(semio_framework_job_clock::OriginalSourceClock::new());let authority=authority.take().expect("original payload slot checked");let cancel=cancel.take().expect("original cancellation slot checked");Ok(Self{turns,authority,cancel,returns,native,clock})}
+ /// 📤️ Returns the original payload and cancellation owners.
+ #[doc(hidden)]
+ pub fn into_inputs(self)->(JobPayloadAuthority,CancelToken){let Self{authority,cancel,..}=self;(authority,cancel)}
+ /// 🪪️ Names the payload source these roots own.
+ #[doc(hidden)]
+ pub fn payload_identity(&self)->Option<OriginalPayloadSourceIdentity>{self.authority.identity()}
+ /// 🛑️ Borrows the cancellation root these roots own.
+ #[doc(hidden)]
+ pub fn cancel(&self)->&CancelToken{&self.cancel}
+ /// 🧳️ Names the issuer that seals these roots.
+ #[doc(hidden)]
+ pub fn sealing_issuer()->SharedIssuer<Self>{Self::issuer()}
+}
+impl OriginalCallerSourceParent{
+ /// 🌱️ Wraps freshly sealed roots as the parent whose lending is open.
+ #[doc(hidden)]
+ pub fn born(original:Option<SealedShared<SourceRoots>>)->Self{Self{original:ManuallyDrop::new(original),retiring:ManuallyDrop::new(None),pending_roots:ManuallyDrop::new(None),pending_owner:ManuallyDrop::new(None),borrowed_cancel:false,borrowed_source:false,lending_open:true,clock_authority:None,resident_loans:std::sync::atomic::AtomicUsize::new(0)}}
 }

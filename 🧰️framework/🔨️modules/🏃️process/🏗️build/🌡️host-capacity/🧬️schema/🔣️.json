@@ -492,6 +492,12 @@
               "minimum": 0,
               "maximum": 3600000
             },
+            "headOfLineMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600000,
+              "description": "Optional. A queued request that asked for memory and waited this long becomes the head of the line: while it waits for memory, no newer request is admitted unless it fits beside the memory the head needs, so smaller requests cannot keep taking the room the head waits for, whatever the memory pressure says. Absent: no head of the line."
+            },
             "maximumBypasses": {
               "type": "integer",
               "minimum": 0,
@@ -787,6 +793,23 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1048576
+        },
+        "floorMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576,
+          "description": "Optional, below minimumMegabytes: the reduced start the request accepts once it waited longer than the larger of headOfLineMilliseconds and expectedMilliseconds, or once the most memory the host could ever give (every holder released) is below minimumMegabytes. It is then admitted with what is free when that is at least this floor, and grows afterwards."
+        },
+        "queuedSinceMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional: when the operation first queued for memory. A later request of the same operation (a growth) keeps the head-of-line age of the first."
+        },
+        "expectedMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000,
+          "description": "Optional: how long the operation is expected to run; the reduced start waits at least that long."
         },
         "holder": {
           "type": "string",
@@ -1375,7 +1398,9 @@
             "exactGrantRequired",
             "memoryNeverFits",
             "memoryStarved",
-            "memoryWaitedOut"
+            "memoryWaitedOut",
+            "ancestorHolds",
+            "nestedExceedsGrant"
           ],
           "properties": {
             "planRequired": {
@@ -1424,6 +1449,12 @@
               "type": "string"
             },
             "memoryWaitedOut": {
+              "type": "string"
+            },
+            "ancestorHolds": {
+              "type": "string"
+            },
+            "nestedExceedsGrant": {
               "type": "string"
             }
           }
@@ -1590,7 +1621,9 @@
             "exactGrantRequired": "An explicit capacity command requires a live reservation of at least {minimum} MB and {cores} core(s) held for the full command. The current grant supplies {reserved} MB and {availablecores} core(s). Run it outside the enclosing grant or enable capacity admission.",
             "memoryNeverFits": "{operation} needs at least {minimum} MB of memory, but this machine has {total} MB of which {floor} MB stay reserved, so at most {capacity} MB can ever be given out. It cannot run here: use a machine with more memory (at least {needed} MB), or take the result from the fleet cache instead of computing it here.",
             "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again.",
-            "memoryWaitedOut": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB); it is held by {holders}. The wait ends here instead of going on for ever: run the command again once those finish, or stop them."
+            "memoryWaitedOut": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB); it is held by {holders}. The wait ends here instead of going on for ever: run the command again once those finish, or stop them.",
+            "ancestorHolds": "{operation} needs at least {minimum} MB, but the enclosing command {holders} holds {held} MB of this machine and itself waits for this command, so after {seconds} s no wait can ever give more than {possible} MB: it would wait for itself for ever. Start the outer command with at least {needed} MB (for example `repo capacity run --memory={needed}`) or without an enclosing capacity command.",
+            "nestedExceedsGrant": "{operation} needs at least {minimum} MB, but the enclosing grant {holders} holds {granted} MB and only {free} MB are free inside it. A nested command is charged to the grant it runs in and never queues at the machine behind it. Start the outer command with at least {needed} MB (for example `repo capacity run --memory={needed}`)."
           },
           "handover": "[capacity] keeping the {operation} grant ({jobs} job(s), {reserved} MB reserved) for the command that replaces this one: it does not queue again",
           "adopted": "[capacity] took over the {operation} grant of the command this one replaces ({jobs} job(s), {reserved} MB reserved): no queue",
@@ -1678,7 +1711,9 @@
             "exactGrantRequired": "Ein Befehl mit expliziter Kapazitätsangabe benötigt für seine gesamte Ausführung eine aktive Reservierung von mindestens {minimum} MB und {cores} Kern(en). Die aktuelle Zusage stellt {reserved} MB und {availablecores} Kern(e) bereit. Den Befehl außerhalb der umgebenden Zusage ausführen oder die Kapazitätszulassung aktivieren.",
             "memoryNeverFits": "{operation} braucht mindestens {minimum} MB Speicher, dieser Rechner hat aber {total} MB, von denen {floor} MB reserviert bleiben, also können höchstens {capacity} MB vergeben werden. Es kann hier nicht laufen: einen Rechner mit mehr Speicher verwenden (mindestens {needed} MB) oder das Ergebnis aus dem Flottencache holen, statt es hier zu berechnen.",
             "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen.",
-            "memoryWaitedOut": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei; belegt von {holders}. Das Warten endet hier, statt ewig weiterzugehen: den Befehl erneut ausführen, sobald diese fertig sind, oder sie beenden."
+            "memoryWaitedOut": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei; belegt von {holders}. Das Warten endet hier, statt ewig weiterzugehen: den Befehl erneut ausführen, sobald diese fertig sind, oder sie beenden.",
+            "ancestorHolds": "{operation} braucht mindestens {minimum} MB, aber der umgebende Befehl {holders} hält {held} MB dieses Rechners und wartet selbst auf diesen Befehl, sodass nach {seconds} s kein Warten je mehr als {possible} MB geben kann: er würde ewig auf sich selbst warten. Den äußeren Befehl mit mindestens {needed} MB starten (zum Beispiel `repo capacity run --memory={needed}`) oder ohne umgebenden Kapazitätsbefehl.",
+            "nestedExceedsGrant": "{operation} braucht mindestens {minimum} MB, aber die umgebende Zusage {holders} hält {granted} MB und darin sind nur {free} MB frei. Ein verschachtelter Befehl wird der Zusage belastet, in der er läuft, und stellt sich nie am Rechner dahinter an. Den äußeren Befehl mit mindestens {needed} MB starten (zum Beispiel `repo capacity run --memory={needed}`)."
           },
           "handover": "[capacity] die Zusage für {operation} ({jobs} Job(s), {reserved} MB reserviert) bleibt für den Befehl, der diesen ersetzt: er reiht sich nicht erneut ein",
           "adopted": "[capacity] Zusage für {operation} des ersetzten Befehls übernommen ({jobs} Job(s), {reserved} MB reserviert): keine Warteschlange",

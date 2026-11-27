@@ -504,6 +504,15 @@ test("the shared source files are bounded: past the maximum they are dropped as 
  for(const name of["1","2","3","1"])get(name,99);
  expect(shared.size()).toBeLessThanOrEqual(2);expect(calls.length).toBeGreaterThanOrEqual(3);
 });
+test("the shared source files are bounded by the characters they parse too: a few huge declaration files drop the table as a whole before the file count does",()=>{
+ const shared=createSharedSourceFilesV1({maximumFiles:1000,maximumCharacters:100}),original=(name:string)=>({fileName:name,text:"x".repeat(60)}),read=()=>"x".repeat(60),get=shared.sourceFile("c",original as any,read,"s");
+ for(const name of["a","b"])get(name,99);
+ expect(shared.characters()).toBe(120);
+ get("c",99);
+ expect(shared.size()).toBe(1);expect(shared.characters()).toBe(60);
+ for(let at=0;at<50;at++)get("f"+at,99);
+ expect(shared.characters()).toBeLessThanOrEqual(120);expect(shared.size()).toBeLessThanOrEqual(2);
+});
 test("a learned peak that garbage inflated is clamped to the ceiling, persisted clamped, and the owners of the kind are admitted together at once instead of one per wait bound",async()=>{
  const ceiling=2048*MB,written:Record<string,number[]>[]=[];let time=0;
  const governor=createMemoryGovernorV1({workers:4,headroom:()=>6000*MB,estimateBytes:256*MB,sleep:async(milliseconds:number)=>{time+=milliseconds;},now:()=>time,peaks:{read:()=>({project:[23101*MB,14*MB,9617*MB]}),write:value=>{written.push(value as Record<string,number[]>);}}});
@@ -513,9 +522,9 @@ test("a learned peak that garbage inflated is clamped to the ceiling, persisted 
  expect(governor.stats().kinds.project).toBeLessThanOrEqual(2048);
  for(const row of written)for(const samples of Object.values(row))for(const bytes of samples)expect(bytes).toBeLessThanOrEqual(ceiling);
 });
-test("the process that runs a graph-reading command of the build tool carries the collector cap and the allocator purge, a command that never loads the graph does not",()=>{
+test("the process that runs a graph-reading command of the build tool carries the collector cap and the allocator purge, a command that neither loads the graph nor keeps a Cargo run alive does not",()=>{
  const base={PATH:"/bin",KEEP:"1"},cap=graphChildEnvironmentV1();
- for(const args of[["show","projects"],["build","some-project"],["test","some-project"]]){
+ for(const args of[["show","projects"],["build","some-project"],["test","some-project"],["cargo","--store=shared","--configuration=prototype","--","build"],["cache","status"],["cache","gc","--reclaim=1"]]){
   const row=implementationProcessEnvironmentV1(args,base,{});
   expect(row).toMatchObject({...cap,PATH:"/bin",KEEP:"1",BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"});
  }

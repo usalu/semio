@@ -22,7 +22,7 @@ fn folder_artifact_open_projects_kind_and_reuses_only_the_current_binding() {
         wasm_out: "note.wasm".into(),
         role: "plugin".into(), extends: None, capabilities: Vec::new(), activation_events: Vec::new(), host: None,
     }], ..NativeCatalogV1::default() }).expect("publish the authored note editor");
-    let dir = semio_os_kernel::test_support::tempdir().expect("folder");
+    let dir = semio_os_store_test_support::tempdir().expect("folder");
     let storage = semio_os_kernel::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:binding-law".into(), Vec::new(), gateway_only_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("folder workspace"));
     let mut tools = InMemoryToolRegistry::new();

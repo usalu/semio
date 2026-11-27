@@ -127,11 +127,11 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
 }
 
 #[test]
-fn owned_pdf_snapshot_borrowed_projection_matches_reference_pack_fields() {
-    use semio_framework_dsl_record::{FieldValue, native_encoding::{FieldProjectionView, RetainedFieldProjection}};
+fn owned_pdf_snapshot_borrowed_projection_lends_original_paged_octets_and_the_field_projection_refuses_to_materialise_them() {
+    use semio_framework_dsl_record::native_encoding::{FieldProjectionView, RetainedFieldProjection};
     use semio_framework_value::ByteReadSource;
     use store::os_store::serialization::ArtifactStoreSnapshot;
-    use crate::standards::v1_7::subsets::base::io::{import::decode_pdf, text::snapshot as snapshot_text};
+    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
 
     let pdf = include_bytes!("../../../../🔨️modules/🗜️filters/🪣️stream-data/🧪️tests/🔬️unit/🧪️streams.pdf");
     let mut snapshot = decode_pdf(pdf).unwrap();
@@ -144,20 +144,15 @@ fn owned_pdf_snapshot_borrowed_projection_matches_reference_pack_fields() {
     assert_eq!((original.byte_len(), original.read_bytes(0, &mut copied)), (data.len(), data.len()));
     assert_eq!(copied, data.to_vec_owner());
 
-    let expected = snapshot_text::to_record(&snapshot);
     let mut projection = RetainedFieldProjection::new(view.source);
     let mut accept = |_| true;
     let mut control = semio_framework_value::NativeEncodeControl::new(1024 * 1024, &mut accept);
-    let mut actual = None;
-    for _ in 0..200_000 {
-        actual = projection.step(view.source, 1, &mut control).unwrap();
-        if actual.is_some() { break; }
-    }
-    let FieldValue::Record(actual) = actual.expect("projection finished") else { panic!("expected Pack record") };
-    assert_eq!(actual, expected);
-    let expected_bytes = store::pack_rt::encode_document(&snapshot_text::spec(), &expected, &Default::default()).unwrap();
-    let actual_bytes = store::pack_rt::encode_document(&snapshot_text::spec(), &actual, &Default::default()).unwrap();
-    assert_eq!(actual_bytes, expected_bytes);
+    let refusal = (0..200_000).find_map(|_| match projection.step(view.source, 1, &mut control) {
+        Ok(Some(_)) => Some(None),
+        Ok(None) => None,
+        Err(error) => Some(Some(error)),
+    });
+    assert_eq!(refusal.flatten().map(|error| error.kind), Some(semio_framework_value::ValueRefusalKind::UnsupportedOwner), "paged octets are never materialised by the field projection, the retained export route encodes them");
 }
 
 #[test]
@@ -257,14 +252,15 @@ fn controlled_annotations_match_cold_lift_and_retain_partial_pages() {
     assert_eq!(cold.pages[0].annotations[0].contents.as_deref(), fixture["expected"]["note"]["contents"].as_str());
     assert_eq!(cold.pages[0].annotations[0].name.as_deref(), fixture["expected"]["note"]["name"].as_str());
 
-    for mode in ["complete", "cancel", "appearance"] {
+    for mode in ["complete", "cancel", "appearance", "popup"] {
         let mut graph = objects.clone();
-        if mode == "appearance" {
+        if matches!(mode, "appearance" | "popup") {
             let PdfObject::Dict(entries) = &mut graph[5].value else { panic!("link dictionary"); };
-            entries.push(PdfDictEntry::new("AP", PdfObject::Dict(Vec::new())));
+            entries.push(if mode == "popup" { PdfDictEntry::new("Popup", PdfObject::Ref(objects[0].id)) } else { PdfDictEntry::new("AP", PdfObject::Dict(Vec::new())) });
         }
         let expected = graph.clone();
-        let mut graph = BorrowedAnnotationGraph(graph);
+        let reference = if mode == "appearance" { lift_document(&root, "1.7", &mut GraphSource::new(&graph)).unwrap() } else { cold.clone() };
+        let mut graph = BorrowedAnnotationGraph::admit(graph);
         let mut cursor = DocumentLiftCursor::controlled();
         let mut grant = CosGrant { work: 1, ..Default::default() };
         let mut events = 0;
@@ -288,12 +284,13 @@ fn controlled_annotations_match_cold_lift_and_retain_partial_pages() {
                     grant.release_bytes = 0;
                 }
                 ControlledLiftEvent::Complete => {
-                    assert_eq!(mode, "complete");
-                    assert_eq!(cursor.take_result().unwrap(), cold);
+                    assert!(matches!(mode, "complete" | "appearance"));
+                    assert_eq!(cursor.take_result().unwrap(), reference);
                     ended = true;
                     break;
                 }
                 event @ (ControlledLiftEvent::Cancelled | ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page)) => {
+                    assert!(matches!(mode, "cancel" | "popup"));
                     assert_eq!(event, if mode == "cancel" { ControlledLiftEvent::Cancelled } else { ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page) });
                     assert!(cursor.take_result().is_none());
                     let inspected = graph.0.clone();
@@ -316,10 +313,23 @@ fn controlled_annotations_match_cold_lift_and_retain_partial_pages() {
     }
 }
 
-struct BorrowedAnnotationGraph(Vec<PdfIndirectObject>);
+/// 🪟️ Borrows PDF originals: an annotation dictionary is only ever inspected in place, except one with appearance streams (`/AP`), whose reference builder reads by value; fonts and images always register through the reference builder over the persistent state, which reads by value.
+struct BorrowedAnnotationGraph(Vec<PdfIndirectObject>, bool);
+
+impl BorrowedAnnotationGraph {
+    fn admit(objects: Vec<PdfIndirectObject>) -> Self {
+        let appearance = objects.iter().any(|object| matches!(&object.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "AP")));
+        Self(objects, appearance)
+    }
+}
 
 impl semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::schema::graph_source::ObjectSource for BorrowedAnnotationGraph {
-    fn get(&mut self, _: ObjRef) -> Option<PdfObject> { panic!("controlled annotations must borrow PDF originals") }
+    fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
+        let value = self.0.iter().find(|object| object.id == reference).map(|object| object.value.clone());
+        let annotation = matches!(&value, Some(PdfObject::Dict(entries)) if entries.iter().any(|entry| entry.key == "Type" && entry.value.as_name() == Some("Annot")));
+        assert!(self.1 || !annotation, "controlled annotations without appearance streams must borrow PDF originals");
+        value
+    }
 
     fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
         read(self.0.iter().find(|object| object.id == reference).map(|object| &object.value));
@@ -340,7 +350,8 @@ fn controlled_shapes_match_the_independent_reader_and_the_cold_lift() {
     for (shape, case) in fixture.as_object().unwrap() {
         let mut objects: Vec<_> = case["objects"].as_array().unwrap().iter().map(|row| {
             let authored = format!("{} {} obj\n{}\nendobj\n", row[0], row[1], row[2].as_str().unwrap());
-            let (id, value) = parse_indirect_at(authored.as_bytes(), 0).unwrap();
+            let (id, mut value) = parse_indirect_at(authored.as_bytes(), 0).unwrap();
+            if let PdfObject::Stream { dict, .. } = &mut value { dict.retain(|entry| entry.key != "Length"); }
             PdfIndirectObject { id, value }
         }).collect();
         let mut root = [PdfDictEntry::new("Root", PdfObject::Ref(objects[0].id))];
@@ -355,7 +366,7 @@ fn controlled_shapes_match_the_independent_reader_and_the_cold_lift() {
             assert_eq!(i64::from(page.rotate), reference["rotate"].as_i64().unwrap(), "{shape}: rotation");
             assert_eq!(page.annotations.len(), reference["annotations"].as_array().unwrap().len(), "{shape}: annotations");
         }
-        let mut graph = BorrowedAnnotationGraph(objects.clone());
+        let mut graph = BorrowedAnnotationGraph::admit(objects.clone());
         let mut cursor = DocumentLiftCursor::controlled();
         let mut grant = CosGrant { work: 1, ..Default::default() };
         let mut finished = false;
@@ -366,7 +377,7 @@ fn controlled_shapes_match_the_independent_reader_and_the_cold_lift() {
                 ControlledLiftEvent::NeedsRelease { bytes } => grant.release_bytes = bytes,
                 ControlledLiftEvent::More => { grant.allocation_bytes = 0; grant.release_bytes = 0; }
                 ControlledLiftEvent::Complete => { assert_eq!(cursor.take_result().unwrap(), cold, "{shape}: controlled lift differs from the cold lift"); finished = true; break; }
-                ControlledLiftEvent::Deferred(barrier) => panic!("{shape}: the governed lifter still defers at {barrier:?}"),
+                ControlledLiftEvent::Deferred(barrier) => panic!("{shape}: the governed lifter still defers at {barrier:?} ({:?})", cursor.deferred_detail()),
                 event => panic!("{shape}: unexpected controlled event {event:?}"),
             }
         }

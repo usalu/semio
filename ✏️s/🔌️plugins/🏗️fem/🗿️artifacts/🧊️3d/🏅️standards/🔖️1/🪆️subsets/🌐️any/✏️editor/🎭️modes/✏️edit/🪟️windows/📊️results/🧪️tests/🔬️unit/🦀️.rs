@@ -227,9 +227,10 @@ fn progress_stage_labels_are_monolingual_per_locale() {
 /// 🔁️ Drives the mounted results jobs the way the host does: spawns, cancels and steps each registry job between renders.
 async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>, rounds: usize) -> String {
     use semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver;
+    let started = std::time::Instant::now();
     for round in 0..rounds {
+        if round % 25 == 0 { let caption = render_body(app, FEM3D_BODY_RESULTS); eprintln!("[DEBUG] pump round {round} at {:?} caption {}", started.elapsed(), caption.split("\"type\":\"text\",\"value\":\"").nth(1).and_then(|rest| rest.split('"').next()).unwrap_or_default()); }
         let _ = render_body(app, FEM3D_BODY_RESULTS);
-        if round % 20 == 0 { let json = render_body(app, FEM3D_BODY_RESULTS); eprintln!("[DEBUG] round {round} drivers {} caption {:?}", drivers.len(), json.split("\"type\":\"text\",\"value\":\"").nth(1).and_then(|rest| rest.split('"').next())); }
         let view = crate::context::view(FEM3D_WINDOW_RESULTS);
         let grant = app.1.cx().retained_grant();
         semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("renew turn");

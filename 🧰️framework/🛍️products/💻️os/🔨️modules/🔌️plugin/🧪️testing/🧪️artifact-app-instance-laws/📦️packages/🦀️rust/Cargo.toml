@@ -77,6 +77,7 @@ serde_json = "1.0.140"
 
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust"}
 
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust"}
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

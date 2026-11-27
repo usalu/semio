@@ -9,12 +9,13 @@ import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️cach
 import {formatMachinePlanV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {dedupeTreeV1} from "../👯️dedupe/🟦️.ts";
 import {collectMachineBoundsV1} from "../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts";
-import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineHostTotalBytesV1,machineUsesV1,removeCacheTreeV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+import {cacheRunnerPortsV1,collectCacheV1,createCacheImagesV1,loadCacheSizesV1,machineHostFreeBytesV1,machineHostTotalBytesV1,machineUsesV1,removeCacheTreeV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
 import type {CargoGcControlV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📏️tree/🟦️.ts";
 import type {MachinePlanV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+import {createNativeImageSharedReaderV1,withNativeImageSharedReadV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
 import {nativeFreeSpaceSyncV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 📝️ The closed arguments of `repo cache status|gc|verify`. */
@@ -41,7 +42,7 @@ export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cac
 }
 
 /** 🎛️ What the command needs besides the runner ports: the workspace, the environment, the output and the ledger. */
-export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>}>;
+export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>;leaseDirectory?:string}>;
 
 /** 💰️ Resolves the disk budget of this machine from `--budget`, the environment and the machine file inside the repository cache root, in that order, falling back to the declared default. */
 async function machineTotalV1(context:CacheCommandContextV1,parsed:CacheArgumentsV1,ledger:CacheLedgerV1){
@@ -55,17 +56,31 @@ async function runDedupeV1(context:CacheCommandContextV1,parsed:CacheArgumentsV1
  const free=context.freeBytes??((path:string):number|undefined=>nativeFreeSpaceSyncV1(path)?.availableBytes);
  for(const target of declared.dedupe){
   if(parsed.only&&!parsed.only.has(target.id))continue;
-  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,"m",...(target.directory?.split("/")??[])):undefined,present=base!==undefined&&await stat(base).then(row=>row.isDirectory(),()=>false);
-  if(!base||!present){if(!parsed.json)context.write(cacheTextV1(language,"dedupe.absent",{id:target.id,directory:target.directory??target.partition}));continue;}
-  if(!parsed.json)context.write(cacheTextV1(language,"dedupe.target",{id:target.id,directory:base}));
-  await ports.progress("dedupe:"+target.id);const before=parsed.dryRun?undefined:free(base);
-  const outcome=await dedupeTreeV1({base,minimumBytes:target.minimumBytes,quietMs:target.quietMs,maximumFiles:target.maximumFiles,dryRun:parsed.dryRun,language,write:parsed.json?()=>{}:context.write},ports,context.clone);
-  if(outcome.partial&&!parsed.json)context.write(cacheTextV1(language,"dedupe.partial",{id:target.id,count:target.maximumFiles}));
-  const after=parsed.dryRun?undefined:free(base),gain=before!==undefined&&after!==undefined?Math.max(0,after-before):null;
-  if(gain!==null)gained+=gain;else if(!parsed.dryRun&&outcome.clones){unmeasured++;if(!parsed.json)context.write(cacheTextV1(language,"dedupe.freeUnknown",{directory:base}));}
-  replaced+=outcome.replaced;freed+=outcome.freedBytes;skipped+=outcome.skipped;failed+=outcome.failed.length;
-  for(const message of outcome.failed)if(!parsed.json)context.write(target.id+": "+message);
-  rows.push({id:target.id,directory:base,groups:outcome.plan.groups,files:outcome.plan.files,clones:outcome.clones,plannedReplacements:outcome.plan.replacements.length,reclaimableBytes:outcome.plan.reclaimableBytes,replaced:outcome.replaced,freedBytes:outcome.freedBytes,volumeGainBytes:parsed.dryRun?0:gain,skipped:outcome.skipped,failed:outcome.failed,partial:outcome.partial});
+  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,"m",...(target.directory?.split("/")??[])):undefined;
+  if(partition===undefined||base===undefined){if(!parsed.json)context.write(cacheTextV1(language,"dedupe.absent",{id:target.id,directory:target.directory??target.partition}));continue;}
+  if(context.leaseDirectory===undefined)throw Error(cacheTextV1(language,"dedupe.leaseRequired"));
+  const reader=createNativeImageSharedReaderV1({leaseDirectory:context.leaseDirectory,imageDirectory:join(context.workspace,partition.directory),signal:ports.signal,timeoutMs:CACHE_GC_LIMITS_V1.imageReadLeaseWaitMilliseconds});
+  try{
+   await ports.progress("dedupe:lease "+target.id);
+   const present=await reader.run(()=>stat(base).then(row=>row.isDirectory(),()=>false));
+   if(!present){if(!parsed.json)context.write(cacheTextV1(language,"dedupe.absent",{id:target.id,directory:target.directory??target.partition}));continue;}
+   if(!parsed.json)context.write(cacheTextV1(language,"dedupe.target",{id:target.id,directory:base}));
+   await ports.progress("dedupe:"+target.id);const before=parsed.dryRun?undefined:free(base);
+   let outcome:Awaited<ReturnType<typeof dedupeTreeV1>>;
+   try{outcome=await dedupeTreeV1({base,reader,minimumBytes:target.minimumBytes,quietMs:target.quietMs,maximumFiles:target.maximumFiles,dryRun:parsed.dryRun,language,write:parsed.json?()=>{}:context.write},ports,context.clone);}
+   catch(error){
+    if(ports.signal.aborted)throw error;
+    const reason=String((error as Error).message??error);failed++;
+    if(!parsed.json)context.write(cacheTextV1(language,"dedupe.failedTarget",{id:target.id,reason}));
+    rows.push({id:target.id,directory:base,groups:0,files:0,clones:false,plannedReplacements:0,reclaimableBytes:0,replaced:0,freedBytes:0,volumeGainBytes:null,skipped:0,failed:[reason],partial:false});continue;
+   }
+   if(outcome.partial&&!parsed.json)context.write(cacheTextV1(language,"dedupe.partial",{id:target.id,count:target.maximumFiles}));
+   const after=parsed.dryRun?undefined:free(base),gain=before!==undefined&&after!==undefined?Math.max(0,after-before):null;
+   if(gain!==null)gained+=gain;else if(!parsed.dryRun&&outcome.clones){unmeasured++;if(!parsed.json)context.write(cacheTextV1(language,"dedupe.freeUnknown",{directory:base}));}
+   replaced+=outcome.replaced;freed+=outcome.freedBytes;skipped+=outcome.skipped;failed+=outcome.failed.length;
+   for(const message of outcome.failed)if(!parsed.json)context.write(target.id+": "+message);
+   rows.push({id:target.id,directory:base,groups:outcome.plan.groups,files:outcome.plan.files,clones:outcome.clones,plannedReplacements:outcome.plan.replacements.length,reclaimableBytes:outcome.plan.reclaimableBytes,replaced:outcome.replaced,freedBytes:outcome.freedBytes,volumeGainBytes:parsed.dryRun?0:gain,skipped:outcome.skipped,failed:outcome.failed,partial:outcome.partial});
+  }finally{await reader.close();}
  }
  const planned=rows.reduce((sum,row)=>sum+(row.plannedReplacements as number),0),reclaimable=rows.reduce((sum,row)=>sum+(row.reclaimableBytes as number),0);
  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:parsed.dryRun,targets:rows},null,2));
@@ -192,15 +207,17 @@ async function nxToolingReclaim(root:string,dryRun:boolean,language:CacheLanguag
   try{const result=await withRepositoryCacheStoreMaintenanceV1(root,"tools",invocation,phaseControl,scope);return{retired:result.retired,held:result.held,kept:result.kept};}
   catch(error){if(String((error as Error).message)==="Quiescent pre-pin cache storage admission required")return "busy" as const;throw error;}
  };
- const ports={signal,now:()=>Date.now(),progress,census:()=>censusNxToolingStoreV1(root,mount,{signal,progress}),held:(identity:string)=>probeNxToolingHeldV1(leaseDirectory,identity,signal),pressure:pressed,freeBytes:free,idle:()=>probeNxToolingImageIdleV1(leaseDirectory,join(root,budgetPolicy.partitions.tools.directory),signal),sleep:(milliseconds:number)=>new Promise<void>((done,fail)=>{const timer=setTimeout(done,milliseconds);signal.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});}),...dryRun?{}:{retire}};
+ const ports={signal,now:()=>Date.now(),progress,census:()=>withNativeImageSharedReadV1({leaseDirectory,imageDirectory:join(root,budgetPolicy.partitions.tools.directory),signal,timeoutMs:CACHE_GC_LIMITS_V1.imageReadLeaseWaitMilliseconds},()=>censusNxToolingStoreV1(root,mount,{signal,progress})),held:(identity:string)=>probeNxToolingHeldV1(leaseDirectory,identity,signal),pressure:pressed,freeBytes:free,idle:()=>probeNxToolingImageIdleV1(leaseDirectory,join(root,budgetPolicy.partitions.tools.directory),signal),sleep:(milliseconds:number)=>new Promise<void>((done,fail)=>{const timer=setTimeout(done,milliseconds);signal.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});}),...dryRun?{}:{retire}};
  try{return formatNxToolingStoreBoundV1(language,await runNxToolingStoreBoundV1(dryRun,ports,policy)).join("\n");}finally{single.release();}
 }
 
 /** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, and the lease directory of the leases partition for the area leases. */
 export async function runCacheLedgerV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
  const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),partitions=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"),headroom=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
+ const images=createCacheImagesV1({workspace:root,partitions:budgetPolicy.partitions,leaseDirectory:directory,signal:invocation.control.signal,timeoutMs:CACHE_GC_LIMITS_V1.imageReadLeaseWaitMilliseconds});
  const ports:CacheRunnerPortsV1=cacheRunnerPortsV1({
   signal:invocation.control.signal,
+  images,
   progress:stage=>routing.advanceScriptInvocation(invocation,"cache:"+stage,"running"),
   exclusive:async resource=>{
    try{return await leases.acquireResourceLease({directory,resource,mode:"exclusive",signal:phaseControl.signal,control:phaseControl,timeoutMs:0});}
@@ -211,18 +228,34 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
    if(owner==="graph"&&id==="graph-inference")return routing.withRequestedIssuedResourceControlV1(phaseControl,CACHE_GC_LIMITS_V1.phaseBudgetMilliseconds,control=>graphReclaim(root,dryRun,language,control,leases,opening,partitions,headroom));
    if(owner==="cargo"&&id==="cargo-store")return cargoIncrementalReclaim(root,dryRun,language,{...ports,signal:phaseControl.signal},context?.machine??null).catch(error=>{if(phaseControl.signal.aborted)throw error;return "failed: "+String((error as Error).message);});
    if(owner==="test-evidence"&&id==="test-runs")return testRunsReclaim(root,dryRun,language,phaseControl,invocation).catch(error=>"failed: "+String((error as Error).message));
-   if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal,id)).catch(error=>"failed: "+String((error as Error).message));
+   if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal,id,images)).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-cache")return import("../../🌐️remote-cache/⌨️command/🟦️.ts").then(module=>module.collectRemoteCacheForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
    return import("../../🔌️backends/🟦️.ts").then(async registry=>registry.buildBackendIdsV1().includes(owner)?routing.withRequestedIssuedResourceControlV1(phaseControl,CACHE_GC_LIMITS_V1.phaseBudgetMilliseconds,async control=>(await(await import("../../🔌️backends/🚚️loading/🟦️.ts")).loadBuildBackendV1(owner)).collectCache?.({root,invocation,phase:control,dryRun,signal:control.signal,area:id,language})):undefined);
   }
  });
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
  const wholeGc=args[0]==="gc"&&!args.some(arg=>arg==="--area"||arg.startsWith("--area="));
- const dependencyArea=args.some(arg=>arg.startsWith("--area=")&&arg.slice(7).split(",").includes("dependencies")),collectDependencies=async(dryRun:boolean,bounded:boolean):Promise<void>=>{
+ const dependencyArea=args.some(arg=>arg.startsWith("--area=")&&arg.slice(7).split(",").includes("dependencies")),purgeBunCache=async(dryRun:boolean):Promise<void>=>{
+  const{concurrentLeaseResourceV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{purgeJavascriptDependencyBunCacheV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts"),{resolve:resolvePath}=await import("node:path"),store=join(root,...budgetPolicy.partitions.dependencies.directory.split("/"),"m");
+  if(!existsSync(join(store,"bun-cache")))return;
+  let lease:{release():void|Promise<void>}|null=null;
+  try{lease=await leases.acquireResourceLease({directory,resource:concurrentLeaseResourceV1("build",resolvePath(root)),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}
+  catch(error){if(!/timed out/iu.test(String((error as Error).message)))throw error;}
+  if(lease===null){writeResultLineV1("Bun package cache kept: an install holds the build lease / Bun-Paketcache behalten: ein Install hält die Build-Sperre");return;}
+  try{
+   if(dryRun){writeResultLineV1("Would remove the Bun package cache / Der Bun-Paketcache würde entfernt");return;}
+   const removed=await purgeJavascriptDependencyBunCacheV1(store,async count=>{invocation.control.signal.throwIfAborted();routing.advanceScriptInvocation(invocation,"cache:bun-cache-"+count,"running");});
+   writeResultLineV1("Removed the Bun package cache ("+removed+" entries) / Bun-Paketcache entfernt ("+removed+" Einträge)");
+  }catch(error){if(invocation.control.signal.aborted)throw error;writeResultLineV1("Bun package cache not removed: "+String((error as Error).message)+" / Bun-Paketcache nicht entfernt: "+String((error as Error).message));}
+  finally{await lease.release();}
+ },
+ collectDependencies=async(dryRun:boolean,bounded:boolean):Promise<void>=>{
+  const{DISK_RECOVERY_POLICY_V1:recoveryPolicy}=await import("../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts");
+  if(process.env[recoveryPolicy.environmentBunCache]==="1")return purgeBunCache(dryRun);
   const{collectUnpinnedDependencyGenerationsV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/♻️collection/🟦️.ts"),{concurrentPinResourceV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{resolve:resolvePath}=await import("node:path"),store=join(root,...budgetPolicy.partitions.dependencies.directory.split("/"),"m");
   if(!existsSync(store))return;
   try{
-   const result=await collectUnpinnedDependencyGenerationsV1(store,{dryRun,signal:invocation.control.signal,...bounded?{maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds}:{},progress:row=>routing.advanceScriptInvocation(invocation,"cache:dependencies-"+row.phase+"-"+row.done+"-"+row.total+"-"+row.entries,"running"),acquire:async key=>{try{return await leases.acquireResourceLease({directory,resource:concurrentPinResourceV1(resolvePath(root),key),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return null;throw error;}}});
+   const result=await withNativeImageSharedReadV1({leaseDirectory:directory,imageDirectory:join(root,...budgetPolicy.partitions.dependencies.directory.split("/")),signal:invocation.control.signal,timeoutMs:CACHE_GC_LIMITS_V1.imageReadLeaseWaitMilliseconds},()=>collectUnpinnedDependencyGenerationsV1(store,{dryRun,signal:invocation.control.signal,...bounded?{maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds}:{},progress:row=>routing.advanceScriptInvocation(invocation,"cache:dependencies-"+row.phase+"-"+row.done+"-"+row.total+"-"+row.entries,"running"),acquire:async key=>{try{return await leases.acquireResourceLease({directory,resource:concurrentPinResourceV1(resolvePath(root),key),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return null;throw error;}}}));
    if(result.refused!==undefined)writeResultLineV1("Dependency generations kept: "+result.refused+" / Abhängigkeits-Generationen behalten: "+result.refused);
    else if(result.retired.length>0||result.finished.length>0){const finished=result.finished.length>0?" and "+(dryRun?"would finish ":"finished ")+result.finished.length+" interrupted removal(s)":"",fertig=result.finished.length>0?" und "+result.finished.length+" unterbrochene Entfernung(en) "+(dryRun?"würden beendet":"beendet"):"";writeResultLineV1((dryRun?"Would retire ":"Retired ")+result.retired.length+" dependency generation(s)"+finished+(result.pressure?" (image under pressure)":"")+" / "+result.retired.length+" Abhängigkeits-Generation(en) "+(dryRun?"würden entfernt":"entfernt")+fertig+(result.pressure?" (Image unter Druck)":""));}
    if(result.more)writeResultLineV1("More dependency generations follow in the next pass / Weitere Abhängigkeits-Generationen folgen im nächsten Durchgang");
@@ -253,14 +286,15 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
  };
  const retireIdle=async():Promise<void>=>{
   const signal=invocation.control.signal;
-  await import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(async module=>writeResultLineV1("Remote execution worker home: "+await module.collectRemoteExecutionForLedgerV1(root,false,signal,"remote-execution-worker")),()=>undefined).catch(()=>undefined);
+  await import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(async module=>writeResultLineV1("Remote execution worker home: "+await module.collectRemoteExecutionForLedgerV1(root,false,signal,"remote-execution-worker",images)),()=>undefined).catch(()=>undefined);
+  await images.settle();
   const registry=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts"),order=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts");
   const pruned=await registry.pruneLeaseRegistryIfDueV1(registry.leaseRegistryRootV1(),order.leaseOrderPolicyV1(process.env),Date.now(),signal).catch(()=>undefined);
   if(pruned!==undefined)writeResultLineV1("Lease registry: removed "+pruned.removedFolders+" folders and "+pruned.removedEntries+" rows"+(pruned.more?" (more follow)":"")+" / Lease-Register: "+pruned.removedFolders+" Ordner und "+pruned.removedEntries+" Zeilen entfernt"+(pruned.more?" (weitere folgen)":""));
  };
  if(idleOnly){await collectDependencies(false,true);await retireIdle();await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);return;}
  if(wholeGc&&!args.includes("--dry-run"))await reclaimImages(["rust"]);
- const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
+ const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify,leaseDirectory:directory},ports).finally(()=>images.settle());
  if(code!==0)process.exitCode=code;
  else if(wholeGc||dependencyArea){await collectDependencies(args.includes("--dry-run"),false);if(wholeGc)await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);}
 }

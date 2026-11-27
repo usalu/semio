@@ -95,7 +95,7 @@ test("the typed reason, its refusal and its kill record exist in both languages"
 });
 
 const overdueRepo=(language:"en"|"de",lines=120)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${lines} ]; do i=$((i+1)); echo "${stepLine(9000,2,language==="de")}" | sed "s/(9000 s/($((9000+i)) s/"; sleep 0.3; done\nexit 0\n`;
-const SLOW={...TREE,speedFactor:1,stallStopMilliseconds:12000,stallMilliseconds:12000};
+const SLOW={...TREE,speedFactor:1,stallStopMilliseconds:12000,stallMilliseconds:12000,livenessCpuMilliseconds:10};
 const run=(home:string,root:string,tree=FAST)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree});
 
 for(const language of["en","de"] as const)posix(`a stage whose step ran far past its bound with nothing else moving is stopped with the step named (${language})`,async()=>{

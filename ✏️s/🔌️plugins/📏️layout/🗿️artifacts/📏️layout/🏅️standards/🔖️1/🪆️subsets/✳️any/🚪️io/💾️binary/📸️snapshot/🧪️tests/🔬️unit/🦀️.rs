@@ -5,8 +5,8 @@ use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, Page
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
-    store::os_store::test_support::assert_pack_schema_identity(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_pack_schema_identity(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
@@ -29,7 +29,7 @@ async fn pack_round_trips_minimal_document_with_character_style() {
         background_drawing: None,
         referenced_model: None,
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,7 +71,7 @@ async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
         background_drawing: None,
         referenced_model: None,
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -88,6 +88,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     };
     document.background_drawing = Some(birth.member.clone());
     document.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
-    store::os_store::test_support::assert_pack_schema_identity(&document);
+    semio_os_store_test_support::assert_pack_schema_identity(&document);
     assert_eq!(birth.initial.as_ptr(), original);
 }

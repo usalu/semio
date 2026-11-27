@@ -52,6 +52,10 @@ impl LdltJob {
             }
             return Ok(NumericalRun::Yield);
         }
+        if self.state.column == self.state.a.n && !self.publishes {
+            self.terminal_published = true;
+            return Ok(NumericalRun::Complete);
+        }
         if self.state.column == self.state.a.n {
             context.set_stage("fem.ldlt.output-entry");
             if self.output_writer.is_some() && self.state.publication_stage == 3 {

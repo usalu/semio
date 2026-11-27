@@ -53,7 +53,7 @@ fn an_example_switch_emits_one_load_and_no_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn puzzle2d_play_projection_pack_round_trips() {
     let mut app = concrete_forest_app();
-    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+    semio_os_store_test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     close_app(&mut app);
 }
 
@@ -194,7 +194,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
+    semio_os_store_test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     close_puzzle2d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

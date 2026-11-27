@@ -1,0 +1,66 @@
+/** 🔎️ The calls of one source that open a path below a cache image outside every lease. A value carries such a path when its expression matches a mount or root pattern, or refers to a name that does; names are followed to a fixed point over the syntax tree through declarations (with their type annotations against the root types), parameters, assignments, loop bindings, the arguments of calls to functions declared in the same file that are not themselves leased and the arguments of carrier methods (`push`, `set`) into their receiver, whatever the shape of the expression (a name that only is a property name or an object key is not a reference). A declaration at the top level of a file counts in the whole file, any other inside its top-level statement only. A call is a violation when it opens such a path (or hands it to a documented helper) and is not leased: inside the arguments of a lease callee, inside a function with a leased parameter, or handing a leased argument (a reader of the image) to the callee. Judged call by call, so a file with one leased and one unleased read fails on the unleased one.
+ * @see ./🧬️schema/🔣️.json */
+export function unleasedImageSitesV1(path:string,source:string,policy:ImageLeaseLawPolicyV1):readonly ImageLeaseSiteV1[]{
+ const mounts=compile([...policy.mountPatterns,...policy.rootPatterns]),types=compile(policy.rootTypes),openers=compile(policy.openers),callees=compile(policy.leaseCallees),parameters=compile(policy.leasedParameters),carried=compile(policy.leasedArguments),carriers=new Set(policy.carrierMethods);
+ const file=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith(".tsx")?ts.ScriptKind.TSX:/\.m?js$/u.test(path)?ts.ScriptKind.JS:ts.ScriptKind.TS);
+ const unitOf=(node:ts.Node):ts.Node=>{let up=node;while(up.parent!==undefined&&up.parent!==file)up=up.parent;return up;};
+ const keyName=(node:ts.Identifier):boolean=>{const parent=node.parent;return ts.isPropertyAccessExpression(parent)&&parent.name===node||ts.isQualifiedName(parent)&&parent.right===node||(ts.isPropertyAssignment(parent)||ts.isPropertySignature(parent)||ts.isMethodDeclaration(parent)||ts.isMethodSignature(parent))&&parent.name===node||ts.isBindingElement(parent)&&parent.propertyName===node;};
+ const refsOf=(nodes:readonly ts.Node[]):readonly string[]=>{const found:string[]=[];const walk=(node:ts.Node):void=>{if(ts.isIdentifier(node)&&!keyName(node))found.push(node.text);ts.forEachChild(node,walk);};for(const node of nodes)walk(node);return found;};
+ const namesOf=(node:ts.Node):readonly string[]=>ts.isIdentifier(node)?[node.text]:ts.isObjectBindingPattern(node)||ts.isArrayBindingPattern(node)?node.elements.flatMap(element=>ts.isBindingElement(element)?namesOf(element.name):[]):[];
+ type Rule={names:readonly string[];text:string;refs:readonly string[];type:boolean;reads:ts.Node;writes:ts.Node;top:boolean};
+ const rules:Rule[]=[],topNames=new Set<string>(),functions=new Map<string,ts.SignatureDeclaration>();
+ const isFunction=(node:ts.Node|undefined):node is ts.ArrowFunction|ts.FunctionExpression=>node!==undefined&&(ts.isArrowFunction(node)||ts.isFunctionExpression(node));
+ const collect=(node:ts.Node):void=>{
+  if(ts.isVariableDeclaration(node)){
+   const unit=unitOf(node),list=node.parent,loop=ts.isVariableDeclarationList(list)&&(ts.isForOfStatement(list.parent)||ts.isForInStatement(list.parent))?list.parent:undefined,top=ts.isVariableDeclarationList(list)&&ts.isVariableStatement(list.parent)&&list.parent.parent===file,names=namesOf(node.name);
+   if(top)for(const name of names)topNames.add(name);
+   const source=loop?.expression??node.initializer;
+   if(source!==undefined)rules.push({names,text:source.getText(file),refs:refsOf([source]),type:false,reads:unit,writes:unit,top});
+   if(node.type!==undefined)rules.push({names,text:node.type.getText(file),refs:[],type:true,reads:unit,writes:unit,top});
+   if(ts.isIdentifier(node.name)&&isFunction(node.initializer))functions.set(node.name.text,node.initializer);
+  }
+  if(ts.isFunctionDeclaration(node)&&node.name!==undefined)functions.set(node.name.text,node);
+  if(ts.isParameter(node)){
+   const unit=unitOf(node),names=namesOf(node.name);
+   if(node.initializer!==undefined)rules.push({names,text:node.initializer.getText(file),refs:refsOf([node.initializer]),type:false,reads:unit,writes:unit,top:false});
+   if(node.type!==undefined)rules.push({names,text:node.type.getText(file),refs:[],type:true,reads:unit,writes:unit,top:false});
+  }
+  ts.forEachChild(node,collect);
+ };
+ collect(file);
+ const leased=(node:ts.Node):boolean=>{
+  let child=node;
+  for(let up=node.parent as ts.Node|undefined;up!==undefined;child=up,up=up.parent){
+   if(ts.isCallExpression(up)&&up.expression!==child&&callees.some(pattern=>pattern.test(calleeTextV1(up.expression))))return true;
+   if(ts.isFunctionLike(up)&&parameters.some(pattern=>pattern.test((up as ts.SignatureDeclaration).parameters.map(parameter=>parameter.getText(file)).join(","))))return true;
+  }
+  return false;
+ };
+ const flow=(node:ts.Node):void=>{
+  if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.EqualsToken&&ts.isIdentifier(node.left)){const unit=unitOf(node);rules.push({names:[node.left.text],text:node.right.getText(file),refs:refsOf([node.right]),type:false,reads:unit,writes:unit,top:topNames.has(node.left.text)});}
+  if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&ts.isIdentifier(node.expression.expression)&&carriers.has(node.expression.name.text)){const receiver=node.expression.expression.text,unit=unitOf(node);rules.push({names:[receiver],text:node.arguments.map(argument=>argument.getText(file)).join(","),refs:refsOf([...node.arguments]),type:false,reads:unit,writes:unit,top:topNames.has(receiver)});}
+  if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)){
+   const target=functions.get(node.expression.text);
+   if(target!==undefined&&!leased(node))node.arguments.forEach((argument,at)=>{const parameter=target.parameters[at];if(parameter!==undefined)rules.push({names:namesOf(parameter.name),text:argument.getText(file),refs:refsOf([argument]),type:false,reads:unitOf(node),writes:unitOf(target),top:false});});
+  }
+  ts.forEachChild(node,flow);
+ };
+ flow(file);
+ const shared=new Set<string>(),local=new Map<ts.Node,Set<string>>();
+ const tainted=(name:string,unit:ts.Node):boolean=>shared.has(name)||local.get(unit)?.has(name)===true;
+ const bears=(text:string,names:readonly string[],unit:ts.Node):boolean=>mounts.some(pattern=>pattern.test(text))||names.some(name=>tainted(name,unit));
+ for(let changed=true;changed;){changed=false;for(const row of rules){const target=row.top?shared:local.get(row.writes)??local.set(row.writes,new Set()).get(row.writes)!;if(row.names.some(name=>!target.has(name))&&(row.type?types.some(pattern=>pattern.test(row.text)):bears(row.text,row.refs,row.reads))){for(const name of row.names)target.add(name);changed=true;}}}
+ const found:ImageLeaseSiteV1[]=[];
+ const visit=(node:ts.Node):void=>{
+  if(ts.isCallExpression(node)){
+   const opener=calleeTextV1(node.expression);
+   if(openers.some(pattern=>pattern.test(opener))){
+    const args=source.slice(node.arguments.pos,node.arguments.end);
+    if(bears(args,refsOf([...node.arguments]),unitOf(node))&&!carried.some(pattern=>pattern.test(args))&&!leased(node)){const name=ts.isPropertyAccessExpression(node.expression)?node.expression.name:node.expression;found.push(Object.freeze({path,line:file.getLineAndCharacterOfPosition(name.getStart(file)).line+1,opener,text:opener+"("+args.replace(/\s+/gu,"")+")"}));}
+   }
+  }
+  ts.forEachChild(node,visit);
+ };
+ visit(file);
+ return found;
+}

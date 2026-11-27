@@ -25,6 +25,18 @@ test("the result matches its schema, the line carries managed, resident and rele
  expect(lines.length).toBe(renderSettleMessageV1("answered",{managed:1,resident:1,released:1},{SEMIO_LANGUAGE:"en,de"}).length);
 });
 
+test("the settling lets the event loop turn between the release and the collection (the releasing call's stack must be gone), then samples",async()=>{
+ const order:string[]=[];let turned=false;setTimeout(()=>{turned=true;},0);
+ await settleGraphMemoryV1({force:true,environment:{},report:()=>undefined,release:()=>{order.push("release");},ports:{sample:()=>{order.push("sample");return 0;},collect:()=>{order.push(turned?"collect-after-turn":"collect-before-turn");}},shrink:()=>{order.push("shrink");}});
+ expect(order).toEqual(["sample","release","collect-after-turn","shrink","collect-after-turn","sample"]);
+});
+
+test("REAL heap: garbage dropped by a call that read it first is still collected (the stale stack reference of the same turn)",async()=>{
+ let garbage:object[]|undefined=Array.from({length:3_000_000},(_,at)=>({at,text:"graph-record-"+at}));let length=0;
+ const result=await settleGraphMemoryV1({force:true,environment:{},report:()=>undefined,release:()=>{length=garbage!.length;garbage=undefined;}});
+ expect(length).toBe(3_000_000);expect(result!.managedMegabytes).toBeLessThan(40);expect(result!.managedBeforeMegabytes-result!.managedMegabytes).toBeGreaterThan(80);
+});
+
 test("a serving machine (no plan limit) is not touched and says nothing, SEMIO_GRAPH_PHASES=1 and force override",async()=>{
  const lines:string[]=[];let collected=0;const ports={sample:()=>0,collect:()=>{collected++;}};
  expect(await settleGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),ports})).toBeUndefined();expect(lines).toEqual([]);expect(collected).toBe(0);
@@ -32,10 +44,10 @@ test("a serving machine (no plan limit) is not touched and says nothing, SEMIO_G
  lines.length=0;expect(await settleGraphMemoryV1({limitBytes:Infinity,environment:{},force:true,report:line=>lines.push(line),ports,shrink:()=>undefined})).toBeDefined();
 });
 
-test("the retained line names the largest bounded caches and is reported without a plan limit (the whole read has none)",()=>{
+test("the retained line names the largest bounded caches and is reported without a plan limit (the whole read has none)",async()=>{
  const lines:string[]=[],stats=()=>[{name:"a",entries:1,bytes:5*MB},{name:"b",entries:9,bytes:50*MB},{name:"c",entries:0,bytes:0}];
- reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>1*MB,collect:()=>undefined},resident:()=>2*MB});expect(lines.length).toBeGreaterThan(0);lines.length=0;
- reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
+ await reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>1*MB,collect:()=>undefined},resident:()=>2*MB});expect(lines.length).toBeGreaterThan(0);lines.length=0;
+ await reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
  expect(lines[0]).toBe("graph: after the wave managed 100 MB, resident 200 MB; largest collections: b 9 entries 50 MB, a 1 entries 5 MB");
 });
 
@@ -47,9 +59,15 @@ test("REAL heap: 200 MB of garbage a plan left is gone after a settling (managed
  expect(result!.managedBeforeMegabytes-result!.managedMegabytes).toBeGreaterThan(80);
 });
 
+test("the census lets the event loop turn before it samples",async()=>{
+ let turned=false;setTimeout(()=>{turned=true;},0);const seen:boolean[]=[];
+ await reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:()=>undefined,stats:()=>[],ports:{sample:()=>{seen.push(turned);return 0;},collect:()=>undefined},resident:()=>0});
+ expect(seen).toEqual([true]);
+});
+
 test("the default retained census names the registered collections of the whole read next to the bounded caches",async()=>{
  const{registerSliceCollectionsV1}=await import("../../📋️slice-report/🟨️.mjs"),lines:string[]=[];
  registerSliceCollectionsV1("test-wave-census",()=>[{name:"test:per-owner",entries:7,bytes:300*MB}]);
- reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
+ await reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
  expect(lines[0]).toContain("largest collections: test:per-owner 7 entries 300 MB");
 });

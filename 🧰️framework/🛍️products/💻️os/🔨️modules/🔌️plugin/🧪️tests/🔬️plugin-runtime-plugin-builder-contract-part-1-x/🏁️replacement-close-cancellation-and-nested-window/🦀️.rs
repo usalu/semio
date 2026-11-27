@@ -36,6 +36,72 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
+/// ⏳️ LAW: a store replacement whose decode job waits on its worker session admission is an external wait, never a stall. Many starved polls answer `AwaitingInput` and never fault the live pump, and only an unbroken wait past the 30 s ceiling faults. Reproduced with a context whose deadline has already run out, so the admission refuses to step exactly as it does while the host has not yet admitted the worker.
+#[semio_framework_async_macros::async_test]
+async fn pending_worker_admission_waits_without_faulting_until_the_ceiling() {
+    use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    let mut scope = semio_plugin_testing_laws::OriginalFixtureScope::admit();
+    let mut app = live_composed_replacement_app().await;
+    let pending = composed_replacement_candidate(&mut app, 812, "worker-admission", 0, scope.cx()).await;
+    let grant = scope.cx().retained_grant();
+    let starved_poll = |app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, scope: &mut semio_plugin_testing_laws::OriginalFixtureScope| {
+        scope.with_deadline_after_clock_reads(0, |cx| app.ingest.store_replacement_jobs.get_mut(pending.operation.0).expect("replacement").drive_initializer(cx, grant))
+    };
+    assert!(semio_plugin_document_media::STORE_INITIALIZER_WORKER_IDLE_CEILING_US >= 1_000_000);
+    for _ in 0..1_000 {
+        let step = starved_poll(&mut app, &mut scope).unwrap_or_else(|failure| panic!("a pending admission is waited for: {failure:?}"));
+        assert!(matches!(step, PluginLifecycleStep::AwaitingInput { .. }), "{step:?}");
+    }
+    assert!(app.ingest.store_replacement_jobs.get(pending.operation.0).and_then(|active| active.worker_idle_since_us).is_some(), "the unbroken wait is clocked");
+    app.ingest.store_replacement_jobs.get_mut(pending.operation.0).expect("replacement").worker_idle_since_us = Some(1_000);
+    let dead = starved_poll(&mut app, &mut scope).expect_err("a wait past its ceiling faults");
+    close_composition_refusal(dead, scope.cx());
+    app.ingest.store_replacement_jobs.get_mut(pending.operation.0).expect("replacement").worker_idle_since_us = None;
+    app.cancel_artifact_store_replacement(pending).expect("cancel the pending candidate");
+    let mut terminal = false;
+    for _ in 0..100_000 {
+        let step = app.close_step(scope.cx(), COMPOSITION_CLEANUP_GRANT).expect("close the pending replacement app"); let _ = app.take_constructor_receipt();
+        if matches!(step, PluginLifecycleStep::Complete(_)) { terminal = true; break; }
+        semio_framework_async::yield_once().await;
+    }
+    assert!(terminal && PluginApp::close_terminal_is_empty(&app));
+}
+
+/// ⏳️ LAW: once the admission completed, an `Idle` worker poll is an external wait too: many starved polls answer `AwaitingInput`, only an unbroken wait past the ceiling faults, and the replacement then proceeds. It needs a replacement whose admission completes, as the existing composed-replacement laws do.
+#[semio_framework_async_macros::async_test]
+async fn idle_worker_waits_without_faulting_until_the_ceiling_then_the_replacement_proceeds() {
+    use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    let mut scope = semio_plugin_testing_laws::OriginalFixtureScope::admit();
+    let mut app = live_composed_replacement_app().await;
+    let ready = composed_replacement_candidate(&mut app, 813, "worker-idle", 0, scope.cx()).await;
+    let grant = scope.cx().retained_grant();
+    let starved_poll = |app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, scope: &mut semio_plugin_testing_laws::OriginalFixtureScope| {
+        scope.with_deadline_after_clock_reads(0, |cx| app.ingest.store_replacement_jobs.get_mut(ready.operation.0).expect("replacement").drive_initializer(cx, grant))
+    };
+    let turn_grant = store::RetainedCloneGrant { maximum_items: 4, ..COMPOSITION_MAINTENANCE_GRANT };
+    for _ in 0..100_000 {
+        let active = app.ingest.store_replacement_jobs.get(ready.operation.0).expect("replacement");
+        if active.session.is_some() && active.session_rejected.is_none() { break; }
+        app.maintenance.maintenance_stage = 14;
+        semio_framework_job::testkit::renew_payload_page_grant(scope.cx());
+        let demand = app.maintenance_retirement_demands(turn_grant.maximum_copy_bytes, scope.cx().fuel_remaining()).expect("admission quote");
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(scope.cx(), turn_grant, demand, |same, grant| Ok((app.maintenance_step(same, grant)?, app.maintenance_terminal_is_empty()))).expect("admission turn");
+        semio_framework_async::yield_once().await;
+    }
+    let active = app.ingest.store_replacement_jobs.get(ready.operation.0).expect("replacement");
+    assert!(active.session.is_some() && active.session_rejected.is_none(), "the admission completed: state={:?} session={} rejected={}", active.state, active.session.is_some(), active.session_rejected.is_some());
+    assert_eq!(active.worker_idle_since_us, None, "a completed admission leaves no wait clock");
+    for _ in 0..1_000 {
+        let step = starved_poll(&mut app, &mut scope).unwrap_or_else(|failure| panic!("an idle worker is waited for: {failure:?}"));
+        assert!(matches!(step, PluginLifecycleStep::AwaitingInput { .. }), "{step:?}");
+    }
+    app.ingest.store_replacement_jobs.get_mut(ready.operation.0).expect("replacement").worker_idle_since_us = Some(1_000);
+    let dead = starved_poll(&mut app, &mut scope).expect_err("an idle worker past its ceiling faults");
+    close_composition_refusal(dead, scope.cx());
+    app.ingest.store_replacement_jobs.get_mut(ready.operation.0).expect("replacement").worker_idle_since_us = None;
+    drive_composed_replacement_to(&mut app, ready, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, scope.cx()).await;
+}
+
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_close_query_forwards_whole_member_page_extent() {
     let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();

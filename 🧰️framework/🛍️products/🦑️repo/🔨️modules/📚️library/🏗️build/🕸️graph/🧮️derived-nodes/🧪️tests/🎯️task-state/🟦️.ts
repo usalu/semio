@@ -10,7 +10,10 @@ import{createDerivedGraphV1}from"../../🟨️.mjs";
 import{createDiskWorldV1}from"../../🌍️world/🟨️.mjs";
 import{createStatIndexV1}from"../../🗂️stat-index/🟨️.mjs";
 import{KIND_RULES_V1,verifyObservedV1}from"../../🧩️kinds/🟨️.mjs";
-import{createTaskRecorderV1,taskKeysV1}from"../../🎯️task-state/🟨️.mjs";
+import{createHostTaskStateV1,createTaskRecorderV1,taskKeysV1}from"../../🎯️task-state/🟨️.mjs";
+import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import{nativeImageSharedReadResourceV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤲️shared-read/🟦️.ts";
+import{acquireResourceLease}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import fixture from"./🔣️.json";
 
 type Task={root:string;target:string;dependsOn:string[];cacheable:boolean};
@@ -73,4 +76,17 @@ test("an edit nobody announced, even a whitespace one, changes the key after the
  expect(after.get("a:build")).not.toBe(before.get("a:build"));
  expect(after.get("a:test"),"the edit reaches the task above").not.toBe(before.get("a:test"));
  expect(after.get("b:build"),"an unrelated task keeps its key").toBe(before.get("b:build"));
+});
+
+test("the host task state runs a section under the shared lease of the graph image, which keeps an exclusive writer out and is given back when idle, and a failing section leaves the next one working",async()=>{
+ const root=scratch("host-lease");mkdirSync(join(root,".cache/b/l/m/data"),{recursive:true});mkdirSync(join(root,".cache/b/g"),{recursive:true});
+ const state=await createHostTaskStateV1({cas:createCasStoreV1({root:scratch("host-cas")})})({root}),signal=new AbortController().signal,resource=nativeImageSharedReadResourceV1(machinePathV1(root,".cache/b/g")),busy=()=>acquireResourceLease({directory:machinePathV1(root,".cache/b/l/m/data"),resource,mode:"exclusive",signal,timeoutMs:0});
+ expect(Object.keys(state.recorder).sort()).toEqual(["record","upToDate"]);
+ const answer=await state.leased(async()=>{await expect(busy()).rejects.toThrow("timed out");return await state.leased(async()=>"nested");});
+ expect(answer).toBe("nested");
+ await expect(state.leased(async()=>{throw new Error("section failed");})).rejects.toThrow("section failed");
+ let freed=false;
+ for(let at=0;at<60&&!freed;at++){try{(await busy()).release();freed=true;}catch{await new Promise(resolve=>setTimeout(resolve,50));}}
+ expect(freed,"the lease is given back after the idle time").toBe(true);
+ expect(await state.leased(async()=>"again")).toBe("again");
 });

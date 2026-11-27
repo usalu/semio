@@ -6,7 +6,7 @@ export type RemoteCacheDigestV1=Readonly<{hash:string;size:number}>;
 /** 📦️ What an action result points at: blobs it needs in the content store (outputs and streams that are not inline) and the output trees whose files it needs as well. */
 export type RemoteCacheActionResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[]}>;
 
-/** 🔖️ An action result with the references split by whether they are volatile: `stable` holds the digests of every output except the files named as volatile (their bytes carry times), `manifest` says whether such a file was present, `named` the path and digest of every other output file, so two results of one key can name the outputs that differ. */
+/** 🔖️ An action result with the references split by whether they are volatile: `stable` holds the digests of every output except the files named as volatile (their bytes carry times), `manifest` says whether such a file was present, `named` the path and digest of every other output file and of the captured streams (`⟨stdout⟩`, `⟨stderr⟩`), so two results of one key can name the outputs that differ and the evidence keeps the streams too. */
 export type RemoteCacheStableResultV1=Readonly<{references:readonly RemoteCacheDigestV1[];trees:readonly RemoteCacheDigestV1[];stable:readonly RemoteCacheDigestV1[];manifest:boolean;paths:readonly string[];named:readonly Readonly<{path:string;hash:string}>[]}>;
 
 /** 🚦️ How far an uploaded action result is checked: not at all, for a well-formed message, or additionally for every blob it names. */
@@ -101,7 +101,7 @@ function decodeActionResult(bytes:Uint8Array,volatile:readonly string[]):RemoteC
    else if(tree.size>0)trees.push(tree);
   }else if(field.number===4)expect(field,0,"exit_code");
   else if(field.number===5||field.number===7)expect(field,2,field.number===5?"stdout_raw":"stderr_raw");
-  else if(field.number===6||field.number===8)reference(digest(field,field.number===6?"stdout_digest":"stderr_digest"));
+  else if(field.number===6||field.number===8){const stream=digest(field,field.number===6?"stdout_digest":"stderr_digest");reference(stream);if(stream.size>0)rows.push({path:field.number===6?"⟨stdout⟩":"⟨stderr⟩",hash:stream.hash});}
   else if(field.number===9){expect(field,2,"execution_metadata");for(const part of fields(field.data))void part;}
   else if(field.number===10||field.number===11||field.number===12){
    expect(field,2,"output_symlinks");let path="";

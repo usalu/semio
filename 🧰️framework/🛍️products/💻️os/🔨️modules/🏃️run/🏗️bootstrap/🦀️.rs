@@ -284,7 +284,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             BTreeMap::new()
         } else {
             let parsed: protocol::os_store::text_format::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::os_store::text_format::parse_document_pack(&run_pack, &run_spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
-            parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
+            parsed.snapshot.node_records.iter().map(|record| (record.node_id.clone(), record.clone())).collect()
         }
     };
 

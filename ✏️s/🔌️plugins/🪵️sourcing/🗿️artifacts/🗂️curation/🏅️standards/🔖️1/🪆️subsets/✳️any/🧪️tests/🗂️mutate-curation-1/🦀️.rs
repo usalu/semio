@@ -1,7 +1,7 @@
 //! 🗂️ Curation exhaustive mutation case — Rust SUBJECT adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
-//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
+//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` beside this file —
 //! a second implementation of the `sourcing.curation` document and all three typed mutations, written
 //! in Python from this subset's committed snapshot schema, mutation schema, mutation grammar and
 //! specification vectors. This adapter registers the SUBJECT half only: keeping oracle

@@ -10,7 +10,8 @@ import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
 const policy=ADMISSION_POLICY_V1.available,oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),schemaFile=fileURLToPath(new URL("../../🧬️schema/🔣️.json",import.meta.url)),corpusFile=fileURLToPath(new URL("./🔣️.json",import.meta.url));
-const run=(input:(typeof corpus.cases)[number]["input"])=>availableAdmissionV1({...input,availableBytes:input.availableBytes??undefined,wardenLevel:input.wardenLevel??undefined,policy});
+const wardenLevelOfV1=(level:string|null|undefined):"calm"|"guard"|"danger"|undefined=>level==="calm"||level==="guard"||level==="danger"?level:undefined;
+const run=(input:(typeof corpus.cases)[number]["input"])=>availableAdmissionV1({...input,availableBytes:input.availableBytes??undefined,wardenLevel:wardenLevelOfV1(input.wardenLevel),policy});
 
 test("the policy is the authored one and the corpus is closed by its own schema",()=>{
  expect(policy).toMatchObject({marginBasisPoints:1500,waitMilliseconds:180000,pollMilliseconds:1000,cancelledFactorBasisPoints:12500,cancelledMemoryMilliseconds:3600000});
@@ -21,7 +22,7 @@ test("the policy is the authored one and the corpus is closed by its own schema"
 });
 
 test("every corpus case equals its expected verdict",()=>{
- for(const item of corpus.cases)expect(run(item.input),item.id).toEqual(item.expected);
+ for(const item of corpus.cases)expect<unknown>(run(item.input),item.id).toEqual(item.expected);
 });
 
 test("the verdict of every corpus case equals the independent Python oracle",()=>{

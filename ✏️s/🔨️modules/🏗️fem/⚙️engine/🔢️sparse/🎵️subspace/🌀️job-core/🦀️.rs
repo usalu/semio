@@ -324,6 +324,7 @@ pub struct SubspaceIterationJob {
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
     pub(super) terminal_published: bool,
+    pub(super) publishes: bool,
     pub(super) branch: u8,
 }
 
@@ -446,8 +447,8 @@ impl SubspaceCheckpoint {
 }
 
 impl SubspaceIterationJob {
-    /// 🚫️ Never checkpoints or previews: for a caller that discards both, they only cost page writes.
-    pub fn without_publication(mut self) -> Self { self.state.publication_floor = usize::MAX; self }
+    /// 🚫️ Never checkpoints, previews or publishes its terminal payload: for a mounted owner that reads the modes in place, each of them only costs page writes.
+    pub fn without_publication(mut self) -> Self { self.state.publication_floor = usize::MAX; self.publishes = false; self }
 
     /// 🎯️ Declares the right matrix positive semidefinite (a mass matrix), so the iteration needs no shift: it skips the inverse-norm bound, whose large shift flattens the convergence ratio, and runs plain inverse subspace iteration.
     pub fn with_positive_semidefinite_right(mut self) -> Self { self.state.shift = Some(0.0); self }
@@ -467,7 +468,7 @@ impl SubspaceIterationJob {
             terminal_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
-            terminal_published: false, branch: 0, desk: NumericalOutcomeDesk::default(),
+            terminal_published: false, publishes: true, branch: 0, desk: NumericalOutcomeDesk::default(),
         }
     }
 
@@ -618,7 +619,7 @@ impl SubspaceIterationJob {
         let grant=context.retained_grant();let depth=matrix.data.next_push_depth_demand().map_err(|_|())?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<f64>()||grant.maximum_depth<depth{return Ok(false)}
         matrix.data.push_reserved(0.0).map_err(|_|())?;
-        context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;Ok(false)
+        context.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;Ok(false)
     }
 
     pub(super) fn reserve_scalar_owner<T>(owner:&mut PagedList<T,SPARSE_INDEX_SPACE>,items:usize,context:&mut StepContext<'_>)->Result<bool,()>{
@@ -630,7 +631,7 @@ impl SubspaceIterationJob {
         let grant=context.retained_grant();let depth=owner.next_push_depth_demand().map_err(|_|())?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<T>()||grant.maximum_depth<depth{return Ok(false)}
         owner.push_reserved(value).map_err(|_|())?;
-        context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}).map_err(|_|())?;Ok(true)
+        context.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Default::default()}).map_err(|_|())?;Ok(true)
     }
 
     pub(super) fn reserve_iteration_owner(&mut self,context:&mut StepContext<'_>) -> Result<(), ()> {
@@ -663,7 +664,7 @@ impl SubspaceIterationJob {
                     bits^=bits>>31;
                     let grant=context.retained_grant();let depth=self.state.x.data.next_get_depth_demand(index).map_err(|_|())?;
                     if grant.maximum_copy_bytes<size_of::<f64>()||grant.maximum_depth<depth{return Ok(())}                    self.state.x.set(index/m,index%m,if m==n{u8::from(index/m==index%m)as f64}else{((bits>>11)as f64/9007199254740992.0)-0.5});
-                    context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;
+                    context.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;
                     self.state.initialization_cursor += 1;
                     return Ok(());
                 }
@@ -736,7 +737,7 @@ impl SubspaceIterationJob {
                 if work.first < m {
                     let grant=context.retained_grant();let depth=work.jacobi_vectors.data.next_get_depth_demand(work.first*m+work.first).map_err(|_|())?;
                     if grant.maximum_copy_bytes<size_of::<f64>()||grant.maximum_depth<depth{return Ok(())}
-                    context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;                    work.jacobi_vectors.set(work.first, work.first, 1.0);
+                    context.consume_retained(RetainedCloneProgress{copied_bytes:size_of::<f64>(),..Default::default()}).map_err(|_|())?;                    work.jacobi_vectors.set(work.first, work.first, 1.0);
                     work.first += 1;
                     return Ok(());
                 }

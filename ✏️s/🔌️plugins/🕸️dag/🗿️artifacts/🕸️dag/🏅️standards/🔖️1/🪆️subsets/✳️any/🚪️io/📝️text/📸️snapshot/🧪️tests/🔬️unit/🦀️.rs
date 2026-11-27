@@ -32,7 +32,7 @@ fn demo_graph_matches_the_language_neutral_json_oracle() {
 #[semio_framework_async_macros::async_test]
 async fn example_fixture_dsl_round_trips() {
     let document = parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("parse default fixture");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]

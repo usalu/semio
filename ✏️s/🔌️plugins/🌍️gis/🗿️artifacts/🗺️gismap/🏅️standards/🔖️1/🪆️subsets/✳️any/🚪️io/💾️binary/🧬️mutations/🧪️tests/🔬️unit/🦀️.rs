@@ -19,29 +19,29 @@ fn sample_feature(id: &str) -> MapFeature {
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let operation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_positions_op_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "p1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "p1".into(), to_index: 3 }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "label": "Home" })) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "p1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "p1".into(), to_index: 3 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "label": "Home" })) }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_routes_op_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRoute(create_route::CreateRoute { index: 0, item: sample_feature("p1") }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "p1".into(), to_index: 1 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::CreateRoute(create_route::CreateRoute { index: 0, item: sample_feature("p1") }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "p1".into(), to_index: 1 }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_regions_op_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRegion(create_region::CreateRegion { index: 0, item: sample_feature("p1") }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "p1".into(), to_index: 2 }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::CreateRegion(create_region::CreateRegion { index: 0, item: sample_feature("p1") }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "p1".into(), to_index: 2 }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -51,13 +51,13 @@ async fn gis_map_default_document_is_non_empty() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_property_op_lines_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemovePositionProperty(remove_position_property::RemovePositionProperty { feature: "f1".into(), key: "label".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRouteProperty(remove_route_property::RemoveRouteProperty { feature: "f1".into(), key: "label".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRegionProperty(remove_region_property::RemoveRegionProperty { feature: "f1".into(), key: "label".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetPositionProperty(set_position_property::SetPositionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::RemovePositionProperty(remove_position_property::RemovePositionProperty { feature: "f1".into(), key: "label".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetRouteProperty(set_route_property::SetRouteProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRouteProperty(remove_route_property::RemoveRouteProperty { feature: "f1".into(), key: "label".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!("x")), before: Some("next".into()) }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::SetRegionProperty(set_region_property::SetRegionProperty { feature: "f1".into(), key: "label".into(), value: dsl_of(&json!(null)), before: None }));
+    semio_os_store_test_support::assert_op_line_round_trip(&GisMapMutation::RemoveRegionProperty(remove_region_property::RemoveRegionProperty { feature: "f1".into(), key: "label".into() }));
 }

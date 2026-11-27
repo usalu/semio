@@ -37,6 +37,7 @@ semio-os-host-instance = { path = "../../../🧱️instance/📦️packages/🦀
 semio-os-host-registry = { path = "../../../🗂️registry/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-test-support = { path = "../../../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }

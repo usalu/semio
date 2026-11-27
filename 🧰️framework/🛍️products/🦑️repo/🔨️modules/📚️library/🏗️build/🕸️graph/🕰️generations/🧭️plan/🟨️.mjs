@@ -9,6 +9,7 @@ import{selectDoubtfulRowsV1}from"../🔎️doubt/🟨️.mjs";
 import{staleConfigOwnersV1}from"../🏷️config-owners/🟨️.mjs";
 import{pendingCratePathsV1}from"../🕓️pending-crates/🟨️.mjs";
 import{P}from"../🧱️guards/🟨️.mjs";
+import{staleEdgeOwnersV1}from"../🪡️edge-heal/🟨️.mjs";
 import{revalidatedWithheldOwnersV1}from"../../📥️load/🛟️owner-isolation/🔁️revalidation/🟨️.mjs";
 
 /** 🚧️ The withheld owners of a generation that do not hold the source that withholds them: an untagged `unavailable` owner names the file that does not parse (`config`), and it stays valid only while the bytes of that file are the ones it was withheld for, so a generation that carries no fact about that file (a withholding recorded before its facts were kept) can never notice the repair and its owner must be inferred again. Sources outside the workspace and tagged owners (rediscovered as a group) are not judged. The judgement is global: a repair is bounded by the withheld owners and one build heals all of them, instead of one build per layer of the closure they open. */
@@ -49,6 +50,7 @@ export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,se
   for(const change of changes){
    const known=configs.get(change.path);
    if(pending.has(change.path))continue;
+   if(change.config&&change.kind==="added"&&known){dirty.add(known);continue;}
    if(change.config&&change.kind==="added"){added.push(change.path);const prior=ownerOf(change.path);if(prior!==undefined&&manifest.owners[prior].config!==change.path&&change.path.startsWith(manifest.owners[prior].root+"/")&&!change.path.slice(manifest.owners[prior].root.length+1).includes("/"))removed.add(prior);}
    else if(change.config&&change.kind==="removed"&&known)removed.add(known);
    else if(change.config&&known)dirty.add(known);
@@ -56,6 +58,7 @@ export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,se
    else{const owner=ownerOf(change.path);if(owner!==undefined)dirty.add(owner);else{envStale=true;if(change.kind!=="removed")added.push(change.path);}}
   }
   for(const[name,row]of owners)if((!only||only.has(name))&&!present.has(row.fragment+".json.br"))dirty.add(name);
+  const stalled=staleEdgeOwnersV1(Object.fromEntries(owners.filter(([name])=>!only||only.has(name))),manifest.env);for(const name of stalled.tagged)dirty.add(name);
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
   const revalidated=ledger?await revalidatedWithheldOwnersV1(manifest.owners,{ledger,now,include:name=>!only||only.has(name),say,implementation,reasonOf}):[];for(const name of revalidated)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
@@ -80,8 +83,8 @@ export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,se
   }
   for(const[name,row]of settled.changed){if(reasons.length>=P.reasonRows)break;const names=[...changedHolders.get(name)??[]].sort(compareCodePointsV1).slice(0,3);if(names.length)reasons.push({row,owners:names});}
   for(const name of removed)dirty.delete(name);
-  const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded,...revalidated]):dirty,clean=!scoped.size&&!added.length&&!removed.size&&!envStale;
+  const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded,...revalidated]):dirty,edgeStale=stalled.edges.filter(name=>!dirty.has(name)&&!removed.has(name)),clean=!scoped.size&&!added.length&&!removed.size&&!envStale&&!edgeStale.length;
   const staleKinds={};for(const id of stale){const kind=index.rows[id].kind;staleKinds[kind]=(staleKinds[kind]??0)+1;}
-  return{kind:clean?"clean":"delta",times,dirty:scoped,revalidated,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,skipped:inScope.size-suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
+  return{kind:clean?"clean":"delta",times,dirty:scoped,edgeStale,revalidated,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,skipped:inScope.size-suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
  }
 }

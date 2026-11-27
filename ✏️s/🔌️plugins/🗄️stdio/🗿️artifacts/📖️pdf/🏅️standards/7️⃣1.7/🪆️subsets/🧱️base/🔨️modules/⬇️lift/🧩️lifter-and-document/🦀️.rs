@@ -33,6 +33,47 @@ pub enum Category {
     Page,
 }
 
+/// 🆔 One resource id a lift claimed: the category, the object that owns it (none for an inline resource), the page scope, the name it was bound under and the id it got.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Claim {
+    pub category: Category,
+    pub owner: Option<ObjRef>,
+    pub scope: usize,
+    pub name: String,
+    pub id: String,
+}
+
+/// 🆔 The resource ids a lift has claimed so far, moved from one lift of a document slice to the next so a name that repeats across pages gets the id the whole-document lift gave it (`T1_0`, `T1_0_2`, …). `log` records every claim in order so a read can be rolled back to a mark without copying the tables.
+#[derive(Default)]
+pub struct ResourceClaims {
+    pub ids: HashMap<(Category, ObjRef), String>,
+    pub used: HashMap<Category, HashSet<String>>,
+    pub inline_ids: HashMap<(Category, usize, String), String>,
+    pub log: Vec<Claim>,
+}
+
+impl ResourceClaims {
+    /// 📍️ The position a later [`Self::rollback`] returns to.
+    pub fn mark(&self) -> usize { self.log.len() }
+
+    /// ↩️ Removes every claim made after `mark`.
+    pub fn rollback(&mut self, mark: usize) {
+        while self.log.len() > mark {
+            let Some(claim) = self.log.pop() else { break };
+            match claim.owner {
+                Some(owner) => { self.ids.remove(&(claim.category, owner)); }
+                None => { self.inline_ids.remove(&(claim.category, claim.scope, claim.name)); }
+            }
+            if let Some(used) = self.used.get_mut(&claim.category) { used.remove(&claim.id); }
+        }
+    }
+
+    /// 🧮️ The number of ids claimed.
+    pub fn len(&self) -> usize { self.log.len() }
+
+    pub fn is_empty(&self) -> bool { self.log.is_empty() }
+}
+
 /// 📦️ Holds the native lifting state independently of each turn's graph borrow.
 #[derive(Default)]
 pub struct DocumentLiftState {
@@ -41,6 +82,7 @@ pub struct DocumentLiftState {
     pub ids: HashMap<(Category, ObjRef), String>,
     pub used: HashMap<Category, HashSet<String>>,
     pub inline_ids: HashMap<(Category, usize, String), String>,
+    pub claim_log: Option<Vec<Claim>>,
     pub in_progress: HashSet<(Category, ObjRef)>,
     pub page_refs: Vec<ObjRef>,
     pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
@@ -58,6 +100,7 @@ pub struct Lifter<'s> {
     pub ids: HashMap<(Category, ObjRef), String>,
     pub used: HashMap<Category, HashSet<String>>,
     pub inline_ids: HashMap<(Category, usize, String), String>,
+    pub claim_log: Option<Vec<Claim>>,
     pub in_progress: HashSet<(Category, ObjRef)>,
     pub page_refs: Vec<ObjRef>,
     pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
@@ -79,24 +122,29 @@ impl FontTable for MappedFonts<'_> {
 }
 
 impl<'s> Lifter<'s> {
+    /// 🆔 Takes the resource ids this lift claimed (those it continued from and its own), leaving the lifter without any.
+    pub fn take_claims(&mut self) -> ResourceClaims {
+        ResourceClaims { ids: std::mem::take(&mut self.ids), used: std::mem::take(&mut self.used), inline_ids: std::mem::take(&mut self.inline_ids), log: self.claim_log.take().unwrap_or_default() }
+    }
+
     pub fn bind(source: &'s mut dyn ObjectSource, state: DocumentLiftState) -> Self {
         let DocumentLiftState {
-            snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            snapshot, admitted_stream_roles, ids, used, inline_ids, claim_log, in_progress, page_refs, annotation_refs,
             font_codecs, scope, admission_error, artifacts,
         } = state;
         Self {
-            source, snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            source, snapshot, admitted_stream_roles, ids, used, inline_ids, claim_log, in_progress, page_refs, annotation_refs,
             font_codecs, scope, admission_error, artifacts,
         }
     }
 
     pub fn unbind(self) -> DocumentLiftState {
         let Self {
-            source: _, snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs,
+            source: _, snapshot, admitted_stream_roles, ids, used, inline_ids, claim_log, in_progress, page_refs,
             annotation_refs, font_codecs, scope, admission_error, artifacts,
         } = self;
         DocumentLiftState {
-            snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            snapshot, admitted_stream_roles, ids, used, inline_ids, claim_log, in_progress, page_refs, annotation_refs,
             font_codecs, scope, admission_error, artifacts,
         }
     }
@@ -133,6 +181,7 @@ impl<'s> Lifter<'s> {
             counter += 1;
         }
         used.insert(candidate.clone());
+        if let Some(log) = self.claim_log.as_mut() { log.push(Claim { category, owner: reference, scope: self.scope, name: name.to_string(), id: candidate.clone() }); }
         match reference {
             Some(reference) => {
                 self.ids.insert((category, reference), candidate.clone());

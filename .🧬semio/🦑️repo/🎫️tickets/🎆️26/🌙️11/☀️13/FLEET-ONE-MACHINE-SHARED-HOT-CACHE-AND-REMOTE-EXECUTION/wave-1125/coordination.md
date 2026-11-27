@@ -159,3 +159,14 @@
 - Load 65 on 10 cores: git signing (≈260%, archivist/auto-commit), Antigravity IDE (≈150%) — not ours; lane tests ≈16%.
 - Landed: F93 (walker skips test scratch; artifacts 5/0; GIS receipt port), F94 (product-lane pool counted retained lanes → starvation; Bun.write partial-write duplication), F95 (library typecheck 0; product 372 from Next.js globals → F98), F96 round 1.
 - Running: F96 r2 (host-derived heavy-question cap), F97 (incremental inventory walk), F98 (Next.js program split), F99 (suites/custody/lean/action tests), F100.
+
+## 15:30 (11/26) coordinator
+- Seal read restarted 15:10 on F100's wave-release fix (coord-graph6.log); first wave reused 276/278 owner records.
+- Landed: F96 r2 (heavy-question cap host-derived 2560..6144/2 children; witness path interning 3.06→2.17 GB), F97 (inventory via change journal: warm 48–57 s → 0.15–0.42 s, birth 16/0), F99, F100 (row-log seal, releaseWaveStateV1, census names carry/rowLogs), F101, F102 (original-control 13/0 on issued Originals; storage 22/0).
+- POST-SEAL QUEUE add: (5) cargo testing tests (🏃️process/🧪️testing/🦀️cargo/🧪️tests, 🔒️lease) need SEMIO_SCRIPT_PROVIDERS from the suite/project env declaration (result-F102).
+
+## 18:45 (11/26) coordinator
+- Seal read restarts today: graph6 ran 15:10→~18:05 and died on "Canonical build owner identity collision" (peer's torn build-owners.json; F113 names owners now, F115 single validated writer). graph7 retry 1: hdiutil detach busy (F114 retry). graph7 retry 2: storing 608 fragments then SIGKILL exit 137 (→ F118). graph8: "Original Graph format identity changed" at start (lane edited graph code) → retried.
+- TODO lane: classify "Original Graph format identity changed" as source-transient (bilingual, auto-retry once) instead of Internal error — after F116 lands.
+- Landed: F104 (closure caches byte charge), F106 (managed metric double counting; yield-before-collect), F107 (schema predicate + catalog regenerated + freshness suite), F108 (atomic schema writes; dual dialect), F112 (twins fresh; gate), F113, F114, F115.
+- Running: F111 (checker false positives), F116 (image readers under shared lease), F117 (registry writer audit), F118 (SIGKILL of graph read).

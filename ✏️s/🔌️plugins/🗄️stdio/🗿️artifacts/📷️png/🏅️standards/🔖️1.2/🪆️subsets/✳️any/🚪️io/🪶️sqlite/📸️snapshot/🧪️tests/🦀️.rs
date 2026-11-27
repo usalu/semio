@@ -24,7 +24,7 @@ async fn sqlite_snapshot_png_public_file_round_trip_preserves_owned_sample_metad
     use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use store::sqlite_snapshot::SnapshotEncoding;
     semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
-        .label("PNG canonical SQLite").version("0.0.1").package_id("semio:stdio")
+        .label(semio_plugin::LocalizedLabel::native("PNG canonical SQLite", "Kanonisches PNG-SQLite")).version("0.0.1").package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.png".into(), standard: "1.2".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {

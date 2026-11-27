@@ -90,7 +90,7 @@ async function runGit(worktree:string,args:readonly string[],signal?:AbortSignal
    for(const name of ["GIT_WORK_TREE","GIT_OBJECT_DIRECTORY","GIT_ALTERNATE_OBJECT_DIRECTORIES","GIT_INDEX_FILE"])delete environment[name];
    const child=spawn(file,["-c","core.fsmonitor=false",...args],{cwd:worktree,env:environment as NodeJS.ProcessEnv,stdio:[input===undefined?"ignore":"pipe","pipe","ignore"],windowsHide:true,signal}),chunks:Buffer[]=[];
    if(input!==undefined){child.stdin!.on("error",()=>{});child.stdin!.end(input);}
-   child.stdout.on("data",(chunk:Buffer)=>{chunks.push(chunk);});
+   child.stdout!.on("data",(chunk:Buffer)=>{chunks.push(chunk);});
    child.on("error",()=>{done(null);});
    child.on("close",code=>{done({code:code??1,out:Buffer.concat(chunks).toString("utf8").trim()});});
   }catch{done(null);}

@@ -13,10 +13,11 @@ mkdir -p "$G" /c/t/wd /c/t/wdb /c/t/wdtmp
 case "$1" in
 wasm)
   cd "$R/🌎️hub" || exit 2
-  export TMP='C:\t\wdtmp' TEMP='C:\t\wdtmp' TMPDIR='C:\t\wdtmp' CARGO_INCREMENTAL=0
+  export TMP='C:\t\wdtmp' TEMP='C:\t\wdtmp' TMPDIR='C:\t\wdtmp' CARGO_INCREMENTAL=1
   export CARGO_TARGET_DIR='C:\t\wd' CARGO_BUILD_BUILD_DIR='C:\t\wdb'
   export CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= RUSTC_WRAPPER= SEMIO_BUILD_MODE=prototype RUST_MIN_STACK=134217728
   export CARGO_UNSTABLE_FEATURE_UNIFICATION=true CARGO_RESOLVER_FEATURE_UNIFICATION=selected
+  find /c/t/wdb/wasm32-wasip2/prototype/incremental -mindepth 1 -maxdepth 1 -type d -mmin +240 -exec rm -rf {} + 2>/dev/null
   cargo build --offline -j 6 --manifest-path "$R/🌎️hub/Cargo.toml" --profile prototype --target wasm32-wasip2 \
     -p semio-hub-fem-component --lib --config "$(cygpath -m "$T/native-fem-profile.toml")" \
     > "$G/nfd-wasm.log" 2>&1

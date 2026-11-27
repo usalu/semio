@@ -31,7 +31,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// persist edits.
 pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
     PluginBuilder::<_, ImperativeApps>::new("imperative")
-        .label("Imperative")
+        .label(semio_plugin::LocalizedLabel::native("Imperative", "Imperativ"))
         .version("0.1.0")
         .package_id("semio:imperative")
         .artifact(crate::artifacts::procedure::declaration().map_err(PluginAssemblyError::definition)?)

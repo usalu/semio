@@ -122,7 +122,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
 fn every_command_round_trips_through_text_and_binary() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     for command in every_command() {
-        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 

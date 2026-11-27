@@ -4,13 +4,14 @@
 import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { CLEAR_SELECTION_ACTION_ID } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
-import { spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1 } from "../../../🪟️spawned-program/🟦️.ts";
+import { spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1, windowProgramGoneV1 } from "../../../🪟️spawned-program/🟦️.ts";
 import { inputActionWindowV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../../🎯️input-ledger/🟦️.ts";
 import { type ActiveSession } from "../../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { frameworkLayoutDeclaredInstances } from "../../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { sessionWindowInstances } from "../../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { shellHistoryUndoRouteV1 } from "../../../🪪️host-bootstrap/🟦️.tsx";
+import { liveNoteTargetV1, type SealedInstanceLedgerV1 } from "../../../🔀️surface-switch/🟦️.ts";
 import type { ShellCoreAfterShellUriAndDocuments } from "../../../🗄️shell-uri-documents/🟦️.ts";
 
 /**
@@ -68,6 +69,14 @@ export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWi
     }
   }
   return { targetSession, hostWindowId, targetSpawnedId, targetContributor: undefined };
+}
+
+/** 🪦️ The program instance a shell-chrome input (a window note, an automatic check-in) may address, resolved exactly as the funnel resolves it but from LIVE state: `null` when the window it names belongs to a program that left the roster, or when the instance that owns it is sealed. Chrome that gets `null` emits nothing, so no input is ever addressed to a sealed instance. */
+export function liveChromeTargetV1(ports: Parameters<typeof resolveDispatchTarget>[0] & Readonly<{ sealed: SealedInstanceLedgerV1 }>): ActiveSession | null {
+  const { targetSession, hostWindowId } = resolveDispatchTarget(ports);
+  if (hostWindowId !== undefined && windowProgramGoneV1(hostWindowId, ports.spawnedIdsRef.current)) return null;
+  const handle = ports.loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle ?? null;
+  return liveNoteTargetV1(targetSession, handle, ports.sealed);
 }
 
 /** ⏪️ Sends an undo to the mounted remote history owner when the undo route is remote. */

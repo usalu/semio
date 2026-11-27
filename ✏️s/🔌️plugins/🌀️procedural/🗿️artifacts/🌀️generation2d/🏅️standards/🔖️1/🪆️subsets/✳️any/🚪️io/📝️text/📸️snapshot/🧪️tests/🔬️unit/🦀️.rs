@@ -1,5 +1,5 @@
 use crate::snapshot::*;
-use semio_os_kernel::os_store::test_support;
+use semio_os_store_test_support as test_support;
 use pack::snapshot::ArtifactDsl;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
 

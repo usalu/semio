@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-os-store-mutation-report"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Language-neutral mutation report of the Store: base, applied, diff, messages and inverse replay of one mutation"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-mutation-report"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

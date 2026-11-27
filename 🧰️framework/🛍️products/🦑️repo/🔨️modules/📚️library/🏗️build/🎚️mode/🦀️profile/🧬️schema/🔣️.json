@@ -429,11 +429,16 @@
             "semio-s-plugin-sourcing-windows-component"
           ],
           "release": [
+            "semio-hub-cad-component",
             "semio-hub-demonstrator-component",
+            "semio-hub-energy-component",
             "semio-hub-fem-component",
+            "semio-hub-flow-component",
             "semio-hub-gis-component",
+            "semio-hub-playbook-component",
             "semio-hub-procedural-component",
             "semio-hub-process-component",
+            "semio-hub-puzzle-component",
             "semio-hub-sourcing-component",
             "semio-hub-stdio-component"
           ]

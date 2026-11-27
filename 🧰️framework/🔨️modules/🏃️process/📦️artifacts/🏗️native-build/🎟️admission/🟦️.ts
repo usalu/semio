@@ -507,9 +507,11 @@ export async function sourceKlocV1(source: string, buildScriptManifestDirectory?
     if (lines !== undefined) return lines / 1000;
   }
   const entry = resolve(source);
-  if (!closureCache.has(entry)) closureCache.set(entry, moduleClosureLinesV1(entry));
-  const closure = await closureCache.get(entry);
-  if (closure !== undefined) return closure / 1000;
+  if (!buildScriptManifestDirectory) {
+    if (!closureCache.has(entry)) closureCache.set(entry, moduleClosureLinesV1(entry));
+    const closure = await closureCache.get(entry);
+    if (closure !== undefined) return closure / 1000;
+  }
   const root = dirname(resolve(source));
   let cached = klocCache.get(root);
   if (!cached) {
@@ -559,7 +561,7 @@ export interface AdmissionBrokerV1 {
   close(): Promise<void>;
 }
 
-type Entry = { serial?: boolean; grown?: Readonly<{ extraBytes: number; release: () => void }>; request: AdmitRequestV1; key: string; lines: number; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; peakChargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket; forced?: boolean; pingedMs?: number };
+type Entry = { serial?: boolean; grown?: Readonly<{ extraBytes: number; release: () => void }>; request: AdmitRequestV1; key: string; lines: number; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; peakChargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket; forced?: boolean; pingedMs?: number; seenMs?: number };
 type AdmissionCancellationV1 = Readonly<{ command: string; megabytes: number; reason?: string; buildScriptOutput?: string }>;
 
 /** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
@@ -652,9 +654,9 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   const rescuing = new Set<Entry>();
   const rescueStalled = (): void => {
     const first = admissionOrderV1(waiting)[0];
-    if (!options.growth || running.size > 0 || parentAllowance === undefined || parentAllowance <= 0 || !first || rescuing.has(first) || now() - first.requestMs < (options.waits?.progressMilliseconds ?? ADMISSION_POLICY_V1.waits.progressMilliseconds)) return;
-    const need = first.predictedBytes + nonCompiler();
-    if (first.predictedBytes > parentAllowance || need <= parentAllowance || parentBudget()! >= first.predictedBytes) return;
+    if (!options.growth || parentAllowance === undefined || parentAllowance <= 0 || !first || first.serial || rescuing.has(first) || now() - first.requestMs < (options.waits?.progressMilliseconds ?? ADMISSION_POLICY_V1.waits.progressMilliseconds)) return;
+    const runningBytes = [...running].reduce((sum, entry) => sum + Math.max(entry.predictedBytes, entry.chargedBytes), 0), need = first.predictedBytes + runningBytes + nonCompiler();
+    if (first.predictedBytes + runningBytes > parentAllowance || need <= parentAllowance) return;
     const control = new AbortController(), abort = (): void => control.abort();
     first.socket.once("close", abort);
     rescuing.add(first);
@@ -687,6 +689,15 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
         continue;
       }
       if (at - (entry.pingedMs ?? entry.requestMs) >= bounds.heartbeatMilliseconds) { entry.pingedMs = at; verdict(entry.socket, false); }
+    }
+    for (const entry of [...running]) {
+      const silentMs = at - (entry.seenMs ?? entry.admittedMs);
+      if (silentMs < bounds.runningSilenceMilliseconds) continue;
+      say("silent", { unit: nameOf(entry), seconds: Math.round(silentMs / 1000) });
+      lastActivityMs = at;
+      changed = true;
+      forget(entry);
+      entry.socket.destroy();
     }
     const first = admissionOrderV1(waiting)[0];
     if (!first || running.size > 0 || first.forced || rescuing.has(first) || at - first.requestMs < bounds.stallMilliseconds) { if (changed) schedule(); return; }
@@ -746,6 +757,11 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
       return held();
     } finally { clearInterval(ticker); clearTimeout(guard); signal.removeEventListener("abort", relay); growing.delete(growth); }
   };
+  const estimate = (request: AdmitRequestV1, pass: BrokerPassV1): Promise<Awaited<ReturnType<typeof predict>>> => new Promise((accept, reject) => {
+    const seconds = Math.round(bounds.predictMilliseconds / 1000), timer = setTimeout(() => { try { options.log?.(`[admission] ${formatWaitV1("en", "late", { unit: request.crate, seconds })} / ${formatWaitV1("de", "late", { unit: request.crate, seconds })}`); } catch { void 0; } reject(Error(`Admission estimate of ${request.crate} exceeded ${bounds.predictMilliseconds} ms`)); }, bounds.predictMilliseconds);
+    timer.unref?.();
+    predict(request, pass).then(accept, reject).finally(() => clearTimeout(timer));
+  });
   const server = createServer((socket) => {
     let entry: Entry | undefined, finished = false, chain = Promise.resolve();
     const gone = new AbortController();
@@ -785,7 +801,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
           let wait = true;
           if(pass.placement!=="fleet-only"){
-            const { history, predictedBytes } = await predict(request, pass);
+            const { history, predictedBytes } = await estimate(request, pass);
             wait = admissionWouldWaitV1(stateNow(admissionFrozenV1(frozen, { actualBytes: charged(), budgetBytes: budget(), swapOutBytesPerSecond })), waiting, { predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals });
           }
           if (!socket.destroyed) socket.end(`{"v":1,"op":"headroom","wait":${wait}${pass.placement==="fleet-only"?",\"fleetOnly\":true":""}}\n`);
@@ -795,11 +811,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
         if (message.op === "admit" && !entry) {
           const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", message), pass = passes.get(request.pass);
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
-          const { key, history, lines, predictedBytes: predicted, cancelled, cold } = await new Promise<Awaited<ReturnType<typeof predict>>>((accept, reject) => {
-            const timer = setTimeout(() => { try { options.log?.(`[admission] ${formatWaitV1("en", "late", { unit: request.crate, seconds: Math.round(bounds.predictMilliseconds / 1000) })} / ${formatWaitV1("de", "late", { unit: request.crate, seconds: Math.round(bounds.predictMilliseconds / 1000) })}`); } catch { void 0; } reject(Error(`Admission estimate of ${request.crate} exceeded ${bounds.predictMilliseconds} ms`)); }, bounds.predictMilliseconds);
-            timer.unref?.();
-            predict(request, pass).then(accept, reject).finally(() => clearTimeout(timer));
-          });
+          const { key, history, lines, predictedBytes: predicted, cancelled, cold } = await estimate(request, pass);
           let predictedBytes = predicted;
           const overheadBytes = nonCompiler();
           let overheadGrowthTried = false, serial = false;
@@ -844,6 +856,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           if (waiting.includes(entry)) verdict(socket, false);
         } else if (message.op === "rss" && entry) {
           const sample = admitDefinition<{ bytes: number; chargedBytes: number }>("RssReportV1", message);
+          entry.seenMs = now();
           entry.rssBytes = sample.bytes;
           entry.chargedBytes = sample.chargedBytes;
           entry.peakChargedBytes = Math.max(entry.peakChargedBytes, sample.chargedBytes);

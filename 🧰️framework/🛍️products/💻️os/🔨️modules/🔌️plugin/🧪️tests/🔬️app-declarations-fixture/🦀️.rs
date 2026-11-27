@@ -658,7 +658,7 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
             panic!("a codec call constructed an app")
         }
         let projected = project_artifact_declarations(&[build_declaration()]).unwrap();
-        let mut plugin = semio_plugin_plugin_program::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
+        let mut plugin = semio_plugin_plugin_program::Plugin::<FixtureApps>::new("testkit", LocalizedLabel::native("Testkit", "Testkit"), "1.0.0");
         for (app, mut factory) in projected.app_defs {
             assert_eq!(factory.document_schema, app.definition.io.artifact_schema, "{}", app.definition.id);
             factory.create = Some(refuse_construction);
@@ -706,7 +706,7 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
             }).collect();
             for role in [AppRole::Editor, AppRole::Viewer] {
                 for indices in [(0..dialects.len()).collect::<Vec<_>>(), (0..dialects.len()).rev().collect()] {
-                    let mut plugin = Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
+                    let mut plugin = Plugin::<FixtureApps>::new("testkit", LocalizedLabel::native("Testkit", "Testkit"), "1.0.0");
                     for index in indices {
                         let (mut app, mut factory) = project_artifact_declarations(&[build_declaration()])
                             .unwrap().app_defs.into_iter().find(|(app, _)| app.definition.role == role).unwrap();
@@ -770,7 +770,7 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
 
     #[semio_framework_async_macros::async_test]
     async fn io_route_finds_the_conformance_profile_hop() {
-        let _plugin = PluginBuilder::<_, FixtureApps>::new("testkit").label("w1c-fixture-route").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
+        let _plugin = PluginBuilder::<_, FixtureApps>::new("testkit").label(LocalizedLabel::native("w1c-fixture-route", "w1c-testvorlage-route")).version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
         let route = semio_os_kernel::io::io_mechanism::io_route(&ArtifactDialect::from(STD1_ANY_DIALECT), &ArtifactDialect::from(STD1_STRICT_DIALECT), 3).await.expect("a route from the base subset into its conformance profile must exist");
         assert_eq!(route.value.hops.len(), 1, "the profile hop is direct");
 
@@ -801,7 +801,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
         use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, IoRoute, SQLITE_SNAPSHOT};
         semio_os_kernel::io::register_subset_validator(&SQLITE_FIXTURE_STRICT_VALIDATOR).expect("strict fixture conformance registration");
-        let _plugin = PluginBuilder::<_, FixtureApps>::new("testkit").label("sqlite-fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture assembly");
+        let _plugin = PluginBuilder::<_, FixtureApps>::new("testkit").label(LocalizedLabel::native("sqlite-fixture", "sqlite-testvorlage")).version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture assembly");
         let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
         let format = semio_os_kernel::io::format_descriptor("sqlite").expect("format registry").expect("framework SQLite file endpoint");
         assert_eq!(format.kind_id, sqlite.artifact_kind);
@@ -921,7 +921,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(async{let original_file_dialect=&TYPED.into();let original_file_input=&Std2AnySnapshot { value: 42 };let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
         assert!(async{let original_file_dialect=&STD1_ANY_DIALECT.into();let original_file_input=&file;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Std1AnySnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.is_err());
         assert!(async{let original_file_dialect=&TYPED.into();let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| false;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
-        let _plugin=PluginBuilder::<_, FixtureApps>::new("testkit").label("typed strict fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().unwrap();
+        let _plugin=PluginBuilder::<_, FixtureApps>::new("testkit").label(LocalizedLabel::native("typed strict fixture", "Typisierte strikte Testvorlage")).version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().unwrap();
         let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🪶️sqlite-snapshot-registration/🔣️.json")).unwrap();let cases=&cases["ownedSubsetValidation"];
         let mut strict_phases=Vec::new();let outcome=async{let original_file_dialect=&STD1_STRICT_DIALECT.into();let original_file_input=&Std1StrictSnapshot{value:i32::try_from(cases["warning"]["value"].as_i64().unwrap()).unwrap()};let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{strict_phases.push(event.phase);true};semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();assert_eq!(outcome.diagnostics.len(),1);assert_eq!(outcome.diagnostics[0].severity,semio_framework_diagnostic::Severity::Warning);
         let restored=async{let original_file_dialect=&STD1_STRICT_DIALECT.into();let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{strict_phases.push(event.phase);true};semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Std1StrictSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();assert_eq!(restored.value.value,0);assert_eq!(restored.diagnostics,outcome.diagnostics);assert!(!strict_phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));

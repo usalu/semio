@@ -13272,15 +13272,15 @@
           },
           {
             "id": "mass-l-foot",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "foot-left",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0235,
-              0.0235,
-              0.0235
+            "size": [
+              0.047,
+              0.047,
+              0.047
             ],
             "transform": {
               "translation": [
@@ -13294,15 +13294,15 @@
           },
           {
             "id": "mass-l-stage",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "stage-left",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0285,
-              0.0285,
-              0.0285
+            "size": [
+              0.057,
+              0.057,
+              0.057
             ],
             "transform": {
               "translation": [
@@ -13316,15 +13316,15 @@
           },
           {
             "id": "mass-l-column",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "column-left",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0245,
-              0.0245,
-              0.0245
+            "size": [
+              0.049,
+              0.049,
+              0.049
             ],
             "transform": {
               "translation": [
@@ -13407,15 +13407,15 @@
           },
           {
             "id": "mass-r-foot",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "foot-right",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0235,
-              0.0235,
-              0.0235
+            "size": [
+              0.047,
+              0.047,
+              0.047
             ],
             "transform": {
               "translation": [
@@ -13429,15 +13429,15 @@
           },
           {
             "id": "mass-r-stage",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "stage-right",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0285,
-              0.0285,
-              0.0285
+            "size": [
+              0.057,
+              0.057,
+              0.057
             ],
             "transform": {
               "translation": [
@@ -13451,15 +13451,15 @@
           },
           {
             "id": "mass-r-column",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "column-right",
             "material": "steel-desk",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.0245,
-              0.0245,
-              0.0245
+            "size": [
+              0.049,
+              0.049,
+              0.049
             ],
             "transform": {
               "translation": [
@@ -13485,15 +13485,15 @@
           },
           {
             "id": "mass-top",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "top",
             "material": "particleboard-laminate",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.075,
-              0.0125,
-              0.075
+            "size": [
+              0.15,
+              0.025,
+              0.15
             ],
             "transform": {
               "translation": [
@@ -13507,15 +13507,15 @@
           },
           {
             "id": "mass-monitor",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.075,
-              0.075,
-              0.025
+            "size": [
+              0.15,
+              0.15,
+              0.05
             ],
             "transform": {
               "translation": [
@@ -13529,15 +13529,15 @@
           },
           {
             "id": "mass-laptop",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "top",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.075,
-              0.0101,
-              0.075
+            "size": [
+              0.15,
+              0.0202,
+              0.15
             ],
             "transform": {
               "translation": [
@@ -13556,8 +13556,8 @@
             "de": "1:500 ist das Tischzeichen: zwei T-Füße, die drei gestapelten Rohre und das Kopfgehäuse je Säule, die Platte mit ihrem Querträger, der Monitor als ein 59-mm-Panelblock mit Glas, Fußplatte und Ständer, Laptop und Steuerkasten als dünne Blöcke; Wanne, Seitenzargen und alle Rundungen entfallen, die Teile behalten ihre gezeichnete wahre Größe (C13)."
           },
           {
-            "en": "Thermal references the 1:500 bodies; structure: the same members without slide and flange joints (below the 75 mm feature), head plates of the housing section, 30 mm contact pads standing 15 mm proud of the foot footprint and the masses.",
-            "de": "Die Thermik verweist auf die Körper von 1:500; Tragwerk: dieselben Stäbe ohne Gleit- und Flanschgelenke (unter dem 75-mm-Merkmal), Kopfplatten im Gehäusequerschnitt, 30-mm-Kontaktflächen, die 15 mm über die Fußfläche vorstehen, und die Massen."
+            "en": "Thermal references the 1:500 bodies; structure: the same members without slide and flange joints (below the 75 mm feature), head plates of the housing section, 30 mm contact pads standing 15 mm proud of the foot footprint and the masses. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+            "de": "Die Thermik verweist auf die Körper von 1:500; Tragwerk: dieselben Stäbe ohne Gleit- und Flanschgelenke (unter dem 75-mm-Merkmal), Kopfplatten im Gehäusequerschnitt, 30-mm-Kontaktflächen, die 15 mm über die Fußfläche vorstehen, und die Massen. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
           },
           {
             "en": "The monitor is one block of its full 59 mm depth from the glass to the stand, with the glass as the sheet on its face that the display region needs.",

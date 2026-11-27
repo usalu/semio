@@ -261,6 +261,23 @@ describe("setup", () => {
     expect(lines).toEqual(["Verifying uv against its pin.", "uv 8.8.8 already matches its pin."]);
   });
 
+  test("an installer that waits forever is stopped at its deadline with a bilingual reason, a cancel stays a cancel", async () => {
+    const context = machine({exists: () => false, capture: async () => { throw new Error("none"); }});
+    const waits = (_row: unknown, _pin: string, stop: AbortSignal) => new Promise<void>((_done, fail) => stop.addEventListener("abort", () => fail(stop.reason), {once: true}));
+    const started = performance.now();
+    const failure = await setupToolsV1(toolRowsV1(["uv"]), context, waits, signal, () => undefined, 200).catch((error: Error) => error);
+    expect(performance.now() - started).toBeLessThan(5000);
+    expect(String((failure as Error).message)).toMatch(/uv was still being provisioned after 0 s and was stopped/u);
+    const german = await setupToolsV1(toolRowsV1(["uv"]), machine({exists: () => false, capture: async () => { throw new Error("none"); }, environment: {SEMIO_LANGUAGE: "de"}}), waits, signal, () => undefined, 200).catch((error: Error) => error);
+    expect(String((german as Error).message)).toMatch(/uv wurde auch nach 0 s noch eingerichtet/u);
+    const controller = new AbortController();
+    const cancelled = setupToolsV1(toolRowsV1(["uv"]), context, waits, controller.signal, () => undefined, 60000).catch((error: unknown) => error);
+    setTimeout(() => controller.abort(new Error("cancelled")), 50);
+    expect(String(((await cancelled) as Error).message)).toBe("cancelled");
+    const oracle = Bun.spawnSync(["python3", "-I", "-c", "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));print(d['provision']['deadlineSeconds']>=60 and set(d['messages']['texts']['deadline'])=={'en','de'})", join(here, "..", "🔣️.json")]);
+    expect(oracle.stdout.toString().trim()).toBe("True");
+  });
+
   test("fails when a provisioned tool still differs from its pin, in the resolved language", async () => {
     const context = machine({exists: () => true, capture: async () => "uv 0.1.0\n", environment: {SEMIO_LANGUAGE: "de"}});
     await expect(setupToolsV1(toolRowsV1(["uv"]), context, async () => undefined, signal, () => undefined)).rejects.toThrow(/wurde eingerichtet, meldet aber 0\.1\.0 statt des Pins 8\.8\.8/u);

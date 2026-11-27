@@ -1,0 +1,15 @@
+import sys
+sys.argv = ["x", "none"]
+exec(open("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/🧰️scripts/F120/land.py").read().split("step = sys.argv[1]")[0])
+edit(N + "/✍️own-file-writers/🟦️.ts", [
+ ('import { updateBuildOwnerRegistryV1 } from', 'import { readBuildOwnerRegistryV1 } from "../../🏗️build/🕸️graph/🚪️admission/🟦️.ts";\nimport { updateBuildOwnerRegistryV1 } from'),
+ ('/** ✍️ Publishes the exact `bytes` a reference edit computed over the file that holds `expected`: the writer of the file refuses a file that is no longer the preimage and refuses invalid text, so a refusal leaves the file byte for byte. */\nexport type OwnFileWriterV1 = (target: string, expected: Readonly<{ contentHash: string; mode: number }>, bytes: Buffer) => void;',
+  '/** ✍️ The writer of one kind of file: `check` refuses text the file may never hold (called before the engine freezes any backup, so a refusal leaves nothing half done) and `publish` writes the exact `bytes` a reference edit computed over the file that holds `expected`, refusing a file that is no longer the preimage and invalid text, so a refusal leaves the file byte for byte. */\nexport type OwnFileWriterV1 = Readonly<{ check: (text: string) => void; publish: (target: string, expected: Readonly<{ contentHash: string; mode: number }>, bytes: Buffer) => void }>;'),
+ ('  "build-owner-registry": (target, expected, bytes) => {\n    updateBuildOwnerRegistryV1(target, (source) => {\n      if (createHash("sha256").update(source).digest("hex") !== expected.contentHash) throw new Error(`Reference edit preimage changed: ${target}`);\n      return { value: undefined, text: bytes.toString("utf8") };\n    }, { mode: expected.mode });\n  },\n};',
+  '  "build-owner-registry": {\n    check: (text) => { readBuildOwnerRegistryV1(JSON.parse(text)); },\n    publish: (target, expected, bytes) => {\n      updateBuildOwnerRegistryV1(target, (source) => {\n        if (createHash("sha256").update(source).digest("hex") !== expected.contentHash) throw new Error(`Reference edit preimage changed: ${target}`);\n        return { value: undefined, text: bytes.toString("utf8") };\n      }, { mode: expected.mode });\n    },\n  },\n};'),
+])
+edit(N + "/🚀️apply/🏁️transaction-run/🔧️transaction-steps/🟦️.ts", [
+ ('import { ownFileWriterFor } from "../../../✍️own-file-writers/🟦️.ts";\n', 'import { ownFileWriterFor } from "../../../✍️own-file-writers/🟦️.ts";\nimport { applyEditsToContent } from "../../../✂️reference-edits/🟦️.ts";\n'),
+ ('      backupPath(repoRoot, path, absolutePath(repoRoot, journal.backupRoot), journal, preimage,', '      const ownWriter = ownFileWriterFor(path);\n      ownWriter?.check(applyEditsToContent(readFileSync(absolutePath(repoRoot, path), "utf8"), edits));\n      backupPath(repoRoot, path, absolutePath(repoRoot, journal.backupRoot), journal, preimage,'),
+ ('editWriteCandidateName, ownFileWriterFor(path));', 'editWriteCandidateName, ownWriter?.publish);'),
+])

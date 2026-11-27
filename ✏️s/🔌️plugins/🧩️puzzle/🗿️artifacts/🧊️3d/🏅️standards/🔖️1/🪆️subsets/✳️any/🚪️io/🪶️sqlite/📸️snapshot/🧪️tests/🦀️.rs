@@ -292,7 +292,7 @@ fn sqlite_snapshot_puzzle3d_declared_txt_preserves_complete_fields_and_every_wor
     }
 }
 
-fn register(){semio_plugin::PluginBuilder::<semio_plugin::component::app::NeedsLabel, PublicApps>::new("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
+fn register(){semio_plugin::PluginBuilder::<semio_plugin::component::app::NeedsLabel, PublicApps>::new("puzzle").label(semio_plugin::LocalizedLabel::native("Populated public SQLite", "Befülltes öffentliches SQLite")).version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};

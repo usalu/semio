@@ -119,8 +119,8 @@ fn populated() -> MapWindowConfig {
     value.camera_json = r#"{"x":8,"y":9,"zoom":4}"#.into();
     value.render_mode = "vector".into();
     value.vector_style = "figureGround".into();
-    value.layer_visibility.insert("water".into(), false);
-    value.layer_stroke_scale.insert("roads".into(), 2.0);
+    value.layer_visibility.cold_insert("water".into(), false);
+    value.layer_stroke_scale.cold_insert("roads".into(), 2.0);
     value
 }
 
@@ -148,9 +148,9 @@ fn no_op_preserves_every_populated_field() {
 fn visibility_inverse_distinguishes_absence_and_explicit_default() {
     for previous in [None, Some(false), Some(true)] {
         let mut base = populated();
-        base.layer_visibility.remove("water");
+        base.layer_visibility.cold_remove("water");
         if let Some(value) = previous {
-            base.layer_visibility.insert("water".into(), value);
+            base.layer_visibility.cold_insert("water".into(), value);
         }
         for visible in [None, Some(false), Some(true)] {
             let operation = MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible });
@@ -165,9 +165,9 @@ fn visibility_inverse_distinguishes_absence_and_explicit_default() {
 fn stroke_inverse_distinguishes_absence_and_explicit_default() {
     for previous in [None, Some(1.0), Some(2.0)] {
         let mut base = populated();
-        base.layer_stroke_scale.remove("roads");
+        base.layer_stroke_scale.cold_remove("roads");
         if let Some(value) = previous {
-            base.layer_stroke_scale.insert("roads".into(), value);
+            base.layer_stroke_scale.cold_insert("roads".into(), value);
         }
         for value in [None, Some(1.0), Some(2.0)] {
             let operation = MapWindowConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value });

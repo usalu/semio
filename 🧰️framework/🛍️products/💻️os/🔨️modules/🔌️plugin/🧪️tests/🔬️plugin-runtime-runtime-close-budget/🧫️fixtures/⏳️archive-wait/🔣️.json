@@ -1,0 +1,27 @@
+{
+  "ceilingUs": 120000000,
+  "sequences": [
+    { "name": "a hung host: the witness never changes", "expires": true, "steps": [
+      { "nowUs": 1000, "witness": 7, "waitedUs": 0 },
+      { "nowUs": 60000000, "witness": 7, "waitedUs": 59999000 },
+      { "nowUs": 120001000, "witness": 7, "waitedUs": 120000000 }
+    ] },
+    { "name": "a slow but moving host: every step changes the witness", "expires": false, "steps": [
+      { "nowUs": 1000, "witness": 1, "waitedUs": 0 },
+      { "nowUs": 100000000, "witness": 2, "waitedUs": 0 },
+      { "nowUs": 200000000, "witness": 3, "waitedUs": 0 },
+      { "nowUs": 300000000, "witness": 3, "waitedUs": 100000000 }
+    ] },
+    { "name": "progress elsewhere clears the wait", "expires": false, "steps": [
+      { "nowUs": 1000, "witness": 5, "waitedUs": 0 },
+      { "nowUs": 100000000, "witness": 5, "waitedUs": 99999000 },
+      { "clear": true },
+      { "nowUs": 200000000, "witness": 5, "waitedUs": 0 },
+      { "nowUs": 250000000, "witness": 5, "waitedUs": 50000000 }
+    ] },
+    { "name": "no clock never expires", "expires": false, "steps": [
+      { "nowUs": null, "witness": 9, "waitedUs": null },
+      { "nowUs": null, "witness": 9, "waitedUs": null }
+    ] }
+  ]
+}

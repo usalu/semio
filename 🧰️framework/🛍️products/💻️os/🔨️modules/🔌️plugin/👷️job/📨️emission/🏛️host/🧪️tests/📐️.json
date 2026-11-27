@@ -7,6 +7,7 @@
     "version",
     "turnFuel",
     "lifetimeFuel",
+    "generatedCases",
     "policies",
     "classification",
     "cases"
@@ -22,6 +23,41 @@
     "lifetimeFuel": {
       "type": "integer",
       "minimum": 1
+    },
+    "generatedCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "policy",
+          "unit",
+          "times",
+          "maximumWorkUnits"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "policy": {
+            "const": "raw"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "times": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maximumWorkUnits": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
     },
     "policies": {
       "type": "object",

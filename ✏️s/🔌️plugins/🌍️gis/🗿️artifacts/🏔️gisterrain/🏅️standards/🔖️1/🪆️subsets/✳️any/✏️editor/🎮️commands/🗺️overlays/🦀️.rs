@@ -5,13 +5,69 @@ use crate::schema::imported_map::ImportedMap;
 use crate::GisTerrainSnapshot;
 use semio_framework_surface::tiled_map::projection::MAX_LAT as MAX_TILED_LATITUDE;
 use semio_framework_value::{DslValue, ToValue};
-use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
 use semio_ui_locale::LocalizedLabel;
 
 const MAX_TEXT_BYTES: usize = 256;
 const MAX_WGS84_LATITUDE: f64 = 90.0;
 pub(crate) const MAX_COORDINATES_JSON_BYTES: usize = 512;
 pub type OverlayEdit = Result<Emit<GisTerrainMutation, NoConfigMutation>, Fault>;
+
+/// 🚫️ Overlay refusals under stable `gis.terrain.overlay.<name>` codes, localized through [`fault_notices`].
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum OverlayFault { IdentifierOrLabel, Range, Duplicate, PositionInvalid, PositionMissing, PositionAmbiguous, CoordinatesTooLong, CoordinatesFormat, ShapeCoordinates, ShapeKind, ShapeMode, OtherKind, ShapeAmbiguous, ShapeMissing, ShapeStored, ShapeVertices, Identifier, IdentifierMissing, LabelInvalid, VerticesMissing, LongitudeInvalid, LatitudeInvalid, ElevationInvalid }
+
+impl OverlayFault {
+    const ALL: [Self; 23] = [Self::IdentifierOrLabel, Self::Range, Self::Duplicate, Self::PositionInvalid, Self::PositionMissing, Self::PositionAmbiguous, Self::CoordinatesTooLong, Self::CoordinatesFormat, Self::ShapeCoordinates, Self::ShapeKind, Self::ShapeMode, Self::OtherKind, Self::ShapeAmbiguous, Self::ShapeMissing, Self::ShapeStored, Self::ShapeVertices, Self::Identifier, Self::IdentifierMissing, Self::LabelInvalid, Self::VerticesMissing, Self::LongitudeInvalid, Self::LatitudeInvalid, Self::ElevationInvalid];
+
+    fn message(self) -> (&'static str, &'static str, &'static str) {
+        match self {
+            Self::IdentifierOrLabel => ("gis.terrain.overlay.identifier-or-label", "Invalid overlay identifier or label", "Ungültige Überlagerungs-ID oder ungültiger Name"),
+            Self::Range => ("gis.terrain.overlay.range", "Overlay coordinates are outside the terrain display range", "Die Koordinaten der Überlagerung liegen außerhalb des Anzeigebereichs des Geländes"),
+            Self::Duplicate => ("gis.terrain.overlay.duplicate", "An overlay already has that identifier", "Eine Überlagerung hat diese ID bereits"),
+            Self::PositionInvalid => ("gis.terrain.overlay.position-invalid", "Invalid position identifier or coordinates", "Ungültige Positions-ID oder ungültige Koordinaten"),
+            Self::PositionMissing => ("gis.terrain.overlay.position-missing", "Position was not found", "Die Position wurde nicht gefunden"),
+            Self::PositionAmbiguous => ("gis.terrain.overlay.position-ambiguous", "More than one position has that identifier", "Mehrere Positionen haben diese ID"),
+            Self::CoordinatesTooLong => ("gis.terrain.overlay.coordinates-too-long", "Coordinate entry exceeds 512 bytes", "Die Koordinateneingabe überschreitet 512 Byte"),
+            Self::CoordinatesFormat => ("gis.terrain.overlay.coordinates-format", "Enter a JSON list of [longitude, latitude] pairs", "Eine JSON-Liste aus [Längengrad, Breitengrad]-Paaren eingeben"),
+            Self::ShapeCoordinates => ("gis.terrain.overlay.shape-coordinates", "Shape contains no vertices or coordinates outside the terrain display range", "Die Form enthält keine Stützpunkte oder Koordinaten außerhalb des Anzeigebereichs des Geländes"),
+            Self::ShapeKind => ("gis.terrain.overlay.shape-kind", "Unknown shape type", "Unbekannte Formart"),
+            Self::ShapeMode => ("gis.terrain.overlay.shape-mode", "Unknown shape edit mode", "Unbekannter Formbearbeitungsmodus"),
+            Self::OtherKind => ("gis.terrain.overlay.other-kind", "Another kind of overlay has that identifier", "Eine andere Art von Überlagerung hat diese ID"),
+            Self::ShapeAmbiguous => ("gis.terrain.overlay.shape-ambiguous", "More than one shape has that identifier", "Mehrere Formen haben diese ID"),
+            Self::ShapeMissing => ("gis.terrain.overlay.shape-missing", "Create the shape before appending vertices", "Die Form erstellen, bevor Stützpunkte hinzugefügt werden"),
+            Self::ShapeStored => ("gis.terrain.overlay.shape-stored", "The stored shape contains invalid coordinates. Replace its vertices before appending.", "Die gespeicherte Form enthält ungültige Koordinaten. Ihre Stützpunkte ersetzen, bevor weitere hinzugefügt werden."),
+            Self::ShapeVertices => ("gis.terrain.overlay.shape-vertices", "A route needs two distinct vertices and a region needs three", "Eine Route braucht zwei verschiedene Stützpunkte und eine Fläche drei"),
+            Self::Identifier => ("gis.terrain.overlay.identifier", "Invalid overlay identifier", "Ungültige Überlagerungs-ID"),
+            Self::IdentifierMissing => ("gis.terrain.overlay.identifier-missing", "Missing overlay identifier", "Die Überlagerungs-ID fehlt"),
+            Self::LabelInvalid => ("gis.terrain.overlay.label-invalid", "Invalid overlay label", "Ungültiger Überlagerungsname"),
+            Self::VerticesMissing => ("gis.terrain.overlay.vertices-missing", "Missing WGS84 vertices", "Die WGS84-Stützpunkte fehlen"),
+            Self::LongitudeInvalid => ("gis.terrain.overlay.longitude-invalid", "Missing or invalid longitude", "Der Längengrad fehlt oder ist ungültig"),
+            Self::LatitudeInvalid => ("gis.terrain.overlay.latitude-invalid", "Missing or invalid latitude", "Der Breitengrad fehlt oder ist ungültig"),
+            Self::ElevationInvalid => ("gis.terrain.overlay.elevation-invalid", "Missing or invalid elevation", "Die Höhe fehlt oder ist ungültig"),
+        }
+    }
+
+    pub(crate) fn fault(self) -> Fault {
+        let (code, en, _) = self.message();
+        Fault::new(FaultOrigin::App, FaultCode::new(code), en)
+    }
+
+    pub(crate) fn number(key: &str) -> Self {
+        match key { "longitude" => Self::LongitudeInvalid, "latitude" => Self::LatitudeInvalid, _ => Self::ElevationInvalid }
+    }
+}
+
+/// 🔔️ Registers the bilingual overlay refusal notices with the Terrain editor.
+pub(crate) fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&'static str, LocalizedLabel); 23]> = std::sync::LazyLock::new(|| {
+        OverlayFault::ALL.map(|kind| {
+            let (code, en, de) = kind.message();
+            (code, LocalizedLabel::native(en, de))
+        })
+    });
+    NOTICES.as_slice()
+}
 
 fn replacement(map: ImportedMap) -> OverlayEdit {
     Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures {
@@ -68,16 +124,16 @@ pub mod add_overlay_position {
 
     pub fn handle(payload: &AddOverlayPosition, doc: &ArtifactView<'_, GisTerrainSnapshot>, _: &ConfigView<'_, NoConfig>) -> OverlayEdit {
         if !valid_id(&payload.id) || payload.label.as_ref().is_some_and(|label| label.len() > MAX_TEXT_BYTES) {
-            return Err(Fault::from("Invalid overlay identifier or label"));
+            return Err(OverlayFault::IdentifierOrLabel.fault());
         }
         if !valid_coordinates(payload.longitude, payload.latitude, latitude_limit(doc.snapshot)) || payload.elevation.is_some_and(|value| !value.is_finite())
         {
-            return Err(Fault::from("Overlay coordinates are outside the terrain display range"));
+            return Err(OverlayFault::Range.fault());
         }
         if doc.snapshot.imported_map.as_ref().is_some_and(|map| {
             map.positions.iter().chain(&map.routes).chain(&map.regions).any(|record| feature_id(record) == Some(payload.id.as_str()))
         }) {
-            return Err(Fault::from("An overlay already has that identifier"));
+            return Err(OverlayFault::Duplicate.fault());
         }
         let mut fields = vec![
             ("id".into(), payload.id.to_value()),
@@ -101,12 +157,12 @@ pub mod move_overlay_position {
 
     pub fn handle(payload: &MoveOverlayPosition, doc: &ArtifactView<'_, GisTerrainSnapshot>, _: &ConfigView<'_, NoConfig>) -> OverlayEdit {
         if !valid_id(&payload.id) || !valid_coordinates(payload.longitude, payload.latitude, latitude_limit(doc.snapshot)) {
-            return Err(Fault::from("Invalid position identifier or coordinates"));
+            return Err(OverlayFault::PositionInvalid.fault());
         }
-        let mut map = doc.snapshot.imported_map.clone().ok_or_else(|| Fault::from("Position was not found"))?;
+        let mut map = doc.snapshot.imported_map.clone().ok_or_else(|| OverlayFault::PositionMissing.fault())?;
         let mut matching = map.positions.iter_mut().filter(|record| feature_id(record) == Some(payload.id.as_str()));
-        let feature = matching.next().ok_or_else(|| Fault::from("Position was not found"))?;
-        if matching.next().is_some() { return Err(Fault::from("More than one position has that identifier")); }
+        let feature = matching.next().ok_or_else(|| OverlayFault::PositionMissing.fault())?;
+        if matching.next().is_some() { return Err(OverlayFault::PositionAmbiguous.fault()); }
         if feature.get("lon").and_then(DslValue::as_f64) == Some(payload.longitude)
             && feature.get("lat").and_then(DslValue::as_f64) == Some(payload.latitude)
         {
@@ -133,11 +189,11 @@ pub mod edit_overlay_shape {
     }
 
     fn coordinates(text: &str, limit: f64) -> Result<Vec<DslValue>, Fault> {
-        if text.len() > MAX_COORDINATES_JSON_BYTES { return Err(Fault::from("Coordinate entry exceeds 512 bytes")); }
+        if text.len() > MAX_COORDINATES_JSON_BYTES { return Err(OverlayFault::CoordinatesTooLong.fault()); }
         let numbers: Vec<[f64; 2]> = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject)
-            .map_err(|_| Fault::from("Enter a JSON list of [longitude, latitude] pairs"))?;
+            .map_err(|_| OverlayFault::CoordinatesFormat.fault())?;
         if numbers.is_empty() || !numbers.iter().all(|&[lon, lat]| valid_coordinates(lon, lat, limit)) {
-            return Err(Fault::from("Shape contains no vertices or coordinates outside the terrain display range"));
+            return Err(OverlayFault::ShapeCoordinates.fault());
         }
         Ok(numbers.iter().map(ToValue::to_value).collect())
     }
@@ -154,17 +210,17 @@ pub mod edit_overlay_shape {
 
     pub fn handle(payload: &EditOverlayShape, doc: &ArtifactView<'_, GisTerrainSnapshot>, _: &ConfigView<'_, NoConfig>) -> OverlayEdit {
         if !valid_id(&payload.id) || payload.label.as_ref().is_some_and(|label| label.len() > MAX_TEXT_BYTES) {
-            return Err(Fault::from("Invalid overlay identifier or label"));
+            return Err(OverlayFault::IdentifierOrLabel.fault());
         }
         let polygon = match payload.kind.as_str() {
             "route" => false,
             "region" => true,
-            _ => return Err(Fault::from("Unknown shape type")),
+            _ => return Err(OverlayFault::ShapeKind.fault()),
         };
         let append = match payload.mode.as_str() {
             "replace" => false,
             "append" => true,
-            _ => return Err(Fault::from("Unknown shape edit mode")),
+            _ => return Err(OverlayFault::ShapeMode.fault()),
         };
         let limit = latitude_limit(doc.snapshot);
         let mut new_vertices = coordinates(&payload.coordinates, limit)?;
@@ -172,15 +228,15 @@ pub mod edit_overlay_shape {
         let (collection, other_collection) = if polygon { (&mut map.regions, &map.routes) } else { (&mut map.routes, &map.regions) };
         let id = Some(payload.id.as_str());
         if map.positions.iter().chain(other_collection).any(|record| feature_id(record) == id) {
-            return Err(Fault::from("Another kind of overlay has that identifier"));
+            return Err(OverlayFault::OtherKind.fault());
         }
         let mut matching = collection.iter_mut().filter(|record| feature_id(record) == id);
         let current = matching.next();
-        if matching.next().is_some() { return Err(Fault::from("More than one shape has that identifier")); }
+        if matching.next().is_some() { return Err(OverlayFault::ShapeAmbiguous.fault()); }
         let key = if polygon && current.as_ref().is_none_or(|record| record.get("ring").is_some() || record.get("points").is_none()) { "ring" } else { "points" };
         if append {
             let current = current.as_ref().and_then(|record| record.get(key)).and_then(DslValue::as_array)
-                .ok_or_else(|| Fault::from("Create the shape before appending vertices"))?;
+                .ok_or_else(|| OverlayFault::ShapeMissing.fault())?;
             let mut vertices = current.to_vec();
             if polygon && closed(&vertices) { vertices.pop(); }
             vertices.append(&mut new_vertices);
@@ -191,10 +247,10 @@ pub mod edit_overlay_shape {
         let mut distinct = Vec::with_capacity(minimum);
         for vertex in &new_vertices {
             let pair = coordinate_pair(vertex).filter(|&[lon, lat]| valid_coordinates(lon, lat, limit))
-                .ok_or_else(|| Fault::from("The stored shape contains invalid coordinates. Replace its vertices before appending."))?;
+                .ok_or_else(|| OverlayFault::ShapeStored.fault())?;
             if distinct.len() < minimum && !distinct.contains(&pair) { distinct.push(pair); }
         }
-        if distinct.len() < minimum { return Err(Fault::from("A route needs two distinct vertices and a region needs three")); }
+        if distinct.len() < minimum { return Err(OverlayFault::ShapeVertices.fault()); }
         let vertices = DslValue::Array(new_vertices);
         if let Some(feature) = current {
             replace_field(feature, key, vertices);
@@ -216,7 +272,7 @@ pub mod remove_overlay_feature {
     pub struct RemoveOverlayFeature { pub id: String }
 
     pub fn handle(payload: &RemoveOverlayFeature, doc: &ArtifactView<'_, GisTerrainSnapshot>, _: &ConfigView<'_, NoConfig>) -> OverlayEdit {
-        if !valid_id(&payload.id) { return Err(Fault::from("Invalid overlay identifier")); }
+        if !valid_id(&payload.id) { return Err(OverlayFault::Identifier.fault()); }
         let wanted = Some(payload.id.as_str());
         let Some(map) = doc.snapshot.imported_map.as_ref().filter(|map| {
             map.positions.iter().chain(&map.routes).chain(&map.regions).any(|record| feature_id(record) == wanted)

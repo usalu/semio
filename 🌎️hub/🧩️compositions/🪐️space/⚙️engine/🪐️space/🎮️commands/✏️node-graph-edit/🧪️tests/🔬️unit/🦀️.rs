@@ -6,7 +6,7 @@ use semio_os::WorkflowMutation;
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     use semio_hub_space_app::SpaceCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
 }
 
 //#region ✋️GestureLaws

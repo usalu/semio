@@ -251,7 +251,7 @@ test("the Python oracle derives the same abort times of the drain",()=>{
 
 test("a cache server restarts for a code change although requests are in flight (its stop drains them and the successor takes the new connections), and a request that never ends cannot hold the restart back",()=>{
  const world=tree(),work={busy:true,restartPending:false} as {busy:boolean;restartPending:boolean;wake?:()=>void},test=rig("cache",world.watch,sidecarRestartPolicyForV1("cache"),work);
- for(let tick=0;tick<80;tick++){if(tick%10===0)appendFileSync(world.inside,`// ${tick}\n`);test.advance(30*SECOND);}
+ for(let tick=0;tick<400;tick++){if(tick%10===0)appendFileSync(world.inside,`// ${tick}\n`);test.advance(30*SECOND);}
  expect(test.events.length,"restarted once, in flight or not").toBe(2);expect(test.events[0]).toMatch(/^begin@/u);expect(test.events[1]).toMatch(/^abort@/u);
 });
 
@@ -266,6 +266,21 @@ test("with the declared policy ten landings, two minutes apart, cause one restar
  for(let tick=0;tick<2*60*60/30;tick++)busy.advance(30*SECOND);
  expect(busy.events,"two hours of a busy read: no restart").toEqual([]);
  expect(work.restartPending).toBe(true);
+});
+
+test("the cache server, whose restart is a hand-over, restarts for landings at most every three hours however often its closure is edited",()=>{
+ const cache=sidecarRestartPolicyForV1("cache");
+ expect(cache).toMatchObject({quietMilliseconds:900_000,maximumDeferralMilliseconds:10_800_000,minimumIntervalMilliseconds:10_800_000,serveDeferralMilliseconds:0});
+ const world=tree(),run=rig("cache",world.watch,cache);
+ let restartedAt:number|undefined;
+ for(let tick=0;tick<24*60*2&&restartedAt===undefined;tick++){if(tick%20===0)appendFileSync(world.inside,`// ${tick}\n`);run.advance(30*SECOND);if(run.events.length>0)restartedAt=run.at();}
+ expect(restartedAt,"a closure edited every ten minutes still restarts").toBeDefined();
+ expect(restartedAt!-1_000_000,"not before the minimum interval").toBeGreaterThanOrEqual(10_800_000);
+ expect(restartedAt!-1_000_000,"and within one look of it").toBeLessThanOrEqual(10_800_000+30*SECOND);
+ const quiet=tree(),calm=rig("cache",quiet.watch,cache);
+ appendFileSync(quiet.inside,"// x\n");
+ while(calm.events.length===0)calm.advance(30*SECOND);
+ expect(calm.at()-1_000_000,"a single landing restarts when the closure was quiet and the interval is over").toBeGreaterThanOrEqual(10_800_000);
 });
 
 test("a role that reports progress is not restarted while the progress advances, whatever the clock says, and restarts when it stalls",()=>{

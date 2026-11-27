@@ -53,7 +53,7 @@ pub async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
 #[semio_framework_async_macros::async_test]
 pub async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
     let error = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-contributor-missing-dep")
-        .label("Builder Test Contributor Missing Dep")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Contributor Missing Dep", "Builder-Test Beitragender mit fehlender Abhängigkeit"))
         .version("0.1.0")
         .package_id("semio:builder-test-contributor-missing-dep")
         .contributes(contribution("s.builder-test-dep-target.thing").await)
@@ -67,7 +67,7 @@ pub async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
 #[semio_framework_async_macros::async_test]
 async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
     let plugin = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-contributor-ok")
-        .label("Builder Test Contributor Ok")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Contributor Ok", "Builder-Test Beitragender in Ordnung"))
         .version("0.1.0")
         .package_id("semio:builder-test-contributor-ok")
         .depends_on("builder-test-dep-target-ok", semio_framework::tree_pin!())
@@ -88,7 +88,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
     let kind = host_media_kind().await;
     let bridge = HostMediaHandlerDeclaration::mesh_import("builder-test.media.mesh-import", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("typed bridge declaration");
     let plugin = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-media")
-        .label("Builder Test Media")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Media", "Builder-Test Medien"))
         .version("0.1.0")
         .package_id("semio:builder-test-media")
         .artifact_kind(kind.clone())
@@ -111,7 +111,7 @@ async fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
     let first = HostMediaHandlerDeclaration::mesh_import("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("first bridge");
     let second = HostMediaHandlerDeclaration::mesh_import("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_importer).expect("second bridge");
     let error = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-media-conflict")
-        .label("Builder Test Media Conflict")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Media Conflict", "Builder-Test Medienkonflikt"))
         .version("0.1.0")
         .package_id("semio:builder-test-media-conflict")
         .artifact_kind(kind)
@@ -130,7 +130,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
     let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").expect("typed executable identity");
     let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
     let plugin = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-flow")
-        .label("Builder Test Flow")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Flow", "Builder-Test Flow"))
         .version("0.1.0")
         .package_id("semio:builder-test-flow")
         .flow_extension(declaration.clone())
@@ -140,7 +140,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
     assert_eq!(plugin.flow_extensions().len(), 1);
     let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).expect("conflicting target descriptor");
     let error = PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("builder-test-flow-conflict")
-        .label("Builder Test Flow Conflict")
+        .label(semio_plugin_builder::LocalizedLabel::native("Builder Test Flow Conflict", "Builder-Test Flow-Konflikt"))
         .version("0.1.0")
         .package_id("semio:builder-test-flow-conflict")
         .flow_extension(

@@ -34,4 +34,5 @@ semio-framework-pack = { path = "../../../../../../../../../../../../🧰️fram
 [dev-dependencies]
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+serde_json = { workspace = true }
 zip = { version = "6", default-features = false, features = ["deflate"] }

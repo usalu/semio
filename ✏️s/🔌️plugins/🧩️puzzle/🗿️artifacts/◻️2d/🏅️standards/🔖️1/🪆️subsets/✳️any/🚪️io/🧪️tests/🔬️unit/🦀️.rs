@@ -1,7 +1,6 @@
 //! 🖊️ Real board drawing formats are readable by owned codecs and an independent DWG reader.
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1024::any as dwg_out;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::dxf::v_r12::any as dxf_out;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::any as pdf_out;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any as png_out;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any as svg_out;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any as txt_out;
@@ -71,13 +70,6 @@ fn svg_witness(source: &str) -> (usize, Vec<String>) {
     (paths, labels)
 }
 
-fn pdf_witness(source: &[u8]) -> (usize, String) {
-    let document = lopdf::Document::load_mem(source).expect("independent PDF parse");
-    let pages: Vec<u32> = document.get_pages().keys().copied().collect();
-    let text = document.extract_text(&pages).expect("independent PDF page text");
-    (pages.len(), text)
-}
-
 #[test]
 fn svg_draws_the_visible_board() {
     let board = board();
@@ -92,13 +84,6 @@ fn svg_draws_the_visible_board() {
 #[test]
 fn page_formats_are_real_files() {
     let board = board();
-    let pdf = pdf_out::serialize_bytes(board.get()).expect("pdf");
-    assert!(pdf.starts_with(b"%PDF-1.4"));
-    let (pages, text) = pdf_witness(&pdf);
-    assert_eq!(pages, cases()["page"]["pages"].as_u64().unwrap() as usize);
-    for label in cases()["page"]["labels"].as_array().unwrap() {
-        assert!(text.contains(label.as_str().unwrap()), "PDF page is missing visible label {label}: {text}");
-    }
     let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_layout(&semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&png_out::serialize_bytes(board.get()).expect("png")).expect("decodes as png")).expect("png header");
     assert_eq!((png.width, png.height), (240 + 64, 120 + 64));
     let dxf = String::from_utf8(dxf_out::serialize_bytes(board.get()).expect("dxf")).expect("dxf text");

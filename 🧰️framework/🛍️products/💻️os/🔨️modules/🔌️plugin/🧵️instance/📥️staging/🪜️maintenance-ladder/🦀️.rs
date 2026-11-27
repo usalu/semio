@@ -14,9 +14,15 @@ use crate::VcsArtifactApp;
 use semio_ui_contract::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
-use semio_plugin_instance_ladders::{DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS, MAINTENANCE_POSITIONS, MaintenanceUnit};
+use semio_plugin_instance_ladders::{DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS, DOCUMENT_ARCHIVE_WAIT_CEILING_US, MAINTENANCE_POSITIONS, MaintenanceUnit};
 
 fn empty_demand()->semio_framework_value::RetirementDemand{Default::default()}
+
+fn debug_archive_wait(diagnostic:impl FnOnce()->String){
+    thread_local!{static WAITS:std::cell::Cell<u64>=const{std::cell::Cell::new(0)}}
+    let waits=WAITS.with(|waits|{waits.set(waits.get()+1);waits.get()});
+    if waits%512==1{eprintln!("[DEBUG] archive/replacement wait reading={waits} {}",diagnostic())}
+}
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     /// 🎡️ Visits units in fair order and spends the grant on the first one that releases something. An empty or unfunded
@@ -41,7 +47,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     }
 
     fn maintenance_ladder_unit_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        LAST_MAINTENANCE_STAGE.store(u64::MAX,std::sync::atomic::Ordering::Relaxed);let empty=RetainedCloneProgress::default();let cursor=self.maintenance.maintenance_stage;let mut awaiting=None;let mut blocked=None;let archive_pending=self.ladder_ref().maintenance_unit_demand(MaintenanceUnit::Stage(24),loan.maximum_copy_bytes,cx.fuel_remaining())?.is_some_and(|demand|demand!=empty_demand());
+        LAST_MAINTENANCE_STAGE.store(u64::MAX,std::sync::atomic::Ordering::Relaxed);let empty=RetainedCloneProgress::default();let cursor=self.maintenance.maintenance_stage;let mut awaiting=None;let mut blocked=None;let mut archive_waited=false;let archive_pending=self.ladder_ref().maintenance_unit_demand(MaintenanceUnit::Stage(24),loan.maximum_copy_bytes,cx.fuel_remaining())?.is_some_and(|demand|demand!=empty_demand());
         for position in 0..MAINTENANCE_POSITIONS{
             if cx.should_yield(){semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
             let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
@@ -70,8 +76,15 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                     Ok((step,true))
                 })?
             };
-            let step=match(unit,step){(MaintenanceUnit::Stage(14|24)|MaintenanceUnit::Pressure(14|24),PluginLifecycleStep::Progress(progress))if progress==empty=>PluginLifecycleStep::AwaitingInput{reason:"funded archive or replacement phase awaits its original host, worker or replacement owner"},(_,step)=>step};
-            match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)if progress!=empty=>return Ok(PluginLifecycleStep::Progress(progress)),step@PluginLifecycleStep::AwaitingInput{..}=>awaiting=awaiting.or(Some(step)),step@PluginLifecycleStep::Blocked{..}=>blocked=blocked.or(Some(step)),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)=>{}}
+            let step=match(unit,step){(MaintenanceUnit::Stage(14|24)|MaintenanceUnit::Pressure(14|24),PluginLifecycleStep::Progress(progress))if progress==empty=>{debug_archive_wait(||self.ladder_ref().document_load_diagnostic(grant));archive_waited=true;PluginLifecycleStep::AwaitingInput{reason:"funded archive or replacement phase awaits its original host, worker or replacement owner"}},(_,step)=>step};
+            match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)if progress!=empty=>{self.maintenance.archive_wait.clear();return Ok(PluginLifecycleStep::Progress(progress))},step@PluginLifecycleStep::AwaitingInput{..}=>awaiting=awaiting.or(Some(step)),step@PluginLifecycleStep::Blocked{..}=>blocked=blocked.or(Some(step)),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)=>{}}
+        }
+        if archive_waited {
+            if let Some(waited_us) = self.maintenance.archive_wait.observe(cx.now_us(), ()).filter(|waited_us| *waited_us >= DOCUMENT_ARCHIVE_WAIT_CEILING_US) {
+                self.ladder_ctx().expire_stalled_document_archive_loads(waited_us);
+            }
+        } else {
+            self.maintenance.archive_wait.clear();
         }
         if awaiting.is_none() && self.ladder_ref().document_archive_waits_for_host() {
             awaiting=Some(PluginLifecycleStep::AwaitingInput { reason: "retained archive load awaits original host polling or acknowledgement" });

@@ -35,6 +35,7 @@ semio-plugin-reactor-lifecycle = { path = "../../../⚛️reactor/📨️pending
 semio-plugin-runtime-instances = { path = "../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }

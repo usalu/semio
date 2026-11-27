@@ -6,7 +6,7 @@ use semio_hub_space_foundation::config::SpaceConfig;
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     use semio_hub_space_app::SpaceCommand;
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat {}));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat {}));
 }
 
 #[semio_framework_async_macros::async_test]

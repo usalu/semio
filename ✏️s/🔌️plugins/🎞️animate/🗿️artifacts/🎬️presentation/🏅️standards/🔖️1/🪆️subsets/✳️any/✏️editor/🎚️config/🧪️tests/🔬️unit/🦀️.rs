@@ -43,6 +43,6 @@ fn config_set_engagement_input_round_trips() {
 
 #[test]
 fn config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&PresentationConfigMutation::SetEngagementInput(SetEngagementInput { value: "add".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&PresentationConfigMutation::SetEngagementInput(SetEngagementInput { value: "add".into() }));
 }
 //#endregion 🔖️ConfigMutationTests

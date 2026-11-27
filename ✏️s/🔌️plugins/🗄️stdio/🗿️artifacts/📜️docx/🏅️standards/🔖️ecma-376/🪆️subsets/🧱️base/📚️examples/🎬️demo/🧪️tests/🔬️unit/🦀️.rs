@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use protocol::Inference;
 
-use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
+use semio_os_store_test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {

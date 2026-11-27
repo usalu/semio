@@ -19,7 +19,7 @@ pub fn native_openable_stdio_bundle() -> std::path::PathBuf {
         .build_definition();
     let mut viewer = viewer;
     viewer.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
-    let mut manifest = semio_plugin::Plugin::<semio_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
+    let mut manifest = semio_plugin::Plugin::<semio_plugin::app::NoPluginApp>::new("stdio", semio_plugin::LocalizedLabel::native("Stdio Fixture", "Stdio-Testvorlage"), receipts[0].package_version).manifest;
     manifest.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
     manifest.topic_contributions.push(semio_hub_stdio_catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));

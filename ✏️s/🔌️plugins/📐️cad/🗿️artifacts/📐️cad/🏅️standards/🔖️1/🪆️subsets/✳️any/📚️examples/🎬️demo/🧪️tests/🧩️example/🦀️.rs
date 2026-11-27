@@ -46,7 +46,7 @@ async fn inference_default_law() {
 //#endregion 🧪️InferenceLaws
 
 //#region 🧪️SubsetRoundtrip
-use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
+use semio_os_store_test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
 struct CadAnyRoundtrip;
 

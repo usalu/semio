@@ -424,8 +424,8 @@ if (process.env.SEMIO_PROBE_EXTENSION_TRACE === "1") {
       console.info("[DEBUG] EXT_INVOKE " + JSON.stringify({ extensionId, capability, req: String(req) }));
       $&
       console.info("[DEBUG] EXT_ANSWER " + JSON.stringify({ extensionId, capability, req: String(req), bytes: raw.length }));`)
-    .replace("outcome = { fault: encodePackValue(fault) };", `
-      console.info("[DEBUG] EXT_FAULT " + JSON.stringify({ extensionId, capability, req: String(req), code: fault.code }));
+    .replace("outcome = { fault: encodeFaultPack(fault) };", `
+      console.info("[DEBUG] EXT_FAULT " + JSON.stringify({ extensionId, capability, req: String(req), fault }, (_, v) => typeof v === "bigint" ? String(v) : v));
       $&`)
     .replace("const response = await completion.complete(outcome);", `
       $&

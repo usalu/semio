@@ -192,11 +192,12 @@
             "cache.remote.cas.put",
             "cache.remote.nx.hit",
             "cache.remote.nx.miss",
-            "cache.remote.nx.put"
+            "cache.remote.nx.put",
+            "cache.remote.refused"
           ],
           "label": {
-            "en": "The persisted counter ledger of the remote cache server of this machine",
-            "de": "Das persistierte Zählerbuch des Remote-Cache-Servers dieser Maschine"
+            "en": "What the remote cache answered the clients of this machine (hits, misses, puts, conflicts, refusals by kind)",
+            "de": "Was der Remote-Cache den Clients dieser Maschine geantwortet hat (Treffer, Fehlzugriffe, Ablagen, Konflikte, Ablehnungen je Art)"
           },
           "scope": "origin"
         },
@@ -226,6 +227,55 @@
           "label": {
             "en": "The offload counter files",
             "de": "Die Auslagerungszähler-Dateien"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "cache-skip-reasons",
+          "cadence": "slow",
+          "source": "cache-skip-reasons",
+          "ids": [
+            "cache.skip.spool-full",
+            "cache.skip.upload-expired",
+            "cache.skip.upload-expired-down",
+            "cache.skip.upload-expired-denied",
+            "cache.skip.upload-entry-gone",
+            "cache.skip.upload-failed",
+            "cache.skip.upload-dropped",
+            "cache.skip.key-incomplete",
+            "cache.skip.path-dependent",
+            "cache.skip.read-only",
+            "cache.skip.diverged",
+            "cache.skip.breaker-denied",
+            "cache.skip.other"
+          ],
+          "label": {
+            "en": "The unit cache skip reason counter files (units compiled and not shared, by reason)",
+            "de": "Die Zählerdateien der Überspringgründe des Einheiten-Caches (kompiliert und nicht geteilt, nach Grund)"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "offload-reasons",
+          "cadence": "slow",
+          "source": "offload-reasons",
+          "ids": [
+            "exec.decline.local-slot",
+            "exec.decline.cheap",
+            "exec.decline.unmapped-path",
+            "exec.decline.infrastructure",
+            "exec.decline.unmeasured",
+            "exec.decline.pin-failed",
+            "exec.decline.not-portable",
+            "exec.decline.worker-policy",
+            "exec.decline.no-idle-machine",
+            "exec.decline.queue-timeout",
+            "exec.decline.incomplete-inputs",
+            "exec.decline.other"
+          ],
+          "label": {
+            "en": "The offload decline and fall-back reason counter files",
+            "de": "Die Zählerdateien der Ablehnungs- und Rückfallgründe der Auslagerung"
           },
           "scope": "origin"
         },

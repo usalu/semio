@@ -134,7 +134,6 @@ pub use protocol::retained::{Done as RetainedDone,Flight as RetainedFlight,Reply
 pub use protocol::retained::patch::RetainedPatchEmpty;
 pub use protocol::retained_routed;
 pub use crate::os_spr::*;
-pub use crate::os_store::test_support;
 pub use crate::os_store::*;
 
 

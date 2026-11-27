@@ -37,7 +37,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// own declaration, `Isolated` execution, one `artifacts.write` ask covering both editors.
 pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
     PluginBuilder::<_, TrinityApps>::new("trinity")
-        .label("Trinity")
+        .label(semio_plugin::LocalizedLabel::native("Trinity", "Trinity"))
         .version("0.1.0")
         .package_id("semio:trinity")
         .declare_artifact(semio_s_dev_trinity_jack::artifact::<TrinityApps>())

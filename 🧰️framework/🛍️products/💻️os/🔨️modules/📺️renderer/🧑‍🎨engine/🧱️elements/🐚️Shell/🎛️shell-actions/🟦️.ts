@@ -35,6 +35,8 @@ export type ShellAction =
   | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
   | { readonly type: "SET_ACTIVE_UTILITY"; readonly windowId: string; readonly utilityId: string | null }
   | { readonly type: "SET_ACTIVE_TOOL"; readonly toolId: string | null }
+  | { readonly type: "WINDOWS_RETIRED"; readonly windowIds: readonly string[]; readonly programIds: readonly string[] }
+  | { readonly type: "PROGRAM_INSTANCE_REPLACED"; readonly programId: string; readonly replacedInstanceId: number; readonly liveWindowIds: readonly string[] }
   | { readonly type: "SET_TOOL_MEASURES_BY_TOOL_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
   | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }

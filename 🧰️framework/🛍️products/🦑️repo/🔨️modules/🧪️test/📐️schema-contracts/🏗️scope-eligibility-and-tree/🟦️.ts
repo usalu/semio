@@ -1,9 +1,8 @@
 /** 🏗️ Which scopes may own a schema: fixture-owned paths, the owner levels and their eligibility, the declared dialect, schema definition reading and the schema tree on disk. */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { isExcludedTestPath, TAXONOMY_REL_PATH } from "../../🗂️taxonomy/🟦️.ts";
-import { SKIP_DIR_NAMES } from "../../🧭️case-discovery/🟦️.ts";
-import { matchesTaxonomyPathPattern, schemaJsonDialect, type SchemaScopeEligibility, schemaScopeOwnerLevels, submodulePaths } from "../🟦️.ts";
+import { readFileSync } from "node:fs";
+import { TAXONOMY_REL_PATH, testTaxonomy } from "../../🗂️taxonomy/🟦️.ts";
+import { isSchemaDefinitionDocument, parseSchemaDefinitionText, walkSchemaTree } from "../../../📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
+import { matchesTaxonomyPathPattern, schemaJsonDialect, type SchemaScopeEligibility, schemaScopeOwnerLevels } from "../🟦️.ts";
 
 //#region 🧬️SchemaContracts
 /**
@@ -27,9 +26,7 @@ export function schemaScopeEligibility(repoRoot: string, ownerPath: string): Sch
 
 /** 🧬️ Whether a parsed JSON document DEFINES a schema, as opposed to being validated by one. */
 export function isJsonSchemaDefinition(document: unknown): boolean {
-  if (document === null || typeof document !== "object" || Array.isArray(document)) return false;
-  const dialect = (document as { $schema?: unknown }).$schema;
-  return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
+  return isSchemaDefinitionDocument(document);
 }
 
 /** 📑️ Whether a schema definition declares the one dialect the taxonomy names. */
@@ -59,18 +56,11 @@ export function readSchemaDefinition(abs: string): unknown | undefined {
   } catch {
     return undefined;
   }
-  if (!text.includes("json-schema.org")) return undefined;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    return undefined;
-  }
-  return isJsonSchemaDefinition(parsed) ? parsed : undefined;
+  return parseSchemaDefinitionText(text);
 }
 
 /**
- * 🗂️ Every file under a subtree, repository-relative, skipping the taxonomy's exclusions.
+ * 🗂️ Every file under a subtree, repository-relative, skipping the taxonomy's exclusions: the generator's own walk, `walkSchemaTree`, so the tree this layer measures is the tree the catalog is generated from.
  *
  * Three kinds of directory are never a schema authority and are cut at the directory, not per file:
  * dot-directories (tooling state — `.nx/cache` alone carries six generated copies of one manifest
@@ -79,27 +69,6 @@ export function readSchemaDefinition(abs: string): unknown | undefined {
  * double a law that walks the artifact tree — ledger row 153), and declared git submodules (row 133).
  */
 export function schemaTreeFiles(repoRoot: string, under = ""): string[] {
-  const submodules = submodulePaths(repoRoot);
-  const files: string[] = [];
-  const walk = (absDir: string, relDir: string): void => {
-    let entries: import("node:fs").Dirent[];
-    try {
-      entries = readdirSync(absDir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      if (entry.isSymbolicLink()) continue;
-      const rel = relDir.length === 0 ? entry.name : `${relDir}/${entry.name}`;
-      if (entry.isDirectory()) {
-        if (entry.name.startsWith(".") || SKIP_DIR_NAMES.has(entry.name) || submodules.has(rel.normalize("NFC")) || isExcludedTestPath(repoRoot, rel)) continue;
-        walk(join(absDir, entry.name), rel);
-        continue;
-      }
-      if (entry.isFile()) files.push(rel);
-    }
-  };
-  walk(join(repoRoot, under), under);
-  return files.sort();
+  return [...walkSchemaTree(repoRoot, testTaxonomy(repoRoot), under).files].sort();
 }
 //#endregion 🧬️SchemaContracts

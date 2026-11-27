@@ -8,7 +8,7 @@ fn test_bundle() -> Plugin<DemonstratorApps> {
 fn bundle_keeps_its_plugin_identity() {
     let manifest = test_bundle().manifest;
     assert_eq!(manifest.plugin_id, PLUGIN_ID);
-    assert_eq!(manifest.label, PLUGIN_LABEL);
+    assert_eq!(manifest.label, semio_plugin::LocalizedLabel::native(PLUGIN_LABEL[0], PLUGIN_LABEL[1]));
     assert_eq!(manifest.version, PLUGIN_VERSION);
     assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["process", "sourcing"]);
 }

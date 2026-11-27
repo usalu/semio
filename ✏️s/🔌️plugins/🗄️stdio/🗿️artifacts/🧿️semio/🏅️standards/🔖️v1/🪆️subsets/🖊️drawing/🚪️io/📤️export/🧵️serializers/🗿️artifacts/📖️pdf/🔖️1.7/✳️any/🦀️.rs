@@ -11,6 +11,10 @@
 //!
 //! @see https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_os_kernel as store;
+
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_drawing::schema::geometry::{arc_to_cubics, semio_transform_affine};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
@@ -188,6 +192,46 @@ impl ArtifactSerializer for SemioDrawingToPdf {
     }
 }
 //#endregion 🔖️Serializer
+
+//#region 🔌️Conversion
+/// 🧾️ This leaf's composer row, built once.
+pub fn entries() -> &'static [semio_plugin::io::ComposerEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_plugin::serializer_entry_of::<SemioDrawingToPdf>()]).as_slice()
+}
+
+/// 🔌️ Registers and declares the `drawing` → pdf composer row; a composition root that offers pdf names it next to the
+/// subset's own export conversion.
+pub const CONVERSION: semio_s_artifact_stdio_semio_base::SemioConversion = semio_s_artifact_stdio_semio_base::SemioConversion { declare, register };
+
+fn declare(builder: semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady>) -> semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady> {
+    static COMPOSERS: std::sync::OnceLock<Vec<semio_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
+    builder.composers(semio_s_artifact_stdio_semio_base::semio_written(entries(), &COMPOSERS))
+}
+
+fn register() {
+    semio_plugin::io::register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
+}
+//#endregion 🔌️Conversion
+
+//#region 📄️Encoding
+/// 📄️ The file bytes of `drawing` as a PDF declaring `version` (empty: 1.7) — the one pdf writer every domain artifact
+/// that projects into a drawing calls.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_drawing_pdf(drawing: &SemioDrawingSnapshot, version: &str) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, WriteOptions};
+    use semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::modules::lower::{lower_document, LowerOptions};
+    let version = if version.is_empty() { "1.7" } else { version };
+    if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
+        return Err(semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::io::error::PdfEngineError::Malformed("declared PDF version is not numeric".into()).to_string());
+    }
+    let mut pdf = drawing_to_pdf(drawing)?;
+    pdf.declared_version = version.into();
+    let document = lower_document(&pdf, 1, LowerOptions::default()).map_err(|error| error.to_string())?;
+    let trailer = DocumentTrailer { root: document.root, info: document.info, id: pdf.document_id, extra: Vec::new() };
+    Ok(serialize_document(version, &document.objects, &trailer, &WriteOptions::default()))
+}
+//#endregion 📄️Encoding
 
 //#region 🔖️Tests
 #[cfg(test)]

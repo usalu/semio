@@ -10761,12 +10761,7 @@
     "actions": [
      {
       "action": "cancel",
-      "id": "p262",
-      "reason": "danger"
-     },
-     {
-      "action": "cancel",
-      "id": "p263",
+      "id": "p261",
       "reason": "danger"
      }
     ]
@@ -11139,6 +11134,492 @@
      }
     ]
    }
+  },
+  {
+   "name": "victim: a severe danger with every pausable test binary already suspended past the pause deadline cancels the large one, never the small young cargo step",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p201",
+     "pid": 201,
+     "kind": "cargo",
+     "rank": 65,
+     "elapsedSeconds": 20,
+     "megabytes": 216,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "nonresidentMegabytes": 0
+    },
+    {
+     "id": "p202",
+     "pid": 202,
+     "kind": "test-binary",
+     "rank": 55,
+     "elapsedSeconds": 900,
+     "megabytes": 1800,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192
+    },
+    {
+     "id": "p203",
+     "pid": 203,
+     "kind": "test-binary",
+     "rank": 55,
+     "elapsedSeconds": 600,
+     "megabytes": 1500,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p202",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "last resort: at a severe danger the stage that owns the tree is cancelled after the worker within its grant, not before it",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p401",
+     "pid": 401,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 900,
+     "megabytes": 3665,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 6144,
+     "capCritical": true,
+     "grantMegabytes": 3829
+    },
+    {
+     "id": "p402",
+     "pid": 402,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 200,
+     "megabytes": 71,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "lastResort": true
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p401",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "shelter: at a severe danger the subject above its grant is cancelled before a larger one that stays within the grant its owner holds",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p301",
+     "pid": 301,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 900,
+     "megabytes": 2700,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 6144,
+     "capCritical": true,
+     "grantMegabytes": 3000
+    },
+    {
+     "id": "p302",
+     "pid": 302,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 100,
+     "megabytes": 1800,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 6144,
+     "capCritical": true,
+     "grantMegabytes": 1500
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p302",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "shelter: an overdue suspended subject without a claim is cancelled while the host is tight",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p311",
+     "pid": 311,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 900,
+     "megabytes": 2000,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192
+    }
+   ],
+   "previous": {
+    "level": "guard",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p311",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "shelter: the same overdue subject within the grant its owner holds is not cancelled while the host is only tight",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p311",
+     "pid": 311,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 900,
+     "megabytes": 2000,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192,
+     "grantMegabytes": 3000
+    }
+   ],
+   "previous": {
+    "level": "guard",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "trigger: acute swap-out with a sustained warning names the swapping, not the memory pressure",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 900,
+    "compressedMegabytes": 6000,
+    "pressure": "warn",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p321",
+     "pid": 321,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 900,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "swapping",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p321",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "shelter: a sheltered worker paused past the deadline is not cancelled while a subject without a grant still waits for its own deadline",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p331",
+     "pid": 331,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 900,
+     "megabytes": 3249,
+     "suspended": true,
+     "suspendedSeconds": 12,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 6144,
+     "capCritical": true,
+     "grantMegabytes": 5054
+    },
+    {
+     "id": "p332",
+     "pid": 332,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 100,
+     "megabytes": 1200,
+     "suspended": true,
+     "suspendedSeconds": 3,
+     "canSuspend": true,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 8192
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "shelter: a worker its owner holds stopped is never cancelled as a direct danger victim, whatever the other subjects are",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p341",
+     "pid": 341,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 826,
+     "megabytes": 3418,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "nonresidentMegabytes": 0,
+     "capMegabytes": 6144,
+     "capCritical": true,
+     "grantMegabytes": 3770,
+     "held": true
+    }
+   ],
+   "previous": {
+    "level": "danger",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
   }
  ],
  "classifications": [
@@ -11401,7 +11882,8 @@
      "start": "Tue Nov 24 02:42:00 2026",
      "owner": "bun /work/semio/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=1 /tmp/x.exit /work/semio/repo run",
      "scope": "tree",
-     "signal": "SIGTERM"
+     "signal": "SIGTERM",
+     "lastResort": true
     }
    ]
   },
@@ -11961,7 +12443,8 @@
      "start": "Tue Nov 24 02:34:00 2026",
      "owner": "bun /work/semio/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=9 /tmp/x",
      "scope": "tree",
-     "signal": "SIGTERM"
+     "signal": "SIGTERM",
+     "lastResort": true
     }
    ]
   },

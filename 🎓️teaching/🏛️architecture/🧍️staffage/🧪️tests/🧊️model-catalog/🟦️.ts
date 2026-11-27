@@ -11,7 +11,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { VIEWS, type View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { type BatchManifest, exportModels, plannedNames } from "../../🔨️modules/📤️export/📦️batch/🟦️.ts";
 import { exportIssues, modelFormats, volumeIssues } from "../../🔨️modules/🗂️catalog/🧊️volume/🟦️.ts";
@@ -34,6 +34,8 @@ const entries = await assetPathsFromFiles();
 const selected = entries.filter((e) => ONLY === undefined || ONLY.includes(e.folder));
 
 describe("🧊️ every asset of the catalog has a valid 3D model set at every authored scale", () => {
+  afterEach(() => (globalThis as { Bun?: { gc(force: boolean): void } }).Bun?.gc(true));
+
   it("finds every asset of the catalog, each once", () => {
     expect(new Set(entries.map((e) => e.folder)).size).toBe(entries.length);
     expect(entries.length).toBeGreaterThanOrEqual(152);

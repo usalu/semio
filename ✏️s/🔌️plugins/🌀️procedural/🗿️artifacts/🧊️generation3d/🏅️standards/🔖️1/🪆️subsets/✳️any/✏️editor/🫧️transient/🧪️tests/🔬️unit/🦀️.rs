@@ -12,7 +12,7 @@ fn preview_lifecycle_matches_language_neutral_third_party_oracle() {
         let mutation = Generation3dTransientMutation::from(SetGenerationPreview { preview_text });
         typed = protocol::apply_diff_cold(mutation.diff(&typed).diff(), &typed).expect("typed mutation applies");
         oracle.insert("generationPreviewText".into(), step["previewText"].clone());
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
         assert_eq!(Generation3dTransientMutation::parse_op(&mutation.print_op()).expect("text round trip"), mutation);
         assert_eq!(Generation3dTransientMutation::decode_op(&mutation.encode_op().expect("encode")).expect("binary round trip"), mutation);
     }

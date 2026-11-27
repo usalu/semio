@@ -63,7 +63,7 @@ fn operations_round_trip_text_and_binary() {
     let operations = ops();
     assert!(!operations.is_empty());
     for operation in &operations {
-        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(operation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(operation);
         let line = operation.print_op();
         assert_eq!(&Puzzle3dMutation::parse_op(&line).expect("parse_op"), operation);
         let bytes = encode_op(operation).expect("encode");

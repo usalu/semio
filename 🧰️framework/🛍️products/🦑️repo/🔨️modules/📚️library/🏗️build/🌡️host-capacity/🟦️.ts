@@ -1,5 +1,5 @@
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
-import {hostRunAfterNeedV1,adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {hostRunAfterNeedV1,declareHostCapacityNeedV1,hostCapacityErrorV1,readLiveHostGrantV1,adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readdirSync,readFileSync} from "node:fs";
@@ -19,6 +19,8 @@ import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1,refuseCapacityV1} 
 import {grantJobLimitV1,learnedRunAfterOutcomeV1} from "../🧱️job-limits/🎫️admission/🟦️.ts";
 import type {JobLimitPolicyV1,JobOutcomeV1} from "../🧱️job-limits/🟦️.ts";
 import {PHASELESS_COMMANDS_V1,PLANNED_COMMANDS_V1,PLANNER_PHASE_CLASSES_V1} from "./🎯️planned-commands/🟦️.ts";
+import cargoLaunch from "../../🏃️process/🦀️cargo/🚪️launcher/🧬️schema/🔣️.json" with {type:"json"};
+const CARGO_LOCK_SUBCOMMANDS_V1:readonly string[]=cargoLaunch.definitions.Configuration.const.subcommands.lock;
 
 export {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "./🎛️control/🟦️.ts";
 
@@ -60,13 +62,21 @@ export function buildCapacityLineageV1(args:readonly string[],kinds:readonly Hos
  return hostEstimateLineageV1(command,...(command==="cargo"?[]:[clean(kind)]),...specific.map(clean));
 }
 
+/** 🪶️ Whether a `cargo` invocation only produces or refreshes a lockfile (`update`, `generate-lockfile`): it resolves the manifests and compiles nothing, holds no build directory and takes a few dozen megabytes, so it asks the machine-wide gate for nothing and never queues behind compiles that fill the host; the subcommand is the first word after `--`, read by the same rule as the capacity lineage.
+ * @see ./🧪️tests/🪶️light-cargo/🟦️.ts */
+export function lightCargoResolutionV1(args:readonly string[]):boolean{
+ if(args[0]!=="cargo")return false;
+ const boundary=args.indexOf("--");
+ return boundary>=0&&CARGO_LOCK_SUBCOMMANDS_V1.includes(args.slice(boundary+1).find(argument=>!argument.startsWith("-"))??"");
+}
+
 /** 🎯️ Reads which operation, how many jobs and which kinds an already tool-stripped argument list asks for; answers undefined for light commands. */
 export function buildCapacityAskV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1=BUILD_HOST_CAPACITY_POLICY_V1):BuildCapacityAskV1|undefined{
  const command=args[0]==="preflight"||args[0]==="tools"&&(args[1]==="exec"||args[1]==="setup")?"command":args[0];
  if(command===undefined||!policy.operations.some(row=>row.name===command))return undefined;
  const head=args.slice(0,args.indexOf("--")<0?undefined:args.indexOf("--"));
  if(head.some(argument=>argument==="--help"||argument==="-h"))return undefined;
- if(sealedCurrentReadV1(head,environment))return undefined;
+ if(sealedCurrentReadV1(head,environment)||lightCargoResolutionV1(args))return undefined;
  const requested=command==="cargo"?option(head,"parallelism"):option(head,"parallel"),fromEnvironment=command==="cargo"?undefined:environment.SEMIO_BUILD_PARALLEL,parsed=Number(requested??fromEnvironment);
  const preferred=Number.isSafeInteger(parsed)&&parsed>0?parsed:command==="cargo"?availableParallelism():planWorkersV1(readWorkerPolicyV1((buildPolicy as unknown as {workers:unknown}).workers),currentWorkerHostV1()).localJobs;
  const targets=command==="cargo"?[]:requestedTargets(head),dry=command!=="cargo"&&head.some(argument=>argument==="--dry-run"||argument==="--graph"||argument.startsWith("--graph=")),kinds=dry?[]:requestedKinds(targets);
@@ -191,12 +201,37 @@ export function graphPlanObserverV1(worker:()=>number|undefined,tree:(pid:number
  return async pid=>pid===worker()?tree(pid):0;
 }
 
-/** 🧮️ Reserves the memory one graph plan will hold (the limit of its slice worker, which is never below the peak earlier plans of the host needed) in the machine-wide gate before the worker starts, and holds it until the worker is gone: builds that ask afterwards fit beside it or queue behind it in the fair queue instead of racing the worker for memory and cancelling it at its limit. The wait is never given up on a timer and ends with the signal; the held grant observes the worker tree that `attach` names, so the gate sees what the plan really holds; `release` is idempotent. A request with `minimumMegabytes` is admitted with what the machine has free when that is at least the minimum (the answer carries the granted `megabytes`), refused at once when the minimum can never fit and refused when nothing of ours runs and the minimum is not free after the override time; a request without a minimum that waits with nothing of ours able to free more is admitted with what the host has once it has waited the bypass time (see `unsatisfiableHostRequestV1`). A gate that is off reserves nothing. */
-export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{megabytes:number;minimumMegabytes?:number;environment?:NodeJS.ProcessEnv;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;signal?:AbortSignal}>):Promise<Readonly<{megabytes:number;attach:(pid:number)=>void;release:()=>void}>>{
- const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1,environment:NodeJS.ProcessEnv={...(input.environment??process.env)},none=Object.freeze({megabytes:Math.max(0,Math.ceil(input.megabytes)),attach:()=>undefined,release:()=>undefined});
+/** 🧮️ What a graph plan holds: `megabytes` reserved, `attach` names the worker whose tree the grant observes, `grow` books more memory into the very same grant (one process, one grant: never a second one beside it; answers the megabytes added, `0` when the grant ended), `release` ends it. */
+export type GraphPlanReservationV1=Readonly<{megabytes:number;attach:(pid:number)=>void;grow:(ask:Readonly<{megabytes:number;minimumMegabytes?:number;signal?:AbortSignal;queuedSinceMs?:number}>)=>Promise<number>;release:()=>void}>;
+
+const nestedBookedV1=new Map<string,number>();
+
+/** 🪆️ Charges a graph plan to the grant of the command it was asked for instead of queueing it at the machine behind that very grant: the part of the parent's reservation that no other nested plan holds is lent to the plan (all of what it asks, or less down to its minimum), the plan worker joins the tree the parent's heartbeat counts, and the booking ends with `release`. What the parent cannot carry is never waited for: the need is declared to the parent (its class learns it) and the plan is refused at once with `nestedExceedsGrant`.
+ * @see ./🧪️tests/🪆️nested/🟦️.ts */
+function reserveWithinParentGrantV1(parent:Readonly<{id:string;reservedMegabytes:number;label?:string;operation:string}>,input:Readonly<{megabytes:number;minimumMegabytes?:number}>,environment:NodeJS.ProcessEnv):Promise<GraphPlanReservationV1>{
+ const asked=Math.max(0,Math.ceil(input.megabytes)),minimum=Math.min(asked,Math.max(0,Math.ceil(input.minimumMegabytes??input.megabytes))),booked=nestedBookedV1.get(parent.id)??0,free=Math.max(0,parent.reservedMegabytes-booked);
+ if(free<minimum){
+  declareHostCapacityNeedV1({...environment,SEMIO_HOST_CAPACITY_GRANT:parent.id},booked+minimum);
+  return Promise.reject(hostCapacityErrorV1("nestedExceedsGrant",{operation:"graph-plan",minimum,holders:parent.label??parent.operation,granted:parent.reservedMegabytes,free,needed:booked+minimum},environment));
+ }
+ const megabytes=Math.min(asked,free);nestedBookedV1.set(parent.id,booked+megabytes);
+ let released=false;
+ let taken=megabytes;
+ return Promise.resolve(Object.freeze({megabytes,attach:(pid:number)=>{attachHostCapacityProcessV1({...environment,SEMIO_HOST_CAPACITY_GRANT:parent.id},pid);},grow:(ask:Readonly<{megabytes:number;minimumMegabytes?:number}>)=>{
+  const more=Math.max(0,Math.ceil(ask.megabytes)),least=Math.min(more,Math.max(0,Math.ceil(ask.minimumMegabytes??more))),room=Math.max(0,parent.reservedMegabytes-(nestedBookedV1.get(parent.id)??0));
+  if(released||room<least)return Promise.resolve(0);
+  const added=Math.min(more,room);nestedBookedV1.set(parent.id,(nestedBookedV1.get(parent.id)??0)+added);taken+=added;return Promise.resolve(added);
+ },release:()=>{if(released)return;released=true;const left=(nestedBookedV1.get(parent.id)??0)-taken;if(left>0)nestedBookedV1.set(parent.id,left);else nestedBookedV1.delete(parent.id);}}));
+}
+
+/** 🧮️ Reserves the memory one graph plan will hold (the limit of its slice worker, which is never below the peak earlier plans of the host needed) in the machine-wide gate before the worker starts, and holds it until the worker is gone: builds that ask afterwards fit beside it or queue behind it in the fair queue instead of racing the worker for memory and cancelling it at its limit. The wait is never given up on a timer and ends with the signal; the held grant observes the worker tree that `attach` names, so the gate sees what the plan really holds; `release` is idempotent. A request with `minimumMegabytes` is admitted with what the machine has free when that is at least the minimum (the answer carries the granted `megabytes`), refused at once when the minimum can never fit and refused when nothing of ours runs and the minimum is not free after the override time; a request without a minimum that waits with nothing of ours able to free more is admitted with what the host has once it has waited the bypass time (see `unsatisfiableHostRequestV1`). A gate that is off reserves nothing. A plan asked for by a command that runs under a live grant (`parentGrant`) is charged to that grant (`reserveWithinParentGrantV1`) and never queues behind it; a quiet parent holds too little to carry it, so the plan queues at the gate, where the waiting request knows its ancestor and is refused when it can only wait for itself (`hostAncestorDeadlockV1`). */
+export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{parentGrant?:string;megabytes:number;minimumMegabytes?:number;floorMegabytes?:number;queuedSinceMs?:number;expectedMilliseconds?:number;environment?:NodeJS.ProcessEnv;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;signal?:AbortSignal}>):Promise<GraphPlanReservationV1>{
+ const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1,environment:NodeJS.ProcessEnv={...(input.environment??process.env)},none=Object.freeze({megabytes:Math.max(0,Math.ceil(input.megabytes)),attach:()=>undefined,grow:(ask:Readonly<{megabytes:number}>)=>Promise.resolve(Math.max(0,Math.ceil(ask.megabytes))),release:()=>undefined});
  delete environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_PLAN"];delete environment["SEMIO_HOST_CAPACITY_HANDOVER"];
  if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off")return Promise.resolve(none);
- const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"graph-plan",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(0,Math.ceil(input.megabytes)),perJobMegabytes:0,cpuPerJob:1,retainReservation:true,...input.minimumMegabytes===undefined?{}:{minimumMegabytes:Math.min(Math.max(0,Math.ceil(input.minimumMegabytes)),Math.max(0,Math.ceil(input.megabytes)))},label:"graph-plan"}),session=currentAgentSessionV1({environment}),controller=new AbortController();
+ const parent=input.parentGrant===undefined?undefined:readLiveHostGrantV1(environment,input.parentGrant,policy);
+ if(parent!==undefined&&parent.quiet!==true)return reserveWithinParentGrantV1(parent,input,environment);
+ const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"graph-plan",priority:"interactive",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(0,Math.ceil(input.megabytes)),perJobMegabytes:0,cpuPerJob:1,retainReservation:true,...input.minimumMegabytes===undefined?{}:{minimumMegabytes:Math.min(Math.max(0,Math.ceil(input.minimumMegabytes)),Math.max(0,Math.ceil(input.megabytes)))},...input.floorMegabytes===undefined||input.minimumMegabytes===undefined?{}:{floorMegabytes:Math.min(Math.max(0,Math.ceil(input.floorMegabytes)),Math.max(0,Math.ceil(input.minimumMegabytes)))},...input.queuedSinceMs===undefined?{}:{queuedSinceMs:Math.floor(input.queuedSinceMs)},...input.expectedMilliseconds===undefined?{}:{expectedMilliseconds:Math.floor(input.expectedMilliseconds)},label:"graph-plan"}),session=currentAgentSessionV1({environment}),controller=new AbortController();
  const control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
  let worker:number|undefined,release=()=>{};const held=new Promise<void>(done=>{release=done;});
  const cancelWait=()=>controller.abort(input.signal?.reason??refuseCapacityV1("cancelled","graph-plan-wait-cancelled"));
@@ -205,7 +240,7 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{m
  return new Promise((accept,reject)=>{
   withHostCapacityV1({sample:previous=>readHostSampleV1(policy,wholeHostProbeV1(currentHostProbeV1()),previous,input.now,environment),...input,observe:graphPlanObserverV1(()=>worker,input.observe??observeTreeMegabytesV1),directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
    controller.signal.throwIfAborted();leaveWait();
-   accept(Object.freeze({megabytes:handle.reservedMegabytes,attach:(pid:number)=>{worker=pid;attachHostCapacityProcessV1({...environment,SEMIO_HOST_CAPACITY_GRANT:handle.id},pid);},release}));
+   accept(Object.freeze({megabytes:handle.reservedMegabytes,attach:(pid:number)=>{worker=pid;attachHostCapacityProcessV1({...environment,SEMIO_HOST_CAPACITY_GRANT:handle.id},pid);},grow:ask=>handle.grow===undefined?Promise.resolve(0):handle.grow(ask),release}));
    await held;
   }).then(()=>undefined,error=>{leaveWait();reject(error);});
  });
@@ -226,7 +261,8 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  if(!base)return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  if(stripped[0]!=="preflight"&&!nativeImageRecovery){
   const disk=await import("./💽️disk/🟦️.ts");
-  await disk.admitBuildDiskV1(environment,{write:ports.write,signal:ports.control?.signal,expectedBytes:disk.expectedDiskGrowthBytesV1(environment,requested.operation),...ports.disk});
+  const relief=await disk.admitBuildDiskV1(environment,{write:ports.write,signal:ports.control?.signal,expectedBytes:disk.expectedDiskGrowthBytesV1(environment,requested.operation),...ports.disk}),inner=body;
+  body=async granted=>{try{return await inner(granted);}finally{await relief();}};
  }
  const fleetPolicy=ask.operation==="cargo"?await import("../🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts"):undefined;
  const mode=fleetPolicy?.extractOffloadFlagV1(stripped).mode,fleetEnvironment=mode===undefined?environment:{...environment,SEMIO_OFFLOAD:mode};

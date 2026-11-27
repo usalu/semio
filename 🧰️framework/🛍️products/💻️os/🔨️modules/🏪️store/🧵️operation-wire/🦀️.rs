@@ -19,6 +19,7 @@ mod replacement;
 pub use replacement::OriginalReplacementReceiving;
 pub use semio_os_store_one_item_publication::artifact_persisted_binary_operation;
 pub use semio_os_store_one_item_publication::artifact_persisted_encoded_binary_operation;
+pub use semio_os_store_one_item_publication::artifact_persisted_pack_value_operation;
 pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOperationEncoded, encoded_operation_source, ArtifactOriginalOperationReceiving, ArtifactPersistedOperation, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.

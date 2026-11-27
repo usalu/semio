@@ -3,6 +3,13 @@
 use super::*;
 
 //#region 🔖️Ledger
+/// 🧯️ Consecutive turns without spend after which an owned replay or publication refuses as underfunded.
+pub const TIME_TRAVEL_UNFUNDED_TURN_LIMIT:u32=256;
+/// 🧯️ Counts consecutive owned turns that spent nothing, so a stock that cannot fund the next unit refuses typed instead of stalling; answers whether the limit is reached.
+pub fn observe_turn_funding(unfunded_turns:&mut u32,progressed:bool)->bool{*unfunded_turns=if progressed{0}else{unfunded_turns.saturating_add(1)};*unfunded_turns>=TIME_TRAVEL_UNFUNDED_TURN_LIMIT}
+/// 🧾️ The refusal an exhausted stock answers with.
+pub fn time_travel_underfunded()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"the job's retained stock cannot fund the next history unit")}
+
 /// 🕰️ The ephemeral local-only history edit of one document instance (design §4 and §7): the pure session, the draft
 /// editor, and the typed owners of the store the session edits — the document's own, or one composed member's (§12):
 /// the preview the renderer reads while editing (state before the target with the draft), the running Report replay,
@@ -14,6 +21,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
     pub command_retirements: semio_framework_value_retirement_queue::RetirementQueue,
     pub finalize_outcome:Option<TimeTravelCommit>,pub authoring_finalization:bool,
+    pub unfunded_turns:u32,
     pub command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     pub(super) session_retired: bool,
@@ -80,6 +88,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
             discard_cursor: None,
             command_retirements: Default::default(),
             finalize_outcome:None,authoring_finalization:false,
+            unfunded_turns:0,
             command_receipt: None,
             session_retirement: None,
             session_retired: false,
@@ -578,3 +587,17 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 }
 //#endregion 🔖️Ledger
+
+#[cfg(test)]
+mod unfunded_turn_laws{
+    use super::*;
+    /// ⚖️ LAW: an exhausted stock refuses typed once the unfunded run reaches the limit, and any spend restarts the run.
+    #[test]
+    fn an_unfunded_run_refuses_at_the_limit_and_spend_restarts_it(){
+        let mut turns=0u32;
+        for _ in 0..TIME_TRAVEL_UNFUNDED_TURN_LIMIT-1{assert!(!observe_turn_funding(&mut turns,false));}
+        assert!(!observe_turn_funding(&mut turns,true));
+        for _ in 0..TIME_TRAVEL_UNFUNDED_TURN_LIMIT-1{assert!(!observe_turn_funding(&mut turns,false));}
+        assert!(observe_turn_funding(&mut turns,false));
+    }
+}

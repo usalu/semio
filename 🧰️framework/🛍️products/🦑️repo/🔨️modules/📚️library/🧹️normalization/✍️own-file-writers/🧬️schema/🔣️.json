@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Files With Their Own Writer V1",
+  "description": "Declares the files whose bytes a taxonomy reference edit never publishes itself: the engine computes the new text and the named writer validates, locks and publishes it.",
+  "type": "object",
+  "required": ["version", "writers"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "writers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "fileName", "authority"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "fileName": { "type": "string", "minLength": 1 },
+          "authority": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

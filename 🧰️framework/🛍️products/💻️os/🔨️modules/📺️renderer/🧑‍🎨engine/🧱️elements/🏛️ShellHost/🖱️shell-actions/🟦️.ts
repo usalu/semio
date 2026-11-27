@@ -86,6 +86,8 @@ import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/
 import type { ShellCoreAfterShellUriAndDocuments } from "../🗄️shell-uri-documents/🟦️.ts";
 import type { RetainedBrowserActorUiV1 } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 import { runShellInput } from "./🧭️input-funnel/🟦️.ts";
+import { liveChromeTargetV1 } from "./🧭️input-funnel/🎯️dispatch-target-and-view-state/🟦️.ts";
+import { parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
 export type ShellCoreAfterShellActions = ShellCoreAfterShellUriAndDocuments & ReturnType<typeof useShellActions>;
 
@@ -206,13 +208,17 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
    * other action (see `NOTE_SHELL_COMMAND_ACTION_ID`) so it lands on `targetSession.instanceId` via the
    * standard `handleAction` call, just tagged with an id the plugin intercepts before the app sees it.
    * Answers the ledger outcome, so a caller that retires the target instance right after (closing a spawned
-   * program's last window) can wait for the note to land first. No-ops when there's no active app session. */
+   * program's last window) can wait for the note to land first. The target is the session live at CALL time, never the one a
+ * long-lived window callback captured: a note for a sealed or replaced instance is dropped, not dispatched. No-ops when there's no active app session. */
   const noteShellCommand = useCallback(
     (commandId: string, label: ShellLabelTextV1, detail?: Record<string, unknown>): Promise<InputOutcomeV1 | null> => {
-      if (!session) return Promise.resolve(null);
-      return onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
+      const current = core.sessionRef.current;
+      if (current === null) return Promise.resolve(null);
+      const action = buildNoteShellCommandAction(current.app.controllerId, commandId, label, detail);
+      const live = liveChromeTargetV1({ hostMode: core.hostMode, panel: parsePanelState(current.viewState), loadedPlugins: core.loadedPluginsRef.current, activeWindowIdRef: core.activeWindowIdRef, spawnedIdsRef: core.spawnedIdsRef, contributorInstancesRef: core.contributorInstancesRef, session: current, action, sealed: core.sealedInstancesRef.current });
+      return live === null ? Promise.resolve(null) : core.onActionRef.current(action);
     },
-    [session, onAction],
+    [core],
   );
 
   const onActionRef = useRef(onAction);

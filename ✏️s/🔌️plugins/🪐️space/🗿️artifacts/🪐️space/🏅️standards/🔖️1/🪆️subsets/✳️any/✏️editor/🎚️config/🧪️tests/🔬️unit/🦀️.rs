@@ -25,7 +25,7 @@ async fn config_dsl_round_trips() {
         indexed_artifacts: Vec::new(),
         presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }],
     };
-    store::os_store::test_support::assert_dsl_round_trip(&config);
+    semio_os_store_test_support::assert_dsl_round_trip(&config);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -69,9 +69,9 @@ async fn artifact_presence_sets_and_clears_at_the_sorted_middle_slot() {
 
 #[semio_framework_async_macros::async_test]
 async fn config_mutation_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection::default() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::SetArtifactPresence(ArtifactPresenceSetting { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id: "artifact-1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection::default() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::SetArtifactPresence(ArtifactPresenceSetting { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }));
+    semio_os_store_test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id: "artifact-1".into() }));
 }
 
 /// 🧾️ The payload-record variants keep the former named variants' externally tagged wire byte for byte, checked against an

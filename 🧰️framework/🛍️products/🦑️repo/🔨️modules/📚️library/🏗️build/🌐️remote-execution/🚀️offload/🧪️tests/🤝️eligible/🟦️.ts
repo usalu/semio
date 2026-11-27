@@ -12,7 +12,7 @@ const worker=(origin:string,extra:Readonly<Record<string,string>>,running=0,conc
 const linker=(id:string)=>({"semio-linker":id,"semio-target":"aarch64-apple-darwin"});
 
 test("capability is the scheduler's own rule over the advertised properties: a worker without the required linker, a draining one and this machine itself are no capacity, and the free slots are counted over the capable ones only",()=>{
- const fleet={own:"g1-server",workers:[worker("g1-m01",linker("aaaa")),worker("g1-m02",linker("bbbb"),1,4),worker("g1-m03",{"semio-target":"aarch64-apple-darwin"}),worker("g1-m04",linker("aaaa"),0,4,true),worker("g1-server",linker("aaaa"))]};
+ const fleet={own:"g1-server",workers:[worker("x1-m01",linker("aaaa")),worker("g1-m02",linker("bbbb"),1,4),worker("g1-m03",{"semio-target":"aarch64-apple-darwin"}),worker("g1-m04",linker("aaaa"),0,4,true),worker("g1-server",linker("aaaa"))]};
  expect(eligibleFleetWorkersV1(fleet,[{name:"semio-linker",value:"aaaa"}])).toEqual({eligible:1,slots:4,total:4,unmet:[]});
  expect(eligibleFleetWorkersV1(fleet,[{name:"semio-linker",value:"bbbb"}])).toEqual({eligible:1,slots:3,total:4,unmet:[]});
  expect(eligibleFleetWorkersV1(fleet,[{name:"semio-linker",value:"cccc"},{name:"semio-target",value:"aarch64-apple-darwin"}])).toEqual({eligible:0,slots:0,total:4,unmet:["semio-linker=cccc"]});
@@ -26,7 +26,7 @@ test("a unit that no worker can take is declined at once with its own reason and
  const ports=(workers:readonly FleetWorkerV1[])=>({content,endpoint:"grpc://127.0.0.1:1",token:"t",instance:"main",workers:{own:"me",workers}});
  const run=(workers:readonly FleetWorkerV1[])=>offloadRustcUnitV1({args:checkout.arguments("c",["a"]),environment,cwd:checkout.root,root,crate:"c",key:"a".repeat(64),compiler:["rustc"],ports:ports(workers)});
  try{
-  const foreign=await run([worker("g1-m01",{"semio-toolchain":"0".repeat(16),"semio-target":"aarch64-apple-darwin"})]),started=Date.now();
+  const foreign=await run([worker("x1-m01",{"semio-toolchain":"0".repeat(16),"semio-target":"aarch64-apple-darwin"})]),started=Date.now();
   expect(foreign).toMatchObject({kind:"local",reason:"no-compatible-worker"});expect((foreign as {detail:string}).detail).toContain("semio-toolchain=");
   expect(touched).toEqual([]);expect(Date.now()-started).toBeLessThan(2000);
   expect(await run([])).toMatchObject({kind:"local",reason:"no-compatible-worker"});expect(touched).toEqual([]);
@@ -49,7 +49,7 @@ test("explicit linked slots require a matching sized scheduler response and dist
    const compatible=Number(target===link.target&&linker===link.linker);
    return Response.json({compatible,slots:compatible*linkedSlots,link:{target,linker}});
   }
-  if(pathname==="/status")return Response.json({workers:[{origin:"g1-m01",properties:[{name:"semio-linker",value:link.linker}],concurrency:2,running:1},{origin:"g1-m02",properties:[{name:"semio-linker",value:"1111111111111111"}],concurrency:8,running:0}]});
+  if(pathname==="/status")return Response.json({workers:[{origin:"x1-m01",properties:[{name:"semio-linker",value:link.linker}],concurrency:2,running:1},{origin:"g1-m02",properties:[{name:"semio-linker",value:"1111111111111111"}],concurrency:8,running:0}]});
   return new Response("no",{status:404});
  }});
  try{

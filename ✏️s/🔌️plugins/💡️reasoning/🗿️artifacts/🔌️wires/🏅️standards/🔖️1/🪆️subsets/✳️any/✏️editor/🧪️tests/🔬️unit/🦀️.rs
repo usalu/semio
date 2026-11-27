@@ -118,7 +118,7 @@ use semio_plugin::HierarchyProvider;
     pub fn retire_envelope(envelope: store::os_store::store_schema::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<WiresSnapshot, WiresMutation>(), maximum_depth: 4, ..Default::default() };
         let (mut retirement, _) = store::os_store::snapshot_read::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<WiresMutation>::default()), grant).map_err(|(error, ..)| error).expect("seed envelope retirement admission");
-        store::test_support::drive_retirement(retirement.as_mut()).expect("seed envelope retirement");
+        semio_os_store_test_support::drive_retirement(retirement.as_mut()).expect("seed envelope retirement");
         assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
     
@@ -243,7 +243,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -290,7 +290,7 @@ async fn commands_keep_their_pre_migration_wire_bytes() {
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
         assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 

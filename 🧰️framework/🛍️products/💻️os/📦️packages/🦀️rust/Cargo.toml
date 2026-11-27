@@ -93,7 +93,7 @@ semio-os-store-member-open = { path = "../../🔨️modules/🏪️store/🧩️
 semio-os-store-member-open-store = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust" }
 semio-os-store-space = { path = "../../🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust" }
 semio-os-store-space-member = { path = "../../🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust" }
-semio-os-store-test-support = { path = "../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
+semio-os-store-schema-exports = { path = "../../🔨️modules/🏪️store/🗂️schema-exports/📦️packages/🦀️rust" }
 semio-os-io = { path = "../../🔨️modules/🚪️io/📦️packages/🦀️rust" }
 semio-os-store-codec-registry = { path = "../../🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust" }
 semio-os-store-space-history = { path = "../../🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust" }
@@ -261,6 +261,7 @@ required-features = ["native-bin"]
 
 [dev-dependencies]
 semio-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-test-support = { path = "../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }

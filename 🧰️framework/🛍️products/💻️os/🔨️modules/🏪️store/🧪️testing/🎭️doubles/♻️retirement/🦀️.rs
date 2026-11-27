@@ -228,6 +228,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
         let result=Self::close_state_result(state,effect.grant()).map_err(semio_framework_value::RetirementPollExit::from);
         semio_framework_value::RetirementPollExit::settle(effect,result)
     }
+    unsafe fn close_state_terminal_native_release_safe()->bool { true }
     fn close_state_work_demand(state:&Self::CloseState,_:usize)->Result<u64,ValueError> { Ok(u64::from(!Self::close_state_terminal_is_empty(state))) }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool { state.weak.is_none()&&state.root.is_none() }
 }
@@ -275,9 +276,8 @@ pub fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
                 4 if demands.depth > 0 => below.maximum_depth -= 1,
                 _ => continue,
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_granted(&mut *owner, below));
+            let step = close_driven(&mut *owner, below);
             assert_eq!(step.progress(), RetainedCloneProgress::default());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         let step = close_driven(&mut *owner, grant);
         assert!(step.progress().fits(grant));

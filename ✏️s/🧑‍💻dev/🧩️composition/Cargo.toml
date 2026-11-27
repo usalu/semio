@@ -205,6 +205,9 @@ path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generatio
 [workspace.dependencies.semio-s-artifact-procedural-3d-viewer-transient]
 path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-procedural-generation2d-pdf-export]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-procedural-2d-io]
 path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
 

@@ -13,7 +13,7 @@ fn preview_state_matches_language_neutral_json_oracle() {
         let outcome = mutation.diff(&typed);
         typed = protocol::apply_diff_cold(outcome.diff(), &typed).expect("typed mutation");
         oracle.insert("generationPreviewText".into(), step["previewText"].clone());
-        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        semio_os_store_test_support::assert_op_text_binary_equivalence(&mutation);
     }
     assert_eq!(serde_json::to_value(&typed).expect("typed json"), fixture["expected"]);
     assert_eq!(serde_json::Value::Object(oracle), fixture["expected"]);

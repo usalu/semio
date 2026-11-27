@@ -5,10 +5,10 @@ use semio_s_artifact_cad_cad_testing::sample_scene;
 #[semio_framework_async_macros::async_test]
 async fn default_example_dsl_round_trips() {
     let document = parse_dsl(CAD_DEFAULT_EXAMPLE_TEXT).expect("parse default .cad example");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_store_test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cad_scene_round_trips_through_dsl_document() {
-    store::os_store::test_support::assert_dsl_round_trip(&sample_scene());
+    semio_os_store_test_support::assert_dsl_round_trip(&sample_scene());
 }

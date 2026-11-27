@@ -25,6 +25,8 @@ pub mod standards {
                     pub mod refusal;
                     #[path = "../../🏗️construction/🦀️.rs"]
                     pub mod construction;
+                    #[path = "../../🧮️calculation/🦀️.rs"]
+                    pub mod calculation;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]

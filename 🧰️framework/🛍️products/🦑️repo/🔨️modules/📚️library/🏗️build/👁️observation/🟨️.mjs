@@ -79,11 +79,26 @@ let finishOnLoadedImplementationV1Enabled = false;
 /** 🧊️ Makes this process finish what it runs on the code it loaded: an observation of an implementation file it loaded names the loaded digest even when a peer edited the file since, so a running request is never restarted by an edit and the next request, loaded from the new code, finds the old digest stale and observes again. */
 export function finishOnLoadedImplementationV1() { finishOnLoadedImplementationV1Enabled = true; }
 
-/** 🧊️ The fact a pinned process records for an implementation file: the loaded digest when the file moved after load. */
+/** 📌️ The data files this process read while its modules loaded (the owner registry, the taxonomy, policies, schemas) as the facts of its pinned snapshot, by kind, path and provider: taken once when the module-load authority is sealed, the first fact of a key wins. A pinned process that finishes on its loaded code records these facts for them even when a peer edited the file since, so a mid-read change never contradicts the sealed authority and never restarts the read; the sealed result then names the old digest and the next read finds it stale and observes again. */
+const loadedDataFactsV1 = new Map();
+const loadedDataKeyV1 = (kind, path, fact) => kind === "analysis" ? kind + "\0" + path + "\0" + String(fact?.provider) : kind + "\0" + path;
+function pinLoadedDataFactsV1(rows) {
+  for (const row of rows) {
+    if ((row.kind !== "file" && row.kind !== "analysis") || row.fact === null || typeof row.fact !== "object" || row.fact.error !== undefined) continue;
+    const key = loadedDataKeyV1(row.kind, row.path, row.fact);
+    if (!loadedDataFactsV1.has(key)) loadedDataFactsV1.set(key, Object.freeze(row.fact));
+  }
+}
+
+/** 🧊️ The fact a pinned process records for an implementation or module-load data file: the loaded fact when the file moved after load. */
 export function loadedImplementationRecordedFactV1(kind, path, fact) {
-  if (!finishOnLoadedImplementationV1Enabled || kind !== "file" || fact === null || typeof fact !== "object" || fact.error !== undefined || typeof fact.sha256 !== "string") return fact;
-  const loaded = loadedImplementationFactsV1.get(path);
-  return loaded === undefined || loaded.ignored || loaded.sha256 === fact.sha256 ? fact : { ...fact, sha256: loaded.sha256 };
+  if (!finishOnLoadedImplementationV1Enabled || (kind !== "file" && kind !== "analysis") || fact === null || typeof fact !== "object" || fact.error !== undefined) return fact;
+  if (kind === "file" && typeof fact.sha256 === "string") {
+    const loaded = loadedImplementationFactsV1.get(path);
+    if (loaded !== undefined) return loaded.ignored || loaded.sha256 === fact.sha256 ? fact : { ...fact, sha256: loaded.sha256 };
+  }
+  const data = loadedDataFactsV1.get(loadedDataKeyV1(kind, path, fact));
+  return data === undefined || JSON.stringify(data) === JSON.stringify(fact) ? fact : data;
 }
 
 /** 🔎️ A pinned implementation observation holds exactly when it names the digest the process loaded. */
@@ -93,9 +108,9 @@ function loadedImplementationAnswerV1(kind, path, fact) {
   return loaded === undefined ? undefined : fact.sha256 === loaded.sha256;
 }
 
-/** 🪪️ Restarts when this inference observed the current version of an implementation file its worker still executes at another digest. */
+/** 🪪️ Restarts when this inference observed the current version of an implementation file its worker still executes at another digest, unless the process finishes on its loaded code (`finishOnLoadedImplementationV1`, a slice worker): such a worker finishes the load it started under the digest it loaded, its result is tagged with that digest (`module` of the authority receipt), the row it read names the file as it is, and the next load, started on the new code, judges the sealed result by digest as usual; a peer's edit of a loaded file never ends a load in progress. */
 export function requirePinnedImplementationFactsV1(observations, signal) {
-  if (!implementationPinnedV1()) return;
+  if (!implementationPinnedV1() || finishOnLoadedImplementationV1Enabled) return;
   for (const row of observations) {
     signal?.throwIfAborted();
     const loaded = loadedImplementationFactV1(row.kind, row.path, row.fact);
@@ -217,12 +232,12 @@ function authorityDigestOfRowsV1(rows){return sha256HexV1(JSON.stringify(rows.fi
 
 /** 📚️ Seals module-load authority and names it by the meaning of its data facts, so project records inherit the declared policies and schemas by digest instead of by rows; every file below a fragment of the inference protocol is named by its stamp, never by its bytes. */
 export function inferenceAuthorityDigestV1(){
- loadSealed=true;
+ loadSealed=true;pinLoadedDataFactsV1(loadObservations.values());
  return authorityDigest??=authorityDigestOfRowsV1([...loadObservations.values()]);
 }
 
 /** 🫱️ Seals the module-load authority of this process and answers its rows, so a farm worker can serve under exactly this authority: the digest is derived again from the rows answered, because the digest the first project asked for was made before later loads and the table of a worker that adopts these rows holds fewer of them (13 directory rows fewer), so the farm was refused as differing in its records. */
-export function inferenceAuthorityRowsV1(){const rows=[...loadObservations.values()];loadSealed=true;authorityDigest=authorityDigestOfRowsV1(rows);return rows;}
+export function inferenceAuthorityRowsV1(){const rows=[...loadObservations.values()];loadSealed=true;pinLoadedDataFactsV1(rows);authorityDigest=authorityDigestOfRowsV1(rows);return rows;}
 
 /** 🎁️ Serves under the sealed authority of a parent process: the parent's rows become the authority of this process (its records are then named as the parent's own records are, whatever the parent's command read before its first project), unless a row this process recorded at its own load says something else about the same fact; those conflicts are answered and nothing is adopted. */
 export function adoptInferenceAuthorityV1(rows){
@@ -375,8 +390,10 @@ export async function memoizedObservedAsyncComputationV1(cache,key,compute,check
 const observationIdentities=new WeakMap(),observationMeanings=new WeakMap();
 function observationIdentityV1(row,remember=true){let value=observationIdentities.get(row);if(value===undefined){value=row.kind+"\0"+row.path+(row.kind==="analysis"?"\0"+row.fact?.provider:row.kind==="field"?"\0"+row.fact?.format+"\0"+row.fact?.pointer:"");if(remember)observationIdentities.set(row,value);}return value;}
 
+/** 🪞️ What two reads of the same `global` question must agree on: the registered `meaning` of its fact (a closure answer is what consumers read, not the digest of every file behind it), else the whole fact; an unreadable fact stays itself. */
+function globalFactMeaningV1(row){try{const meaning=globalFactMeaningsV1.get(JSON.parse(row.path)[0]);return meaning===undefined?row.fact:meaning(JSON.parse(row.fact));}catch{return row.fact;}}
 /** 🧠️ Distinguishes semantic results independently of their original source byte hints. */
-function observationMeaningV1(row,remember=true){let value=observationMeanings.get(row);if(value===undefined){value=JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.kind==="resolve"?canonicalResolutionV1(row.fact):row.fact);if(remember)observationMeanings.set(row,value);}return value;}
+function observationMeaningV1(row,remember=true){let value=observationMeanings.get(row);if(value===undefined){value=JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.kind==="resolve"?canonicalResolutionV1(row.fact):row.kind==="global"?globalFactMeaningV1(row):row.fact);if(remember)observationMeanings.set(row,value);}return value;}
 
 /** 🚫️ Finds the first conflicting result for the same source consumer, keeping large batch keys transient. */
 function firstObservationConflictV1(rows){
@@ -828,8 +845,8 @@ function registryOwnerRowV1(path){
 /** 🖊️ Records the registry row (root and manifest) one inference read for one owner name, or its absence. */
 /** 🌐️ The answers of the global facts a record may depend on without any file (the generator contracts of the taxonomy): a `global` row is `{kind, path: JSON [name, workspaceRoot, segments], fact}` and holds while the resolver registered under `name` says that `fact` (what the inference read at `segments` of that global) still holds for the workspace of the path; without a resolver it does not hold, so a process that cannot answer never adopts such a record.
  * @see ../🕸️graph/📥️inference/📜️contract-reads/🟨️.mjs */
-const globalFactResolversV1=new Map(),globalFactPreparersV1=new Map();
-export function registerGlobalFactV1(name,holds,prepare){globalFactResolversV1.set(name,holds);if(typeof prepare==="function")globalFactPreparersV1.set(name,prepare);else globalFactPreparersV1.delete(name);}
+const globalFactResolversV1=new Map(),globalFactPreparersV1=new Map(),globalFactMeaningsV1=new Map();
+export function registerGlobalFactV1(name,holds,prepare,meaning){globalFactResolversV1.set(name,holds);if(typeof meaning==="function")globalFactMeaningsV1.set(name,meaning);else globalFactMeaningsV1.delete(name);if(typeof prepare==="function")globalFactPreparersV1.set(name,prepare);else globalFactPreparersV1.delete(name);}
 /** 🛎️ Lets the resolvers that need asynchronous work before they can answer (`prepare` of {@link registerGlobalFactV1}: the module closure graph answers a question after a pass over the tree) get ready for the `global` rows among `rows`, each resolver once with its own rows; a resolver that is not prepared still answers, from what it holds. */
 export async function prepareGlobalFactsV1(rows){
  if(globalFactPreparersV1.size===0)return;
@@ -897,9 +914,9 @@ const witnessLinkV1=path=>{try{return fs.lstatSync(path).isSymbolicLink();}catch
 const witnessDirectoryV1=path=>{try{return fs.lstatSync(path).isDirectory();}catch{return false;}};
 const WITNESS_TYPED_V1=new Set(["lstat","stat","exists","fileExists","directoryExists"]),WITNESS_LISTED_V1=new Set(["readdir","readdirNames"]);
 const witnessStringsV1=new Map();
-/** 🧵️ One shared copy of a path of a witness: every row of every walked node rebases its own copy of the same few thousand paths, and a graph of ten thousand nodes held each of them seventeen times over (2.4 million path strings, 255 MB, in the preflight of the tool closures); the table is bounded and starts again when it is full. */
+/** 🧵️ One shared copy of a path of a witness: every row of every walked node rebases its own copy of the same few thousand paths, and a graph of ten thousand nodes held each of them seventeen times over (2.4 million path strings, 255 MB, in the preflight of the tool closures); the table is bounded (4 M entries: the closure of a whole-closure read has far more than the 262 k of the first bound, which made it start again all the time and left 2.9 M path strings, 600 MB, behind the `typed`, `code`, `live`, `paths` and `tuples` arrays of the witnesses in the heap summary) and starts again when it is full. */
 const internWitnessStringV1=text=>{if(typeof text!=="string")return text;let shared=witnessStringsV1.get(text);if(shared===undefined){if(witnessStringsV1.size>=WITNESS_STRING_LIMIT_V1)witnessStringsV1.clear();witnessStringsV1.set(text,text);shared=text;}return shared;};
-const WITNESS_STRING_LIMIT_V1=262144;
+const WITNESS_STRING_LIMIT_V1=4194304;
 /** 🪪️ The witness of rows that all hold now: the stamps of the few files and directories whose state decides them, so that a later verification of the same rows is one stat per distinct path instead of one probe per row and no stored layer is read. An `analysis` row is decided by the bytes of its file (and the registered revision of its parser, kept in `code`) and by its nested rows; a type or existence row (`lstat`, `stat`, `exists`, `fileExists`, `directoryExists`) by its own name alone and is kept in `typed` with the fact it recorded: stamping the directory that holds the name (as an earlier form did) made every stamp fail whenever anything was created or removed beside it, in the workspace root, in a home directory or in a plugin folder a peer works in, and the full verification that followed read every layer again (11 to 28 CPU seconds per Rust owner instead of one); a listing row by the directory it lists; a module resolution of an absolute path by the directory of the target (the listing the extension probes read) and, for a directory or link, by the target and its `package.json`. Every other row (fields, owner registry questions, realpaths, TypeScript text) is kept in `live` and probed again by every verification. Undefined while a path is not calm (it was written within the racy window before `since`, the start of the verification that found the rows holding), a row is of a kind or shape that cannot be witnessed, or the observation runs over a plan port instead of the disk. Each stamped path is stated once: its stamp is refused unless it was last written and changed before `since` minus the racy window (a write inside the verification cannot hide), and the stamp kept is that same stat.
  * @see ./🧪️tests/🪪️witness */
 export function observationWitnessV1(rows,{since=Date.now()}={}){
@@ -913,16 +930,16 @@ export function observationWitnessV1(rows,{since=Date.now()}={}){
   seen.add(key);
   if(kind==="analysis"){const registered=registeredAnalysisV1(fact);if(registered===undefined||!Array.isArray(fact.nestedObservations))return false;code.set(fact.provider+"\0"+fact.revision,registered.provider.revision);paths.add(path);return fact.nestedObservations.every(visit);}
   if(kind==="field"){const identity=fieldExtractorIdentityV1(fact?.format);if(identity===undefined)return false;code.set("f\0"+fact.format,identity);paths.add(path);for(const other of fact.paths??[])paths.add(internWitnessStringV1(other));return true;}
-  if(WITNESS_TYPED_V1.has(kind)){typed.push([kind,path,internWitnessStringV1(fact)]);return true;}
+  if(WITNESS_TYPED_V1.has(kind)){typed.push([internWitnessStringV1(kind),path,internWitnessStringV1(fact)]);return true;}
   if(WITNESS_LISTED_V1.has(kind)){paths.add(path);return true;}
   if(kind==="resolve"){
    let target;try{target=JSON.parse(path)[1];}catch{return false;}
-   if(typeof target!=="string"||resolve(target)!==target){live.set(JSON.stringify({kind,path,fact}),true);return true;}
-   paths.add(dirname(target));
-   if(witnessLinkV1(target)||witnessDirectoryV1(target)){paths.add(target);paths.add(join(target,"package.json"));}
+   if(typeof target!=="string"||resolve(target)!==target){live.set(internWitnessStringV1(JSON.stringify({kind,path,fact})),true);return true;}
+   paths.add(internWitnessStringV1(dirname(target)));
+   if(witnessLinkV1(target)||witnessDirectoryV1(target)){paths.add(internWitnessStringV1(target));paths.add(internWitnessStringV1(join(target,"package.json")));}
    return true;
   }
-  live.set(JSON.stringify({kind,path,fact}),true);return true;
+  live.set(internWitnessStringV1(JSON.stringify({kind,path,fact})),true);return true;
  };
  for(const row of rows)if(!visit(row))return undefined;
  const limit=since-RACY_MS,list=[...paths],tuples=new Array(list.length);
@@ -1681,8 +1698,8 @@ export async function sweepSupersededObservationBlocksV1(directory,{headerPatter
  * unchanged, e.g. by unchanged directory stamps) hold without a probe: an entry can only appear, vanish or change type by changing its parent.
  * Existence follows symbolic links, so a present entry is probed for every entry in `symlinks`, and for every entry when `symlinks` is `true`; an absent entry of a stable directory cannot appear without changing that directory.
  */
-export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified,exhaustive=false) {
-  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,undefined,exhaustive));
+export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified,exhaustive=false,clean=undefined) {
+  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,undefined,exhaustive,clean));
 }
 
 const asyncAdmissionChecksV1=new WeakMap();
@@ -1691,16 +1708,16 @@ const carriedVerdictsV1=new WeakMap(),carriedCountsV1={reused:0,probed:0};
 export function observationCarriedCountsV1(){return{...carriedCountsV1};}
 
 /** 🪧️ Shares exact observation verdicts and followed path types across owner admissions in this settle pass. The seal always verifies outside the pass. */
-export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,onVerified){
+export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,onVerified,clean=undefined){
  return withObservationRoundV1(()=>{
   const round=inferenceValidationScopes.getStore();
   let checks=asyncAdmissionChecksV1.get(round);
   if(checks===undefined){checks={rows:createRowRebaserV1(),verdicts:new WeakMap(),metadata:new Map()};asyncAdmissionChecksV1.set(round,checks);}
-  return observationsHoldInRoundV1(observations,limit,new Set(),new Set(),signal,onStale,onVerified,checks);
+  return observationsHoldInRoundV1(observations,limit,new Set(),new Set(),signal,onStale,onVerified,checks,false,clean);
  });
 }
 
-async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks,exhaustive=false) {
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks,exhaustive=false,clean=undefined) {
   signal?.throwIfAborted();
   if(!Number.isSafeInteger(limit)||limit<1)throw new RangeError("Positive observation worker limit required");
   observations = sharedChecks===undefined?rebaseRowsV1(observations):sharedChecks.rows(observations);
@@ -1767,7 +1784,7 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
         const carriedAt=verdicts===undefined?undefined:carriedVerdictsV1.get(row);
         if(carriedAt!==undefined&&performance.now()-carriedAt<OBSERVATION_LIMITS_V1.carriedVerdictMilliseconds){verdict=true;verdicts.set(row,true);carriedCountsV1.reused++;}
         else{
-          const began=performance.now(),pending=check(row);
+          const began=performance.now(),pending=clean!==undefined&&clean(row)===true?true:check(row);
           verdicts?.set(row,pending);
           verdict=await pending;
           verdicts?.set(row,verdict);

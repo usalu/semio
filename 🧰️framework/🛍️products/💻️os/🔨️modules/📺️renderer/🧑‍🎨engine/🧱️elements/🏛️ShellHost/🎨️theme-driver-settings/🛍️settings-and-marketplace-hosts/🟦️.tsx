@@ -4,6 +4,7 @@ import { type VideoRenderJobRow } from "@semio-tech/framework";
 import { setAppearance, setLayout, setLocale, setTerminology } from "@semio-tech/framework/config/mutations";
 import { type ElementsSurfaceAppearance, UI_TERMINOLOGY_NATIVE, type UiChromeLayout, type UiLocale } from "@semio-tech/ui-react";
 import { appBreadcrumb, resolveAppBreadcrumb } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { actionBindingToActionDescriptor } from "../../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 import { toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../../../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { createFrameworkChatPanelTab, createFrameworkTaskManagerPanelTab, createFrameworkSettingsPanelTab } from "../../../📌️ChromePanels/🟦️.tsx";
@@ -185,7 +186,7 @@ export function useSettingsHost({ session, uiTerminology, uiDriverId, uiDriverBa
 }
 
 /** 🏪 Builds the marketplace host api and the framework task manager tab. */
-export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry, extensionIdSet, pluginSource, hubOnlyPlugins, loadedPlugins, pluginStatusById, primaryPluginId, session, catalog, extensionLedger, installPlugin, uninstallPlugin, reloadPlugin, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled, marketplaceHostRef, uiLocale, agentBridge, onActionStable, pluginInstallAbortsRef, uiLocaleRef, installingPluginIds, toolRunPanelNode, focusedProgram }: Pick<ReturnType<typeof useThemeAndDriverState>, "registry" | "extensionIdSet" | "pluginSource" | "loadedPlugins" | "pluginStatusById" | "primaryPluginId" | "session" | "catalog" | "extensionLedger" | "installPlugin" | "uninstallPlugin" | "reloadPlugin" | "installExtension" | "installExtensionFromFile" | "uninstallExtension" | "setExtensionEnabled" | "uiLocale" | "agentBridge" | "onActionStable" | "pluginInstallAbortsRef" | "uiLocaleRef" | "installingPluginIds" | "toolRunPanelNode" | "focusedProgram"> & Pick<ReturnType<typeof useSettingsHost>, "hubOnlyPlugins" | "marketplaceHostRef"> & Readonly<{ canManageExtensions: boolean }>) {
+export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry, extensionIdSet, pluginSource, hubOnlyPlugins, loadedPlugins, pluginStatusById, primaryPluginId, session, catalog, extensionLedger, installPlugin, uninstallPlugin, reloadPlugin, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled, marketplaceHostRef, uiLocale, uiTerminology, agentBridge, onActionStable, pluginInstallAbortsRef, uiLocaleRef, installingPluginIds, toolRunPanelNode, focusedProgram }: Pick<ReturnType<typeof useThemeAndDriverState>, "registry" | "extensionIdSet" | "pluginSource" | "loadedPlugins" | "pluginStatusById" | "primaryPluginId" | "session" | "catalog" | "extensionLedger" | "installPlugin" | "uninstallPlugin" | "reloadPlugin" | "installExtension" | "installExtensionFromFile" | "uninstallExtension" | "setExtensionEnabled" | "uiLocale" | "uiTerminology" | "agentBridge" | "onActionStable" | "pluginInstallAbortsRef" | "uiLocaleRef" | "installingPluginIds" | "toolRunPanelNode" | "focusedProgram"> & Pick<ReturnType<typeof useSettingsHost>, "hubOnlyPlugins" | "marketplaceHostRef"> & Readonly<{ canManageExtensions: boolean }>) {
   const marketplaceHost: MarketplaceHostApi = useMemo(
     () => ({
       plugins: [
@@ -195,7 +196,7 @@ export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry
         const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === pluginId);
         return {
           pluginId,
-          label: loadedEntry?.manifest.label ?? pluginId,
+          label: loadedEntry ? resolveManifestLabel(loadedEntry.manifest.label, uiTerminology, uiLocale) : pluginId,
           version: loadedEntry?.manifest.version,
           status: pluginStatusById[pluginId] ?? "available",
           sourceId,
@@ -209,7 +210,7 @@ export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry
           const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === target.pluginId);
           byId.set(target.pluginId, {
             extensionId: target.pluginId,
-            label: loadedEntry?.manifest.label ?? target.pluginId,
+            label: loadedEntry ? resolveManifestLabel(loadedEntry.manifest.label, uiTerminology, uiLocale) : target.pluginId,
             version: ledger?.version ?? loadedEntry?.manifest.version,
             extendsHost: ledger?.extendsHost ?? target.extends ?? "unscoped",
             enabled: ledger?.enabled ?? false,
@@ -221,7 +222,7 @@ export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry
           const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === ledger.extensionId);
           byId.set(ledger.extensionId, {
             extensionId: ledger.extensionId,
-            label: loadedEntry?.manifest.label ?? ledger.extensionId,
+            label: loadedEntry ? resolveManifestLabel(loadedEntry.manifest.label, uiTerminology, uiLocale) : ledger.extensionId,
             version: ledger.version,
             extendsHost: ledger.extendsHost,
             enabled: ledger.enabled,
@@ -259,6 +260,8 @@ export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry
       installExtensionFromFile,
       uninstallExtension,
       setExtensionEnabled,
+      uiTerminology,
+      uiLocale,
     ],
   );
   marketplaceHostRef.current = marketplaceHost;

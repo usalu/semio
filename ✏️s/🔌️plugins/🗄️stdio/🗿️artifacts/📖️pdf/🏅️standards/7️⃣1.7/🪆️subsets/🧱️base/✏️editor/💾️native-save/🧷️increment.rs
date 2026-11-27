@@ -4,13 +4,16 @@ use std::{cell::Cell, collections::{BTreeMap, HashSet}, sync::Arc};
 use semio_framework_value::{ByteReadSource, RetireOwned};
 use crate::standards::v1_7::subsets::base::{
     io::{export::{Moved, Reading, graft::Graft}, import::original_custody::{self, GraphDigest, RetainedOriginal}},
-    modules::{content::content_references, lexer::dict_get, lower::lower_info},
+    modules::{content::content_references, lexer::dict_get, lift::{Category, ResourceClaims}, lower::lower_info},
     schema::{graph_source::ObjectSource, snapshot::{ObjRef, PdfAnnotationKind, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot}},
 };
 use super::{classic_graph_quote::GraphLoan, graph::object_capacity, original_tail::{OriginalTail, TailRefusal}};
 
 /// ⛽️ Fuel one page step spends at least; a slice that reads more is charged by the bytes it read.
 pub const PAGE_WORK: usize = 4096;
+
+/// 🆔 The most resource ids the plan's claim tables hold before the appended route gives up; the tables are plan state outside the retained grant, like the seeds and the page list.
+const CLAIMED_IDS: usize = 1 << 16;
 
 /// 🍰️ The most bytes one slice may read before the page counts as too large for the appended route.
 const SLICE_BYTES: usize = 8 << 20;
@@ -68,6 +71,8 @@ pub struct IncrementPlan {
     info: Option<ObjRef>,
     seen: Seen,
     leaves: Vec<(ObjRef, ObjRef)>,
+    existing: Option<ExistingResources>,
+    claims: ResourceClaims,
 }
 
 impl IncrementPlan {
@@ -80,7 +85,7 @@ impl IncrementPlan {
     fn with(base: Option<OriginalBase>, document: Option<String>) -> Self {
         Self { base, document, held: None, measured: [0; 32], touched: Vec::new(), pending: Vec::new(), fresh: 0,
             stage: Stage::Baseline, tail: None, digest: GraphDigest::default(), root: None, catalog: None, next: 0, page: 0,
-            rows: IncrementRows::default(), info: None, seen: Seen::default(), leaves: Vec::new() }
+            rows: IncrementRows::default(), info: None, seen: Seen::default(), leaves: Vec::new(), existing: None, claims: ResourceClaims::default() }
     }
 
     pub fn ready(&self) -> bool { self.stage == Stage::Done }
@@ -194,7 +199,8 @@ impl IncrementPlan {
         let trailer = trailer_entries(loan);
         let version = &snapshot.declared_version;
         let bytes = Cell::new(0);
-        let reading = Reading::of(Slice { loan, seeds: &seeds, bytes: &bytes }, &trailer, version).map_err(|_| Compact::Document)?;
+        let claimed = self.claims.mark();
+        let reading = Reading::of_claiming(Slice { loan, seeds: &seeds, bytes: &bytes }, &trailer, version, &mut self.claims).map_err(|_| Compact::Document)?;
         let moved = Moved::between(&reading.lanes, snapshot);
         if !moved.catalog.is_empty() || moved.regenerates() || reading.lanes.document_id != snapshot.document_id {
             return Err(Compact::Document);
@@ -209,7 +215,8 @@ impl IncrementPlan {
             trailer.retain(|entry| entry.key != "Info");
             trailer.push(PdfDictEntry::new("Info", PdfObject::Ref(reference)));
             bytes.set(0);
-            let reading = Reading::of(Slice { loan, seeds: &check, bytes: &bytes }, &trailer, version).map_err(|_| Compact::Document)?;
+            self.claims.rollback(claimed);
+            let reading = Reading::of_claiming(Slice { loan, seeds: &check, bytes: &bytes }, &trailer, version, &mut self.claims).map_err(|_| Compact::Document)?;
             work += bytes.get() / 16;
             if Moved::between(&reading.lanes, snapshot).info { return Err(Compact::Document); }
             let capacity = row_capacity(&info);
@@ -262,7 +269,9 @@ impl IncrementPlan {
         let trailer = vec![PdfDictEntry::new("Root", PdfObject::Ref(catalog))];
         let version = &snapshot.declared_version;
         let bytes = Cell::new(0);
-        let reading = Reading::of(Slice { loan, seeds: &seeds, bytes: &bytes }, &trailer, version).map_err(|_| Compact::Page)?;
+        let claimed = self.claims.mark();
+        let reading = Reading::of_claiming(Slice { loan, seeds: &seeds, bytes: &bytes }, &trailer, version, &mut self.claims).map_err(|_| Compact::Page)?;
+        if self.claims.len() > CLAIMED_IDS { return Err(Compact::Extent); }
         let mut work = PAGE_WORK.max(bytes.get() / 16);
         if reading.lanes.pages.len() != if links { self.leaves.len() } else { 1 } || !resources_agree(&reading.lanes, snapshot) { return Err(Compact::Resources); }
         let mut turn = IncrementTurn::default();
@@ -272,18 +281,28 @@ impl IncrementPlan {
             pages[at] = typed.clone();
             let mut probe = PdfSnapshot { pages, objects: final_reading.lanes.objects.clone(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..final_reading.lanes.clone() };
             let used = content_references(&typed.content);
-            for id in &used.fonts { if probe.font(id).is_none() { probe.fonts.extend(snapshot.font(id).cloned()); } }
+            let mut unseen: Vec<(Category, &'static str, &String)> = Vec::new();
+            for id in &used.fonts { if probe.font(id).is_none() { unseen.push((Category::Font, "Font", id)); probe.fonts.extend(snapshot.font(id).cloned()); } }
             for id in &used.x_objects {
+                if probe.image(id).is_none() && probe.form(id).is_none() { unseen.push((Category::XObject, "XObject", id)); }
                 if probe.image(id).is_none() { probe.images.extend(snapshot.image(id).cloned()); }
                 if probe.form(id).is_none() { probe.forms.extend(snapshot.form(id).cloned()); }
             }
-            for id in &used.ext_g_states { if probe.ext_g_state(id).is_none() { probe.ext_g_states.extend(snapshot.ext_g_state(id).cloned()); } }
+            for id in &used.ext_g_states { if probe.ext_g_state(id).is_none() { unseen.push((Category::ExtGState, "ExtGState", id)); probe.ext_g_states.extend(snapshot.ext_g_state(id).cloned()); } }
             for id in &used.shadings { if probe.shading(id).is_none() { probe.shadings.extend(snapshot.shading(id).cloned()); } }
             for id in &used.patterns { if probe.pattern(id).is_none() { probe.patterns.extend(snapshot.pattern(id).cloned()); } }
             for name in &used.color_spaces { if !probe.color_spaces.iter().any(|space| &space.name == name) { probe.color_spaces.extend(snapshot.color_spaces.iter().find(|space| &space.name == name).cloned()); } }
             for name in &used.properties { if !probe.properties.iter().any(|item| &item.name == name) { probe.properties.extend(snapshot.properties.iter().find(|item| &item.name == name).cloned()); } }
             let before = self.next;
             let mut graft = Graft::sparse(&probe, seeds.clone(), trailer.clone(), self.next);
+            if !unseen.is_empty() {
+                if self.existing.is_none() {
+                    work += self.leaves.len() * 16;
+                    self.existing = Some(ExistingResources::index(loan, &self.leaves)?);
+                }
+                let index = self.existing.as_ref().expect("indexed existing resources");
+                graft.bind_existing(unseen.iter().filter_map(|(category, _, id)| index.unique(*category, id).map(|target| ((*category, (*id).clone()), target))).collect());
+            }
             let original = final_reading;
             let mut moved = Moved::between(&original.lanes, &probe);
             if !moved.catalog.is_empty() || moved.info || moved.regenerates() { return Err(Compact::Page); }
@@ -293,7 +312,8 @@ impl IncrementPlan {
             for _ in 0..3 {
                 if !graft.round(current.as_ref().unwrap_or(&original), &original, &moved).map_err(|_| Compact::Page)? { return Err(Compact::Page); }
                 bytes.set(0);
-                let reading = Reading::of(Slice { loan, seeds: &graft.graph, bytes: &bytes }, &graft.trailer, version).map_err(|_| Compact::Page)?;
+                self.claims.rollback(claimed);
+                let reading = Reading::of_claiming(Slice { loan, seeds: &graft.graph, bytes: &bytes }, &graft.trailer, version, &mut self.claims).map_err(|_| Compact::Page)?;
                 work += bytes.get() / 16;
                 let still = Moved::between(&reading.lanes, &probe);
                 if still.is_empty() { settled = Some(reading); break; }
@@ -356,6 +376,38 @@ impl IncrementPlan {
         self.stage = Stage::Done;
         Ok(IncrementTurn { work: 1, ready: true, ..Default::default() })
     }
+}
+
+/// 🔗️ The document's existing indirect resource objects by name, indexed in one pass over every page and page-tree node's `/Resources` (fonts, XObjects and graphics states): a name is bound only when exactly one object carries it. A wrong binding cannot pass the slice's re-read, which must equal the typed resources.
+struct ExistingResources(std::collections::HashMap<(Category, String), Option<ObjRef>>);
+
+/// 🧮️ The most names one Save's index holds before the appended route gives up.
+const EXISTING_NAMES: usize = 1 << 16;
+
+impl ExistingResources {
+    fn index(loan: GraphLoan<'_>, leaves: &[(ObjRef, ObjRef)]) -> Result<Self, Compact> {
+        let resolve = |value: &PdfObject| -> Option<Vec<PdfDictEntry>> {
+            match value { PdfObject::Dict(entries) => Some(entries.clone()), PdfObject::Ref(target) => dictionary(loan, *target).map(<[PdfDictEntry]>::to_vec), _ => None }
+        };
+        let mut index: std::collections::HashMap<(Category, String), Option<ObjRef>> = std::collections::HashMap::new();
+        let mut owners: HashSet<ObjRef> = HashSet::new();
+        for (page, parent) in leaves { owners.insert(*page); owners.insert(*parent); }
+        for owner in owners {
+            let Some(resources) = dictionary(loan, owner).and_then(|entries| dict_get(entries, "Resources")).and_then(resolve) else { continue };
+            for (category, key) in [(Category::Font, "Font"), (Category::XObject, "XObject"), (Category::ExtGState, "ExtGState")] {
+                let Some(section) = dict_get(&resources, key).and_then(resolve) else { continue };
+                for entry in &section {
+                    let PdfObject::Ref(target) = &entry.value else { continue };
+                    let slot = index.entry((category, entry.key.clone())).or_insert(Some(*target));
+                    if *slot != Some(*target) { *slot = None; }
+                }
+                if index.len() > EXISTING_NAMES { return Err(Compact::Extent); }
+            }
+        }
+        Ok(Self(index))
+    }
+
+    fn unique(&self, category: Category, id: &str) -> Option<ObjRef> { self.0.get(&(category, id.to_owned())).copied().flatten() }
 }
 
 /// 🔍️ Whether every resource the slice's page binds is exactly the typed document's resource of that id.
@@ -502,4 +554,3 @@ fn row_capacity(object: &PdfIndirectObject) -> usize { object_capacity(&object.v
 
 /// 🧾️ The digest of a retained graph the document opened with, computed in one go.
 pub fn objects_digest(objects: &[PdfIndirectObject]) -> [u8; 32] { original_custody::objects_digest(objects) }
-

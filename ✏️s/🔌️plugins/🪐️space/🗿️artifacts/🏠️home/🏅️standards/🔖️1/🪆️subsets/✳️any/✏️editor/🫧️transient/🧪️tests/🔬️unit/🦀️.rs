@@ -205,7 +205,7 @@ fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
     }
     let half_bound = semio_framework_pack_json::json!({ "sessionBindingSha256": BINDING, "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
     assert!(semio_framework_pack_json::from_json_str::<HomeTransient>(&half_bound.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "a partial resume authority is refused");
-    store::os_store::test_support::assert_dsl_round_trip(&transient);
+    semio_os_store_test_support::assert_dsl_round_trip(&transient);
     let bytes = pack::snapshot::ArtifactPack::encode_pack(&transient);
     assert_eq!(<HomeTransient as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
 }
@@ -214,7 +214,7 @@ fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
 #[test]
 fn the_page_verb_round_trips_text_and_binary() {
     let mutation = item(&semio_framework_pack_json::to_json_string(&sealed(0, 1, false, vec![created(1, "space-a", "One")])));
-    store::os_store::test_support::assert_op_line_round_trip(&mutation);
+    semio_os_store_test_support::assert_op_line_round_trip(&mutation);
     let bytes = protocol::OpBinary::encode_op(&mutation).expect("binary op");
     assert_eq!(<HomeTransientMutation as protocol::OpBinary>::decode_op(&bytes).expect("binary round trip"), mutation);
     assert!(mutation.inverse(&HomeTransient::default()).expect("valid retained mutation inverse fixture").is_empty(), "a derived projection page is never undone");

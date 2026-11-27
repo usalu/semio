@@ -27,10 +27,10 @@ fn seeded_snapshot() -> SSpaceSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn home_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&create_artifact(sample_row("artifact-9")));
-    store::os_store::test_support::assert_op_line_round_trip(&delete_artifact("artifact-1".into()));
-    store::os_store::test_support::assert_op_line_round_trip(&rename_artifact("artifact-1".into(), "New Name".into()));
-    store::os_store::test_support::assert_op_line_round_trip(&touch_artifact("artifact-1".into(), 42, "user:2".into()));
+    semio_os_store_test_support::assert_op_line_round_trip(&create_artifact(sample_row("artifact-9")));
+    semio_os_store_test_support::assert_op_line_round_trip(&delete_artifact("artifact-1".into()));
+    semio_os_store_test_support::assert_op_line_round_trip(&rename_artifact("artifact-1".into(), "New Name".into()));
+    semio_os_store_test_support::assert_op_line_round_trip(&touch_artifact("artifact-1".into(), 42, "user:2".into()));
 }
 
 #[semio_framework_async_macros::async_test]

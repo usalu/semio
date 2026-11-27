@@ -1,0 +1,380 @@
+{
+  "policy": {
+    "version": 1,
+    "roots": [
+      "r"
+    ],
+    "skipDirectories": [
+      "🧪️tests"
+    ],
+    "extensions": [
+      ".ts"
+    ],
+    "skipSuffixes": [
+      ".d.ts"
+    ],
+    "mountPatterns": [
+      "partitions\\.[a-z]+\\.directory[^;\\n]{0,160}?[\"']m[\"']",
+      "\\.cache/b/[a-km-z]/m\\b",
+      "[\"']m[\"']\\s*,\\s*[\"']generations[\"']"
+    ],
+    "rootPatterns": [
+      "\\b(cacheAreaDirectoryV1|cacheAreaHomeV1)\\s*\\(",
+      "\\bbudgetPolicy\\.partitions\\b",
+      "\\brepositoryCacheBudgetV1\\s*\\([^()]*\\)\\s*\\.partitions\\b"
+    ],
+    "rootTypes": [
+      "\\b(CachePartitionBudgetsV1|RepositoryCachePartitionV1|DedupeRequestV1)\\b"
+    ],
+    "openers": [
+      "(^|\\.)(readFile|writeFile|appendFile|copyFile|readdir|opendir|stat|lstat|access|readlink|realpath|mkdir|rmdir|rm|unlink|rename|cp|truncate|open|utimes|chmod|exists)(Sync)?$",
+      "(^|\\.)create(Read|Write)Stream$",
+      "^Bun\\.(file|write)$",
+      "^(censusNxToolingStoreV1|collectUnpinnedDependencyGenerationsV1|dedupeTreeV1)$"
+    ],
+    "leaseCallees": [
+      "^(withNativeImageSharedReadV1|readUnderImageLeaseV1|withRepositoryCacheStoreV1|withRepositoryCacheStoreMaintenanceV1)$",
+      "(^|\\.)(reader|peek)\\.run$",
+      "^held$",
+      "^createNativeImageSharedSampleV1$"
+    ],
+    "leasedParameters": [
+      "\\bNativeImageSharedReaderV1\\b",
+      "\\bleased\\b",
+      "\\b(RepositoryToolingStoreV1|RepositoryCacheStoreV1)\\b"
+    ],
+    "leasedArguments": [
+      "\\breader\\b"
+    ],
+    "carrierMethods": [
+      "push",
+      "unshift",
+      "add",
+      "set"
+    ],
+    "classes": [
+      "custody"
+    ],
+    "entries": []
+  },
+  "cases": [
+    {
+      "name": "a graph generation read without the lease",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");readdirSync(root);",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "the same read under the shared lease",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");await withNativeImageSharedReadV1(input,()=>readdirSync(root));",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a file with one leased and one unleased read",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");\nawait withNativeImageSharedReadV1(input,()=>readdirSync(root));\nconst names=readdirSync(root);",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "a literal mount path of the tools image",
+      "source": "readFileSync(\".cache/b/t/m/nx/x.json\")",
+      "named": true,
+      "unleased": [
+        "readFileSync"
+      ]
+    },
+    {
+      "name": "the leases image has no lease of its own",
+      "source": "const leases=\".cache/b/l/m/data\";readdirSync(leases);",
+      "named": false,
+      "unleased": []
+    },
+    {
+      "name": "a path built from a carrier of a carrier",
+      "source": "const base=join(partitions.graph.directory,\"m\",\"generations\");\nconst at=key=>join(base,key);\nstatSync(at(\"a\"));",
+      "named": true,
+      "unleased": [
+        "statSync"
+      ]
+    },
+    {
+      "name": "a reader callback holds the lease",
+      "source": "const base=join(partitions.graph.directory,\"m\",\"generations\");await reader.run(async()=>readFileSync(join(base,\"x\")));",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a function with a leased reader parameter",
+      "source": "function read(reader:NativeImageSharedReaderV1){const base=join(partitions.graph.directory,\"m\",\"generations\");return readFileSync(join(base,\"x\"));}",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a function taking a leased callback parameter",
+      "source": "const make=({leased}:{leased:(body:()=>void)=>void})=>{const base=join(partitions.graph.directory,\"m\",\"generations\");return readFileSync(base);};",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a single parameter arrow named leased",
+      "source": "const base=join(partitions.graph.directory,\"m\",\"generations\");const run=leased=>readFileSync(base);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "the path is only named, nothing is opened",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");const rows=[root,join(root,\"a\")];",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a comment names the path",
+      "source": "// .cache/b/g/m/generations\nconst a=readFileSync(path);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a member call is an opener",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");await fs.promises.readFile(root);",
+      "named": true,
+      "unleased": [
+        "fs.promises.readFile"
+      ]
+    },
+    {
+      "name": "a regular expression and a template before the call",
+      "source": "const re=/a\"b/;const t=`x${1}`;\nreadFileSync(join(partitions.graph.directory,\"m\",\"generations\"));",
+      "named": true,
+      "unleased": [
+        "readFileSync"
+      ]
+    },
+    {
+      "name": "a method definition is not a call",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");const port={stat(path){return 1;}};",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a doctor helper callback holds the lease",
+      "source": "await readUnderImageLeaseV1(ports,\".cache/b/d\",()=>readdirSync(\".cache/b/d/m\"));",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "an unrelated read in a file that names the path",
+      "source": "const root=join(partitions.graph.directory,\"m\",\"generations\");await withNativeImageSharedReadV1(input,()=>statSync(root));\nconst other=readFileSync(join(dir,\"x.json\"));",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a rename of two mount paths",
+      "source": "const a=join(partitions.graph.directory,\"m\",\"generations\");const b=join(a,\"x\");renameSync(b,join(a,\"y\"));",
+      "named": true,
+      "unleased": [
+        "renameSync"
+      ]
+    },
+    {
+      "name": "a declarator after a comma carries the mount",
+      "source": "const area=1,mount=join(partitions.tools.directory,\"m\");\nawait censusNxToolingStoreV1(root,mount,ports);",
+      "named": true,
+      "unleased": [
+        "censusNxToolingStoreV1"
+      ]
+    },
+    {
+      "name": "a store parameter of the lease holding opener",
+      "source": "async function install(root:string,store:RepositoryToolingStoreV1){const base=join(partitions.tools.directory,\"m\");writeFileSync(join(base,\"a\"),\"x\");}",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "the same function without a leased parameter",
+      "source": "async function install(root:string,store:Store){const base=join(partitions.tools.directory,\"m\");writeFileSync(join(base,\"a\"),\"x\");}",
+      "named": true,
+      "unleased": [
+        "writeFileSync"
+      ]
+    },
+    {
+      "name": "a sample read callback with a type argument runs leased",
+      "source": "const sample=createNativeImageSharedSampleV1<number|null>({reader:peek,initial:null,read:()=>{const root=join(partitions.graph.directory,\"m\");return statSync(root).mtimeMs;}});",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "the old dedupe pattern: a partition table, an index, a joined base, a stat and a walker without the lease",
+      "source": "type Ctx={workspace:string};\nasync function run(context:Ctx,budgets:CachePartitionBudgetsV1){\n for(const target of declared){\n  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,\"m\",...(target.directory?.split(\"/\")??[])):undefined;\n  const present=base!==undefined&&await stat(base).then(row=>row.isDirectory(),()=>false);\n  await dedupeTreeV1({base,minimumBytes:1},ports);\n }\n}\n",
+      "named": true,
+      "unleased": [
+        "stat",
+        "dedupeTreeV1"
+      ]
+    },
+    {
+      "name": "the fixed dedupe pattern: the stat inside the reader and the reader handed to the walker",
+      "source": "type Ctx={workspace:string};\nasync function run(context:Ctx,budgets:CachePartitionBudgetsV1,leaseDirectory:string){\n for(const target of declared){\n  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,\"m\",...(target.directory?.split(\"/\")??[])):undefined;\n  const reader=createNativeImageSharedReaderV1({leaseDirectory,imageDirectory:join(context.workspace,partition.directory),signal});\n  try{\n   const present=base!==undefined&&await reader.run(()=>stat(base).then(row=>row.isDirectory(),()=>false));\n   await dedupeTreeV1({base,minimumBytes:1,reader},ports);\n  }finally{await reader.close();}\n }\n}\n",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a path from the area helper through an assignment and a loop",
+      "source": "let base;\nbase=cacheAreaDirectoryV1(workspace,ledger,area);\nfor(const name of readdirSync(base)){use(name);}",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "a helper result through a member, a template, a ternary and a spread",
+      "source": "const home=cacheAreaHomeV1(w,id).directory;\nconst file=`${home}/x`;\nconst both=ok?[...file]:file;\nunlinkSync(`${both}.tmp`);",
+      "named": true,
+      "unleased": [
+        "unlinkSync"
+      ]
+    },
+    {
+      "name": "a parameter that receives the path from a caller in the same file",
+      "source": "function walk(directory:string){return readdirSync(directory);}\nconst base=cacheAreaDirectoryV1(workspace,ledger,area);\nwalk(base);",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "the same walker reading inside the reader",
+      "source": "function walk(directory:string,reader:Reader){return reader.run(()=>readdirSync(directory));}\nconst base=cacheAreaDirectoryV1(workspace,ledger,area);\nwalk(base,reader);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a property name or an object key that equals a carrier is no reference",
+      "source": "const directory=join(partitions.graph.directory,\"m\");\nconst other={directory:\"x\"};\nreadFileSync(other.directory);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a partition table type with an unrelated path",
+      "source": "function f(budgets:CachePartitionBudgetsV1,name:string){return readFileSync(name);}",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a partition record typed parameter without an initializer",
+      "source": "function f(partition:RepositoryCachePartitionV1){return statSync(join(partition.directory,\"fixed.dmg\"));}",
+      "named": true,
+      "unleased": [
+        "statSync"
+      ]
+    },
+    {
+      "name": "a loop binding over the declared partition table",
+      "source": "const budgets=budgetPolicy.partitions;\nfor(const[id,partition]of Object.entries(budgets))mkdirSync(partition.directory);",
+      "named": true,
+      "unleased": [
+        "mkdirSync"
+      ]
+    },
+    {
+      "name": "the old dedupe pattern: a partition table, an index, a joined base, a stat and a walker without the lease",
+      "source": "type Ctx={workspace:string};\nasync function run(context:Ctx,budgets:CachePartitionBudgetsV1){\n for(const target of declared){\n  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,\"m\",...(target.directory?.split(\"/\")??[])):undefined;\n  const present=base!==undefined&&await stat(base).then(row=>row.isDirectory(),()=>false);\n  await dedupeTreeV1({base,minimumBytes:1},ports);\n }\n}\n",
+      "named": true,
+      "unleased": [
+        "stat",
+        "dedupeTreeV1"
+      ]
+    },
+    {
+      "name": "the fixed dedupe pattern: the stat inside the reader and the reader handed to the walker",
+      "source": "type Ctx={workspace:string};\nasync function run(context:Ctx,budgets:CachePartitionBudgetsV1,leaseDirectory:string){\n for(const target of declared){\n  const partition=budgets[target.partition],base=partition?join(context.workspace,partition.directory,\"m\",...(target.directory?.split(\"/\")??[])):undefined;\n  const reader=createNativeImageSharedReaderV1({leaseDirectory,imageDirectory:join(context.workspace,partition.directory),signal});\n  try{\n   const present=base!==undefined&&await reader.run(()=>stat(base).then(row=>row.isDirectory(),()=>false));\n   await dedupeTreeV1({base,minimumBytes:1,reader},ports);\n  }finally{await reader.close();}\n }\n}\n",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a path from the area helper through an assignment and a loop",
+      "source": "let base;\nbase=cacheAreaDirectoryV1(workspace,ledger,area);\nfor(const name of readdirSync(base)){use(name);}",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "a helper result through a member, a template, a ternary and a spread",
+      "source": "const home=cacheAreaHomeV1(w,id).directory;\nconst file=`${home}/x`;\nconst both=ok?[...file]:file;\nunlinkSync(`${both}.tmp`);",
+      "named": true,
+      "unleased": [
+        "unlinkSync"
+      ]
+    },
+    {
+      "name": "a parameter that receives the path from a caller in the same file",
+      "source": "function walk(directory:string){return readdirSync(directory);}\nconst base=cacheAreaDirectoryV1(workspace,ledger,area);\nwalk(base);",
+      "named": true,
+      "unleased": [
+        "readdirSync"
+      ]
+    },
+    {
+      "name": "the same walker reading inside the reader",
+      "source": "function walk(directory:string,reader:Reader){return reader.run(()=>readdirSync(directory));}\nconst base=cacheAreaDirectoryV1(workspace,ledger,area);\nwalk(base,reader);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a property name or an object key that equals a carrier is no reference",
+      "source": "const directory=join(partitions.graph.directory,\"m\");\nconst other={directory:\"x\"};\nreadFileSync(other.directory);",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a partition table type with an unrelated path",
+      "source": "function f(budgets:CachePartitionBudgetsV1,name:string){return readFileSync(name);}",
+      "named": true,
+      "unleased": []
+    },
+    {
+      "name": "a partition record typed parameter without an initializer",
+      "source": "function f(partition:RepositoryCachePartitionV1){return statSync(join(partition.directory,\"fixed.dmg\"));}",
+      "named": true,
+      "unleased": [
+        "statSync"
+      ]
+    },
+    {
+      "name": "a loop binding over the declared partition table",
+      "source": "const budgets=budgetPolicy.partitions;\nfor(const[id,partition]of Object.entries(budgets))mkdirSync(partition.directory);",
+      "named": true,
+      "unleased": [
+        "mkdirSync"
+      ]
+    },
+    {
+      "name": "a path stored in a list and read back through a loop",
+      "source": "const base=cacheAreaDirectoryV1(workspace,ledger,area);\nconst found=[];\nfound.push(join(base,\"a\"));\nfor(const path of found)unlinkSync(path);",
+      "named": true,
+      "unleased": [
+        "unlinkSync"
+      ]
+    },
+    {
+      "name": "a path stored in a map with a key and read back",
+      "source": "const base=cacheAreaDirectoryV1(workspace,ledger,area);\nconst stamps=new Map();\nstamps.set(\"k\",base);\nconst at=stamps.get(\"k\");\nstatSync(at);",
+      "named": true,
+      "unleased": [
+        "statSync"
+      ]
+    },
+    {
+      "name": "a list of plain names stays clean",
+      "source": "const base=cacheAreaDirectoryV1(workspace,ledger,area);\nconst names=[];\nnames.push(\"a\");\nreaddirSync(names[0]);",
+      "named": true,
+      "unleased": []
+    }
+  ]
+}

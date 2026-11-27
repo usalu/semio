@@ -27,7 +27,7 @@ use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
 #[semio_framework_async_macros::async_test]
 async fn set_query_op_binary_round_trips_and_agrees_with_text() {
     let operation = set_query("MATCH (a:Piece) RETURN a.name".into());
-    ::store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    ::semio_os_store_test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
@@ -38,20 +38,20 @@ async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     let envelope = create_document_envelope_for_test();
     let mut doc_store = new_trinity_graph_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![set_query("MATCH (a:Piece) RETURN a.name".into())], transaction: None }, &mut identity).await.expect("apply set-query");
-    ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
-    ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
+    ::semio_os_store_test_support::assert_document_text_round_trip(&doc_store).await;
+    ::semio_os_store_test_support::assert_document_pack_round_trip(&doc_store).await;
 }
 
 /// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
 fn create_document_envelope_for_test() -> store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<semio_os_store_test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 use store::os_store::document_materialize::create_document_envelope;
 
 type JackStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<JackSnapshot, TrinityGraphMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<semio_os_store_test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     JackStoreInitializationAuthority::new(envelope, TRINITY_GRAPH_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -242,8 +242,8 @@ fn drive_snapshot_retirement(value: JackSnapshot) -> usize {
 
 #[test]
 fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
-    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
-    crate::test_support::materialize_fixture(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<semio_os_store_test_support::FixtureComposition>();
+    semio_os_store_test_support::materialize_fixture(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
     let source_owner = source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source content owner");
     let clone = drive_snapshot_clone(&source);
     let clone_owner = clone.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("clone content owner");
@@ -261,7 +261,7 @@ fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
 fn nakagin_snapshot_clone_and_retirement_do_not_walk_the_manifest() {
     let manifest = crate::standards::v1::subsets::any::schema::manifest::Manifest::nakagin_default();
     let manifest_steps = drive_owned_retirement(manifest);
-    let source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
+    let source = crate::standards::v1::subsets::any::schema::empty_jack_document::<semio_os_store_test_support::FixtureComposition>();
     assert!(std::sync::Arc::ptr_eq(&source.manifest().unwrap(), &source.manifest().unwrap()));
     let clone = drive_snapshot_clone(&source);
     assert!(std::sync::Arc::ptr_eq(&clone.manifest().unwrap(), &source.manifest().unwrap()));
@@ -272,8 +272,8 @@ fn nakagin_snapshot_clone_and_retirement_do_not_walk_the_manifest() {
 
 #[test]
 fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant() {
-    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
-    crate::test_support::materialize_fixture(
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<semio_os_store_test_support::FixtureComposition>();
+    semio_os_store_test_support::materialize_fixture(
         &mut source.content,
         vec![
             Node { id: "one".into(), kind: "Apartment".into(), name: "One".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() },
@@ -287,7 +287,7 @@ fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant()
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_op_text_round_trips() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&set_query("MATCH (a:Piece) WHERE a.name = 'b' RETURN a".into()));
+    ::semio_os_store_test_support::assert_op_line_round_trip(&set_query("MATCH (a:Piece) WHERE a.name = 'b' RETURN a".into()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -304,7 +304,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = new_trinity_graph_store(create_document_envelope_for_test(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     crate::standards::v1::subsets::any::schema::operations::dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("apply set query");
     let edit: &Edit<TrinityGraphMutation> = store.envelope().vcs.edits.last().expect("published query edit");
-    ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    ::semio_os_store_test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 
 

@@ -19,11 +19,11 @@ const status=async(sample:HostSampleV1,language:string,args:string[]=["status"])
 
 test("a partial sample adds one line in the selected language and the JSON snapshot carries the marker",async()=>{
  const english=await status(host({counters:"partial"}),"en_US.UTF-8"),german=await status(host({counters:"partial"}),"de_DE.UTF-8");
- expect(english.length).toBe(2);expect(english[1]).toMatch(/win32 memory counters could not be read \(probe failed\)/u);
+ expect(english.length).toBe(3);expect(english[1]).toMatch(/win32 memory counters could not be read \(probe failed\)/u);expect(english[2]).toBe("Memory guard: no warden is running on this machine");
  expect(german[1]).toMatch(/Speicherzähler von win32 konnten nicht gelesen werden \(Probe fehlgeschlagen\)/u);
  expect(JSON.parse((await status(host({counters:"partial"}),"en_US.UTF-8",["status","--json"]))[0]!).host.counters).toBe("partial");
 });
 
-test("a complete sample prints the status line alone",async()=>{
- expect((await status(host(),"en_US.UTF-8")).length).toBe(1);
+test("a complete sample prints the status line and the memory guard line alone",async()=>{
+ const lines=await status(host(),"en_US.UTF-8");expect(lines.length).toBe(2);expect(lines[1]).toBe("Memory guard: no warden is running on this machine");
 });

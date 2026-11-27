@@ -39,6 +39,7 @@ semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust"
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust"}
+semio-plugin-retained-command-operation = { path = "../../../../🧵️retained-command/🔄️full-operation/🧱️owner/📦️packages/🦀️rust"}
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
 semio-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }

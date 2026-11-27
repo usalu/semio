@@ -34,7 +34,7 @@ it("attaches actual Window pane chrome to its host edges in either direction and
       for (const row of [...paneEdges.windowPanes, ...paneEdges.anchors.map(row => ({ ...row, slot: undefined }))]) {
         const pane = view.container.querySelector<HTMLElement>(row.slot ? `[data-slot="${row.slot}"]` : `[id="edge-${"anchor" in row ? row.anchor : ""}"]`)!;
         for (const edge of row.edges) expect(new Decimal(Number.parseFloat(pane.style[edge as "left"])).toNumber(), `${direction}:${folded}:${row.slot}:${edge}`).toBe(paneEdges.insetPx);
-        expect(pane.style.maxHeight).toBe("calc(100% - (0px * 2))");
+        expect(pane.style.maxHeight, `${direction}:${folded}:${row.slot}:maxHeight`).toBe("maxHeight" in row ? row.maxHeight : "calc(100% - (0px * 2))");
         expect(pane.style.maxWidth).not.toContain("spacing-single");
         const chrome = pane.querySelector('[data-window-frame]');
         expect(chrome).not.toBeNull();

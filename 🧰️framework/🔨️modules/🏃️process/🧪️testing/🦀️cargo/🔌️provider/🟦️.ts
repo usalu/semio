@@ -12,7 +12,7 @@ import type { ExactCargoLawOptions, ExactCargoLawReceipt } from "../🎯️exact
 /** 📨️ Carries one exact Cargo law request; the provider completes it with its selected preparation, storage and source authority. */
 export type ExactCargoLawRequestV1 = Omit<ExactCargoLawOptions, "storage" | "sourceBoundary" | "leaseDirectory" | "manifestPaths" | "cargoTargetDir" | "artifactDir" | "cancelled"> & Readonly<{ manifestPath?: string; manifestPaths?: Readonly<Record<string, string>> }>;
 /** 🔨️ Carries one Cargo artifact production request; the provider completes it with its selected storage, source and network authority. */
-export type CargoArtifactBuildRequestV1 = Omit<CargoArtifactBuildOptionsV1, "storage" | "sourceBoundary" | "maximumObservationBytes" | "withCargoInputs"> & Readonly<{ invocation: ScriptInvocation; producer: "artifact" | "descriptor-emitter" }>;
+export type CargoArtifactBuildRequestV1 = Omit<CargoArtifactBuildOptionsV1, "storage" | "sourceBoundary" | "maximumObservationBytes" | "withCargoInputs"> & Readonly<{ invocation: ScriptInvocation; producer: "artifact" | "descriptor-emitter"; sourceRoot?: string }>;
 
 /** 🏪️ Exposes the bounded compiler store a provider holds open for one operation. */
 export type CompilerStoreViewV1 = Readonly<{ control: ResourceLeaseControl; root: string; buildDirectory: string; captureDirectory: string; storage: NativeStorageReservationV1; sourceBoundary: CargoSourceBoundaryPolicyV1; withCargoInputs: CargoCompilerInputsPortV1; environment: Readonly<Record<string, string | undefined>> }>;

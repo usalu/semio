@@ -56,7 +56,7 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
 }
 
 fn open_workspace(catalog: Arc<Catalog>) -> Arc<HeadlessWorkspace> {
-    let dir = store::test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let mut workspace=HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog, serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     workspace.test_discovery=Some(serde_json::from_str(fixture_text!("../../../💡️inference/🧪️tests/🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
     Arc::new(workspace)

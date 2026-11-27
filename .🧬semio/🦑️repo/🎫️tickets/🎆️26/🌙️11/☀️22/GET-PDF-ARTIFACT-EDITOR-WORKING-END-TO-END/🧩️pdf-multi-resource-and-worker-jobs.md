@@ -914,3 +914,44 @@ A page's operator program was one `Vec<PdfOp>` (128 B per operator): 12,843 oper
 
 #### 5. Verification and open items
 
+- **Workspace lib tests** (`s15-allr1`, PDF workspace, institution and thesis skipped): 89 test binaries; testkit, `mut-family-*`, lift, filters, native-save and every other registered route (navigation, nested, multi-resource, fonts, form images, page resources, AcroForm, two-page, site plan) pass. 20 tests fail, none through this change: the history acceptance law (`history_edits_end_to_end`, `conflict_history_edits_end_to_end` for `pdf14` (whose model has no page program), `pdf17*`, `pdf17vt`; the binary editor failed the same law in the 2026-11-25 run `bm-test2.log`; message `replacement input is not the admitted canonical operation wire`, framework operation wire); three `paged_natural_decode_*` (`original clock Source or action changed`); `a_freshly_born_pdf_app_…` (6,823,571 B against the fixture's 6,815,744 B, before any document opens); `controlled_annotations_…`, `controlled_shapes_…` (annotations with `/AP` now complete in the controlled lift; the test's `get` panic) and `owned_pdf_snapshot_borrowed_projection_…` (the field projection refuses an `IntrinsicBytesSource`, `🗣️dsl/…/🛫️encode`).
+- **Thesis route** (`s15-thesis1`, `registered_bachelor_thesis_…`): the open now completes (476.9 MB copy, 201 + 1,741 turns; before: the scope's copy stock was exhausted), and the route fails one step later at Save: `stdio.pdf.save-declined` (`registered PDF Save poll`). The Save refusal was not diagnosed (next blocker, same class as slice 12 section 6/7 for the site plan: probably an `IncrementPlan` route refusal for the thesis).
+- **Not verified** (another session's framework crates did not compile during the run: `semio-os-store-one-item` fixture, then `maintenance_starved_mark`): the three trivial consumers outside the PDF tree, edited by hand, `page.content = painter.ops.into_iter().collect()` (semio drawing export), `ink.ops.into_iter().collect()` (BIM sheets) and `.into()` in the layout interchange tests. BIM and layout workspaces also carry unrelated errors of their own.
+- **Not done**: form, Type 3 glyph and tiling programs and whole-replacement diffs (`SetPageContent` over a page with no common prefix or suffix) are still one `Vec`; the controlled lift's page reservations now break the body run at every 32 operators (402 extra host turns for the site plan, `settle_turns` 142 against 143 before: no measurable cost); no TypeScript twin change was needed (the wire is the same array).
+
+#### Files
+
+- Model: `🖋️content-operators/🦀️.rs` (+ package `🦀️.rs`, `Cargo.toml`), `📐️model/🦀️.rs`, `📃️page-model/🦀️.rs`, `🪪️stream-roles/🦀️.rs`, mutations `➕️append-page-content`, `✏️set-page-content`, `🖋️insert-content`, `🧻️remove-content`, diff `🔀️tri-state-indexed-and-keyed`, `📄️page-info-and-pages`, `🛠️mutation-diff-builders`, `🧭️content-mapping`.
+- Lift: `📜️page-content/🧺️program`, `🧭️controlled`, `🧩️lifter-and-document`, graph projection; lower `🎛️options-and-lowering`, `🧭️pages-and-navigation`; content print/extract/references; sqlite snapshot `🖋️content`; export graft and builders; editor scene, geometry, image preview, text and object edits, authoring.
+- Tests: `pdf-snapshot-value` (two new tests, fixture `🧫️fixtures/🔣️.json`), page-content, stream-roles, testkit, mutations, diff, export, editor, layout interchange.
+- Ticket inputs: `run-s15-check.sh`, `run-s15.sh`, `run-s15-retry.sh`, `run-s15-others.sh`, `run-s15-others2.sh`.
+
+
+### Slice 16: symbol discovery of the borrowed Pack cursor in O(N log N) (2026-11-26)
+
+Native, debug, every cargo run through `native-cargo.sh` (`pack-cursor-test16.sh`, `run-s16.sh`, `run-s16-routes.sh`, `run-s16-thesis.sh`); logs `🗑️generated/s16-*.log`. Every temporary `[DEBUG]` hook (per-phase copy print, wire poll print, `EVENTS` atomic) is removed again.
+
+#### 1. Design (`🫳️borrowed/⏳️cursor/🦀️.rs`)
+
+- **Gone:** the 16-slot inline tail, `MOVE_BLOCK` and the nine merge fields; `Phase::Insert`, `MergeReserve`, `MergePush`, `MergeFind`, `MergeMove`. The cursor and `BorrowedPackDocumentCursor` stay within 4,096 bytes (the size test passes).
+- **Chain index:** `Buckets` births a fixed `PagedList<Bucket, 256>`; a `Bucket` is 16 `u32` heads (64 bytes, one event), so 4,096 buckets, never grown, never rehashed. Each `Symbol` gained `hash: u32` and `next: u32` (two `u32`).
+- **Discovery:** `Hash` (FNV-1a 32 bit, resumable, at most 64 text bytes per event through `TextReadCursor::copy_step`), `Probe` (read the head, then one chain link per event: equal hash and equal length go to `Find`), `Find` (the existing resumable byte compare; equal increments `occurrences`), `Reserve` (funded symbol page, then one event pushes the symbol with its chain link and writes the bucket head). New symbols are appended unsorted.
+- **Order, once, at the end of discovery:** `Order` (funded pages, 16 identity slots per event), `Merge` (bottom-up merge sort of runs of width 1, 2, 4, ... between `order` and the symbols' `next` links as scratch, one slot per event, the same compare, a duplicate is an error), `SortBack` (copy back when the last pass ended in the scratch). Symbol set and comparator are unchanged, so the output is byte-identical.
+- **Quotes:** capacity (`Buckets`, `Order` reservations), work (same), depth (every new phase, chain probes include the bucket backing), minimum copy (bucket row 64, probe 8, symbol push `size_of::<Symbol>() + 8`, order 4, merge 0, 4 or 1). The exact-grant tests (`...exact_physical_grants`, `...intrinsic_order_duplicates_and_exact_grants`) cover them.
+- **Close ladder:** `buckets` retires after `order` (pop per row, then one funded release): `next_close_copy_byte_demand`, `next_close_byte_demand`, `retirement_demands`, `close`, `terminal_is_empty`, `Drop`, `PhysicalBorrowedPack`.
+
+#### 2. Laws (`⏳️cursor/🧪️tests/🦀️.rs`)
+
+- `borrowed_pack_discovery_and_order_copy_is_bounded_by_n_log_n_and_every_step_heap_equals_its_receipt`: N in 1, 2, 3, 17, 256, 1024, 8192 distinct eight-byte texts; every step funded exactly (`birth == retained_capacity_bytes`, `free == 0`, `fits`), the order equals the sorted texts, copy `<= fixed + N (8 hash + 4 head + Symbol + 8 + 4 order + 4 + chain probes) + N passes (4 + 16) + 4 N`, with `fixed` derived from the structure (64 frames, 256 bucket rows of 64 bytes, and for each list `(pages + 1)` metadata steps plus `pages` leaf headers, the quote of an empty list's first reservation), plus a growth check (per-symbol copy at N = 8192 against N = 256 under 3x; the replaced design grew 8x).
+- Document test `...segment_runs_match_the_canonical_oracle_in_events_per_run`: `events < raw/8 + raw/64 + fixed`, where raw/64 is the new hashing pass and `fixed` the frame and bucket births (derived, not a relaxed constant).
+- Step caps of the intrinsic-depth test: old cap plus the 256 bucket rows plus the reserve events. The wire test cap (`1024 + 3 x bucket events`) is a margin, not derived: the measured run was ready at poll 1647 with 884 cursor events (about 489 of them not accounted for by this slice's added events).
+
+#### 3. Results
+
+- Pack cursor 21 of 21, deflate 34 of 34, replication 2 of 2 (`s16-codec`, `s16-cur6`); TypeScript record-document 19 of 19, Python 18 of 18; `recode-packs.ts dry` over the 150 committed `*.pack.semio`: 0 changed, 109 identical, 41 not readable by the TS twin (SPK magic), as before.
+- Institution diagram (`s16r-inst1`): open 146,149,369 B copied, 201 + 607 = 808 turns (bound 4 MiB + 24 x 648,725 + 400 x 343,228 = 157,054,904 B; turn limit 1,024). Slice 14: 179.8 MB. The open assertions pass; the test then fails in the Save poll, in code another session is changing (its own `[DEBUG]` traces).
+- Bachelor thesis (`s16t1`, 6,346,331 B): open 476,960,275 B copied, 201 + 1,741 = 1,942 turns; it now finishes (Slice 14: it ended at the 504 MiB lifetime stock) and passes the real-world copy and turn assertions; the test then fails in the Save poll with `stdio.pdf.save-declined-page`, outside this slice.
+
+#### 4. Files
+
+`🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs`, its `🧪️tests/🦀️.rs`, and `🎒️document/⏳️cursor/🧪️tests/🦀️.rs`; ticket inputs `s16-patch.py`, `pack-cursor-test16.sh`, `run-s16*.sh`.

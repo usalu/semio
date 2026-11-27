@@ -72,7 +72,7 @@ async fn guest_codec_tables_answer_like_the_declared_native_codecs() {
     let runtime = semio_plugin::plugin_runtime::PluginRuntime::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, crate::plugin().expect("puzzle assembles"));
     let document_id = format!("artifact-{}", "3".repeat(32));
-    let declarations = [semio_s_artifact_puzzle_2d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
+    let declarations = [semio_s_artifact_puzzle_2d_pdf_export::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
     let mut compared = Vec::new();
     for declaration in declarations {
         for standard in declaration.standards {
@@ -97,7 +97,7 @@ fn declared_io_routes_match_the_complete_advertised_roster() {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
     use semio_os_kernel::io::io_mechanism::IoEntryDirection;
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️io-routes/🔣️.json")).unwrap();
-    let declarations = [semio_s_artifact_puzzle_2d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
+    let declarations = [semio_s_artifact_puzzle_2d_pdf_export::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
     assert_eq!(contract["artifacts"].as_array().unwrap().len(), declarations.len());
     for (declaration, expected) in declarations.into_iter().zip(contract["artifacts"].as_array().unwrap()) {
         let mut imports = std::collections::BTreeSet::new();
@@ -130,7 +130,7 @@ async fn declared_exact_io_routes_restore_the_registered_native_document() {
     let runtime = semio_plugin::plugin_runtime::PluginRuntime::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, crate::plugin().expect("actual Puzzle declaration registers"));
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️io-routes/🔣️.json")).unwrap();
-    let declarations = [semio_s_artifact_puzzle_2d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
+    let declarations = [semio_s_artifact_puzzle_2d_pdf_export::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];
     let routes = semio_os_kernel::io::io_mechanism::io_entries();
     let mut compared = 0;
     let mut exported_count = 0;
