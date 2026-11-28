@@ -297,9 +297,17 @@
         "semio-s-artifact-stdio-dwg-read",
         "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dxf",
-        "semio-s-artifact-stdio-pdf",
         "semio-s-artifact-stdio-svg",
         "semio-s-artifact-stdio-xml"
+      ]
+    },
+    {
+      "subset": "drawing",
+      "direction": "import",
+      "package": "semio-s-artifact-stdio-semio-drawing-pdf-import",
+      "manifest": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "targets": [
+        "semio-s-artifact-stdio-pdf"
       ]
     },
     {
@@ -312,11 +320,19 @@
         "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dwg-write",
         "semio-s-artifact-stdio-dxf",
-        "semio-s-artifact-stdio-pdf-conformance-support",
-        "semio-s-artifact-stdio-pdf-lower",
         "semio-s-artifact-stdio-png",
         "semio-s-artifact-stdio-svg",
         "semio-s-artifact-stdio-xml"
+      ]
+    },
+    {
+      "subset": "drawing",
+      "direction": "export",
+      "package": "semio-s-artifact-stdio-semio-drawing-pdf-export",
+      "manifest": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "targets": [
+        "semio-s-artifact-stdio-pdf-conformance-support",
+        "semio-s-artifact-stdio-pdf-lower"
       ]
     },
     {

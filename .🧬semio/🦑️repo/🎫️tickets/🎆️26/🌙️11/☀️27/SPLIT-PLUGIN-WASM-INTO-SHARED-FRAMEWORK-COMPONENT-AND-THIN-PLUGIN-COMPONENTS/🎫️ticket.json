@@ -1,0 +1,22 @@
+{
+  "title": "Split Plugin Wasm Into Shared Framework Component and Thin Plugin Components",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Design and implement splitting the ~230 MB plugin wasm build into a stable, cacheable framework component and thin per-plugin components, so the edit→browser loop for a plugin change drops below 10 minutes. Measure today's edit→browser time for one plugin and where the 230 MB comes from (per-crate size, duplicated framework code per plugin), propose the component boundary (component model / wasm linking) schema-first, implement it for one plugin end to end, and prove the time with before/after numbers. Done = one plugin rebuilt and reloaded in the browser in \u003c 10 min after a plugin-only edit, framework component reused from cache, written up in the ticket folder. Origin: fleet wave 1127 proposal-review item 2 (ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION).",
+  "goal": "🎯runningplugins",
+  "sessions": [
+    "89df8556-721d-4447-bf3e-5ac48549b494"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 11:50:01",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Design and implement splitting the ~230 MB plugin wasm build into a stable, cacheable framework component and thin per-plugin components, so the edit→browser loop for a plugin change drops below 10 minutes. Measure today's edit→browser time for one plugin and where the 230 MB comes from (per-crate size, duplicated framework code per plugin), propose the component boundary (component model / wasm linking) schema-first, implement it for one plugin end to end, and prove the time with before/after numbers. Done = one plugin rebuilt and reloaded in the browser in \u003c 10 min after a plugin-only edit, framework component reused from cache, written up in the ticket folder. Origin: fleet wave 1127 proposal-review item 2 (ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION).",
+      "llm": "opus-5-5"
+    }
+  ]
+}

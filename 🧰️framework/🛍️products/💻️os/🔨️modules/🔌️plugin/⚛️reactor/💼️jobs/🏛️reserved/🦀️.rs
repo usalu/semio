@@ -144,6 +144,7 @@ impl crate::BoundedJob for FrameworkReservedBoundedJob {
  }
  fn cancel(&mut self){self.cancelled=true}
  fn checkpoint(&self)->Option<Vec<u8>>{None}
+ fn replay_input(&self)->Option<&[u8]>{self.source.as_ref().map(|source|source.0.as_slice())}
  fn terminal_drop_is_shallow(&self)->bool{self.source.is_none()&&self.source_close.is_none()&&self.output.is_none()&&self.output_close.is_none()&&self.admission.terminal_is_empty()&&self.construction.terminal_is_empty()}
 }
 

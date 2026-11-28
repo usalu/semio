@@ -7,7 +7,7 @@ const POINTS: [[f64; 2]; 9] = [[0.0, 3000.0], [150.0, 2600.0], [320.0, 1500.0], 
 const PARAMS: SpectrumParameters = SpectrumParameters { ag: 1.5, s: 1.2, tb: 0.15, tc: 0.5, td: 2.0, eta: 1.0, q: 3.0, beta: 0.2 };
 
 fn oracle(case: &Value) -> Value {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../📈️diagram-kit/🧪️tests/🔮️oracle/🐍️.py");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../📈️diagram-kit/🧪️tests/🔮️oracle/🐍️.py");
     let mut child = semio_s_plugin_norm_compliance::python_oracle::command().arg(path).stdin(Stdio::piped()).stdout(Stdio::piped()).spawn().expect("python oracle");
     child.stdin.take().expect("stdin").write_all(case.to_string().as_bytes()).expect("write");
     let out = child.wait_with_output().expect("oracle");

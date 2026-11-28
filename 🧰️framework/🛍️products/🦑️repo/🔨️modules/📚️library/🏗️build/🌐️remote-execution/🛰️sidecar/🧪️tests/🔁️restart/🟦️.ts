@@ -29,9 +29,9 @@ const rig=(role:"agent"|"cache"|"graph"|"ready"|"pool",watch:ReturnType<typeof t
  return{lines,events,timers,restart,at:()=>clock,advance:(ms:number)=>{clock+=ms;restart.tick();}};
 };
 
-test("the numbers come from the schema: 5 min quiet, 30 min at most, 5 min grace, a 30 s look",()=>{
+test("the numbers come from the schema: 2 min quiet, 9 min at most, 3 min grace, a 30 s look, 15 min until every role runs the new code",()=>{
  expect(sidecarRestartPolicyV1).toEqual(schema.definitions.Restart.const);
- expect(sidecarRestartPolicyV1.quietMilliseconds).toBe(300_000);expect(sidecarRestartPolicyV1.maximumDeferralMilliseconds).toBe(1_800_000);expect(sidecarRestartPolicyV1.minimumIntervalMilliseconds).toBe(1_800_000);expect(sidecarRestartPolicyV1.graceMilliseconds).toBe(300_000);expect(sidecarRestartPolicyV1.watchMilliseconds).toBe(30_000);expect(sidecarRestartPolicyV1.serveDeferralMilliseconds).toBe(28_800_000);
+ expect(sidecarRestartPolicyV1.quietMilliseconds).toBe(120_000);expect(sidecarRestartPolicyV1.maximumDeferralMilliseconds).toBe(540_000);expect(sidecarRestartPolicyV1.minimumIntervalMilliseconds).toBe(300_000);expect(sidecarRestartPolicyV1.graceMilliseconds).toBe(180_000);expect(sidecarRestartPolicyV1.reloadWithinMilliseconds).toBe(900_000);expect(sidecarRestartPolicyV1.watchMilliseconds).toBe(30_000);expect(sidecarRestartPolicyV1.serveDeferralMilliseconds).toBe(28_800_000);
 });
 
 test("an edit outside the closure never restarts, however often it happens",()=>{
@@ -240,7 +240,7 @@ test("an agent that serves actions for other agents is drained, never aborted: i
  expect(waited.events.filter(event=>event.startsWith("abort@")).length).toBe(1);
  const bounded=results[3]!;expect(bounded.lines.some(line=>line.includes("the bound of the drain")&&line.includes("Grenze des Auslaufens"))).toBe(true);
  expect(results[0]!.lines.some(line=>line.includes("never aborted"))).toBe(false);
- expect(sidecarRestartPolicyForV1("agent").drainMaximumMilliseconds).toBe(7_200_000);
+ expect(sidecarRestartPolicyForV1("agent").drainMaximumMilliseconds).toBe(360_000);
 });
 
 test("the Python oracle derives the same abort times of the drain",()=>{
@@ -255,9 +255,9 @@ test("a cache server restarts for a code change although requests are in flight 
  expect(test.events.length,"restarted once, in flight or not").toBe(2);expect(test.events[0]).toMatch(/^begin@/u);expect(test.events[1]).toMatch(/^abort@/u);
 });
 
-test("with the declared policy ten landings, two minutes apart, cause one restart of the cache role and a long graph read is never cancelled by them",()=>{
+test("with the declared policy ten landings, 30 seconds apart, cause one restart of the cache role and a long graph read is never cancelled by them",()=>{
  const real=sidecarRestartPolicyV1,cache=tree(),run=rig("cache",cache.watch,real);
- for(let landing=0;landing<10;landing++){appendFileSync(cache.inside,`// ${landing}\n`);run.advance(120*SECOND);}
+ for(let landing=0;landing<10;landing++){appendFileSync(cache.inside,`// ${landing}\n`);run.advance(30*SECOND);}
  expect(run.events,"inside the burst nothing restarts").toEqual([]);
  while(run.events.length===0)run.advance(30*SECOND);
  expect(run.events.length).toBe(2);
@@ -268,19 +268,28 @@ test("with the declared policy ten landings, two minutes apart, cause one restar
  expect(work.restartPending).toBe(true);
 });
 
-test("the cache server, whose restart is a hand-over, restarts for landings at most every three hours however often its closure is edited",()=>{
+test("the cache server, whose restart is a hand-over, restarts for landings at most every 15 minutes however often its closure is edited",()=>{
  const cache=sidecarRestartPolicyForV1("cache");
- expect(cache).toMatchObject({quietMilliseconds:900_000,maximumDeferralMilliseconds:10_800_000,minimumIntervalMilliseconds:10_800_000,serveDeferralMilliseconds:0});
+ expect(cache).toMatchObject({quietMilliseconds:300_000,maximumDeferralMilliseconds:600_000,minimumIntervalMilliseconds:900_000,serveDeferralMilliseconds:0});
  const world=tree(),run=rig("cache",world.watch,cache);
  let restartedAt:number|undefined;
- for(let tick=0;tick<24*60*2&&restartedAt===undefined;tick++){if(tick%20===0)appendFileSync(world.inside,`// ${tick}\n`);run.advance(30*SECOND);if(run.events.length>0)restartedAt=run.at();}
- expect(restartedAt,"a closure edited every ten minutes still restarts").toBeDefined();
- expect(restartedAt!-1_000_000,"not before the minimum interval").toBeGreaterThanOrEqual(10_800_000);
- expect(restartedAt!-1_000_000,"and within one look of it").toBeLessThanOrEqual(10_800_000+30*SECOND);
+ for(let tick=0;tick<24*60*2&&restartedAt===undefined;tick++){if(tick%6===0)appendFileSync(world.inside,`// ${tick}\n`);run.advance(30*SECOND);if(run.events.length>0)restartedAt=run.at();}
+ expect(restartedAt,"a closure edited every three minutes still restarts").toBeDefined();
+ expect(restartedAt!-1_000_000,"not before the minimum interval").toBeGreaterThanOrEqual(900_000);
+ expect(restartedAt!-1_000_000,"and within one look of it").toBeLessThanOrEqual(900_000+30*SECOND);
  const quiet=tree(),calm=rig("cache",quiet.watch,cache);
  appendFileSync(quiet.inside,"// x\n");
  while(calm.events.length===0)calm.advance(30*SECOND);
- expect(calm.at()-1_000_000,"a single landing restarts when the closure was quiet and the interval is over").toBeGreaterThanOrEqual(10_800_000);
+ expect(calm.at()-1_000_000,"a single landing restarts when the closure was quiet and the interval is over").toBeGreaterThanOrEqual(900_000);
+});
+
+test("every role reloads within the bound of the schema after the first edit of its closure: the deferral plus the drain of the role never exceeds it, only the graph server serving a read is exempt",()=>{
+ for(const role of ["agent","scheduler","spool","pool","ready","cache"] as const){
+  const policy=sidecarRestartPolicyForV1(role),drain=role==="agent"?policy.drainMaximumMilliseconds!:role==="cache"||role==="pool"||role==="ready"?0:policy.graceMilliseconds;
+  expect(policy.maximumDeferralMilliseconds+drain,role).toBeLessThanOrEqual(sidecarRestartPolicyV1.reloadWithinMilliseconds);
+  expect(policy.quietMilliseconds,role).toBeLessThanOrEqual(policy.maximumDeferralMilliseconds);
+ }
+ expect(sidecarRestartPolicyForV1("graph").serveDeferralMilliseconds).toBeGreaterThan(sidecarRestartPolicyV1.reloadWithinMilliseconds);
 });
 
 test("a role that reports progress is not restarted while the progress advances, whatever the clock says, and restarts when it stalls",()=>{

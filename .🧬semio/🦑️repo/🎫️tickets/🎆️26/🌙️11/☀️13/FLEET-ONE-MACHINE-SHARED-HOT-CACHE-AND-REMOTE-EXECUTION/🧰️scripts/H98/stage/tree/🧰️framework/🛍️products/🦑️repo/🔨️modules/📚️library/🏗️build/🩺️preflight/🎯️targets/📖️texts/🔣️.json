@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "labels": {
+    "refusal": {"en": "Refused", "de": "Abgelehnt"},
+    "warning": {"en": "Warning", "de": "Warnung"},
+    "schedule": {"en": "Producer scheduled first", "de": "Erzeuger zuerst eingeplant"},
+    "ok": {"en": "Preflight passed", "de": "Vorprüfung bestanden"},
+    "failed": {"en": "Preflight refused", "de": "Vorprüfung abgelehnt"}
+  },
+  "findings": {
+    "target-unknown": {
+      "detail": {"en": "Target {target} names no owner in the build owner registry.", "de": "Das Ziel {target} nennt keinen Eigentümer im Build-Eigentümerregister."},
+      "fix": {"en": "Check the project name with repo show projects, or run repo graph to refresh the registry.", "de": "Prüfe den Projektnamen mit repo show projects oder aktualisiere das Register mit repo graph."}
+    },
+    "generated-no-producer": {
+      "detail": {"en": "{subject} needs the generated file {needed}, but contract {contract} declares no Build producer for it (owner {owner}).", "de": "{subject} braucht die erzeugte Datei {needed}, aber der Vertrag {contract} deklariert dafür keinen Build-Erzeuger (Eigentümer {owner})."},
+      "fix": {"en": "Declare a producer target on the contract in the taxonomy (generatorContracts), or remove the import.", "de": "Deklariere im Vertrag der Taxonomie (generatorContracts) ein Erzeugerziel oder entferne den Import."}
+    },
+    "generated-producer-unregistered": {
+      "detail": {"en": "{subject} needs {needed}; contract {contract} names producer {target}, but no registered owner provides it.", "de": "{subject} braucht {needed}; der Vertrag {contract} nennt den Erzeuger {target}, aber kein registrierter Eigentümer stellt ihn bereit."},
+      "fix": {"en": "Fix the producer name in the contract or register the owner (repo graph).", "de": "Korrigiere den Erzeugernamen im Vertrag oder registriere den Eigentümer (repo graph)."}
+    },
+    "generated-producer-target-missing": {
+      "detail": {"en": "{subject} (owner {owner}) lacks the target {target} that contract {contract} names as producer of {needed}.", "de": "{subject} (Eigentümer {owner}) hat das Ziel {target} nicht, das der Vertrag {contract} als Erzeuger von {needed} nennt."},
+      "fix": {"en": "Add the target to the project manifest or correct the contract.", "de": "Ergänze das Ziel im Projektmanifest oder korrigiere den Vertrag."}
+    },
+    "import-unresolved": {
+      "detail": {"en": "Import {specifier} of {subject} resolves to no file (owner {owner}).", "de": "Der Import {specifier} in {subject} führt zu keiner Datei (Eigentümer {owner})."},
+      "fix": {"en": "Create the file, correct the path, or remove the import.", "de": "Lege die Datei an, korrigiere den Pfad oder entferne den Import."}
+    },
+    "rust-mod-unresolved": {
+      "detail": {"en": "mod {module}; in {subject} has neither {module}.rs nor {module}/mod.rs (owner {owner}).", "de": "mod {module}; in {subject} hat weder {module}.rs noch {module}/mod.rs (Eigentümer {owner})."},
+      "fix": {"en": "Create the module file or remove the declaration.", "de": "Lege die Moduldatei an oder entferne die Deklaration."}
+    },
+    "rust-include-unresolved": {
+      "detail": {"en": "include of {path} in {subject} resolves to no file (owner {owner}).", "de": "Das Einbinden von {path} in {subject} führt zu keiner Datei (Eigentümer {owner})."},
+      "fix": {"en": "Create the file, correct the path, or declare a generator contract for it.", "de": "Lege die Datei an, korrigiere den Pfad oder deklariere einen Generatorvertrag dafür."}
+    },
+    "rust-crate-undeclared": {
+      "detail": {"en": "{subject} uses workspace crate {crate}, which {manifest} does not declare as a dependency (owner {owner}).", "de": "{subject} nutzt die Workspace-Crate {crate}, die {manifest} nicht als Abhängigkeit deklariert (Eigentümer {owner})."},
+      "fix": {"en": "Add {crate} to the dependencies of {manifest}.", "de": "Füge {crate} zu den Abhängigkeiten von {manifest} hinzu."}
+    },
+    "manifest-missing": {
+      "detail": {"en": "Workspace {workspace} lists member {subject}, but its Cargo.toml does not exist (owner {owner}).", "de": "Der Workspace {workspace} führt das Mitglied {subject}, aber dessen Cargo.toml existiert nicht (Eigentümer {owner})."},
+      "fix": {"en": "Create the manifest or remove the member from {workspace}.", "de": "Lege das Manifest an oder entferne das Mitglied aus {workspace}."}
+    },
+    "manifest-invalid": {
+      "detail": {"en": "{subject} is not a readable Cargo manifest with a package name (owner {owner}).", "de": "{subject} ist kein lesbares Cargo-Manifest mit Paketnamen (Eigentümer {owner})."},
+      "fix": {"en": "Repair the TOML syntax of {subject}.", "de": "Repariere die TOML-Syntax von {subject}."}
+    },
+    "manifest-no-workspace": {
+      "detail": {"en": "{subject} belongs to no Cargo workspace (owner {owner}).", "de": "{subject} gehört zu keinem Cargo-Workspace (Eigentümer {owner})."},
+      "fix": {"en": "Add package.workspace to the manifest or a workspace root above it.", "de": "Setze package.workspace im Manifest oder lege darüber eine Workspace-Wurzel an."}
+    },
+    "manifest-not-member": {
+      "detail": {"en": "{subject} is a path dependency of {dependent} inside workspace {workspace} but not one of its members (owner {owner}).", "de": "{subject} ist eine Pfadabhängigkeit von {dependent} im Workspace {workspace}, aber keines seiner Mitglieder (Eigentümer {owner})."},
+      "fix": {"en": "Add the crate to workspace.members of {workspace}.", "de": "Füge die Crate zu workspace.members von {workspace} hinzu."}
+    },
+    "lock-missing": {
+      "detail": {"en": "Workspace {manifest} has no Cargo.lock at {subject}; a locked build cannot start (owner {owner}).", "de": "Der Workspace {manifest} hat keine Cargo.lock unter {subject}; ein gesperrter Build kann nicht starten (Eigentümer {owner})."},
+      "fix": {"en": "Generate the lock file with the command shown.", "de": "Erzeuge die Sperrdatei mit dem gezeigten Befehl."}
+    },
+    "lock-stale": {
+      "detail": {"en": "{subject} is stale for crate {crate} ({why}); manifest {manifest}; a locked build would be refused after the compile queue (owner {owner}).", "de": "{subject} ist für die Crate {crate} veraltet ({why}); Manifest {manifest}; ein gesperrter Build würde erst nach der Compile-Warteschlange abgelehnt (Eigentümer {owner})."},
+      "fix": {"en": "Refresh the lock file with the command shown and review the diff.", "de": "Aktualisiere die Sperrdatei mit dem gezeigten Befehl und prüfe die Änderung."}
+    },
+    "memory-over-ceiling": {
+      "detail": {"en": "Unit {subject} peaked at {peak} MB, above the host ceiling of {ceiling} MB.", "de": "Die Einheit {subject} erreichte {peak} MB und liegt über der Host-Grenze von {ceiling} MB."},
+      "fix": {"en": "Run it single-threaded on the carving list, split the unit, or schedule it on a larger host.", "de": "Führe sie in einem Thread auf der Zerlegungsliste aus, teile die Einheit oder plane sie auf einem größeren Host ein."}
+    },
+    "source-large": {
+      "detail": {"en": "Unit {owner} has no measured peak and its largest source {subject} is {bytes} bytes; compiling it may exceed memory.", "de": "Die Einheit {owner} hat keinen gemessenen Spitzenwert und ihre größte Quelle {subject} hat {bytes} Bytes; das Kompilieren kann den Speicher übersteigen."},
+      "fix": {"en": "Split the file, or run the unit once to record its peak.", "de": "Teile die Datei oder führe die Einheit einmal aus, um ihren Spitzenwert aufzuzeichnen."}
+    }
+  }
+}

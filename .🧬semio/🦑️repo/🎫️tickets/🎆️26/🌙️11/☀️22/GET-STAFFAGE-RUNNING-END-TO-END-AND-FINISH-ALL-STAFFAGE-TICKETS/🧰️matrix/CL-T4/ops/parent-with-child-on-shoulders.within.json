@@ -1,0 +1,30 @@
+[
+ {
+  "remove": "joint-head|mass-head|joint-scapula-l|joint-hip-bone-l|joint-thigh-l|joint-scapula-r|joint-hip-bone-r|joint-thigh-r|mass-toddler-head|joint-toddler-thigh-l|joint-toddler-thigh-r",
+  "list": "structure",
+  "scales": [
+   50
+  ]
+ },
+ {
+  "remove": "joint-head|mass-head|joint-hip-bone-l|joint-thigh-l|joint-hip-bone-r|joint-thigh-r|mass-toddler-head|joint-toddler-thigh-l|joint-toddler-thigh-r",
+  "list": "structure",
+  "scales": [
+   100
+  ]
+ },
+ {
+  "remove": "joint-head|mass-head|joint-thigh-l|joint-hip-bone-r|joint-thigh-r|mass-toddler-head",
+  "list": "structure",
+  "scales": [
+   200
+  ]
+ },
+ {
+  "remove": "mass-pelvis|mass-thorax|joint-head|mass-head|joint-forearm-l|joint-forearm-r|mass-toddler-torso|mass-toddler-head|joint-toddler-shank-l|joint-toddler-shank-r",
+  "list": "structure",
+  "scales": [
+   500
+  ]
+ }
+]

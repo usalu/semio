@@ -176,6 +176,21 @@
       ]
     },
     {
+      "operation": "land",
+      "kind": "execute",
+      "bind": { "--json": true },
+      "positional": [
+        {
+          "name": "words",
+          "argv": true,
+          "description": {
+            "en": "The words of repo land as an array: checkout <dir> <path>... | delete <dir> <path>... | [check] <dir> | rollback <id> | status. A staged changeset is checked against a scratch overlay of the live tree (stale bases, dangling imports, type check, Rust check, suite law, declared tests) and then applied atomically under the area locks inside the landing slot; the result lists the gates, the files and the rollback point.",
+            "de": "Die Wörter von repo land als Array: checkout <Ordner> <Pfad>... | delete <Ordner> <Pfad>... | [check] <Ordner> | rollback <Kennung> | status. Ein vorbereiteter Änderungssatz wird gegen ein Scratch-Overlay des Live-Baums geprüft (veraltete Basen, hängende Importe, Typprüfung, Rust-Prüfung, Suite-Gesetz, deklarierte Tests) und dann atomar unter den Bereichssperren im Landefenster angewendet; das Ergebnis führt die Prüfschritte, die Dateien und den Rücksetzpunkt auf."
+          }
+        }
+      ]
+    },
+    {
       "operation": "typecheck",
       "kind": "execute",
       "bind": { "--json": true },
@@ -258,6 +273,7 @@
     { "operation": "cache", "subcommand": "clear", "reason": { "en": "Empties the shared task cache that other agents use; a human decision.", "de": "Leert den gemeinsamen Task-Cache, den andere Agenten nutzen; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "dedupe", "reason": { "en": "Replaces files of the shared caches that other agents use by clones of one canonical file; a human decision.", "de": "Ersetzt Dateien der gemeinsamen Caches, die andere Agenten nutzen, durch Klone einer kanonischen Datei; eine menschliche Entscheidung." } },
     { "operation": "bench", "subcommand": "acceptance", "reason": { "en": "Runs every acceptance scenario of the course, print and the dashboard for many minutes and, with --in-place, edits tracked files of this checkout; a human or CI decision.", "de": "Führt alle Abnahmeszenarien von Kurs, Druck und Dashboard über viele Minuten aus und ändert mit --in-place versionierte Dateien dieses Checkouts; eine Entscheidung von Mensch oder CI." } },
+    { "operation": "bench", "subcommand": "latency", "reason": { "en": "Times the developer commands on a fixed target and is only meaningful on a machine no other agent loads; a human or CI decision.", "de": "Misst die Entwicklerbefehle auf einem festen Ziel und ist nur auf einem Rechner aussagekräftig, den kein anderer Agent belastet; eine menschliche oder CI-Entscheidung." } },
     { "operation": "remote-cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
     { "operation": "remote-cache", "subcommand": "gc", "reason": { "en": "Deletes shared remote cache content; a human decision.", "de": "Löscht gemeinsamen Remote-Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "remote-execution", "subcommand": "serve", "reason": { "en": "Starts a long-running cluster, not an operation.", "de": "Startet einen dauerhaften Cluster, keine Operation." } },

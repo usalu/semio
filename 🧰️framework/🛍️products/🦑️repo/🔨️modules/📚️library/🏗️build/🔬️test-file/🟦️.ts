@@ -18,7 +18,7 @@ export type TestFileRouteV1=Readonly<{file:string;mode:"suite"|"plain"|"oracle";
 /** 📋️ What a dry run prints: every route and nothing executed. */
 export type TestFilePlanV1=Readonly<{version:1;files:readonly TestFileRouteV1[]}>;
 /** 🧾️ The outcome of one file. */
-export type TestFileRowV1=Readonly<{file:string;mode:"suite"|"plain"|"oracle";table:string|null;suite:string;status:"passed"|"failed"|"skipped"|"not-run";seconds:number;pass?:number;fail?:number;error?:string;tail?:string}>;
+export type TestFileRowV1=Readonly<{file:string;mode:"suite"|"plain"|"oracle";table:string|null;suite:string;status:"passed"|"failed"|"skipped"|"not-run";seconds:number;pass?:number;fail?:number;error?:string;tail?:string;ranOn?:string}>;
 /** 📤️ The structured result of one run. */
 export type TestFileResultV1=Readonly<{version:1;status:"passed"|"failed";seconds:number;bail:boolean;counts:Readonly<{passed:number;failed:number;skipped:number;notRun:number}>;files:readonly TestFileRowV1[]}>;
 
@@ -180,7 +180,7 @@ export function renderTestFilePlanV1(plan:TestFilePlanV1,language:TestFileLangua
 /** 🖨️ Renders a result: one line per file and the totals. */
 export function renderTestFileResultV1(result:TestFileResultV1,language:TestFileLanguageV1):string{
  const lines=result.files.map(row=>{
-  const counts=row.pass===undefined?"":testFileTextV1(language,"row.counts",{pass:row.pass,fail:row.fail??0}),ran={file:row.file,suite:row.suite,seconds:row.seconds,counts},idle={file:row.file,suite:row.suite};
+  const counts=(row.pass===undefined?"":testFileTextV1(language,"row.counts",{pass:row.pass,fail:row.fail??0}))+(row.ranOn===undefined?"":testFileTextV1(language,"row.ran-on",{origin:row.ranOn})),ran={file:row.file,suite:row.suite,seconds:row.seconds,counts},idle={file:row.file,suite:row.suite};
   return row.status==="passed"?testFileTextV1(language,"row.passed",ran):row.status==="failed"?testFileTextV1(language,"row.failed",ran)+(row.error?"\n"+testFileTextV1(language,"row.error",{error:row.error}):""):testFileTextV1(language,row.status==="skipped"?"row.skipped":"row.not-run",idle);
  });
  lines.push(testFileTextV1(language,result.status==="passed"?"totals.passed":"totals.failed",{...result.counts,seconds:result.seconds}));

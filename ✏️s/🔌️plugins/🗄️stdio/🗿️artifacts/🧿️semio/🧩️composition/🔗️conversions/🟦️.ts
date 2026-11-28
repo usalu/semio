@@ -20,7 +20,7 @@ function text(value: unknown, pattern: RegExp, what: string): string {
   return value;
 }
 
-/** 🔗️ Admits the conversion authority: every conversion crate once per subset and direction, every target an owned format. */
+/** 🔗️ Admits the conversion authority: every conversion crate once, every target an owned format, and the crates one subset direction is split into (one per format group its consumers pick) naming disjoint targets. */
 export function admitSemioConversionsV1(value: unknown): SemioConversionsV1 {
   const doc = closed(value, ["schema", "catalog", "owners", "conversions"], "authority");
   if (doc.schema !== "semio.stdio.semio.conversions/v1") throw new Error("Unsupported Semio conversion authority schema");
@@ -40,7 +40,8 @@ export function admitSemioConversionsV1(value: unknown): SemioConversionsV1 {
   });
   const packages = [text(catalog.package, atom, "catalog package"), ...conversions.map((row) => row.package)];
   if (new Set(packages).size !== packages.length) throw new Error("Semio conversion packages repeat");
-  if (new Set(conversions.map((row) => `${row.subset}:${row.direction}`)).size !== conversions.length) throw new Error("Semio conversions repeat a subset direction");
+  const claimed = conversions.flatMap((row) => row.targets.map((target) => `${row.subset}:${row.direction}:${target}`));
+  if (new Set(claimed).size !== claimed.length) throw new Error("Semio conversions of one subset direction repeat a target");
   return { schema: doc.schema, catalog: { package: catalog.package as string, manifest: text(catalog.manifest, local, "catalog manifest"), source: text(catalog.source, local, "catalog source") }, owners, conversions };
 }
 

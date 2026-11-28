@@ -95,6 +95,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_
 /// its slice, closes the sections the author closed, and carries no `+N` row.
 #[test]
 fn the_catalogue_stamps_every_section_and_never_pages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let windows = TreeWindows::unhosted();
@@ -125,6 +126,7 @@ fn activation_of(row: &BuiltNode) -> Option<String> {
 /// its own `addNode` activation, because a catalogue row is not a pick target.
 #[test]
 fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (40u32, 9u32);

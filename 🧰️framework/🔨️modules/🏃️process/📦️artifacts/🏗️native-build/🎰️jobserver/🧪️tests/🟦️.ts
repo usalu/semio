@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { registeredToolExecutableV1 } from "../../../../🧰️tools/🏃️run/🟦️.ts";
-import { admitJobserverConfigV1, cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, withoutJobserverEnvironmentV1, type JobserverStyleV1 } from "../🟦️.ts";
+import { admitJobserverConfigV1, cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, removeJobserverPathV1, retireJobserverV1, withoutJobserverEnvironmentV1, type JobserverStyleV1 } from "../🟦️.ts";
 import { schedulerBinaries } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
@@ -220,4 +220,33 @@ test.skipIf(make === null)(`GNU make ≥ ${fixture.gnuMake.minimumVersion.join("
 test("cargo gets the local grant plus the light slots of the environment as its job count", () => {
   const rows: readonly (readonly [number, string | undefined, number])[] = [[4, "44", 48], [4, undefined, 4], [4, "0", 4], [4, "-3", 4], [4, "x", 4], [4, "2.5", 4], [1, "5", 6], [0, "5", 6], [3.9, "1", 4]];
   for (const [local, light, jobs] of rows) expect(cargoJobsV1(local, light === undefined ? {} : { SEMIO_UNIT_CACHE_LIGHT_SLOTS: light }), `${local} + ${light}`).toBe(jobs);
+});
+
+test("retiring a pool unlinks its open fifo, treats a vanished or twice retired fifo as success and reports nothing", async () => {
+  const unix = process.platform !== "win32";
+  for (const vanish of unix ? [false, true] : [false]) {
+    const directory = mkdtempSync(join(artifacts, "retire-")), jobserver = await createJobserverV1({ version: 1, tokens: 3, style: defaultJobserverStyleV1() }, directory);
+    const fifo = jobserver.endpoint;
+    if (unix) expect(spawnSync("test", ["-p", fifo]).status).toBe(0);
+    if (vanish) unlinkSync(fifo);
+    expect(retireJobserverV1(jobserver, directory)).toEqual([]);
+    expect(existsSync(directory)).toBe(false);
+    expect(retireJobserverV1(jobserver, directory)).toEqual([]);
+    expect(() => removeJobserverPathV1(fifo, false)).not.toThrow();
+    expect(() => removeJobserverPathV1(directory, true)).not.toThrow();
+  }
+});
+
+test("a pool that cannot be retired yields typed warnings instead of throwing, and the next retirement succeeds", async () => {
+  if (process.platform === "win32" || process.getuid?.() === 0) return;
+  const parent = mkdtempSync(join(artifacts, "locked-")), directory = join(parent, "pool"), jobserver = await createJobserverV1({ version: 1, tokens: 2, style: defaultJobserverStyleV1() }, directory);
+  chmodSync(parent, 0o500);
+  let warnings;
+  try { warnings = retireJobserverV1(jobserver, directory); } finally { chmodSync(parent, 0o700); }
+  expect(warnings.length).toBeGreaterThan(0);
+  for (const warning of warnings) { expect(warning.kind).toBe("jobserver-retirement-failed"); expect(warning.reason.length).toBeGreaterThan(0); }
+  expect(warnings.map((warning) => warning.path)).toContain(directory);
+  expect(retireJobserverV1(jobserver, directory)).toEqual([]);
+  expect(existsSync(directory)).toBe(false);
+  rmSync(parent, { recursive: true, force: true });
 });

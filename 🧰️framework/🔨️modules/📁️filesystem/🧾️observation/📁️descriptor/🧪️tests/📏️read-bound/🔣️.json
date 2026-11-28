@@ -1,0 +1,10 @@
+[
+ {"id":"default-reads-bound","fileBytes":200000,"read":65536,"options":null,"accepted":true},
+ {"id":"default-refuses-over-bound","fileBytes":200000,"read":65537,"options":null,"accepted":false},
+ {"id":"declared-reads-chunk","fileBytes":200000,"read":131072,"options":{"maximumReadBytes":131072},"accepted":true},
+ {"id":"declared-refuses-over-declared","fileBytes":200000,"read":131073,"options":{"maximumReadBytes":131072},"accepted":false},
+ {"id":"declared-reads-whole-file-bound","fileBytes":200000,"read":200000,"options":{"maximumReadBytes":8388608},"accepted":true},
+ {"id":"declared-above-schema-maximum","fileBytes":10,"read":1,"options":{"maximumReadBytes":8388609},"accepted":false,"at":"declare"},
+ {"id":"declared-zero","fileBytes":10,"read":1,"options":{"maximumReadBytes":0},"accepted":false,"at":"declare"},
+ {"id":"declared-fraction","fileBytes":10,"read":1,"options":{"maximumReadBytes":1.5},"accepted":false,"at":"declare"}
+]

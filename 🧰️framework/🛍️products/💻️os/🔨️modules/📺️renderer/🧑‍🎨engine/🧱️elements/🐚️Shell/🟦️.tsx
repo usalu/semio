@@ -35,8 +35,8 @@ export type FrameworkOsBootOptions = {
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
-  /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — defaults to `"editor"` via
-   * {@link resolveBootAppRole} when omitted, never inferred from `appId`. */
+  /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — resolved by
+   * {@link resolveBootAppRole}; unstated when omitted, so the pinned `appId` names the role. */
   readonly appRole?: AppRole;
   readonly locks?: FrameworkOsLocks;
   readonly defaults?: FrameworkOsDefaults;

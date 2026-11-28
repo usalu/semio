@@ -40,3 +40,4 @@ test-support = ["dep:serde", "semio-s-artifact-norm-en1998-model/test-support", 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }
+serde_json = { workspace = true }

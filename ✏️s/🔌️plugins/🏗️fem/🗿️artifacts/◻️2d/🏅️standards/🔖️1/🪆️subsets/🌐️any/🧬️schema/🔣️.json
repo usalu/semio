@@ -125,6 +125,7 @@
           }
         },
         "deformationScale": {
+          "x-semio-display-only": true,
           "type": "number",
           "format": "double",
           "exclusiveMinimum": 0,

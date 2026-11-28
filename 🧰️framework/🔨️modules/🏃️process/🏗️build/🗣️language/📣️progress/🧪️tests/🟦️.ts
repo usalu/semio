@@ -142,7 +142,7 @@ for (const row of corpus.boundary as unknown as readonly BoundaryRow[]) {
       const lines: string[] = [];
       let status = -1;
       reportBoundaryErrorV1(thrown, { environment: { SEMIO_LANGUAGE: language }, osLanguages: () => [], write: (line) => lines.push(line), setExitCode: (code) => { status = code; } });
-      expect(lines).toEqual(row[language]);
+      expect<unknown>(lines).toEqual(row[language]);
       expect(status).toBe(row.exitCode);
       expect(lines.join("\n")).not.toMatch(/\n\s+at |Bun v/u);
     }

@@ -1,0 +1,19 @@
+--- sidecars.orig.ts	2026-11-27 18:51:00
++++ sidecars.new.ts	2026-11-27 19:00:21
+@@ -3,6 +3,7 @@
+ import {closeSync,existsSync,mkdirSync,openSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+ import {readdir,readFile} from "node:fs/promises";
+ import {dirname,join} from "node:path";
++import {toolEntryOfV1} from "../../../📚️library/🏗️build/🏛️sealed/🧰️tool-snapshot/👁️watch/🟦️.ts";
+ import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+ import {processHolderAliveV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+@@ -128,7 +129,7 @@
+  const launch=options.launch??((command,args,env,log)=>spawn(command,[...args],{env,stdio:["ignore",log,log],windowsHide:true,detached:true}));
+  const protocol={...sidecarProtocolV1,...options.protocol},retiring=new Map<number,number>();
+  let leasedAt=-Infinity;
+- const entryOf=(slot:Slot):string=>join(options.facts.worktree,...slot.spec.script.split("/"));
++ const entryOf=(slot:Slot):string=>{const live=join(options.facts.worktree,...slot.spec.script.split("/"));try{return toolEntryOfV1(live,options.facts.worktree);}catch{return live;}};
+  const settle=(slot:Slot,why:string):void=>{
+   const ran=now()-slot.startedMs,ended=slot.pid;delete slot.proc;slot.pid=null;slot.lastExit=why;revoke(slot,ended);
+   if(slot.adopted!==undefined){clearInterval(slot.adopted);delete slot.adopted;}

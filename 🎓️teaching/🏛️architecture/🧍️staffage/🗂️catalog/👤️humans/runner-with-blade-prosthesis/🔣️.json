@@ -87580,28 +87580,6 @@
             "part": "member"
           },
           {
-            "id": "st-sole-l",
-            "kind": "capsule",
-            "bone": "foot-l",
-            "material": "running-shoe",
-            "role": "body",
-            "tone": 0.5,
-            "p0": [
-              0.13572,
-              0.03302,
-              0
-            ],
-            "p1": [
-              0.1384,
-              0.02811,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "foot-l",
-            "part": "member"
-          },
-          {
             "id": "sk-femur-r",
             "bone": "thigh-r",
             "material": "bone",
@@ -87984,50 +87962,6 @@
             "part": "joint"
           },
           {
-            "id": "joint-clavicle-l",
-            "kind": "ellipsoid",
-            "bone": "clavicle-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "clavicle-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-arm-l",
-            "kind": "ellipsoid",
-            "bone": "arm-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "arm-l",
-            "part": "joint"
-          },
-          {
             "id": "joint-forearm-l",
             "kind": "ellipsoid",
             "bone": "forearm-l",
@@ -88047,28 +87981,6 @@
               ]
             },
             "member": "forearm-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-hand-l",
-            "kind": "ellipsoid",
-            "bone": "hand-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "hand-l",
             "part": "joint"
           },
           {
@@ -88094,28 +88006,6 @@
             "part": "joint"
           },
           {
-            "id": "joint-thigh-l",
-            "kind": "ellipsoid",
-            "bone": "thigh-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "thigh-l",
-            "part": "joint"
-          },
-          {
             "id": "joint-shank-l",
             "kind": "ellipsoid",
             "bone": "shank-l",
@@ -88135,28 +88025,6 @@
               ]
             },
             "member": "shank-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-foot-l",
-            "kind": "ellipsoid",
-            "bone": "foot-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "foot-l",
             "part": "joint"
           },
           {
@@ -88182,50 +88050,6 @@
             "part": "joint"
           },
           {
-            "id": "joint-clavicle-r",
-            "kind": "ellipsoid",
-            "bone": "clavicle-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "clavicle-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-arm-r",
-            "kind": "ellipsoid",
-            "bone": "arm-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "arm-r",
-            "part": "joint"
-          },
-          {
             "id": "joint-forearm-r",
             "kind": "ellipsoid",
             "bone": "forearm-r",
@@ -88248,28 +88072,6 @@
             "part": "joint"
           },
           {
-            "id": "joint-hand-r",
-            "kind": "ellipsoid",
-            "bone": "hand-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "hand-r",
-            "part": "joint"
-          },
-          {
             "id": "joint-ilium-r",
             "kind": "ellipsoid",
             "bone": "ilium-r",
@@ -88289,28 +88091,6 @@
               ]
             },
             "member": "ilium-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-thigh-r",
-            "kind": "ellipsoid",
-            "bone": "thigh-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "thigh-r",
             "part": "joint"
           },
           {
@@ -88492,8 +88272,8 @@
             "de": "Thermik 1:500: eine Oberfläche je Region mit denselben Schnitten an den Säumen; der Hals ist der untere Teil der Kopfmasse."
           },
           {
-            "en": "Structure 1:500: the same members as at 1:200 at the printable thickness of this scale; the path still runs from the skull over column, basket and basin into both legs down to the feet. The shoulder girdle hangs on its own rig bones: each collarbone runs from the sternoclavicular joint beside the jugular notch 0.149 m out, 4 degrees up and 27 degrees back to the acromioclavicular joint and carries shoulder blade, glenoid and the upper arm; each hip bone runs from the sacroiliac joint to the hip joint and carries the thigh, so the limbs leave the trunk at the true breadths (hip joints 0.18 m, shoulder joints 0.36 m apart). Femur, tibia, humerus, radius and ulna keep their true shaft as slender members between the joint knobs, the femur leaves the hip joint over its neck and runs obliquely to the knee, and the pelvis is a basin that narrows from the iliac crests to the pubis. The spine is one true rod from the sacrum to the skull base and also the member of the neck; collarbone, shoulder blade and glenoid stay one 75 mm yoke per side because the 0.149 m collarbone is too short to print as a rod.",
-            "de": "Tragwerk 1:500: dieselben Glieder wie bei 1:200 in der druckbaren Stärke dieses Massstabs; der Pfad läuft weiterhin vom Schädel über Wirbelsäule, Korb und Schale in beide Beine bis in die Füsse. Der Schultergürtel hängt an eigenen Rig-Knochen: Jedes Schlüsselbein läuft vom Sternoklavikulargelenk neben der Drosselgrube 0,149 m nach aussen, 4 Grad aufwärts und 27 Grad nach hinten zum Akromioklavikulargelenk und trägt Schulterblatt, Gelenkpfanne und Oberarm; jedes Hüftbein läuft vom Iliosakralgelenk zum Hüftgelenk und trägt den Oberschenkel, sodass die Gliedmassen in den wahren Breiten vom Rumpf abgehen (Hüftgelenke 0,18 m, Schultergelenke 0,36 m auseinander). Femur, Tibia, Humerus, Radius und Ulna behalten als schlanke Stäbe zwischen den Gelenkknoten ihren wahren Schaft, der Femur verlässt das Hüftgelenk über den Schenkelhals und läuft schräg zum Knie, und das Becken ist eine Schale, die sich von den Darmbeinkämmen zum Schambein verjüngt. Die Wirbelsäule ist ein wahrer Stab vom Kreuzbein bis zur Schädelbasis und zugleich das Tragglied des Halses; Schlüsselbein, Schulterblatt und Gelenkpfanne bleiben je Seite ein 75 mm starkes Joch, weil das 0,149 m lange Schlüsselbein als Stab zu kurz zum Drucken ist."
+            "en": "Structure 1:500: the members of 1:200 at the printable thickness of this scale; the joint spheres that lie within the rounded ends of the 75 mm members they tie (collarbones, shoulders, wrists, hip joints and the ankle) and the sole strut within the end of the foot bar are merged into those members, the knobs at elbows, knees, hip bones, toe and along the column stay; the path still runs from the skull over column, basket and basin into both legs down to the feet. The shoulder girdle hangs on its own rig bones: each collarbone runs from the sternoclavicular joint beside the jugular notch 0.149 m out, 4 degrees up and 27 degrees back to the acromioclavicular joint and carries shoulder blade, glenoid and the upper arm; each hip bone runs from the sacroiliac joint to the hip joint and carries the thigh, so the limbs leave the trunk at the true breadths (hip joints 0.18 m, shoulder joints 0.36 m apart). Femur, tibia, humerus, radius and ulna keep their true shaft as slender members between the joint knobs, the femur leaves the hip joint over its neck and runs obliquely to the knee, and the pelvis is a basin that narrows from the iliac crests to the pubis. The spine is one true rod from the sacrum to the skull base and also the member of the neck; collarbone, shoulder blade and glenoid stay one 75 mm yoke per side because the 0.149 m collarbone is too short to print as a rod.",
+            "de": "Tragwerk 1:500: die Glieder von 1:200 in der druckbaren Stärke dieses Massstabs; die Gelenkkugeln, die in den gerundeten Enden der 75 mm starken Glieder liegen, die sie verbinden (Schlüsselbeine, Schultern, Handgelenke, Hüftgelenke und das Sprunggelenk), und die Sohlenstrebe im Ende des Fussstabs gehen in diesen Gliedern auf, die Knoten an Ellbogen, Knien, Hüftbeinen, Zehe und entlang der Wirbelsäule bleiben; der Pfad läuft weiterhin vom Schädel über Wirbelsäule, Korb und Schale in beide Beine bis in die Füsse. Der Schultergürtel hängt an eigenen Rig-Knochen: Jedes Schlüsselbein läuft vom Sternoklavikulargelenk neben der Drosselgrube 0,149 m nach aussen, 4 Grad aufwärts und 27 Grad nach hinten zum Akromioklavikulargelenk und trägt Schulterblatt, Gelenkpfanne und Oberarm; jedes Hüftbein läuft vom Iliosakralgelenk zum Hüftgelenk und trägt den Oberschenkel, sodass die Gliedmassen in den wahren Breiten vom Rumpf abgehen (Hüftgelenke 0,18 m, Schultergelenke 0,36 m auseinander). Femur, Tibia, Humerus, Radius und Ulna behalten als schlanke Stäbe zwischen den Gelenkknoten ihren wahren Schaft, der Femur verlässt das Hüftgelenk über den Schenkelhals und läuft schräg zum Knie, und das Becken ist eine Schale, die sich von den Darmbeinkämmen zum Schambein verjüngt. Die Wirbelsäule ist ein wahrer Stab vom Kreuzbein bis zur Schädelbasis und zugleich das Tragglied des Halses; Schlüsselbein, Schulterblatt und Gelenkpfanne bleiben je Seite ein 75 mm starkes Joch, weil das 0,149 m lange Schlüsselbein als Stab zu kurz zum Drucken ist."
           }
         ]
       }

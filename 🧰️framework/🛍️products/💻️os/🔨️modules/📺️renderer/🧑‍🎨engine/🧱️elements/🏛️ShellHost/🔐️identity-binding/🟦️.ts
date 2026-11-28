@@ -67,8 +67,8 @@ export interface FrameworkOsShellProps {
   readonly plugins: readonly PluginRegistryEntry[];
   readonly appId?: string;
   /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — resolved by
-   * `resolveBootAppRole`/`VITE_SEMIO_APP_ROLE` at the `bootFrameworkOs` call site, default `"editor"`.
-   * Used only to prefer a same-role app when `appId` doesn't pin one explicitly; the actual role of an
+   * `resolveBootAppRole`/`VITE_SEMIO_APP_ROLE` at the `bootFrameworkOs` call site, unstated by default.
+   * When stated it projects the pinned app onto that role; unstated, the pinned app id names the role; the actual role of an
    * open session always comes from `session.app.role`, never this prop. */
   readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;

@@ -45,18 +45,19 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
         assert_eq!(since.load(Ordering::SeqCst), 0);
     }
 
-    /// ⏱️ LAW: the zero-progress verdict is priced in BOTH currencies it claims — consecutive fruitless
-    /// steps AND real elapsed microseconds. Before 2026-09-16 the step count was the whole rule, so a
-    /// close ladder that answered `Pending { 0, 0 }` eight times within the same microsecond faulted
-    /// with `plugin.internal.zero-progress` and the message `(elapsed 0us, ceiling 8000us)` — a stall
-    /// credit reported as exhausted before any time had passed. Reproduced here with a virtual clock.
+    /// ⏱️ LAW: the zero-progress verdict is a progress witness, never a duration. The Nth consecutive funded fruitless turn faults and the turn before it does not, whatever the clock reads: frozen at one instant, absent, or racing ahead by seconds per turn. Before 2026-11-28 the verdict also needed 8000us of wall time, which a loaded machine satisfies by itself, so machine load decided between a fault and a yield.
     #[test]
-    fn structural_zero_progress_cannot_fault_before_its_stall_credit_elapses() {
-        let (stalled, since) = stall_state();
-        for _ in 0..1_024 {
-            assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1)), (RuntimeCloseStatus::Ready, 0));
+    fn structural_zero_progress_is_decided_by_the_count_whatever_the_clock_reads() {
+        type Clock = fn(u64) -> Option<u64>;
+        let clocks: [(&str, Clock); 3] = [("frozen", |_| Some(1)), ("absent", |_| None), ("racing", |step| Some(1 + step * 5_000_000))];
+        for (name, clock) in clocks {
+            let (stalled, since) = stall_state();
+            for step in 1..u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT) {
+                assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, clock(step)).0, RuntimeCloseStatus::Ready, "{name} clock, step {step}");
+            }
+            let (status, _) = runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, clock(u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT)));
+            assert_eq!(status, RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress), "{name} clock faults at exactly the bound");
         }
-        assert!(stalled.load(Ordering::SeqCst) >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT);
     }
 
     #[test]
@@ -196,30 +197,35 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
     #[test]
     fn a_live_zero_progress_fault_names_its_blocking_reading_and_last_owner() {
         let fault = semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault_with_reading("live", RuntimeCleanupFault::ZeroProgress, 1, 64_000, "blocked: snapshot retirement waits for its exact live media owner; last progressing owner: host-crossing");
-        assert!(fault.to_string().contains("(last reading: blocked: snapshot retirement waits for its exact live media owner; last progressing owner: host-crossing)"), "{fault}");
+        assert!(fault.message.contains("(last reading: blocked: snapshot retirement waits for its exact live media owner; last progressing owner: host-crossing)"), "{}", fault.message);
     }
 
-    /// ⏱️ LAW: the live pump's zero-progress verdict is priced in BOTH currencies, like the close ladder's. An ingress-free reactor turn repeats the live pump up to 32 times while a funded document archive is runnable, so a booting natural-file import read 256 fruitless steps inside the same microsecond and faulted with `plugin.internal.zero-progress (elapsed 0us, ceiling 8000us)`. Reproduced with a virtual clock.
+    /// ⏱️ LAW: the live pump's zero-progress verdict is a progress witness too. The repeat pumps of one reactor turn read as starved and buy nothing, so only the first pump of each turn counts; the `RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT`-th funded fruitless turn faults and the one before it does not, with a frozen clock, no clock at all, or a racing one. A booting natural-file import that read 256 echoes inside one microsecond (`elapsed 0us, ceiling 8000us`) is covered by the repeat marking, not by wall time.
     #[test]
-    fn live_zero_progress_cannot_fault_before_its_stall_credit_elapses() {
+    fn live_zero_progress_is_decided_by_the_count_whatever_the_clock_reads() {
+        type Clock = fn(u64) -> Option<u64>;
         let zero = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
-        for progress in [zero] {
+        let clocks: [(&str, Clock); 3] = [("frozen", |_| Some(1)), ("absent", |_| None), ("racing", |step| Some(1 + step * 5_000_000))];
+        for (name, clock) in clocks {
             let (stalled, since) = live_stall_state();
-            for _ in 0..4 * RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &stalled, &since, Some(1), 0, &std::sync::atomic::AtomicU64::new(0)).0, RuntimeMaintenanceStatus::Ready);
+            let seen = std::sync::atomic::AtomicU64::new(0);
+            for step in 1..u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, zero, &stalled, &since, clock(step), 0, &seen).0, RuntimeMaintenanceStatus::Ready, "{name} clock, step {step}");
             }
-            assert!(stalled.load(Ordering::SeqCst) >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+            let (status, _) = runtime_live_cleanup_nonterminal_status(false, zero, &stalled, &since, clock(u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT)), 0, &seen);
+            assert_eq!(status, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress), "{name} clock faults at exactly the bound");
         }
     }
 
+    /// 🌫️ LAW: repeat pumps of one reactor turn (`contended`) never buy live stall debt, so a clock that moves between them cannot assemble a fault.
     #[test]
-    fn live_zero_progress_without_a_clock_never_faults() {
+    fn live_repeat_pumps_buy_no_stall_debt_under_any_clock() {
         let (stalled, since) = live_stall_state();
         let zero = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
-        for _ in 0..4 * RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, zero, &stalled, &since, None, 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
+        for step in 0..4 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            assert_eq!(runtime_live_cleanup_nonterminal_status(true, zero, &stalled, &since, Some(1 + step * 9_000), 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
         }
-        assert_eq!(since.load(Ordering::SeqCst), 0);
+        assert_eq!((stalled.load(Ordering::SeqCst), since.load(Ordering::SeqCst)), (0, 0));
     }
 
     #[test]
@@ -246,7 +252,7 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
         }
     }
 
-    /// 🩻️ LAW (vectors `🩻️live-stall-reading`): the live reading is judged by its cause. Starved readings buy no debt, waiting on an external owner (a stage 14 or 24 archive or replacement phase, `Blocked`) never faults however many readings and microseconds pass, and only a funded fruitless step faults after the limit and credit.
+    /// 🩻️ LAW (vectors `🩻️live-stall-reading`): the live reading is judged by its cause. Starved readings buy no debt, waiting on an external owner (a stage 14 or 24 archive or replacement phase, `Blocked`) never faults however many readings and microseconds pass, and only a funded fruitless step faults, after exactly the limit of consecutive turns and whatever the wall clock reads.
     #[test]
     fn live_readings_are_judged_by_their_cause_over_language_agnostic_vectors() {
         use semio_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeMaintenanceReading as Reading, runtime_maintenance_reading};
@@ -265,6 +271,23 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
                 faulted |= verdict.0 == RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress);
             }
             assert_eq!(faulted, sequence["faults"].as_bool().unwrap(), "{sequence}");
+        }
+    }
+
+    /// 🪦️ LAW (vectors `🪦️live-prior-outcome`): a faulted or cancelled prior live cleanup job is a normal terminal that ends only itself (`Ready`, the next turn starts a fresh job); only a run of `RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT` consecutive ones is the `PriorOutcome` fault, and one clean job clears the run.
+    #[test]
+    fn a_faulted_or_cancelled_prior_live_outcome_ends_only_its_own_job_over_language_agnostic_vectors() {
+        use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::{RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT, runtime_live_prior_outcome_status};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🪦️live-prior-outcome/🔣️.json")).unwrap();
+        assert_eq!(fixture["limit"].as_u64().unwrap(), u64::from(RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT));
+        for sequence in fixture["sequences"].as_array().unwrap() {
+            let run = AtomicU32::new(0);
+            let (outcomes, verdicts) = (sequence["outcomes"].as_array().unwrap(), sequence["verdicts"].as_array().unwrap());
+            for (outcome, verdict) in outcomes.iter().zip(verdicts) {
+                let status = runtime_live_prior_outcome_status(outcome == "fault", &run, RuntimeMaintenanceStatus::Queued);
+                let expected = match verdict.as_str().unwrap() { "ready" => RuntimeMaintenanceStatus::Ready, "pending" => RuntimeMaintenanceStatus::Queued, _ => RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::PriorOutcome) };
+                assert_eq!(status, expected, "{sequence}");
+            }
         }
     }
 

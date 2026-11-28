@@ -7,7 +7,7 @@ import {readFileSync} from "node:fs";
 import ts from "typescript";
 import schema from "../../../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";
-import {readNativeImageMaintenanceRequestV1,requireNativeStoragePathV1} from "../🟦️.ts";
+import {readNativeImageMaintenanceRequestV1,requireNativeImageUnlinkedV1,requireNativeStoragePathV1} from "../🟦️.ts";
 import {spawnSync as shardSpawnV1} from "node:child_process";
 import {mkdirSync as shardMkdirV1,mkdtempSync as shardMkdtempV1,realpathSync as shardRealpathV1,rmSync as shardRmV1,lstatSync as shardLstatV1} from "node:fs";
 import {join as shardJoinV1} from "node:path";
@@ -82,4 +82,17 @@ test.skipIf(process.platform!=="darwin")("a storage path may hand over to anothe
   shardAppendV1(directory,{type:"retired",id:"w",atMs:2});
   expect(()=>requireNativeStoragePathV1(root,inside)).toThrow("Native storage path crosses filesystem boundary");
  }finally{for(const point of made.reverse())try{shell("/usr/bin/hdiutil",["detach","-force",point]);}catch{}shardRmV1(directory,{recursive:true,force:true});}
+});
+
+test("retiring an image under a checkout is refused while the root node_modules link points into it, a dangling or absent link admits it",()=>{
+ const root=shardRealpathV1(shardMkdtempV1(shardJoinV1(shardScratchV1(),"unlinked-"))),directory=shardJoinV1(root,".cache","b","d"),other=shardJoinV1(root,".cache","b","g");
+ try{
+  shardMkdirV1(shardJoinV1(directory,"m","j","x","node_modules"),{recursive:true});shardMkdirV1(other,{recursive:true});
+  expect(()=>requireNativeImageUnlinkedV1(directory)).not.toThrow();
+  const made=shardSpawnV1("ln",["-s",shardJoinV1(directory,"m","j","x","node_modules"),shardJoinV1(root,"node_modules")]);expect(made.status).toBe(0);
+  expect(()=>requireNativeImageUnlinkedV1(directory)).toThrow("Live link");
+  expect(()=>requireNativeImageUnlinkedV1(other)).not.toThrow();
+  shardRmV1(shardJoinV1(directory,"m"),{recursive:true});
+  expect(()=>requireNativeImageUnlinkedV1(directory)).not.toThrow();
+ }finally{shardRmV1(root,{recursive:true,force:true});}
 });

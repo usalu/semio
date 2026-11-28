@@ -14,7 +14,7 @@ test("a durable graph or explicitly exact reservation survives the ramp and prev
    const available=host.availableMegabytes-Math.floor(host.totalMegabytes*policy.memory.floorBasisPoints/10000);
    const result=evaluateHostCapacityV1(policy,host,item.grant==="quiet"?[grant]:[grant,fixture.quiet] as readonly HostGrantV1[],[fixture.cargo as HostWaiterV1],fixture.nowMs);
    expect(sql.get(Number(retains),grant.reservedMegabytes,grant.observedMegabytes,available,policy.memory.rampMilliseconds-(fixture.nowMs-grant.admittedAtMs),fixture.cargo.request.fixedMegabytes),item.name).toEqual({unrealized:item.unrealized,verdict:item.verdict});
-   expect({unrealized:result.unrealizedMegabytes,verdict:result.decisions[0]?.verdict},item.name).toEqual({unrealized:item.unrealized,verdict:item.verdict});
+   expect<unknown>({unrealized:result.unrealizedMegabytes,verdict:result.decisions[0]?.verdict},item.name).toEqual({unrealized:item.unrealized,verdict:item.verdict});
   }
  }finally{db.close();}
 });

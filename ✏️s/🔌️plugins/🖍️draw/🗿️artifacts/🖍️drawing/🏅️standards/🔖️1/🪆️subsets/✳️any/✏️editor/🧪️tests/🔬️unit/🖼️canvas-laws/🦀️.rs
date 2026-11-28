@@ -2,37 +2,6 @@
 
 use super::*;
 
-pub(super) fn canvas_scene_of_tree(tree: semio_plugin::ComponentTree) -> semio_plugin::Canvas2dScene {
-    canvas_scene(artifact_laws::project_and_retire_fixture_tree(tree).expect("project and retire canvas tree"))
-}
-
-pub(super) fn canvas_scene(projection: String) -> semio_plugin::Canvas2dScene {
-    artifact_laws::decode_fixture_scene_with_lanes::<semio_plugin::Canvas2dScene>(&projection).expect("typed canvas")
-}
-
-pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
-    use semio_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
-    for effect in app.prepared_effects(view).await{match effect{
-        Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},
-        Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");let mut complete=false;for _ in 0..100000{match driver.step().expect("registered Drawing geometry steps"){JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
-        _=>{},
-    }}
-}
-
-pub(super) async fn rendered_drawing_canvas(app:&mut DrawingAppFixture,fixture:Option<&str>,view:&ViewModel)->Result<String,String>{
-    settle_drawing_geometry(app,Some(view)).await;
-    artifact_laws::render_registered_fixture_app_over(&mut app.0,DRAWING_PLAY_BODY_COMPOSITE,fixture,view,app.1.cx()).await.map_err(|error|format!("{error:?}"))
-}
-
-pub(super) fn first_layer_id(app: &DrawingAppFixture) -> String {
-    layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()
-}
-
-pub(super) fn last_layer_id(app: &DrawingAppFixture) -> String {
-    let projection = app.snapshot().expect("materialize projection");
-    layer_id(projection.layers.last().expect("layer")).to_string()
-}
-
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_scene_with_segments() {
     let mut app = drawing_app().await;

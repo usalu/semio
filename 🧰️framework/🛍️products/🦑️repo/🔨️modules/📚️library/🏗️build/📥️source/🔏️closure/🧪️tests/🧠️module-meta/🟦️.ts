@@ -27,13 +27,14 @@ function runNativeV1(area:string,files:Readonly<Record<string,string>>):{status:
  const run=spawnSyncV1(process.execPath,["--eval",`const module=await import(${JSON.stringify(join(root,"entry.ts"))});await module.runCapturedBuildSourceV1();`],{encoding:"utf8",env:environmentV1});return{status:run.status,out:run.stdout,err:run.stderr};
 }
 
+const filesOfV1=(files:Readonly<Record<string,string|undefined>>):Record<string,string>=>Object.fromEntries(Object.entries(files).filter((entry):entry is[string,string]=>typeof entry[1]==="string"));
 const expandV1=(value:unknown,root:string):unknown=>typeof value==="string"?value.replaceAll("{root}",root):Array.isArray(value)?value.map(item=>expandV1(item,root)):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,expandV1(item,root)])):value;
 
 test("module meta of a captured module names that module and equals Bun's native loader and the fixture",()=>{
  const area=realPathV1(makeTemporaryV1(join(temporaryDirectoryV1(),"mm-")));
  try{
   for(const row of fixture.cases){
-   const loaded=runLoadedV1(area,row.files),native=runNativeV1(area,row.files);
+   const files=filesOfV1(row.files),loaded=runLoadedV1(area,files),native=runNativeV1(area,files);
    expect(loaded.err).toBe("");expect(native.err).toBe("");expect(loaded.status).toBe(0);expect(native.status).toBe(0);
    const got=JSON.parse(loaded.out),reference=JSON.parse(native.out.split(join(area,"native")).join(join(area,"loaded")));
    expect(got).toEqual(expandV1(row.expected,join(area,"loaded")));expect(got).toEqual(reference);

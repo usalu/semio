@@ -1304,9 +1304,9 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +            if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false;
 +            return true;
 +        };
-+        if (!await verifySource()) return;
++        if (!await verifySource()) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld / Quelle während ${task.id} geändert; Cache-Übernahme zurückgehalten`); return; }
 +        const promote = async () => {
-+            if (!await verifySource()) return;
++            if (!await verifySource()) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld / Quelle während ${task.id} geändert; Cache-Übernahme zurückgehalten`); return; }
 +            if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)))) { console.log(`[nx] Output changed during ${task.id}; cache promotion withheld`); return; }
 +            return tryAndRetry(async () => {
 +                if (Buffer.byteLength(terminalOutput ?? '', 'utf8') > 134217728) throw Error('Native cache terminal output exceeds Original publication budget');
@@ -1314,7 +1314,7 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +                const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
 +                (0, task_io_service_1.getTaskIOService)().notifyTaskOutputs(task.id, expandedOutputs);
 +                if (this.remoteCache) {
-+                    if (!await verifySource()) return;
++                    if (!await verifySource()) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld / Quelle während ${task.id} geändert; Cache-Übernahme zurückgehalten`); return; }
 +                    await this.remoteCache.store(task.hash, this.cache.cacheDirectory, terminalOutput, code);
 +                }
 +                return expandedOutputs;

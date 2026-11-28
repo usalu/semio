@@ -195,7 +195,7 @@ where
     }
 
     fn close_phase_witness(&self) -> String {
-        format!("{:?}/started={}/active={}", self.phase, self.started, self.active.is_some())
+        format!("{:?}/started={}/active={}/active_demand={:?}", self.phase, self.started, self.active.is_some(), self.active.as_ref().map(|active| artifact_retirement_box_demands(active, 1 << 20)))
     }
 }
 

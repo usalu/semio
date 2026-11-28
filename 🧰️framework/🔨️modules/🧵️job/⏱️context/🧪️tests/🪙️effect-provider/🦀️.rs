@@ -78,9 +78,9 @@ fn a_one_fuel_turn_closes_through_its_effect_charging_each_unit_once(){
  for _ in 0..64{
   if owner.terminal_is_empty(){break}
   caller.turn(quantum(),|cx|{
-   let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;let spent=cx.original_work_units_spent();
-   cx.with_original_work_loan(1,cx.deadline_us(),|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect)))?;
-   assert!(cx.original_work_units_spent()-spent<=1);
+   let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;let spent=cx.original_work_units_spent();let quantum_work=owner.next_computational_work(body)?.max(1);
+   cx.with_original_work_loan(quantum_work,cx.deadline_us(),|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect)))?;
+   assert!(cx.original_work_units_spent()-spent<=u128::from(quantum_work));
    Ok::<_,OriginalTurnFailure>(())
   }).unwrap();
  }

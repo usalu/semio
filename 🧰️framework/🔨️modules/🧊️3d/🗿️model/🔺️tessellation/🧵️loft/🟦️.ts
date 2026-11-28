@@ -54,7 +54,7 @@ export function loftFault(sections: LoftSolid["sections"]): [number, number] | n
 export function tessellateLoft(solid: LoftSolid, quality: Quality, operation: Operation = silentOperation): Geometry {
   const pace = new Pace(operation);
   const sections = solid.sections;
-  const segments = Math.max(4, circleSegments(Math.max(...sections.flatMap((s) => [s.rx, s.ry])), quality));
+  const segments = solid.segments ?? Math.max(4, circleSegments(Math.max(...sections.flatMap((s) => [s.rx, s.ry])), quality));
   const { tangents, frames, turn } = loftFrames(sections);
   const rings: V3[][] = sections.map((s, si) => {
     const f = frames[si]!;

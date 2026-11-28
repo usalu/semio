@@ -134,7 +134,7 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     assert_eq!(DrawingCanvasWindowConfig::decode_pack(&base_config.encode_pack()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfigMutation::parse_op(&config_mutation.print_op()).unwrap(), config_mutation);
     let binary = config_mutation.encode_op().unwrap();
-    let decoded = store::pack_rt::decode_wire_value(&binary).unwrap();
+    let decoded = store::pack_rt::renormalize_whole_number_floats(store::pack_rt::decode_pack_value(&binary).unwrap());
     assert_eq!(<DrawingCanvasWindowConfigMutation as semio_framework_value::FromValue>::from_value(decoded).unwrap(), config_mutation);
     assert_eq!(DrawingCanvasWindowConfigMutation::decode_op(&binary).unwrap(), config_mutation);
     assert!(<DrawingCanvasWindowConfigOwner as semio_plugin::WindowConfigOwner>::native_pair_demands().is_ok());

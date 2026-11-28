@@ -29,6 +29,10 @@ name = "editor_app_2"
 path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 
 [[test]]
+name = "editor_live_cleanup"
+path = "../../🧪️tests/🔁️live-cleanup/🦀️.rs"
+
+[[test]]
 name = "editor_boot"
 path = "../../🧪️tests/🌱️boot/🦀️.rs"
 
@@ -67,6 +71,7 @@ semio-s-artifact-fem-2d-editor-transient = { workspace = true }
 semio-s-artifact-fem-2d-engine = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-diff = { workspace = true }
 semio-s-artifact-fem-2d-mutations = { workspace = true }
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }

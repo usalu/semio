@@ -338,6 +338,7 @@ pub fn fixture_payload_bytes(payload: &semio_framework_job_payload::RetainedJobP
 pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J, cx: &mut semio_framework_job::StepContext<'_>, origin: &mut semio_framework_job::OriginalJobReturnReceiver) -> FixtureStepOutcome {
     use semio_framework_job::JobOutcomeBorrow as B;
     let mut verdict = None;
+    semio_framework_job::testkit::renew_payload_page_grant(cx);
     let semio_framework_job::OriginalJobReturn::Outcome(reply) = semio_framework_job::drive_step(job, cx, origin, "fixture_step", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fixture job step") else { return FixtureStepOutcome::Idle };
     let summary = match reply.original() {
         None => FixtureStepOutcome::Idle,
@@ -348,8 +349,16 @@ pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J
         Some(B::Cancelled { .. }) => FixtureStepOutcome::Cancelled,
         Some(B::Fault { detail, .. }) => FixtureStepOutcome::Fault(fixture_payload_bytes(detail)),
     };
-    drop(reply.into_descriptor());
-    summary
+    let mut returned = Some(reply.into_descriptor());
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if returned.is_none() { break }
+        origin.receive_outcome(cx, &mut returned).expect("fixture outcome receipt");
+    }
+    assert!(returned.is_none(), "fixture outcome was not received within the authored turn bound");
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if origin.acknowledge_outcome(cx).expect("fixture outcome acknowledgement") { return summary }
+    }
+    panic!("fixture outcome was not acknowledged within the authored turn bound")
 }
 
 /// 🎟️ Lends a live original caller's own Work (the `native_encoder_work` snapshot of its step context) to every native hop of an authoring identity, exactly as the production reserved-commit route does; the caller charges `performed()` back with `consume_fuel`.

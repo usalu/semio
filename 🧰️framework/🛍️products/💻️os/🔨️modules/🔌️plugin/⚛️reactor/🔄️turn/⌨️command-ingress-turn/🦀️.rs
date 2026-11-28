@@ -95,7 +95,7 @@ impl CommandIngressTurn {
     /// 🔁️ Takes the retained owner of the live slot and marks its instance for cancellation when its lifetime is no longer the exact retained one.
     fn resume<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,allow_empty:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         step_retiring_command_ingress(cx)?;
-        let ready=COMMAND_INGRESS.with(|slots|slots.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].settle_step(cx))?;
+        let ready=step_until_slice(cx,|cx|COMMAND_INGRESS.with(|slots|slots.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].settle_step(cx)))?;
         if !ready{return Ok(false)}
         if !allow_empty&&COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().is_none()){return Ok(false)}
         if let Some(key)=COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().map(|entry|entry.key)){runtime.guest_lifetimes.try_borrow().map_err(|_|reactor_close_fault("command Source lifetime is busy"))?.get(key.instance()).ok_or_else(||reactor_close_fault("retained command Source lifetime is missing"))?.command_origin.validate(cx)?;}

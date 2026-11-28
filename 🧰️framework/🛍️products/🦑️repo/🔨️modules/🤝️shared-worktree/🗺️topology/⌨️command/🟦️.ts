@@ -14,6 +14,8 @@ import {accessDirectoryV1,accessReceiptsLackingV1} from "../../../📚️library
 import {serviceBootstrapScriptV1} from "../🛠️service/🟦️.ts";
 import {applyFleetHostnameV1} from "../🧭️addresses/🟦️.ts";
 import {applyFleetAddressEnvironmentV1,bindFleetHostsV1,factsV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,worktreePathV1,type FleetGroupV1,type FleetPlatformV1,type FleetResolvedHostsV1,type FleetTopologyV1} from "../🟦️.ts";
+/** 🖥️ Runs an interactive command with the terminal of this process (the operating system tools of `repo fleet hostname`, which may ask for a password); the status commands of the fleet never use it. */
+const interactiveRunV1=(command:string,commandArguments:readonly string[]):Promise<number>=>new Promise(done=>{const child=spawn(command,[...commandArguments],{stdio:"inherit"});child.once("error",()=>done(1));child.once("close",code=>done(code??1));});
 
 type Operation="hostname"|"mount-plan"|"server-plan"|"worker-service"|"service-bootstrap"|"facts"|"validate"|"preflight";
 
@@ -179,8 +181,8 @@ export async function runTopologyCommandAsyncV1(args:readonly string[],context:R
  if(operation==="hostname"){
   const lines:string[]=[],language=values["--lang"]==="de"?"de":values["--lang"]==="en"?"en":(context.environment??process.env).SEMIO_LANGUAGE==="de"?"de":"en",workspace=values["--root"]??(context.environment??process.env).SEMIO_WORKSPACE_ROOT;
   if(workspace===undefined||workspace==="")throw Error(language==="de"?"--root oder SEMIO_WORKSPACE_ROOT erforderlich":"--root or SEMIO_WORKSPACE_ROOT required");
-  if(context.confirm===undefined||context.run===undefined)throw Error("hostname needs the interactive confirmation of repo fleet hostname");
-  await applyFleetHostnameV1({root:workspace,language,report:line=>lines.push(line),confirm:async question=>{for(const line of lines.splice(0))context.progress(line);return context.confirm!(question);},run:context.run,...context.platform===undefined?{}:{platform:context.platform as NodeJS.Platform}});
+  if(context.confirm===undefined)throw Error("hostname needs the interactive confirmation of repo fleet hostname");
+  await applyFleetHostnameV1({root:workspace,language,report:line=>lines.push(line),confirm:async question=>{for(const line of lines.splice(0))context.progress(line);return context.confirm!(question);},run:context.run??interactiveRunV1,...context.platform===undefined?{}:{platform:context.platform as NodeJS.Platform}});
   return {text:lines.join("\n"),exitCode:0};
  }
  if(operation==="preflight"){

@@ -16,3 +16,12 @@ fn retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation(){
   let capacity=buffer.capacity();let(_,heap)=observe(||drop(std::mem::take(&mut buffer)));assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,capacity);
  }
 }
+#[test]
+fn every_static_refusal_is_a_canonical_fault_the_host_decodes_by_code(){
+ for(refusal,code)in[(ArtifactRetainedAdmissionRefusal::CapacityIsZero,"interactive-job.command-capacity-zero"),(ArtifactRetainedAdmissionRefusal::RawCapacityRejected,"interactive-job.command-raw-capacity-rejected")]{
+  let fault=semio_framework_diagnostic::try_decode_fault_bytes(refusal.detail()).expect("canonical Fault wire");
+  assert_eq!(fault.code.0,code);
+  let oracle:serde_json::Value=serde_json::from_slice(refusal.detail()).expect("third-party JSON parse");
+  assert_eq!(oracle["code"],code);assert!(oracle["message"].as_str().is_some_and(|message|message.starts_with("retained command")));
+ }
+}

@@ -76,9 +76,23 @@ pub trait SnapshotDetailsProvider {
     fn presentation(&self, _path: &[SnapshotDetailPathSegment], _locale: Locale) -> Option<SnapshotDetailPresentation> {
         None
     }
-    /// 🔽️ Whether the collection at `path` opens on first paint; a provider keeps metadata collapsed so the first viewport reaches its content.
-    fn default_open(&self, _path: &[SnapshotDetailPathSegment]) -> bool {
-        true
+    /// 🔽️ Whether the collection at `path` opens on first paint: top-level collections, and the direct items whose own fields are all scalars. An item holding a nested collection (an XML part's document tree, an AST) stays closed, so a deep recursive tree can neither spend the shared first-paint budget before its later siblings nor price its own rows out of the window.
+    fn default_open(&self, path: &[SnapshotDetailPathSegment]) -> bool {
+        match path.len() {
+            0 | 1 => true,
+            2 => (0..self.child_count(path).min(64)).all(|index| {
+                let segment = match self.value(path) {
+                    Some(SnapshotDetailValue::Object) => self.object_key(path, index).map(SnapshotDetailPathSegment::Key),
+                    _ => Some(SnapshotDetailPathSegment::Index(index)),
+                };
+                segment.is_some_and(|segment| {
+                    let mut child = path.to_vec();
+                    child.push(segment);
+                    !matches!(self.value(&child), Some(SnapshotDetailValue::Array | SnapshotDetailValue::Object))
+                })
+            }),
+            _ => false,
+        }
     }
     fn item_capabilities(&self, path: &[SnapshotDetailPathSegment]) -> SnapshotDetailItemCapabilities {
         SnapshotDetailItemCapabilities::for_path(path)

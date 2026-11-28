@@ -19,7 +19,7 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
         let id = host.add_widget(&serde_json::json!({"kind":"inputSlider","id":case["widgetId"],"label":""}).to_string(), 0.0, 0.0).unwrap();
         host.set_slider_value(&id, case["value"].as_f64().unwrap());
         host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();
@@ -78,7 +78,7 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
             host.connect_ports(&source, "text", &construct, "data").unwrap();
             host.connect_ports(&construct, "meshOut", &preview, "").unwrap();
             host.host_snapshot.clone()
-        });
+        }).expect("the evaluation host binds its snapshot");
         std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
         let payload = semio_framework_pack_json::to_json_string(&snapshot); snapshot.retire_cold();
         context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_3d_import_document::ImportDocument { name: "mesh-source.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
@@ -150,7 +150,7 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
             let preview = host.add_widget(r#"{"kind":"outputPreview","id":"preview"}"#, 200.0, 0.0).unwrap();
             host.connect_ports(&source, "wire", &preview, "").unwrap();
             host.host_snapshot.clone()
-        });
+        }).expect("the evaluation host binds its snapshot");
         std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
         let payload = semio_framework_pack_json::to_json_string(&snapshot);
         snapshot.retire_cold();
@@ -205,7 +205,7 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
         host.connect_ports(&source, "number", &variable, "height").unwrap();
         host.connect_ports(&variable, "height", &preview, "").unwrap();
         host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();
@@ -254,7 +254,7 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
         host.set_note_text(&source, &fixture["meshAssets"]["mesh"].to_string());
         let construct = host.add_widget(r#"{"kind":"neuron","id":"construct","neuronKind":"brep.mesh.construct"}"#, 200.0, 0.0).unwrap();
         host.connect_ports(&source, "text", &construct, "data").unwrap(); host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot); snapshot.retire_cold();
     context::dispatch(&mut app, Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "texture-scope.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;

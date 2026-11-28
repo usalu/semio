@@ -1,0 +1,53 @@
+/** 📤 Publishes one built plugin component into the prototype browser modules root (transpile, host shim, descriptor probe, receipt) and times it.
+ * Usage: `bun publish-component.ts <component.wasm> <label>`; derived from ticket 26/07/23 GET-PROCESS-WORKING-END-TO-END `publish-hub.ts`. */
+import { createHash } from "node:crypto";
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+const R = "/Users/ueli/Documents/semio";
+const T = import.meta.dir;
+const F = `${R}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin`;
+const wasm = process.argv[2]!, label = process.argv[3] ?? "publish";
+const { transpilePluginComponentModulesAsync, rewritePreview2ShimImports } = await import(`${F}/🌐️browser-bundle/🏗️materialization/🟦️.ts`);
+const { hostShimSource } = await import(`${F}/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts`);
+const { PLUGIN_HOST_SHIM_FILE } = await import(`${F}/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts`);
+const { pluginComponentBridgeSource } = await import(`${F}/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts`);
+const { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } = await import(`${F}/🌐️browser-bundle/🛂️descriptor/🟦️.ts`);
+const { PREVIEW2_VENDOR_RELATIVE } = await import(`${F}/🌐️browser-bundle/🕸️imports/🟦️.ts`);
+const { ensurePreview2ShimVendorAt } = await import(`${F}/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts`);
+const { encodeComponentReceiptV1 } = await import(`${F}/🖨️describe/🏷️component-receipt/🟦️.ts`);
+const { MODULE_BRIDGE_FILE } = await import(`${F}/📇️registry/📦️deployment/🟦️.ts`);
+const root = `${R}/.cache/b/p/m/browser/prototype/modules`;
+const hub = { pluginId: "process", packageId: "semio:process", packageName: "semio-hub-process-component", wasmOut: "semio_hub_process_component.wasm", directoryName: "🏭️process" };
+const phases: Record<string, number> = {};
+const time = async <V>(name: string, run: () => Promise<V> | V): Promise<V> => { const at = Date.now(); try { return await run(); } finally { phases[name] = (Date.now() - at) / 1000; } };
+const sha = (data: Uint8Array | string) => createHash("sha256").update(data).digest("hex");
+const toolchain = () => { const v = spawnSync("rustc", ["-vV"], { encoding: "utf8" }).stdout; return `rustc ${/release: (\S+)/.exec(v)![1]} (${/commit-hash: (\S+)/.exec(v)![1]})`; };
+const base = hub.packageName.replaceAll("-", "_"), work = `${T}/🗑️generated/modwork/${hub.pluginId}`, out = `${work}/transpiled`;
+mkdirSync(join(root, PREVIEW2_VENDOR_RELATIVE), { recursive: true });
+ensurePreview2ShimVendorAt(join(root, PREVIEW2_VENDOR_RELATIVE), R);
+rmSync(work, { recursive: true, force: true });
+mkdirSync(work, { recursive: true });
+await time("transpile", () => transpilePluginComponentModulesAsync(wasm, out, base, { repoRoot: R, mode: "prototype", preview2VendorDir: join(root, PREVIEW2_VENDOR_RELATIVE), environment: process.env }));
+const dest = join(root, hub.directoryName);
+const probe = await time("stage+probe", () => {
+  rmSync(dest, { recursive: true, force: true });
+  mkdirSync(dest, { recursive: true });
+  cpSync(out, dest, { recursive: true });
+  writeFileSync(join(dest, PLUGIN_HOST_SHIM_FILE), hostShimSource());
+  rewritePreview2ShimImports(join(dest, `${base}.js`), join(root, PREVIEW2_VENDOR_RELATIVE));
+  return spawnSync("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(dest, `${base}.js`)], { encoding: "utf8", maxBuffer: 1 << 28, cwd: R });
+});
+if (probe.status !== 0) throw new Error(`probe ${hub.pluginId}: ${probe.stderr.slice(-2000)}`);
+const descriptor = Buffer.from(probe.stdout.trim(), "base64");
+const d = finalizePluginDescriptor(descriptor, hub.pluginId);
+const bytes = readFileSync(wasm);
+const receipt = { schema: "semio.plugin.component-receipt/v1", pluginId: hub.pluginId, packageId: hub.packageId, profile: "prototype", target: "wasm32-wasip2", wasmSha256: sha(bytes), wasmBytes: bytes.length, semanticDescriptorSha256: sha(descriptor), toolchain: toolchain(), sourceTreeDigest: sha(bytes), provenanceSha256: sha(`split:${hub.pluginId}:${sha(bytes)}`) };
+writeFileSync(join(dest, "🛂️.descriptor.semio"), d.pack);
+writeFileSync(join(dest, "🔣️.json"), d.json);
+writeFileSync(join(dest, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, hub.wasmOut));
+writeFileSync(join(dest, "🧾️component.json"), encodeComponentReceiptV1(receipt as never));
+const report = { label, wasm, wasmBytes: bytes.length, descriptorSha256: sha(descriptor), files: readdirSync(dest).length, phases };
+writeFileSync(join(T, "🗑️generated", `publish-${label}.json`), JSON.stringify(report, null, 1));
+console.log(JSON.stringify(report));

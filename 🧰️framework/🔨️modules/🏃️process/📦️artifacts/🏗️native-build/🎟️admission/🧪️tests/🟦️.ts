@@ -164,7 +164,14 @@ test("a write killed at any byte of a record leaves every complete row readable 
   }
   writeFileSync(path, base + record);
   expect(await readUnitHistoryV1(path)).toEqual(compactUnitHistoryV1([...complete, rows[3]!]));
-  writeFileSync(path, `${fixture.journal.invalidTerminated}\n${base}`);
+  for (const damage of [fixture.journal.invalidTerminated, "\0".repeat(4096), `${"\0".repeat(64)}${JSON.stringify(rows[3])}`]) {
+    writeFileSync(path, `${damage}\n${base}`);
+    expect(await readUnitHistoryV1(path), JSON.stringify(damage.slice(0, 8))).toEqual(compactUnitHistoryV1(complete));
+    await recordUnitHistoryV1(path, [rows[3]!], journalOptions(original));
+    expect(readFileSync(path, "utf8")).not.toContain("\0");
+    expect(await readUnitHistoryV1(path)).toEqual(compactUnitHistoryV1([...complete, rows[3]!]));
+  }
+  writeFileSync(path, `{"v":1}\n${base}`);
   await expect(readUnitHistoryV1(path)).rejects.toThrow();
 }));
 

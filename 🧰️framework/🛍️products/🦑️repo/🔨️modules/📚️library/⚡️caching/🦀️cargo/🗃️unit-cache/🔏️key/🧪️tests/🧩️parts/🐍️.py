@@ -13,6 +13,8 @@ def parts(input):
         "source:" + part(input["sourceSha256"]),
         "externs:" + part([[row["name"], row["sha256"]] for row in input["externs"]]),
         "environment:" + part(input["environment"]),
+        "determinism:" + fixture["determinism"],
+        "cargo:" + part(input.get("cargoIdentity", "")),
     ])
 
 print(json.dumps({"base": parts(fixture["input"]), "variants": [parts({**fixture["input"], **row["set"]}) for row in fixture["variants"]]}, ensure_ascii=False))

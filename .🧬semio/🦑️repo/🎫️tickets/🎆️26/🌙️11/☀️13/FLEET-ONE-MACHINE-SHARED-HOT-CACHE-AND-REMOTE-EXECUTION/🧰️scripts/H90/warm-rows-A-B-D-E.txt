@@ -1,0 +1,12 @@
+A-limited user 53.53 sys 5.17 real 135.69 rssMB 2065 total 127.403 link 0.888 llvm 21.488
+B-ltonly user 50.55 sys 3.70 real 64.49 rssMB 2583 total 63.541 link 0.986 llvm 20.827
+D-full user 57.12 sys 4.58 real 128.48 rssMB 3058 total 127.647 link 1.057 llvm 79.664
+E-none user 49.97 sys 4.46 real 132.15 rssMB 2381 total 130.840 link 1.432 llvm 18.536
+A-limited user 53.07 sys 4.11 real 93.88 rssMB 2242 total 93.673 link 0.545 llvm 16.977
+B-ltonly user 47.51 sys 2.56 real 48.81 rssMB 2673 total 48.632 link 0.593 llvm 12.536
+D-full user 53.39 sys 3.63 real 79.62 rssMB 2831 total 79.430 link 1.242 llvm 26.658
+E-none user 45.06 sys 3.03 real 66.66 rssMB 2422 total 66.414 link 1.306 llvm 9.142
+A-limited user 49.34 sys 3.45 real 74.17 rssMB 2096 total 73.865 link 0.725 llvm 23.057
+B-ltonly user 50.85 sys 3.68 real 99.61 rssMB 2021 total 99.183 link 1.800 llvm 26.888
+D-full user 54.53 sys 3.94 real 106.90 rssMB 2605 total 106.646 link 1.214 llvm 31.993
+E-none user 47.69 sys 3.17 real 114.85 rssMB 2635 total 114.348 link 1.393 llvm 17.829

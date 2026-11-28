@@ -57,8 +57,9 @@ impl BoundedJob for MountedBoundedJob {
     }
 
     fn cancel(&mut self) {
+        record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled);
         if let Ok(shell) = self.shell.try_borrow() {
-            if let Some(state) = shell.as_ref() {
+            if let Some(state) = shell.as_ref().filter(|state| state.identity == self.identity) {
                 state.cancel.cancel_now();
             }
         }
@@ -72,6 +73,10 @@ impl BoundedJob for MountedBoundedJob {
         bytes.extend_from_slice(&state.identity.base_revision.0.to_le_bytes());
         bytes.extend_from_slice(&state.identity.generation.0.to_le_bytes());
         Some(bytes)
+    }
+
+    fn replay_input(&self) -> Option<&[u8]> {
+        self.input.as_deref()
     }
 
     fn terminal_drop_is_shallow(&self) -> bool {
@@ -147,6 +152,25 @@ pub(super) fn current_identity(identity: MountedIdentity) -> Option<MountedIdent
     })
 }
 
+/// 🔏️ Re-binds every finished generation whose physics fingerprint equals the render's to the render's revision, so a display-only edit neither spawns a solve nor marks the fields stale.
+fn rebind_display_only(registry: &mut MountedRegistry, render: AppRenderOperationContext, snapshot: &Fem2dSnapshot) {
+    let mut fingerprint = registry.fingerprint_memo.filter(|(revision, _)| *revision == render.canonical_base_revision).map(|(_, fingerprint)| fingerprint);
+    for index in 0..SESSION_ACTIVE_CAPACITY {
+        let Some(current) = registry.current[index].filter(|current| current.app_instance_id == render.app_instance_id && !current.matches(render)) else { continue };
+        let finished = registry.shells[current.shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.visual.validated_final && state.stage == MountedStage::Complete));
+        if !finished { continue }
+        let fingerprint = *fingerprint.get_or_insert_with(|| snapshot.physics_fingerprint());
+        registry.fingerprint_memo = Some((render.canonical_base_revision, fingerprint));
+        if !rebinds_generation(finished, current.fingerprint, fingerprint) { continue }
+        if let Some(pending) = registry.pending[index].take() {
+            registry.release_credit(pending.shell);
+            registry.release(pending.shell);
+        }
+        registry.preflight[index] = None;
+        registry.current[index] = Some(CurrentSession { bound: RevisionBinding::of_render(render), ..current });
+    }
+}
+
 /// 🔍️ Advances exactly one schema owner/scalar census before the shared application may
 /// request an opaque snapshot lease. The fixed shell and exact process credit are reserved only
 /// after the census reaches its complete witness.
@@ -158,11 +182,12 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2
     let ready = MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let Some(app_slot) = registry.app_slots.lookup(render.app_instance_id).map(|slot| slot.index()) else { return false };
+        rebind_display_only(&mut registry, render, snapshot);
         let candidate = (0..SESSION_ACTIVE_CAPACITY).find_map(|offset| {
             let index = (registry.request_cursor + offset) % SESSION_ACTIVE_CAPACITY;
             let (owner, scope, _) = registry.requests.at(index)?;
             if scope != render.app_instance_id || !registry.requests.ready(owner) || registry.requests.terminal(owner,source_version(render)).is_some() { return None; }
-            if registry.current[index].is_some_and(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision)) { return None; }
+            if registry.current[index].is_some_and(|current| current.matches(render)) { return None; }
             Some(owner)
         });
         let Some(owner) = candidate else { return false };
@@ -176,7 +201,7 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2
         registry.request_cursor = (current_slot + 1) % SESSION_ACTIVE_CAPACITY;
         registry.snapshot_owners[app_slot] = Some(owner);
         if registry.source_apps[current_slot].is_some_and(|app| app != render.app_instance_id) { return false; }
-        if let Some(current) = registry.current[current_slot].filter(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision)) {
+        if let Some(current) = registry.current[current_slot].filter(|current| current.matches(render)) {
             let Ok(owner) = registry.shells[current.shell as usize].try_borrow() else { return false };
             if owner.as_ref().is_some_and(|state| state.source == registry.sources[current_slot]) { return false }
         }
@@ -274,7 +299,7 @@ pub fn result_request_key(source: Option<semio_s_fem_analyses_model::ResultSourc
 #[cfg(test)]
 pub(super) fn resolved_source(snapshot:&Fem2dSnapshot,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>)->Option<Option<ResolvedResultSource>>{match source{None=>Some(None),Some(source)if source.kind=="loadCase"=>snapshot.load_cases.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::LoadCase(index))),Some(source)if source.kind=="combination"=>snapshot.combinations.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::Combination(index))),Some(_)=>None}}
 
-fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperationContext,consumer:ConsumerKey,window:&str,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>,family:semio_s_fem_app_surface::ResultMode,index:usize,version:semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,grant:RetainedCloneGrant)->RetainedCloneProgress{
+pub(super) fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperationContext,consumer:ConsumerKey,window:&str,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>,family:semio_s_fem_app_surface::ResultMode,index:usize,version:semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,grant:RetainedCloneGrant)->RetainedCloneProgress{
  let source=if family==semio_s_fem_app_surface::ResultMode::Modal{None}else{source};let index=if family==semio_s_fem_app_surface::ResultMode::Static{0}else{index};
  let Some(app)=registry.app_slots.lookup(render.app_instance_id)else{let bytes=size_of::<u32>()+size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Default::default();}if registry.app_slots.claim(render.app_instance_id).is_none(){return Default::default();}return RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};};
  let consumer_index=registry.requests.consumer_index(render.app_instance_id,consumer);
@@ -327,7 +352,7 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> 
             if current.app_instance_id != render.app_instance_id {
                 return Vec::new();
             }
-            if render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) {
+            if current.matches(render) {
                 let Ok(owner) = registry.shells[current.shell as usize].try_borrow() else { return Vec::new() };
                 if owner.as_ref().is_some_and(|state| state.source == registry.sources[current_slot]) { return Vec::new() }
             }
@@ -348,6 +373,7 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> 
             Ok(snapshot) => snapshot,
             Err(_) => return Vec::new(),
         };
+        let snapshot_fingerprint = registry.fingerprint_memo.filter(|(revision, _)| *revision == render.canonical_base_revision).map_or_else(|| snapshot.physics_fingerprint(), |(_, fingerprint)| fingerprint);
         registry.pending[current_slot] = None;
         let previous_valid = previous.and_then(|previous| {
             let owner = registry.shells[previous.shell as usize].try_borrow().ok()?;
@@ -371,7 +397,7 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> 
         state.family = registry.families[current_slot];
         state.mode_index = registry.mode_indices[current_slot];
         *registry.shells[shell as usize].borrow_mut() = Some(state);
-        registry.current[current_slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity, previous_valid });
+        registry.current[current_slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity, previous_valid, bound: RevisionBinding::of_identity(identity), fingerprint: snapshot_fingerprint });
         let mut effects = Vec::with_capacity(2);
         if let Some(previous) = previous {
             effects.push(Effect::CancelJob { job: previous.identity.job });
@@ -387,6 +413,7 @@ pub struct MountedFieldsView<'a> {
     pub fields: &'a semio_s_fem_analyses_model::AssemblyOrder<NodeLiveField>,
     assembly: Option<&'a AssemblyCsrBuild>,
     pub retained: bool,
+    pub stale: bool,
     pub eigenvalue: Option<f64>,
     pub mode_shape_peak: f64,
     family: semio_s_fem_app_surface::ResultMode,
@@ -436,25 +463,41 @@ impl MountedFieldsView<'_> {
     }
 }
 
+/// 🧊️ Which retained generation a results frame draws and whether it still awaits the bound revision's solve.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FieldsGeneration {
+    pub previous: bool,
+    pub stale: bool,
+}
+
+/// 🧊️ A revision change never blanks the view: the last bound generation stays drawn, marked stale, until the new one binds.
+pub fn fields_generation(matches_revision: bool, current_final: bool, previous_final: bool) -> FieldsGeneration {
+    FieldsGeneration { previous: previous_final && !current_final, stale: !matches_revision }
+}
+
+/// 👁️ Lends the live fields of the window's binding, keeping the previous revision's generation visible (stale) until the new solve binds.
 pub fn with_live_fields<R>(render: AppRenderOperationContext, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, read: impl FnOnce(Option<MountedFieldsView<'_>>) -> R) -> R {
     let shells = MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let owner = registry.requests.live_binding(render.app_instance_id, ConsumerKey::Window(authority?))?;
         let current = registry.current[owner.index()]?;
-        if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) { return None; }
-        Some((registry.shells[current.shell as usize].clone(), current.previous_valid.map(|shell| registry.shells[shell as usize].clone())))
+        if current.app_instance_id != render.app_instance_id { return None; }
+        let matches = current.matches(render);
+        Some((registry.shells[current.shell as usize].clone(), current.previous_valid.map(|shell| registry.shells[shell as usize].clone()), matches))
     });
-    let Some((shell, previous)) = shells else { return read(None); };
+    let Some((shell, previous, matches)) = shells else { return read(None); };
     let Ok(owner) = shell.try_borrow() else { return read(None); };
     let Some(current) = owner.as_ref() else { return read(None); };
     let previous = previous.as_ref().and_then(|owner| owner.try_borrow().ok());
-    let previous = previous.as_ref().and_then(|owner| owner.as_ref()).filter(|state| state.visual.validated_final && !current.visual.validated_final);
-    let fields = previous.unwrap_or(current);
+    let previous = previous.as_ref().and_then(|owner| owner.as_ref());
+    let generation = fields_generation(matches, current.visual.validated_final, previous.is_some_and(|state| state.visual.validated_final));
+    let fields = previous.filter(|_| generation.previous).unwrap_or(current);
     read(Some(MountedFieldsView {
         progress: &current.visual,
         fields: &fields.visual.fields,
         assembly: fields.csr_build.as_ref(),
-        retained: previous.is_some(),
+        retained: generation.previous,
+        stale: generation.stale,
         eigenvalue: fields.visual.validated_final.then_some(fields.eigenvalue).flatten(),
         mode_shape_peak: fields.mode_shape_peak,
         family: current.family,
@@ -471,14 +514,14 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
         let app = registry.app_slots.lookup(render.app_instance_id)?.index();
         let key = registry.model_requests[app]?;
         let current = registry.current[registry.requests.lookup(render.app_instance_id, key)?.index()]?;
-        if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) {
+        if !current.matches(render) {
             return None;
         }
-        Some(registry.shells[current.shell as usize].clone())
+        Some((registry.shells[current.shell as usize].clone(), current.identity))
     });
-    let Some(shell) = shell else { return build(None) };
+    let Some((shell, identity)) = shell else { return build(None) };
     let Ok(owner) = shell.try_borrow() else { return build(None) };
-    build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(render.app_instance_id, render.base_revision.0, render.generation.0)))
+    build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(identity.app_instance_id, identity.base_revision.0, identity.generation.0)))
 }
 
 fn retirable_shell(registry: &MountedRegistry, index: usize, app: u32) -> bool {

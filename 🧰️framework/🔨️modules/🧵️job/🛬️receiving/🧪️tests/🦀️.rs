@@ -93,18 +93,19 @@ fn retire_original_text(close:&mut ControlledRetirement<String>,frame:&mut Nativ
  };
  RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
 }
+/// 🧯️ An idle receiving scope refunds its whole stock, so the first cleanup after it claims afresh: the work loan of a funded case covers that claim on top of the six quoted units, and the unfunded cases stay refused with exact heap, ledger and deadline.
 #[test]
 fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact_heap(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🛬️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["retirementCases"].as_array().unwrap(){
-  let stock=bank();let grant=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:8192,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(75),Generation(4),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);let text=copy_native_text(&mut caller,&mut owner,grant,"π 🌿");let identity=owner.receiving_identity();assert_eq!(serde_json::to_value(&text).unwrap(),serde_json::json!("π 🌿"));let mut close=ControlledRetirement::retain(text);
+  let stock=bank();let grant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:262144,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(75),Generation(4),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);let text=copy_native_text(&mut caller,&mut owner,grant,"π 🌿");let identity=owner.receiving_identity();assert_eq!(serde_json::to_value(&text).unwrap(),serde_json::json!("π 🌿"));let mut close=ControlledRetirement::retain(text);
   if case["cancelled"].as_bool().unwrap(){caller.cancel().cancel_now()}
   let mut frame=NativeReceivingEffect::<semio_framework_value::OriginalRetirementFailure>::default();let visited=std::cell::Cell::new(false);let admitted=owner.owned_bytes();let mut initial=Default::default();
   caller.refreshed_turn_with_decoder(grant,&mut owner,|cx|{
    let deadline=if case["deadlineOpen"].as_bool().unwrap(){cx.deadline_us()}else{0};let before=cx.retained_progress();
    let result:Result<(),OriginalTurnFailure>=cx.with_original_work_loan(case["fuel"].as_u64().unwrap(),deadline,|cx|cx.with_original_retirement(|cx|{
     let mut outcome=None;let mut child=None;
-    let(result,heap)=observe_heap(||{let quote=(cx.retained_grant(),cx.fuel_remaining());cx.with_native_retirement_receiving(&mut outcome,quote,|control,body_grant|{visited.set(true);assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);child=Some(retire_original_text(&mut close,&mut frame,control,body_grant));Ok(())})});
+    let(result,heap)=observe_heap(||{let quote=(RetainedCloneGrant{maximum_items:8,maximum_copy_bytes:8192,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64},cx.fuel_remaining().min(6));cx.with_native_retirement_receiving(&mut outcome,quote,|control,body_grant|{visited.set(true);assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);child=Some(retire_original_text(&mut close,&mut frame,control,body_grant));Ok(())})});
     match result{Ok(true)=>{source_received(outcome);let turn=child.expect("actual retirement result is retained");let p=turn.result.unwrap().progress();assert_eq!((heap.0,heap.1),(p.retained_capacity_bytes,p.released_bytes));},Ok(false)=>{assert!(outcome.is_none()&&child.is_none());assert_eq!((heap.0,heap.1),(0,0));},Err(failure)=>{assert!(!case["visited"].as_bool().unwrap());assert_eq!(failure.retained_progress(),Default::default());assert!(outcome.is_none()&&child.is_none());assert_eq!((heap.0,heap.1),(0,0));}}Ok(())
    }));
    initial=delta(cx.retained_progress(),before);if let Err(failure)=result{assert!(!case["visited"].as_bool().unwrap());assert_eq!(failure.retained_progress(),Default::default())}Ok(())
@@ -121,7 +122,7 @@ fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact
 }
 #[test]
 fn original_receiving_ready_scope_settles_a_ready_step_and_refuses_a_suspended_one(){
- let stock=bank();let grant=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(76),Generation(5),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);
+ let stock=bank();let grant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:262144,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(76),Generation(5),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);
  caller.refreshed_turn_with_decoder(grant,&mut owner,|cx|{
   let mut outcome=None;let mut value=None;assert!(cx.with_native_receiving_ready(&mut outcome,async|_,_|{value=Some(7u8);Ok(())})?);assert_eq!(value,Some(7));source_received(outcome);
   let mut suspended=None;assert!(cx.with_native_receiving_ready(&mut suspended,async|_,_|std::future::pending::<Result<(),ValueError>>().await)?);

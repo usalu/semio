@@ -169,6 +169,7 @@ test("a loaded graph holds one copy of each path its witnesses name: 200 stored 
   graph.update(Array.from({length:200},(_,at)=>({key:"k"+at,name:"src/m"+at+".ts",kind:"module",digest:at.toString(16).padStart(64,"0"),edges:[],extra:{witness:witness()}})));
   await saveClosureGraphV1(graph,root);
   const before=heap(),loaded=loadClosureGraphSyncV1(root),held=heap()-before;
+  if(loaded===undefined)throw new Error("closure graph not loaded");
   expect([...loaded.records()].length).toBe(200);
   const unshared=heap(),copies=Array.from({length:200},witness),reference=heap()-unshared;
   expect(copies.length).toBe(200);

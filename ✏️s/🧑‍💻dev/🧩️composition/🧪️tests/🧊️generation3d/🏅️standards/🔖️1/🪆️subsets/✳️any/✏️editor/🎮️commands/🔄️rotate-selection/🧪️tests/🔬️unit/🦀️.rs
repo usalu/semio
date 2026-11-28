@@ -14,7 +14,7 @@ async fn rotate_selection_composes_world_axes_and_preserves_the_result_selection
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: Vec::new(), ax: 1.0, ay: 0.0, az: 0.0, angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None, window_id: None })).await;
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: Vec::new(), ax: 0.0, ay: 1.0, az: 0.0, angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None, window_id: None })).await;
     let snapshot = context::snapshot(&app);
-    let params = with_host(&snapshot.host_snapshot, |host| gumball_widget_json(host, ROTATE_ID).unwrap());
+    let params = with_host(&snapshot.host_snapshot, |host| gumball_widget_json(host, ROTATE_ID).unwrap()).expect("the evaluation host binds its snapshot");
     let axis = params.get("params").unwrap().get("axis").unwrap();
     for (key, expected) in [("x", 1.0), ("y", 1.0), ("z", -1.0)] {
         assert!((axis.get(key).unwrap().as_f64().unwrap() - expected / 3.0_f64.sqrt()).abs() < 1e-12);

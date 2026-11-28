@@ -26,6 +26,12 @@ describe("machine state root",()=>{
  test("an empty, relative or overlong declaration is no declaration",()=>{
   for(const value of ["","state","./state","/"+"x".repeat(MACHINE_STATE_PROTOCOL_V1.maximumDirectoryCharacters)]){process.env[name]=value;expect(machineStateDirectoryV1()).toBeUndefined();expect(machinePathV1("/work/tree",".cache","f")).toBe(join("/work/tree",".cache","f"));}
  });
+ test("a root inside the declared directory keeps its own state",()=>{
+  process.env[name]="/machines/one";
+  expect(machinePathV1("/machines/one/test-sandbox/r1",".cache","b","r")).toBe(join("/machines/one/test-sandbox/r1",".cache","b","r"));
+  expect(machinePathV1("/machines/one",".cache","b")).toBe(join("/machines/one",".cache","b"));
+  expect(machinePathV1("/machines/onetwo",".cache","b")).toBe(join("/machines/one","b"));
+ });
  test("the declaration is read from the environment it is given",()=>{
   expect(machineStateDirectoryV1({[name]:"/a/b/"})).toBe("/a/b/");
   expect(machineStateDirectoryV1({})).toBeUndefined();

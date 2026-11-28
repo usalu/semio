@@ -12,7 +12,7 @@ use semio_plugin_command::{CommandLogAppend, HISTORY_ROW_OPERATION_PREVIEW, Hist
 use semio_plugin_decl_views::history_view::{CommandLogEntry, CommandView, InverseAction};
 use semio_framework_value::DslValue;
 use std::future::Future;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_command::HISTORY_ROWS_BUILT;
 use std::collections::HashMap;
 use semio_plugin_instance_stores::stores_components::InstanceStores;
@@ -94,7 +94,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// supersede record's row, or a command row with its edit's printed lines, its applied and revertible state, its mutation
     /// rows (its edit's applied operations read as one slice, then its composed members'), its transaction and its label.
     pub fn history_row(&self, stores: &InstanceStores<A>, history: &CommandHistory<A>, entry: &CommandLogEntry, reads: &HistoryRowReads<'_, A::Mutation>) -> CommandView {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "artifact-app-testing"))]
         HISTORY_ROWS_BUILT.with(|built| built.set(built.get() + 1));
         let previous = reads.previous.get(&entry.seq).copied();
         if let Some((index, record)) = entry.transition_id.as_deref().and_then(|transition_id| history.supersedes.record(transition_id)) {

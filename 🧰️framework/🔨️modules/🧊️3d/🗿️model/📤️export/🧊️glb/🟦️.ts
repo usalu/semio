@@ -17,14 +17,15 @@ import type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 import { qNormalize } from "../../🧮️math/🟦️.ts";
 import { selectScene } from "../../🎞️scenes/🟦️.ts";
 import { Pace } from "../../⏱️operation/🟦️.ts";
-import { BufferBuilder, BufferTarget, ComponentType, packGlb } from "./🧱️buffer/🟦️.ts";
+import { BufferBuilder, BufferTarget, ComponentType, packGlb, shortFloat } from "./🧱️buffer/🟦️.ts";
 import type { ElementType } from "./🧱️buffer/🟦️.ts";
 import { partitionRigidParts } from "./🧱️parts/🟦️.ts";
+import { weldUnread } from "./🧱️weld/🟦️.ts";
 import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 export type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 
-/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants, and optionally one model scene (default: every scene as one glTF scene, the first is the default scene). `compact` writes the normals of the primitives that a lit material can draw as normalized 8-bit integers (`KHR_mesh_quantization`, listed as used and required) and leaves them out where every material a primitive can show is unlit. */
+/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants, and optionally one model scene (default: every scene as one glTF scene, the first is the default scene). `compact` (`KHR_mesh_quantization`, listed as used and required) leaves out the glTF defaults (`alphaMode` OPAQUE, `doubleSided` false, primitive `mode` 4), writes the indices of a primitive below 255 vertices as bytes, packs the accessors of one kind into shared buffer views, writes the normals of the primitives that a lit material can draw as normalized 8-bit integers and leaves them out where every material a primitive can show is unlit, welds the vertices of those unread-normal primitives that differ in nothing else inside a solid, and writes the colour factors and node transforms as the shortest decimals of the same 32-bit floats. */
 export type GlbOptions = { readonly pose?: PoseSelector; readonly animations: boolean; readonly variants: boolean; readonly scene?: Slug; readonly compact?: boolean };
 
 const GENERATOR = "semio.model glb/v1";
@@ -54,26 +55,28 @@ function lookup(map: Map<string, number>, id: string, what: string): number {
   return i;
 }
 
-function materialJson(material: Material): Json {
+const floats = (values: readonly number[], short: boolean): number[] => (short ? values.map(shortFloat) : [...values]);
+
+function materialJson(material: Material, short: boolean): Json {
   const out: Json = {
     name: material.id,
-    pbrMetallicRoughness: { baseColorFactor: [...material.baseColor], metallicFactor: material.metallic, roughnessFactor: material.roughness },
-    ...(same(material.emissive, [0, 0, 0]) ? {} : { emissiveFactor: [...material.emissive] }),
-    alphaMode: material.alphaMode === "blend" ? "BLEND" : "OPAQUE",
-    doubleSided: material.doubleSided,
+    pbrMetallicRoughness: { baseColorFactor: floats(material.baseColor, short), metallicFactor: short ? shortFloat(material.metallic) : material.metallic, roughnessFactor: short ? shortFloat(material.roughness) : material.roughness },
+    ...(same(material.emissive, [0, 0, 0]) ? {} : { emissiveFactor: floats(material.emissive, short) }),
+    ...(short && material.alphaMode !== "blend" ? {} : { alphaMode: material.alphaMode === "blend" ? "BLEND" : "OPAQUE" }),
+    ...(short && !material.doubleSided ? {} : { doubleSided: material.doubleSided }),
     extras: { title: title(material.title) },
   };
   if (material.unlit) out.extensions = { KHR_materials_unlit: {} };
   return out;
 }
 
-function nodeJson(node: Node, local: Readonly<Record<"translation" | "rotation" | "scale", readonly number[]>>, meshes: Map<string, number>, skins: Map<string, number>, children: number[] | undefined): Json {
+function nodeJson(node: Node, local: Readonly<Record<"translation" | "rotation" | "scale", readonly number[]>>, meshes: Map<string, number>, skins: Map<string, number>, children: number[] | undefined, short: boolean): Json {
   const out: Json = { name: node.id };
   if (children !== undefined && children.length > 0) out.children = children;
-  if (!same(local.translation, IDENTITY_T)) out.translation = [...local.translation];
+  if (!same(local.translation, IDENTITY_T)) out.translation = floats(local.translation, short);
   const rotation = unit(local.rotation);
-  if (!same(rotation, IDENTITY_R)) out.rotation = [...rotation];
-  if (!same(local.scale, IDENTITY_S)) out.scale = [...local.scale];
+  if (!same(rotation, IDENTITY_R)) out.rotation = floats(rotation, short);
+  if (!same(local.scale, IDENTITY_S)) out.scale = floats(local.scale, short);
   if (node.mesh !== undefined) out.mesh = lookup(meshes, node.mesh, "mesh");
   if (node.skin !== undefined) {
     if (node.mesh === undefined) throw new Error(`node ${node.id} has a skin but no mesh`);
@@ -173,9 +176,9 @@ function primitiveJson(primitive: Primitive, jointCount: number | undefined, mat
   }
   return {
     attributes,
-    indices: buffer.add(indices, max < 65535 ? ComponentType.UnsignedShort : ComponentType.UnsignedInt, "SCALAR", { target: BufferTarget.Index }),
+    indices: buffer.add(indices, quantized !== undefined && max < 255 ? ComponentType.UnsignedByte : max < 65535 ? ComponentType.UnsignedShort : ComponentType.UnsignedInt, "SCALAR", { target: BufferTarget.Index }),
     material: lookup(materials, primitive.material, "material"),
-    mode: MODES[primitive.mode],
+    ...(quantized !== undefined && primitive.mode === "triangles" ? {} : { mode: MODES[primitive.mode] }),
     ...(solids !== undefined && solids.length > 0 ? { extras: { solids: solids.map((range) => ({ id: range.id, first: range.first, count: range.count })) } } : {}),
   };
 }
@@ -234,7 +237,7 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
     return baked === undefined ? material : { ...material, baseColor: (baked.baseColor as unknown as Material["baseColor"] | undefined) ?? material.baseColor, emissive: (baked.emissive as unknown as Material["emissive"] | undefined) ?? material.emissive };
   });
   const materialIndex = indexOf(materials, "material");
-  const buffer = new BufferBuilder(pace);
+  const buffer = new BufferBuilder(pace, options.compact === true);
 
   const skinnedMeshes = new Map<string, number>();
   for (const node of document.nodes) {
@@ -244,13 +247,13 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   }
   step(0.02);
 
-  const meshes = partitionRigidParts(document.meshes, pace);
   const unlit = new Set(materials.filter((material) => material.unlit).map((material) => material.id));
   const quantized = { used: false };
   const readsNormals = (primitive: Primitive): boolean => options.compact !== true || !unlit.has(primitive.material) || (options.variants && document.variants.some((variant) => {
     const bound = variant.bindings[primitive.material];
     return bound !== undefined && !unlit.has(bound);
   }));
+  const meshes = partitionRigidParts(options.compact === true ? weldUnread(document.meshes, readsNormals, pace) : document.meshes, pace, options.compact === true);
   const totalPrimitives = meshes.reduce((n, mesh) => n + mesh.primitives.length, 0);
   let done = 0;
   const gltfMeshes = meshes.map((mesh) => ({
@@ -286,14 +289,14 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
       skinsHere.set(skin.id, gltfSkins.length);
       gltfSkins.push({ name: skin.id, joints: skin.joints.map((joint) => lookup(ids, joint, "joint node")), inverseBindMatrices: inverseBind.get(skin.id)! });
     }
-    nodes.forEach((node, i) => gltfNodes.push(nodeJson(node, posed?.local[node.id] ?? node, meshIndex, skinsHere, children.get(i))));
+    nodes.forEach((node, i) => gltfNodes.push(nodeJson(node, posed?.local[node.id] ?? node, meshIndex, skinsHere, children.get(i), options.compact === true)));
     instanceNodes.push(ids);
     sceneRoots.push(roots);
   }
   step(0.78);
 
   const used = new Set<string>();
-  const gltfMaterials = materials.map(materialJson);
+  const gltfMaterials = materials.map((material) => materialJson(material, options.compact === true));
   if (materials.some((material) => material.unlit)) used.add("KHR_materials_unlit");
   if (quantized.used) used.add("KHR_mesh_quantization");
 

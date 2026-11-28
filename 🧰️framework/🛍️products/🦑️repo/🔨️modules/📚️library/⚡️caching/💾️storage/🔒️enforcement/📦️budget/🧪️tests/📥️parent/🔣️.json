@@ -2374,13 +2374,12 @@
           "drain-lifetime",
           "fault-profile-undefined",
           "fault-profile-frozen",
-          "lease-reopen",
-          "lease-busy",
-          "lease-maintenance-undefined",
-          "lease-first-close-frozen",
-          "lease-reopen-undefined",
-          "lease-maintenance-close",
-          "lease-second-recheck-close",
+          "lease-single-open",
+          "lease-recheck-after-sweep",
+          "lease-first-recheck-changed",
+          "lease-second-recheck-changed",
+          "lease-second-recheck-changed-close",
+          "lease-close-frozen",
           "independent-absent",
           "independent-empty",
           "independent-history",
@@ -2686,43 +2685,37 @@
       "failed": true
     },
     {
-      "mode": "lease-reopen",
+      "mode": "lease-single-open",
       "accepted": true,
       "reads": 1,
       "failed": false
     },
     {
-      "mode": "lease-busy",
+      "mode": "lease-recheck-after-sweep",
       "accepted": true,
       "reads": 1,
       "failed": false
     },
     {
-      "mode": "lease-maintenance-undefined",
+      "mode": "lease-first-recheck-changed",
       "accepted": false,
       "reads": 0,
       "failed": true
     },
     {
-      "mode": "lease-first-close-frozen",
+      "mode": "lease-second-recheck-changed",
       "accepted": false,
       "reads": 0,
       "failed": true
     },
     {
-      "mode": "lease-reopen-undefined",
+      "mode": "lease-second-recheck-changed-close",
       "accepted": false,
       "reads": 0,
       "failed": true
     },
     {
-      "mode": "lease-maintenance-close",
-      "accepted": false,
-      "reads": 0,
-      "failed": true
-    },
-    {
-      "mode": "lease-second-recheck-close",
+      "mode": "lease-close-frozen",
       "accepted": false,
       "reads": 0,
       "failed": true
@@ -3595,53 +3588,97 @@
   ],
   "leaseReopenCases": [
     {
-      "mode": "lease-reopen",
+      "mode": "lease-single-open",
       "accepted": true,
-      "opened": 2,
-      "closed": 2,
-      "failures": 0
+      "opened": 1,
+      "closed": 1,
+      "failures": 0,
+      "sweeps": false,
+      "changedAt": 0,
+      "closeFails": false,
+      "trace": [
+        "open1",
+        "recheck1",
+        "close1"
+      ]
     },
     {
-      "mode": "lease-busy",
+      "mode": "lease-recheck-after-sweep",
       "accepted": true,
-      "opened": 2,
-      "closed": 2,
-      "failures": 0
+      "opened": 1,
+      "closed": 1,
+      "failures": 0,
+      "sweeps": true,
+      "changedAt": 0,
+      "closeFails": false,
+      "trace": [
+        "open1",
+        "recheck1",
+        "recheck1",
+        "close1"
+      ]
     },
     {
-      "mode": "lease-maintenance-undefined",
+      "mode": "lease-first-recheck-changed",
       "accepted": false,
       "opened": 1,
       "closed": 1,
-      "failures": 1
+      "failures": 1,
+      "sweeps": false,
+      "changedAt": 1,
+      "closeFails": false,
+      "trace": [
+        "open1",
+        "recheck1",
+        "close1"
+      ]
     },
     {
-      "mode": "lease-first-close-frozen",
+      "mode": "lease-second-recheck-changed",
       "accepted": false,
       "opened": 1,
       "closed": 1,
-      "failures": 1
+      "failures": 1,
+      "sweeps": true,
+      "changedAt": 2,
+      "closeFails": false,
+      "trace": [
+        "open1",
+        "recheck1",
+        "recheck1",
+        "close1"
+      ]
     },
     {
-      "mode": "lease-reopen-undefined",
+      "mode": "lease-second-recheck-changed-close",
       "accepted": false,
       "opened": 1,
       "closed": 1,
-      "failures": 1
+      "failures": 2,
+      "sweeps": true,
+      "changedAt": 2,
+      "closeFails": true,
+      "trace": [
+        "open1",
+        "recheck1",
+        "recheck1",
+        "close1"
+      ]
     },
     {
-      "mode": "lease-maintenance-close",
+      "mode": "lease-close-frozen",
       "accepted": false,
       "opened": 1,
       "closed": 1,
-      "failures": 2
-    },
-    {
-      "mode": "lease-second-recheck-close",
-      "accepted": false,
-      "opened": 2,
-      "closed": 2,
-      "failures": 2
+      "failures": 1,
+      "sweeps": false,
+      "changedAt": 0,
+      "closeFails": true,
+      "trace": [
+        "open1",
+        "recheck1",
+        "close1"
+      ]
     }
   ],
   "leaseReopenCaseSchema": {
@@ -3652,18 +3689,21 @@
       "accepted",
       "opened",
       "closed",
-      "failures"
+      "failures",
+      "sweeps",
+      "changedAt",
+      "closeFails",
+      "trace"
     ],
     "properties": {
       "mode": {
         "enum": [
-          "lease-reopen",
-          "lease-busy",
-          "lease-maintenance-undefined",
-          "lease-first-close-frozen",
-          "lease-reopen-undefined",
-          "lease-maintenance-close",
-          "lease-second-recheck-close"
+          "lease-single-open",
+          "lease-recheck-after-sweep",
+          "lease-first-recheck-changed",
+          "lease-second-recheck-changed",
+          "lease-second-recheck-changed-close",
+          "lease-close-frozen"
         ]
       },
       "accepted": {
@@ -3672,17 +3712,40 @@
       "opened": {
         "type": "integer",
         "minimum": 1,
-        "maximum": 2
+        "maximum": 1
       },
       "closed": {
         "type": "integer",
         "minimum": 1,
-        "maximum": 2
+        "maximum": 1
       },
       "failures": {
         "type": "integer",
         "minimum": 0,
         "maximum": 2
+      },
+      "sweeps": {
+        "type": "boolean"
+      },
+      "changedAt": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2
+      },
+      "closeFails": {
+        "type": "boolean"
+      },
+      "trace": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 4,
+        "items": {
+          "enum": [
+            "open1",
+            "recheck1",
+            "close1"
+          ]
+        }
       }
     }
   },
@@ -4749,13 +4812,12 @@
           "drain-lifetime",
           "fault-profile-undefined",
           "fault-profile-frozen",
-          "lease-reopen",
-          "lease-busy",
-          "lease-maintenance-undefined",
-          "lease-first-close-frozen",
-          "lease-reopen-undefined",
-          "lease-maintenance-close",
-          "lease-second-recheck-close",
+          "lease-single-open",
+          "lease-recheck-after-sweep",
+          "lease-first-recheck-changed",
+          "lease-second-recheck-changed",
+          "lease-second-recheck-changed-close",
+          "lease-close-frozen",
           "independent-absent",
           "independent-empty",
           "independent-history",

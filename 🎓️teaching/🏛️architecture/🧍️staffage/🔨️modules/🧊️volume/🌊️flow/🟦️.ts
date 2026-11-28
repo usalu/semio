@@ -2,10 +2,10 @@
  *
  * - A kept stream is a stream tube: one kernel `loft` per run of equal temperature-excess bin, its circular sections at points of the stream (the first and last point of a run always, the points between thinned until the polyline stays within {@link FLOW_MODEL}`.chordMm` of paper of the stream), the radius of a section half the paper width the local speed asks (`flowPaint.streamWidthMm`), so a tube is as wide as the line of the drawing at that scale. Where a stream bends tighter than its tube is wide a loft would cross itself (the kernel's `loftFault`): the tube ends there with a cap and the next one starts at the same station, like an elbow of two pipes ({@link tubesOf}).
  * - The direction of flow is a cone (`revolve`) at every arrow of the ribbon, its tip on the stream point, its axis the direction of flow, with the paper size of the arrow heads of the drawing.
- * - Vapour puffs (more than `FLOW_STYLE.vapourThresholdGKg` of vapour excess) and fog puffs (any condensate) are translucent spheres of the entrained radius of the puff (clamped to the paper sizes of the drawing): `polyhedron` icospheres of {@link FLOW_MODEL}`.puffTriangles` triangles (the finer one from a paper radius of `puffFineMm` on), because a soft cloud has no silhouette to keep round and a kernel ellipsoid at the roundness rule of the models would cost thousands of triangles per puff.
+ * - Vapour puffs (more than `FLOW_STYLE.vapourThresholdGKg` of vapour excess) and fog puffs (any condensate) are translucent spheres of the entrained radius of the puff (clamped to the paper sizes of the drawing): `polyhedron` icospheres of {@link FLOW_MODEL}`.puffTriangles` triangles (the finer one from a paper radius of `puffFineMm` on), because a soft cloud has no silhouette to keep round and a kernel ellipsoid at the roundness rule of the models would cost thousands of triangles per puff. A puff is one instance: its solid is the unit icosphere on a node of its own (`flow-vapour-<i>`, `flow-fog-<i>`) whose translation is the centre of the puff and whose uniform scale is its radius, so every puff of one sphere and material has the very same vertices and a file stores them once.
  * Colours are those of `flowPaint`: a material per temperature-excess bin of the streams (opaque, unlit; the speed is the width, not an opacity), per vapour bin and per fog bin (colour and opacity at the middle of the bin). Every base material is fully transparent and only the `thermal` variant binds it to its paint, so the flow shows in the thermal view and in no other.
  * Sizes: paper millimetres times the metres per paper millimetre of the scale, but the widest tube is at most {@link FLOW_MODEL}`.tubeShare` of the largest extent of the asset in radius (the arrow heads shrink with it), so at 1:200 and 1:500 the flow never buries the body.
- * Frame: a point `(x, y, z)` of the field (ahead, up, left) is `(z, y, x)` in the neutral frame of the model, after the `travel` of the figure during the developed history is taken off (a walking clip has moved on by whole cycles while its flow developed; the model shows the figure of the first instant, so the field is carried back onto it; a pose has not travelled). The solids ride on world nodes (`flow`, `flow-stream-<index of the stream in the field>`, `flow-vapour`, `flow-fog`), not on bones.
+ * Frame: a point `(x, y, z)` of the field (ahead, up, left) is `(z, y, x)` in the neutral frame of the model, after the `travel` of the figure during the developed history is taken off (a walking clip has moved on by whole cycles while its flow developed; the model shows the figure of the first instant, so the field is carried back onto it; a pose has not travelled). The solids ride on world nodes (`flow`, `flow-stream-<index of the stream in the field>`, `flow-vapour`, `flow-fog` and below the last two one node per puff), not on bones.
  * Tracers are motion and are not part of a file: the tubes, arrows and puffs are the field of one instant.
  *
  * @see ../../💨️transport/🌊️flow/🟦️.ts — `flowMarks`, `flowDetailOf`
@@ -21,8 +21,8 @@ import { formatNumber } from "../../📐️units/🟦️.ts";
 import type { Paint } from "../🎨️looks/🟦️.ts";
 import { type Triple, toNeutral } from "../🧭️frame/🟦️.ts";
 
-/** 📏️ The rules of the flow solids: the paper deviation in millimetres a tube axis may have from its stream, the share of the largest extent of the asset the widest tube radius may be, the bins of the vapour and fog materials, the triangles of a small and of a large puff sphere (an icosahedron subdivided once and twice) and the paper radius in millimetres from which a puff is large. */
-export const FLOW_MODEL = { chordMm: 0.08, tubeShare: 0.012, vapourBins: 4, fogBins: 3, puffTriangles: [80, 320], puffFineMm: 2 } as const;
+/** 📏️ The rules of the flow solids: the paper deviation in millimetres a tube axis may have from its stream, the share of the largest extent of the asset the widest tube radius may be, the bins of the vapour and fog materials, the triangles of a small and of a large puff sphere (an icosahedron subdivided once and twice), the paper radius in millimetres from which a puff is large and the vertices of a tube ring and of an arrow head: the widest tube is 0.15 mm and the head 0.375 mm of paper in radius, so an octagon keeps within 0.012 and 0.029 mm of paper of its circle, within the chord the axis keeps. */
+export const FLOW_MODEL = { chordMm: 0.08, tubeShare: 0.012, vapourBins: 4, fogBins: 3, puffTriangles: [80, 320], puffFineMm: 2, tubeSegments: 8 } as const;
 
 /** 🏷️ The tag of every flow node and solid; each is a glyph too (generated, hidden by default, shown by the variant of its view). */
 export const FLOW_TAG = "flow";
@@ -148,32 +148,33 @@ export function flowParts(flow: FlowField, scale: number, extentM: number, theme
           const radius = (paint.streamWidthMm(ribbon.speedMS[index]!) / 2) * unit;
           return { index, at: placed(points[index]!), rx: radius, ry: radius };
         });
-        for (const tube of tubesOf(stations)) made.push({ id: `${node}-${tube[0]!.index}`, node, material: excessMaterial(bins[start]!), tags: FLOW_TAGS, kind: "loft", sections: tube.map(({ at, rx, ry }) => ({ at, rx, ry })), capStart: true, capEnd: true });
+        for (const tube of tubesOf(stations)) made.push({ id: `${node}-${tube[0]!.index}`, node, material: excessMaterial(bins[start]!), tags: FLOW_TAGS, kind: "loft", sections: tube.map(({ at, rx, ry }) => ({ at, rx, ry })), capStart: true, capEnd: true, segments: FLOW_MODEL.tubeSegments });
       }
       start = end;
       if (i >= points.length - 1) break;
     }
     ribbon.arrows.forEach((arrow, j) => {
       const length = FLOW_STYLE.headLengthMm * unit;
-      made.push({ id: `flow-arrow-${ribbon.stream}-${j}`, node, material: excessMaterial(bins[Math.max(0, points.indexOf(arrow.at))]!), tags: FLOW_TAGS, kind: "revolve", profile: [[-length, 0], [-length, (FLOW_STYLE.headWidthMm / 2) * unit], [0, 0]], axis: neutral(arrow.direction), origin: placed(arrow.at) });
+      made.push({ id: `flow-arrow-${ribbon.stream}-${j}`, node, material: excessMaterial(bins[Math.max(0, points.indexOf(arrow.at))]!), tags: FLOW_TAGS, kind: "revolve", profile: [[-length, 0], [-length, (FLOW_STYLE.headWidthMm / 2) * unit], [0, 0]], axis: neutral(arrow.direction), origin: placed(arrow.at), segments: FLOW_MODEL.tubeSegments });
     });
     if (made.length === 0) continue;
     nodes.push(flowNode(node, "flow"));
     solids.push(...made);
   }
 
-  const sphere = (id: Slug, node: Slug, material: Slug, puff: FlowPuff): Solid => {
+  const sphere = (kind: "vapour" | "fog", i: number, material: Slug, puff: FlowPuff): void => {
+    const id = `flow-${kind}-${i}`;
     const radius = Math.min(FLOW_STYLE.puffMaxMm * mm, Math.max(FLOW_STYLE.puffMinMm * mm, puff.radiusM));
-    const [cx, cy, cz] = placed(puff.at);
     const mesh = SPHERES[radius < FLOW_MODEL.puffFineMm * mm ? 0 : 1];
-    return { id, node, material, tags: FLOW_TAGS, kind: "polyhedron", vertices: mesh.vertices.map(([x, y, z]) => [cx + radius * x, cy + radius * y, cz + radius * z]), triangles: mesh.triangles };
+    nodes.push({ id, parent: `flow-${kind}`, translation: placed(puff.at), rotation: [0, 0, 0, 1], scale: [radius, radius, radius], tags: FLOW_TAGS });
+    solids.push({ id, node: id, material, tags: FLOW_TAGS, kind: "polyhedron", vertices: mesh.vertices, triangles: mesh.triangles });
   };
   const vapour = marks.puffs.filter((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg);
   if (vapour.length > 0) nodes.push(flowNode("flow-vapour", "flow"));
-  vapour.forEach((p, i) => solids.push(sphere(`flow-vapour-${i}`, "flow-vapour", binned("vapour", p.vapourExcessKgPerKg * 1000), p)));
+  vapour.forEach((p, i) => sphere("vapour", i, binned("vapour", p.vapourExcessKgPerKg * 1000), p));
   const fog = marks.puffs.filter((p) => p.condensateKgPerKg > 0);
   if (fog.length > 0) nodes.push(flowNode("flow-fog", "flow"));
-  fog.forEach((p, i) => solids.push(sphere(`flow-fog-${i}`, "flow-fog", binned("fog", p.condensateKgPerKg * 1000), p)));
+  fog.forEach((p, i) => sphere("fog", i, binned("fog", p.condensateKgPerKg * 1000), p));
 
   return solids.length === 0 ? { nodes: [], solids: [], materials: [] } : { nodes: [flowNode("flow", null), ...nodes], solids, materials: [...materials.values()] };
 }

@@ -100,7 +100,7 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch_with_view(app: &mut Generation3dViewerFixture, command: Generation3dViewCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
-        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
         semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))?;
         settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
     }

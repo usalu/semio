@@ -126,7 +126,7 @@ test("source refusals name file, line and column in both languages and agree wit
       expect(run.status, row.name).not.toBe(0);
       if (error.key.endsWith("unexpected")) { expect(run.stderr, row.name).toContain(`unit.rs:${row.values.line}:${row.values.column}`); continue; }
       const lines = run.stderr.split("\n"), label = lines.findIndex(text => /^\s*\|.*unclosed delimiter/u.test(text)), marker = /[-^] unclosed/u.test(lines[label]!) ? lines[label]! : lines[label - 2]!;
-      expect(marker.search(/[-^]/u) - marker.indexOf("| ") - 1, row.name).toBe(row.values.column);
+      expect<unknown>(marker.search(/[-^]/u) - marker.indexOf("| ") - 1, row.name).toBe(row.values.column);
     }
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });

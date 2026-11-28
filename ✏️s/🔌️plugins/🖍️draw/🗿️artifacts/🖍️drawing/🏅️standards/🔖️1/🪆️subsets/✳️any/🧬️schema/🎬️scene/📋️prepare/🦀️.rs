@@ -477,13 +477,16 @@ impl<'a> DocumentVectorJob<'a>{
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct DocumentVectorOwners{children:Vec<VectorChildRetirement>,plans:Vec<ScenePlanCloseJob>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>}
-/// 🔐️ The exact source read returns to its registry as soon as it is taken, independent of the private owners, which never dereference it while they drain.
+/// 🔐️ Actual private byte ownership closes before the exact source read returns to its registry; only the mounted scene cleanup may return it earlier through `release_snapshot_read`, because the private owners are lifetime-free and never dereference the source while they drain.
 pub struct DocumentVectorRetirement<'a>{pub source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>}
 impl DocumentVectorRetirement<'_>{
  pub fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.private_is_empty()&&self.source.is_none()}
  pub fn snapshot_authority_matches(&self,generation:u64,revision:[u8;32])->bool{match &self.source{Some(DocumentVectorSource::SnapshotRead(read))=>read.commit_authority_matches(generation,revision),_=>false}}
- pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{match self.source.take(){Some(DocumentVectorSource::SnapshotRead(read))=>Some(read),other=>{self.source=other;None}}}
+ pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{if !self.private_is_empty(){return None;}self.release_snapshot_read()}
+ pub fn source_pending(&self)->bool{matches!(self.source,Some(DocumentVectorSource::SnapshotRead(_)))}
+ /// 🕊️ Hands the exact source read back while private owners still drain: they own only lifetime-free data and take no document, so the lease must not wait for their size.
+ pub fn release_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{match self.source.take(){Some(DocumentVectorSource::SnapshotRead(read))=>Some(read),other=>{self.source=other;None}}}
  pub fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
   if !self.private_is_empty() {
    let poll = self.owner.step(body, effect);

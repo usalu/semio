@@ -1,5 +1,5 @@
 import {createHash,randomBytes} from "node:crypto";
-import {closeSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from "node:fs";
+import {closeSync,lstatSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from "node:fs";
 import {basename,join,relative,resolve,sep} from "node:path";
 import {processAliveV1,tryClaimV1} from "../🔒️lock/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
@@ -39,12 +39,31 @@ export function readLaneSizeV1(root:string,id:string):Readonly<{bytes:number;inc
  try{const row=JSON.parse(readFileSync(lanePathsV1(root,id).size,"utf8"));return Number.isSafeInteger(row?.bytes)&&Number.isSafeInteger(row?.incrementalBytes)&&Number.isSafeInteger(row?.measuredMs)?{bytes:row.bytes,incrementalBytes:row.incrementalBytes,measuredMs:row.measuredMs,...Number.isSafeInteger(row.temporariesBytes)?{temporariesBytes:row.temporariesBytes}:{}}:undefined;}catch{return undefined;}
 }
 
+const IMAGE_FAULTS_V1:ReadonlySet<string>=new Set(["EFAULT","EIO","ENXIO","ENODEV","ENOTCONN","ESTALE"]);
+/** 🩻️ Whether an error says the image under a path failed rather than the path being wrong: a volume that lost its backing (the host ran out of space for the sparse image, the image was detached under a running process) answers `EFAULT`, `EIO`, `ENXIO`, `ENODEV`, `ENOTCONN` or `ESTALE` to every call. Pure. */
+export function imageFaultV1(error:unknown):boolean{return IMAGE_FAULTS_V1.has((error as NodeJS.ErrnoException)?.code??"");}
+/** 🧯️ Runs a removal inside a lane image and answers whether the image still answered: an error of `imageFaultV1` ends it quietly with `false` (the image is retired whole instead), any other error is the caller's. */
+export function removeInImageV1(body:()=>void):boolean{try{body();return true;}catch(error){if(imageFaultV1(error))return false;throw error;}}
 const writeAtomicV1=(path:string,text:string):void=>{const temporary=path+"."+randomBytes(3).toString("hex");writeFileSync(temporary,text);renameSync(temporary,path);};
 
 /** 🧮️ Records the measured size of a lane and the part its incremental sessions hold next to its metadata (a file of its own, so a measurement never overwrites a concurrent acquisition's record). */
-export function recordLaneSizeV1(root:string,id:string,bytes:number,incrementalBytes:number,nowMs:number,temporariesBytes?:number):void{try{writeAtomicV1(lanePathsV1(root,id).size,JSON.stringify({bytes,incrementalBytes,measuredMs:nowMs,...temporariesBytes===undefined?{}:{temporariesBytes}}));}catch{}}
+export function recordLaneSizeV1(root:string,id:string,bytes:number,incrementalBytes:number,nowMs:number,temporariesBytes?:number):void{try{writeAtomicV1(lanePathsV1(root,id).size,JSON.stringify({bytes,incrementalBytes,measuredMs:nowMs,...temporariesBytes===undefined?{}:{temporariesBytes}}));}catch{}const key=readLaneV1(root,id)?.crateKey;if(key!==undefined)recordLanePeakV1(root,key,bytes);}
 
-/** 🚪️ Registers one running command in its lane and records who uses it for which crate set. The marker is kept fresh by a heartbeat and removed on release; garbage collection never touches a lane with a fresh marker. */
+/** 📈️ The most bytes a lane of each crate set has held, by crate key (see `crateKeyV1`): evidence that outlives the lanes, so a lane born after its predecessor was retired is sized for what its crate set has needed instead of a flat guess. */
+export type LanePeaksV1=Readonly<Record<string,number>>;
+const peaksPath=(root:string):string=>join(root,layout.peaks);
+
+/** 📖️ Reads the peaks of a cache root; absent or unreadable evidence is empty. */
+export function readLanePeaksV1(root:string):LanePeaksV1{
+ try{const row=JSON.parse(readFileSync(peaksPath(root),"utf8"));return Object.freeze(Object.fromEntries(Object.entries(row as Record<string,unknown>).filter(([key,value])=>Number.isSafeInteger(value)&&(value as number)>0&&key.length>0).map(([key,value])=>[key,value as number])));}catch{return Object.freeze({});}
+}
+
+/** ✍️ Raises the recorded peak of a crate set to `bytes` (never lowers it, a smaller observation changes nothing); best effort, a write that fails loses only the evidence. */
+export function recordLanePeakV1(root:string,crateKey:string,bytes:number):void{
+ try{if(!Number.isSafeInteger(bytes)||bytes<=0)return;const peaks=readLanePeaksV1(root);if((peaks[crateKey]??0)>=bytes)return;writeAtomicV1(peaksPath(root),JSON.stringify({...peaks,[crateKey]:bytes}));}catch{}
+}
+
+/** 🚪️ Registers one running command in its lane and records who uses it for which crate set. The marker is kept fresh by a heartbeat and removed on release (a lane image that failed under the command keeps its marker: the release never turns the command's own result into an internal error, a dead holder frees the lane anyway); garbage collection never touches a lane with a fresh marker. */
 export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:readonly string[],flavour?:string):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{
  const paths=lanePathsV1(root,id);
  for(const directory of[paths.target,paths.build,paths.live,paths.stamps])mkdirSync(directory,{recursive:true});
@@ -55,7 +74,7 @@ export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:rea
  const marker=join(paths.live,process.pid+"-"+randomBytes(3).toString("hex")),write=()=>writeAtomicV1(marker,JSON.stringify({...ownProcessIdentityV1(),startedMs:Date.now()}));write();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(marker,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();
  let released=false;
- return Object.freeze({paths,release(){if(released)return;released=true;clearInterval(beat);rmSync(marker,{force:true});touch();}});
+ return Object.freeze({paths,release(){if(released)return;released=true;clearInterval(beat);removeInImageV1(()=>rmSync(marker,{force:true}));touch();}});
 }
 
 /** 🫀️ Whether any marker of the lane belongs to a live process, however old its heartbeat: a holder whose event loop is busy for long (a provenance snapshot) is still a holder; only a dead one frees the lane. */
@@ -124,12 +143,19 @@ export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;in
 /** 📐️ The logical bytes a lane holds right now, measured with the same bound as the collector's measurement; `0` for a lane that does not exist. */
 export function measureLaneBytesV1(root:string,id:string):number{return treeBytes(lanePathsV1(root,id).base,{files:2_000_000});}
 
+/** 🧩️ Removes the files of a lane base; a base that is the mount point of its own image (a lane shard) keeps the directory (an image that failed answers every call with an error of `imageFaultV1`: its files are beyond removal and the image is retired whole instead), because a mount point cannot be removed while the image is mounted: its files go (the volume's own system directories stay, the system owns them) and the idle image is retired whole afterwards (`retireIdleLaneImagesV1`). */
+function removeLaneTreeV1(base:string):void{
+ let mounted=false;try{mounted=lstatSync(base).dev!==lstatSync(join(base,"..")).dev;}catch{}
+ if(!mounted){rmSync(base,{recursive:true,force:true});return;}
+ removeInImageV1(()=>{for(const name of readdirSync(base))if(!layout.volumeMetadata.includes(name))rmSync(join(base,name),{recursive:true,force:true});});
+}
+
 /** 🗑️ Removes a whole lane or only its incremental directories. It takes the lane's own claim first, so it can never race an acquirer, and refuses while the claim is held or a live marker exists; `beforeRemoval` runs for a whole lane under that claim, once the lane is known to be idle and before anything is deleted (the retention of what a holder that is gone left behind). */
 export function removeLaneV1(root:string,id:string,scope:"lane"|"incremental",nowMs:number,beforeRemoval?:(paths:ReturnType<typeof lanePathsV1>)=>boolean|void):boolean{
  const paths=lanePathsV1(root,id),claim=tryClaimV1(join(root,layout.locks),"lane-"+id);if(!claim)return false;
  try{
   if(laneLiveV1(paths,nowMs))return false;
-  if(scope==="lane"){if(beforeRemoval?.(paths)===false)return false;rmSync(paths.base,{recursive:true,force:true});}else for(const directory of incrementalDirectoriesV1(paths.build))rmSync(directory,{recursive:true,force:true});
+  if(scope==="lane"){if(beforeRemoval?.(paths)===false)return false;removeLaneTreeV1(paths.base);}else for(const directory of incrementalDirectoriesV1(paths.build))rmSync(directory,{recursive:true,force:true});
   return true;
  }finally{claim.release();}
 }

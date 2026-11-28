@@ -22,8 +22,10 @@ semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
+# 🧩️ Capability Dependencies
 semio-s-artifact-stdio-pdf-conformance-support = { workspace = true }
 semio-s-artifact-stdio-pdf-lower = { workspace = true }
+# /🧩️ Capability Dependencies
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

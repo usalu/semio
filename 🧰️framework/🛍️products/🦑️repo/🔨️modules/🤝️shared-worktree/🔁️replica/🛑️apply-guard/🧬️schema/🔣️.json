@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "EN: The disk rule of the replica apply: a file that arrives from the store is written only while the volume keeps `reserveBytes` plus `reserveBasisPoints` of its size free after the write. Deletions, the daemon's own code and the git stage are never held back (they free space or repair the daemon). DE: Die Plattenregel des Replikat-Anwendens: Eine Datei aus dem Store wird nur geschrieben, solange das Volume danach `reserveBytes` plus `reserveBasisPoints` seiner Größe frei behält. Löschungen, der eigene Code des Daemons und die Git-Stufe werden nie zurückgehalten (sie geben Platz frei oder reparieren den Daemon).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "reserveBytes": 2147483648,
+        "reserveBasisPoints": 300,
+        "cacheMilliseconds": 2000
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦�
 import {getWorkspaceRoot} from "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {provisionNativeToolsV1} from "./🟦️.ts";
-import {ownedNativeToolPortV1} from "./🔌️port/🟦️.ts";
+import {ownedNativeToolPortV1} from "./🔌️port/🎟️owned/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const kinds: readonly ToolchainKindV1[] = ["python", "dotnet", "cmake", "go"];

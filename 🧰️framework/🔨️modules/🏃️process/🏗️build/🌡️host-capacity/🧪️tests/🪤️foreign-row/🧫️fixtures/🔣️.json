@@ -1,0 +1,151 @@
+{
+ "current": 1,
+ "fallbackMegabytes": 2048,
+ "fingerprints": {
+  "1": "019f92faa0fc79d7800aa0cabe159efc6feab1a0874608e9a1547811ffdcdab6"
+ },
+ "rows": [
+  {
+   "name": "the incident: a live older process wrote its stats inline into the row",
+   "row": {
+    "id": "inlinestats1",
+    "operation": "serve",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": 3000,
+    "admittedAtMs": 1,
+    "observedMegabytes": 500,
+    "pid": 4242,
+    "bootAtMs": 0,
+    "peakMegabytes": 900,
+    "observations": 10,
+    "deviationMegabytes": 50
+   },
+   "relation": "unversioned",
+   "megabytes": 3000,
+   "declared": true,
+   "format": null
+  },
+  {
+   "name": "a row of a newer format that adds fields",
+   "row": {
+    "id": "newerformat1",
+    "operation": "run",
+    "jobs": 2,
+    "cpu": 2,
+    "reservedMegabytes": 4096,
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4243,
+    "bootAtMs": 0,
+    "custody": {
+     "epoch": 7
+    }
+   },
+   "relation": "newer",
+   "megabytes": 4096,
+   "declared": true,
+   "format": 2
+  },
+  {
+   "name": "a row of the current format whose charge has the wrong type",
+   "row": {
+    "id": "badcharge001",
+    "operation": "run",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": "much",
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4244,
+    "bootAtMs": 0
+   },
+   "relation": "invalid",
+   "megabytes": 2048,
+   "declared": false,
+   "format": 1
+  },
+  {
+   "name": "a row of the current format with a negative charge",
+   "row": {
+    "id": "negativecharge",
+    "operation": "run",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": -5,
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4245,
+    "bootAtMs": 0
+   },
+   "relation": "invalid",
+   "megabytes": 2048,
+   "declared": false,
+   "format": 1
+  },
+  {
+   "name": "a row without any format whose charge is a fraction",
+   "row": {
+    "id": "fractioncharge",
+    "operation": "run",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": 10.5,
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4246,
+    "bootAtMs": 0
+   },
+   "relation": "unversioned",
+   "megabytes": 2048,
+   "declared": false,
+   "format": null
+  },
+  {
+   "name": "a format that is not a number",
+   "row": {
+    "id": "stringformat1",
+    "operation": "run",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": 100,
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4247,
+    "bootAtMs": 0
+   },
+   "relation": "unversioned",
+   "megabytes": 100,
+   "declared": true,
+   "format": "one"
+  },
+  {
+   "name": "a row that is not an object",
+   "row": [
+    "x"
+   ],
+   "relation": "unversioned",
+   "megabytes": 2048,
+   "declared": false,
+   "format": null
+  },
+  {
+   "name": "a row of the current format whose sidecar is missing the format field",
+   "row": {
+    "id": "nosidecar001",
+    "operation": "run",
+    "jobs": 1,
+    "cpu": 1,
+    "reservedMegabytes": 700,
+    "admittedAtMs": 1,
+    "observedMegabytes": null,
+    "pid": 4248,
+    "bootAtMs": 0
+   },
+   "format": null,
+   "relation": "unversioned",
+   "megabytes": 700,
+   "declared": true
+  }
+ ]
+}

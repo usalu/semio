@@ -5,6 +5,7 @@ resolver = "2"
 members = [
     "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/📈️metrics/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",

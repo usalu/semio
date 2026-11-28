@@ -1,6 +1,6 @@
 import type{NxSdkPhysicalFileIdentityV1}from"../🪪️identity/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🟦️.ts";
+import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🐧️libc/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();

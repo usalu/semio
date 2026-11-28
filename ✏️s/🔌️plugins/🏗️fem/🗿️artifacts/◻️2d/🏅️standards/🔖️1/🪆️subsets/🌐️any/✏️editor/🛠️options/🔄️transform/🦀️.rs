@@ -1,26 +1,17 @@
 //! 🔄️ Transform utility options — gumball handle toggles for the fem2d canvas windows.
 
-use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::gumball_config_for_window;
-use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballConfig;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_measure_action;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
-use semio_plugin::ViewModel;
 use semio_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = FEM2D_UTILITY_TRANSFORM;
 
-fn gumball_window_id(view: &ViewModel) -> String {
-    fem2d_gesture_window_id_for_render(view, model::WINDOW_KIND_ID).or_else(|| view.window_id.clone()).unwrap_or_else(|| "fem2d-model".into())
-}
-
-/// 🎛️ Utility Options when the Transform utility is active.
-pub fn measure(view: &ViewModel, labels: &Fem2dLabels) -> WindowMeasure {
-    let window_id = gumball_window_id(view);
-    let config = gumball_config_for_window(&window_id);
+/// 🎛️ Utility Options when the Transform utility is active, read from the model window's gumball config.
+pub fn measure(config: &Fem2dGumballConfig, labels: &Fem2dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{FEM2D_PLAY_CONTROLLER_ID}-utility-options-transform"),
         label: String::new(),
@@ -61,7 +52,7 @@ pub fn measure(view: &ViewModel, labels: &Fem2dLabels) -> WindowMeasure {
             },
             WindowMeasure::Toggle {
                 id: "fem2d-transform-scale-uniform".into(),
-                icon_id: "expand".into(),
+                icon_id: "maximize-2".into(),
                 label: Some(labels.scale_uniform_flag.into()),
                 pressed: config.scale_uniform,
                 text: None,

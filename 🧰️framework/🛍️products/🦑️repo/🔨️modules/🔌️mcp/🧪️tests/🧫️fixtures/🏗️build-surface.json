@@ -29,6 +29,7 @@
     "incremental_prepare",
     "incremental_run",
     "inputs",
+    "land",
     "leases_status",
     "preflight",
     "remote_cache_evidence",
@@ -920,6 +921,77 @@
       "tool": "typecheck",
       "arguments": {
         "files": []
+      },
+      "valid": false
+    },
+    {
+      "id": "land-basic",
+      "tool": "land",
+      "arguments": {
+        "words": [
+          "./stage"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "land",
+        "--json",
+        "--",
+        "./stage"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "land-flags",
+      "tool": "land",
+      "arguments": {
+        "words": [
+          "check",
+          "./stage"
+        ],
+        "dry_run": true,
+        "outage": true,
+        "rebase": true,
+        "no_wait": true,
+        "bench": true,
+        "lane": "H1",
+        "title": "T",
+        "wave": "Wave 1"
+      },
+      "valid": true,
+      "argv": [
+        "land",
+        "--json",
+        "--dry-run",
+        "--outage",
+        "--rebase",
+        "--no-wait",
+        "--bench",
+        "--lane",
+        "H1",
+        "--title",
+        "T",
+        "--wave",
+        "Wave 1",
+        "--",
+        "check",
+        "./stage"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "land-no-words",
+      "tool": "land",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "land-empty-words",
+      "tool": "land",
+      "arguments": {
+        "words": []
       },
       "valid": false
     }

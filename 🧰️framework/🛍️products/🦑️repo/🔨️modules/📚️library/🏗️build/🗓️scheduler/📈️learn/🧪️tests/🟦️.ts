@@ -44,11 +44,20 @@ test("a slice peak is learned per scope: a scope books what it was measured to n
  expect(unknown).toBeGreaterThan(0);
 });
 
-test("the slice peak of a scope follows its newest runs: stale larger history does not pin the booking",async()=>{
+test("the slice peak of a scope follows its newest runs: stale larger history beyond the sample window does not pin the booking",async()=>{
  const own={...environment,SEMIO_HOST_CAPACITY_DIRECTORY:join(base,"slice-recent")};
  let clock=1_000_000;
  for(const peak of[6000,6000,5900,5800])await recordHostSlicePeakV1(own,peak,8192,()=>clock++,"/w/recent");
- for(const peak of[3400,4400,3900,4500,4000])await recordHostSlicePeakV1(own,peak,8192,()=>clock++,"/w/recent");
- expect(learnedHostSlicePeakV1(own,8192,()=>clock,"/w/recent"),"the largest of the newest five runs").toBe(4500);
- expect(learnedHostSlicePeakV1(own,4000,()=>clock,"/w/recent"),"never above the ceiling").toBe(4000);
+ for(let run=0;run<16;run++)await recordHostSlicePeakV1(own,4000,8192,()=>clock++,"/w/recent");
+ expect(learnedHostSlicePeakV1(own,8192,()=>clock,"/w/recent"),"the quantile of the newest runs only").toBe(4000);
+ expect(learnedHostSlicePeakV1(own,3000,()=>clock,"/w/recent"),"never above the ceiling").toBe(3000);
+});
+
+test("the slice peak of a scope is the p95 of its recorded peaks: one outlier among many runs does not pin the booking",async()=>{
+ const own={...environment,SEMIO_HOST_CAPACITY_DIRECTORY:join(base,"slice-p95")};
+ let clock=2_000_000;
+ for(const peak of[5300,...Array.from({length:15},()=>3000)])await recordHostSlicePeakV1(own,peak,8192,()=>clock++,"/w/p95");
+ const learned=learnedHostSlicePeakV1(own,8192,()=>clock,"/w/p95");
+ expect(learned,"a measured p95, below the single outlier").toBeLessThan(5300);
+ expect(learned).toBeGreaterThanOrEqual(3000);
 });

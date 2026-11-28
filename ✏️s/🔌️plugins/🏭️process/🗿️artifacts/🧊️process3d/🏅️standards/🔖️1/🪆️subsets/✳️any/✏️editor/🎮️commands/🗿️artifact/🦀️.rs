@@ -61,10 +61,11 @@ pub mod set_active_example {
         _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = match payload.example_id.as_str() {
-            semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
+            semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_DEMO => default_document(),
+            semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_PLATE => plate_document(),
             semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST => concrete_forest_document(),
             "" => Process3dSnapshot::default(),
-            _ => default_document(),
+            unknown => return Err(Fault::from(format!("unknown process3d example `{unknown}`"))),
         };
         Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }

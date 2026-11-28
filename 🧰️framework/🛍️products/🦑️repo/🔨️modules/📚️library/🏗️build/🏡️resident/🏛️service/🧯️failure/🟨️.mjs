@@ -161,9 +161,19 @@ function handoverOfV1(error,depth=0){
  if(error.code==="SEMIO_STALE_IMPLEMENTATION")return String(error.message??"").split("\n")[0].slice(0,300);
  return handoverOfV1(error.cause,depth+1);
 }
+/** 🪓️ The words of a request that ended because the process it ran in was ended from outside (the `Original Script process terminated` abort of a SIGTERM, a signal name in the error or its causes): a signal is an event of the machine, never a deterministic failure of the code, so it is not counted as a repeated cause and the client asks again; `undefined` for every other failure.
+ * @see ../../🧪️tests/🧯️failure/🔁️same-cause/🟦️.ts */
+export function externalTerminationOfV1(error,depth=4){
+ if(typeof error!=="object"||error===null||depth<0)return undefined;
+ const signal=["SIGTERM","SIGINT","SIGKILL","SIGHUP"].find(name=>error.signal===name||error.code===name);
+ if(error.message==="Original Script process terminated"||signal!==undefined)return"the process was ended from outside"+(signal===undefined?" (SIGTERM)":" ("+signal+")");
+ return externalTerminationOfV1(error.cause,depth-1);
+}
 function failureRefusalCoreV1(error,{log,logPath,retry="later",root,platform,home,fullImage=fullImageOfV1,inspect,environment=process.env,pid=process.pid,ppid=process.ppid,streak,sameCauseMaximum=HOST_POLICY_V1.sliceRestartSameCauseMaximum}){
  const handed=handoverOfV1(error);
   if(handed!==undefined){log("graph-handover",handed);return{code:"handover",key:"host-graph-handover",fields:{message:handed},retry:"later"};}
+  const ended=externalTerminationOfV1(error);
+ if(ended!==undefined){log("graph-terminated",ended);return{code:"handover",key:"host-graph-handover",fields:{message:ended},retry:"later"};}
   const owned=ownerSourceOfV1(error);
  if(owned!==undefined){log(owned.unsettled?"graph-replica-unsettled":"graph-owner-source",JSON.stringify(owned.fields));return{code:owned.unsettled?"stale":"unserved",key:owned.unsettled?"host-graph-replica-unsettled":"host-graph-owner-source",fields:owned.fields,retry:"later"};}
   const failed=ownerFailureOfV1(error);

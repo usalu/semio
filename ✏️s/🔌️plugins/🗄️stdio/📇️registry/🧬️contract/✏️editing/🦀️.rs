@@ -86,7 +86,7 @@ macro_rules! bounded_native_editing_editor {
                     lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact],
                 }),+
                 $(,$(semio_plugin::ArtifactToolPublicationContract { tool_id: $host_tool, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }),+)?
-                $(,$(semio_plugin::ArtifactToolPublicationContract { tool_id: $transient_tool, lanes: &[semio_plugin::ArtifactToolPublicationLane::Transient] }),+)?
+                $(,$(semio_plugin::ArtifactToolPublicationContract { tool_id: $transient_tool, lanes: &[semio_plugin::ArtifactToolPublicationLane::Transient, semio_plugin::ArtifactToolPublicationLane::Presence] }),+)?
             ];
             const NATIVE_PAYLOAD_SCHEMA: &'static str = $payload_schema;
             $(const NATIVE_CHECKPOINT_RESUME: bool = $checkpoint_resume;)?

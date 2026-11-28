@@ -148,6 +148,8 @@ export type WorldSelectionRecord = {
    * delta as `phase: "commit"`; blur or unmount mid-drag sends `phase: "abort"` with its `reason`. Without
    * it the host previews locally and dispatches ONE net delta on release (no `phase`: a one-shot transaction). */
   readonly gumballLiveDispatch?: boolean;
+  /** 🎯️ With {@link gumballLiveDispatch}: every `stream` tick and the `commit` carry the WHOLE offset from the grab pose instead of the delta since the previous tick, so each tick is idempotent and one the app dropped as stale costs the gesture nothing (the guest REPLACES its open leaf). Guests that compose deltas leave it off. */
+  readonly gumballCumulative?: boolean;
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
   readonly engagementSessionActive?: boolean;

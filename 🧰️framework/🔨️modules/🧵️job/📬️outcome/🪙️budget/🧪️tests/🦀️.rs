@@ -148,3 +148,23 @@ fn return_budget_observations_preserve_visibility_and_balances(){
   budget.origin_commit=None;
  }
 }
+
+/// ⛽️ Law: the O(1) fuel read answers exactly the CPU part of `remaining`, zero wherever `remaining` refuses.
+#[test]
+fn remaining_fuel_agrees_with_the_snapshot_remaining_in_every_state(){
+ let grant=RetainedCloneGrant{maximum_items:10,maximum_copy_bytes:100,maximum_capacity_bytes:100,maximum_release_bytes:100,maximum_depth:1};
+ let unbound=OriginalReturnBudget::<Origin>::empty(1);
+ assert_eq!(unbound.remaining_fuel(),unbound.remaining().map_or(0,|remaining|remaining.1));
+ for(fuel,work,held_fuel,held_items,spent_items)in[(100u64,0u128,0u64,0usize,0usize),(100,40,0,0,0),(100,40,10,0,0),(100,100,0,0,0),(100,95,10,0,0),(100,0,0,11,0),(100,0,0,3,8),(100,0,0,0,11),(0,0,0,0,0),(100,101,0,0,0)]{
+  let mut budget=OriginalReturnBudget::<Origin>::empty(1);
+  let input=Origin{recipient:&budget as*const _ as usize,grant,fuel,spent:P::default(),work:0};
+  budget.bind(input).unwrap();
+  budget.work=work;budget.held_fuel=held_fuel;budget.held_items=held_items;budget.spent=P{copied_items:spent_items,..Default::default()};
+  assert_eq!(budget.remaining_fuel(),budget.remaining().map_or(0,|remaining|remaining.1),"fuel {fuel} work {work} held fuel {held_fuel} held items {held_items} spent items {spent_items}");
+  budget.failure=Some((ValueRefusalKind::WorkLimit,"refused"));
+  assert_eq!(budget.remaining_fuel(),0);
+  budget.failure=None;
+  let mut metered=budget.remaining_fuel();
+  if metered>0{budget.record_work(1);metered-=1;assert_eq!(budget.remaining_fuel(),metered)}
+ }
+}

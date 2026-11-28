@@ -3,15 +3,15 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::node_geometry` finiteness bound (`mutation.invariant`, Fatal).
 use super::CreateNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodeInsertion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dNodeInsertion;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateNode, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
-    if let Some(rejection) = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards::scoped_identity(&["node", &payload.node.id]) { return rejection; }
+    if let Some(rejection) = semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards::scoped_identity(&["node", &payload.node.id]) { return rejection; }
     if base.nodes.iter().any(|node| node.id == payload.node.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.node.id), [payload.node.id.clone()]);
     }

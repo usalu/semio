@@ -1,6 +1,9 @@
 {
   "source": "package main\nimport \"fmt\"\nfunc main(){fmt.Print(\"go-mode-runtime-ok\")}\n",
   "stdout": "go-mode-runtime-ok",
+  "common": [
+    "-buildvcs=false"
+  ],
   "modes": [
     {
       "mode": "prototype",

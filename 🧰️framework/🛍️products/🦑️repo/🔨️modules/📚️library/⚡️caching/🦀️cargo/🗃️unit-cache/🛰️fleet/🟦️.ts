@@ -1,6 +1,6 @@
 import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
-import {closeSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,writeFileSync} from "node:fs";
+import {closeSync,existsSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {differingComponentsV1,unitKeyComponentsV1,type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
 import {tryAcquireRemoteWaitV1} from "../🔒️lock/🟦️.ts";
@@ -9,8 +9,10 @@ import {type UnitEventV1} from "../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "./📡️client/🟦️.ts";
 import {fleetCacheRootV1,remoteCacheFetchV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,portableTextV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1,type ToolRootsV1} from "./🪪️identity/🟦️.ts";
-import {enqueueUploadV1,markOfferedV1,offeredV1,spoolBoundV1,spoolLengthV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
+import {enqueueUploadV1,markOfferedV1,offeredV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
+import {spoolBoundV1,spoolLengthV1} from "./📏️spool-size/🟦️.ts";
 import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
+import {recordSeedSlotV1,seededClientV1,seedDirectoryV1} from "./🌱️seed/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1;
@@ -82,15 +84,17 @@ const clients=new Map<string,FleetClientV1>();
 export function fleetClientV1(root:string,environment:Environment):FleetClientV1|undefined{
  try{
   const settings=readFleetSettingsV1(root,environment);if(!settings)return undefined;
-  const known=clients.get(settings.identity+"|"+root);if(known)return known;
-  const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(environment),client=createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(environment,{root:identityRoot})});
-  clients.set(settings.identity+"|"+root,client);return client;
+  const laneRoot=environment.SEMIO_UNIT_CACHE_LANE_ROOT||undefined,name=settings.identity+"|"+root+"|"+(laneRoot??""),known=clients.get(name);if(known)return known;
+  const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(environment),plain=createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(environment,{root:identityRoot})});
+  const client=laneRoot!==undefined&&existsSync(join(seedDirectoryV1(laneRoot),fleet.seed.acDirectory))?seededClientV1(plain,laneRoot):plain;
+  clients.set(name,client);return client;
  }catch{return undefined;}
 }
 
 /** 🛰️ Prepares the fleet tier for one cache-eligible unit, also while the breaker is open (lookup and claims then wait for the breaker, the upload of the compiled unit waits in the spool); `undefined` when the tier is off or the unit has no identity. Never throws. */
 export function prepareFleetV1(input:Readonly<{root:string;environment:Environment;basics:UnitBasicsV1;unit:RustcUnitV1;args:readonly string[];cwd:string;laneRoot:string|undefined;localKey:string;keyInput:Parameters<typeof unitKeyV1>[0];toolchain:string;crate:string;sensitive?:readonly string[];expected?:readonly string[];tools?:ToolRootsV1}>,world:Readonly<{client?:FleetClientV1}>={}):FleetUnitV1|undefined{
  try{
+  recordSeedSlotV1(input.laneRoot,input.basics.slot);
   const settings=readFleetSettingsV1(input.root,input.environment);if(!settings)return undefined;
   const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,client=world.client??fleetClientV1(input.root,input.environment);if(client===undefined)return undefined;
   const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD],...input.tools});

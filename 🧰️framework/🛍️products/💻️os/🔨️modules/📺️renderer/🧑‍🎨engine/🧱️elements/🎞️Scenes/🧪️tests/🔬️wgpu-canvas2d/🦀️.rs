@@ -492,7 +492,7 @@ fn gumball_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>
 }
 
 /// 🧭️ The live seam: a press on the x knob (pivot at the canvas centre, knob 56 px right) opens the gumball gesture —
-/// never a document pointer action — each move streams its increment and the release commits the tail, every dispatch
+/// never a document pointer action — each move streams its cumulative offset from the press and the release commits the whole offset, every dispatch
 /// addressed to the canvas surface; a press beside the handles under the Transform utility reaches nothing.
 #[test]
 fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
@@ -508,7 +508,7 @@ fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
     let actions = gumball_actions(&mut input);
     assert_eq!(actions.iter().map(|(action, args)| (action.as_str(), args["phase"].as_str(), args["dx"].as_f64(), args["surfaceId"].as_str())).collect::<Vec<_>>(), [
         ("translateSelection", Some("stream"), Some(14.0), Some("canvas2d-gumball-live")),
-        ("translateSelection", Some("commit"), Some(10.0), Some("canvas2d-gumball-live")),
+        ("translateSelection", Some("commit"), Some(24.0), Some("canvas2d-gumball-live")),
     ]);
     assert_eq!(actions[0].1["ids"], json!(["frame-1"]));
     assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer).is_none()), "the gumball never opens a document pointer gesture");

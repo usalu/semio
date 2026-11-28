@@ -126,8 +126,8 @@ pub fn session_submitted(bank:&EffectBank)->RetainedCloneProgress{with_session(b
 pub fn session_open(bank:&EffectBank){with_session(bank,|_|())}
 /// ✂️ Sets the cancellation flag the session's checkpoints read.
 pub fn session_admit(flag:Option<std::sync::Arc<std::sync::atomic::AtomicBool>>){ADMIT.with(|slot|*slot.borrow_mut()=flag)}
-/// 🧵️ Runs one nested turn under the persistent decoder session, so every turn of one receiver shares one Work scope, issuer and Source.
-pub fn session_nested<T,E>(bank:&EffectBank,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>,OriginalSourceTurnWitness<'_>)->RetainedWorkPoll<T,E>)->RetainedWorkPoll<T,E>{with_session(bank,|session|{let Session{payer,control,..}=session;payer.nested(control,g,f)})}
+/// 🧵️ Runs one nested turn under the persistent decoder session, so every turn of one receiver shares one Work scope, issuer and Source; the turn's own capacity narrowing ends with the turn, as an original retained turn's ceiling does.
+pub fn session_nested<T,E>(bank:&EffectBank,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>,OriginalSourceTurnWitness<'_>)->RetainedWorkPoll<T,E>)->RetainedWorkPoll<T,E>{with_session(bank,|session|{let Session{payer,control,..}=session;let ceiling=control.maximum_bytes();control.scoped_maximum(ceiling,|control|Ok::<_,ValueError>(payer.nested(control,g,f))).expect("session turn ceiling")})}
 /// 🎟️ Runs one funded effect under the persistent decoder session that also lends the wired native control, so a receiving cursor steps under the session's persistent Work and construction authorities; an unadmitted quote ran nothing and yields `None`.
 pub fn session_step<R>(bank:&EffectBank,g:RetainedCloneGrant,work:u64,f:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->R)->Option<R>{with_session(bank,|session|{let Session{payer,control,..}=session;payer.step_effect(control,g,work,f)})}
 /// 🏦️ Runs one funded local turn under the persistent decoder session and debits its work from the bank wallet.

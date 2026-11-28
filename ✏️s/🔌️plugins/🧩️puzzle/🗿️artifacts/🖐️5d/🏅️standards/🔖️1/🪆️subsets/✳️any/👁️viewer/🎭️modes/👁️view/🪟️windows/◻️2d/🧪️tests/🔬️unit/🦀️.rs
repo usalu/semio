@@ -30,7 +30,9 @@ fn definition_is_a_read_only_board_window() {
 #[test]
 fn render_produces_a_scene_node_for_the_default_document() {
     let document = Puzzle5dSnapshot::default();
-    let _node = render(&document);
+    for locale in semio_ui_locale::Locale::ALL {
+        render(&document, locale).expect("the default document renders in every locale");
+    }
 }
 
 #[test]

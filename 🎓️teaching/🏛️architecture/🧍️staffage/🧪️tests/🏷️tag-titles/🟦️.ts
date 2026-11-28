@@ -21,7 +21,10 @@ const catalog = join(STAFFAGE_ROOT, "🗂️catalog");
 const documents = readdirSync(catalog, { withFileTypes: true })
   .filter((category) => category.isDirectory())
   .flatMap((category) => readdirSync(join(catalog, category.name), { withFileTypes: true }).filter((asset) => asset.isDirectory()).map((asset) => join(catalog, category.name, asset.name, "🔣️.json")))
-  .map((file) => (JSON.parse(readFileSync(file, "utf8")) as { asset: { id: string; tags: readonly unknown[] } }).asset);
+  .map((file) => {
+    const { id, tags } = (JSON.parse(readFileSync(file, "utf8")) as { asset: { id: string; tags: readonly unknown[] } }).asset;
+    return { id, tags };
+  });
 
 describe("🏷️ tag titles", () => {
   it("defines a tag as an identifier with a bilingual title", () => {

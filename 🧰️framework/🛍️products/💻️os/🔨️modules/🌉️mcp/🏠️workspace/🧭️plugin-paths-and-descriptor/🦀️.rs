@@ -107,6 +107,21 @@ struct ComponentModelPolicy {
     maximum_prepared_actor_bytes: usize,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ComponentModelLayout {
+    directory: String,
+    generation_length: usize,
+}
+
+fn component_model_layout() -> &'static ComponentModelLayout {
+    static LAYOUT: std::sync::OnceLock<ComponentModelLayout> = std::sync::OnceLock::new();
+    LAYOUT.get_or_init(|| {
+        let schema: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/📦️model/🧬️schema/🔣️.json")).expect("valid component model schema");
+        serde_json::from_value(schema["definitions"]["Layout"]["const"].clone()).expect("valid component model layout")
+    })
+}
+
 fn component_model_policy() -> &'static ComponentModelPolicy {
     static POLICY: std::sync::OnceLock<ComponentModelPolicy> = std::sync::OnceLock::new();
     POLICY.get_or_init(|| {
@@ -125,8 +140,10 @@ fn read_component_model_manifest(source: &str, mode: &str) -> Result<ComponentMo
         let valid_id = !row.plugin_id.is_empty() && row.plugin_id.len() <= 64 && row.plugin_id.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
         let valid_crate = row.crate_path.chars().count() <= 256 && !row.crate_path.contains(['\\', ':']) && !row.crate_path.chars().any(char::is_control) && row.crate_path.split('/').all(|part| !matches!(part, "" | "." | ".."));
         let digest = framework_hash::sha256_hex(row.crate_path.as_bytes());
-        let key = Path::new("browser").join(mode).join("components").join(&digest[..24]);
-        let valid_root = row.root.is_absolute() && row.root.to_string_lossy().chars().count() <= 224 && !row.root.components().any(|part| matches!(part, std::path::Component::ParentDir | std::path::Component::CurDir)) && row.root.ends_with(key);
+        let layout = component_model_layout();
+        let key = Path::new("browser").join(mode).join(&layout.directory).join(&digest[..24]);
+        let generation = row.root.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.len() == layout.generation_length && name.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)));
+        let valid_root = row.root.is_absolute() && row.root.to_string_lossy().chars().count() <= 224 && !row.root.components().any(|part| matches!(part, std::path::Component::ParentDir | std::path::Component::CurDir)) && generation && row.root.parent().is_some_and(|parent| parent.ends_with(&key));
         let valid_preparation = row.prepared_actor.as_ref().is_none_or(|image| {
             (1..=component_model_policy().maximum_prepared_actor_bytes).contains(&image.image_bytes)
                 && parse_sha256(&image.image_sha256).is_some()

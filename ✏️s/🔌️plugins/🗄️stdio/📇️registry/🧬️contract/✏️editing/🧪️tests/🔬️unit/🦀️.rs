@@ -560,3 +560,15 @@ fn contextual_snapshot_work_uses_original_control_and_never_completes_failed_emi
         let repeated=tool_job_factories::snapshot_edit_contextual_once(&mut consumed,&mut cx,|_|Ok(vec![9u8]));assert!(repeated.is_err());
     }
 }
+
+#[test]
+fn an_unaddressable_path_with_an_admitted_payload_is_left_to_the_typed_reducer_refusal(){
+ let snapshot=DslValue::Object(vec![("xmlParts".into(),DslValue::Array(vec![DslValue::Object(vec![("path".into(),DslValue::String("a.xml".into()))])]))]);
+ for pointer in["/xmlParts/-1/path","/xmlParts/7/path","/missing/0"]{
+  let event=SnapshotEditEvent::SetValue{path:pointer.into(),value:DslValue::String("x".into())};
+  assert!(snapshot_edit_payload_is_admitted(&event),"{pointer}");
+  assert!(!snapshot_edit_path_is_admitted(&event,&snapshot),"{pointer}");
+ }
+ let oracle=apply_snapshot_edit(&snapshot,&SnapshotEditEvent::SetValue{path:"/xmlParts/-1/path".into(),value:DslValue::String("x".into())});
+ assert_eq!(oracle.expect_err("refused").code,"snapshot-edit.index-out-of-bounds");
+}

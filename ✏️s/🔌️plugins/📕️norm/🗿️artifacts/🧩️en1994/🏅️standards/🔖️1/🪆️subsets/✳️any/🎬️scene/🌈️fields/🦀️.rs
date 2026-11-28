@@ -169,7 +169,7 @@ fn fatigue_bands(input: &SceneInput, layout: &Layout, f: &BeamFacts, out: &mut O
     let as_total = beam.as_hogging_m2_per_m * beff;
     let cr = catalogue::cracked(&sec, beam.slab_thickness_m, as_total, catalogue::constants::HOGGING_REBAR_DEPTH_M);
     let ts = catalogue::delta_sigma_ts_fatigue(catalogue::fctm_pa(beam.concrete_f_ck_pa), cr.area, cr.i, sec.area(), sec.i_y, as_total / (beff * f.hc).max(1e-9));
-    let r_lim = catalogue::fatigue::rebar_curve().resistance_pa(beam.n_cycles).max(1.0);
+    let r_lim = semio_s_artifact_norm_en1994_checks_catalogue_fatigue::rebar_curve().resistance_pa(beam.n_cycles).max(1.0);
     let (u_ts, u_support) = (ts / r_lim, check.utilization);
     let u = move |ratio: f64| u_ts + ratio * (u_support - u_ts).max(0.0);
     let lifted = f.depth + 5.0 * LIFT;

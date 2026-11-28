@@ -20,7 +20,7 @@ use semio_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSinks,
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
 use semio_os_mcp_foundation::reports::{InvocationStatus, RevisionStamp};
-use semio_os_mcp_port::channel_port::{exchange_blocking, AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
+use semio_os_mcp_port::channel_port::{exchange_blocking, GUEST_REFUSED_FAULT_CODE, GUEST_REFUSED_REMEDY, AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
 use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
 use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
 use semio_os_mcp_wire::protocol::ClientFeatures;
@@ -966,4 +966,19 @@ fn a_directly_exposed_gateway_tool_is_refused_by_name_before_any_artifact_channe
     assert!(error.message.contains("`capabilities_search`"), "{}", error.message);
     assert_eq!(error.details["tool"], "capabilities_search");
     assert!(channel.frame_log().is_empty(), "no plugin or channel may be involved");
+}
+
+/// 🧱️ Law: a guest refusal is a typed `PluginUnavailable` fault whose message keeps the poll phase and cause and whose remedy is authored in en and de, never an unnamed internal error.
+#[test]
+fn guest_refusal_maps_to_a_typed_plugin_fault_with_an_en_and_de_remedy() {
+    let message = "guest poll: Refused with None; poll stage=4, loan header=Some(184), execution fuel spent=Some(12)";
+    let mapped = map_fault(&Fault { code: GUEST_REFUSED_FAULT_CODE.into(), message: message.into() });
+    assert_eq!(mapped.code, GatewayErrorCode::PluginUnavailable);
+    assert_eq!(mapped.message, message);
+    assert_eq!(mapped.details["faultCode"], GUEST_REFUSED_FAULT_CODE);
+    for (locale, remedy) in [("en", GUEST_REFUSED_REMEDY.0), ("de", GUEST_REFUSED_REMEDY.1)] {
+        assert_eq!(mapped.details["remedy"][locale], remedy, "remedy.{locale}");
+        assert!(!remedy.trim().is_empty(), "remedy.{locale} is non-empty");
+    }
+    assert_ne!(GUEST_REFUSED_REMEDY.0, GUEST_REFUSED_REMEDY.1, "de is a translation, not a copy");
 }

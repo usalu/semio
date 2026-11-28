@@ -16,7 +16,7 @@ for(const row of fixture.encoding)test("owned strict UTF8 "+row.name,()=>{
  expect(independent.status).toBe(0);expect(Buffer.from(independent.stdout)).toEqual(bytes);expect(isUtf8(independent.stdout)).toBe(row.accepted);
  let output="",observed=0,error:unknown;
  try{for(const chunk of row.chunks){observed+=chunk.length;output+=decode(decoder,Buffer.from(chunk),"p".repeat(270),row.stream,"chunk",observed,observed);}output+=decode(decoder,undefined,"p".repeat(270),row.stream,"final",observed,observed);}catch(failure){error=failure;}
- if(row.accepted){expect(error).toBeUndefined();expect(output).toBe(row.text);expect(output).toBe(new TextDecoder("utf-8",{fatal:true}).decode(independent.stdout));}
+ if(row.accepted){expect(error).toBeUndefined();expect<unknown>(output).toBe(row.text);expect(output).toBe(new TextDecoder("utf-8",{fatal:true}).decode(independent.stdout));}
  else{expect(error).toBeInstanceOf(TypeError);const cause=(error as Error).cause as Record<string,unknown>;expect(validate(cause)).toBe(true);expect(Object.isFrozen(cause)).toBe(true);expect(cause).toEqual({version:1,kind:"output-encoding",program:"p".repeat(256),programTruncated:true,stream:row.stream,phase:row.phase,streamBytes:observed,observedBytes:observed});expect((error as Error).message).toContain(schema.definitions.EncodingProtocol.const.marker+JSON.stringify(cause));}
 });
 

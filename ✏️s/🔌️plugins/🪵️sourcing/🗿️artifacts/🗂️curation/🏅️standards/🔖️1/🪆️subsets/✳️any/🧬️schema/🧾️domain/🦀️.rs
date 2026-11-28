@@ -763,7 +763,7 @@ const CATALOG_TYPOLOGY_LABELS: [(&str, &str, &str); 17] = [
 
 /// 🗣️ `(kind id, English, German)` rows of the demo stock names; an unlisted kind id keeps the name its document carries.
 const CATALOG_KIND_NAMES: [(&str, &str, &str); 12] = [
-    ("beam-glulam-gl24h", "Glulam GL24h 200×400", "Brettschichtholz GL24h 200×400"), ("beam-kvh-c24", "KVH C24 100×200", "KVH C24 100×200"), ("beam-steel-ipe200", "Steel IPE 200", "Stahl IPE 200"), ("beam-steel-hea160", "Steel HEA 160", "Stahl HEA 160"),
+    ("beam-glulam-gl24h", "Glulam GL24h 200×400", "Brettschichtholz GL24h 200×400"), ("beam-kvh-c24", "KVH C24 100×200", "Konstruktionsvollholz C24 100×200"), ("beam-steel-ipe200", "Steel IPE 200", "Stahl IPE 200"), ("beam-steel-hea160", "Steel HEA 160", "Stahl HEA 160"),
     ("window-casement-100x120", "Casement Window 100×120", "Drehflügelfenster 100×120"), ("window-fixed-150x150", "Fixed Window 150×150", "Festverglasung 150×150"), ("window-tilt-turn-120x140", "Tilt & Turn Window 120×140", "Dreh-Kipp-Fenster 120×140"),
     ("slab-concrete-240", "Concrete Slab 240mm", "Betondecke 240 mm"), ("slab-clt-160", "CLT Slab 160mm", "BSP-Decke 160 mm"), ("slab-hollow-core-265", "Hollow Core Slab 265mm", "Hohlkörperdecke 265 mm"),
     ("hexagonal-cut-concrete-forest-left", "Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"), ("hexagonal-cut-concrete-forest-right", "Hexagonal Cut Concrete Forest Right", "Sechseckig geschnittener Betonwald rechts"),

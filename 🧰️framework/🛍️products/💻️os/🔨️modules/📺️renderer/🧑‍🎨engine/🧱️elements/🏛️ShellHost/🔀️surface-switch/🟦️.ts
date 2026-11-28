@@ -65,12 +65,13 @@ export function roleSwitchTargetV1<T extends RoleSurfaceAppV1>(apps: readonly T[
  * Returns `undefined` only when `pinnedAppId` names no declared app at all — the caller raises that as
  * a boot error. A plugin that declares no sibling for the requested role keeps the anchor rather than
  * failing: asking for a viewer of an editor-only artifact is a downgrade to the surface that exists,
- * never a dead boot. An absent `appRole` (an embed that never states one) disables the projection. */
+ * never a dead boot. An absent `appRole` (nobody stated one) disables the projection: the app id alone names the role, and with no anchor the editor
+ * surface is preferred. */
 export function resolveBootPrimaryAppV1<T extends RoleSurfaceAppV1>(apps: readonly T[], pinnedAppId: string | undefined, defaultAppId: string | undefined, appRole: AppRole | undefined): T | undefined {
   const anchorId = pinnedAppId ?? defaultAppId;
   const anchor = anchorId === undefined ? undefined : apps.find((app) => app.id === anchorId);
   if (pinnedAppId !== undefined && anchor === undefined) return undefined;
-  if (anchor === undefined) return apps.find((app) => app.role === appRole) ?? apps[0];
+  if (anchor === undefined) return apps.find((app) => app.role === (appRole ?? "editor")) ?? apps[0];
   if (appRole === undefined || anchor.role === appRole) return anchor;
   const anchorDialect = anchor.dialect;
   const sibling = anchorDialect === undefined ? undefined : apps.find((app) => app.role === appRole && app.dialect !== undefined && dialectCoordinate(app.dialect) === dialectCoordinate(anchorDialect));

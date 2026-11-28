@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "store": {
+    "directory": [
+      "v1",
+      "origins"
+    ],
+    "environment": "SEMIO_FLEET_STORE_ROOT",
+    "machineFile": ".cache/f/machine.json"
+  },
+  "journal": {
+    "segmentsDirectory": "segments",
+    "extension": ".jsonl",
+    "maximumBytesPerRead": 4194304,
+    "lookbackSegments": 6
+  }
+}

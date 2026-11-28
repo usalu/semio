@@ -19,11 +19,16 @@ export function isHistoryChord(event: KeyboardEventLike): boolean {
   return mod && !event.altKey && (key === "z" || (key === "y" && event.ctrlKey && !event.shiftKey));
 }
 
-/** ⏪️ A Details field with no uncommitted draft has nothing of its own to undo, so history chords reach the editor's history; a dirty draft (`data-draft-dirty`) keeps native text undo. Only fields the interpreter owns (`data-ui-node-id`) qualify. */
+/** ⏪️ Input types that edit no text: the browser keeps no text undo for them, so a history chord has nothing native to yield to. */
+const INPUT_TYPES_WITHOUT_TEXT_HISTORY: ReadonlySet<string> = new Set(["checkbox", "radio", "range", "button", "submit", "reset", "color", "file", "image"]);
+
+/** ⏪️ A Details field with no uncommitted draft has nothing of its own to undo, so history chords reach the editor's history; a dirty draft (`data-draft-dirty`) keeps native text undo. Qualifying fields are the ones the interpreter owns (`data-ui-node-id`) and every field that edits no text (a `select`, a checkbox, a slider, ...), because a focus left there by an earlier edit must never swallow Ctrl+Z. */
 export function cleanInterpreterFieldYieldsHistory(event: KeyboardEventLike & { readonly target: EventTarget | null }): boolean {
   if (!isHistoryChord(event) || !(event.target instanceof Element)) return false;
-  const field = event.target.closest("input,textarea");
-  return field !== null && field.hasAttribute("data-ui-node-id") && field.getAttribute("data-draft-dirty") !== "true";
+  const field = event.target.closest("input,textarea,select");
+  if (field === null) return false;
+  if (field.tagName === "SELECT" || (field.tagName === "INPUT" && INPUT_TYPES_WITHOUT_TEXT_HISTORY.has((field as HTMLInputElement).type))) return true;
+  return field.hasAttribute("data-ui-node-id") && field.getAttribute("data-draft-dirty") !== "true";
 }
 
 /** 🎹️ Focused widgets own ordinary keys; text editors also retain modified editing chords. */

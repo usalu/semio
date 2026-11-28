@@ -1,13 +1,87 @@
 {
-  "grant":{"id":"newerGrant1","operation":"command","jobs":1,"cpu":1,"reservedMegabytes":6144,"observedMegabytes":127,"futureCustody":{"version":2}},
-  "cases":[
-    {"name":"fresh owner in the current boot","live":true,"boot":"current","shape":"extend","age":"fresh","blocks":true},
-    {"name":"live owner whose heartbeat is old","live":true,"boot":"current","shape":"extend","age":"old","blocks":true},
-    {"name":"live owner with invalid accounting field","live":true,"boot":"current","shape":"bad-charge","age":"fresh","blocks":true},
-    {"name":"definitely dead owner","live":false,"boot":"current","shape":"extend","age":"fresh","blocks":false},
-    {"name":"expired row points at a reused PID","live":false,"boot":"current","shape":"reused","age":"old","blocks":false},
-    {"name":"known prior boot","live":true,"boot":"prior","shape":"extend","age":"fresh","blocks":false},
-    {"name":"fresh bytes without owner identity","live":null,"boot":"current","shape":"unreadable","age":"fresh","blocks":true},
-    {"name":"expired bytes without owner identity","live":null,"boot":"current","shape":"unreadable","age":"old","blocks":false}
-  ]
+ "grant": {
+  "id": "newerGrant1",
+  "operation": "command",
+  "jobs": 1,
+  "cpu": 1,
+  "reservedMegabytes": 6144,
+  "observedMegabytes": 127,
+  "futureCustody": {
+   "version": 2
+  }
+ },
+ "cases": [
+  {
+   "name": "fresh owner in the current boot",
+   "live": true,
+   "boot": "current",
+   "shape": "extend",
+   "age": "fresh",
+   "held": true,
+   "megabytes": 6144
+  },
+  {
+   "name": "live owner whose heartbeat is old",
+   "live": true,
+   "boot": "current",
+   "shape": "extend",
+   "age": "old",
+   "held": true,
+   "megabytes": 6144
+  },
+  {
+   "name": "live owner with invalid accounting field",
+   "live": true,
+   "boot": "current",
+   "shape": "bad-charge",
+   "age": "fresh",
+   "held": true,
+   "megabytes": 2048
+  },
+  {
+   "name": "definitely dead owner",
+   "live": false,
+   "boot": "current",
+   "shape": "extend",
+   "age": "fresh",
+   "held": false,
+   "megabytes": 6144
+  },
+  {
+   "name": "expired row points at a reused PID",
+   "live": false,
+   "boot": "current",
+   "shape": "reused",
+   "age": "old",
+   "held": false,
+   "megabytes": 6144
+  },
+  {
+   "name": "known prior boot",
+   "live": true,
+   "boot": "prior",
+   "shape": "extend",
+   "age": "fresh",
+   "held": false,
+   "megabytes": 6144
+  },
+  {
+   "name": "fresh bytes without owner identity",
+   "live": null,
+   "boot": "current",
+   "shape": "unreadable",
+   "age": "fresh",
+   "held": true,
+   "megabytes": 2048
+  },
+  {
+   "name": "expired bytes without owner identity",
+   "live": null,
+   "boot": "current",
+   "shape": "unreadable",
+   "age": "old",
+   "held": false,
+   "megabytes": 2048
+  }
+ ]
 }

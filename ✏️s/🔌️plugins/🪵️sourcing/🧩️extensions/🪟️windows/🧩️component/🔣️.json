@@ -1,17 +1,7 @@
 {
-  "descriptorVersion": 1,
-  "packageId": "semio:sourcing-module-windows",
-  "role": "extension",
-  "manifest": {
-    "pluginId": "sourcing-module-windows",
-    "label": "Sourcing Module Windows",
-    "version": "0.1.0",
-    "apps": [],
-    "examples": [],
-    "capabilities": [],
+  "contributions": {
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "window",
@@ -19,27 +9,41 @@
           "label": "Windows",
           "moduleId": "windows",
           "typologyJson": "{\"id\":\"windows\",\"label\":\"Windows\",\"children\":[{\"id\":\"casement\",\"label\":\"Casement\"},{\"id\":\"fixed\",\"label\":\"Fixed\"},{\"id\":\"tilt-turn\",\"label\":\"Tilt & Turn\"}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ],
-    "commands": [],
+    ]
+  },
+  "descriptorVersion": 1,
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 25
+  },
+  "manifest": {
+    "apps": [],
     "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
     "dependencies": [
       {
         "pluginId": "sourcing",
         "version": "=0.1.0"
       }
-    ]
-  },
-  "execution": "declarative",
-  "executionProtocol": {
-    "appChannelVersion": 25
-  },
-  "quotas": {},
-  "contributions": {
+    ],
+    "examples": [],
+    "label": {
+      "native": {
+        "de": "Beschaffungsmodul Fenster",
+        "en": "Sourcing Module Windows"
+      },
+      "reuse": {
+        "de": "Beschaffungsmodul Fenster",
+        "en": "Sourcing Module Windows"
+      }
+    },
+    "pluginId": "sourcing-module-windows",
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "window",
@@ -47,8 +51,13 @@
           "label": "Windows",
           "moduleId": "windows",
           "typologyJson": "{\"id\":\"windows\",\"label\":\"Windows\",\"children\":[{\"id\":\"casement\",\"label\":\"Casement\"},{\"id\":\"fixed\",\"label\":\"Fixed\"},{\"id\":\"tilt-turn\",\"label\":\"Tilt & Turn\"}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ]
-  }
+    ],
+    "version": "0.1.0"
+  },
+  "packageId": "semio:sourcing-module-windows",
+  "quotas": {},
+  "role": "extension"
 }

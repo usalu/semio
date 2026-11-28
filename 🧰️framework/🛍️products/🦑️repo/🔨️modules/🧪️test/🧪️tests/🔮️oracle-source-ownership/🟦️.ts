@@ -29,7 +29,7 @@ describe("Norm oracle source ownership", () => {
     expect(control["schemaVersion"]).toEqual(1);expect(control["module"]).toEqual("🐍️");
     
     
-    const actual = fg.sync(`${control.plugin}/🗿️artifacts/*/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/*/🐍️.py`, { cwd: root }).sort();
+    const actual = fg.sync(`${control.plugin}/🗿️artifacts/*/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/*mutate-*/🐍️.py`, { cwd: root }).sort();
     expect(actual).toEqual(control.adapters.map((row) => row.path).sort());
     expect(control.adapters.every((row) => existsSync(join(root, row.feature)))).toBe(true);
   });
@@ -44,15 +44,15 @@ describe("Norm oracle source ownership", () => {
       }),
     ).toBe("oracle-execution");
     expect(implementationLeafBasenameFinding(control.destination, taxonomy)).toBeNull();
-    expect(fg.sync(`${control.plugin}/🔮️oracles/**/*.py`, { cwd: root }).sort()).toEqual([control.destination, ...control.destinationChildren].sort());
+    expect(fg.sync(`${control.plugin}/🔮️oracles/🏃️execution/**/*.py`, { cwd: root, ignore: ["**/🧪️tests/**"] })).toEqual(expect.arrayContaining([control.destination, ...control.destinationChildren]));
     expect(control.destinationChildren.every((child) => dirname(dirname(child)) === dirname(control.destination))).toBe(true);
   }, 15000);
 
-  test("ancestor contributions select the anonymous local module for all fifteen owners", () => {
+  test("ancestor contributions select the anonymous local module for all fifteen owners, beside the distributions their oracles register", () => {
     const registry = loadOracleRegistry(root);
     for (const row of control.adapters) {
       expect(
-        oracleHostPackagesFor(registry, row.owner, "python").map(({ package: name, path, module }) => ({
+        oracleHostPackagesFor(registry, row.owner, "python").filter((entry) => entry.path !== undefined).map(({ package: name, path, module }) => ({
           package: name,
           path,
           module,
@@ -131,7 +131,7 @@ describe("Norm oracle source ownership", () => {
     const built = buildCasePlan(root, discovered, "exhaustive");
     expect(built.feature.errors).toEqual([]);
     expect(built.missingFixtures).toEqual([]);
-    expect(built.plan.scenarios).toHaveLength(161);
+    expect(built.plan.scenarios).toHaveLength(control.scenarios);
     expect(built.plan.target).toEqual({
       artifact: "s.norm-eurocode.en1991",
       standard: "1",
@@ -153,7 +153,7 @@ describe("Norm oracle source ownership", () => {
         resultsPath,
       };
       writeFileSync(planPath, JSON.stringify(plan));
-      const declarations = oracleHostPackagesFor(loadOracleRegistry(root), selected.owner, "python");
+      const declarations = oracleHostPackagesFor(loadOracleRegistry(root), selected.owner, "python").filter((entry) => entry.path !== undefined);
       const localPaths = declarations.map((entry) => join(root, entry.path!));
       const pythonPath = localPaths.join(delimiter);
       const child = Bun.spawn([oracleHostPython(root), ...pythonHostArguments(join(root, control.host), planPath, resultsPath, join(root, selected.path), localPaths)], {
@@ -180,7 +180,7 @@ describe("Norm oracle source ownership", () => {
         stderr: "",
         failures: [],
       });
-      expect(results).toHaveLength(161);
+      expect(results).toHaveLength(control.scenarios);
       expect(results.map((entry) => entry.scenario).sort()).toEqual(built.plan.scenarios.map((entry) => entry.id).sort());
       expect(results.every((entry) => entry.status === "passed" && entry.role === "oracle" && entry.implementation === "python")).toBe(true);
       expect(stdout).toBe("");

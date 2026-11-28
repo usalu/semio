@@ -37,7 +37,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioImageApps>, PluginAssemblyError> {
-    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioImageApps>::new("stdio-image").label("Stdio Image").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-image").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioImageApps>::new("stdio-image").label(semio_plugin::LocalizedLabel::native("Stdio Image", "Stdio Bild")).version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-image").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_svg::declaration(semio_s_artifact_stdio_svg::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_png::declaration(semio_s_artifact_stdio_png::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_jpg::declaration(semio_s_artifact_stdio_jpg::definition()?).map_err(PluginAssemblyError::definition)?);

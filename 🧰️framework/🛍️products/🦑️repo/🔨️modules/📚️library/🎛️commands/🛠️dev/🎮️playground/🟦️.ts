@@ -140,7 +140,7 @@ async function preparePlaygroundModels(workspace: string, invocation: ScriptInvo
   const { repositoryCargoNetworkV1 } = await import("../../../📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
   const control = scriptCompilerAdmissionControlV1(invocation, "playground:components", 0);
   const compile = () => buildComponentClosureV1(workspace, missing, {
-    facet, invocation, prepareCargoOwners: true, ...(emitterPin === undefined ? {} : { emitterPin }),
+    facet, invocation, ...(emitterPin === undefined ? {} : { emitterPin }),
     network: repositoryCargoNetworkV1(invocation, workspace),
     control,
   });
@@ -255,7 +255,8 @@ async function prepareNativeRuntimeAssets(workspace: string, invocation: ScriptI
 
 async function runNativePlayground(workspace: string, invocation: ScriptInvocation, variant: string, mode: "prototype" | "release", generated: readonly (readonly string[])[]): Promise<void> {
   const { withPlaygroundSessionV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts");
-  const { componentModelLayoutV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts");
+  const { componentModelLayoutV1, componentModelGenerationPathV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts");
+  const { readComponentModelHeadFileV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/🧭️head/🟦️.ts");
   const { default: modelSchema } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/🧬️schema/🔣️.json", { with: { type: "json" } });
   const products = repositoryCachePartitionRootDataV1(workspace, "products");
   const { missing, host } = await withPlaygroundSessionV1(workspace, invocation, variant, async (session, projection) => {
@@ -265,8 +266,9 @@ async function runNativePlayground(workspace: string, invocation: ScriptInvocati
     for (const { pluginId } of session.plugins) {
       const entry = projection.entries.find(candidate => candidate.pluginId === pluginId);
       if (!entry) throw Error(`Missing Native component declaration: ${pluginId}`);
-      const { path } = componentModelLayoutV1(products, { version: 1, mode, pluginId, cratePath: entry.cratePath });
-      if (publicationMissing(path, [".semio-artifact.json", ...Object.values(modelSchema.definitions.Protocol.const)])) missing.add(pluginId);
+      const layout = componentModelLayoutV1(products, { version: 1, mode, pluginId, cratePath: entry.cratePath });
+      const head = await readComponentModelHeadFileV1(layout.head);
+      if (!head || publicationMissing(componentModelGenerationPathV1(layout, head.generation), [".semio-artifact.json", ...Object.values(modelSchema.definitions.Protocol.const)])) missing.add(pluginId);
     }
     return { missing, host: row.nativeHost };
   });

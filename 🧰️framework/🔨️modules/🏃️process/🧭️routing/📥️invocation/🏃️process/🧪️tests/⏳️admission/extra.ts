@@ -9,7 +9,7 @@ const wire=(environment:Readonly<Record<string,string|undefined>>)=>JSON.parse(e
 
 test("distinct issued invocation roots retain the followed bound and cancellation",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
- const graph=new graphlib.Graph({directed:true});graph.setEdge("child","parent");graph.setEdge("child","following");expect(graphlib.alg.preorder(graph,"child").length).toBe(fixture.expected.reachableControls);
+ const graph=new graphlib.Graph({directed:true});graph.setEdge("child","parent");graph.setEdge("child","following");expect(graphlib.alg.preorder(graph,["child"]).length).toBe(fixture.expected.reachableControls);
  let ready!:()=>void,release!:()=>void;const readyPromise=new Promise<void>(done=>ready=done),gate=new Promise<void>(done=>release=done),abort=new AbortController(),reason=Error("distinct invocation following cancelled");let followed:ReturnType<typeof api.createIssuedResourceControlV1>|undefined,firstInvocation:unknown;
  const first=api.withScriptProcessEnvelope(envelope(fixture.owners.first,fixture.followingMaximumMilliseconds),async invocation=>{
   firstInvocation=invocation;followed=api.createIssuedResourceControlV1(invocation,fixture.owners.first,0,abort.signal);ready();await gate;

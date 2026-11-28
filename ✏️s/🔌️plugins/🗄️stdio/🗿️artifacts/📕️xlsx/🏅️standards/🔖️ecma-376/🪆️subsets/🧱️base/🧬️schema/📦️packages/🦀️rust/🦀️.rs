@@ -27,6 +27,8 @@ pub mod standards {
                     pub mod construction;
                     #[path = "../../🧮️calculation/🦀️.rs"]
                     pub mod calculation;
+                    #[path = "../../🧮️calculation/📋️shared-formula/🦀️.rs"]
+                    pub mod shared_formula;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]

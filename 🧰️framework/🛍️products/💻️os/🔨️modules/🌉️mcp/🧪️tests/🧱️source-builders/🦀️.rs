@@ -236,7 +236,7 @@ pub fn cad_app() -> AppDefinition {
 pub fn cad_descriptor() -> PackageDescriptor {
     wrap_descriptor("semio:cad", manifest::PluginManifest {
         plugin_id: "cad".to_string(),
-        label: "CAD".to_string(),
+        label: LocalizedLabel::native("CAD", "CAD"),
         version: "0.1.0".to_string(),
         apps: vec![cad_app()],
         examples: Vec::new(),
@@ -353,7 +353,7 @@ pub fn note_app() -> AppDefinition {
 pub fn note_descriptor() -> PackageDescriptor {
     wrap_descriptor("semio:note", manifest::PluginManifest {
         plugin_id: "note".to_string(),
-        label: "Note".to_string(),
+        label: LocalizedLabel::native("Note", "Notiz"),
         version: "0.1.0".to_string(),
         apps: vec![note_app()],
         examples: Vec::new(),
@@ -430,7 +430,7 @@ fn colliding_app(controller_id: &str) -> AppDefinition {
 pub fn colliding_action_id_source() -> CatalogSource {
     let a = wrap_descriptor("semio:plugin-a", manifest::PluginManifest {
         plugin_id: "plugin-a".to_string(),
-        label: "Plugin A".to_string(),
+        label: LocalizedLabel::native("Plugin A", "Plugin A"),
         version: "0.1.0".to_string(),
         apps: vec![colliding_app("plugin-a")],
         examples: Vec::new(),
@@ -444,7 +444,7 @@ pub fn colliding_action_id_source() -> CatalogSource {
     });
     let b = wrap_descriptor("semio:plugin-b", manifest::PluginManifest {
         plugin_id: "plugin-b".to_string(),
-        label: "Plugin B".to_string(),
+        label: LocalizedLabel::native("Plugin B", "Plugin B"),
         version: "0.1.0".to_string(),
         apps: vec![colliding_app("plugin-b")],
         examples: Vec::new(),
@@ -579,7 +579,7 @@ pub fn draw_app() -> AppDefinition {
 pub fn draw_descriptor() -> PackageDescriptor {
     wrap_descriptor("semio:draw", manifest::PluginManifest {
         plugin_id: "draw".to_string(),
-        label: "Draw".to_string(),
+        label: LocalizedLabel::native("Draw", "Zeichnen"),
         version: "0.1.0".to_string(),
         apps: vec![draw_app()],
         examples: Vec::new(),

@@ -77,7 +77,7 @@ pub fn mutation_grammar_recognizer()->Result<semio_framework_dsl::Recognizer,sem
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::{ColdMutation, Mutation};

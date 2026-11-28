@@ -51,6 +51,7 @@ impl GuestRelayLifecycleProbeJob {
 
 impl GuestRelayLifecycleProbeJob {
     fn step_callback<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if let Some(turn) = context.cancelled_turn() { return turn }
         if self.publication.is_none() {
             let Some(output) = self.terminal_output.take() else { return semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from) };
             self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output));

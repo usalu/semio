@@ -267,7 +267,7 @@ macro_rules! config_owner {
             }
 
             fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
-                store::os_store::ArtifactOperationWire::canonical().with_original_receiving()
+                store::os_store::ArtifactOperationWire::canonical().with_original_pack_value_receiving()
             }
 
             type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<LayoutWindowConfig, LayoutWindowConfigMutation>;

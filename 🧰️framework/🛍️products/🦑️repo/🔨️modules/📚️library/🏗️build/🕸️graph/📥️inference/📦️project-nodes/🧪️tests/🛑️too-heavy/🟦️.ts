@@ -14,6 +14,7 @@ const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),t
 const calls=()=>{const found:{text:string;callee:string}[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node))found.push({text:node.getText(tree),callee:node.expression.getText(tree)});ts.forEachChild(node,visit);};visit(tree);return found;};
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+import{farmAloneCapV1}from"../../../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
 const MB=1048576;
 const withTotal=async<T>(megabytes:number|undefined,work:()=>Promise<T>)=>{const before=process.env.SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES;if(megabytes===undefined)delete process.env.SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES;else process.env.SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES=String(megabytes);try{return await work();}finally{if(before===undefined)delete process.env.SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES;else process.env.SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES=before;}};
 
@@ -58,13 +59,14 @@ test("the real yield point of the inference throws inside the scope of a stopped
 test("a limited machine reads alone: the owners whose recorded cost passes the share are named heavy, they get the solo grant of the memory available when they start (never less than the share), a serving machine has no heavy owners",async()=>{
  const root=mkdtempSync(join(tmpdir(),"solo-"));scratch.push(root);
  recordOwnerCostFileV1(join(root,".cache/f/graph-costs/owner-costs.3.json"),{name:"@semio-tech/framework-os-kernel",kind:"project",megabytes:3492,seconds:90,rows:10,stopped:false,atMs:Date.now()});
+ const alone16=Math.floor(farmAloneCapV1(16384)*MB/2);
  let available=12000*MB;
  const sixteen=await withTotal(16384,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,()=>available,()=>16384));
  expect(sixteen.heavy!(["@semio-tech/light","@semio-tech/framework-os-kernel","@semio-tech/other"])).toEqual(["@semio-tech/framework-os-kernel"]);
  expect(sixteen.heavy!(["@semio-tech/light"])).toEqual([]);
- expect(sixteen.soloLimitBytes!()).toBe(Math.floor((12000-2048)/2/1.25)*MB);
- available=7599*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.floor((7599-2048)/2/1.25)*MB);
- available=1000*MB;expect(sixteen.soloLimitBytes!(),"never below the limit of an owner beside others").toBe(Math.floor((8192-3072)/2/1.25)*MB);
+ expect(sixteen.soloLimitBytes!()).toBe(Math.max(alone16,Math.floor((12000-2048)/2/1.25)*MB));
+ available=7599*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.max(alone16,Math.floor((7599-2048)/2/1.25)*MB));
+ available=1000*MB;expect(sixteen.soloLimitBytes!(),"never below the limit of an owner beside others").toBe(Math.max(alone16,Math.floor((8192-3072)/2/1.25)*MB));
  available=40000*MB;expect(sixteen.soloLimitBytes!()).toBe(Math.floor((16384-2048-3072)/2/1.25)*MB);
  const small=await withTotal(8192,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,()=>available,()=>8192));
  expect(small.soloLimitBytes!(),"an 8 GB host: 8192 less the system reserve 1536 less the parent floor 3072, by factor and margin").toBe(Math.floor((8192-1536-3072)/2/1.25)*MB);

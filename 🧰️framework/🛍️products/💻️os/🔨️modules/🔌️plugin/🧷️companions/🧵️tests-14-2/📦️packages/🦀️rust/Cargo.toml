@@ -48,6 +48,7 @@ semio-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/�
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
+semio-plugin-testing-instance-laws = { path = "../../../../🧪️testing/🧪️artifact-app-instance-laws/📦️packages/🦀️rust" }
 semio-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-tests-03 = { path = "../../../🍊️tests-03/📦️packages/🦀️rust" }
 semio-plugin-tests-05 = { path = "../../../🍌️tests-05/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

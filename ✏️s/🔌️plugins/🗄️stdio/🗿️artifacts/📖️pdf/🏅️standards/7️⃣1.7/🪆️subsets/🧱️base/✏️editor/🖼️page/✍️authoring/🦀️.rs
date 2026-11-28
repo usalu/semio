@@ -2,7 +2,7 @@
 
 use semio_framework_io_base64::{base64_standard_decode_controlled, base64_standard_encode_controlled, Base64Control};
 use semio_plugin::Fault;
-use semio_s_artifact_stdio_pdf_editor_document::{cancelled, fault, none_if_empty, page_of, refuse, resolve_page};
+use semio_s_artifact_stdio_pdf_editor_document::{cancelled, fault, free_entry_key, none_if_empty, page_of, refuse, resolve_page};
 use semio_s_artifact_stdio_pdf_io_export::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf, mutation_bridge::apply_pdf_mutation};
 use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::{InsertAnnotation, InsertPage, PdfMutation, RemoveCatalogEntry, RemoveTrailerEntry, SetCatalogEntry, SetInfo, SetTrailerEntry, SetViewerPreferences, RemoveNamedDestination, ReplacePage, SetNamedDestination, SetOutlines, SetAcroForm, SetAnnotation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{
@@ -82,7 +82,8 @@ fn ink_of(extra: &str) -> Result<(Vec<Vec<f64>>, PdfRect), Fault> {
 /// 📌 Creates one annotation (note, highlight, underline, strike-out, ink or link) at the end of the page's annotation list; see [`InsertAnnotation`].
 pub fn create_annotation(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, extra: &str, x: f64, y: f64, width: f64, height: f64, color: [f64; 3]) -> Result<Vec<PdfMutation>, Fault> {
     let target = page_of(snapshot, page)?;
-    let tinted = |fallback: [f64; 3]| (if color == [0.0; 3] { fallback } else { color }).to_vec();
+    let chosen = color.iter().all(|channel| *channel >= 0.0);
+    let tinted = |fallback: [f64; 3]| (if chosen { color } else { fallback }).to_vec();
     let mut annotation = match kind {
         "note" => {
             let (width, height) = (if width > 0.0 { width } else { 20.0 }, if height > 0.0 { height } else { 20.0 });
@@ -108,7 +109,7 @@ pub fn create_annotation(snapshot: &PdfSnapshot, page: usize, kind: &str, text: 
             let (paths, rect) = ink_of(extra)?;
             let mut ink = PdfAnnotation::new(rect, PdfAnnotationKind::Ink { paths });
             ink.border = Some(PdfBorderStyle { width: if width > 0.0 { width } else { 2.0 }, style: Some("S".into()), dash: None, radii: None });
-            ink.color = color.to_vec();
+            ink.color = if chosen { color.to_vec() } else { Vec::new() };
             ink
         }
         "link" => {
@@ -1084,6 +1085,7 @@ pub fn set_entry(snapshot: &PdfSnapshot, family: &str, key: &str, value: &str) -
     if key.is_empty() {
         return Err(fault("an entry needs a key"));
     }
+    free_entry_key(family, &key)?;
     Ok(vec![match family {
         "catalog" if value.is_empty() => PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }),
         "catalog" => PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value: PdfObject::Name(value), index: None }),

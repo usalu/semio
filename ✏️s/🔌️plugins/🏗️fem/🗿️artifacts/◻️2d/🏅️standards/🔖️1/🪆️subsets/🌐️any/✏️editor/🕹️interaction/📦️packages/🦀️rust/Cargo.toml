@@ -22,6 +22,9 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-value-derive = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-ui-locale = { workspace = true }
@@ -30,6 +33,7 @@ semio-framework-value-persistent = { workspace = true }
 semio-s-artifact-fem-2d-editor-transient = { workspace = true }
 semio-s-artifact-fem-2d-mesh = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-diff = { workspace = true }
 semio-s-artifact-fem-2d-mutations = { workspace = true }
 
 [dev-dependencies]

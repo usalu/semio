@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:reaper:v1",
+  "title": "A parent that dies leaves no orphan behind: its owned process groups are reaped by a sentinel outside its own tree",
+  "description": "Every owned task runs in its own process group (POSIX session leader via `detached`; a Windows process tree ended with `taskkill /T /F`). A POSIX parent killed by SIGKILL cannot clean up, and a child in its own group survives it and keeps holding what it locked (a cargo build holds the target-directory lock for as long as it lives). One sentinel process per parent is started on the first registration, in its own session so that the signals meant for the parent and its group never reach it. It reads lines from a pipe the parent keeps open: `add <pid> <spawnedMs>` registers an owned child (its creation time is pinned from the process table, a pid that is not found within the window is dropped), `remove <pid>` unregisters it when it ended by itself or by a stop. When the pipe closes, the parent has ended in any way (normal exit, crash, SIGKILL, power of the shell), and the sentinel stops every registered child by pid and creation time: SIGTERM for its tree, `graceMilliseconds` of grace, then SIGKILL for what is left, and ends. A line per signal is appended to `<tmp>/<directoryName>/<parent>.log` in English and German with the identity of victim and sender. Limits: a descendant that left the group of its owner by its own `setsid` after the owner died is not found; a parent that is stopped, not ended (SIGSTOP), is not reaped.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "graceMilliseconds": 5000, "directoryName": "semio-reaper"}},
+    "Texts": {
+      "const": {
+        "en": {"reason": "the parent process {parent} ended; its owned child {pid} would be an orphan"},
+        "de": {"reason": "der Elternprozess {parent} ist beendet; sein eigenes Kind {pid} wäre eine Waise"}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

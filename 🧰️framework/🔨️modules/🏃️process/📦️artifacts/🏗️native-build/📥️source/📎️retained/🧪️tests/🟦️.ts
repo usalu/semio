@@ -2,6 +2,7 @@ import {expect,test} from "bun:test";
 import {blake3} from "@noble/hashes/blake3.js";
 import {createHash} from "node:crypto";
 import {mkdir,mkdtemp,rm,utimes,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {isConcurrentEditV1} from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../🏗️build/🎟️capacity/🟦️.ts";
@@ -11,14 +12,14 @@ import {runWasmCargoCommandV1} from "../../../../🕸️wasm-build/🟦️.ts";
 import {RetainedCargoSourcesV1} from "../🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"cargo-retained-source",maximumElapsedMilliseconds:120_000,capabilities:{artifacts:true}});
+declareBuildTestEnvelopeV1({owner:"cargo-retained-source",maximumElapsedMilliseconds:120_000,capabilities:{}});
 
 const sha256=(text:string)=>createHash("sha256").update(text).digest("hex");
 const dependency=(artifact:string,source:string,text:string)=>`${artifact}: ${source}\n# checksum:blake3=${Buffer.from(blake3(Buffer.from(text))).toString("hex")} file_len:${Buffer.byteLength(text)} ${source}\n`;
 const bodies:Record<string,string>={admitted:fixture.admitted,edited:fixture.edited};
 
 test("retained admitted sources prove the consumed bytes against independent checksums",async()=>{
-  const workspace=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"rs-"));
+  const workspace=await mkdtemp(join(tmpdir(),"semio-retained-"));
   try{
     await withBuildTestInvocationV1(invocation=>withLawStorageV1(scriptCompilerAdmissionControlV1(invocation,"test:retained-sources",120000),lawStoragePolicyV1.stubImageBytes,async(held,control)=>{
       for(const [index,row] of fixture.cases.entries()){
@@ -53,7 +54,7 @@ test("retained admitted sources prove the consumed bytes against independent che
 },120000);
 
 test("an edit mid-compile defers instead of cancelling and the artifact proves the admitted digest",async()=>{
-  const workspace=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"rs-"));
+  const workspace=await mkdtemp(join(tmpdir(),"semio-retained-"));
   try{
     await withBuildTestInvocationV1(invocation=>withLawStorageV1(scriptCompilerAdmissionControlV1(invocation,"test:retained-churn",120000),lawStoragePolicyV1.stubImageBytes,async(held,control)=>{
       {
@@ -71,7 +72,7 @@ test("an edit mid-compile defers instead of cancelling and the artifact proves t
           await Promise.race([seen,Bun.sleep(3000)]);
         };
         try{
-          await runWasmCargoCommandV1(run,"compiler",[],{cwd:workspace,environment:{},budgetMs:60000,label:"fixture-WASM",signal:control.signal,control},roster,retained);
+          await runWasmCargoCommandV1(run,"compiler",[],{cwd:workspace,environment:{},label:"fixture-WASM",signal:control.signal,control},roster,retained);
           const provenance=await retained.prove([target],Date.now()-60_000,control);
           expect(provenance.sha256).toBe(sha256(source+"\0"+sha256(fixture.admitted)+"\n"));
           expect(provenance.deferred).toEqual([{path:source,admitted:sha256(fixture.admitted),observed:sha256(fixture.edited)}]);

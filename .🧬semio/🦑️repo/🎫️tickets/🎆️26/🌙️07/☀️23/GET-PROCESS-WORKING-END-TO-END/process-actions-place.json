@@ -1,0 +1,31 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__h&&window.__h.ready()))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "PL0 demo loaded",
+  "js": "(async()=>{const h=window.__h;await h.actions();const s=await h.stepsNow(s=>s.n===4,150000,'demo steps');window.__p0=s;return h.json(s)})()",
+  "settleMs": 300,
+  "timeoutMs": 170000
+ },
+ {
+  "name": "PL1 Catalogue Place capability arms the Generic Saw",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.until(()=>h.find('Generic Saw — Cut'),30000,'catalogue rows');const row=h.find('Generic Saw — Cut').closest('[data-slot=tree-row-content]');const btn=[...row.querySelectorAll('button')].find(b=>b.innerText.trim()==='Place capability');h.ok(btn,'no place button');btn.click();await h.wait(2000);return h.json(h.steps())})()",
+  "settleMs": 300
+ },
+ {
+  "name": "PL2 click the viewport to commit the armed placement",
+  "js": "(async()=>{const h=window.__h;return 'c'})()",
+  "settleMs": 4000,
+  "pointer": "(async()=>{const c=document.querySelector('canvas');const r=c.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "PL3 placement added exactly one step",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.n===window.__p0.n+1,60000,'placed step');return h.json(s)})()",
+  "settleMs": 300
+ }
+]

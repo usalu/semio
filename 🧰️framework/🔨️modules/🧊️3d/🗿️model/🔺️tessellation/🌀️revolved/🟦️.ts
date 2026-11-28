@@ -180,7 +180,7 @@ export function tessellateRevolve(solid: RevolveSolid, quality: Quality, operati
     rows.push({ ...f, join: false });
   }
   const maxRadius = Math.max(...points.map((p) => p[1]), 1e-9) * Math.max(1, k);
-  const segments = circleSegments(maxRadius, quality);
+  const segments = solid.segments ?? circleSegments(maxRadius, quality);
   const pace = new Pace(operation);
   const builder = new MeshBuilder(pace);
   sweepRows(builder, rows, solid.origin, solid.axis, k, sweep, segments);

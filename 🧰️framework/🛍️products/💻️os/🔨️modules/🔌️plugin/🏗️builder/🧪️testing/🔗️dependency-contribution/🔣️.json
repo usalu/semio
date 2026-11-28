@@ -37,9 +37,7 @@
         0
       ],
       "result": 7,
-      "inverse": [
-        0
-      ]
+      "inverse": []
     },
     {
       "name": "minimum-delta",

@@ -20,10 +20,10 @@ Updated: family Cargo.toml and script.ts, four lockfiles (family, hub, fixture-s
 
 Source of truth for peaks: `peakRssBytes` of the unit `miss` record in `.cache/b/r/m/u/x/<lane>.jsonl`, read with `en1995-peak.py <sinceMs>`. Earlier one-worker records of this crate: 1,075 MiB (77 s) and 1,395 MiB (66 s). The 2,258 MiB figure came from the component driver.
 
-Later attempts (logs in `🗑️generated/en1995-unit-ceiling`):
+Final run, one worker, through the capacity gate (`--memory=2663 --cpu=1`), after the job-context carve landed:
 
-- The `E0432` is resolved at lock level: hub, family and norm-bridge locks already list `semio-os-store-schema-exports`; the fixture-sweep lock was missing it and now has the package and the kernel edge.
-- An admitted run then stopped before the compiler: `semio-framework-job-context exceeds its source boundary: 262309 of 262144 bytes` (first 262180). The cause is a concurrent, uncommitted edit of `job/⏱️context/🎟️source/🦀️.rs` by another agent; not touched here.
-- Before that, repo tooling refused for a minute because `🕸️graph/🕰️generations/🟨️.mjs` was edited past 65,536 bytes (now back under).
+- `repo cargo ... build -p semio-s-artifact-norm-en1995-mutations --target wasm32-wasip2`: rc 0. Unit `peakRssBytes` of the mutations crate: 925 MiB (ceiling 1,536 MiB; earlier one-worker records of the uncarved crate 1,075 and 1,395 MiB; component-driver figure 2,258 MiB). Largest other EN 1995 unit in the same run: `en1995-diff` 1,381 MiB, then `en1995-model` 1,002 MiB; all owners below 1,536 MiB.
+- `repo cargo ... test -p` (native): edit-rules rc 0 (no tests of its own; compiles), schema rc 0 (0 tests), mutations-bridges rc 0 (4 passed, 0 failed: edit-rule kinds, value-tree edit resolution, kinds-catalog/vector round trips).
+- Earlier blockers (job-context source boundary, repo tooling size limit, E0432 lock entry in fixture-sweep) were resolved or cleared; one test attempt was cancelled by the host warden and rerun.
 
-No post-carve peak is recorded yet, and the EN 1995 Rust tests (edit-rules, schema, bridges) have not run because every cargo run stops at that boundary. Retry once the job-context file is back under 262,144 bytes: `en1995-measure-retry.sh semio-s-artifact-norm-en1995-mutations m1`, then read `en1995-peak.py <sinceMs>`; afterwards run the same script with `-p` set to `semio-s-artifact-norm-en1995-mutations-edit-rules`, `semio-s-artifact-norm-en1995-schema`, and test-run the bridges package one at a time.
+Logs: `🗑️generated/en1995-unit-ceiling` (delete when done).

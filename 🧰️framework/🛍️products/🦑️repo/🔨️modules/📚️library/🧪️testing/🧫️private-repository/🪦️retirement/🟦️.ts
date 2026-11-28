@@ -1,3 +1,4 @@
+import{requireNativeStorageRootCapabilityV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🛂️root-capability/🟦️.ts";
 import {existsSync} from "node:fs";
 import {detachDiskImagesUnderV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts";
 import {readdir,rm} from "node:fs/promises";
@@ -24,7 +25,7 @@ async function retirePrivatePartitionV1(options:any):Promise<void>{
 }
 /** 🪦️ Retires a private repository through its actual caller and live control, keeping the lease image last. */
 export async function retirePrivateRepositoryRootV1(root:string,original:ScriptInvocation,control:ResourceLeaseControl):Promise<void>{
- requireIssuedResourceControlInvocationV1(control,original);const workspace=requirePrivateRepositoryWorkspaceV1(root);if(resolve(readNativeCallerAuthorityV1(original.capabilities).repositoryRoot)!==workspace)throw Error("Actual private Native workspace required for retirement");
+ requireIssuedResourceControlInvocationV1(control,original);const workspace=requirePrivateRepositoryWorkspaceV1(root);requireNativeStorageRootCapabilityV1(workspace,"retire-private-repository");if(resolve(readNativeCallerAuthorityV1(original.capabilities).repositoryRoot)!==workspace)throw Error("Actual private Native workspace required for retirement");
  const budget=repositoryCacheBudgetV1(workspace),retire=async(partition:any,options:object)=>{if(!existsSync(join(partition.directory,"image.json")))return;await retirePrivatePartitionV1({...partition,maximumPhysicalBytes:partition.capacityBytes,control,...options});};
  for(const[id,partition]of Object.entries(budget.partitions)){if(id==="leases")continue;await retire(partition,{leaseDirectory:repositoryLeaseDirectoryV1(workspace)});}
  await retire(budget.partitions.leases,{maximumLeaseDatabaseBytes:16384,leaseDirectory:budget.controlDirectory});

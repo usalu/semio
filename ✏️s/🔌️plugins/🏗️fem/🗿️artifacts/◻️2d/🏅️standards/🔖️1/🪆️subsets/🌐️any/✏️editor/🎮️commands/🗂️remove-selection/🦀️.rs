@@ -35,11 +35,29 @@ pub struct RemoveSelection {
     pub ids: Vec<String>,
 }
 
-/// 🗂️ Deletes the payload's ids. An empty list is a deliberate no-op: the keybinding path dispatches
+/// 🗂️ Deletes the payload's ids; an empty list is refused with `fem2d.remove-selection.empty`. The keybinding path dispatches
 /// `removeSelection` with no args and the CURRENT selection is framework-owned state only
 /// `ArtifactEditor::handle` sees, so the editor resolves it there and calls [`remove_ids`] directly.
 pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    if payload.ids.is_empty() { return Err(Fault::from("fem2d.remove-selection.empty")); }
     remove_ids(doc, &payload.ids)
+}
+
+/// 🔗️ The refusal of a removal that would leave `referrers` pointing at `id`: one localized notice per kind (`{id}` and the first five `{referrers}` filled from its params), raised before any mutation so nothing is removed and the shell says why.
+fn referenced(code: &'static str, id: &str, referrers: &[&str]) -> Fault {
+    let listed = referrers.iter().take(5).copied().collect::<Vec<_>>().join(", ");
+    let listed = if referrers.len() > 5 { format!("{listed}, …") } else { listed };
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), format!("'{id}' is still referenced by {listed}")).with_param("id", id).with_param("referrers", listed)
+}
+
+/// 🧱️ The material id a member names.
+fn element_material(element: &FemElement) -> &str {
+    match element { FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id }
+}
+
+/// 📐️ The section id a member names.
+fn element_section(element: &FemElement) -> &str {
+    match element { FemElement::Bar { section_id, .. } | FemElement::Beam { section_id, .. } => section_id }
 }
 
 /// 🔗️ The two node ids a member connects.
@@ -117,6 +135,16 @@ pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Resu
     }
     for row in snapshot.materials.iter().filter(|row| selected.contains(&("material", row.id.as_str()))) {
         operations.push(Fem2dMutation::DeleteMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: row.id.as_str().to_owned() }));
+    }
+    for address in &addresses {
+        let [kind, id] = address.as_slice() else { continue };
+        let (code, referrers): (&str, Vec<&str>) = match *kind {
+            "material" => ("fem2d.remove-selection.material-referenced", snapshot.elements.iter().filter(|row| !removed_elements.contains(element_id(row)) && element_material(row) == *id).map(element_id).chain(snapshot.regions.iter().filter(|row| !removed_regions.contains(row.id.as_str()) && row.material_id == *id).map(|row| row.id.as_str())).collect()),
+            "section" => ("fem2d.remove-selection.section-referenced", snapshot.elements.iter().filter(|row| !removed_elements.contains(element_id(row)) && element_section(row) == *id).map(element_id).collect()),
+            "loadCase" => ("fem2d.remove-selection.load-case-referenced", snapshot.combinations.iter().filter(|row| !selected.contains(&("combination", row.id.as_str())) && row.terms.iter().any(|term| term.case_id == *id)).map(|row| row.id.as_str()).collect()),
+            _ => continue,
+        };
+        if !referrers.is_empty() { return Err(referenced(code, id, &referrers)); }
     }
     if operations.is_empty() {
         Ok(Emit::default())

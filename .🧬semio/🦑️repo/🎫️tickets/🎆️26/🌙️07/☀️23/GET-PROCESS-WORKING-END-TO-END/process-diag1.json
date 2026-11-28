@@ -1,0 +1,59 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__h&&window.__h.ready()))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "open actions",
+  "js": "(async()=>{const h=window.__h;await h.actions();await h.stepsNow(s=>s.n===4,150000,'demo loaded');return h.json(h.steps())})()",
+  "settleMs": 300,
+  "timeoutMs": 170000
+ },
+ {
+  "name": "pointer on Decrease",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 3000,
+  "pointer": "(async()=>{const b=window.__h.find('Decrease');const r=b.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "after pointer decrease",
+  "js": "(async()=>{const h=window.__h;const t0=Date.now();while(Date.now()-t0<60000&&h.steps().k===4)await h.wait(500);return h.json([h.steps(),Date.now()-t0])})()",
+  "settleMs": 300
+ },
+ {
+  "name": "click canvas",
+  "js": "(async()=>{const h=window.__h;return 'c'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const c=document.querySelector('canvas');const r=c.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "key [",
+  "js": "(async()=>{const h=window.__h;return 'k'})()",
+  "settleMs": 1000,
+  "keys": [
+   "["
+  ]
+ },
+ {
+  "name": "after [",
+  "js": "(async()=>{const h=window.__h;const t0=Date.now();const k=h.steps().k;while(Date.now()-t0<60000&&h.steps().k===k)await h.wait(500);return h.json([h.steps(),Date.now()-t0,window.__keys])})()",
+  "settleMs": 300
+ },
+ {
+  "name": "key ] and Delete after selecting row",
+  "js": "(async()=>{const h=window.__h;return 'k'})()",
+  "settleMs": 3000,
+  "keys": [
+   "]",
+   "Delete"
+  ]
+ },
+ {
+  "name": "after ]",
+  "js": "(async()=>{const h=window.__h;return h.json([h.steps(),window.__keys])})()",
+  "settleMs": 300
+ }
+]

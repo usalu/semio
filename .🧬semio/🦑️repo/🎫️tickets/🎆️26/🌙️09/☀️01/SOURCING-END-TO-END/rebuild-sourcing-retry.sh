@@ -1,6 +1,6 @@
 #!/bin/sh
 # 🔁️ Rebuilds each given sourcing component under the build lock until its wasm is fresh (peers' half-edited crates fail single attempts), then stages, restarts 6081 and runs every journey.
-# Usage: sh rebuild-sourcing-retry.sh "<package> ..." [attempts]   (from the workspace root)
+# Usage: [NATIVE=1] sh rebuild-sourcing-retry.sh "<package> ..." [attempts]   (from the workspace root)
 # @see ./after-hub.sh
 set -u
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -10,7 +10,7 @@ for package in $1; do
     [ $i -ge "${2:-12}" ] && { echo "gave up $package"; exit 1; }
     until mkdir "$here/🗑️generated/build.lock" 2>/dev/null; do sleep 30; done
     hub=; case $package in semio-hub-*) hub=1;; esac
-    ONLY="$package" ONLY_HUB=$hub sh "$here/native-wasm-build.sh" > "$here/🗑️generated/retry-$base-$i.txt" 2>&1
+    NATIVE="${NATIVE:-}" ONLY="$package" ONLY_HUB=$hub sh "$here/native-wasm-build.sh" > "$here/🗑️generated/retry-$base-$i.txt" 2>&1
     rmdir "$here/🗑️generated/build.lock"; echo "$package attempt $i done"; i=$((i+1))
     [ -f "$here/🗑️generated/native-wasm/$base.wasm" ] && [ "$(stat -f %m "$here/🗑️generated/native-wasm/$base.wasm")" -gt "$start" ] || sleep 120
   done

@@ -32,4 +32,11 @@ Crate dirs: new values crates sit beside the snapshot folders (`📐️geometry-
 Generator and log inputs: `carve-bim.py` (this folder, run once). Edited sources: `🧰️kit/🦀️.rs` (`pub use window_config`), `🪛️utilities/🦀️.rs` (`window_kinds`), `WINDOW_KIND_ID` in plan, section, sheet window files, `🕹️interaction/🦀️.rs`, `🧬️schema/📦️packages/🦀️rust/🦀️.rs`, `💠️values/🦀️.rs` (split).
 
 ## Verification
-See the end of this file (filled after `repo cargo check`).
+`repo cargo --store=shared --configuration=prototype -- check ...` in the model workspace (logs in `🗑️generated/carve-*.log`):
+- `check -p <4 values crates> -p semio-s-artifact-bim-model-schema -j 4`: Finished (carve-schema.log).
+- `check --tests -p kit -p kit-core -p utilities -p window-{plan,world,section,schedule,sheet} -j 2`: EXIT 0 (carve-kit10.log).
+- `check --tests -p interaction -p entities-tests -p entities-families-tests`: EXIT 0 with `-j 1` (carve-interaction3.log; earlier attempts were cancelled by the host warden for host memory pressure, not by compile errors).
+Fixes found by the check: the `window_kinds::WORLD` re-export path, and the root artifact manifest rows that first landed under `[lib]`.
+Outside scope, minimal: `semio-plugin-runtime-instances` descriptor used `"Empty".into()` for a `LocalizedLabel` (no `From<&str>`), changed to `LocalizedLabel::native("Empty", "Leer")` so the plugin chain compiles.
+Open: wasm32-wasip2 and test-build peak memory of the carved crates were not re-measured (host under memory pressure; builds were cancelled by the warden several times). The carving list in the admission policy had no entries for these crates, so nothing to remove there.
+

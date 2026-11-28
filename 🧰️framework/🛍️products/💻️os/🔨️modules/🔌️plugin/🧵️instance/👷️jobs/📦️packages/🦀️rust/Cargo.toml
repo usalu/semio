@@ -73,4 +73,4 @@ serde_json = { workspace = true }
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-plugin-command/artifact-app-testing"]

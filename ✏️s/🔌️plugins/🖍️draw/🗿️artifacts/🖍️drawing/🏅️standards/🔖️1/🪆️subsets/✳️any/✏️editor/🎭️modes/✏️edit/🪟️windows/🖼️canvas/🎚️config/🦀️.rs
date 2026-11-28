@@ -197,15 +197,7 @@ impl protocol::OpText for DrawingCanvasWindowConfigMutation {
 
 semio_os_kernel::original_pack_value_operation_receiving!(DrawingCanvasWindowConfigMutation);
 
-impl protocol::OpBinary for DrawingCanvasWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })
-    }
-}
+semio_os_kernel::field_set_mutations_binary!(DrawingCanvasWindowConfigMutation);
 
 pub struct DrawingCanvasWindowConfigOwner;
 
@@ -228,7 +220,7 @@ impl semio_plugin::WindowConfigOwner for DrawingCanvasWindowConfigOwner {
     }
 
     fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
-        store::os_store::ArtifactOperationWire::canonical().with_original_receiving()
+        store::os_store::ArtifactOperationWire::canonical().with_original_pack_value_receiving()
     }
 
     type Edit = semio_plugin::WindowConfigApplyEdit<DrawingCanvasWindowConfig, DrawingCanvasWindowConfigMutation>;

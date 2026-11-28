@@ -317,7 +317,7 @@ async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authori
         let pending = registry.pending[slot].take().unwrap();
         let owner = registry.shells[pending.shell as usize].clone();
         *owner.borrow_mut() = Some(MountedState::new(pending.identity, read, pending.admitted_items));
-        registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell: pending.shell, identity: pending.identity, previous_valid: None });
+        registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell: pending.shell, identity: pending.identity, previous_valid: None, bound: RevisionBinding::of_identity(pending.identity), fingerprint: 0 });
         owner
     });
     assert!(!prepare_test(render, &snapshot));
@@ -410,7 +410,7 @@ async fn mounted_demo_static_publishes_live_load_reaction() {
         let mut state = MountedState::new(pending.identity, read, pending.admitted_items);
         state.source = source;
         *owner.borrow_mut() = Some(state);
-        registry.current[slot] = Some(CurrentSession { app_instance_id: app, shell: pending.shell, identity: pending.identity, previous_valid: None });
+        registry.current[slot] = Some(CurrentSession { app_instance_id: app, shell: pending.shell, identity: pending.identity, previous_valid: None, bound: RevisionBinding::of_identity(pending.identity), fingerprint: 0 });
         (owner, pending.identity)
     });
     let mut original = OriginalNumericalFixture::new(identity.operation(OperationId(identity.operation.0 ^ 0x5eed), semio_framework_job::Generation(identity.generation.0 + 3)));
@@ -501,7 +501,7 @@ fn mounted_close_and_capacity_are_fixed_and_terminal_witnessed() {
     assert_eq!(registry.allocate(), Some(returned), "fixed free ring deterministically reuses the returned slot");
     let identity = MountedIdentity { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(2), generation: semio_framework_job::Generation(3), canonical_base_revision: [4; 32], operation: OperationId(5), job: 5 };
     let first = registry.app_slots.claim(1).unwrap();
-    registry.current[first.index()] = Some(CurrentSession { app_instance_id: 1, shell: returned, identity, previous_valid: None });
+    registry.current[first.index()] = Some(CurrentSession { app_instance_id: 1, shell: returned, identity, previous_valid: None, bound: RevisionBinding::of_identity(identity), fingerprint: 0 });
     let second = registry.app_slots.claim(33).unwrap();
     assert_ne!(first.index(), second.index(), "exact app keys occupy independent slots even when their old modulo buckets collide");
     assert!(registry.current[second.index()].is_none());
@@ -736,4 +736,169 @@ fn mesh_edge_index_vectors_claim_three_fixed_roots_and_the_exact_credit_depends_
     lost.claims[MountedOwnerClass::MeshEdgeIndexVectors as usize].roots -= 1;
     let credit = lost.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES).expect("fewer roots still fit");
     assert_ne!(credit, exact, "the credit returned to the process authority follows the claimed roots");
+}
+
+/// 🧪️ LAW: an edit that changes only the revision (the deformation scale) never leaves a frame without results: every combination of generation states still lends one, marked stale until the new revision binds, and the bound revision is unmarked.
+#[test]
+fn a_revision_change_keeps_the_last_generation_drawn_until_the_new_one_binds() {
+    for current_final in [false, true] {
+        for previous_final in [false, true] {
+            let stale = fields_generation(false, current_final, previous_final);
+            assert!(stale.stale, "edited revision awaits its solve: final={current_final}/{previous_final}");
+            let bound = fields_generation(true, current_final, previous_final);
+            assert!(!bound.stale, "the bound revision shows the new generation");
+            assert_eq!(stale.previous, bound.previous, "the shown generation does not depend on staleness");
+            assert_eq!(bound.previous, previous_final && !current_final, "the new generation wins once it is final");
+        }
+    }
+}
+
+fn fingerprint_fixture() -> Fem2dSnapshotValue {
+    use semio_s_fem_node::planar::FemNodeValue;
+    Fem2dSnapshotValue { nodes: vec![FemNodeValue { id: "root".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "tip".into(), x: 2.0, y: 0.0 }], ..Default::default() }
+}
+
+fn fingerprint_of(value: &Fem2dSnapshotValue) -> u64 {
+    persist(value).physics_fingerprint()
+}
+
+/// 🧪️ LAW: a deformation scale edit changes only the revision: the finished generation is re-bound, so no solve is spawned and the fields stay current, not stale.
+#[test]
+fn a_display_only_edit_rebinds_the_finished_generation_without_a_new_solve() {
+    let base = fingerprint_fixture();
+    let mut scaled = base.clone();
+    scaled.analysis.deformation_scale = 500.0;
+    assert_ne!(base.analysis, scaled.analysis, "the edit changed the document");
+    let (bound, edited) = (fingerprint_of(&base), fingerprint_of(&scaled));
+    assert_eq!(bound, edited, "a display-only edit keeps the physics fingerprint");
+    assert!(rebinds_generation(true, bound, edited), "the finished generation answers the edited revision");
+    let generation = fields_generation(true, true, false);
+    assert!(!generation.stale && !generation.previous, "the re-bound fields are current, never stale");
+    assert!(!rebinds_generation(false, bound, edited), "a solve still running is not reused");
+}
+
+/// 🧪️ LAW: every physics edit, the mode counts included, changes the fingerprint, takes the re-solve path and leaves the previous generation drawn stale.
+#[test]
+fn a_physics_edit_still_re_solves_through_the_keep_results_path() {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+    let base = fingerprint_fixture();
+    let bound = fingerprint_of(&base);
+    let edits: Vec<(&str, Box<dyn Fn(&mut Fem2dSnapshotValue)>)> = vec![
+        ("modal count", Box::new(|value| value.analysis.modal_count += 1)),
+        ("buckling count", Box::new(|value| value.analysis.buckling_count += 1)),
+        ("node position", Box::new(|value| value.nodes[1].x = 2.5)),
+        ("load case", Box::new(|value| value.load_cases.push(FemLoadCase { id: "wind".into(), name: "Wind".into(), loads: vec![], self_weight: false }))),
+    ];
+    for (name, edit) in edits {
+        let mut edited = base.clone();
+        edit(&mut edited);
+        let fingerprint = fingerprint_of(&edited);
+        assert_ne!(bound, fingerprint, "{name} is physics");
+        assert!(!rebinds_generation(true, bound, fingerprint), "{name} re-solves");
+        assert!(fields_generation(false, false, true).stale && fields_generation(false, false, true).previous, "{name} keeps the previous generation drawn, stale");
+    }
+}
+
+/// 🔀️ LAW (vectors `🔀️source-switching`, the same vector file as the 3D twin): a window that switches its result source and mode over and over ends bound to exactly its last choice, with the scheduler key of that choice and every earlier request released.
+#[semio_framework_async_macros::async_test]
+async fn repeated_source_and_mode_switches_settle_on_the_last_choice() {
+    use semio_s_fem_app_surface::ResultMode;
+    let wide = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️source-switching/🔣️.json")).unwrap();
+    let kind = <semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID;
+    let render = AppRenderOperationContext { app_instance_id: 2_000_000_041, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: wide, maintenance: wide, close: wide } };
+    let window = corpus["window"].as_str().unwrap();
+    let mut windows = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-switching-test".into()));
+    windows.register::<semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfigOwner>().unwrap();
+    windows.fixture_partition_authority(kind, window).await.unwrap();
+    let original = windows.borrow(kind, window).unwrap();
+    fn parts<'a>(row: &'a serde_json::Value) -> (Option<semio_s_fem_analyses_model::ResultSourceIdentity<'a>>, ResultMode, usize) {
+        let family = match row["family"].as_u64().unwrap() { 0 => ResultMode::Static, 1 => ResultMode::Modal, _ => ResultMode::Buckling };
+        let source = (family != ResultMode::Modal).then(|| semio_s_fem_analyses_model::ResultSourceIdentity { kind: if row["namespace"] == 1 { "combination" } else { "loadCase" }, id: row["source"].as_str().unwrap() });
+        (source, family, row["index"].as_u64().unwrap() as usize)
+    }
+    let edits = std::cell::Cell::new(0u64);
+    let prepare = |row: &serde_json::Value| {
+        let (source, family, index) = parts(row);
+        let version = semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion { source: source_version(render), consumer_generation: original.generation + edits.get(), consumer_revision: { let mut revision = original.revision; revision[..8].copy_from_slice(&edits.get().to_le_bytes()); revision } };
+        let progress = MOUNTED.with(|registry| prepare_result_demand(&mut registry.borrow_mut(), render, ConsumerKey::Window(original.authority), window, source, family, index, version, wide));
+        assert!(progress.fits(wide));
+    };
+    for row in corpus["switches"].as_array().unwrap() { edits.set(edits.get() + 1); for _ in 0..corpus["prepares"].as_u64().unwrap() { prepare(row); } }
+    for _ in 0..corpus["settleRounds"].as_u64().unwrap() { prepare(&corpus["last"]); }
+    let (source, family, index) = parts(&corpus["last"]);
+    MOUNTED.with(|registry| {
+        let registry = registry.borrow();
+        let owner = registry.requests.binding(render.app_instance_id, ConsumerKey::Window(original.authority)).expect("the window stays bound after the switches");
+        assert_eq!(registry.requests.key(owner).map(|(_, key)| key), result_request_key(source, family, if family == ResultMode::Static { 0 } else { index }), "the window settles on the scheduler key of its last choice");
+        assert_eq!((registry.families[owner.index()], registry.mode_indices[owner.index()]), (family, if family == ResultMode::Static { 0 } else { index }));
+        assert_eq!(registry.requests.references(owner), 1, "only the last choice stays referenced");
+        assert_eq!((0..SESSION_ACTIVE_CAPACITY).filter(|slot| registry.requests.at(*slot).is_some_and(|(held, scope, _)| scope == render.app_instance_id && registry.requests.references(held) > 0)).count(), 1, "every earlier request of the window is released");
+    });
+    for _ in 0..512 { if terminal_is_empty(render.app_instance_id) { break } close(render.app_instance_id, wide); }
+    assert!(terminal_is_empty(render.app_instance_id));
+    windows.fixture_close();
+}
+
+/// 🔀️ LAW (twin of the 3D `fem3d_replacement_request_cancels_the_in_flight_job_of_its_instance_at_the_next_step`): a document-replacement request cancels the in-flight mounted solve of its own app instance at that job's very next step, never waiting for the replacement to commit.
+#[semio_framework_async_macros::async_test]
+async fn replacement_request_cancels_the_in_flight_job_of_its_instance_at_the_next_step() {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+
+    let envelope = store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(
+        FEM_2D_SCHEMA, "superseded-demo", default_fem2d_snapshot().expect("demo genesis"), None, &ArtifactPackGenesisProducer,
+    );
+    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<ArtifactPackGenesisProducer>(
+        envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),
+    ).await.expect("original demo store");
+    document.install_document_store_owners_exact(
+        store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().unwrap(),
+    ).unwrap_or_else(|(error, _)| panic!("original owners refused: {error}"));
+    let grant = drain_grant();
+    let lifecycle_grant = RetainedCloneGrant { maximum_items: 1, ..grant };
+    let app = 103;
+    let render = AppRenderOperationContext {
+        app_instance_id: app,
+        base_revision: semio_framework_job::RevisionId(17),
+        generation: semio_framework_job::Generation(document.generation()),
+        canonical_base_revision: document.content_revision(),
+        mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: lifecycle_grant, maintenance: lifecycle_grant, close: lifecycle_grant },
+    };
+    let demo = Fem2dSnapshotRetiring::new(default_fem2d_snapshot().expect("bundled demo loads"));
+    assert!((0..16).any(|_| prepare_test(render, &demo)), "the original demo snapshot must be admitted");
+    let read = document.snapshot_read().expect("original demo snapshot lease");
+    let (owner, identity) = MOUNTED.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let app_slot = registry.app_slots.lookup(app).unwrap().index();
+        let slot = registry.snapshot_owners[app_slot].unwrap().index();
+        let pending = registry.pending[slot].take().unwrap();
+        let owner = registry.shells[pending.shell as usize].clone();
+        *owner.borrow_mut() = Some(MountedState::new(pending.identity, read, pending.admitted_items));
+        registry.current[slot] = Some(CurrentSession { app_instance_id: app, shell: pending.shell, identity: pending.identity, previous_valid: None, bound: RevisionBinding::of_identity(pending.identity), fingerprint: 0 });
+        (owner, pending.identity)
+    });
+    let mut original = OriginalNumericalFixture::new(identity.operation(OperationId(identity.operation.0 ^ 0x5eed), semio_framework_job::Generation(identity.generation.0 + 3)));
+    let running = original.turn(grant, 128, u64::MAX, |cx| owner.borrow_mut().as_mut().expect("admitted mounted owner").step(cx));
+    assert!(matches!(running, Ok(JobStep::Running(_))), "the solve runs before the request");
+    semio_plugin::begin_supersede(app);
+    let cancelled = original.turn(grant, 128, u64::MAX, |cx| owner.borrow_mut().as_mut().expect("admitted mounted owner").step(cx));
+    assert!(matches!(&cancelled, Ok(JobStep::Failed(detail)) if detail == b"fem2d.session-cancelled"), "the superseded solve cancels at its next step: {cancelled:?}");
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
+    for _ in 0..32_768 {
+        if !terminal_is_empty(app) {
+            let step = original.turn(lifecycle_grant, 128, u64::MAX, |cx| cx.with_original_retirement(|cx| close_step(app, cx, lifecycle_grant).map_err(Into::into))).expect("mounted close turn");
+            if !matches!(step, PluginLifecycleStep::AwaitingInput { .. }) { continue; }
+        }
+        if disposer.terminal_is_empty(&document) { break; }
+        let demand = disposer.retirement_demands(&document, lifecycle_grant.maximum_copy_bytes).expect("store close demand");
+        original.turn(lifecycle_grant, 128, u64::MAX, |cx| {
+            Ok(semio_plugin::app::original_lifecycle_effect_step(cx, lifecycle_grant, demand, |_, effect| {
+                let step = disposer.close_step(&mut document, effect)?;
+                Ok((step, disposer.terminal_is_empty(&document)))
+            }).expect("store retires"))
+        }).expect("store close turn");
+    }
+    assert!(terminal_is_empty(app) && disposer.terminal_is_empty(&document), "every owner of the superseded solve retires");
 }

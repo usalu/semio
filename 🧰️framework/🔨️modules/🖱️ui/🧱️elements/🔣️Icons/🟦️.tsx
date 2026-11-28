@@ -312,6 +312,11 @@ const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
   ellipsis: "more-horizontal",
 };
 
+/** 🪪️ Whether a bare string is an icon identifier (`ruler`, `mouse-pointer-click`) rather than authored text: an unregistered one must never be drawn as its own letters. */
+export function looksLikeIconId(key: string): boolean {
+  return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(key) && (key.length >= 3 || key.includes("-"));
+}
+
 function catalogIconName(key: string): IconName | undefined {
   return CATALOG_ICON_ALIASES[key] ?? (isIconName(key) ? key : undefined);
 }
@@ -330,10 +335,10 @@ function coerceIconSource(source: IconSource): Icon {
       return { kind: "catalog", key: catalog };
     }
     const decoded = decodeIcon(key);
-    if (decoded) {
+    if (decoded && !(decoded.kind === "text" && looksLikeIconId(key))) {
       return decoded;
     }
-    return { kind: "text", text: key };
+    return looksLikeIconId(key) || /^[a-z][\w.:-]*$/u.test(key) ? { kind: "catalog", key: key as IconName } : { kind: "text", text: key };
   }
   if ("kind" in source) {
     return source;
@@ -471,8 +476,8 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
     normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons) : normalized.kind === "themed" ? themedIconSvg(normalized.key, themeIcons) : undefined;
   if (!svgMarkup) {
     return (
-      <span data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
-        {normalized.kind === "catalog" || normalized.kind === "themed" ? normalized.key.slice(0, 3) : "?"}
+      <span data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"} data-icon-id={normalized.kind === "catalog" || normalized.kind === "themed" ? normalized.key : undefined} className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden font-mono text-2xs text-muted-foreground", normalized.kind === "catalog" || normalized.kind === "themed" ? "rounded-sm border border-dashed border-current opacity-60" : undefined, boxClass)} style={boxStyle} title={title} aria-hidden={title ? undefined : true}>
+        {normalized.kind === "catalog" || normalized.kind === "themed" ? null : "?"}
       </span>
     );
   }

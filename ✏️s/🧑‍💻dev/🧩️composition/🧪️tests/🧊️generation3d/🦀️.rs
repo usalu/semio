@@ -5,7 +5,9 @@ extern crate semio_os_kernel as store;
 use semio_s_artifact_procedural_generation3d::*;
 use semio_plugin::*;
 use semio_os_flow::*;
-use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep, Widget, widget_id_for as widget_id};
+#[allow(unused_imports)]
+pub(crate) use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
 use semio_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use serde_json::Value;
 #[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;

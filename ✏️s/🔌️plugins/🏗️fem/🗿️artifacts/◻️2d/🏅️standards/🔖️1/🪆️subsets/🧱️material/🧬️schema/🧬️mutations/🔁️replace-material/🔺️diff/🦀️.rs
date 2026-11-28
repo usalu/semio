@@ -4,11 +4,11 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME elasticity bounds
 //! `create-material` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialPatch;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dMaterialPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dMaterialsDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dMaterialsModification;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff

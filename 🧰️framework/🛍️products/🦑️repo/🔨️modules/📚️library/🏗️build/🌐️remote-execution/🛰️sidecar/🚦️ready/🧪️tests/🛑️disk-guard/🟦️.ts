@@ -36,7 +36,7 @@ print(json.dumps(out))`;
  const run=spawnSync("python3",["-I","-c",script,JSON.stringify(P.diskGuard),JSON.stringify(rows)],{encoding:"utf8"});
  expect(run.status).toBe(0);
  const model=JSON.parse(run.stdout) as (string|null)[];
- expect(cases.map(row=>readyDiskGuardV1("/w/.cache",row.row)?.resource??null)).toEqual(model);
+ expect<unknown>(cases.map(row=>readyDiskGuardV1("/w/.cache",row.row)?.resource??null)).toEqual(model);
  expect(model.filter(Boolean).length).toBeGreaterThan(2);
 });
 

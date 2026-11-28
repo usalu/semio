@@ -114,3 +114,8 @@ export async function readStreamedAsset(entry: { readonly categoryFolder: string
   if (document.asset.id !== entry.folder) throw new Error(`asset ${document.asset.id} lives in the folder ${entry.folder}, the folder must carry the asset id`);
   return { asset: document.asset, document, folder: entry.folder, categoryFolder: entry.categoryFolder, path: entry.path, text };
 }
+
+/** 🌊️ Every asset of {@link assetPathsFromFiles}, one at a time and in the same order: the previous document is garbage by the time the next one is parsed, so a pass over the whole catalog (774 MB of JSON, 23 MB for the largest asset) holds one asset instead of all of them. */
+export async function* streamAssetsFromFiles(root: string = DEFAULT_CATALOG_ROOT, signal?: AbortSignal): AsyncGenerator<StreamedAsset, void, undefined> {
+  for (const entry of await assetPathsFromFiles(root, signal)) yield await readStreamedAsset(entry, signal);
+}

@@ -25,7 +25,7 @@ export type TypecheckResultV1=Readonly<{version:1;status:"passed"|"failed";secon
 /** 🔌️ What the compiler step needs and gives back; tests replace it. */
 export type TypecheckCompileV1=(request:Readonly<{root:string;script:string;configuration:string;timeoutMs:number;heapMegabytes:number;signal?:AbortSignal}>)=>Promise<Readonly<{status:number|null;output:string}>>;
 /** 🧰️ What the run touches besides the checkout; tests replace them. */
-export type TypecheckPortsV1=Readonly<{cacheDirectory?:string;compile?:TypecheckCompileV1;notice?:(line:string)=>void;signal?:AbortSignal;now?:()=>number}>;
+export type TypecheckPortsV1=Readonly<{cacheDirectory?:string;compile?:TypecheckCompileV1;ensureCompiler?:(signal?:AbortSignal)=>Promise<void>;notice?:(line:string)=>void;signal?:AbortSignal;now?:()=>number}>;
 
 const rules=policy as TypecheckPolicyV1,valued=["--lang"] as const,plain=["--json","--dry-run","--no-importers","--all-errors","--declarations"] as const;
 const posix=(path:string):string=>path.split(sep).join("/");
@@ -244,11 +244,21 @@ export function readTypecheckLibraryReportV1(cacheDirectory:string,limits:Typech
  }catch{return undefined;}
 }
 
+/** 🩹️ Self-heals a missing compiler: when the script is absent and the run carries an `ensureCompiler` port, announces it in the language of the run and lets `repo dependencies ensure` (progress and cancellation included) restore it; a failed ensure is a typed `failed` refusal, a script still absent a typed `missing` one, a cancellation `cancelled`. */
+async function requireCompilerV1(script:string,ports:TypecheckPortsV1,language:TypecheckLanguageV1,limits:TypecheckPolicyV1,notice:(line:string)=>void):Promise<void>{
+ if(existsSync(script))return;
+ if(ports.ensureCompiler!==undefined){
+  notice(typecheckTextV1(language,"compiler.ensuring",{script:limits.compiler.script}));
+  try{await ports.ensureCompiler(ports.signal);}catch(error){if(ports.signal?.aborted)throw refuseTypecheckV1("cancelled","cancelled");throw refuseTypecheckV1("failed","compiler.ensure-failed",{reason:String(error instanceof Error?error.message:error).slice(0,limits.limits.errorCharacters)});}
+ }
+ if(!existsSync(script))throw refuseTypecheckV1("missing","compiler.missing",{script:limits.compiler.script});
+}
+
 /** 🏛️ Type-checks the whole library project once with its own configuration (incremental in the machine cache), counts every error per area and stores the report in the machine cache; it never fails on type errors, it reports them. */
 export async function runTypecheckLibraryV1(root:string,language:TypecheckLanguageV1,ports:TypecheckPortsV1&Readonly<{timeoutMs?:number}>={},limits:TypecheckPolicyV1=rules):Promise<TypecheckLibraryReportV1>{
  const now=ports.now??Date.now,begin=now(),notice=ports.notice??(()=>{}),cacheDirectory=ports.cacheDirectory??typecheckCacheDirectoryV1(realpathSync(root)),compile=ports.compile??typecheckCompileV1,script=resolve(root,limits.compiler.script);
  const project=limits.projects.find(row=>row.id===limits.report.project);
- if(!project||!existsSync(script))throw refuseTypecheckV1("missing","compiler.missing",{script:limits.compiler.script});
+ if(!project)throw refuseTypecheckV1("missing","compiler.missing",{script:limits.compiler.script});await requireCompilerV1(script,ports,language,limits,notice);
  if(ports.signal?.aborted)throw refuseTypecheckV1("cancelled","cancelled");
  notice(typecheckTextV1(language,"progress.library",{project:project.id}));
  mkdirSync(cacheDirectory,{recursive:true});
@@ -282,7 +292,7 @@ export async function runTypecheckV1(root:string,touched:TypecheckTouchedV1,opti
  const plan=planTypecheckV1(root,touched,options,cacheDirectory,limits);
  if(plan.truncated)notice(typecheckTextV1(language,"progress.truncated",{count:plan.found,maximum:limits.limits.maximumImporters}));
  const diagnostics:TypecheckDiagnosticV1[]=[],checked=new Set(plan.files);
- if(plan.files.length&&!existsSync(script))throw refuseTypecheckV1("missing","compiler.missing",{script:limits.compiler.script});
+ if(plan.files.length)await requireCompilerV1(script,ports,language,limits,notice);
  for(const {project,files} of plan.groups.values()){
   signalled();
   notice(typecheckTextV1(language,"progress.run",{files:files.length,touched:files.filter(file=>touched.check.includes(file)).length,importers:files.filter(file=>!touched.check.includes(file)).length,project:project.id}));

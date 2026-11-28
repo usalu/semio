@@ -6,7 +6,7 @@ export CARGO_PROFILE_DEV_DEBUG=0 CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_SPLIT_DEB
 mkdir -p $N
 cd "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🏭️process/🧩️component/📦️packages/🦀️rust" || exit 1
 for i in $(seq 1 ${HUB_ATTEMPTS:-8}); do
-  repo capacity run --memory=3072 --cpu=3 -- "$T/hub-cargo.sh" build --target wasm32-wasip2 --profile wasm-prototype --config 'profile.wasm-prototype.inherits="dev"' --config 'profile.wasm-prototype.opt-level="s"' --config profile.wasm-prototype.codegen-units=16 --config 'profile.wasm-prototype.lto="off"' --config profile.wasm-prototype.incremental=false > $T/🗑️generated/hub-build.txt 2>&1 && break
+  repo capacity run --memory=${HUB_MEMORY:-3072} --cpu=${HUB_CPU:-3} -- "$T/hub-cargo.sh" build --target wasm32-wasip2 --profile wasm-prototype --config 'profile.wasm-prototype.inherits="dev"' --config 'profile.wasm-prototype.opt-level="s"' --config profile.wasm-prototype.codegen-units=16 --config 'profile.wasm-prototype.lto="off"' --config profile.wasm-prototype.incremental=false > $T/🗑️generated/hub-build.txt 2>&1 && break
   grep -q "^error\[E" $T/🗑️generated/hub-build.txt || break
   sleep 120
 done

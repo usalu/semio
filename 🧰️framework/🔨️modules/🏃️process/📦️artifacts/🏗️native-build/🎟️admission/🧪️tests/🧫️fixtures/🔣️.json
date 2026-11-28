@@ -970,7 +970,7 @@
   },
   "cargo": {
     "tokens": 2,
-    "tightPhysicalGiB": 6.9,
+    "tightPhysicalGiB": 1.5,
     "roomyPhysicalGiB": 22,
     "crates": [
       "base",

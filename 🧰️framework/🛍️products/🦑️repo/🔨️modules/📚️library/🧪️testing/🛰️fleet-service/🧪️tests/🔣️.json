@@ -1,0 +1,14 @@
+{
+  "description": "🛰️ Language-neutral vectors of fleet-network membership: an IPv4 address (plain or IPv4-mapped IPv6), a CIDR block and whether the address lies inside it.",
+  "inside": [
+    {"address": "192.168.178.71", "cidr": "192.168.178.0/24", "inside": true},
+    {"address": "::ffff:192.168.178.12", "cidr": "192.168.178.0/24", "inside": true},
+    {"address": "192.168.179.1", "cidr": "192.168.178.0/24", "inside": false},
+    {"address": "10.1.2.3", "cidr": "10.0.0.0/8", "inside": true},
+    {"address": "127.0.0.1", "cidr": "192.168.178.0/24", "inside": false},
+    {"address": "8.8.8.8", "cidr": "0.0.0.0/0", "inside": true},
+    {"address": "192.168.178.256", "cidr": "192.168.178.0/24", "inside": false},
+    {"address": "fe80::1", "cidr": "192.168.178.0/24", "inside": false},
+    {"address": "192.168.178.5", "cidr": "192.168.178.0/33", "inside": false}
+  ]
+}

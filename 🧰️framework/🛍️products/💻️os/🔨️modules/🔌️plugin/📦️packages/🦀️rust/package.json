@@ -55,6 +55,7 @@
     "./model/comparison": "./📦️model/⚖️comparison/🟦️.ts",
     "./model/reading": "./📦️model/👓️reading/🟦️.ts",
     "./model/contract": "./📦️model/📋️contract/🟦️.ts",
+    "./model/head": "./📦️model/🧭️head/🟦️.ts",
     "./model/schema.json": "./📦️model/🧬️schema/🔣️json/🟦️.ts",
     "./model": "./📦️model/🟦️.ts",
     "./host/testing/workspace-lease": "./🖥️host/🧪️testing/🪶️workspace-lease/🟦️.ts",

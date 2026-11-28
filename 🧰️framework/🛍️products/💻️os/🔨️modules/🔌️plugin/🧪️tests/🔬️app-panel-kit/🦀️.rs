@@ -270,6 +270,22 @@ mod panel_kit_tests {
         assert!(body_nodes(&panel) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&panel));
     }
 
+    /// ⌨️ The History panel's Undo and Redo buttons announce the chords that reach the same verbs (`aria-keyshortcuts`), so the keyboard route is discoverable; the other action buttons announce none.
+    #[semio_framework_async_macros::async_test]
+    async fn history_panel_undo_and_redo_announce_their_chords() {
+        fn find<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
+            if node.key.as_str() == key { return Some(node); }
+            node.children.iter().find_map(|child| find(child, key))
+        }
+        let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: true, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: HistoryCommandFilter::All };
+        let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &view).await.expect("an empty log assembles");
+        let shortcut = |key: &str| find(&panel, key).unwrap_or_else(|| panic!("{key} is built")).accessibility.shortcut.as_ref().map(|text| text.as_str().to_owned());
+        assert_eq!(shortcut("framework.history.undo.run").as_deref(), Some("Control+Z Meta+Z"));
+        assert_eq!(shortcut("framework.history.redo.run").as_deref(), Some("Control+Shift+Z Control+Y Meta+Shift+Z"));
+        assert_eq!(shortcut("framework.history.commitCheckpoint.run"), None);
+    }
+
     /// 🧾️ The budget is derived once, in the contract, from the reconciler's own record arena.
     #[semio_framework_async_macros::async_test]
     async fn the_body_node_budget_is_the_record_arena_less_the_root_and_the_fixed_reserve() {

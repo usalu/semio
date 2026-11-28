@@ -285,7 +285,8 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
       this.beginPan(x, y, button);
       return;
     }
-    if (button === 0 && this.leftDragPans && !(modifiers?.shift || modifiers?.ctrl || modifiers?.meta)) {
+    const held = modifiersForSelectionMode(modifiers, this.readSelectionMode?.());
+    if (button === 0 && this.leftDragPans && !(held.shift || held.ctrl || held.meta)) {
       this.pendingLeft = { x, y, modifiers };
       return;
     }

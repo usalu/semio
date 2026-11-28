@@ -315,7 +315,8 @@ impl IncrementPlan {
                 self.claims.rollback(claimed);
                 let reading = Reading::of_claiming(Slice { loan, seeds: &graft.graph, bytes: &bytes }, &graft.trailer, version, &mut self.claims).map_err(|_| Compact::Page)?;
                 work += bytes.get() / 16;
-                let still = Moved::between(&reading.lanes, &probe);
+                let mut still = Moved::between(&reading.lanes, &probe);
+                still.resources = false;
                 if still.is_empty() { settled = Some(reading); break; }
                 if still == moved { return Err(Compact::Page); }
                 moved = still;

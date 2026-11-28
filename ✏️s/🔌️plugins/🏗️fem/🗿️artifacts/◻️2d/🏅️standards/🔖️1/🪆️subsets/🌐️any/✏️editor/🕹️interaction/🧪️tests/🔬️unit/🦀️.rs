@@ -177,7 +177,7 @@ fn scoped_identity_admission_refuses_unaddressable_entities_and_duplicate_load_o
         (Fem2dMutation::CreateLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: case, index: None }), "duplicateLoadCode"),
     ] {
         let outcome = operation.diff(&*before);
-        assert_eq!(outcome.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default());
+        assert_eq!(outcome.diff(), &semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff::default());
         assert_eq!(outcome.messages()[0].code.0, fixture["identityAdmission"][expected].as_str().expect("declared diagnostic"));
         assert!(operation.inverse(&*before).expect("refused aggregate inverse").is_empty());
     }

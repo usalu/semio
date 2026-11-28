@@ -1,0 +1,24 @@
+{
+  "cases": [
+    { "locale": "en", "text": "007", "display": "'007" },
+    { "locale": "en", "text": "1.5", "display": "'1.5" },
+    { "locale": "en", "text": "1,5", "display": "1,5" },
+    { "locale": "en", "text": "true", "display": "'true" },
+    { "locale": "en", "text": "TRUE", "display": "'TRUE" },
+    { "locale": "en", "text": "False", "display": "'False" },
+    { "locale": "en", "text": "WAHR", "display": "WAHR" },
+    { "locale": "de", "text": "WAHR", "display": "'WAHR" },
+    { "locale": "de", "text": "falsch", "display": "'falsch" },
+    { "locale": "de", "text": "TRUE", "display": "'TRUE" },
+    { "locale": "en", "text": "=SUM(A1)", "display": "'=SUM(A1)" },
+    { "locale": "en", "text": "'quoted", "display": "''quoted" },
+    { "locale": "en", "text": "", "display": "'" },
+    { "locale": "en", "text": "Hello", "display": "Hello" },
+    { "locale": "de", "text": "1,5", "display": "'1,5" },
+    { "locale": "de", "text": "1.5", "display": "1.5" },
+    { "locale": "de", "text": "007", "display": "'007" },
+    { "locale": "de", "text": "Hallo", "display": "Hallo" },
+    { "locale": "", "text": "1.5", "display": "'1.5" },
+    { "locale": "", "text": "1,5", "display": "1,5" }
+  ]
+}

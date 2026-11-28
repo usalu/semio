@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { PLANAR_VIEWPOINTS, type Asset, type Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { catalogAssetsById } from "../🧰️support/🧊️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { DIMENSION_GAP_MM } from "../../🔨️modules/🎨️depiction/🏷️annotations/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -25,7 +25,7 @@ const ORACLE = join(STAFFAGE_ROOT, "🧪️tests/📐️dimension-clearance/🐍
 let assets: ReadonlyMap<string, Asset>;
 
 beforeAll(async () => {
-  assets = new Map((await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets.map((asset) => [asset.id, asset]));
+  assets = await catalogAssetsById(["retractable-bollard", "street-lamp"]);
 });
 
 function caseOf(asset: Asset, denominator: number, viewpoint: Viewpoint): Case {

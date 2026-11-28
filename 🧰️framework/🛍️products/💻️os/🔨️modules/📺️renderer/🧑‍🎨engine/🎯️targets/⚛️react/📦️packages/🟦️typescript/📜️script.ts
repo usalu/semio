@@ -25,6 +25,13 @@ class ViewportPresenceCheckScript extends BundleScript {
     await runVitest(this.root, ["../../../../🧱️elements/👕️canvas-presence/🧪️tests/✏️text-carets/🟦️.tsx", "../../../../🧱️elements/👕️canvas-presence/🧪️tests/🔬️unit/🟦️.ts", "../../../../🧱️elements/📐️Canvas2dHost/🧪️tests/👕️peer-presence/🟦️.tsx", "../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
+/** 🔂️ Executes the turn-settle continuation laws: owed grace, queued host-call yield, progress hand-off and quiescence. */
+class SettleContinuationsCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("settle-continuations-check accepts no arguments");
+    await runVitest(this.root, ["../../../../🧪️tests/🔌️plugin-runtime-suite/🟦️.tsx", "--silent=false", "--reporter=verbose", "--testNamePattern=submitPluginTurn \\(TurnScheduler-backed"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
 /** 📬️ Executes original diagnostic command identity, replay, progress and before-ACK terminal laws. */
 class OperationDiagnosticHostCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -218,6 +225,15 @@ class WindowScopeCheckScript extends BundleScript {
   }
 }
 
+/** ⏪️ Executes the history key-route laws (Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y under overrides and focus) over the language-neutral fixture. */
+class HistoryKeyRouteCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("history-key-route-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧪️tests/⌨️history-key-route/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** 📌️ Runs the view-state carriage laws: contributions are not a view-state field, and `panelJson`
  * is the one long field, bounded at the schema capacity. */
 class ViewStateCarriageCheckScript extends BundleScript {
@@ -309,6 +325,7 @@ class LintScript extends BundleScript {
 
 const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("operation-diagnostic-host-check", OperationDiagnosticHostCheckScript)
+  .register("settle-continuations-check", SettleContinuationsCheckScript)
     .register("test", TestScript)
   .register("viewport-presence-check", ViewportPresenceCheckScript)
   .register("lint", LintScript)
@@ -329,6 +346,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("surface-switch-check", SurfaceSwitchCheckScript)
   .register("input-ledger-check", InputLedgerCheckScript)
   .register("window-scope-check", WindowScopeCheckScript)
+  .register("history-key-route-check", HistoryKeyRouteCheckScript)
   .register("surface-retention-check", SurfaceRetentionCheckScript)
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);

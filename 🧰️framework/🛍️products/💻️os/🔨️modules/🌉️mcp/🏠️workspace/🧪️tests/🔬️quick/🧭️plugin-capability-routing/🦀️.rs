@@ -262,7 +262,7 @@ fn framework_capabilities_route_from_the_target_artifact_binding() {
 #[test]
 fn resolve_plugin_for_capability_asks_a_framework_capability_for_its_target_artifact() {
     let dir = semio_os_store_test_support::tempdir().expect("tempdir");
-    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy").expect("opens");
     let error = workspace.resolve_plugin_for_capability("framework.undo").expect_err("framework-owned, no plugin of its own");
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
     assert!(error.message.contains("target.artifactRef"));

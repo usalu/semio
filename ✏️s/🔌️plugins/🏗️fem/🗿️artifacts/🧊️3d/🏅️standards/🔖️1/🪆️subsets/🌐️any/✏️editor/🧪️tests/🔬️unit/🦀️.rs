@@ -113,9 +113,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         assert!(!contract.lanes.is_empty(), "tool {tool_id} declares a nonempty publication lane set");
     }
     let definition = create_fem3d_app();
-    let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     for tool_id in FEM3D_RETAINED_TOOL_IDS {
-        let action = semio_framework::window_kind_actions(&definition, model_window).into_iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
+        let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} must be UI-dispatchable");
     }
 }
@@ -392,15 +391,15 @@ fn every_mutation_action_declares_args_covering_its_payload() {
         }
     }
 }
-/// 🔗️ LAW: the palette's `addCombination.terms` argument is declared as JSON text with a worked example, so a form authors exactly the value the command admits.
+/// 🔗️ LAW: the palette's `addCombination.terms` argument is declared as plain text (not the `json` format, which a form would validate as JSON and so refuse `dead:1.35, live:1.5`) with a worked example, so a form authors exactly the values the command admits.
 #[test]
-fn the_combination_terms_argument_is_declared_as_json_text() {
+fn the_combination_terms_argument_is_declared_as_plain_text_with_an_example() {
     let definition = create_fem3d_app();
     let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     let actions = semio_framework::window_kind_actions(&definition, model_window);
     let action = actions.iter().find(|action| action.id == "addCombination").expect("addCombination declared");
     let terms = action.args.iter().find(|arg| arg.id == "terms").expect("terms arg");
-    assert!(format!("{:?}", terms.schema).contains("Json"), "{:?}", terms.schema);
+    assert!(!format!("{:?}", terms.schema).contains("Json"), "{:?}", terms.schema);
     assert!(terms.description.is_some(), "the form shows an example");
 }
 //#endregion 🔖️ManifestSanity
@@ -757,3 +756,22 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
 
 #[path = "../🪧️pane-smoke/🦀️.rs"]
 mod pane_smoke;
+
+/// 📚️ LAW: the `setActiveExample` palette options are the Artifact panel combobox rows: the empty example, then every registered example in registration order, each with one canonical name per language (language-neutral fixture `🧫️fixtures/📚️example-options/🔣️.json`).
+#[test]
+fn set_active_example_options_equal_the_combobox_options() {
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️example-options/🔣️.json")).expect("language-neutral example-options fixture");
+    let definition = create_fem3d_app();
+    let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared");
+    let arg = action.args.iter().find(|arg| arg.id == "exampleId").expect("exampleId is declared");
+    let semio_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is a select: {:?}", arg.schema) };
+    let declared: Vec<(String, String, String)> = options.iter().map(|option| (option.value.clone(), option.label.resolve(Terminology::Native, Locale::En).to_string(), option.label.resolve(Terminology::Native, Locale::De).to_string())).collect();
+    let vector: Vec<(String, String, String)> = fixture["options"].as_array().expect("options").iter().map(|row| (row["id"].as_str().expect("id").to_owned(), row["en"].as_str().expect("en").to_owned(), row["de"].as_str().expect("de").to_owned())).collect();
+    assert_eq!(declared, vector, "the palette action offers exactly the fixture's options");
+    let mut combobox = vec![(semio_s_fem_app_surface::EMPTY_EXAMPLE_ID.to_owned(), semio_s_fem_app_surface::no_example_label().resolve(Terminology::Native, Locale::En).to_string(), semio_s_fem_app_surface::no_example_label().resolve(Terminology::Native, Locale::De).to_string())];
+    combobox.extend(semio_s_artifact_fem_3d_io::examples::sources().iter().map(|example| (example.id().to_owned(), example.label().resolve(Terminology::Native, Locale::En).to_string(), example.label().resolve(Terminology::Native, Locale::De).to_string())));
+    assert_eq!(declared, combobox, "the palette action and the combobox derive from one registry");
+    assert_eq!(arg.default.as_ref().and_then(|value| value.as_str()), fixture["default"].as_str(), "the declared default is the boot example");
+}

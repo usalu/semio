@@ -9,7 +9,7 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {HERE} from "../🟦️.ts";
-import {createHostServiceV1,supersededDrainDueV1} from "../../🏛️service/🌐️host/🟨️.mjs";
+import {createHostServiceV1,sameCheckoutV1,supersededDrainDueV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {PlanRefusedErrorV1,requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
@@ -42,16 +42,16 @@ const setup=(name:string)=>{
  mkdirSync(root,{recursive:true});copyFileSync(GRAPH,join(root,"graph.json"));
  return{env,root:realpathSync(root)};
 };
-const supersede=(runtime:{directory:string;tag:string})=>writeFileSync(join(runtime.directory,"host-"+(runtime.tag==="0".repeat(12)?"1":"0").repeat(12)+".json"),JSON.stringify({v:1,pid:process.pid,instance:"newer",startedAt:9_000_000_000_000,endpoint:"none",protocol:1,implementation:"f".repeat(64)}));
+const supersede=(runtime:{directory:string;tag:string;identity?:unknown},identity:unknown=runtime.identity)=>writeFileSync(join(runtime.directory,"host-"+(runtime.tag==="0".repeat(12)?"1":"0").repeat(12)+".json"),JSON.stringify({v:1,pid:process.pid,instance:"newer",startedAt:9_000_000_000_000,endpoint:"none",protocol:1,implementation:"f".repeat(64),...identity?{identity}:{}}));
 
 test("the drain decision of every case of the table equals the table and the SQLite oracle",()=>{
  const db=new Database(":memory:");
  try{
-  const oracle=db.query<{due:number},[number|null,number,number,number,number,number,number]>("SELECT ?1 IS NOT NULL AND ?2-?1>=?6 AND ((?4=0 AND ?5=0) OR (?5>0 AND ?2-MAX(?1,?3)>=?7)) AS due");
+  const oracle=db.query<{due:number},[number|null,number,number,number,number,number,number,number,number]>("SELECT ?1 IS NOT NULL AND ?2-?1>=?6 AND ((?4=0 AND ?5=0) OR (?4>0 AND ?5=0 AND ?2-MAX(?1,?8)>=?9) OR (?5>0 AND ?2-MAX(?1,?3)>=?7)) AS due");
   for(const row of table.cases){
-   const due=supersededDrainDueV1({supersededSinceMs:row.supersededSinceMs??undefined,nowMs:row.nowMs,lastProgressMs:row.lastProgressMs,connections:row.connections,inFlight:row.inFlight,graceMilliseconds:table.graceMilliseconds,stallMilliseconds:table.stallMilliseconds});
+   const due=supersededDrainDueV1({supersededSinceMs:row.supersededSinceMs??undefined,nowMs:row.nowMs,lastProgressMs:row.lastProgressMs,lastActivityMs:(row as {lastActivityMs?:number}).lastActivityMs??row.nowMs,connections:row.connections,inFlight:row.inFlight,graceMilliseconds:table.graceMilliseconds,stallMilliseconds:table.stallMilliseconds,idleConnectionMilliseconds:table.idleConnectionMilliseconds});
    expect(due,row.name).toBe(row.due);
-   expect(due,row.name).toBe(Boolean(oracle.get(row.supersededSinceMs,row.nowMs,row.lastProgressMs,row.connections,row.inFlight,table.graceMilliseconds,table.stallMilliseconds)!.due));
+   expect(due,row.name).toBe(Boolean(oracle.get(row.supersededSinceMs,row.nowMs,row.lastProgressMs,row.connections,row.inFlight,table.graceMilliseconds,table.stallMilliseconds,(row as {lastActivityMs?:number}).lastActivityMs??row.nowMs,table.idleConnectionMilliseconds)!.due));
   }
  }finally{db.close();}
  expect(HOST_POLICY_V1.handoverFlushMilliseconds).toBeGreaterThan(0);
@@ -71,6 +71,33 @@ test("a superseded service keeps a progressing load until it answers on its own 
  let reason:string|undefined;void h.service.closed.then(value=>{reason=value;});
  for(let turn=0;turn<200&&reason===undefined;turn++){h.advance(2000);h.service.sweep();await Bun.sleep(20);}
  expect(reason).toBe("superseded");
+},60000);
+
+test("a superseded service never hands over a read that is queued or waits quietly inside the stall bound: it answers on the code it pinned",async()=>{
+ const{env,root}=setup("quiet"),h=host("quiet",env,{supersededGraceMilliseconds:1000,reload:{drainStallMilliseconds:600000}});
+ const answer=h.ask(root);
+ await within(h.started);
+ supersede(h.runtime);h.service.sweep();
+ for(let step=0;step<8;step++){h.advance(60000);h.service.sweep();await Bun.sleep(10);}
+ expect((await requestHostStatusV1({implementation:h.implementation,environment:env} as never))?.inFlight,"eight quiet minutes after the supersession the read still runs").toBe(1);
+ h.release();
+ expect((await within(answer)).reply.t).toBe("plan-reply");
+},60000);
+
+test("a burst of newer generations supersedes once and the service of another checkout never supersedes it",async()=>{
+ const{env}=setup("burst"),h=host("burst",env,{supersededGraceMilliseconds:1000});
+ await h.service.start();
+ try{
+  supersede(h.runtime,{root:"/another/checkout",state:""});h.service.sweep();h.advance(5000);h.service.sweep();
+  expect(sameCheckoutV1(h.runtime.identity,{root:"/another/checkout",state:""})).toBe(false);
+  expect(sameCheckoutV1(h.runtime.identity,h.runtime.identity)).toBe(true);
+  expect(sameCheckoutV1(undefined,undefined)).toBe(false);
+  let reason:string|undefined;void h.service.closed.then(value=>{reason=value;});
+  await Bun.sleep(100);expect(reason,"an unrelated service keeps it running").toBeUndefined();
+  for(const copy of[1,2,3])writeFileSync(join(h.runtime.directory,"host-"+String(copy).repeat(12)+".json"),JSON.stringify({v:1,pid:process.pid,instance:"newer"+copy,startedAt:9_000_000_000_000+copy,endpoint:"none",protocol:1,implementation:"f".repeat(63)+copy,identity:h.runtime.identity}));
+  h.service.sweep();h.advance(5000);h.service.sweep();
+  expect(await within(h.service.closed),"three newer generations of one checkout end it once").toBe("superseded");
+ }finally{await h.service.stop("test");}
 },60000);
 
 test("a superseded load without original progress for the stall bound is handed over to its client, in both languages",async()=>{

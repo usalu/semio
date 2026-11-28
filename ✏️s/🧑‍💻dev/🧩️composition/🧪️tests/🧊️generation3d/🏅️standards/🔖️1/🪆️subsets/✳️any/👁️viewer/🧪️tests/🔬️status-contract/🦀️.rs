@@ -362,13 +362,13 @@ async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document(
     let mut app = app().await;
     let before = context::snapshot(&app);
     let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
-    let action_meta = semio_plugin::ActionMeta { view_state: Some(shell_view), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(shell_view)), ..semio_plugin::artifact_app_laws::meta("local") };
     let args = preview_eval::window_args(VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalRelease", Some(&args), &action_meta).await.expect("the shell dispatches the declared release verb");
     let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the cancel settles through the retained ladder");
     assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
     assert_eq!(context::snapshot(&app), before, "a kernel release must not mutate the document");
-    let _ = app.pending_effects(None).await;
+    let _ = semio_plugin::artifact_app_laws::fixture_pending_effects(&mut app.0, None).await.expect("the host pending-effects poll");
 }
 
 /// ⚖️ LAW: the viewer's preview window offers the verb its status names. The window kind used to
@@ -427,7 +427,7 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     assert_eq!(working_addressed["cancellable"], serde_json::json!(true), "and its work can be stopped");
 
     session.settle_window_extension("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
-    while session.tick(&mut host, None) {}
+    while session.tick_cold(&mut host, None) {}
     session.note_window_tick_outcome("preview-1", false, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     let chain = session.preview_chain_status();
     assert!(chain.settled(), "the chain settled its whole census: {chain:?}");

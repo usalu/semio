@@ -20,6 +20,7 @@ export function writeLauncherMarkerV1(root:string,options?:{platform?:string;hom
 export function invalidateLauncherMarkerV1(root:string,options?:{platform?:string;home?:string;environment?:Record<string,string|undefined>}):void;
 export function sampleAccessInChildV1(root:string,options?:{timeoutMilliseconds?:number;spawn?:unknown;script?:string;environment?:Record<string,string|undefined>}):Promise<{place:string;error:string}|undefined>;
 export const RESET_MARKER_V1:string;
+export const LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1:number;
 type LaunchdMemoryOptionsV1={platform?:string;home?:string;environment?:Record<string,string|undefined>;digest?:(path:string)=>string|undefined;now?:()=>number};
 export function rememberLaunchdRefusalV1(root:string,options?:LaunchdMemoryOptionsV1&{place?:string}):void;
 export function launchdRefusalV1(root:string,options?:LaunchdMemoryOptionsV1&{uptimeSeconds?:()=>number}):{place:string;at:number}|undefined;

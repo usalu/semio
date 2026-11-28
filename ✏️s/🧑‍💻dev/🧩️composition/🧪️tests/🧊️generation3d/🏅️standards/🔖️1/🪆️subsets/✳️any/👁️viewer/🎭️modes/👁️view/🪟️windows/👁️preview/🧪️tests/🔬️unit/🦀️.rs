@@ -9,7 +9,7 @@ fn default_document() -> Generation3dSnapshot {
 
 /// 🎨️ Evaluates and delivers a concrete preview fixture under its owned broker port.
 fn evaluated_preview_fixture(graph: &FlowHostSnapshot) -> (String, FlowEvalSession) {
-    let eval = semio_s_artifact_procedural_3d_model::with_host(graph, |host| host.evaluate().expect("preview fixture evaluates"));
+    let eval = semio_s_artifact_procedural_3d_model::with_host(graph, |host| host.evaluate().expect("preview fixture evaluates")).expect("the preview fixture graph binds its evaluation host");
     let mut session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     crate::flow_operators::resolve_preview_geometry(&eval, graph, &Generation3dViewConfig::default().lod_mode, &mut session);
     (eval, session)
@@ -159,7 +159,7 @@ fn a_hover_only_re_render_tessellates_nothing() {
     let _serial = crate::viewer_domain::viewer_laws::context::lock();
     let document = default_document();
     let config = Generation3dViewConfig::default();
-    let eval = semio_s_artifact_procedural_3d_model::with_host(&document.host_snapshot, |host| host.evaluate().expect("fixture evaluation"));
+    let eval = semio_s_artifact_procedural_3d_model::with_host(&document.host_snapshot, |host| host.evaluate().expect("fixture evaluation")).expect("the evaluation host binds its snapshot");
     let session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     reset_preview_mesh_table();
     let cold = preview_payload(&PreviewEvaluation::from_json(&eval), &document.host_snapshot, &config, Some(&session), &Generation3dViewMarks::default());

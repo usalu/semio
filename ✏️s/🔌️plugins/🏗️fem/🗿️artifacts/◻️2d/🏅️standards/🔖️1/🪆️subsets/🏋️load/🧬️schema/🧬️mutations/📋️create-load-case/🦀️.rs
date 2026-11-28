@@ -25,7 +25,7 @@ pub struct CreateLoadCase {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for CreateLoadCase
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>, {
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "load-case", kind: "create-load-case", record: "CreatedLoadCase" };
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
@@ -38,10 +38,10 @@ where
 }
 impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for CreateLoadCase
 where
-    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>, {
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>, {
 
 
-    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
 

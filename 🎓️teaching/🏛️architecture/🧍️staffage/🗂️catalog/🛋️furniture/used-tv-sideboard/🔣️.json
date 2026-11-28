@@ -9362,11 +9362,11 @@
       "material": "steel-runner",
       "role": "detail",
       "tone": 0.3,
-      "kind": "ellipsoid",
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "kind": "box",
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -9384,11 +9384,11 @@
       "material": "steel-runner",
       "role": "detail",
       "tone": 0.3,
-      "kind": "ellipsoid",
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "kind": "box",
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -9406,11 +9406,11 @@
       "material": "steel-runner",
       "role": "detail",
       "tone": 0.3,
-      "kind": "ellipsoid",
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "kind": "box",
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -9428,11 +9428,11 @@
       "material": "steel-runner",
       "role": "detail",
       "tone": 0.3,
-      "kind": "ellipsoid",
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "kind": "box",
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -9451,8 +9451,8 @@
       "de": "Körper 1:500: der Korpus ist eine Masse vom Fußboden bis zur Deckplatte mit dem 16-mm-Überstand der Platte über die Fronten; offenes Fach, Rückwand, Mittelwände und Gleiter gehen darin auf; die zwei Klappen und die Schubladenfront bleiben eigene Platten davor (sie bewegen sich noch), der Schubladenkasten ist ein Block, der Knopf der einzige Teil vor der Front."
      },
      {
-      "en": "Thermal 1:500 is modelled anew and hollow as in reality: the top, one U-section for the sides and bottom, one H-section for the dividers and niche shelf, the back with its cable hole, six foot blocks, the fronts and the knob, 16 mm handle bars. Structure 1:500: the carcass mass as one member, flaps and drawer as members, 20 mm hinge rods and runner joints, mass markers of 75 mm.",
-      "de": "Die Thermik 1:500 ist neu und wie in Wirklichkeit hohl modelliert: Deckplatte, ein U-Profil für Seiten und Boden, ein H-Profil für Mittelwände und Fachboden, die Rückwand mit Kabeldurchlass, sechs Gleiterblöcke, die Fronten und der Knopf, Griffstäbe von 16 mm. Tragwerk 1:500: die Korpusmasse als ein Glied, Klappen und Schublade als Glieder, 20-mm-Scharnierstäbe und Auszugsgelenke, Massenmarken von 75 mm."
+      "en": "Thermal 1:500 is modelled anew and hollow as in reality: the top, one U-section for the sides and bottom, one H-section for the dividers and niche shelf, the back with its cable hole, six foot blocks, the fronts and the knob, 16 mm handle bars. Structure 1:500: the carcass mass as one member, flaps and drawer as members, 20 mm hinge rods and runner joints, mass markers of 75 mm. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Die Thermik 1:500 ist neu und wie in Wirklichkeit hohl modelliert: Deckplatte, ein U-Profil für Seiten und Boden, ein H-Profil für Mittelwände und Fachboden, die Rückwand mit Kabeldurchlass, sechs Gleiterblöcke, die Fronten und der Knopf, Griffstäbe von 16 mm. Tragwerk 1:500: die Korpusmasse als ein Glied, Klappen und Schublade als Glieder, 20-mm-Scharnierstäbe und Auszugsgelenke, Massenmarken von 75 mm. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

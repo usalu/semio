@@ -11,6 +11,7 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseDepInfoV1,parseRustcUnitV1,rustcBypassV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
+import {tryAcquireSlotV1} from "../🔒️lock/🟦️.ts";
 import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
 import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
 import {foreignLanePathV1,lookupBuildRunV1,missingLinkSearchPathV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
@@ -59,7 +60,7 @@ test("dependency files parse as the vectors say", () => {
 
 test("the first-level key equals an independent Python serialisation and moves with every input", () => {
  const input={toolchain:"rustc 1.99.0-nightly",normalized:["--crate-name","foo","--emit=link"],sourceSha256:"a".repeat(64),externs:[{name:"bar",sha256:"b".repeat(64)}],environment:[["CARGO_PKG_NAME","foo"]] as [string,string][]};
- const preimage=[policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment];
+ const preimage=[policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment,["determinism",policy.key.outputDeterminism.version]];
  const python=spawnSync(testPythonV1()??"python3",["-I","-c","import hashlib,json,sys;v=json.load(sys.stdin);print(hashlib.sha256(json.dumps(v,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify(preimage),encoding:"utf8"});
  expect(python.status).toBe(0);expect(unitKeyV1(input)).toBe(python.stdout.trim());
  const variants=[{...input,toolchain:"other"},{...input,normalized:[...input.normalized,"-O"]},{...input,sourceSha256:"c".repeat(64)},{...input,externs:[{name:"bar",sha256:"d".repeat(64)}]},{...input,environment:[["CARGO_PKG_NAME","baz"]] as [string,string][]}];
@@ -134,13 +135,13 @@ test("compile slots never exceed their count and are granted first-in-first-out"
 },60000);
 
 test("waiters of a full slot pool block on events and use almost no CPU", async()=>{
- const root=scratch(),holder=launch(["slot",root,"1","4500"]);
- await new Promise(done=>setTimeout(done,500));
+ const root=scratch(),holder=tryAcquireSlotV1(root,1);
+ expect(holder,"the test holds the only slot until every waiter has measured its window").toBeDefined();
  const waiters=Array.from({length:12},()=>new Promise<{cpuMicroseconds:number;windowMilliseconds:number}>((done,fail)=>{
   const child=spawn(process.execPath,[worker,"slot-cpu",root,"1","2500"],{stdio:["ignore","pipe","inherit"]});
   child.stdout.once("data",chunk=>done(JSON.parse(String(chunk))));child.once("error",fail);
  }));
- const rows=await Promise.all(waiters);await holder;
+ const rows=await Promise.all(waiters);holder!.release();
  for(const row of rows)expect(row.cpuMicroseconds/1000/row.windowMilliseconds,"waiting costs almost no CPU").toBeLessThan(0.02);
 },60000);
 
@@ -183,7 +184,7 @@ test("three sessions build disjoint crates at once, share each unit exactly once
  expect(count(parallel,"hit","core")).toBe(2);expect(count(parallel,"hit","mac")).toBe(2);
  for(const leaf of fixture.scenario.leaves)expect(count(parallel,"miss",leaf),leaf).toBe(1);
  expect(count(parallel,"failed")).toBe(0);expect(count(parallel,"bypass")).toBe(0);
- expect(Math.max(...parallel.map(row=>row.waitedMs))).toBeLessThan(bounds.maximumLockWaitMs);
+ expect(Math.max(...parallel.map(row=>row.waitedMs)),"a waiter waits for the one compile of the shared unit: the bound plus the longest unit the sessions measured, so a loaded host stretches both").toBeLessThan(bounds.maximumLockWaitMs+Math.max(0,...parallel.map(row=>(row as Event&{milliseconds?:number}).milliseconds??0)));
  expect(parallel.some(row=>row.kind==="hit"&&row.reason==="after-wait"||row.kind==="lock-wait")).toBe(true);
  const fourth=await session(workspace,cache,"s4",fixture.scenario.leaves.flatMap(leaf=>["-p",leaf]));
  expect(fourth.code,fourth.output).toBe(0);

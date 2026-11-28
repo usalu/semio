@@ -6,7 +6,46 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.56,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "scales": [
+   500
+  ]
  },
  {
   "facet": ".*",
@@ -22,7 +61,46 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.56,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "scales": [
+   500
+  ]
  },
  {
   "facet": ".*",
@@ -38,7 +116,46 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.56,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "scales": [
+   500
+  ]
  },
  {
   "facet": ".*",
@@ -49,8 +166,8 @@
  },
  {
   "decision": {
-   "en": "Budget: every soft mass (leaf lobe, flower, fruit, transpiration outlet) and every joint and mass sphere of the structure is a faceted lobe, a polyhedron with the facets of its ellipsoid at 24 to 64 segments around (the surface every check of the volumes measures), so it keeps about 530 triangles at every scale instead of the 2000 to 4000 of a smooth ellipsoid; a lobe of at most 0.35 m radius has 16 segments around and 8 rings (224 triangles) and is sized so that its outline straddles that measured surface, within 2 mm.",
-   "de": "Budget: Jede weiche Masse (Laubballen, Blüte, Frucht, Transpirationsauslass) und jede Gelenk- und Massenkugel des Tragwerks ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 24 bis 64 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst), und behält damit in jedem Maßstab rund 530 Dreiecke statt der 2000 bis 4000 eines glatten Ellipsoids; ein Ballen mit höchstens 0,35 m Radius hat 16 Segmente im Umfang und 8 Ringe (224 Dreiecke) und ist so bemessen, dass sein Umriss diese gemessene Fläche umspielt, auf 2 mm genau."
+   "en": "Budget: every soft mass (leaf lobe, flower, fruit, transpiration outlet) and every joint and mass sphere of the structure is a faceted lobe, a polyhedron with the facets of its ellipsoid at 24 to 64 segments around (the surface every check of the volumes measures), so it keeps about 530 triangles at every scale instead of the 2000 to 4000 of a smooth ellipsoid; a lobe of at most 0.28 m radius at 1:50, 0.56 m at 1:100, 1.12 m at 1:200 and 2.8 m at 1:500 has 16 segments around and 8 rings (224 triangles) and is sized so that its outline straddles that measured surface, within a fifth of the smallest feature of its scale.",
+   "de": "Budget: Jede weiche Masse (Laubballen, Blüte, Frucht, Transpirationsauslass) und jede Gelenk- und Massenkugel des Tragwerks ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 24 bis 64 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst), und behält damit in jedem Maßstab rund 530 Dreiecke statt der 2000 bis 4000 eines glatten Ellipsoids; ein Ballen mit höchstens 0,28 m Radius bei 1:50, 0,56 m bei 1:100, 1,12 m bei 1:200 und 2,8 m bei 1:500 hat 16 Segmente im Umfang und 8 Ringe (224 Dreiecke) und ist so bemessen, dass sein Umriss diese gemessene Fläche umspielt, auf ein Fünftel des kleinsten Merkmals seines Maßstabs genau."
   }
  }
 ]

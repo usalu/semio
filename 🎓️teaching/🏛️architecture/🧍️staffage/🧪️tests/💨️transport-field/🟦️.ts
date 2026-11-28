@@ -345,7 +345,7 @@ describe("💨️ passengers", () => {
 
 describe("🌬️ looping breath", () => {
   const load = async () => {
-    const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"));
+    const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"), undefined, new Set(["standing-adult"]));
     const environment = (await loadEnvironments(join(STAFFAGE_ROOT, "🗂️catalog")))!.presets.find((preset) => preset.id === "office-still")!.environment;
     return { asset: catalog.assets.find((asset) => asset.id === "standing-adult")!, environment };
   };

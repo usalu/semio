@@ -12,7 +12,7 @@ use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Rgba;
 use semio_ui_declaration::ui::UiComponentSceneNode;
-use semio_renderer_wgpu_scene_state::{GUMBALL, GumballConfig, GumballGesture, GumballHandle, GumballMotion, GumballSlot, GumballView, MOVE_EPSILON, ModelToLayer, TURN_EPSILON, pivot_screen, total};
+use semio_renderer_wgpu_scene_state::{GUMBALL, GumballConfig, GumballGesture, GumballHandle, GumballMotion, GumballSlot, GumballView, ModelToLayer, pivot_screen, total};
 
 //#region 📐️Geometry
 /// 📏️ Screen pixels from the pivot to the move knobs; the scale knobs sit at three quarters of it on the diagonals.
@@ -145,26 +145,6 @@ pub fn begin(meta: &GumballMeta, kind: GumballHandle, x: f64, y: f64) -> Gumball
     GumballGesture { kind, start: (x, y), pivot_layer: meta.pivot_layer, model_to_layer: meta.model_to_layer.unwrap_or(IDENTITY_MAP), ids: meta.selection_ids.clone(), live: meta.live_dispatch, total: None, streamed: false }
 }
 
-/// ➖️ The increment from `previous` to `current` — offsets and angles subtract, factors divide; `None` when it moves
-/// nothing.
-pub(crate) fn increment(previous: Option<GumballMotion>, current: GumballMotion) -> Option<GumballMotion> {
-    match (previous, current) {
-        (Some(GumballMotion::Translate { dx: before_x, dy: before_y }), GumballMotion::Translate { dx, dy }) => {
-            let (dx, dy) = (dx - before_x, dy - before_y);
-            (dx.abs() >= MOVE_EPSILON || dy.abs() >= MOVE_EPSILON).then_some(GumballMotion::Translate { dx, dy })
-        }
-        (Some(GumballMotion::Rotate { angle: before }), GumballMotion::Rotate { angle }) => {
-            let angle = angle - before;
-            (angle.abs() >= TURN_EPSILON).then_some(GumballMotion::Rotate { angle })
-        }
-        (Some(GumballMotion::Scale { sx: before_x, sy: before_y }), GumballMotion::Scale { sx, sy }) => {
-            let (sx, sy) = (sx / before_x, sy / before_y);
-            ((sx - 1.0).abs() >= TURN_EPSILON || (sy - 1.0).abs() >= TURN_EPSILON).then_some(GumballMotion::Scale { sx, sy })
-        }
-        _ => Some(current),
-    }
-}
-
 pub fn identity(kind: GumballHandle) -> GumballMotion {
     match kind {
         GumballHandle::MoveX | GumballHandle::MoveY => GumballMotion::Translate { dx: 0.0, dy: 0.0 },
@@ -177,29 +157,32 @@ pub fn dispatch(gesture: &GumballGesture, motion: Option<GumballMotion>, phase: 
     GumballDispatch { verb: gesture.kind.verb(), ids: gesture.ids.clone(), motion, phase }
 }
 
-/// 🌊️ A pointer move: a live gesture streams the increment since its last tick; a non-live one records its total for the
-/// ghost.
+/// 🌊️ A pointer move: a live gesture streams its CUMULATIVE pose delta from the press — every tick is idempotent, so a
+/// tick the app drops as stale costs the gesture nothing — and the identity while the pointer is back on the press point
+/// once a tick went out; a non-live one records its total for the ghost.
 pub fn drag(gesture: &mut GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
-    let current = total(gesture, view, x, y)?;
+    let current = total(gesture, view, x, y);
     if !gesture.live {
-        gesture.total = Some(current);
+        gesture.total = current.or(gesture.total);
         return None;
     }
-    let step = increment(gesture.total, current)?;
-    gesture.total = Some(current);
+    if current == gesture.total {
+        return None;
+    }
+    gesture.total = current;
     gesture.streamed = true;
-    Some(dispatch(gesture, Some(step), Some(GumballPhase::Stream)))
+    Some(dispatch(gesture, Some(current.unwrap_or_else(|| identity(gesture.kind))), Some(GumballPhase::Stream)))
 }
 
-/// 💾️ The release at local `(x, y)`: a live gesture commits its ONE transaction with the remaining tail (the identity
-/// when nothing is left; nothing when it never moved); a non-live one dispatches its whole pose delta as ONE one-shot.
+/// 💾️ The release at local `(x, y)`: a live gesture commits its ONE transaction with the whole cumulative pose delta (the
+/// identity when the pointer is back on the press point; nothing when it never moved); a non-live one dispatches its whole
+/// pose delta as ONE one-shot.
 pub fn release(gesture: &GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
     let current = total(gesture, view, x, y);
     if !gesture.live {
         return current.map(|motion| dispatch(gesture, Some(motion), None));
     }
-    let tail = current.and_then(|current| increment(gesture.total, current));
-    (gesture.streamed || tail.is_some()).then(|| dispatch(gesture, Some(tail.unwrap_or_else(|| identity(gesture.kind))), Some(GumballPhase::Commit)))
+    (gesture.streamed || current.is_some()).then(|| dispatch(gesture, Some(current.unwrap_or_else(|| identity(gesture.kind))), Some(GumballPhase::Commit)))
 }
 
 /// 🧯️ A host cancel: a live gesture that streamed drops its open transaction with zero trace; anything else sends nothing.

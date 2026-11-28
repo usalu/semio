@@ -62,12 +62,16 @@
  {
   "name": "switch to Viewer",
   "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Viewer\")).click();return \"v\"})()",
-  "settleMs": 8000
+  "settleMs": 2000,
+  "until": "(async()=>String(!document.querySelector('[role=combobox]')&&document.querySelectorAll('canvas').length>=1))()",
+  "timeoutMs": 120000
  },
  {
   "name": "switch back to Editor",
   "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Editor\")).click();return \"e\"})()",
-  "settleMs": 8000
+  "settleMs": 2000,
+  "until": "(async()=>String(!!document.querySelector('[role=combobox]')&&document.querySelectorAll('canvas').length>=1))()",
+  "timeoutMs": 120000
  },
  {
   "name": "open Actions",

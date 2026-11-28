@@ -142,6 +142,10 @@
       "en": "Process {pid} ({command}) holds the dependency store since {since}; waiting for it ({seconds} s of at most {limit} s)",
       "de": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since}; es wird darauf gewartet ({seconds} s von höchstens {limit} s)"
     },
+    "closure.reference-data-bound": {
+      "en": "A stored closure payload has {nodes} nodes at depth {depth}; at most {maximumNodes} nodes and depth {maximumDepth} are read",
+      "de": "Eine gespeicherte Hüllen-Nutzlast hat {nodes} Knoten in Tiefe {depth}; gelesen werden höchstens {maximumNodes} Knoten und Tiefe {maximumDepth}"
+    },
     "headroom.retention-ledger-invalid": {
       "en": "The retained snapshot ledger row needs exactly a byte count and a time",
       "de": "Die Zeile der Schnappschuss-Bilanz braucht genau eine Bytezahl und einen Zeitpunkt"

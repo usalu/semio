@@ -49,6 +49,7 @@ pub struct AddMemberUdl {
 }
 
 pub fn handle(payload: &AddMemberUdl, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    super::add_nodal_load::require(doc.snapshot.elements.iter().any(|element| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id(element) == payload.element_id), "fem3d.reference.element-unknown", &payload.element_id)?;
     let load_id = doc.operation()?.entity_id("l", "loads")?;
     let load = FemLoad::MemberUdl { id: load_id, element_id: payload.element_id.clone(), wx: payload.wx, wy: payload.wy, wz: payload.wz };
     Ok(Emit::mutations(vec![super::add_nodal_load::add_load_mutation(doc, payload.case_id.as_deref(), load)?]))

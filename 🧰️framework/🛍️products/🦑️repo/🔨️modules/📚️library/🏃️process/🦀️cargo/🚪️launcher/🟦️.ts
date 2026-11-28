@@ -1,6 +1,7 @@
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import {requireHostAboveCriticalV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts";
 import{profilePhaseV1}from"../../../🏗️build/⏱️profile/🟨️.mjs";
-import{withLaneRetentionV1}from"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
+import{retainRemovedLaneV1,withLaneRetentionV1}from"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withRepositoryCompilerRuntimeEntriesV1} from "../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {prepareRepositoryCargoSchedulerV1} from "../🧰️native-helpers/🟦️.ts";
@@ -11,14 +12,16 @@ import{nativeBuildDiagnosticLinesV1}from"../../../../../../../🔨️modules/�
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1,cargoTimingLedgerRowV1,appendCargoTimingLedgerV1}from"../⏱️timing/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import {acquirePooledLaneV1,planPoolAcquireV1,poolBoundsV1,readPoolV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
-import {crateKeyV1,laneFlavourV1,measureLaneBytesV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
+import {withSeededLaneV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🌱️seed/🛫️lane/🟦️.ts";
+import {acquirePooledLaneV1,planPoolAcquireV1,poolBoundsV1,poolOwnerKeyV1,readPoolV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
+import {requireShardsWritableV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧩️image/🟦️.ts";
+import {crateKeyV1,laneFlavourV1,measureLaneBytesV1,removeLaneV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
 import {rustImageReclaimRuleV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/♻️auto-reclaim/🟦️.ts";
 import {admitImageHeadroomV1,headroomImageMountV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
-import {compilerLaneQuotaBytesV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
+import {compilerLaneQuotaBytesV1,compilerLaneStoreBytesV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
-import {gcOutOfSpaceV1,measureVolumeV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
-import {collectAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,withUnitPressureRecheckV1,reportUnitCacheStillFullV1,unitCacheCapacityBytesV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+import {gcOutOfSpaceV1,hostFreeBytesOfRootV1,measureVolumeV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
+import {collectAfterOutOfSpaceV1,retryAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,withUnitPressureRecheckV1,reportLaneFullV1,reportUnitCacheStillFullV1,unitCacheCapacityBytesV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {unitAdmissionMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts";
 import {foreignDigestMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -38,7 +41,7 @@ import {compileUnitsForHostV1,describeCompileUnitsV1,planFleetJobsV1,requireGran
 import {cargoArtifactArgumentsV1,cargoConfigurationArgumentsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoRequestedProfileV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import {ADMISSION_POLICY_V1,admissionMemoryBytesV1,admissionMemoryShareV1,admissionReserveBytesV1,localUnitHistoryPathV1,localUnitObservationV1,parentCompilerMemoryAllowanceBytesV1,readUnitHistoryV1,recordUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1,unitOutputBytesV1,type UnitObservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
-import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
+import {createJobserverV1,defaultJobserverStyleV1,retireJobserverV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
 import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanMemoV1,cargoPlanningOutputBytesV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
@@ -62,7 +65,7 @@ import {createCargoOverheadSamplerV1} from "./📈️overhead/🟦️.ts";
 const authored=schema.definitions.Configuration.const;
 
 /** 🧾️ One admitted ad-hoc Cargo command: its explicit store, build configuration, core share and closed subcommand class. */
-export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated";configuration:BuildMode;parallelism:number|"planned";kind:"compile"|"resolve"|"lock";cargo:readonly string[]}>;
+export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated";configuration:BuildMode;parallelism:number|"planned";kind:"compile"|"resolve"|"lock";freshLane?:true;cargo:readonly string[]}>;
 /** 🧺️ Names one invocation's private target, build and temporary namespaces inside the issued compiler store. */
 export type RepositoryCargoIsolatedStoreV1=Readonly<{root:string;target:string;build:string;temporary:string}>;
 /** 📐️ The authored launcher policy. */
@@ -75,20 +78,22 @@ function admit<T>(definition:keyof typeof schema.definitions,value:unknown):T{co
 export const REPOSITORY_CARGO_LAUNCH_POLICY_V1=Object.freeze(admit<RepositoryCargoLaunchPolicyV1>("Policy",authored));
 const policy=REPOSITORY_CARGO_LAUNCH_POLICY_V1;
 
-/** 🧭️ Parses `--store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <subcommand> <args…>` without consuming any Cargo argument.
+/** 🧭️ Parses `--store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] [--fresh-lane] -- <subcommand> <args…>` without consuming any Cargo argument. `--fresh-lane` (shared store only) runs the call in a lane that is born for it and removed after it: a cold Cargo target with nothing carried over, so a probe measures cold, local-hit and remote-hit honestly; an isolated store is fresh by itself.
  * @see ./🧬️schema/🔣️.json */
 export function readRepositoryCargoLaunchV1(argv:readonly string[],environment:Readonly<Record<string,string|undefined>>):RepositoryCargoLaunchV1{
  const delimiter=argv.indexOf(policy.delimiter);if(delimiter<0)throw Error("Repository Cargo launch requires `--` before the Cargo subcommand");
- const head=argv.slice(0,delimiter),cargo=argv.slice(delimiter+1),selected=new Map<string,string>(),names=Object.values(policy.options);
+ const all=argv.slice(0,delimiter),flagged=all.filter(argument=>argument===policy.options.freshLane).length,head=all.filter(argument=>argument!==policy.options.freshLane),cargo=argv.slice(delimiter+1),selected=new Map<string,string>(),names=Object.values(policy.options).filter(name=>name!==policy.options.freshLane);
+ if(flagged>1)throw Error(`Repeated repository Cargo launch option: ${policy.options.freshLane} / Wiederholte Startoption des Repository-Cargo: ${policy.options.freshLane}`);
  for(let index=0;index<head.length;index++){const argument=head[index]!,name=names.find(option=>argument===option||argument.startsWith(option+"="));if(!name||selected.has(name))throw Error(`Unknown or repeated repository Cargo launch option: ${argument}`);const value=argument===name?head[++index]:argument.slice(name.length+1);if(!value||value.startsWith("-"))throw Error(`Repository Cargo launch option ${name} requires a value`);selected.set(name,value);}
  const store=selected.get(policy.options.store),configuration=selected.get(policy.options.configuration),parallelism=selected.get(policy.options.parallelism);
  if(store===undefined||configuration===undefined)throw Error(`Repository Cargo launch requires explicit ${policy.options.store}=${policy.stores.join("|")} and ${policy.options.configuration}=${policy.configurations.join("|")}`);
  if(environment.SEMIO_BUILD_MODE!==undefined&&environment.SEMIO_BUILD_MODE!==configuration)throw Error("Repository Cargo launch configuration conflicts with SEMIO_BUILD_MODE");
+ if(flagged===1&&store!=="shared")throw Error(`${policy.options.freshLane} needs ${policy.options.store}=shared (an isolated store is fresh by itself) / ${policy.options.freshLane} braucht ${policy.options.store}=shared (ein isolierter Speicher ist von sich aus frisch)`);
  if(parallelism!==undefined&&!/^[1-9][0-9]{0,3}$/u.test(parallelism))throw Error("Repository Cargo launch parallelism must be a positive integer");
  const kinds=Object.keys(policy.subcommands) as RepositoryCargoLaunchV1["kind"][],kind=kinds.find(key=>policy.subcommands[key].includes(cargo[0]??""));
  if(!kind)throw Error(`Repository Cargo launch admits only ${kinds.flatMap(key=>policy.subcommands[key]).join(", ")} as its first Cargo argument`);
  if(cargo.length>policy.maximumArguments||cargo.some(argument=>argument.length>policy.maximumArgumentLength||argument.includes("\0")))throw Error("Repository Cargo launch arguments exceed their declared bounds");
- return Object.freeze(admit<RepositoryCargoLaunchV1>("Request",{version:1,store,configuration,parallelism:parallelism===undefined?policy.parallelism:Number(parallelism),kind,cargo:Object.freeze([...cargo])}));
+ return Object.freeze(admit<RepositoryCargoLaunchV1>("Request",{version:1,store,configuration,parallelism:parallelism===undefined?policy.parallelism:Number(parallelism),kind,...flagged===1?{freshLane:true}:{},cargo:Object.freeze([...cargo])}));
 }
 
 /** 🔏️ A live namespace reader excludes maintenance; atomic directory birth admits its unique writer. */
@@ -103,8 +108,8 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
 }
 
 /** 🛤️ One private lane of the pool inside the issued compiler store: a target and build directory held by one process at a time, so no two Cargo processes ever share a build directory and Cargo's unit locks can never form a cycle between processes. The lane of the same crate set is preferred (its incremental state is still warm), a new lane starts empty and fills from the shared content-addressed unit cache, and the idle lanes are trimmed to the pool bounds. */
-export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>}>;
-type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
+export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>;cold?:boolean}>;
+type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];fresh?:boolean;environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 
 /** 💽️ Observes occupied bytes on the admitted image volume. */
 function imageUsedBytesV1(root:string):number|null{
@@ -125,10 +130,13 @@ async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:Reposito
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();bindWaitMarkerOnceV1();
  const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
  const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes),classes=options.classes??["lane"],flavour=laneFlavourV1(options.sharedBuild);
- const warm=planPoolAcquireV1(readPoolV1(options.cacheRoot,Date.now()),{crateKey:crateKeyV1(options.crates)},poolBoundsV1(quotaBytes)).kind==="warm";
+ const commitmentBytes=await compilerLaneStoreBytesV1(options.workspace,options.environment),commitment=commitmentBytes===null?{}:{commitmentBytes},owner={session:agentSessionAddressV1(session),agent:session.agent.id};
+ const warm=options.fresh!==true&&planPoolAcquireV1(readPoolV1(options.cacheRoot,Date.now()),{crateKey:crateKeyV1(options.crates),owner:poolOwnerKeyV1(owner),...flavour===undefined?{}:{flavour}},poolBoundsV1(quotaBytes)).kind==="warm";
  const headroom=await admitImageHeadroomV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,classes,temperature:warm?"warm":"cold",label:classes[classes.length-1]!,language,report:line=>{process.stderr.write(line+"\n");},signal:options.control.signal,softReclaim:rustImageReclaimRuleV1});
+ let freshId:string|undefined;
  try{
-  const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id},...flavour===undefined?{}:{flavour}},{signal:options.control.signal,volume:()=>measureVolumeV1(options.cacheRoot,options.capacityBytes),report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+  const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,...commitment,owner,...flavour===undefined?{}:{flavour},...options.fresh===true?{fresh:true}:{}},{signal:options.control.signal,volume:()=>measureVolumeV1(options.cacheRoot,options.capacityBytes),report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+  if(options.fresh===true)freshId=lane.paths.id;
   return await withLaneRetentionV1({lane,shared:options.sharedBuild,language,report:line=>{process.stderr.write(line+"\n");}},async()=>{let grown:(()=>number)|undefined,completed=false;
   try{
    for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
@@ -137,10 +145,10 @@ async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:Reposito
      const laneGrowth=measureLaneBytesV1(options.cacheRoot,lane.paths.id)-before,usedAfter=usedBefore!==null&&headroom.imageWriteUncontended()?imageUsedBytesV1(options.cacheRoot):null;
      return commandWriteBytesV1(laneGrowth,usedBefore,usedAfter,headroom.imageWriteUncontended());
     };
-   const result=await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));completed=true;return result;
+   const result=await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base}),cold:lane.choice!=="warm"}));completed=true;return result;
   }finally{const failedGrowth=!completed&&grown?grown():0;await headroom.release(completed?grown:failedGrowth>headroom.reservedBytes?()=>failedGrowth:undefined,lane.choice==="warm"?"warm":"cold");}
   });
- }finally{await headroom.release();}
+ }finally{await headroom.release();if(freshId!==undefined)removeLaneV1(options.cacheRoot,freshId,"lane",Date.now(),paths=>{retainRemovedLaneV1(paths);});}
 }
 
 /** 🗂️ The planning port of a repository compile: foreign (registry) crate sources are inventoried through the digest book kept under the store's unit cache, so an unchanged crate directory is stamped, not re-hashed. Shared by `bun repo cargo` and repository tests. */
@@ -149,7 +157,7 @@ export function repositoryCargoPlanningPortV1(store:Readonly<{root:string}>){con
 export function repositoryCargoSourceMemoV1(store:Readonly<{root:string;toolchain:Readonly<{digest:string}>}>){return unitAdmissionMemoV1(unitCacheRootV1(store.root),store.toolchain.digest);}
 
 /** 🧵️ One Cargo command's lane (see {@link RepositoryCargoAgentLaneV1}). Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
-export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;crates:readonly string[];classes?:readonly string[];capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;crates:readonly string[];classes?:readonly string[];fresh?:boolean;capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>;cold?:boolean}>)=>Promise<T>):Promise<T>{
  const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
  try{return await withAgentLaneV1(options,async lane=>{await relieve();return withUnitPressureRecheckV1(relieve,()=>body(Object.freeze({...lane,temporary:options.temporary})));});}
  finally{await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language,report});}
@@ -221,7 +229,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
    let status:number,full=false,dependencyDiagnostic=false;try{await runOwnedCommand("cargo",[...command],cwd,label,0,{deadline:control,env:scriptResourceProcessEnvironmentV1(control,scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined})),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");},onLine:line=>{if(!full&&gcOutOfSpaceV1(line))full=true;if(!dependencyDiagnostic&&cargoDependencyDiagnosticV1(line))dependencyDiagnostic=true;}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status,full:status!==0&&full,dependencyDiagnostic});
   };
   const space=readNativeStorageReservationPolicyV1(store.storage,store.control),spaceRoot=unitCacheRootV1(store.root),spaceBudget=unitCacheCapacityBytesV1(space),spaceLanguage=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment).language,spaceReport=(line:string)=>{process.stderr.write(line+"\n");};
-  const retryingFullImage=<Result extends Execution>(run:()=>Promise<Result>):Promise<Result>=>retryWhenFullV1(run,{collect:()=>collectAfterOutOfSpaceV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport}),stillFull:()=>reportUnitCacheStillFullV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport})});
+  const retryingFullImage=<Result extends Execution>(run:()=>Promise<Result>,lane?:string):Promise<Result>=>retryWhenFullV1(run,{collect:()=>collectAfterOutOfSpaceV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport}),stillFull:()=>{reportUnitCacheStillFullV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport});if(lane!==undefined)void reportLaneFullV1({root:spaceRoot,lane,language:spaceLanguage,report:spaceReport});}});
   const consumeExecution=(execution:Execution,env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume:(()=>void)|undefined,generatedFile:string|undefined):Promise<number|T>=>withRequestedIssuedResourceControlV1(control,0,async control=>{
    mark("consume","begin");checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind==="capture"?execution.result.status===0&&execution.result.signal===null:execution.status===0;if(success)beforeConsume?.();else (await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts")).requireNoHostWardenCancelBelowV1(process.pid,launchedMs);
    if(execution.kind==="stream"){mark("consume","end");return execution.status;}if(options.output!=="capture")throw Error("Actual captured Cargo consumer required");
@@ -241,7 +249,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
     const [history,localHistory]=await Promise.all([readUnitHistoryV1(unitHistoryPathV1(historyRoot)),readUnitHistoryV1(localHistoryPath)]);
     const units=request.parallelism==="planned"?await compileUnitsForHostV1({environment:env,signal:control.signal,history}):undefined,waitStart=Date.now(),operation="cargo "+(args[0]??"");if(units)spaceReport(describeCompileUnitsV1(spaceLanguage,"planned",{operation,preferred:units.decision.preferred,minimum:units.decision.minimum,cores:units.host.cores,reason:units.decision.reason}));return await withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,control,writer=>withCompilerCapacityConsumptionV1({directory:leaseDirectory,control:writer,environment:env,request:units?.request??{kind:"exact",parallelism:request.parallelism as number}},async(capacity,cpuControl)=>{mark("capacity","ready");if(units){requireGrantedCompileUnitsV1(units.decision,capacity.parallelism);spaceReport(describeCompileUnitsV1(spaceLanguage,"granted",{operation,granted:capacity.parallelism,cores:units.host.cores,seconds:Math.round((Date.now()-waitStart)/1000)}));}mark("writer","begin");const compiled=await(async()=>{mark("writer","ready");mark("scheduler","begin");
      const scheduler=preparedScheduler!,local=capacity.parallelism,fleet=units?await(async()=>{try{const idle=await fleetIdleSlotsV1(env,{signal:control.signal}),plan=planFleetJobsV1({local,fleetIdle:idle,grantedMegabytes:units.host.grantedMegabytes,availableMegabytes:units.host.availableMegabytes,pressure:units.host.pressure,unitMegabytes:units.host.unitMegabytes});if(plan.remote>0)spaceReport(describeCompileUnitsV1(spaceLanguage,"fleet",{operation,jobs:plan.jobs,local,remote:plan.remote,idle:idle??0,reason:plan.reason}));return plan;}catch{return undefined;}})():undefined,tokens=fleet?.jobs??local;mark("scheduler","ready");
-     const jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);let jobserverFailed=false,jobserverFailure:unknown;
+     const jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);
      try{
       const observations:UnitObservationV1[]=[];
       const physical=admissionMemoryBytesV1(),parentMemoryAllowanceBytes=parentCompilerMemoryAllowanceBytesV1(environment);
@@ -265,7 +273,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
          const execution=await runAttempt();
          recoveredStorage ||= execution.full;
          return {...execution,units:broker.units().slice(started)};
-        });
+        },"lane"in selected?selected.lane?.id:undefined);
         const {units,...execution}=result;
         return {execution,units,recoveredStorage};
        };
@@ -294,12 +302,12 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
       finally{const secondary:unknown[]=[];try{await sampler?.stop();}catch(error){if(!executionFailed||error!==executionFailure)secondary.push(error);}try{await broker.close();}catch(error){secondary.push(error);}
        if(observations.length)await recordUnitHistoryV1(localHistoryPath,observations,{leaseDirectory,control:cpuControl}).catch(error=>spaceReport(`[native-build] unit history write failed: ${error instanceof Error?error.message:String(error)}`));
        if(secondary.length)throw executionFailed?new AggregateError([executionFailure,...secondary],"Compiler and telemetry retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Compiler telemetry retirement failed");}
-     }catch(error){jobserverFailed=true;jobserverFailure=error;throw error;}finally{const secondary:unknown[]=[];try{jobserver.close();}catch(error){secondary.push(error);}try{rmSync(jobserverDirectory,{recursive:true,force:true});}catch(error){secondary.push(error);}if(secondary.length)throw jobserverFailed?new AggregateError([jobserverFailure,...secondary],"Compiler and jobserver retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Jobserver retirement failed");}
+     }finally{for(const warning of retireJobserverV1(jobserver,jobserverDirectory))for(const line of nativeBuildDiagnosticLinesV1("jobserverRetirementFailed",{path:warning.path,reason:warning.reason}))spaceReport(line);}
     })();return compiled;
     }));
    }catch(error){profileFailed=true;profileFailure=error;throw error;}finally{try{lease.release();}catch(secondary){if(profileFailed)throw new AggregateError([profileFailure,secondary],"Compiler consumption and profile retirement failed");throw secondary;}}
   })();};
-  const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string;lane?:Readonly<{id:string;root:string}>}>):Promise<number|T>=>{
+  const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string;lane?:Readonly<{id:string;root:string}>;cold?:boolean}>):Promise<number|T>=>{
    const inputs={invocation,consumption:request.kind==="compile"?cargoProfileCompilerConsumptionV1("artifact",args[0]??""):{kind:"resolution" as const},workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
    const resolution=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,env=input.environment,command=cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build);return consumeExecution(await execute(command,env,control),env,control,undefined,undefined);};
    const resolved=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build),signal:control.signal,control});try{return await resolution(input);}finally{lease.release();}};
@@ -317,10 +325,13 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
       let planned=graph;
       await admitWarmCargoRetryGraphV1({manifest:inputs.manifest,suffix,previous:graph,observe:async()=>planned=await captureCargoCompilationGraphV1(plan,retryControl,actualCargoCompilerPlanningPortV1()),admit:()=>admitSource(planned,retryControl),replacementFits:()=>false});
      };
-     try{return await (await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts")).retryAfterHostWardenCancelV1((_attempt,startedMs)=>{launchedMs=startedMs;return admitted(compilerArgs,compilerEnvironment,selected,control,readmit,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);},{report:spaceReport,signal:control.signal});}finally{if(generated)rmSync(generated,{force:true});}
+     const attempt=async()=>(await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts")).retryAfterHostWardenCancelV1((_attempt,startedMs)=>{launchedMs=startedMs;return admitted(compilerArgs,compilerEnvironment,selected,control,readmit,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);},{report:spaceReport,signal:control.signal});
+     try{return await ("lane" in selected&&selected.lane!==undefined?withSeededLaneV1({cacheRoot:unitCacheRootV1(store.root),laneRoot:selected.lane.root,lane:selected.lane.id,graph,environment,language:spaceLanguage,report:spaceReport,signal:control.signal,cold:selected.cold===true},attempt):attempt());}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
-  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,sharedBuild:store.buildDirectory,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),classes:cargoHeadroomClassesV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
+  await requireShardsWritableV1(spaceRoot,{signal:store.control.signal,language:spaceLanguage,report:spaceReport});
+  if(request.kind==="compile")await requireHostAboveCriticalV1({partition:store.root,hostFreeBytes:()=>hostFreeBytesOfRootV1(spaceRoot),collect:()=>collectAfterOutOfSpaceV1({root:spaceRoot,capacityBytes:spaceBudget,language:spaceLanguage,report:spaceReport})});
+  return retryAfterOutOfSpaceV1({store:store.root,language:spaceLanguage,report:spaceReport},()=>request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,sharedBuild:store.buildDirectory,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),classes:cargoHeadroomClassesV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,...request.freshLane===true?{fresh:true}:{},environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run));
  }));
  }));
 }

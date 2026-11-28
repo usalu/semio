@@ -1,7 +1,7 @@
 @capability-staffage-model-catalog
 Feature: Every asset of the catalog has a valid 3D model set
   The catalog-wide guard covers all 152 assets. For each asset it checks the authored volume and the 3D formats offered in `exports`, the procedural model (valid, tessellated without
-  non-finite or degenerate triangles, watertight where the solid kind is closed), the extent of the solids in the presentation pose against `dimensions` (the authoring gate of
+  non-finite or degenerate triangles, watertight where the solid kind is closed), the extent of the solids in the presentation pose, without the contact surfaces of role `ground` (the wall a figure leans against, left out as in the 2D dimension rule), against `dimensions` (the authoring gate of
   `volume-drafting`: 8 % per axis, at least 15 mm; where the presentation pose misses, the best-matching named pose is reported and the rest pose is never compared), the triangle budget
   per preset scale, and the files of the batch export read back from disk. A limitation is stated per asset with its reason; nothing else is excused.
 
@@ -23,6 +23,11 @@ Feature: Every asset of the catalog has a valid 3D model set
     Given every named pose of the asset
     When its GLB is validated and loaded
     Then the Khronos validator reports no error and no warning and the seven variants are present
+
+  Scenario: A contact surface is no part of the dimensions
+    Given a figure that leans against a wall of role `ground`
+    When the extent of its body scene is read in the presentation pose
+    Then the wall is left out and the figure alone is measured against `dimensions`
 
   Scenario: Each clip is a loadable FBX
     Given every clip of the asset

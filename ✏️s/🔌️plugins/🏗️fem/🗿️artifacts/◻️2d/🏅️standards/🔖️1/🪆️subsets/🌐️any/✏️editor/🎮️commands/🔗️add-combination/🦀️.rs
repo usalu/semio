@@ -4,7 +4,8 @@ use semio_plugin::NoConfig;
 
 use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{parse_combination_terms, CombinationTermsError, FemCombination, FemCombinationTerm};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemCombination, FemCombinationTerm};
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::combination_terms::{parse_combination_terms, CombinationTermsError};
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;
 use semio_plugin::Emit;

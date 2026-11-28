@@ -428,11 +428,17 @@ impl PcgCheckpoint {
             let row = self.row_cursor;
             let end = self.a.indptr(row + 1).expect("PCG SpMV row end") as usize;
             if self.entry_cursor < end {
-                let entry = self.entry_cursor;
-                let col = self.a.index(entry).expect("PCG SpMV column") as usize;
-                let value = if initial { self.x.get(col) } else { self.p.get(col) };
-                self.row_sum += self.a.value(entry).expect("PCG SpMV value") * value;
-                self.entry_cursor += 1;
+                let columns = self.a.indices.contiguous_at(self.entry_cursor).expect("PCG SpMV column run");
+                let values = self.a.vals.contiguous_at(self.entry_cursor).expect("PCG SpMV value run");
+                let take = columns.len().min(values.len()).min(end - self.entry_cursor).min(maximum_units - *units);
+                let input = if initial { &self.x } else { &self.p };
+                let mut sum = self.row_sum;
+                for (column, value) in columns[..take].iter().zip(&values[..take]) {
+                    sum += value * input.get(*column as usize);
+                }
+                self.row_sum = sum;
+                self.entry_cursor += take;
+                *units += take;
             } else {
                 self.ap.set(row, self.row_sum);
                 if !initial {
@@ -441,8 +447,8 @@ impl PcgCheckpoint {
                 self.row_sum = 0.0;
                 self.row_cursor += 1;
                 self.entry_cursor = self.a.indptr(self.row_cursor.min(self.a.n)).expect("PCG SpMV next row") as usize;
+                *units += 1;
             }
-            *units += 1;
         }
         if self.row_cursor == self.a.n {
             self.cursor = 0;
@@ -551,16 +557,21 @@ impl PcgCheckpoint {
     }
 
     pub(super) fn advance_one(&mut self) -> usize {
+        self.advance(1)
+    }
+
+    /// 🏃️ Advances the current stage by at most `maximum_units` scalar units and reports how many it spent.
+    pub(super) fn advance(&mut self, maximum_units: usize) -> usize {
         let mut units = 0;
         match self.stage {
-            PcgStage::InitializeDiagonal => self.step_diagonal(&mut units, 1),
-            PcgStage::InitialSpmv => self.step_spmv(&mut units, 1, true),
-            PcgStage::InitialResidual => self.step_initial_residual(&mut units, 1),
-            PcgStage::InitialPrecondition => self.step_precondition(&mut units, 1, true),
-            PcgStage::IterationSpmv => self.step_spmv(&mut units, 1, false),
-            PcgStage::IterationUpdate => self.step_update(&mut units, 1),
-            PcgStage::IterationPrecondition => self.step_precondition(&mut units, 1, false),
-            PcgStage::IterationDirection => self.step_direction(&mut units, 1),
+            PcgStage::InitializeDiagonal => self.step_diagonal(&mut units, maximum_units),
+            PcgStage::InitialSpmv => self.step_spmv(&mut units, maximum_units, true),
+            PcgStage::InitialResidual => self.step_initial_residual(&mut units, maximum_units),
+            PcgStage::InitialPrecondition => self.step_precondition(&mut units, maximum_units, true),
+            PcgStage::IterationSpmv => self.step_spmv(&mut units, maximum_units, false),
+            PcgStage::IterationUpdate => self.step_update(&mut units, maximum_units),
+            PcgStage::IterationPrecondition => self.step_precondition(&mut units, maximum_units, false),
+            PcgStage::IterationDirection => self.step_direction(&mut units, maximum_units),
             PcgStage::Complete => {}
         }
         units

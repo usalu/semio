@@ -1,0 +1,30 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json": "1465c49f19027ce5334def48f9b93f3e0bfb60db8d015aafc1edb126f2967d7a",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts": "35ccc59846855936d76cac29127d28deeaea630a9a9635c510f5372889256eea",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts": "1f4d6b778179f3402d89039efe68c0a042fdcb2aa9275ec9b5e1aeacc8f9d7bd",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts": "80eb299a87b4be3b2c19baad81ef1a5284a08ccde78cfee0acb58fd99cee6f22",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🧫️fixtures/🔣️.json": "50c9b9fcf8d33f16abdd33b883d38412c2b2a66099cce74079fd7c8cb0ba58c4",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🐍️.py": "84e7ffe2e043c008d4cb0e2fa7d960b6c31bc36afda047078671b0770695d34d",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts": "d2a22caac621ceabf826c0e4524ac39087964cbfdd8d4e3c9a03cc79a85c53c9",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts": "8cd2f9835a8ea98b35efdea3ef697e99ff79cb0a55963e644ac2522c3e39f887",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json": "f39e29c15d9d6e09269ce6e4c1a44dcb0316b33e32b532eaa4008808d5016f8e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧩️shards/🟦️.ts": "c6a7a5e297d9cfc176461ea4451580f2b2c21d685d295c503c7f8c3f2fac1ab6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts": "b5462c0259272f577b40f4ef77b23f2e8a17413a1b62e889c177840aab4aeb2e",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts": "aa61c8c89317490fba41dc7660e1f0b34ee548064908ce0482bdb80147b42803"
+ },
+ "order": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🧫️fixtures/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🐍️.py",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧩️shards/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts"
+ ]
+}

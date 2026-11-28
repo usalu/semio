@@ -1,0 +1,5 @@
+parent-with-stroller
+runner-with-blade-prosthesis
+running-child
+walking-toddler
+person-with-umbrella

@@ -43,7 +43,7 @@ import {
   sealedInstanceDropTextV1,
   sealedInstanceDropV1
 } from "../🔀️surface-switch/🟦️.ts";
-import { programHistoryKeyV1, programHistoryProjectionsAfterPatchV1, createProgramHistoryStoreV1 } from "../🪟️spawned-program/🟦️.ts";
+import { programHistoryKeyV1, programHistoryProjectionsAfterPatchV1, createProgramHistoryStoreV1, spawnedIdOfWindowInstanceV1 } from "../🪟️spawned-program/🟦️.ts";
 import { type InputOutcomeV1, type ShellInputActionV1 } from "../🎯️input-ledger/🟦️.ts";
 import { type UiPreferencesConfigMutation } from "@semio-tech/framework/config/mutations";
 import {
@@ -65,7 +65,7 @@ import { LocalDocumentOwnerRegistryV1, type LocalDocumentOwnerV1 } from "../../�
 import { StagedActionHost } from "../📝️staging/session.ts";
 import { LocalSourceRevisionRegistryV1 } from "../../🛠️ShellHelpers/📝️source-revision/registry.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { parsePanelState, type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState, localProgramsV1, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { EMPTY_SHELL_DEFAULTS, EMPTY_SHELL_LOCKS, type FrameworkOsDefaults, isEphemeralShellBrand, resolveBootExampleId, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
@@ -149,6 +149,7 @@ export type ShellForwardSlots = {
     notifyDocumentTransfer: (notice: DocumentTransferNoticeV1, file: string, kind: Severity) => void;
   }>;
   spawnedAppsRef: RefObject<readonly SpawnedAppEntry[]>;
+  refreshSpawnedUi: (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg?: UiDirtyScope) => Promise<void>;
   activeUtilityByWindowIdRef: RefObject<Readonly<Record<string, string | null>>>;
   applyHostEffects: ApplyHostEffectsForward;
   onActionRef: RefObject<OnActionForward>;
@@ -592,9 +593,21 @@ export function useShellCoreState({
   if (!treeWindowSchedulerRef.current) {
     treeWindowSchedulerRef.current = createTreeWindowSchedulerV1({
       refresh: (bodyKey) => {
-        console.log("[DEBUG] tree-window refresh", bodyKey, sessionRef.current?.app.windowKinds.map((kind) => kind.bodyKey));
         const live = sessionRef.current;
         const refresh = refreshUiRef.current;
+        const spawnedApps = core.spawnedAppsRef?.current ?? [];
+        const spawnedOwner = spawnedIdOfWindowInstanceV1(bodyKey, spawnedApps.map((entry) => entry.id));
+        const spawned = spawnedApps.find((entry) => entry.id === spawnedOwner);
+        if (live && spawned) {
+          if (parsePanelState(live.viewState)?.activeSpawnedId !== spawned.id) {
+            treeWindowSchedulerRef.current?.settled(bodyKey);
+            return;
+          }
+          void core.refreshSpawnedUi(spawned, live.viewState)
+            .catch(logUnlessRetiredV1("[os-shell] spawned tree window refresh failed"))
+            .finally(() => treeWindowSchedulerRef.current?.settled(bodyKey));
+          return;
+        }
         if (!live || !refresh) {
           treeWindowSchedulerRef.current?.settled(bodyKey);
           return;
@@ -611,7 +624,6 @@ export function useShellCoreState({
       openStatesFor: (bodyKey) => treeWindowSchedulerRef.current!.openStatesFor(bodyKey),
       setFormPage: (bodyKey, windowId, page) => treeWindowSchedulerRef.current!.setFormPage(bodyKey, windowId, page),
       setOpen: (bodyKey, nodeKey, open) => {
-        console.log("[DEBUG] tree-window setOpen", bodyKey, nodeKey, open);
         treeWindowSchedulerRef.current!.setOpen(bodyKey, nodeKey, open);
         setTreeWindowGeneration((generation) => generation + 1);
       },

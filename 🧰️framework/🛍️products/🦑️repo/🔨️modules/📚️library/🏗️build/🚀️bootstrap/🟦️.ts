@@ -70,10 +70,21 @@ export function javascriptScopeOwnersV1(scopes:readonly string[],roots:readonly 
  return [...owners].sort();
 }
 
+/** 🗂️ The declared dependency scopes of a checkout: the root `.` and every top-level folder whose `package.json` declares `semio.workspace` (the top-level owner recipe); never the member packages the root manifest lists in `workspaces`, which belong to a scope and are no scope. A cheap read of one folder listing and the manifests below it.
+ * @see ./🧪️tests/🎯️closure/🟦️.ts */
+export function javascriptDeclaredScopesV1(root:string):string[]{
+ const scopes=["."];
+ for(const entry of readdirSync(root,{withFileTypes:true})){
+  if(!entry.isDirectory()||entry.name.startsWith(".")||entry.name==="node_modules")continue;
+  try{const document=JSON.parse(readFileSync(join(root,entry.name,"package.json"),"utf8")) as {semio?:{workspace?:unknown}};if(document.semio?.workspace!==undefined)scopes.push(entry.name);}catch{}
+ }
+ return scopes.sort();
+}
+
 /** 🪜️ Installs, on demand and with the progress and cancellation of the dependency storage hold, the scopes a planned task closure needs after the graph exists, whatever the install mode: a worker that installed only the scopes of its stages gets any other scope the moment a command needs it, and a scope whose receipt is current costs one receipt check. */
 export async function ensureBuildScopesV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,projectRoots:()=>readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<readonly string[]>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
- const manifest=JSON.parse(readFileSync(join(root,"package.json"),"utf8")) as {workspaces?:string[]},owners=javascriptScopeOwnersV1([".",...(manifest.workspaces??[])],[...projectRoots(),...buildPolicy.javascriptInstallRoots]);
+ const owners=javascriptScopeOwnersV1(javascriptDeclaredScopesV1(root),[...projectRoots(),...buildPolicy.javascriptInstallRoots]);
  if(!owners.length)return owners;
  try{
   const {cacheAreaHomeV1}=await import("../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts"),{readJavascriptDependencySyncReceiptV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts"),{syncRequestRowsV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🟦️.ts"),receipt=readJavascriptDependencySyncReceiptV1(join(cacheAreaHomeV1(root,"dependencies").directory,"m"));

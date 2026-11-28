@@ -1,0 +1,9 @@
+{
+  "description": "Two solids of one unlit primitive: a quad of two triangles with its diagonal corners repeated (6 vertices, 4 distinct) and a triangle that repeats one corner of the quad (3 vertices). Welding happens inside a solid only.",
+  "positions": [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [1, 1, 0], [0, 1, 0], [1, 1, 0], [2, 1, 0], [2, 2, 0]],
+  "indices": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  "solids": [{ "id": "quad", "first": 0, "count": 6 }, { "id": "wedge", "first": 6, "count": 3 }],
+  "lines": { "indices": [0, 1, 1, 2, 2, 4, 4, 5, 5, 3, 6, 7, 7, 8], "solids": [{ "id": "quad", "first": 0, "count": 10 }, { "id": "wedge", "first": 10, "count": 4 }] },
+  "weldedVertexCount": 7,
+  "triangleCorners": [[[0, 0, 0], [1, 0, 0], [1, 1, 0]], [[0, 0, 0], [1, 1, 0], [0, 1, 0]], [[1, 1, 0], [2, 1, 0], [2, 2, 0]]]
+}

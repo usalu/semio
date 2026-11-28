@@ -33,7 +33,9 @@ semio-s-artifact-stdio-semio-cad-export = { workspace = true }
 semio-s-artifact-stdio-semio-document-import = { workspace = true }
 semio-s-artifact-stdio-semio-document-export = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-pdf-import = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-pdf-export = { workspace = true }
 semio-s-artifact-stdio-semio-flow-import = { workspace = true }
 semio-s-artifact-stdio-semio-flow-export = { workspace = true }
 semio-s-artifact-stdio-semio-image-import = { workspace = true }

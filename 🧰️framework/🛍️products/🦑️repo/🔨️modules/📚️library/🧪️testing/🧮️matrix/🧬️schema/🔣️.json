@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.testing.matrix.v1",
+  "description": "🧮️ A browser interaction matrix: rows of steps that find every element by its role and its English and German accessible name (no selector field exists), run fail-fast in each language against one mounted app; one test file per row lets a suite spread the rows over machines.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "languages": ["en", "de"], "browserLocales": {"en": "en-US", "de": "de-DE"}, "pollMs": 100, "maximumRows": 128, "maximumSteps": 32}},
+    "Localized": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1, "maxLength": 256}, "de": {"type": "string", "minLength": 1, "maxLength": 256}}},
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "name"],
+      "properties": {
+        "role": {"type": "string", "pattern": "^[a-z]{2,32}$"},
+        "name": {"$ref": "#/definitions/Localized"},
+        "exact": {"type": "boolean"},
+        "nth": {"type": "integer", "minimum": 0, "maximum": 64},
+        "within": {"$ref": "#/definitions/Target"}
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "visible": {"type": "boolean"},
+        "count": {"type": "integer", "minimum": 0, "maximum": 64},
+        "pressed": {"enum": ["true", "false", "mixed"]},
+        "selected": {"enum": ["true", "false"]},
+        "expanded": {"enum": ["true", "false"]},
+        "checked": {"enum": ["true", "false", "mixed"]},
+        "disabled": {"type": "boolean"},
+        "busy": {"enum": ["true", "false"]},
+        "value": {"type": "string", "maxLength": 256},
+        "text": {"$ref": "#/definitions/Localized"}
+      }
+    },
+    "Step": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["do", "target"], "properties": {"do": {"const": "click"}, "target": {"$ref": "#/definitions/Target"}}},
+        {"type": "object", "additionalProperties": false, "required": ["do", "target", "key"], "properties": {"do": {"const": "press"}, "target": {"$ref": "#/definitions/Target"}, "key": {"type": "string", "pattern": "^[A-Za-z0-9+]{1,32}$"}, "times": {"type": "integer", "minimum": 1, "maximum": 32}}},
+        {"type": "object", "additionalProperties": false, "required": ["do", "target", "text"], "properties": {"do": {"const": "fill"}, "target": {"$ref": "#/definitions/Target"}, "text": {"$ref": "#/definitions/Localized"}}},
+        {"type": "object", "additionalProperties": false, "required": ["do", "target", "state"], "properties": {"do": {"const": "expect"}, "target": {"$ref": "#/definitions/Target"}, "state": {"$ref": "#/definitions/State"}}}
+      ]
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "budgetMs", "steps"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+        "description": {"$ref": "#/definitions/Localized"},
+        "budgetMs": {"type": "integer", "minimum": 50, "maximum": 60000},
+        "steps": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/definitions/Step"}}
+      }
+    },
+    "Matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "version", "app", "mount", "rows"],
+      "properties": {
+        "$schema": {"type": "string"},
+        "version": {"const": 1},
+        "app": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{0,63}$"},
+        "mount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["phases", "landmarks"],
+          "properties": {
+            "phases": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"type": "object", "additionalProperties": false, "required": ["id", "budgetMs"], "properties": {"id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "budgetMs": {"type": "integer", "minimum": 50, "maximum": 60000}}}},
+            "landmarks": {"type": "array", "items": {"$ref": "#/definitions/Target"}}
+          }
+        },
+        "rows": {"type": "array", "minItems": 1, "maxItems": 128, "items": {"$ref": "#/definitions/Row"}}
+      }
+    }
+  }
+}

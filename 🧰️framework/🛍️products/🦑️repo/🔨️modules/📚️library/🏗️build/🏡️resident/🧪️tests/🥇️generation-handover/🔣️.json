@@ -1,0 +1,13 @@
+{
+  "since": 1000,
+  "tag": "aaaaaaaaaaaa",
+  "descriptors": [
+    {"name":"host-aaaaaaaaaaaa.json","startedAt":1000,"busy":3,"pid":1,"alive":true},
+    {"name":"host-bbbbbbbbbbbb.json","startedAt":900,"busy":0,"pid":2,"alive":true},
+    {"name":"host-cccccccccccc.json","startedAt":800,"busy":2,"pid":3,"alive":false},
+    {"name":"host-dddddddddddd.json","startedAt":1200,"busy":2,"pid":4,"alive":true},
+    {"name":"host-eeeeeeeeeeee.json","startedAt":700,"busy":2,"pid":5,"alive":true},
+    {"name":"notes.json","startedAt":600,"busy":9,"pid":6,"alive":true}
+  ],
+  "expectedPid": 5
+}

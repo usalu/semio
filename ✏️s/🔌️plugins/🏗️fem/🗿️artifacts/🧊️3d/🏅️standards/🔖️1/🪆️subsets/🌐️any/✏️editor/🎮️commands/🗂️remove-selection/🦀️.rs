@@ -16,6 +16,7 @@ use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::*;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use std::collections::HashSet;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
@@ -32,9 +33,27 @@ pub struct RemoveSelection {
     pub ids: Vec<String>,
 }
 
+/// 🔗️ The refusal of a removal that would leave `referrers` pointing at `id`: one localized notice per kind (`{id}` and the first five `{referrers}` filled from its params), raised before any mutation so nothing is removed and the shell says why.
+fn referenced(code: &'static str, id: &str, referrers: &[&str]) -> Fault {
+    let listed = referrers.iter().take(5).copied().collect::<Vec<_>>().join(", ");
+    let listed = if referrers.len() > 5 { format!("{listed}, …") } else { listed };
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), format!("'{id}' is still referenced by {listed}")).with_param("id", id).with_param("referrers", listed)
+}
+
+/// 🧱️ The material id a member names.
+fn element_material(element: &FemElement) -> &str {
+    match element { FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id }
+}
+
+/// 📐️ The section id a member names.
+fn element_section(element: &FemElement) -> &str {
+    match element { FemElement::Bar { section_id, .. } | FemElement::Frame { section_id, .. } => section_id }
+}
+
 /// 🗂️ Removes each interaction target once, with selected referrers before their selected parents, cascading to the
 /// supports, members and loads that name a removed node, member or solid so no row is left dangling.
 pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    if payload.ids.is_empty() { return Err(Fault::from("fem3d.remove-selection.empty")); }
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
     let mut seen = HashSet::new();
@@ -81,6 +100,17 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, 
     }
     for row in snapshot.elements.iter().filter(|row| removed_elements.contains(element_id(row)) && !selected.contains(&(FEM3D_GRANULARITY_ELEMENT, element_id(row)))) {
         operations.push((3, Fem3dMutation::DeleteElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: element_id(row).into() })));
+    }
+    let removed_combinations: HashSet<&str> = snapshot.combinations.iter().map(|row| row.id.as_str()).filter(|id| selected.contains(&(FEM3D_GRANULARITY_COMBINATION, *id))).collect();
+    for identity in &payload.ids {
+        let (Some(kind), Some(id)) = (fem3d_entity_kind(snapshot, identity), fem3d_entity_id(identity)) else { continue };
+        let (code, referrers): (&str, Vec<&str>) = match kind {
+            FEM3D_GRANULARITY_MATERIAL => ("fem3d.remove-selection.material-referenced", snapshot.elements.iter().filter(|row| !removed_elements.contains(element_id(row)) && element_material(row) == id).map(element_id).chain(snapshot.solids.iter().filter(|row| !removed_solids.contains(row.id.as_str()) && row.material_id == id).map(|row| row.id.as_str())).collect()),
+            FEM3D_GRANULARITY_SECTION => ("fem3d.remove-selection.section-referenced", snapshot.elements.iter().filter(|row| !removed_elements.contains(element_id(row)) && element_section(row) == id).map(element_id).collect()),
+            FEM3D_GRANULARITY_LOAD_CASE => ("fem3d.remove-selection.load-case-referenced", snapshot.combinations.iter().filter(|row| !removed_combinations.contains(row.id.as_str()) && row.terms.contains_key(id)).map(|row| row.id.as_str()).collect()),
+            _ => continue,
+        };
+        if !referrers.is_empty() { return Err(referenced(code, id, &referrers)); }
     }
     operations.sort_by_key(|(rank, _)| *rank);
     let operations: Vec<_> = operations.into_iter().map(|(_, mutation)| mutation).collect();

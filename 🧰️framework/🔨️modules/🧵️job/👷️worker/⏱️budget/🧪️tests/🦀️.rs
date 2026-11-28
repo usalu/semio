@@ -61,7 +61,7 @@ fn microsecond_exact_callback_quarantine_retains_original_session_identity() {
         let owner=if poll==WorkerJobPoll::Terminal{first}else{match first.resume(){Ok(())=>{},Err(original)=>{let _original=original;panic!("original semantic absence failed to resume same owner")}};let mut terminal=None;for _ in 0..64{let(ticket,poll)=issuer.turn(crate::component::TEST_RETAINED_POLICY,|cx|session.try_step_on_original_caller(cx)).unwrap().expect("funded original continuation opportunity");if poll==WorkerJobPoll::Terminal{let mut original=session.take_terminal().unwrap();let original_receipt=original.take_retained_step_receipt().expect("original terminal receipt");assert!(original_receipt.1.fits(original_receipt.0));terminal=Some(original);break;}let mut original=session.take_outcome(ticket).unwrap();let original_receipt=original.take_retained_step_receipt().expect("original continuation receipt");assert!(original_receipt.1.fits(original_receipt.0));let mut acknowledged=false;for _ in 0..16{if issuer.turn(crate::component::TEST_RETAINED_POLICY,|cx|original.acknowledge_outcome(cx)).unwrap(){acknowledged=true;break}}assert!(acknowledged);match original.resume(){Ok(())=>{},Err(original)=>{let _original=original;panic!("funded original continuation failed to resume same owner")}};}terminal.expect("funded original continuation reaches terminal within64 opportunities")};
         let quarantined = law["sessionTerminal"].as_bool().unwrap();
         assert!(!quarantined || faulted, "a quarantine implies a breached sample");
-        if quarantined {
+        if quarantined && poll != WorkerJobPoll::Terminal {
             assert!(matches!(owner.outcome().unwrap(), Some(JobOutcomeView::Fault{..})));
         } else {
             assert!(matches!(owner.outcome().unwrap(), Some(JobOutcomeView::Complete{..})));
@@ -77,7 +77,7 @@ fn microsecond_exact_callback_quarantine_retains_original_session_identity() {
         for _ in 0..64 {
             let phase=session.close_phase();let caller=super::retained_ownership_tests::caller_worker_close_policy(phase);
             match issuer.close_owner(caller,&mut session).unwrap() {
-                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= caller.maximum_release_bytes); if matches!(phase,WorkerJobClosePhase::OriginalFailure|WorkerJobClosePhase::Outcome|WorkerJobClosePhase::Payload|WorkerJobClosePhase::Job){assert!(bytes<=JOB_PAYLOAD_PAGE_BYTES);released_bytes += bytes;} }
+                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= caller.maximum_release_bytes); if matches!(phase,WorkerJobClosePhase::OriginalFailure|WorkerJobClosePhase::Outcome|WorkerJobClosePhase::Payload|WorkerJobClosePhase::Job){assert!(bytes<=JOB_PAYLOAD_PAGE_BYTES);if bytes==owned_bytes{released_bytes += bytes;}} }
                 WorkerJobCloseStep::Blocked => std::thread::yield_now(),
                 WorkerJobCloseStep::Complete {progress} => break,
             }

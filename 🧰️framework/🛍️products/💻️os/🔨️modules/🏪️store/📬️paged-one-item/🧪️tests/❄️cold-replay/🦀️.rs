@@ -144,7 +144,7 @@ fn cold_replay_meters_the_base_snapshot_clone_as_the_bounded_path_does() {
     let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/❄️cold-replay/🔣️.json")).unwrap();
     let edit = rows(&law["edits"]).remove(0);
     let unbounded = replay_step_with(paged::ColdMutationApplyFactory::default(), Arc::new(plain_document_json(&law["base"])), edit.clone(), 0);
-    let bounds = paged::ColdPreparationBounds { maximum_bytes: 1 << 20, mutation_bytes: |_| 64, snapshot_bytes: snapshot_priced_at_four_kib };
+    let bounds = paged::ColdPreparationBounds { maximum_bytes: 1 << 20, mutation_bytes: |_| 64, snapshot_bytes: snapshot_priced_at_four_kib, heap_quote: |snapshot, _| paged::ColdHeapQuote::reference(snapshot_priced_at_four_kib(snapshot), 64) };
     let bounded = replay_step_with(paged::ColdMutationApplyFactory::bounded(bounds), Arc::new(plain_document_json(&law["base"])), edit, 0);
     assert_eq!(pairs_of(&unbounded.0), pairs_of(&bounded.0), "metering never changes the replayed snapshot");
     assert!(bounded.2 >= unbounded.2 + 4096 - std::mem::size_of::<PlainDocument>(), "the base clone is charged at its measured size: {} vs {}", bounded.2, unbounded.2);

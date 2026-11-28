@@ -1,4 +1,4 @@
-"""🧩️ Independent oracle of the image shard rules: key and id of a logical path, capacity at birth, shard selection, aggregation, upfront admission, path budget and the due decision, written from the policy text with the standard library only."""
+"""🧩️ Independent oracle of the image shard rules: key and id of a logical path, capacity at birth, sizing from the measured need and growth targets, shard selection, aggregation, upfront admission, path budget and the due decision, written from the policy text with the standard library only."""
 import hashlib,json,re,sys
 GIB=1<<30
 CAPS={"darwin":32*GIB,"linux":128*GIB,"win32":64*GIB}
@@ -14,15 +14,32 @@ def key_of(rule,path):
         if len(parts)>len(prefix) and parts[:len(prefix)]==prefix and re.fullmatch(root["pattern"],parts[len(prefix)]):
             k=parts[len(prefix)];return {"root":index,"key":k,"id":shard_id(k)}
     return None
-def capacity(platform,rule,need,host_free):
+def capacity(platform,rule,need,host_free,budget_room=None):
     cap=CAPS[platform]
     if "maximumImageBytes" in rule:cap=min(cap,rule["maximumImageBytes"])
     cap=cap//ALIGN*ALIGN
     want=max(MINIMUM,-(-(need*(100+rule["headroomPercent"])//100)//ALIGN)*ALIGN)
     if want>cap:return None
     room=host_free*rule["hostFreeReservePercent"]//100//ALIGN*ALIGN
-    return None if room<want else min(cap,room)
-def select(rule,platform,live,path,host_free):
+    if room<want:return None
+    if budget_room is None:return min(cap,room)
+    left=max(0,budget_room)//ALIGN*ALIGN
+    return "budget" if left<want else min(cap,room,left)
+def want(rule,need):
+    return max(MINIMUM,-(-(need*(100+rule["headroomPercent"])//100)//ALIGN)*ALIGN)
+def cap_of(platform,rule):
+    return min(CAPS[platform],rule.get("maximumImageBytes",1<<62))//ALIGN*ALIGN
+def sized(platform,rule,need,measured):
+    return min(cap_of(platform,rule),want(rule,max(need,measured or 0)))
+GROW_AT=85
+def grow_target(platform,rule,capacity,used,measured,host_free,budget_room):
+    peak=max(used,measured or 0)
+    if peak*100<capacity*GROW_AT:return None
+    room=host_free*rule["hostFreeReservePercent"]//100//ALIGN*ALIGN
+    budget=1<<62 if budget_room is None else capacity+max(0,budget_room)//ALIGN*ALIGN
+    target=min(cap_of(platform,rule),want(rule,peak),room,budget)
+    return target if target>capacity else None
+def select(rule,platform,live,path,host_free,budget=None):
     if not rule["enabled"] or platform not in SUPPORTED:return {"kind":"home"}
     found=key_of(rule,path)
     if found is None:return {"kind":"home"}
@@ -36,8 +53,10 @@ def select(rule,platform,live,path,host_free):
     want=max(MINIMUM,-(-(need*(100+rule["headroomPercent"])//100)//ALIGN)*ALIGN)
     cap=min(CAPS[platform],rule.get("maximumImageBytes",1<<62))//ALIGN*ALIGN
     if want>cap:return {"kind":"refused",**base,"reason":"cap"}
-    c=capacity(platform,rule,need,host_free)
+    room=None if budget is None else budget-sum(r["capacityBytes"] for r in live if r["root"]==found["root"])
+    c=capacity(platform,rule,need,host_free,room)
     if c is None:return {"kind":"refused",**base,"reason":"host-free"}
+    if c=="budget":return {"kind":"refused",**base,"reason":"budget"}
     return {"kind":"birth",**base,"capacityBytes":c}
 def aggregate(rows):
     vol={}
@@ -83,10 +102,13 @@ def answers(c):
      "keys":[{"path":k["path"],**({"root":None,"key":None,"id":None} if key_of(rule,k["path"]) is None else key_of(rule,k["path"]))} for k in c["keys"]],
      "capacity":[capacity(x["platform"],rule,x["need"],x["hostFreeBytes"]) for x in c["capacity"]],
      "selection":[select({**rule,"enabled":x["enabled"]},x["platform"],x["live"],x["path"],x["hostFreeBytes"]) for x in c["selection"]],
+     "commitment":[select(rule,"darwin",x["live"],x["path"],x["hostFreeBytes"],x["budgetBytes"]) for x in c["commitment"]],
      "aggregate":[aggregate(x["rows"]) for x in c["aggregate"]],
      "admission":[admission(x["rows"],x["reserveBytes"],x["slackCreditBasisPoints"]) for x in c["admission"]],
      "paths":[paths(x["flavor"],x["directory"],x["id"]) for x in c["paths"]],
-     "reclaim":[[due(x["rule"],f) for f in x["facts"]] for x in c["reclaim"]]}
+     "reclaim":[[due(x["rule"],f) for f in x["facts"]] for x in c["reclaim"]],
+     "sizing":[sized(x["platform"],rule,x["need"],x["measuredBytes"]) for x in c["sizing"]],
+     "growth":[grow_target(x["platform"],rule,x["capacityBytes"],x["usedBytes"],x["measuredBytes"],x["hostFreeBytes"],x["budgetRoomBytes"]) for x in c["growth"]]}
 if __name__=="__main__":
     if sys.argv[1]=="id":print(shard_id(sys.argv[2]))
     elif sys.argv[1]=="ids":print(json.dumps([shard_id(k) for k in sys.argv[2:]]))

@@ -193,6 +193,21 @@ export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, 
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
+/** 🧱️ The shift an OPEN pane's whole body needs to stay reachable: its header is graded against every panel ({@link chromePanelSafeArea} on {@link chromePanelHeadBox}), its body only against the docks that cover at least `minShare` of the host's height — the ones that claim the viewport's side — so short chip rows and bands the tall body merely grazes never pin it. The wider of the two shifts wins. */
+export function chromePanelOpenSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, anchor: Anchor, panels: readonly SafeAreaBox[], yieldAxis: SafeAreaYield, gapPx: number, headPx: number, minShare: number): ChromePanelSafeArea {
+  const head = chromePanelSafeArea(chromePanelHeadBox(affordance, anchor, headPx), host, anchor, panels, yieldAxis, gapPx);
+  const tall = panels.filter((panel) => panel.bottom - panel.top >= (host.bottom - host.top) * minShare);
+  const body = chromePanelSafeArea(affordance, host, anchor, tall, yieldAxis, gapPx);
+  return body.inlinePx + body.blockPx > head.inlinePx + head.blockPx ? body : head;
+}
+
+/** ✂️ The cut-out an open top-right chrome-hosted dock leaves over the navbar's trailing controls (fullscreen, chat): the dock's cap row already reserves `trailingEndWidthPx` there ({@link chromeHostedPanelCapRowStyle}), but the dock paints and hit-tests above the navbar band, so without the cut-out the reserved strip hides the very controls it was kept free for. `undefined` for any other anchor or when nothing is reserved. */
+export function chromeHostedPanelTrailingClearStyle(anchor: Anchor, trailingEndWidthPx: number): React.CSSProperties | undefined {
+  if (anchor !== "top-right" || trailingEndWidthPx <= 0) return undefined;
+  const inner = `calc(100% - ${trailingEndWidthPx}px)`;
+  return { clipPath: `polygon(-100vmax -100vmax, ${inner} -100vmax, ${inner} var(--panel-header-height), 100vmax var(--panel-header-height), 100vmax 100vmax, -100vmax 100vmax)` };
+}
+
 /** 🪪️ The anchor-corner strip of an affordance (its header, `headPx` tall at its block edge): an open pane yields to the docks that cover ITS HEADER, not to every chip row or chrome band its tall body merely overlaps at the far end — those pinned it under the dock it should have cleared. */
 export function chromePanelHeadBox(affordance: SafeAreaBox, anchor: Anchor, headPx: number): SafeAreaBox {
   return anchorVertical(anchor) === "bottom" ? { ...affordance, top: Math.max(affordance.top, affordance.bottom - headPx) } : { ...affordance, bottom: Math.min(affordance.bottom, affordance.top + headPx) };
@@ -227,6 +242,7 @@ export function useChromePanelSafeArea({
   gapPx = 0,
   enabled = true,
   headPx,
+  openBodyShare,
 }: {
   readonly hostRef: React.RefObject<HTMLElement | null>;
   readonly affordanceRef: React.RefObject<HTMLElement | null>;
@@ -235,6 +251,7 @@ export function useChromePanelSafeArea({
   readonly gapPx?: number;
   readonly enabled?: boolean;
   readonly headPx?: number;
+  readonly openBodyShare?: number;
 }): ChromePanelSafeArea {
   const shellScope = useShellScopeOptional();
   const panels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
@@ -263,7 +280,8 @@ export function useChromePanelSafeArea({
       const blockShift = vertical === "top" ? -applied.blockPx : vertical === "bottom" ? applied.blockPx : 0;
       const inlineShift = horizontal === "right" ? applied.inlinePx : horizontal === "left" ? -applied.inlinePx : 0;
       const unreserved: SafeAreaBox = { left: rect.left + inlineShift, top: rect.top + blockShift, right: rect.right + inlineShift, bottom: rect.bottom + blockShift };
-      commit(chromePanelSafeArea(headPx === undefined ? unreserved : chromePanelHeadBox(unreserved, anchor, headPx), safeAreaBoxFromRect(host.getBoundingClientRect()), anchor, boxes, yieldAxis, gapPx));
+      const hostBox = safeAreaBoxFromRect(host.getBoundingClientRect());
+      commit(openBodyShare !== undefined && headPx !== undefined ? chromePanelOpenSafeArea(unreserved, hostBox, anchor, boxes, yieldAxis, gapPx, headPx, openBodyShare) : chromePanelSafeArea(headPx === undefined ? unreserved : chromePanelHeadBox(unreserved, anchor, headPx), hostBox, anchor, boxes, yieldAxis, gapPx));
     };
     sync();
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
@@ -274,6 +292,6 @@ export function useChromePanelSafeArea({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", sync);
     };
-  }, [affordanceRef, anchor, attached, enabled, gapPx, headPx, hostRef, panels, yieldAxis]);
+  }, [affordanceRef, anchor, attached, enabled, gapPx, headPx, hostRef, openBodyShare, panels, yieldAxis]);
   return safeArea;
 }

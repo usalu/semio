@@ -71,6 +71,26 @@ test("the unit key and the content hash equal hashlib over the compact JSON of t
  expect(new Set([unitKeyV1(first as never),...variants.map(row=>unitKeyV1(row as never))]).size).toBe(6);
 });
 
+test("the output-determinism contract and Cargo's unit identity are key inputs of a compilation, and of nothing else",()=>{
+ const unit={toolchain:"t",normalized:["--crate-name","a"],sourceSha256:"a".repeat(64),externs:[],environment:[]},run={...unit,sourceSha256:"run:"+"b".repeat(64)};
+ const keyOf=(row:object)=>ask("keys",{rows:[row]})[0] as string;
+ expect(unitKeyV1(unit)).toBe(keyOf(unit));
+ expect(unitKeyV1({...unit,cargoIdentity:"-3c9971acb8b0a698"})).toBe(keyOf({...unit,cargoIdentity:"-3c9971acb8b0a698"}));
+ expect(new Set([unitKeyV1(unit),unitKeyV1({...unit,cargoIdentity:"-3c9971acb8b0a698"}),unitKeyV1({...unit,cargoIdentity:"-4fe346c9fadf2a8a"})]).size).toBe(3);
+ expect(unitKeyV1({...run,cargoIdentity:"-3c9971acb8b0a698"})).toBe(unitKeyV1(run));
+ expect(unitKeyV1(run)).toBe(sha256V1(JSON.stringify([UNIT_CACHE_POLICY_V1.namespace,run.toolchain,run.normalized,run.sourceSha256,[],[]])));
+ expect(unitKeyV1(unit)).not.toBe(sha256V1(JSON.stringify([UNIT_CACHE_POLICY_V1.namespace,unit.toolchain,unit.normalized,unit.sourceSha256,[],[]])));
+});
+
+test("the key changes exactly when the version of the output-determinism contract changes, and the version names the rules it stands for",()=>{
+ const contract=UNIT_CACHE_POLICY_V1.key.outputDeterminism,unit={toolchain:"t",normalized:["--crate-name","a"],sourceSha256:"a".repeat(64),externs:[],environment:[]};
+ const under=(version:string)=>sha256V1(JSON.stringify([UNIT_CACHE_POLICY_V1.namespace,unit.toolchain,unit.normalized,unit.sourceSha256,[],[],["determinism",version]]));
+ expect(unitKeyV1(unit)).toBe(under(contract.version));
+ expect(under(String(Number(contract.version)+1))).not.toBe(unitKeyV1(unit));
+ const pinned:Record<string,string>={"2":"dd945055956faeb7"};
+ expect(sha256V1(JSON.stringify(contract.rules)).slice(0,16),"the rules of a contract changed without a new version: raise key.outputDeterminism.version in the schema and pin its rules here").toBe(pinned[contract.version]);
+});
+
 test("response files expand to one argument per line, only once and only when they exist",()=>{
  const rows=corpus.responses.map((row,index)=>{const directory=join(base,"r"+index);mkdirSync(directory,{recursive:true});for(const[name,text]of Object.entries(row.files))writeFileSync(join(directory,name),text);return{directory,row};}),answers=ask("responses",{rows:corpus.responses});
  for(const[index,{directory,row}]of rows.entries())expect(expandRustcArgumentsV1(row.args,directory),row.name).toEqual(answers[index]);

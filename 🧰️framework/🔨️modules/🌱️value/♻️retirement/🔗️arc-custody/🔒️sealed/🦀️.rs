@@ -16,11 +16,13 @@ mod frontier_tests;
 /// 🎟️ The original producer supplies admission and demand functions without an erased allocation.
 enum OriginalDemand{Native,Shared}
 enum OriginalSlot<'a,T:Send+Sync+'static>{Native(&'a mut Option<T>),Shared(&'a mut Option<SharedOriginal<T>>)}
-pub struct SharedIssuer<T:Send+Sync+'static>{native_admission:Option<retirement::NativeSharedRetirementAdmission<T>>,pub transfer_copy_bytes:fn(&T)->usize,ready:fn(&T)->bool,work:fn(&T,OriginalDemand)->Result<Option<u64>,ValueError>,demand:fn(&T,OriginalDemand)->Result<Option<RetirementDemand>,ValueError>,admit:fn(OriginalSlot<'_,T>,&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,RetainedCloneProgress)>>}
+/// ❄️ Selects a cold quote on the borrowed payload or its immediate cold release.
+pub enum ColdOp<'a,T>{Quote(&'a T),Release(T)}
+pub struct SharedIssuer<T:Send+Sync+'static>{cold:for<'a> fn(ColdOp<'a,T>)->Option<usize>,native_admission:Option<retirement::NativeSharedRetirementAdmission<T>>,pub transfer_copy_bytes:fn(&T)->usize,ready:fn(&T)->bool,work:fn(&T,OriginalDemand)->Result<Option<u64>,ValueError>,demand:fn(&T,OriginalDemand)->Result<Option<RetirementDemand>,ValueError>,admit:fn(OriginalSlot<'_,T>,&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,RetainedCloneProgress)>>}
 impl<T:Send+Sync+'static> Copy for SharedIssuer<T>{}
 impl<T:Send+Sync+'static> Clone for SharedIssuer<T>{fn clone(&self)->Self{*self}}
 impl<T:RetireOwned+Sync> SharedIssuer<T>{
- pub fn owned()->Self{Self{native_admission:T::native_shared_original_admission(),transfer_copy_bytes:|_|size_of::<T>(),ready:RetireOwned::retirement_ready,work:|value,mode|match mode{OriginalDemand::Native=>Ok(Some(1)),OriginalDemand::Shared=>value.shared_original_work_demand()},demand:|value,mode|match mode{OriginalDemand::Native=>native_payload_demand(value).map(Some),OriginalDemand::Shared=>{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no controlled shared issuer"))}value.shared_original_demands()}},admit:|slot,effect|match slot{OriginalSlot::Shared(slot)=>T::shared_original_retirement(slot,effect),OriginalSlot::Native(slot)=>semio_framework_value_retirement::admit_retirement_cursor(slot,effect)}}}
+ pub fn owned()->Self{Self{cold:|operation|match operation{ColdOp::Quote(value)=>value.retirement_cold_bytes(),ColdOp::Release(value)=>value.retirement_cold_release().ok()},native_admission:T::native_shared_original_admission(),transfer_copy_bytes:|_|size_of::<T>(),ready:RetireOwned::retirement_ready,work:|value,mode|match mode{OriginalDemand::Native=>Ok(Some(1)),OriginalDemand::Shared=>value.shared_original_work_demand()},demand:|value,mode|match mode{OriginalDemand::Native=>native_payload_demand(value).map(Some),OriginalDemand::Shared=>{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no controlled shared issuer"))}value.shared_original_demands()}},admit:|slot,effect|match slot{OriginalSlot::Shared(slot)=>T::shared_original_retirement(slot,effect),OriginalSlot::Native(slot)=>semio_framework_value_retirement::admit_retirement_cursor(slot,effect)}}}
 
 }
 
@@ -223,7 +225,7 @@ impl<T:Send+Sync+'static> Cursor<T>{
  }
 }
 
-impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement_ready(&self)->bool{self.source.as_ref().is_none_or(|source|(self.issuer.ready)(source.get()))}type RetirementCursor=Cursor<T>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{handle:self,pending:ManuallyDrop::new(None),original:None}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement_cold_bytes(&self)->Option<usize>{if !self.original_is_exclusive(){return None}(self.issuer.cold)(ColdOp::Quote(self.get())).and_then(|bytes|bytes.checked_add(Self::birth_bytes()))}fn retirement_cold_release(mut self)->Result<usize,Self>{let Some(bytes)=self.retirement_cold_bytes()else{return Err(self)};let cold=self.issuer.cold;let source=self.source.take().expect("verified original remains initialized");let mut owner=match source.try_owner(){Ok(owner)=>owner,Err(_)=>unreachable!("verified original remains physically exclusive")};cold(ColdOp::Release(owner.take_value().expect("verified original payload remains exclusive")));Ok(bytes)}fn retirement_ready(&self)->bool{self.source.as_ref().is_none_or(|source|(self.issuer.ready)(source.get()))}type RetirementCursor=Cursor<T>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{handle:self,pending:ManuallyDrop::new(None),original:None}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetirementStep,OriginalRetirementFailure>,ValueError>{
   if effect.invocation().is_none(){return Err(ValueError::invariant("sealed retirement requires its original producer invocation"))}
@@ -245,7 +247,12 @@ impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<T:Send+Sync+'static> Cursor<T>{
- fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.nested(grant))}
+ /// 📤️ Borrows the unwrapped payload once every alias and storage step finished, before it is admitted as a cursor.
+ pub fn unwrapped(&self)->Option<&T>{if self.handle.source.is_none()&&self.original.is_none(){self.pending.as_ref()}else{None}}
+ /// 🎁️ Hands the unwrapped payload to an inline cold release instead of an erased cursor birth.
+ pub fn take_unwrapped(&mut self)->Option<T>{if self.unwrapped().is_some(){self.pending.take()}else{None}}
+ /// 🎟️ Steps the sealed close under the caller's grant.
+ pub fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.nested(grant))}
 }
 
 impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"sealed cursor retains its original payload and issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);}}}}

@@ -196,10 +196,5 @@
       "description": "Structural identity with the pets numeric parity tolerance of 1e-9 (design §10), applied as an absolute difference; projections compared under it are scaled so that 1e-9 is also their relative bound. Ids, kinds, orders, integers and every non-numeric field still compare exactly.",
       "tolerance": 1e-9
     }
-  ],
-  "oracleHostPackages": [
-    { "implementation": "python", "package": "numpy", "version": "2.5.0", "module": "numpy", "rationale": "📐️ Sine and cosine, SeedSequence words, homogeneous matrices, norms, matrix powers and cumulative weights of the numeric references." },
-    { "implementation": "python", "package": "scipy", "version": "1.18.0", "module": "scipy", "rationale": "🎞️ Root finding on the Bézier easing, integration of the hop arc, of the pendulum behind every swing and of the descent under a canopy, and reachability of the behaviour graph." },
-    { "implementation": "python", "package": "jsonschema", "version": "4.26.0", "module": "jsonschema", "rationale": "🧬️ Draft 7 validation of every pets document against the normative schema." }
   ]
 }

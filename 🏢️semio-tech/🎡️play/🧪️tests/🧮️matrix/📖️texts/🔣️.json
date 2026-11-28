@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "id": "play-matrix",
+  "languages": ["en", "de"],
+  "messages": {
+    "shell.not-found": {"en": "the Play overview has no pane {pane}", "de": "die Play-Übersicht hat keinen Bereich {pane}"},
+    "shell.error": {"en": "the shell of pane {pane} reported an error: {detail}", "de": "die Shell des Bereichs {pane} meldete einen Fehler: {detail}"},
+    "shell.faults": {"en": "pane {pane} faulted while booting: {faults}", "de": "Bereich {pane} meldete beim Start Fehler: {faults}"},
+    "origin.missing": {"en": "no Play service origin: {variable} is not set; run the Play matrix target, which serves Play and forwards its origin", "de": "kein Play-Dienst: {variable} ist nicht gesetzt; das Play-Matrix-Ziel ausführen, das Play bereitstellt und seinen Ursprung weitergibt"}
+  }
+}

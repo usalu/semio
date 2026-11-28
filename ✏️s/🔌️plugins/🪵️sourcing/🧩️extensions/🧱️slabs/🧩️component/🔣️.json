@@ -1,17 +1,7 @@
 {
-  "descriptorVersion": 1,
-  "packageId": "semio:sourcing-module-slabs",
-  "role": "extension",
-  "manifest": {
-    "pluginId": "sourcing-module-slabs",
-    "label": "Sourcing Module Slabs",
-    "version": "0.1.0",
-    "apps": [],
-    "examples": [],
-    "capabilities": [],
+  "contributions": {
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "slab",
@@ -19,27 +9,41 @@
           "label": "Slabs",
           "moduleId": "slabs",
           "typologyJson": "{\"id\":\"slabs\",\"label\":\"Slabs\",\"children\":[{\"id\":\"concrete\",\"label\":\"Concrete\"},{\"id\":\"clt\",\"label\":\"CLT\"},{\"id\":\"hollow-core\",\"label\":\"Hollow Core\"}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ],
-    "commands": [],
+    ]
+  },
+  "descriptorVersion": 1,
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 25
+  },
+  "manifest": {
+    "apps": [],
     "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
     "dependencies": [
       {
         "pluginId": "sourcing",
         "version": "=0.1.0"
       }
-    ]
-  },
-  "execution": "declarative",
-  "executionProtocol": {
-    "appChannelVersion": 25
-  },
-  "quotas": {},
-  "contributions": {
+    ],
+    "examples": [],
+    "label": {
+      "native": {
+        "de": "Beschaffungsmodul Platten",
+        "en": "Sourcing Module Slabs"
+      },
+      "reuse": {
+        "de": "Beschaffungsmodul Platten",
+        "en": "Sourcing Module Slabs"
+      }
+    },
+    "pluginId": "sourcing-module-slabs",
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "slab",
@@ -47,8 +51,13 @@
           "label": "Slabs",
           "moduleId": "slabs",
           "typologyJson": "{\"id\":\"slabs\",\"label\":\"Slabs\",\"children\":[{\"id\":\"concrete\",\"label\":\"Concrete\"},{\"id\":\"clt\",\"label\":\"CLT\"},{\"id\":\"hollow-core\",\"label\":\"Hollow Core\"}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ]
-  }
+    ],
+    "version": "0.1.0"
+  },
+  "packageId": "semio:sourcing-module-slabs",
+  "quotas": {},
+  "role": "extension"
 }

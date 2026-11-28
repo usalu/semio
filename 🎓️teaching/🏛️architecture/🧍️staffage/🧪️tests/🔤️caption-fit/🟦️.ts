@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { PLANAR_VIEWPOINTS, type Asset, type Language } from "../../🧬️schema/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { catalogAssetsById } from "../🧰️support/🧊️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { writeSvg } from "../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
 import { explanationBox } from "../../🔨️modules/🎨️depiction/🪧️explanation/🟦️.ts";
@@ -27,7 +27,7 @@ const ANTA = resolve(STAFFAGE_ROOT, "../../../🧰️framework/🔨️modules/�
 let assets: ReadonlyMap<string, Asset>;
 
 beforeAll(async () => {
-  assets = new Map((await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets.map((asset) => [asset.id, asset]));
+  assets = await catalogAssetsById(["gas-boiler", "gas-hob", "ceiling-diffuser"]);
 });
 
 function widths(texts: readonly Text[]): number[] {

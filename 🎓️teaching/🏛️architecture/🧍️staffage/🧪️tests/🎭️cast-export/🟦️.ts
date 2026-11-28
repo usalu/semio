@@ -44,7 +44,7 @@ describe("🎭️ cast manifest schema", () => {
     const course = JSON.parse(readFileSync(join(STAFFAGE_ROOT, "../⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🔣️.json"), "utf8")) as CastManifest;
     expect(validate(course), JSON.stringify(validate.errors?.slice(0, 3))).toBe(true);
     expect(castManifestIssues(course)).toEqual([]);
-    const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"));
+    const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"), undefined, new Set(Object.values(course.casts).map((cast) => cast.asset)));
     const presets = new Set(((await loadEnvironments(join(STAFFAGE_ROOT, "🗂️catalog")))?.presets ?? []).map((preset) => preset.id));
     for (const [id, cast] of Object.entries(course.casts)) {
       const asset = catalog.assets.find((candidate) => candidate.id === cast.asset);

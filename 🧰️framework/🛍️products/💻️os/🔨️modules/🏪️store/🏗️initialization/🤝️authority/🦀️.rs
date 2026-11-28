@@ -28,6 +28,11 @@ where
     }
     /// 📏️ Quotes an indivisible next business step before the worker enters its callback.
     fn next_step_demands(&self) -> Result<RetirementDemand, ValueError> { Ok(Default::default()) }
+    /// 🪙️ Quotes the smallest grant, items included, the next indivisible business step makes progress under; a host whose largest grant is below it can never run that step. Defaults to the physical quote with one item.
+    fn next_step_floor(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneGrant, ValueError> {
+        let demand = self.next_step_demands()?;
+        Ok(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth })
+    }
     /// 🧷️ Binds the replacement slot identity this initializer belongs to, so its staleness is judged against the store's current slot; an initializer without staleness semantics ignores it.
     fn bind_replacement(&mut self, _replacement: semio_framework_job::ReplacementIdentity) {}
     fn request_cancel(&mut self);

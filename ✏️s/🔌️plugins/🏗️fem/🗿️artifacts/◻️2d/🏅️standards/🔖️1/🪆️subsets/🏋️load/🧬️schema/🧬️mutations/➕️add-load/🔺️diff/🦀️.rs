@@ -6,13 +6,13 @@
 //! load id. The middle guard is what makes the two doors into `loads` agree: the same nodal load on
 //! a missing node is now refused whether it arrives inside a new case or is attached to an old one.
 use super::AddLoad;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasePatch;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadInsertion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadCasePatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesModification;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadInsertion;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadsDelta;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 

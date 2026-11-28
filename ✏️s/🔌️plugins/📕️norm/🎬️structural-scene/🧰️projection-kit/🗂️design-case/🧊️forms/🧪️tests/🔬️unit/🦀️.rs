@@ -556,6 +556,7 @@ fn the_profile_forms_equal_the_independent_python_oracle() {
     let (residual, _) = prism_of(&burnt, "c:residual");
     let slab = match &burnt.entities.iter().find(|e| e.entity.id == "c:slab").expect("slab").geometry {
         Geometry::Solid(SolidGeometry { shape: SolidShape::Box { size, .. } }) => size.z,
+        Geometry::Solid(SolidGeometry { shape: SolidShape::Prism { base, .. } }) => spread(base.outer.points.iter().map(|p| p.y)),
         other => panic!("{other:?}"),
     };
     let shaken = draw_with::<Toy>(&row("m", "M", &[("b", 300.0), ("l", 6.0), ("h", 0.5)]), &pose(), &CheckReport::default(), "cases", "cases", &MaterialRole::Timber, &moving()).expect("draw");
@@ -581,7 +582,7 @@ fn the_profile_forms_equal_the_independent_python_oracle() {
         { "form": "mode", "inputs": { "amplitude": 0.1, "shape": [[0.0, 0.0], [0.5, 1.0], [1.0, 0.0]], "peak": 2.0, "values": [0.0, 1.0, 0.0, 0.0, -1.0, 0.0], "columns": 3, "rows": 2, "l": 6.0, "b": 0.3 }, "measured": { "ghost_max": ghost.samples.iter().map(|s| s.delta.z.abs()).fold(0.0, f64::max), "heat": values, "nodes": grid.points.len(), "extent": [spread(grid.points.iter().map(|p| p.x)), spread(grid.points.iter().map(|p| p.y))] } },
         { "form": "assembly", "inputs": { "origin": [10.0, 20.0], "yaw": 0.7, "subs": subs.iter().map(|(tag, at)| serde_json::json!({ "tag": tag, "at": at })).collect::<Vec<_>>() }, "measured": { "count": placed.entities.len(), "origins": placed.entities.iter().map(origin_of).collect::<Vec<_>>() } },
     ]);
-    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧰️projection-kit/🗂️design-case/🧊️forms/🔮️oracle/🐍️.py");
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🗂️design-case/🧊️forms/🔮️oracle/🐍️.py");
     let output = norm::python_oracle::run_ok(script, &[], Some(cases.to_string().as_bytes()));
     let verdict = String::from_utf8_lossy(&output.stdout);
     assert!(verdict.contains("\"ok\": true"), "oracle verdict: {verdict}");

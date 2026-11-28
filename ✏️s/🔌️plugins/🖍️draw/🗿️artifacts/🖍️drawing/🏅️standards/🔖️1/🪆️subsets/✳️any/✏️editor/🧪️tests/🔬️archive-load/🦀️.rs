@@ -93,3 +93,22 @@ async fn document_archive_replays_the_edited_drawing_on_reopen() {
     artifact_laws::close_registered_fixture_app(&mut reopened.0, policy, reopened.1.cx()).expect("close reopened Drawing");
     assert!(reopened.close_terminal_is_empty());
 }
+
+/// 🔂️ The browser's boot-then-pick sequence: Demo replaces the boot store, then Blank replaces Demo while Demo's displaced store may still retire.
+#[semio_framework_async_macros::async_test]
+async fn demo_then_blank_example_load_settles_two_consecutive_replacements() {
+    let mut app = drawing_app().await;
+    app.bind_instance_id(7).await;
+    let (pack, spr) = published_load(&mut app, DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }), 7).await;
+    let (status, _) = settle_archive(&mut app, 91, pack, spr).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    assert_eq!(app.snapshot().expect("demo snapshot").id, "semio");
+    let (pack, spr) = published_load(&mut app, DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "blank".into() }), 7).await;
+    let (status, _) = settle_archive(&mut app, 93, pack, spr).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    let snapshot = app.snapshot().expect("blank snapshot");
+    assert_eq!(snapshot.id, "blank", "blank replaced demo");
+    assert!(snapshot.layers.is_empty(), "blank has no layers");
+    artifact_laws::close_registered_fixture_app(&mut app.0, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("archive close");
+    assert!(app.close_terminal_is_empty());
+}

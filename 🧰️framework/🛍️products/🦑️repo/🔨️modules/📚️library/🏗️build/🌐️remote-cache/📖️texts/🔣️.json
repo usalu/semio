@@ -189,6 +189,10 @@
       "en": "The cache server answered the status request with a document that is not a server status.",
       "de": "Der Cache-Server hat die Statusanfrage mit einem Dokument beantwortet, das kein Serverstatus ist."
     },
+    "status.divergences.hour": {
+      "en": "{hour}: {count} cache divergences by kind of output: {kinds}",
+      "de": "{hour}: {count} Cache-Abweichungen nach Art der Ausgabe: {kinds}"
+    },
     "status.off": {
       "en": "The remote cache is off: set SEMIO_REMOTE_CACHE_ENDPOINT to an http or https origin.",
       "de": "Der Remote-Cache ist aus: Setze SEMIO_REMOTE_CACHE_ENDPOINT auf einen http- oder https-Ursprung."

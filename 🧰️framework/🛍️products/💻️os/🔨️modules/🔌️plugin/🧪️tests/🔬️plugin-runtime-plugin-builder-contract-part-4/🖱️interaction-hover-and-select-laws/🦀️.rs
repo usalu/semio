@@ -82,7 +82,7 @@
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity, cx).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity, cx).await;
         let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
-        app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
+        app.0.dispatch_ctx().test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
@@ -141,7 +141,7 @@
             ui_scope: UiDirtyScope::None,
             ..Default::default()
         };
-        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
+        let result = app.0.dispatch_ctx().test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
@@ -175,12 +175,12 @@
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
-        app.test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pick lands");
+        app.0.dispatch_ctx().test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pick lands");
         assert_eq!(app.interaction.test_interaction_selection_snapshot(&app.stores).selection.get("items").map(|selection| selection.ids.len()), Some(1));
 
         let carrier_scope = UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: true, tools: false, engagements: false, measures: false, labels: false };
         let clear = Emit { effects: vec![inline_interaction_select(interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))], ui_scope: carrier_scope, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("clear lands");
+        let result = app.0.dispatch_ctx().test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("clear lands");
         assert!(result.requested_effects.is_empty(), "nothing is left for the host to replay: {:?}", result.requested_effects);
         assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
@@ -189,7 +189,7 @@
         assert!(window_bodies.iter().any(|body| body == "some.window"), "the carrier's own window body survives the merge: {window_bodies:?}");
         assert!(window_bodies.iter().any(|body| body == TEST_APP_WINDOW_BODY_KEY), "the verb's declared window body joins it: {window_bodies:?}");
         assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "the verb's declared panel body joins it: {panel_bodies:?}");
-        assert!(*utilities, "the carrier's own section flag survives the merge");
+        assert!(utilities, "the carrier's own section flag survives the merge");
         close_reserved_app(&mut app, mounted_policy,cx);
 
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -216,7 +216,7 @@
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let verb = Effect::DispatchAction { req: RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), delay_ms: 0 };
         let emit = Emit { effects: vec![Effect::Navigate { uri: "semio://home".into() }, verb], ui_scope: UiDirtyScope::None, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
+        let result = app.0.dispatch_ctx().test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the DispatchAction interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);

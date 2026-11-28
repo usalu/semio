@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "id": "norm-final-cancelled-at-the-final-budget", "key": "semio-hub-norm-component@semio_hub_norm_component|wasm32-wasip2|prototype|cdylib", "exit": 143, "peakRssBytes": 4306239488, "cache": false, "recorded": true },
+    { "id": "final-cancelled-exactly-at-the-budget-is-not-above-it", "key": "semio-hub-norm-component@semio_hub_norm_component|wasm32-wasip2|prototype|cdylib", "exit": 143, "peakRssBytes": 4294967296, "cache": false, "recorded": false },
+    { "id": "library-cancelled-above-the-library-budget", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 143, "peakRssBytes": 3558514688, "cache": false, "recorded": true },
+    { "id": "library-killed-by-sigkill-is-an-outside-kill", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 137, "peakRssBytes": 3558514688, "cache": false, "recorded": false },
+    { "id": "library-terminated-below-its-budget-is-an-outside-kill", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 143, "peakRssBytes": 1000000000, "cache": false, "recorded": false },
+    { "id": "carved-final-cancelled-above-its-carving-budget", "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|cdylib", "exit": 143, "peakRssBytes": 9100000000, "cache": false, "recorded": true },
+    { "id": "carved-final-cancelled-below-its-carving-budget", "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|cdylib", "exit": 143, "peakRssBytes": 4500000000, "cache": false, "recorded": false },
+    { "id": "successful-unit-is-always-recorded", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 0, "peakRssBytes": 900000000, "cache": false, "recorded": true },
+    { "id": "cached-unit-is-never-recorded", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 0, "peakRssBytes": 900000000, "cache": true, "recorded": false },
+    { "id": "compile-error-is-never-recorded", "key": "semio-hub-norm@semio_hub_norm|wasm32-wasip2|prototype|lib", "exit": 101, "peakRssBytes": 3558514688, "cache": false, "recorded": false }
+  ]
+}

@@ -51,14 +51,14 @@
       "name": "open",
       "cancelled": false,
       "deadlineOpen": true,
-      "fuel": 6,
+      "fuel": 64,
       "visited": true
     },
     {
       "name": "cancelled-born-custody",
       "cancelled": true,
       "deadlineOpen": true,
-      "fuel": 6,
+      "fuel": 64,
       "visited": true
     },
     {

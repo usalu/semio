@@ -1,0 +1,5 @@
+,
+    "storage.root-capability-refused": {
+      "en": "Refused to {operation} below {root}: a test run may only destroy storage inside its own sandbox, never a live checkout, its .cache/b partitions or the fleet store ({reason}); create the storage in a temporary directory of the test and retry",
+      "de": "{operation} unterhalb von {root} verweigert: ein Testlauf darf nur Speicher in seiner eigenen Sandbox zerstören, nie einen Live-Checkout, dessen .cache/b-Partitionen oder den Flottenspeicher ({reason}); den Speicher in einem temporären Verzeichnis des Tests anlegen und erneut versuchen"
+    }

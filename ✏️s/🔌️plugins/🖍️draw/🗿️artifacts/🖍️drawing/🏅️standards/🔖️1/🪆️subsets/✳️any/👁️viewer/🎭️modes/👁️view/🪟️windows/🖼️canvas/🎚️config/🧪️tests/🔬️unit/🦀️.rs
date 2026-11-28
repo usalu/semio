@@ -22,11 +22,12 @@ async fn drawing_viewer_camera_ownership_and_restore() {
         let before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         for step in fixture["steps"].as_array().ok_or("camera fixture steps missing")? {
             let context = view.for_window_instance(step["window"].as_str().ok_or("camera fixture window missing")?).ok_or("camera fixture window unknown")?;
-            let command = DrawingViewCommand::SetCamera { camera: step["camera"].to_string() };
+            let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(&step["camera"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+            let command = DrawingViewCommand::SetCamera { camera };
             let bytes = protocol::OpBinary::encode_op(&command).map_err(|error| format!("{error:?}"))?;
             let decoded = <DrawingViewCommand as protocol::OpBinary>::decode_op(&bytes).map_err(|error| format!("{error:?}"))?;
             if decoded != command { return Err("viewer camera command binary roundtrip changed payload".into()); }
-            let meta = ActionMeta { instance_id: 91,view_state: Some(context.into()),..artifact_app_laws::meta("drawing-viewer-camera") };
+            let meta = ActionMeta { instance_id: 91,view_state: Some(context.into()),..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
             semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if receipt.lanes != vec![semio_plugin::app::TypedOperationResultLane::WindowConfig,semio_plugin::app::TypedOperationResultLane::Ui,semio_plugin::app::TypedOperationResultLane::Terminal] { return Err(format!("viewer camera published unexpected lanes: {:?}",receipt.lanes)); }
@@ -75,11 +76,11 @@ async fn config_inverse_sums_to_the_negative_diff() {
 fn set_mutation_wire_is_the_flat_tagged_record() {
     use semio_framework_value::{FromValue, ToValue};
     let mutation = DrawingViewerCanvasWindowConfigMutation::Set(DrawingViewerCanvasWindowConfigSet { viewport: store::Viewport2d { x: 1.5, y: -2.0, zoom: 3.0 }, framed: true });
-    let expected: semio_framework_value::DslValue = serde_json::json!({ "kind": "set", "viewport": { "x": 1.5, "y": -2.0, "zoom": 3.0 }, "framed": true }).into();
+    let expected: semio_framework_value::DslValue = semio_plugin::dsl_value!({ "kind": "set", "viewport": { "x": 1.5, "y": -2.0, "zoom": 3.0 }, "framed": true });
     assert_eq!(mutation.to_value(), expected);
     assert_eq!(DrawingViewerCanvasWindowConfigMutation::from_value(expected).expect("flat tagged set decodes"), mutation);
     let binary = protocol::OpBinary::encode_op(&mutation).unwrap();
-    let decoded = store::pack_rt::decode_wire_value(&binary).unwrap();
+    let decoded = store::pack_rt::renormalize_whole_number_floats(store::pack_rt::decode_pack_value(&binary).unwrap());
     assert_eq!(DrawingViewerCanvasWindowConfigMutation::from_value(decoded).unwrap(), mutation);
     assert_eq!(<DrawingViewerCanvasWindowConfigMutation as protocol::OpBinary>::decode_op(&binary).unwrap(), mutation);
     assert!(DrawingViewerCanvasWindowConfigOwner::native_pair_demands().is_ok());

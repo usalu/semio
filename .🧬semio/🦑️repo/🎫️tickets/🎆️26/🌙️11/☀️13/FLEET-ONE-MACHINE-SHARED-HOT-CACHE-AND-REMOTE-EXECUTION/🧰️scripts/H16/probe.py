@@ -25,7 +25,7 @@ def open_session(name):
     if not(env and lane and sid):raise SystemExit("session open failed: "+out)
     return {"env":env.group(1),"lane":lane.group(1),"id":sid.group(1)}
 
-def lane_of(agent):
+def lane_for_agent(agent):
     for path in glob.glob(os.path.join(UNIT,"l","*","lane.json")):
         try:
             if json.load(open(path)).get("agent")==agent:return os.path.basename(os.path.dirname(path))
@@ -68,59 +68,88 @@ def tally(rows):
 
 def artifacts(lane,crates):
     out={}
-    for path in glob.glob(os.path.join(UNIT,"l",lane,"t*","*","deps","lib*.r*"))+glob.glob(os.path.join(UNIT,"l",lane,"t*","*","*","deps","lib*.r*")):
-        stem=re.sub(r"-[0-9a-f]{16}(\.r(lib|meta))$",r"\1",os.path.basename(path))
-        if not stem.startswith("lib") or not stem.endswith((".rlib",".rmeta")):continue
-        name=stem[3:].rsplit(".",1)[0].replace("-","_")
-        if crates and name not in crates:continue
-        out[stem]=hashlib.sha256(open(path,"rb").read()).hexdigest()
+    for path in glob.glob(os.path.join(UNIT,"l",lane,"prototype","build","*","*","out","lib*.r*")):
+        m=re.match(r"lib(.+)-[0-9a-f]{16}\.(rlib|rmeta)$",os.path.basename(path))
+        if not m or (crates and m.group(1) not in crates):continue
+        out[m.group(1)+"."+m.group(2)]=hashlib.sha256(open(path,"rb").read()).hexdigest()
     return out
 
-def run(label,argv,extra_env,crates,session_name):
+def closure(package):
+    seen={};todo=[package]
+    index={}
+    for line in open(os.path.join(ROOT,"Cargo.toml"),encoding="utf8"):
+        m=re.match(r'\s*"([^"]+)",\s*$',line)
+        if m:
+            try:
+                c=open(os.path.join(ROOT,m.group(1),"Cargo.toml"),encoding="utf8").read()
+                index[re.search(r'^name\s*=\s*"([^"]+)"',c,re.M).group(1)]=os.path.join(ROOT,m.group(1))
+            except Exception:pass
+    while todo:
+        name=todo.pop()
+        if name in seen or name not in index:continue
+        seen[name]=1
+        text=open(os.path.join(index[name],"Cargo.toml"),encoding="utf8").read().split("[dev-dependencies]")[0]
+        todo+=re.findall(r'^([\w-]+)\s*=\s*\{[^}]*path\s*=',text,re.M)
+    return {n.replace("-","_") for n in seen}
+
+def lane_for(primary,t0,t1,agent):
+    best=None
+    for path in glob.glob(os.path.join(EVENTS,"*.jsonl")):
+        if os.path.getmtime(path)*1000<t0 or os.path.basename(path) in("uploader.jsonl","offload.jsonl"):continue
+        for line in open(path,errors="ignore"):
+            if primary not in line:continue
+            try:r=json.loads(line)
+            except ValueError:continue
+            if t0<=r["atMs"]<=t1+2000 and r["crate"]==primary:best=r["lane"]
+    return best or lane_for_agent(agent)
+
+OPEN=[]
+def run(label,argv,extra_env,crates,session_name,primary):
     s=open_session(session_name)
     env=dict(os.environ,SEMIO_AGENT_SESSION=s["env"],SEMIO_LANGUAGE="en",**extra_env)
     t0=int(time.time()*1000);w=time.time()
     p=subprocess.run(argv,capture_output=True,text=True,cwd=ROOT,env=env)
     wall=time.time()-w;t1=int(time.time()*1000)
-    lane=lane_of(session_name) or s["lane"]
+    lane=lane_for(primary,t0,t1,session_name) or s["lane"]
     rows=events(lane,t0,t1)
     row={"phase":label,"exit":p.returncode,"wallSeconds":round(wall,1),"lane":lane,**tally(rows),"artifacts":artifacts(lane,crates)}
     row["tail"]=(p.stdout+p.stderr).strip().splitlines()[-6:]
-    close_session(s)
+    OPEN.append(s)
     return row,rows
 
+SCRIPT=os.path.join(ROOT,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts")
 def forget(crates):
-    wrapper=os.path.join(UNIT,"bin","rustc-wrapper");n=0
+    bun=sorted(glob.glob(os.path.join(ROOT,".cache/b/t/m/bun/*/bun")))[0];n=0
     for c in sorted(crates):
-        for spelling in {c,c.replace("_","-")}:
-            r=subprocess.run([wrapper,"--semio-unit-cache","forget","--crate",spelling,"--root",UNIT],capture_output=True,text=True,cwd=ROOT)
-            try:n+=json.loads(r.stdout.strip().splitlines()[-1])["entries"]
-            except Exception:pass
+        r=subprocess.run([bun,SCRIPT,"--semio-unit-cache","forget","--crate",c,"--root",UNIT],capture_output=True,text=True,cwd=ROOT)
+        try:n+=json.loads(r.stdout.strip().splitlines()[-1])["entries"]
+        except Exception:pass
     return n
 
 def rust(args):
-    crate=args.crate;nonce="h16_%d"%int(time.time())
-    base=["repo","cargo","--store=shared","--configuration=prototype","--","build","-p",crate,"--lib"]
-    fresh=["repo","cargo","--store=shared","--configuration=prototype","--","rustc","-p",crate,"--lib","--","--cfg",nonce]
-    down={"SEMIO_REMOTE_CACHE_ENDPOINT":"http://127.0.0.1:%d"%closed_port(),"SEMIO_REMOTE_EXECUTION_ENDPOINT":"http://127.0.0.1:%d"%closed_port()}
-    rows=[];tag=time.strftime("%H%M%S")
-    first,_=run("1 local (cold target, every unit local entry present)",base,{},None,"H16-local-"+tag);rows.append(first)
-    crates=set(first["crates"])
-    forgotten=forget(crates)
-    for label,argv,env,name,pre in [
-      ("2 fleet (cold target, local entries forgotten)",base,{},"fleet",True),
-      ("3 warm (cold target, local entries present)",base,{},"warm",False),
-      ("4 fresh-key cold (primary crate key never seen: compile or offload)",fresh,{},"fresh-cold",False),
-      ("5 fresh-key warm (cold target, local entry present)",fresh,{},"fresh-warm",False),
-      ("6 fresh-key fleet (local entries forgotten, fleet copy of own bytes)",fresh,{},"fresh-fleet",True),
-      ("7 remote down (local entries forgotten, cache+execution endpoints closed)",base,down,"down",True)]:
-        if pre:forgotten+=forget(crates)
-        r,_=run(label,argv,env,crates,"H16-%s-%s"%(name,tag));rows.append(r)
+    crate=args.crate;primary=crate.replace("-","_");nonce="h16_%d"%int(time.time());crates=closure(crate)
+    cargo=["repo","cargo","--store=shared","--configuration=prototype","--"]
+    counter=[100]
+    def base_cmd():
+        counter[0]+=7;return cargo+["rustc","-p",crate,"--lib","--","--diagnostic-width=%d"%counter[0]]
+    fresh=lambda n:cargo+["rustc","-p",crate,"--lib","--","--cfg",nonce+n]
+    down={"SEMIO_REMOTE_CACHE_ENDPOINT_OVERRIDE":"1","SEMIO_REMOTE_CACHE_ENDPOINT":"http://127.0.0.1:%d"%closed_port(),"SEMIO_REMOTE_EXECUTION_ENDPOINT":"http://127.0.0.1:%d"%closed_port()}
+    rows=[];tag=time.strftime("%H%M%S");forgotten=0
+    plan=[("up","fresh key, remote up: fleet miss, compile or offload, publish",fresh("a"),{},False),
+          ("down","fresh key, remote down: cache+execution endpoints closed, must compile locally",fresh("b"),down,False),
+          ("down-wipe","as down, local entries of the closure forgotten first",fresh("c"),down,True)]
+    try:
+        for name,label,argv,env,wipe in plan:
+            if args.only and name not in args.only.split(","):continue
+            if wipe:forgotten+=forget(crates)
+            r,_=run(name+": "+label,argv,env,crates,"H16-%s-%s"%(name,tag),primary);rows.append(r)
+    finally:
+        for s in OPEN:close_session(s)
     return {"crate":crate,"nonce":nonce,"closureCrates":sorted(crates),"localEntriesForgotten":forgotten,"phases":rows}
 
 def main():
     ap=argparse.ArgumentParser();sub=ap.add_subparsers(dest="cmd",required=True)
-    a=sub.add_parser("rust");a.add_argument("--crate",required=True);a.add_argument("--out",required=True)
+    a=sub.add_parser("rust");a.add_argument("--crate",required=True);a.add_argument("--out",required=True);a.add_argument("--only")
     t=sub.add_parser("ts");t.add_argument("--project",required=True);t.add_argument("--out",required=True)
     args=ap.parse_args()
     result=rust(args) if args.cmd=="rust" else None

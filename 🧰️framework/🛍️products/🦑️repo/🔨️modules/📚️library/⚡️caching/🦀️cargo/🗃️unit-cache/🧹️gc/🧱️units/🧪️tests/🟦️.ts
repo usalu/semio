@@ -1,13 +1,13 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,relative,resolve,sep} from "node:path";
 import {acquireResourceLease} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {collectGarbageSingleFlightV1,reclaimUnitStorageV1,unitBudgetBytesV1} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
-import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
+import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,unitsCoveredV1,planUnitsByImageV1,type UnitImagesV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
 import {ownProcessIdentityV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const checkout=resolve(import.meta.dir).split(sep+"🧰️framework")[0]!;
@@ -23,7 +23,7 @@ const privateWorkspace=(prefix:string):Readonly<{root:string;store:string;leases
  throw Error(`No temporary directory outside the checkout ${checkout} exists for a private test workspace`);
 };
 const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(componentSchema,"units.json");
-const policyUnitStamp="units.stamp",hour=3600000,python=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json")],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
+const policyUnitStamp="units.stamp",hour=3600000,python=(rows:readonly unknown[],mode:"plan"|"cover"|"images"="plan"):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json"),mode],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
 
 test("the fixture is closed and the planner equals the independent Python oracle on every vector and on 400 seeded random states",()=>{
  const validate=ajv.compile({$ref:"units.json#/definitions/Vector"});for(const vector of fixture.vectors)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
@@ -45,12 +45,69 @@ test("the policy keeps what a live build needs: a held unit never goes however o
  expect(planUnitsV1({needBytes:1e12,nowMs:now,units:units.map(unit=>({...unit,held:true}))})).toEqual([]);
 });
 
+test("the units a running build covers are the newest variants and the units used in the active window, equal to the Python oracle on every vector and on 300 seeded random profiles",()=>{
+ const validate=ajv.compile({$ref:"units.json#/definitions/Cover"});for(const vector of fixture.covers)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
+ for(const vector of fixture.covers)expect([...unitsCoveredV1(vector.units,vector.nowMs)].sort(),vector.name).toEqual(vector.covered);
+ expect(python(fixture.covers,"cover")).toEqual(fixture.covers.map(vector=>vector.covered));
+ let seed=20261127;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},now=2000*hour,states:{nowMs:number;units:{path:string;lastUsedMs:number}[]}[]=[];
+ for(let index=0;index<300;index++){const units:{path:string;lastUsedMs:number}[]=[];for(const crate of["a","b","c"].filter(()=>next(4)>0))for(let variant=0;variant<next(8);variant++)units.push({path:`/s/b/p/prototype/build/${crate}/${variant.toString(16).padStart(16,"0")}`,lastUsedMs:now-next(80*60)*60000});states.push({nowMs:now,units});}
+ const expected=python(states,"cover");states.forEach((state,at)=>expect([...unitsCoveredV1(state.units,state.nowMs)].sort(),JSON.stringify(state).slice(0,200)).toEqual(expected[at] as string[]));
+ expect(policy.activeBuildMilliseconds).toBeGreaterThan(policy.heldGraceMilliseconds);expect(policy.activeBuildMilliseconds).toBeLessThan(policy.idleMilliseconds);
+});
+
 function unit(store:string,profile:string,crate:string,hash:string,bytes:number,ageHours:number){
  const path=join(store,profile,"build",crate,hash);mkdirSync(join(path,"fingerprint"),{recursive:true});mkdirSync(join(path,"out"),{recursive:true});
  writeFileSync(join(path,"fingerprint","invoked.timestamp"),"x");writeFileSync(join(path,".lock"),"");writeFileSync(join(path,"out","lib.rlib"),Buffer.alloc(bytes,1));
  const when=(Date.now()-ageHours*hour)/1000;for(const target of[join(path,"out","lib.rlib"),join(path,"fingerprint","invoked.timestamp"),join(path,"fingerprint"),join(path,"out"),join(path,".lock"),path])utimesSync(target,when,when);
  return path;
 }
+
+const imagesOf=(vector:{mounts:readonly{prefix:string;id:string}[];needs:Readonly<Record<string,number|undefined>>;budgets?:Readonly<Record<string,number|undefined>>}):UnitImagesV1=>({of:path=>vector.mounts.filter(mount=>path.startsWith(mount.prefix+"/")).sort((left,right)=>right.prefix.length-left.prefix.length)[0]?.id??"home",needBytes:id=>vector.needs[id]??0,budgetBytes:id=>vector.budgets?.[id],satisfied:()=>false});
+
+test("a split partition is planned image by image: the plan equals the independent Python oracle on every vector and on 300 seeded random partitions, and one image is the plain plan",()=>{
+ const validate=ajv.compile({$ref:"units.json#/definitions/ImagePlan"});for(const vector of fixture.images)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
+ for(const vector of fixture.images)expect(planUnitsByImageV1({nowMs:vector.nowMs,units:vector.units,images:imagesOf(vector)}) as unknown,vector.name).toEqual(vector.remove);
+ expect(python(fixture.images,"images")).toEqual(fixture.images.map(vector=>vector.remove));
+ let seed=20261128;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},now=2000*hour,states:{nowMs:number;units:BuildUnitV1[];mounts:{prefix:string;id:string}[];needs:Record<string,number>;budgets:Record<string,number>}[]=[];
+ for(let index=0;index<300;index++){
+  const mounts=["a","b","c"].filter(()=>next(3)>0).map(id=>({prefix:"/s/u/l/"+id,id})),units:BuildUnitV1[]=[],needs:Record<string,number>={},budgets:Record<string,number>={};
+  for(const image of["a","b","c","home"]){
+   const base=image==="home"?"/s/b/p":"/s/u/l/"+image;for(const crate of["x","y"].filter(()=>next(3)>0))for(let variant=0;variant<next(6);variant++)units.push({path:`${base}/prototype/build/${crate}/${variant.toString(16).padStart(16,"0")}`,crate,profile:"prototype",bytes:next(300)*1048576,lastUsedMs:now-next(70*60)*60000,held:next(8)===0});
+   if(next(2))needs[image]=next(1500)*1048576;if(next(4)===0)budgets[image]=next(900)*1048576;
+  }
+  states.push({nowMs:now,units,mounts,needs,budgets});
+ }
+ const expected=python(states,"images");states.forEach((state,at)=>expect(planUnitsByImageV1({nowMs:state.nowMs,units:state.units,images:imagesOf(state)}) as unknown,JSON.stringify(state).slice(0,200)).toEqual(expected[at]));
+ for(const state of states){const single={mounts:[],needs:{home:state.needs.home??0},budgets:state.budgets.home===undefined?{}:{home:state.budgets.home}};expect(planUnitsByImageV1({nowMs:state.nowMs,units:state.units,images:imagesOf(single)}) as unknown).toEqual(planUnitsV1({needBytes:single.needs.home,...state.budgets.home===undefined?{}:{budgetBytes:state.budgets.home},nowMs:state.nowMs,units:state.units}));}
+});
+
+test("every Cargo compile launch of the repository asks Cargo to touch the fingerprint of each unit it plans, the evidence by which the collector tells the units a held profile's builds use",()=>{
+ for(const site of["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts","🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts"]){
+  const text=readFileSync(join(checkout,site),"utf8");expect(text.includes('CARGO_UNSTABLE_MTIME_ON_USE:'),site).toBe(true);expect(/CARGO_UNSTABLE_MTIME_ON_USE: ?"true"/u.test(text),site).toBe(true);
+ }
+});
+
+test("a unit a build only reuses is used when its fingerprint file is touched (Cargo -Z mtime-on-use), though nothing else in it changed, and a unit of a held profile stays then however old it was built",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-touch-")),store=join(root,"m"),leased={leases:async()=>"busy" as const,lock:()=>({release:()=>undefined})};
+ try{
+  const reused=unit(store,"b/p/prototype","serde","r1",4096,100),idle=unit(store,"b/p/prototype","serde","r2",4096,101),third=unit(store,"b/p/prototype","serde","r3",4096,102),fourth=unit(store,"b/p/prototype","serde","r4",4096,103),touched=new Date();
+  writeFileSync(join(reused,"fingerprint","lib-serde"),"");utimesSync(join(reused,"fingerprint"),new Date(Date.now()-100*hour),new Date(Date.now()-100*hour));utimesSync(join(reused,"fingerprint","lib-serde"),touched,touched);
+  const rows=await measureUnitsV1(unitProfilesV1(store),{nowMs:Date.now(),busy:()=>true,lock:()=>"missing"});
+  expect(Date.now()-rows.find(row=>row.path===reused)!.lastUsedMs).toBeLessThan(60000);expect(rows.filter(row=>row.held).map(row=>row.path).sort()).toEqual([reused,idle].sort());
+  const result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,...leased});expect(result.removed.map(row=>row.path).sort()).toEqual([third,fourth].sort());expect(existsSync(reused)&&existsSync(idle)).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a unit a build touches between measuring and removing stays, however old it was",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-race-")),store=join(root,"m");
+ try{
+  const victim=unit(store,"b/p/prototype","serde","v1",4096,103),gone=unit(store,"b/p/prototype","serde","v2",4096,102),newest=[unit(store,"b/p/prototype","serde","v3",4096,101),unit(store,"b/p/prototype","serde","v4",4096,100)],old=new Date(Date.now()-103*hour);
+  writeFileSync(join(victim,"fingerprint","lib-serde"),"");for(const target of[join(victim,"fingerprint","lib-serde"),join(victim,"fingerprint")])utimesSync(target,old,old);
+  let probes=0;const lock=(path:string)=>{if(path===join(victim,".lock")&&++probes===2){const now=new Date();utimesSync(join(victim,"fingerprint","lib-serde"),now,now);}return {release:()=>undefined};};
+  const result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>0,leases:async()=>({release:()=>undefined}),lock});
+  expect(probes).toBe(2);expect(existsSync(victim),"touched meanwhile").toBe(true);expect(existsSync(gone),"untouched variant beside it").toBe(false);expect(newest.every(existsSync)).toBe(true);expect(result.removed.map(row=>row.path)).toEqual([gone]);expect(result.held).toBe(1);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 test("profiles are found below the declared bases at two levels, units need a fingerprint, and measuring reads sizes and last change from the files",async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
@@ -64,7 +121,7 @@ test("profiles are found below the declared bases at two levels, units need a fi
   expect(byPath.get(first)!.bytes).toBeGreaterThanOrEqual(65536);expect(Math.abs(now-byPath.get(first)!.lastUsedMs-5*hour)).toBeLessThan(120000);expect(Math.abs(now-byPath.get(second)!.lastUsedMs-30*hour)).toBeLessThan(120000);
   expect(rows.every(row=>!row.held)).toBe(true);
   const unsupported=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>false,lock:()=>"unsupported"});expect(unsupported.map(row=>row.held)).toEqual([false,false,true]);
-  const leased=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"missing"});expect(leased.every(row=>row.held),"a profile compilers hold holds every unit of it").toBe(true);
+  const leased=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"missing"});expect(leased.every(row=>row.held),"a profile compilers hold keeps the units its builds use (one variant each is the newest)").toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -83,12 +140,12 @@ test("a collection frees stale units under an exclusive profile lease, keeps a u
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("a profile that compilers hold loses no unit however idle or superseded, and pressure stops once the image has its free space",async()=>{
+test("a profile that compilers hold loses only the units no running build uses, and pressure stops once the image has its free space",async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
  try{
   const old=unit(store,"b/p/prototype","a","1",65536,40),mid=unit(store,"b/p/prototype","a","2",65536,10),fresh=unit(store,"b/p/prototype","a","3",65536,4),newest=unit(store,"b/p/prototype","a","4",65536,1);
   const busy=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,leases:async()=>"busy",lock:()=>({release:()=>undefined}),report:{language:"en",write:()=>undefined}});
-  expect(busy.busyProfiles).toBe(1);expect(busy.removed).toEqual([]);expect([old,mid,fresh,newest].every(existsSync)).toBe(true);expect(busy.held).toBe(4);
+  expect(busy.busyProfiles).toBe(1);expect(busy.removed.map(row=>row.path)).toEqual([old,mid]);expect([old,mid].some(existsSync),"the variants no build uses go").toBe(false);expect([fresh,newest].every(existsSync),"the units the build uses stay").toBe(true);expect(busy.held).toBe(2);
   const again=unit(store,"b/p/prototype","b","1",65536,20),second=unit(store,"b/p/prototype","b","2",65536,15),third=unit(store,"b/p/prototype","b","3",65536,10),fourth=unit(store,"b/p/prototype","b","4",65536,5);let calls=0;
   const idle=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,satisfied:()=>++calls>1,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})});
   expect(idle.removed.length).toBeLessThan(6);expect(existsSync(again)).toBe(false);expect(fourth&&second&&third).toBeTruthy();
@@ -96,7 +153,7 @@ test("a profile that compilers hold loses no unit however idle or superseded, an
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("a collector that runs while a compiler holds the build lease of the profile leaves every unit of it, idle, superseded, unlocked, over budget and under pressure alike, and takes them once the compiler is gone",async()=>{
+test("a collector that runs while a compiler holds the build lease of the profile leaves the units a build uses, idle, unlocked, over budget and under pressure alike, takes the variants no build uses, and takes the rest once the compiler is gone",async()=>{
  if(!["darwin","linux"].includes(process.platform))return;
  const {root,store,leases}=privateWorkspace("units-holder-");
  try{
@@ -104,12 +161,12 @@ test("a collector that runs while a compiler holds the build lease of the profil
   const paths=["a","b","c","d","e"].map((hash,index)=>unit(store,"b/p/prototype","pack-http",hash,65536,200-index)),profile=unitProfilesV1(store)[0]!;
   const compiler=await acquireResourceLease({directory:leases,resource:profileLeaseResourceV1(profile),mode:"shared",signal:new AbortController().signal,timeoutMs:0});
   try{
-   const dry=await collectUnitsV1(store,{dryRun:true,needBytes:()=>10**12,budgetBytes:0});expect(dry.removed).toEqual([]);expect(dry.held).toBe(paths.length);expect(dry.busyProfiles).toBe(1);
-   const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(applied.removed).toEqual([]);expect(paths.every(existsSync)).toBe(true);
-   await reclaimUnitStorageV1(store,10**12,{capacityBytes:1});expect(paths.every(existsSync),"the reclaim before a build leaves them too").toBe(true);
-   const swept=await collectGarbageSingleFlightV1(join(store,"u"),1,{nowMs:Date.now()+365*24*hour,volume:()=>({volumeBytes:2**40,freeBytes:1})});if(!swept.running)expect(swept.applied.units).toBe(0);expect(paths.every(existsSync),"the pressure sweep leaves them too").toBe(true);
+   const dry=await collectUnitsV1(store,{dryRun:true,needBytes:()=>10**12,budgetBytes:0});expect(dry.removed.map(row=>row.path).sort()).toEqual(paths.slice(0,3).sort());expect(dry.held).toBe(2);expect(dry.busyProfiles).toBe(1);
+   const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(applied.removed.map(row=>row.path).sort()).toEqual(paths.slice(0,3).sort());expect(paths.slice(0,3).some(existsSync)).toBe(false);expect(paths.slice(3).every(existsSync),"the two newest variants stay").toBe(true);
+   await reclaimUnitStorageV1(store,10**12,{capacityBytes:1});expect(paths.slice(3).every(existsSync),"the reclaim before a build leaves them too").toBe(true);
+   const swept=await collectGarbageSingleFlightV1(join(store,"u"),1,{nowMs:Date.now()+365*24*hour,volume:()=>({volumeBytes:2**40,freeBytes:1})});if(!swept.running)expect(swept.applied.units).toBe(0);expect(paths.slice(3).every(existsSync),"the pressure sweep leaves them too").toBe(true);
   }finally{compiler.release();}
-  const gone=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(gone.removed.length).toBe(paths.length);expect(paths.some(existsSync)).toBe(false);
+  const gone=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(gone.removed.length).toBe(2);expect(paths.some(existsSync)).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);
 

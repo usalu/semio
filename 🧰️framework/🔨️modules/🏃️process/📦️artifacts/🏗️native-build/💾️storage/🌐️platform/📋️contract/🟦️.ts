@@ -1,6 +1,6 @@
 import type {NativeProtectedParentRequestV1,NativeImageMaintenanceRequestV1,NativeImageRetirementExpectationV1,NativeImageRetirementRequestV1,NativeImageMaintenanceResultV1,NativeImageMaintenanceWaitObservationV1,NativeImageMaintenanceWaitObserverV1,NativeImageMaintenanceCustodyV1,NativeImageStorageV1,NativeProtectedParentReadV1,NativeProtectedMaintenanceRequestV1,NativeProtectedMaintenanceAssociationV1,NativeProtectedMaintenanceDeclarationV1,NativeProtectedMaintenanceProviderV1,NativePhysicalIdentityV1} from "../../📋️contract/🟦️.ts";
 export type {NativeProtectedParentRequestV1,NativeImageMaintenanceRequestV1,NativeImageRetirementExpectationV1,NativeImageRetirementRequestV1,NativeImageMaintenanceResultV1,NativeImageMaintenanceWaitObservationV1,NativeImageMaintenanceWaitObserverV1,NativeImageMaintenanceCustodyV1,NativeImageStorageV1,NativeProtectedParentReadV1,NativeProtectedMaintenanceRequestV1,NativeProtectedMaintenanceAssociationV1,NativeProtectedMaintenanceDeclarationV1,NativeProtectedMaintenanceProviderV1,NativePhysicalIdentityV1} from "../../📋️contract/🟦️.ts";
-import {lstatSync,opendirSync,statfsSync} from "node:fs";
+import {existsSync,lstatSync,opendirSync,readlinkSync,statfsSync} from "node:fs";
 import {basename,dirname,join,resolve,relative,isAbsolute,sep} from "node:path";
 import {nativeImageShardMountPointV1} from "../../🍎️image/🧩️shard/🟦️.ts";
 import {nativeStorageAttachedV1,nativeStorageBackingFilenameV1,nativeStorageFilesystemBytesV1,nativeStorageSpaceV1,nativeStorageFreshSpaceV1,nativeStorageUsedBytesV1} from "../../🔌️backends/📋️contract/🟦️.ts";
@@ -59,6 +59,9 @@ export function nativeImageDirectoryNamesV1(path:string,maximum:number):readonly
 
 /** 🚧️ Keeps every pending publication invisible to ordinary readers, including unsafe namespace shapes. */
 export function requireNativeImagePublicationSettledV1(directory:string):void{const path=requireMaterializedPathV1(join(directory,protocol.publicationDirectory));try{lstatSync(path);}catch(error){if(error&&typeof error==="object"&&"code"in error&&error.code==="ENOENT")return;throw error;}throw Error("Pending Native image publication must settle before ordinary admission");}
+/** 🔗️ Refuses to retire an image whose mount root a live link of the checkout still points into (the root `node_modules` of the dependencies image): deleting it would leave every tool that resolves through the link failing until a reinstall. Retire after the link is gone or dangles. Pure over the filesystem, language-agnostic.
+ * @see ./🧪️tests/🟦️.ts */
+export function requireNativeImageUnlinkedV1(directory:string):void{const checkout=resolve(directory,"..","..","..");if(basename(dirname(directory))!=="b"||basename(dirname(dirname(directory)))!==".cache")return;const link=join(checkout,"node_modules");let target:string;try{if(!lstatSync(link).isSymbolicLink())return;target=resolve(dirname(link),readlinkSync(link));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}if(!(target+sep).startsWith(directory+sep)||!existsSync(target))return;throw Error("Live link "+link+" points into the Native image "+directory+"; retiring it would break every tool that resolves through the link, so remove the link first");}
 
 declare const protectedParentBrand:unique symbol;
 /** 🔐️ Identifies only a live actual protected EX callback, never an image or a writer port. */

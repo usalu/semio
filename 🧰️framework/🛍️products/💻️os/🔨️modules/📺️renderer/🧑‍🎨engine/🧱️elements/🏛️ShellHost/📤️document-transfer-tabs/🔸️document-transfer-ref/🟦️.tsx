@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-po
 import { FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_ROW_CONTROL_ARG_ROW, type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
 import { focusedRowKeyV1, isFocusRowControlKeyV1 } from "../../🎯️focus-row-control/🟦️.ts";
 import { handleGripFocusKeyV1 } from "../../🎯️grip-focus/🟦️.ts";
-import { KEYBINDING_UNOWNED_CODE, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1 } from "../../⌨️window-scope/🟦️.ts";
+import { KEYBINDING_UNOWNED_CODE, effectiveChordsV1, historyVerbForChordV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1 } from "../../⌨️window-scope/🟦️.ts";
 import { SHELL_KEYBINDINGS, formatKeybindingShortcut, useShellKeydown } from "@semio-tech/ui-react";
 import { localDocumentOwnerIdentityForSessionV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { actionStageKey } from "../../../🐚️Shell/🗃️state-shapes/🟦️.ts";
@@ -58,11 +58,6 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
       if (event.defaultPrevented || controlOwnsKeyboardEvent(event)) return;
       if (!session) return;
       const keyApp = focusedApp ?? session.app;
-      const parseKeys = (keys: string) =>
-        keys
-          .split(",")
-          .map((key) => key.trim().toLowerCase())
-          .filter(Boolean);
       const instances = focusedWindowInstancesRef.current;
       const focusedWindowId = activeWindowIdRef.current ?? (focusedSpawnedId !== null ? (instances[0]?.id ?? null) : (session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null));
       const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current)
@@ -100,7 +95,7 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
         }
       }
       for (const binding of keyApp.keybindings) {
-        for (const chord of parseKeys(binding.keys)) {
+        for (const chord of effectiveChordsV1(binding.keys, binding.action.action, uiKeybindingOverrides)) {
           if (!keyboardEventMatchesChord(event, chord)) continue;
           if (reservedChords.has(chord)) continue;
           const target = resolveKeybindingTargetWindowV1({ kinds: scopeKinds, mounted, focusedWindowId, actionId: binding.action.action });
@@ -137,15 +132,10 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
           return;
         }
       }
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z" && keyApp.role !== "viewer") {
+      const historyVerb = keyApp.role === "viewer" ? null : historyVerbForChordV1(event, uiKeybindingOverrides, keyboardEventMatchesChord);
+      if (historyVerb !== null) {
         event.preventDefault();
-        onAction({ controllerId: keyApp.controllerId, action: event.shiftKey ? "redo" : "undo" });
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "y" && keyApp.role !== "viewer") {
-        event.preventDefault();
-        onAction({ controllerId: keyApp.controllerId, action: "redo" });
-        return;
+        onAction({ controllerId: keyApp.controllerId, action: historyVerb });
       }
     },
     [onAction, session, focusedApp, focusedSpawnedId, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology, utilityGenerationFor, toolGeneration],

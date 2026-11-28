@@ -7868,6 +7868,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-norm-din4108-model",
  "semio-s-plugin-norm-compliance",
+ "serde_json",
 ]
 
 [[package]]

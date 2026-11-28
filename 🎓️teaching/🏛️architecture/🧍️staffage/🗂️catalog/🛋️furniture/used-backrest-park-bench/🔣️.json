@@ -259,7 +259,7 @@
     "emissivity": 0.92,
     "solarAbsorptivity": 0.68,
     "densityKgM3": 2400,
-    "conductivityWmK": 2.0,
+    "conductivityWmK": 2,
     "specificHeatJKgK": 1000,
     "elasticModulusPa": 30000000000,
     "strengthPa": 20000000,
@@ -414,7 +414,7 @@
      },
      "section": {
       "areaM2": 0.00198,
-      "secondMomentM4": 7.986e-08,
+      "secondMomentM4": 7.986e-8,
       "extremeFibreM": 0.011,
       "material": "cast-iron-painted",
       "title": {
@@ -448,7 +448,7 @@
      },
      "section": {
       "areaM2": 0.00198,
-      "secondMomentM4": 7.986e-08,
+      "secondMomentM4": 7.986e-8,
       "extremeFibreM": 0.011,
       "material": "cast-iron-painted",
       "title": {
@@ -482,7 +482,7 @@
      },
      "section": {
       "areaM2": 0.01755,
-      "secondMomentM4": 2.962e-06,
+      "secondMomentM4": 0.000002962,
       "extremeFibreM": 0.0225,
       "material": "hardwood-greyed",
       "title": {
@@ -509,14 +509,14 @@
      "mass": {
       "kg": 8.53,
       "comX": 0.9,
-      "comY": -4e-05,
+      "comY": -0.00004,
       "distribution": "uniform",
       "source": "authored-estimate",
       "reference": "wagenfuehr-holzatlas-2007"
      },
      "section": {
       "areaM2": 0.0052,
-      "secondMomentM4": 6.933e-07,
+      "secondMomentM4": 6.933e-7,
       "extremeFibreM": 0.02,
       "material": "hardwood-greyed",
       "title": {
@@ -543,14 +543,14 @@
      "mass": {
       "kg": 8.53,
       "comX": 0.9,
-      "comY": -4e-05,
+      "comY": -0.00004,
       "distribution": "uniform",
       "source": "authored-estimate",
       "reference": "wagenfuehr-holzatlas-2007"
      },
      "section": {
       "areaM2": 0.0052,
-      "secondMomentM4": 6.933e-07,
+      "secondMomentM4": 6.933e-7,
       "extremeFibreM": 0.02,
       "material": "hardwood-greyed",
       "title": {
@@ -723,7 +723,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -743,7 +743,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -763,7 +763,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -981,7 +981,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -1001,7 +1001,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -1021,7 +1021,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -1156,7 +1156,7 @@
         -0.21991
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -1233,7 +1233,7 @@
         -0.07546
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -1310,7 +1310,7 @@
         0.06898
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -1387,7 +1387,7 @@
         -0.00137
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -1464,7 +1464,7 @@
         -0.00137
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -1584,11 +1584,11 @@
        ],
        [
         0.0053,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -1633,11 +1633,11 @@
        ],
        [
         0.0053,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -1682,11 +1682,11 @@
        ],
        [
         0.0053,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -1731,11 +1731,11 @@
        ],
        [
         0.0053,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.25882,
        -0.96593
       ],
@@ -1780,11 +1780,11 @@
        ],
        [
         0.0053,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.25882,
        -0.96593
       ],
@@ -1821,11 +1821,11 @@
        ],
        [
         0.0025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -1854,11 +1854,11 @@
        ],
        [
         0.0025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -1887,11 +1887,11 @@
        ],
        [
         0.0025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
+       0,
        0.99619,
        0.08716
       ],
@@ -2296,7 +2296,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-r",
@@ -2318,7 +2318,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-l",
@@ -2340,7 +2340,7 @@
        "translation": [
         0.9,
         -0.00306,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -2361,8 +2361,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-lower",
@@ -2383,8 +2383,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-upper",
@@ -2551,7 +2551,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -2571,7 +2571,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -2591,7 +2591,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -2741,7 +2741,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -2761,7 +2761,7 @@
       "transform": {
        "translation": [
         0.01,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -2781,7 +2781,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -2812,7 +2812,7 @@
         -0.22026
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -2841,7 +2841,7 @@
         -0.07581
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -2870,7 +2870,7 @@
         0.06864
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -2899,7 +2899,7 @@
         0.0025
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -2928,7 +2928,7 @@
         0.0025
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -3386,7 +3386,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-r",
@@ -3408,7 +3408,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-l",
@@ -3430,7 +3430,7 @@
        "translation": [
         0.9,
         -0.00306,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -3451,8 +3451,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-lower",
@@ -3473,8 +3473,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-upper",
@@ -3633,7 +3633,7 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -3653,7 +3653,7 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -3673,7 +3673,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -3815,7 +3815,7 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -3835,7 +3835,7 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -3855,7 +3855,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -3886,7 +3886,7 @@
         -0.23026
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -3915,7 +3915,7 @@
         -0.10076
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -3944,7 +3944,7 @@
         0.0025
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -3973,7 +3973,7 @@
         0.0025
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      }
     ],
@@ -4330,7 +4330,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-r",
@@ -4352,7 +4352,7 @@
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-l",
@@ -4374,7 +4374,7 @@
        "translation": [
         0.9,
         -0.00306,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -4395,8 +4395,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-lower",
@@ -4417,8 +4417,8 @@
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-upper",
@@ -4548,7 +4548,7 @@
       "transform": {
        "translation": [
         0.0375,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -4568,7 +4568,7 @@
       "transform": {
        "translation": [
         0.0375,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -4588,7 +4588,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -4701,7 +4701,7 @@
       "transform": {
        "translation": [
         0.0375,
-        0.0,
+        0,
         -0.21723
        ]
       }
@@ -4721,7 +4721,7 @@
       "transform": {
        "translation": [
         0.0375,
-        0.0,
+        0,
         0.27527
        ]
       }
@@ -4741,7 +4741,7 @@
       "transform": {
        "translation": [
         0.2125,
-        0.0,
+        0,
         0.02375
        ]
       }
@@ -4772,7 +4772,7 @@
         -0.22026
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -4801,7 +4801,7 @@
         -0.09076
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -4830,7 +4830,7 @@
         -0.01571
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      },
      {
@@ -4859,7 +4859,7 @@
         -0.01303
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.8
      }
     ],
@@ -5000,23 +5000,39 @@
      },
      {
       "id": "bolt-seat-1",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "seat",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.172504048,
+        0.0375
+       ],
+       [
+        0.172504048,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       -0.996192351,
+       -0.087182571
+      ],
+      "origin": [
        0.12,
        0.06268,
        -0.14897
       ],
-      "p1": [
-       0.12,
-       -0.07181,
-       -0.16074
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5030,23 +5046,39 @@
      },
      {
       "id": "bolt-seat-2",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "seat",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.172493215,
+        0.0375
+       ],
+       [
+        0.172493215,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       -0.996198219,
+       -0.08711549
+      ],
+      "origin": [
        0.12,
        0.05134,
        -0.01947
       ],
-      "p1": [
-       0.12,
-       -0.08314,
-       -0.03123
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5060,23 +5092,39 @@
      },
      {
       "id": "bolt-back-1",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "back-lower",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.172499865,
+        0.0375
+       ],
+       [
+        0.172499865,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       -0.258815073,
+       0.965926891
+      ],
+      "origin": [
        0.12,
        -0.01029,
        -0.07522
       ],
-      "p1": [
-       0.12,
-       -0.04523,
-       0.05518
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5090,23 +5138,39 @@
      },
      {
       "id": "bolt-back-2",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "back-upper",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.172499865,
+        0.0375
+       ],
+       [
+        0.172499865,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       -0.258815073,
+       0.965926891
+      ],
+      "origin": [
        0.12,
        0.00937,
        -0.06995
       ],
-      "p1": [
-       0.12,
-       -0.02557,
-       0.06045
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5120,23 +5184,39 @@
      },
      {
       "id": "dowel-joint-r",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "footing-r",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.2625,
+        0.0375
+       ],
+       [
+        0.2625,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
        -0.075,
-       0.0,
+       0,
        -0.2225
       ],
-      "p1": [
-       0.15,
-       0.0,
-       -0.2225
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5150,23 +5230,39 @@
      },
      {
       "id": "dowel-joint-l",
-      "kind": "capsule",
+      "kind": "revolve",
       "bone": "footing-l",
       "material": "steel-galvanised",
       "role": "detail",
       "tone": 0.25,
-      "p0": [
+      "profile": [
+       [
+        -0.0375,
+        0
+       ],
+       [
+        -0.0375,
+        0.0375
+       ],
+       [
+        0.2625,
+        0.0375
+       ],
+       [
+        0.2625,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
        -0.075,
-       0.0,
+       0,
        -0.2225
       ],
-      "p1": [
-       0.15,
-       0.0,
-       -0.2225
-      ],
-      "r0": 0.0375,
-      "r1": 0.0375,
       "repeat": {
        "count": 2,
        "translation": [
@@ -5180,21 +5276,21 @@
      },
      {
       "id": "mass-end-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "end-r",
       "material": "cast-iron-painted",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0395,
-       0.0395,
-       0.0395
+      "size": [
+       0.079,
+       0.079,
+       0.079
       ],
       "transform": {
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-r",
@@ -5202,21 +5298,21 @@
      },
      {
       "id": "mass-end-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "end-l",
       "material": "cast-iron-painted",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0395,
-       0.0395,
-       0.0395
+      "size": [
+       0.079,
+       0.079,
+       0.079
       ],
       "transform": {
        "translation": [
         0.36344,
         0,
-        0.0
+        0
        ]
       },
       "member": "end-l",
@@ -5224,21 +5320,21 @@
      },
      {
       "id": "mass-seat",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "hardwood-greyed",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0395,
-       0.0395,
-       0.0395
+      "size": [
+       0.079,
+       0.079,
+       0.079
       ],
       "transform": {
        "translation": [
         0.9,
         -0.00306,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -5246,21 +5342,21 @@
      },
      {
       "id": "mass-back-lower",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "back-lower",
       "material": "hardwood-greyed",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0395,
-       0.0395,
-       0.0395
+      "size": [
+       0.079,
+       0.079,
+       0.079
       ],
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-lower",
@@ -5268,21 +5364,21 @@
      },
      {
       "id": "mass-back-upper",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "back-upper",
       "material": "hardwood-greyed",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0395,
-       0.0395,
-       0.0395
+      "size": [
+       0.079,
+       0.079,
+       0.079
       ],
       "transform": {
        "translation": [
         0.9,
-        -4e-05,
-        0.0
+        -0.00004,
+        0
        ]
       },
       "member": "back-upper",
@@ -5295,8 +5391,8 @@
       "de": "Körper für 75 mm: Sitz- und Rückenlatten als 75 mm dicke Platten (die ersetzte vordere wegen ihrer Region getrennt), jedes Seitenteil ein 75-mm-Guss mit 75-mm-Bändern und in den Umriss verschmolzener Armlehne, die Strebe entfällt, 75-mm-Fußklötze, die Fundamente."
      },
      {
-      "en": "Thermal: one surface per region, compared only in total at this scale. Structure: members as in the body, bolts and dowels as 75 mm joints, masses at the centres.",
-      "de": "Thermik: eine Oberfläche je Region, bei diesem Maßstab nur in der Summe verglichen. Tragwerk: Glieder wie im Körper, Schrauben und Dübel als 75-mm-Gelenke, Massen in den Schwerpunkten."
+      "en": "Thermal: one surface per region, compared only in total at this scale. Structure: members as in the body, bolts and dowels as 75 mm joints, masses at the centres. The bolt and dowel joints are cylinders and the mass markers blocks, not capsules and ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Thermik: eine Oberfläche je Region, bei diesem Maßstab nur in der Summe verglichen. Tragwerk: Glieder wie im Körper, Schrauben und Dübel als 75-mm-Gelenke, Massen in den Schwerpunkten. Die Schrauben- und Dübelgelenke sind Zylinder und die Massenmarken Blöcke, nicht Kapseln und Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }
@@ -5545,7 +5641,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.02,
        "h": 0.06,
@@ -5560,7 +5656,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -5636,7 +5732,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.02,
        "h": 0.06,
@@ -5651,7 +5747,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -5682,7 +5778,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.01736,
        "w": 1.8,
        "h": 0.05547,
@@ -5699,7 +5795,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.02999,
        "w": 1.8,
        "h": 0.05546,
@@ -5716,7 +5812,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.04263,
        "w": 1.8,
        "h": 0.05546,
@@ -5733,7 +5829,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06696,
        "w": 1.8,
        "h": 0.13385,
@@ -5750,7 +5846,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06696,
        "w": 1.8,
        "h": 0.13385,
@@ -6618,7 +6714,7 @@
        "points": [
         [
          -0.315,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -6646,11 +6742,11 @@
         ],
         [
          -0.8,
-         0.0
+         0
         ],
         [
          -0.95,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -6666,11 +6762,11 @@
        "points": [
         [
          0.7,
-         0.0
+         0
         ],
         [
          0.3625,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -7093,7 +7189,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.29465,
        "w": 1.8,
        "h": 0.13273,
@@ -7110,7 +7206,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.1502,
        "w": 1.8,
        "h": 0.13273,
@@ -7127,7 +7223,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.00575,
        "w": 1.8,
        "h": 0.13273,
@@ -7144,7 +7240,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.14197,
        "w": 1.8,
        "h": 0.07021,
@@ -7161,7 +7257,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.20092,
        "w": 1.8,
        "h": 0.07021,
@@ -7625,7 +7721,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.02,
        "h": 0.06,
@@ -7640,7 +7736,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -7701,7 +7797,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.02,
        "h": 0.06,
@@ -7716,7 +7812,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -7732,7 +7828,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0177,
        "w": 1.8,
        "h": 0.05615,
@@ -7747,7 +7843,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03034,
        "w": 1.8,
        "h": 0.05616,
@@ -7762,7 +7858,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.04298,
        "w": 1.8,
        "h": 0.05616,
@@ -7777,7 +7873,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.068,
        "w": 1.8,
        "h": 0.13592,
@@ -7792,7 +7888,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.068,
        "w": 1.8,
        "h": 0.13592,
@@ -8153,7 +8249,7 @@
        "points": [
         [
          -0.315,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -8181,11 +8277,11 @@
         ],
         [
          -0.8,
-         0.0
+         0
         ],
         [
          -0.95,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -8201,11 +8297,11 @@
        "points": [
         [
          0.7,
-         0.0
+         0
         ],
         [
          0.3625,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -8406,7 +8502,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.295,
        "w": 1.8,
        "h": 0.13343,
@@ -8421,7 +8517,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.15055,
        "w": 1.8,
        "h": 0.13343,
@@ -8436,7 +8532,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0061,
        "w": 1.8,
        "h": 0.13343,
@@ -8451,7 +8547,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.14094,
        "w": 1.8,
        "h": 0.07228,
@@ -8466,7 +8562,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.19988,
        "w": 1.8,
        "h": 0.07228,
@@ -8680,7 +8776,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.03,
        "h": 0.06,
@@ -8695,7 +8791,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -8755,7 +8851,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.03,
        "w": 0.03,
        "h": 0.06,
@@ -8770,7 +8866,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -8785,7 +8881,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.01683,
        "w": 1.8,
        "h": 0.05616,
@@ -8800,7 +8896,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.04167,
        "w": 1.8,
        "h": 0.06967,
@@ -8815,7 +8911,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.068,
        "w": 1.8,
        "h": 0.13592,
@@ -8830,7 +8926,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.068,
        "w": 1.8,
        "h": 0.13592,
@@ -9117,7 +9213,7 @@
        "points": [
         [
          -0.315,
-         0.0
+         0
         ],
         [
          -0.42,
@@ -9129,11 +9225,11 @@
         ],
         [
          -0.8,
-         0.0
+         0
         ],
         [
          -0.95,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -9149,11 +9245,11 @@
        "points": [
         [
          0.7,
-         0.0
+         0
         ],
         [
          0.3625,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -9318,7 +9414,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.305,
        "w": 1.8,
        "h": 0.13343,
@@ -9333,7 +9429,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.17549,
        "w": 1.8,
        "h": 0.28788,
@@ -9348,7 +9444,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.14094,
        "w": 1.8,
        "h": 0.07228,
@@ -9363,7 +9459,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.19988,
        "w": 1.8,
        "h": 0.07228,
@@ -9507,7 +9603,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0375,
        "w": 0.075,
        "h": 0.075,
@@ -9522,7 +9618,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -9567,7 +9663,7 @@
        "filled": true,
        "tone": 0.18,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0375,
        "w": 0.075,
        "h": 0.075,
@@ -9582,7 +9678,7 @@
        "filled": true,
        "tone": 0.78,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.11,
        "w": 0.425,
        "h": 0.22,
@@ -9597,7 +9693,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0177,
        "w": 1.8,
        "h": 0.08604,
@@ -9612,7 +9708,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.04167,
        "w": 1.8,
        "h": 0.09868,
@@ -9627,7 +9723,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.078,
        "w": 1.8,
        "h": 0.116,
@@ -9642,7 +9738,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.068,
        "w": 1.8,
        "h": 0.13532,
@@ -9899,7 +9995,7 @@
        "points": [
         [
          -0.315,
-         0.0
+         0
         ],
         [
          -0.42,
@@ -9911,11 +10007,11 @@
         ],
         [
          -0.8,
-         0.0
+         0
         ],
         [
          -0.95,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -9931,11 +10027,11 @@
        "points": [
         [
          0.7,
-         0.0
+         0
         ],
         [
          0.3625,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -10070,7 +10166,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.295,
        "w": 1.8,
        "h": 0.13604,
@@ -10085,7 +10181,7 @@
        "filled": true,
        "tone": 0.5599999999999999,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.16549,
        "w": 1.8,
        "h": 0.28049,
@@ -10100,7 +10196,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.08892,
        "w": 1.8,
        "h": 0.09833,
@@ -10115,7 +10211,7 @@
        "filled": true,
        "tone": 0.52,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.15055,
        "w": 1.8,
        "h": 0.1035,
@@ -10228,19 +10324,19 @@
     "thermal": {
      "regions": {
       "seat-slats-greyed": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.9
       },
       "seat-slat-replaced": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.9
       },
       "back-slats-greyed": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.55
       },
       "cast-frames": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.45
       },
       "feet-rusted": {
@@ -10287,23 +10383,23 @@
     "thermal": {
      "regions": {
       "seat-slats-greyed": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.9
       },
       "seat-slat-replaced": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.9
       },
       "back-slats-greyed": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.55
       },
       "cast-frames": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.45
       },
       "feet-rusted": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.35
       },
       "footings": {
@@ -10364,7 +10460,7 @@
        }
       },
       "cast-frames": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "feet-rusted": {
@@ -10534,7 +10630,7 @@
        }
       },
       "cast-frames": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.43
       },
       "feet-rusted": {
@@ -10638,7 +10734,7 @@
        }
       },
       "cast-frames": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.42
       },
       "feet-rusted": {
@@ -10757,7 +10853,7 @@
       "ease": "smooth"
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "in-use-two",
       "ease": "smooth"
      },
@@ -10807,7 +10903,7 @@
      {
       "id": "second-sitter",
       "fromS": 2.5,
-      "toS": 5.0,
+      "toS": 5,
       "title": {
        "en": "Second sitter",
        "de": "Zweite Person"
@@ -10815,7 +10911,7 @@
      },
      {
       "id": "third-sitter",
-      "fromS": 5.0,
+      "fromS": 5,
       "toS": 7.5,
       "title": {
        "en": "Third sitter",
@@ -10843,7 +10939,7 @@
       "target": "sitter-a"
      },
      {
-      "t": 5.0,
+      "t": 5,
       "kind": "load-on",
       "title": {
        "en": "Second sitter is down",

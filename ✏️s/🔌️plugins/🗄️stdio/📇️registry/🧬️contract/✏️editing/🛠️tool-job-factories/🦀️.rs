@@ -226,9 +226,10 @@ fn snapshot_edit_command_id<E: SnapshotEditingEditor>(command: &E::Command) -> &
     E::snapshot_edit_event(command).map_or("unknownSnapshotEdit", SnapshotEditEvent::action_id)
 }
 
+/// 📏️ The work extent of one edit: an unaddressable path with an admitted payload still takes its capacity, so the reducer refuses it with its own typed `snapshot-edit.*` fault instead of the generic unmeasurable refusal; see [`snapshot_edit_path_is_admitted`].
 fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapshot: &E::Snapshot, _interaction: &kernel::InteractionState) -> Option<usize> {
     let event = E::snapshot_edit_event(command)?;
-    E::snapshot_edit_retained_extent(event,_snapshot)
+    E::snapshot_edit_retained_extent(event, _snapshot).or_else(|| snapshot_edit_payload_is_admitted(event).then(|| E::snapshot_edit_work_capacity().work_items()))
 }
 
 /// 📏️ Refuses a resolved edit whose mutation or exact undo cannot be carried as one native publication item.

@@ -66,9 +66,15 @@ impl ArtifactEditor for SurfaceEditorFixture {
     }
 
     crate::bounded_first_step_tool_proofs! {
-        owner: EditorApp<SurfaceEditorFixture>, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs", controller: "testkit.surface@1/*#editor", artifact_schema: "semio.testkit-surface/v1",
+        owner: EditorApp<SurfaceEditorFixture>, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs", controller: "s.testkit.surface@1/*#editor", artifact_schema: "semio.testkit-surface/v1",
         factory: "SurfaceFixtureFactory", factory_type: SurfaceFixtureFactory,
         contract: SURFACE_TOOL_CONTRACT, tools: ["increment"]
+    }
+
+    fn command_from_action(action: &str, _args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        if action == SURFACE_TOOL_ID { return Ok(SurfaceEditorCommand::Increment); }
+        Err(Fault::new(FaultOrigin::App, semio_framework::FaultCode::new("app.command.unsupported"), format!("surface editor fixture declares no action '{action}'")))
     }
 
     fn command_id(command: &Self::Command) -> &'static str {

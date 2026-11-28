@@ -97,3 +97,25 @@ test("a phase names what it is working on only while it reports progress",()=>{
  profileMarkV1("source.served");
  expect(profileCurrentPhaseV1()).toBe("source.served");
 });
+
+
+test("a phase callback streams every finished phase, stays silent at flush and a round trip counts without naming a phase",()=>{
+ const seen:string[]=[],written:string[]=[];let time=0;
+ const profile=createRepoProfileV1({mode:"off",now:()=>time,write:text=>written.push(text),onPhase:record=>seen.push(record.phase+":"+(record.end-record.start))});
+ expect(profile.enabled).toBe(true);
+ profile.phase("a.b",()=>{time+=5;profile.mark("rt.graph-service");});
+ profile.event("spawn.x",3);
+ profile.flush();
+ expect(seen).toEqual(["rt.graph-service:0","a.b:5","spawn.x:3"]);
+ expect(written).toEqual([]);
+});
+
+test("SEMIO_DIAGNOSTICS=timing prints each finished phase at once and a round trip leaves the current phase alone",()=>{
+ const module=JSON.stringify(import.meta.dir+"/../🟨️.mjs"),program=`const m=await import(${module});m.profilePhaseV1("a.b",()=>{m.profileRoundTripV1("graph-service");});console.log(m.profileCurrentPhaseV1());`;
+ const run=spawnSync(process.execPath,["-e",program],{encoding:"utf8",env:{...process.env,SEMIO_REPO_PROFILE:"off",SEMIO_DIAGNOSTICS:"timing"}});
+ expect(run.status).toBe(0);expect(run.stdout.trim()).toBe("a.b");
+ const lines=run.stderr.split("\n").filter(line=>line.startsWith("[diagnostic:timing] "));
+ expect(lines.map(line=>JSON.parse(line.slice(20)).phase)).toEqual(["rt.graph-service","a.b"]);
+ const quiet=spawnSync(process.execPath,["-e",program],{encoding:"utf8",env:{...process.env,SEMIO_REPO_PROFILE:"off",SEMIO_DIAGNOSTICS:""}});
+ expect(quiet.stderr).toBe("");
+});

@@ -21,7 +21,7 @@ const program = (source: string) => ["-e", source];
 
 test("command capacity distinguishes format and inspection while retaining admission",async()=>{
  const db=new Database(":memory:"),validate=new Ajv({strict:true}).compile({$schema:toolSchema.$schema,definitions:toolSchema.definitions,$ref:"#/definitions/CapacityCommandCase"});
- try{for(const row of capacityCases.cases){expect(validate(row)).toBe(true);const input:any=structuredClone(registryDocument),go=input.tools.find((tool:any)=>tool.id==="go")!;go.commands=row.command==="gofmt"?["gofmt","go"]:["go","gofmt"];go.locate=[{kind:"script",path:"🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🧫️fixtures/🎟️capacity-probe.mjs",via:"bun"}];const selected=readToolRegistryV1(input);let admissions=0;const admission:ToolAdmissionV1=async(ask,body)=>{admissions++;expect(ask.operation).toBe(row.operation);expect(ask.kind).toBe(row.kind);return body({environment:{},jobs:1});};const result=await runToolV1("go",row.arguments,{registry:selected,command:row.command,trusted:true,root:process.cwd(),env:environment,capture:true,heavy:false,admission});expect(result.status).toBe(0);expect(JSON.parse(result.stdout)).toEqual(row.arguments);expect(admissions).toBe(1);const oracle=db.query("SELECT CASE WHEN ?1='gofmt' OR ?2='fmt' THEN 'tool-format' WHEN ?1='go' AND ?2 IN('version','env') THEN 'tool-query' ELSE 'command' END operation").get(row.command,row.arguments[0]??"")as{operation:string};expect(oracle.operation).toBe(row.operation);}}
+ try{for(const row of capacityCases.cases){expect(validate(row)).toBe(true);const input:any=structuredClone(registryDocument),go=input.tools.find((tool:any)=>tool.id==="go")!;go.commands=row.command==="gofmt"?["gofmt","go"]:["go","gofmt"];go.locate=[{kind:"script",path:"🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🧫️fixtures/🎟️capacity-probe.mjs",via:"bun"}];const selected=readToolRegistryV1(input);let admissions=0;const admission:ToolAdmissionV1=async(ask,body)=>{admissions++;expect(ask.operation).toBe(row.operation);expect<unknown>(ask.kind).toBe(row.kind);return body({environment:{},jobs:1});};const result=await runToolV1("go",row.arguments,{registry:selected,command:row.command,trusted:true,root:process.cwd(),env:environment,capture:true,heavy:false,admission});expect(result.status).toBe(0);expect(JSON.parse(result.stdout)).toEqual(row.arguments);expect(admissions).toBe(1);const oracle=db.query("SELECT CASE WHEN ?1='gofmt' OR ?2='fmt' THEN 'tool-format' WHEN ?1='go' AND ?2 IN('version','env') THEN 'tool-query' ELSE 'command' END operation").get(row.command,row.arguments[0]??"")as{operation:string};expect(oracle.operation).toBe(row.operation);}}
  finally{db.close();}
 });
 
@@ -139,7 +139,7 @@ test("rustup delegates compiler capacity and clamps only Cargo's own arguments",
     const admissions: string[] = [];
     const admission: ToolAdmissionV1 = async (ask, execute) => {
       admissions.push(ask.tool);
-      expect(ask.operation).toBe(item.operation);
+      expect<unknown>(ask.operation).toBe(item.operation);
       return execute({jobs:1, environment:{}});
     };
     const result = await runToolV1("rustup", item.args, {...options, registry:readToolRegistryV1(input), trusted:true, heavy:false, capture:true, admission});

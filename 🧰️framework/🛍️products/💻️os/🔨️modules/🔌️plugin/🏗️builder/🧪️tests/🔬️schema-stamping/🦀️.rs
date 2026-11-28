@@ -4,6 +4,8 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_builder::PluginBuilder;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::{mutations::TestMutation, TestSnapshot};
+use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, Editor, Viewer};
 use semio_plugin_decl_emission::surface_contract::ViewEmit;
 use semio_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -23,8 +25,8 @@ struct SchemaStampEditorFixture;
 impl ArtifactEditor for SchemaStampEditorFixture {
     const DIALECT: Dialect = EDITOR_STAMP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "builder-test.schema-stamp-editor.document";
-    type Snapshot = NoConfig;
-    type Mutation = NoConfigMutation;
+    type Snapshot = TestSnapshot;
+    type Mutation = TestMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -33,10 +35,10 @@ impl ArtifactEditor for SchemaStampEditorFixture {
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
-    type Command = NoConfigMutation;
+    type Command = TestMutation;
 
-    fn reference_birth()->Option<fn()->Result<NoConfig,semio_plugin::Fault>>{Some(||{
-        Ok(NoConfig::default())
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot::default())
     })}
 
     fn examples() -> Vec<ExampleSource> {
@@ -44,18 +46,18 @@ impl ArtifactEditor for SchemaStampEditorFixture {
     }
 
     fn handle(
-        _command: &NoConfigMutation,
-        _doc: &ArtifactView<'_, NoConfig>,
+        _command: &TestMutation,
+        _doc: &ArtifactView<'_, TestSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<NoConfigMutation>, Fault> {
+    ) -> Result<Emit<TestMutation>, Fault> {
         Ok(Emit::default())
     }
 
-    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(_body_key: &str, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(semio_ui_locale::Label::data("schema-stamp-editor"))
     }
 }
@@ -66,8 +68,8 @@ struct SchemaStampViewerFixture;
 impl ArtifactViewer for SchemaStampViewerFixture {
     const DIALECT: Dialect = VIEWER_STAMP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "builder-test.schema-stamp-viewer.document";
-    type Snapshot = NoConfig;
-    type Mutation = NoConfigMutation;
+    type Snapshot = TestSnapshot;
+    type Mutation = TestMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -76,13 +78,13 @@ impl ArtifactViewer for SchemaStampViewerFixture {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
 
-    fn reference_birth()->Option<fn()->Result<NoConfig,semio_plugin::Fault>>{Some(||{
-        Ok(NoConfig::default())
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot::default())
     })}
 
     fn handle(
         _command: &NoConfigMutation,
-        _doc: &ArtifactView<'_, NoConfig>,
+        _doc: &ArtifactView<'_, TestSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
@@ -91,7 +93,7 @@ impl ArtifactViewer for SchemaStampViewerFixture {
         Ok(ViewEmit::default())
     }
 
-    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(_body_key: &str, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(semio_ui_locale::Label::data("schema-stamp-viewer"))
     }
 }
@@ -208,31 +210,4 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
     let roster: Vec<WireArtifactInferenceMetadata> = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("frozen roster decodes");
     assert_eq!(roster, vec![metadata.into()]);
     assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
-}
-
-impl store::os_store::serialization::ArtifactSqliteSnapshotHost for NoConfig {
-    
-    
-    
-}
-impl pack::snapshot::ArtifactSqliteSnapshot for NoConfig {
-const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
-        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
-        control.check_rows(1)?;
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
-        database.table_mut("empty_artifact_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1)] });
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
-        Ok(database)
-    }
-fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
-        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
-        let rows = &database.table("empty_artifact_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 || rows[0].values.len() != 1 {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty artifact requires one identity row"));
-        }
-        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
-        Ok(Self {})
-    }
 }

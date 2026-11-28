@@ -1,0 +1,6 @@
+() => { const t0 = performance.now(); const P = window.__probe = { rep: [], text: [], con: [], combo: [], marks: [] }; const at = () => Math.round(performance.now() - t0);
+ const snap = () => { if (!document.body) return; for (const e of document.querySelectorAll('[data-semio-history-reprojection]')) { const k = e.getAttribute('data-semio-history-reprojection') + '|' + (e.innerText || '').replace(/\n/g, ' ').slice(0, 100) + '|btn=' + !!e.querySelector('button'); if (P.rep[P.rep.length - 1]?.[1] !== k) P.rep.push([at(), k]); }
+  const m = (document.body.innerText.match(/(Opening example|Loading document|Cancel replay|Cancel Operation|Replaying)[^\n]*/g) || []).join(' | '); if (P.text[P.text.length - 1]?.[1] !== m) P.text.push([at(), m]);
+  const c = document.querySelector('[role=combobox]')?.innerText; if (P.combo[P.combo.length - 1]?.[1] !== c) P.combo.push([at(), c]); };
+ new MutationObserver(snap).observe(document, { subtree: true, childList: true, characterData: true, attributes: true }); setInterval(snap, 200);
+ for (const k of ['log', 'info', 'warn', 'error']) { const o = console[k]; console[k] = (...a) => { const s = a.map(String).join(' '); if (/archive|load|example|cancel|reprojection|os-shell/i.test(s) && !s.startsWith('[DEBUG]')) P.con.push([at(), k, s.slice(0, 200)]); return o.apply(console, a); }; } }

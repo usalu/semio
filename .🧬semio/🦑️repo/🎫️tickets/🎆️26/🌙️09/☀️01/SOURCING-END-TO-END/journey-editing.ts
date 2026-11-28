@@ -91,7 +91,7 @@ async function journey(browser: Browser, language: "en" | "de") {
   const canvasHash = async () => createHash("md5").update(await grid().locator("canvas").first().screenshot()).digest("hex");
   const fresh = async () => { await boot(); };
   const sameSet = (left: string[], right: string[]) => assert.deepEqual([...left].sort(), [...right].sort());
-  const clickRow = async (name: string, modifiers: ("Shift" | "Control" | "Alt")[] = []) => { await cell(pool(), name).click({ modifiers }); await settle(900); };
+  const clickRow = async (name: string, modifiers: ("Shift" | "ControlOrMeta" | "Alt")[] = []) => { await cell(pool(), name).click({ modifiers }); await settle(900); };
 
   try {
     await boot();
@@ -144,9 +144,9 @@ async function journey(browser: Browser, language: "en" | "de") {
       await clickRow(KVH);
       await clickRow(HEA, ["Shift"]);
       await eventually(async () => sameSet(await active(pool()), [KVH, IPE, HEA]));
-      await clickRow(CASEMENT, ["Control"]);
+      await clickRow(CASEMENT, ["ControlOrMeta"]);
       await eventually(async () => sameSet(await active(pool()), [KVH, IPE, HEA, CASEMENT]));
-      await clickRow(IPE, ["Control"]);
+      await clickRow(IPE, ["ControlOrMeta"]);
       await eventually(async () => sameSet(await active(pool()), [KVH, HEA, CASEMENT]));
       await clickRow(HEA, ["Alt"]);
       await eventually(async () => sameSet(await active(pool()), [KVH, CASEMENT]));
@@ -170,7 +170,11 @@ async function journey(browser: Browser, language: "en" | "de") {
 
     await step("selection: Grid marquee selects the curated kinds, shift adds, ctrl subtracts, hover raises no fault", async () => {
       const box = (await grid().boundingBox())!;
-      const marquee = async (modifier?: "Shift" | "Control") => {
+      const utilities = page.locator('[id="framework.window.sourcingGrid.utilityBar"]');
+      await page.locator('[id="framework.window.sourcingGrid.utilityBar.unfold"]').click();
+      await utilities.getByRole("button").first().click();
+      await settle(600);
+      const marquee = async (modifier?: "Shift" | "ControlOrMeta") => {
         if (modifier) await page.keyboard.down(modifier);
         await page.mouse.move(box.x + 30, box.y + 60);
         await page.mouse.down();
@@ -191,7 +195,7 @@ async function journey(browser: Browser, language: "en" | "de") {
       await clickRow(KVH);
       await marquee("Shift");
       await eventually(async () => sameSet(await active(pool()), [KVH, IPE]));
-      await marquee("Control");
+      await marquee("ControlOrMeta");
       await eventually(async () => assert.deepEqual(await active(pool()), []));
       return {};
     });

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "states": [
+    {"name": "unmeasured", "crate": "a_unit", "target": "host", "state": "unmeasured"},
+    {"name": "calm", "crate": "a_unit", "target": "host", "milliseconds": 60000, "megabytes": 400, "state": "ok"},
+    {"name": "near time", "crate": "a_unit", "target": "host", "milliseconds": 1000000, "megabytes": 400, "state": "near"},
+    {"name": "near memory", "crate": "a_unit", "target": "host", "milliseconds": 60000, "megabytes": 1300, "state": "near"},
+    {"name": "over time", "crate": "a_unit", "target": "host", "milliseconds": 1300000, "megabytes": 400, "state": "over"},
+    {"name": "over memory", "crate": "a_unit", "target": "wasm", "milliseconds": 60000, "megabytes": 1700, "state": "over"},
+    {"name": "gismap tiles as measured", "crate": "semio_s_artifact_gis_gismap_tile_coordinates", "target": "host", "milliseconds": 6000000, "megabytes": 2200, "state": "carving"},
+    {"name": "gismap tiles still declared after carving", "crate": "semio_s_artifact_gis_gismap_tile_coordinates", "target": "host", "milliseconds": 600000, "megabytes": 900, "state": "carving"},
+    {"name": "gismap tiles above its own budget", "crate": "semio_s_artifact_gis_gismap_tile_coordinates", "target": "host", "milliseconds": 7000000, "megabytes": 2200, "state": "over"},
+    {"name": "gismap tiles on wasm has no carving", "crate": "semio_s_artifact_gis_gismap_tile_coordinates", "target": "wasm", "milliseconds": 6000000, "megabytes": 2200, "state": "over"}
+  ]
+}

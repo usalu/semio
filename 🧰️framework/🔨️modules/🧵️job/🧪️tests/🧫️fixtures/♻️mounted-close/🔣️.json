@@ -5,11 +5,10 @@
   "livenessMilliseconds": 30000,
   "phases": [
     "BeginClose",
-    "PreadmittedFault",
+    "Payload",
     "Job",
     "JobRelease",
     "ParamsRelease",
-    "PayloadLedger",
     "AuthorityRelease",
     "SessionArc",
     "RetirementSlot",
@@ -21,7 +20,7 @@
       "turns": [
         {
           "phase": "BeginClose",
-          "next": "PreadmittedFault",
+          "next": "Payload",
           "kind": "pending",
           "receipt": {
             "copiedItems": 0,
@@ -31,29 +30,161 @@
           }
         },
         {
-          "phase": "PreadmittedFault",
-          "next": "PreadmittedFault",
+          "phase": "Payload",
+          "next": "Payload",
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 152,
-            "retainedCapacityBytes": 0,
-            "releasedBytes": 16384
-          }
-        },
-        {
-          "phase": "PreadmittedFault",
-          "next": "PreadmittedFault",
-          "kind": "pending",
-          "receipt": {
-            "copiedItems": 1,
-            "copiedBytes": 136,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
         },
         {
-          "phase": "PreadmittedFault",
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 16384
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 6264
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 118,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 9952
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 1,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 32,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 96,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
+          "next": "Payload",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Payload",
           "next": "Job",
           "kind": "pending",
           "receipt": {
@@ -120,24 +251,13 @@
         },
         {
           "phase": "ParamsRelease",
-          "next": "PayloadLedger",
+          "next": "AuthorityRelease",
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
-          }
-        },
-        {
-          "phase": "PayloadLedger",
-          "next": "AuthorityRelease",
-          "kind": "pending",
-          "receipt": {
-            "copiedItems": 1,
-            "copiedBytes": 136,
-            "retainedCapacityBytes": 0,
-            "releasedBytes": 128
           }
         },
         {
@@ -148,7 +268,7 @@
             "copiedItems": 1,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
-            "releasedBytes": 7336
+            "releasedBytes": 39696
           }
         },
         {
@@ -175,14 +295,15 @@
         }
       ],
       "totalReceipt": {
-        "copiedItems": 12,
-        "copiedBytes": 424,
+        "copiedItems": 23,
+        "copiedBytes": 247,
         "retainedCapacityBytes": 0,
-        "releasedBytes": 23993
+        "releasedBytes": 72441
       }
     }
   ],
   "authority": "independentCallerWorkerClosePolicy",
   "deniedFaultReleaseBytes": 4096,
-  "faultPlusDomainReleaseBytes": 16385
+  "faultPlusDomainReleaseBytes": 16385,
+  "faultPageBytes": 16384
 }

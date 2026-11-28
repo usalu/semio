@@ -2,7 +2,7 @@
   "tolerance": 1e-09,
   "cases": [
     {
-      "name": "a live x drag streams every move as its increment and commits the release tail",
+      "name": "a live x drag streams every move as its cumulative offset from the press and commits the whole offset",
       "viewport": {
         "width": 800,
         "height": 600
@@ -75,7 +75,7 @@
               "ids": [
                 "frame-1"
               ],
-              "dx": 10.0,
+              "dx": 24.0,
               "dy": 0.0,
               "dz": 0,
               "phase": "stream"
@@ -87,7 +87,7 @@
               "ids": [
                 "frame-1"
               ],
-              "dx": 10.0,
+              "dx": 34.0,
               "dy": 0.0,
               "dz": 0,
               "phase": "commit"
@@ -174,7 +174,7 @@
                 "frame-2"
               ],
               "dx": 0.0,
-              "dy": -10.0,
+              "dy": -20.0,
               "dz": 0,
               "phase": "stream"
             }
@@ -187,7 +187,7 @@
                 "frame-2"
               ],
               "dx": 0.0,
-              "dy": -10.0,
+              "dy": -30.0,
               "dz": 0,
               "phase": "commit"
             }
@@ -274,7 +274,7 @@
               "ids": [
                 "n1"
               ],
-              "dx": 1.0,
+              "dx": 2.0,
               "dy": 0.0,
               "dz": 0,
               "phase": "commit"
@@ -284,7 +284,7 @@
       }
     },
     {
-      "name": "a live turn streams angle increments about the pivot",
+      "name": "a live turn streams cumulative angles about the pivot",
       "viewport": {
         "width": 800,
         "height": 600
@@ -361,7 +361,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": 0.6740910641671956,
+              "angle": 1.0969449903001363,
               "phase": "stream"
             }
           },
@@ -374,7 +374,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": 0.4738513364947603,
+              "angle": 1.5707963267948966,
               "phase": "commit"
             }
           }
@@ -469,7 +469,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": -1.5480729659532555,
+              "angle": -3.118869292748152,
               "phase": "stream"
             }
           },
@@ -482,7 +482,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": -0.04544672168328212,
+              "angle": -3.164316014431434,
               "phase": "stream"
             }
           },
@@ -495,7 +495,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": -1.5480729659532555,
+              "angle": -4.71238898038469,
               "phase": "stream"
             }
           },
@@ -508,7 +508,7 @@
               "ax": 0,
               "ay": 0,
               "az": 1,
-              "angle": -0.7531512809621947,
+              "angle": -5.465540261346884,
               "phase": "commit"
             }
           }
@@ -516,7 +516,7 @@
       }
     },
     {
-      "name": "a live uniform scaling multiplies its increments to the release factor",
+      "name": "a live uniform scaling streams its cumulative factor and commits the release factor",
       "viewport": {
         "width": 800,
         "height": 600
@@ -589,8 +589,8 @@
               "ids": [
                 "frame-1"
               ],
-              "sx": 1.3688888888888895,
-              "sy": 1.3688888888888895,
+              "sx": 2.0000000000000018,
+              "sy": 2.0000000000000018,
               "sz": 1,
               "phase": "stream"
             }
@@ -601,8 +601,8 @@
               "ids": [
                 "frame-1"
               ],
-              "sx": 0.24999999999999953,
-              "sy": 0.24999999999999953,
+              "sx": 0.4999999999999995,
+              "sy": 0.4999999999999995,
               "sz": 1,
               "phase": "commit"
             }
@@ -679,7 +679,7 @@
               "ids": [
                 "frame-1"
               ],
-              "sx": 0.75,
+              "sx": 1.5,
               "sy": 1.0,
               "sz": 1,
               "phase": "commit"
@@ -758,7 +758,7 @@
                 "frame-1"
               ],
               "sx": 1.0,
-              "sy": 1.0,
+              "sy": 0.5,
               "sz": 1,
               "phase": "commit"
             }
@@ -815,7 +815,7 @@
       }
     },
     {
-      "name": "a live release without a streamed move commits its whole motion as the tail",
+      "name": "a live release without a streamed move commits its whole motion",
       "viewport": {
         "width": 800,
         "height": 600
@@ -876,7 +876,7 @@
       }
     },
     {
-      "name": "a live drag returning to its press point streams nothing for that move and commits the identity",
+      "name": "a live drag returning to its press point streams the identity for that move and commits the whole offset",
       "viewport": {
         "width": 800,
         "height": 600
@@ -954,7 +954,7 @@
               "ids": [
                 "frame-1"
               ],
-              "dx": -5.0,
+              "dx": 0.0,
               "dy": 0.0,
               "dz": 0,
               "phase": "stream"
@@ -966,7 +966,19 @@
               "ids": [
                 "frame-1"
               ],
-              "dx": 0.0,
+              "dx": 5.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 5.0,
               "dy": 0.0,
               "dz": 0,
               "phase": "commit"

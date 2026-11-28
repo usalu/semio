@@ -22,6 +22,7 @@ pub fn inverse<Op: From<RotateSelection> + From<MoveNode> + From<ReplaceNodeHand
         }
         steps.extend(node.handles.iter().filter(|handle| handle.angle + radians != handle.angle).map(|handle| replace_node_handle::replace_node_handle::<Op>(node.id.clone(), handle.id.clone(), handle.clone())));
     }
+    steps.reverse();
     Ok(steps)
 }
 //#endregion 🔖️Inverse

@@ -178,9 +178,7 @@
       "base": 10,
       "delta": 0,
       "result": 10,
-      "stored": [
-        0
-      ]
+      "stored": []
     },
     {
       "id": "minimum-from-zero",

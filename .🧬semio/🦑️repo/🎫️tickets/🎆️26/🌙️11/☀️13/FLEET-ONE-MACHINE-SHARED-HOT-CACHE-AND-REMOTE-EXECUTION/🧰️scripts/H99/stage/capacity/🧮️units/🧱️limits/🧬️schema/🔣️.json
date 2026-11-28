@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/unit-limits/v1",
+  "title": "Unit limits: declared maximum compile time and peak memory of one compile unit",
+  "description": "What one compile unit may cost: the default maximum of wall time and peak memory, and the declared carving debt (measured cost, budget and the carving action) of the units above it. The plan warns before a build starts. / Was eine Kompilier-Einheit kosten darf: die Standardgrenzen für Laufzeit und Spitzenspeicher und die deklarierte Schnitt-Schuld (gemessene Kosten, Budget und Schnitt-Aktion) der Einheiten darüber. Der Plan warnt, bevor ein Bau startet.",
+  "definitions": {
+    "Text": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}},
+    "Carving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["crate", "target", "measuredMilliseconds", "measuredMegabytes", "budgetMilliseconds", "budgetMegabytes", "action", "reason"],
+      "properties": {
+        "crate": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+        "target": {"enum": ["host", "wasm"]},
+        "measuredMilliseconds": {"type": "integer", "minimum": 1},
+        "measuredMegabytes": {"type": "integer", "minimum": 1},
+        "budgetMilliseconds": {"type": "integer", "minimum": 1},
+        "budgetMegabytes": {"type": "integer", "minimum": 1},
+        "action": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "reason": {"$ref": "#/definitions/Text"}
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "defaults", "carving"],
+      "properties": {
+        "version": {"const": 1},
+        "defaults": {"type": "object", "additionalProperties": false, "required": ["maximumMilliseconds", "maximumMegabytes", "warnBasisPoints", "budgetBasisPoints"], "properties": {"maximumMilliseconds": {"type": "integer", "minimum": 1}, "maximumMegabytes": {"type": "integer", "minimum": 1}, "warnBasisPoints": {"type": "integer", "minimum": 1, "maximum": 10000}, "budgetBasisPoints": {"type": "integer", "minimum": 10000}}},
+        "carving": {"type": "array", "items": {"$ref": "#/definitions/Carving"}}
+      }
+    }
+  },
+  "policy": {
+    "version": 1,
+    "defaults": {"maximumMilliseconds": 1200000, "maximumMegabytes": 1536, "warnBasisPoints": 8000, "budgetBasisPoints": 11000},
+    "carving": [
+      {
+        "crate": "semio_s_artifact_gis_gismap_tile_coordinates",
+        "target": "host",
+        "measuredMilliseconds": 6000000,
+        "measuredMegabytes": 2200,
+        "budgetMilliseconds": 6600000,
+        "budgetMegabytes": 2420,
+        "action": "trim-unused-dev-dependencies",
+        "reason": {
+          "en": "its unit tests need only serde_json, the surface crate and the snapshot crate, yet the test unit also builds the OS kernel with protocol-laws and mutation-testing, the plugin with artifact-app-testing, both job-worker testkits, geo and geojson: carve the dev-dependencies the tests do not name",
+          "de": "seine Unit-Tests brauchen nur serde_json, die Surface-Crate und die Snapshot-Crate, doch die Test-Einheit baut auch den OS-Kernel mit protocol-laws und mutation-testing, das Plugin mit artifact-app-testing, beide Job-Worker-Testkits, geo und geojson: die Dev-Abhängigkeiten schneiden, die die Tests nicht nennen"
+        }
+      }
+    ]
+  }
+}

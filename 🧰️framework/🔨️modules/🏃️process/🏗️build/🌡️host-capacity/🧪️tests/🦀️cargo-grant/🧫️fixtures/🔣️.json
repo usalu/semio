@@ -423,5 +423,16 @@
         "a b"
       ]
     }
+  ],
+  "memory": [
+    {"name": "no memory", "megabytes": 0, "units": 1},
+    {"name": "below the largest unit", "megabytes": 2149, "units": 1},
+    {"name": "the 8 GB host: a session cap of 3.3 GB above the 1536 MB fixed block", "megabytes": 1764, "units": 1},
+    {"name": "the largest unit alone", "megabytes": 2150, "units": 1},
+    {"name": "the two largest classes together", "megabytes": 3600, "units": 2},
+    {"name": "one typical unit beside them", "megabytes": 4688, "units": 3},
+    {"name": "the 16 GB host: a 7.1 GB share above the fixed block", "megabytes": 5632, "units": 3},
+    {"name": "seven units", "megabytes": 9040, "units": 7},
+    {"name": "nine units", "megabytes": 11216, "units": 9}
   ]
 }

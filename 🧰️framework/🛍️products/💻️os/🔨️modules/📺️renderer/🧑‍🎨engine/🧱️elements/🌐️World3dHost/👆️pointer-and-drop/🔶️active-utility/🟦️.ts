@@ -2,7 +2,7 @@
 import * as React from "../../../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { createCoalescingActionDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
-import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets, world3dLeftPressOrbits } from "../../🔗️instance-selection/🟦️.ts";
+import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets, world3dLeftPressOrbits, world3dMarqueeCommitsMerge } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, raycastGroundPoint, world3dMarqueePointerCaptureArmed } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dVolumeBrushCommits } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { world3dSelectionTargetsActionArgs } from "../../🖱️interaction-domain-args/🟦️.ts";
@@ -99,9 +99,11 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
   const finalizeMarqueeSelection = useCallback(() => {
     if (!marqueeDragActiveRef.current || marqueeFinalizeOnceRef.current) return;
     const preview = marqueePreviewRef.current;
-    if (!preview.mergedInstanceIds?.length && !preview.mergedComponentIds?.length) return;
+    const instancesChange = world3dMarqueeCommitsMerge(preview.mergedInstanceIds, selection.ids);
+    const componentsChange = world3dMarqueeCommitsMerge(preview.mergedComponentIds, selection.componentIds);
+    if (!instancesChange && !componentsChange) return;
     marqueeFinalizeOnceRef.current = true;
-    if (preview.mergedInstanceIds?.length) {
+    if (instancesChange && preview.mergedInstanceIds) {
       setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
       const domainTargets = world3dInstanceInteractionTargets(instancesRef.current, preview.mergedInstanceIds, interactionGranularity);
       const marqueeSelect = interactionDomainId
@@ -110,7 +112,7 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
       void Promise.resolve(marqueeSelect).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
       });
-    } else if (preview.mergedComponentIds?.length) {
+    } else if (componentsChange && preview.mergedComponentIds) {
       setMarqueeCommitHold({ mergedComponentIds: preview.mergedComponentIds, mergedInstanceIds: null });
       const activeObjectId = selection.activeObjectId;
       void Promise.resolve(
@@ -136,6 +138,6 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
     }
     wasMarqueeDragRef.current = true;
     setMarqueePath([]);
-  }, [dispatch, interactionDomainId, interactionGranularity, method, selection.activeObjectId, selectionMode]);
+  }, [dispatch, interactionDomainId, interactionGranularity, method, selection.activeObjectId, selection.componentIds, selection.ids, selectionMode]);
   return { gestureRecognizer, setMarqueePath, marqueeStartRef, endHandleDrag, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances, scene, windowInstanceId, handlePointerDown, handlePointerMove };
 }

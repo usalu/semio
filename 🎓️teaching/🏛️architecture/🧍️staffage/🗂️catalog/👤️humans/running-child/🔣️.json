@@ -20629,8 +20629,7 @@
             "body-plume": 1
           }
         },
-        "loads": [],
-        "key": true
+        "loads": []
       },
       {
         "id": "landing",
@@ -79624,28 +79623,6 @@
             "slender": true
           },
           {
-            "id": "sk-calcaneus-l",
-            "kind": "capsule",
-            "bone": "foot-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              0,
-              0,
-              0
-            ],
-            "p1": [
-              -0.00499,
-              -0.04205,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "foot-l",
-            "part": "member"
-          },
-          {
             "id": "sk-foot-l",
             "kind": "capsule",
             "bone": "foot-l",
@@ -79666,52 +79643,10 @@
             "r1": 0.0376,
             "lateralScale": 1.6,
             "member": "foot-l",
-            "part": "member"
-          },
-          {
-            "id": "sk-phalanges-l",
-            "kind": "capsule",
-            "bone": "toe-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              -0.00256,
-              0.02168,
-              0
-            ],
-            "p1": [
-              0.036,
-              0.0204,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "lateralScale": 1.6,
-            "member": "toe-l",
-            "part": "member"
-          },
-          {
-            "id": "st-sole-l",
-            "kind": "capsule",
-            "bone": "foot-l",
-            "material": "canvas-sneaker",
-            "role": "body",
-            "tone": 0.5,
-            "p0": [
-              0.07711,
-              0.03094,
-              0
-            ],
-            "p1": [
-              0.08689,
-              0.01679,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "foot-l",
-            "part": "member"
+            "part": "member",
+            "members": [
+              "toe-l"
+            ]
           },
           {
             "id": "sk-femur-r",
@@ -79760,28 +79695,6 @@
             "slender": true
           },
           {
-            "id": "sk-calcaneus-r",
-            "kind": "capsule",
-            "bone": "foot-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              0,
-              0,
-              0
-            ],
-            "p1": [
-              -0.00499,
-              -0.04205,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "foot-r",
-            "part": "member"
-          },
-          {
             "id": "sk-foot-r",
             "kind": "capsule",
             "bone": "foot-r",
@@ -79802,52 +79715,10 @@
             "r1": 0.0376,
             "lateralScale": 1.6,
             "member": "foot-r",
-            "part": "member"
-          },
-          {
-            "id": "sk-phalanges-r",
-            "kind": "capsule",
-            "bone": "toe-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              -0.00256,
-              0.02168,
-              0
-            ],
-            "p1": [
-              0.036,
-              0.0204,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "lateralScale": 1.6,
-            "member": "toe-r",
-            "part": "member"
-          },
-          {
-            "id": "st-sole-r",
-            "kind": "capsule",
-            "bone": "foot-r",
-            "material": "canvas-sneaker",
-            "role": "body",
-            "tone": 0.5,
-            "p0": [
-              0.07711,
-              0.03094,
-              0
-            ],
-            "p1": [
-              0.08689,
-              0.01679,
-              0
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "foot-r",
-            "part": "member"
+            "part": "member",
+            "members": [
+              "toe-r"
+            ]
           },
           {
             "id": "sk-humerus-l",
@@ -79984,160 +79855,6 @@
             "part": "member"
           },
           {
-            "id": "joint-torso",
-            "kind": "ellipsoid",
-            "bone": "torso",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "torso",
-            "part": "joint"
-          },
-          {
-            "id": "joint-neck",
-            "kind": "ellipsoid",
-            "bone": "neck",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "neck",
-            "part": "joint"
-          },
-          {
-            "id": "joint-head",
-            "kind": "ellipsoid",
-            "bone": "head",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "head",
-            "part": "joint"
-          },
-          {
-            "id": "joint-arm-l",
-            "kind": "ellipsoid",
-            "bone": "arm-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "arm-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-forearm-l",
-            "kind": "ellipsoid",
-            "bone": "forearm-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "forearm-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-hand-l",
-            "kind": "ellipsoid",
-            "bone": "hand-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "hand-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-thigh-l",
-            "kind": "ellipsoid",
-            "bone": "thigh-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "thigh-l",
-            "part": "joint"
-          },
-          {
             "id": "joint-shank-l",
             "kind": "ellipsoid",
             "bone": "shank-l",
@@ -80160,138 +79877,6 @@
             "part": "joint"
           },
           {
-            "id": "joint-foot-l",
-            "kind": "ellipsoid",
-            "bone": "foot-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "foot-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-toe-l",
-            "kind": "ellipsoid",
-            "bone": "toe-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0.0204,
-                0
-              ]
-            },
-            "member": "toe-l",
-            "part": "joint"
-          },
-          {
-            "id": "joint-arm-r",
-            "kind": "ellipsoid",
-            "bone": "arm-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "arm-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-forearm-r",
-            "kind": "ellipsoid",
-            "bone": "forearm-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "forearm-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-hand-r",
-            "kind": "ellipsoid",
-            "bone": "hand-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "hand-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-thigh-r",
-            "kind": "ellipsoid",
-            "bone": "thigh-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "thigh-r",
-            "part": "joint"
-          },
-          {
             "id": "joint-shank-r",
             "kind": "ellipsoid",
             "bone": "shank-r",
@@ -80311,50 +79896,6 @@
               ]
             },
             "member": "shank-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-foot-r",
-            "kind": "ellipsoid",
-            "bone": "foot-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            },
-            "member": "foot-r",
-            "part": "joint"
-          },
-          {
-            "id": "joint-toe-r",
-            "kind": "ellipsoid",
-            "bone": "toe-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0.0204,
-                0
-              ]
-            },
-            "member": "toe-r",
             "part": "joint"
           },
           {
@@ -80402,56 +79943,6 @@
             "part": "member"
           },
           {
-            "id": "sk-glenoid-l",
-            "kind": "capsule",
-            "bone": "clavicle-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              0.09903,
-              0,
-              0
-            ],
-            "p1": [
-              0.10084,
-              -0.02823,
-              -0.00754
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "clavicle-l",
-            "part": "member"
-          },
-          {
-            "id": "joint-clavicle-l",
-            "kind": "ellipsoid",
-            "bone": "clavicle-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ],
-              "rotation": [
-                0.5858,
-                0.61111,
-                0.39602,
-                0.35572
-              ]
-            },
-            "member": "clavicle-l",
-            "part": "joint"
-          },
-          {
             "id": "sk-hip-l",
             "kind": "capsule",
             "bone": "ilium-l",
@@ -80472,34 +79963,6 @@
             "r1": 0.0376,
             "member": "ilium-l",
             "part": "member"
-          },
-          {
-            "id": "joint-ilium-l",
-            "kind": "ellipsoid",
-            "bone": "ilium-l",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ],
-              "rotation": [
-                0.04231,
-                0.63803,
-                0.70584,
-                0.30483
-              ]
-            },
-            "member": "ilium-l",
-            "part": "joint"
           },
           {
             "id": "sk-clavicle-r",
@@ -80546,56 +80009,6 @@
             "part": "member"
           },
           {
-            "id": "sk-glenoid-r",
-            "kind": "capsule",
-            "bone": "clavicle-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.85,
-            "p0": [
-              0.09903,
-              0,
-              0
-            ],
-            "p1": [
-              0.10084,
-              -0.02823,
-              0.00754
-            ],
-            "r0": 0.0376,
-            "r1": 0.0376,
-            "member": "clavicle-r",
-            "part": "member"
-          },
-          {
-            "id": "joint-clavicle-r",
-            "kind": "ellipsoid",
-            "bone": "clavicle-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ],
-              "rotation": [
-                -0.5858,
-                -0.61111,
-                0.39602,
-                0.35572
-              ]
-            },
-            "member": "clavicle-r",
-            "part": "joint"
-          },
-          {
             "id": "sk-hip-r",
             "kind": "capsule",
             "bone": "ilium-r",
@@ -80616,34 +80029,6 @@
             "r1": 0.0376,
             "member": "ilium-r",
             "part": "member"
-          },
-          {
-            "id": "joint-ilium-r",
-            "kind": "ellipsoid",
-            "bone": "ilium-r",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.5,
-            "radii": [
-              0.0376,
-              0.0376,
-              0.0376
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ],
-              "rotation": [
-                -0.04231,
-                -0.63803,
-                0.70584,
-                0.30483
-              ]
-            },
-            "member": "ilium-r",
-            "part": "joint"
           },
           {
             "id": "sk-pack-panel",
@@ -80855,8 +80240,8 @@
             "de": "Thermik 1:500: eine Oberfläche je Region mit denselben Schnitten an den Säumen; die Atemöffnungen sind auf das druckbare Mindestmass vergrössert."
           },
           {
-            "en": "Structure 1:500: the members of 1:200 at the printable thickness of this scale, the girdle struts still on the clavicle and hip bones of the rig; femur, tibia and humerus keep their true shaft and are not thickened.",
-            "de": "Tragwerk 1:500: die Glieder von 1:200 in der druckbaren Stärke dieses Massstabs, die Gürtelstreben weiterhin auf den Schlüsselbein- und Hüftbeinknochen des Rigs; Oberschenkel-, Schien- und Oberarmknochen behalten ihren wahren Schaft und werden nicht verdickt."
+            "en": "Structure 1:500: the load path in the fewest members at the printable thickness of this scale: skull with jaw, column, ribcage basket and pelvis basin, one clavicle and one scapula strut and one hip strut per side on the clavicle and hip bones of the rig, one member per limb bone and each foot with its toes as one bar, the pack panel on its two straps; femur, tibia and humerus keep their true shaft and are not thickened. Against 1:200 the joint spheres, the glenoid stubs, the heels, the sole struts and the toe members lie within the ends of the members they tie or within half a smallest feature of the foot bar and are merged into them; only the knee stays a knob between its two slender shafts.",
+            "de": "Tragwerk 1:500: der Lastpfad in den wenigsten Gliedern in der druckbaren Stärke dieses Massstabs: Schädel mit Kiefer, Wirbelsäule, Brustkorbkorb und Beckenschale, je Seite eine Schlüsselbein-, eine Schulterblatt- und eine Hüftstrebe auf den Schlüsselbein- und Hüftbeinknochen des Rigs, ein Glied je Gliedmassenknochen und jeder Fuss mit seinen Zehen als ein Stab, die Rucksackplatte an ihren zwei Riemen; Oberschenkel-, Schien- und Oberarmknochen behalten ihren wahren Schaft und werden nicht verdickt. Gegenüber 1:200 liegen die Gelenkkugeln, die Gelenkpfannenstummel, die Fersen, die Sohlenstreben und die Zehenglieder in den Enden der Glieder, die sie verbinden, oder innerhalb eines halben kleinsten Merkmals des Fussstabs und gehen in ihnen auf; nur das Knie bleibt ein Knoten zwischen seinen zwei schlanken Schäften."
           }
         ]
       }

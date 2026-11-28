@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/build/broken/v1",
+  "title": "Broken crates board: per crate status, first error and last editor, published by every machine that sweeps and merged by the fleet status",
+  "definitions": {
+    "Status": {
+      "enum": [
+        "ok",
+        "broken",
+        "blocked",
+        "unchecked"
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "atMs",
+        "path"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "crate",
+        "status",
+        "checkedAtMs"
+      ],
+      "properties": {
+        "crate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dir": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        },
+        "firstError": {
+          "$ref": "#/definitions/Error"
+        },
+        "lastEditor": {
+          "$ref": "#/definitions/Editor"
+        },
+        "checkedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "brokenSinceMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "digest": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        }
+      }
+    },
+    "Cursor": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segment",
+          "offset"
+        ],
+        "properties": {
+          "segment": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "Board": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "origin",
+        "atMs",
+        "cursor",
+        "rows",
+        "dirty"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cursor": {
+          "$ref": "#/definitions/Cursor"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "dirty": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "lastSweep": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "atMs",
+            "mode",
+            "seconds",
+            "crates",
+            "code"
+          ],
+          "properties": {
+            "atMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mode": {
+              "enum": [
+                "workspace",
+                "crates",
+                "idle"
+              ]
+            },
+            "seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "crates": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "code": {
+              "type": "integer"
+            },
+            "digest": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atMs",
+        "origins",
+        "counts",
+        "rows"
+      ],
+      "properties": {
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "origin",
+              "ageSeconds"
+            ],
+            "properties": {
+              "origin": {
+                "type": "string"
+              },
+              "ageSeconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "crates": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ok",
+            "broken",
+            "blocked",
+            "unchecked"
+          ],
+          "properties": {
+            "ok": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "broken": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blocked": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unchecked": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        }
+      }
+    }
+  }
+}

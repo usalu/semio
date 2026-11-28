@@ -6,10 +6,10 @@
 //! `mutation.invariant` on a term weighting the combination itself), the finite-factor bound
 //! (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dCombinationsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dCombinationsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dCombinationsDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dCombinationsModification;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
@@ -29,6 +29,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshotValue) -> protocol
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { modified: vec![Fem2dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { modified: vec![Fem2dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

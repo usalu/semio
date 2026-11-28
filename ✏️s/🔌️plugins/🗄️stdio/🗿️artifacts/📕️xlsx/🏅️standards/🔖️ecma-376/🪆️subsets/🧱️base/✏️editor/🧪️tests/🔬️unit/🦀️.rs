@@ -647,3 +647,89 @@ async fn editing_an_input_recalculates_dependent_formula_caches_in_one_undoable_
     assert!(sheet.contains("<f>SUM(B2:B3)</f><v>1600.5</v>"), "{sheet}");
     assert!(sheet.contains("<f>B4*2</f><v>3201</v>"), "{sheet}");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn literal_text_display_fixture_spells_text_the_parser_would_misread_with_an_apostrophe_and_round_trips() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️cell-text-display/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let (locale, text, display) = (notation_locale(case["locale"].as_str().unwrap()), case["text"].as_str().unwrap(), case["display"].as_str().unwrap());
+        let inline = XlsxCellValue::InlineString(text.into());
+        assert_eq!(render_xlsx_cell_value(&inline, &[], locale), display, "{text:?} in {locale:?}");
+        assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &[text.to_string()], locale), display, "shared {text:?} in {locale:?}");
+        assert_eq!(parse_xlsx_cell_value(display, locale), inline, "{display:?} in {locale:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn boolean_drafts_are_case_insensitive_and_german_accepts_wahr_falsch() {
+    for (locale, text, flag) in [(None, "TRUE", true), (None, "True", true), (None, "false", false), (Some(Locale::En), "FaLsE", false), (Some(Locale::De), "TRUE", true), (Some(Locale::De), "WAHR", true), (Some(Locale::De), "Falsch", false)] {
+        assert_eq!(parse_xlsx_cell_value(text, locale), XlsxCellValue::Boolean(flag), "{text:?} in {locale:?}");
+    }
+    for (locale, text) in [(None, "WAHR"), (Some(Locale::En), "FALSCH"), (Some(Locale::En), "tru"), (Some(Locale::De), "TRUE1")] {
+        assert_eq!(parse_xlsx_cell_value(text, locale), XlsxCellValue::InlineString(text.into()), "{text:?} in {locale:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn display_and_parse_are_inverse_over_representative_values_in_every_locale() {
+    let texts = ["", "'", "''", "0", "007", "-1", "+5", "1e5", "1.5", "1,5", "1.000,5", "1,000.5", "NaN", "inf", "true", "false", "TRUE", "=A1", "= 1", "'x", "x'", " 5", "5 ", "Hello", "Ünï", "1.5.2", "--1"];
+    let numbers = [0.0, -0.0, 1.0, 1.5, -0.25, 1e21, 1.5e-7, 123456789.125];
+    for locale in [None, Some(Locale::En), Some(Locale::De)] {
+        for text in texts {
+            let value = XlsxCellValue::InlineString(text.into());
+            assert_eq!(parse_xlsx_cell_value(&render_xlsx_cell_value(&value, &[], locale), locale), value, "{text:?} in {locale:?}");
+        }
+        for number in numbers {
+            let value = XlsxCellValue::Number(number);
+            assert_eq!(parse_xlsx_cell_value(&render_xlsx_cell_value(&value, &[], locale), locale), value, "{number} in {locale:?}");
+        }
+        for flag in [true, false] {
+            let value = XlsxCellValue::Boolean(flag);
+            assert_eq!(parse_xlsx_cell_value(&render_xlsx_cell_value(&value, &[], locale), locale), value);
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn recommitting_an_unchanged_text_cell_in_its_displayed_spelling_emits_nothing_and_keeps_its_type() {
+    let snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }, XlsxCell { row: 2, col: 0, value: XlsxCellValue::InlineString("1,5".into()) }] }],
+        shared_strings: vec!["007".into()],
+    });
+    for (row, locale) in [(1, Locale::En), (1, Locale::De), (2, Locale::De), (2, Locale::En)] {
+        let workbook = snapshot.project_workbook().unwrap();
+        let shown = render_xlsx_cell_value(&workbook.sheets[0].cells[row as usize - 1].value, &workbook.shared_strings, Some(locale));
+        let address = xlsx_cell_address(&snapshot, "Sheet 1", row, 0).unwrap();
+        let canonical = xlsx_canonical_cell_text(&shown, locale.as_str());
+        let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row, column: 0, revision: address.revision, value: canonical };
+        assert!(xlsx_set_cell_emit(&snapshot, &command, None).unwrap().artifact_mutations.is_empty(), "{shown:?} in {locale:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn clearing_an_occupied_cell_through_the_window_kit_action_removes_the_cell_and_the_saved_xlsx_omits_it() {
+    use calamine::Reader;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    let snapshot = build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) }, XlsxCell { row: 1, col: 1, value: XlsxCellValue::InlineString("temporary".into()) }] }],
+        ..Default::default()
+    });
+    let address = xlsx_cell_address(&snapshot, "Sheet 1", 1, 1).unwrap();
+    let json = serde_json::json!({ "sheetName": "Sheet 1", "row": 1, "column": 1, "revision": address.revision, "value": "", "locale": "en" }).to_string();
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let command = XlsxEditor::command_from_action("set-cell", &mut Some(args), &mut None).unwrap();
+    let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = &command else { panic!("expected native command") };
+    let emitted = xlsx_set_cell_emit(&snapshot, native, None).unwrap();
+    assert_eq!(emitted.artifact_mutations, vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row: false })]);
+    let mut cleared = snapshot.clone();
+    for mutation in &emitted.artifact_mutations {
+        apply_xlsx_mutation(&mut cleared, mutation);
+    }
+    let workbook = cleared.project_workbook().unwrap();
+    assert_eq!(workbook.sheets[0].cells, vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) }]);
+    let reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(XlsxEditor::encode_natural_file(&cleared).unwrap())).unwrap();
+    let mut reference = reference;
+    let range = reference.worksheet_range("Sheet 1").unwrap();
+    assert_eq!(range.get_value((0, 1)), None);
+    assert_eq!(range.get_value((0, 0)), Some(&calamine::Data::Float(2.0)));
+}

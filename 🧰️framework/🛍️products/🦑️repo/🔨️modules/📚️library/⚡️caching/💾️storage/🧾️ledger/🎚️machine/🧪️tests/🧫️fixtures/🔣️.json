@@ -1,0 +1,211 @@
+{
+ "cases": [
+  {
+   "name": "mac volume 228 GiB with 13 GiB free: pressure and eviction",
+   "totalBytes": 208642506752,
+   "source": "default",
+   "hostTotalBytes": 244813135872,
+   "hostFreeBytes": 13958643712,
+   "uses": [
+    {
+     "id": "rust",
+     "usedBytes": 55834574848,
+     "envelopeBytes": 103079215104,
+     "evictableBytes": null
+    },
+    {
+     "id": "products",
+     "usedBytes": 17179869184,
+     "envelopeBytes": 32212254720,
+     "evictableBytes": null
+    },
+    {
+     "id": "tools",
+     "usedBytes": 3221225472,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "dependencies",
+     "usedBytes": 6442450944,
+     "envelopeBytes": 17179869184,
+     "evictableBytes": null
+    },
+    {
+     "id": "graph",
+     "usedBytes": 2147483648,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "diagnostics",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "nx",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "leases",
+     "usedBytes": 0,
+     "envelopeBytes": 1073741824,
+     "evictableBytes": null
+    },
+    {
+     "id": "loose",
+     "usedBytes": 10737418240,
+     "envelopeBytes": null,
+     "evictableBytes": 10737418240
+    }
+   ],
+   "expect": {
+    "pressure": true,
+    "derived": true,
+    "evicts": true,
+    "withinReserve": true
+   }
+  },
+  {
+   "name": "mac volume with 27 GiB free: derived below the default, no eviction",
+   "totalBytes": 208642506752,
+   "source": "default",
+   "hostTotalBytes": 244813135872,
+   "hostFreeBytes": 28991029248,
+   "uses": [
+    {
+     "id": "rust",
+     "usedBytes": 42949672960,
+     "envelopeBytes": 103079215104,
+     "evictableBytes": null
+    },
+    {
+     "id": "products",
+     "usedBytes": 8589934592,
+     "envelopeBytes": 32212254720,
+     "evictableBytes": null
+    },
+    {
+     "id": "tools",
+     "usedBytes": 3221225472,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "dependencies",
+     "usedBytes": 6442450944,
+     "envelopeBytes": 17179869184,
+     "evictableBytes": null
+    },
+    {
+     "id": "graph",
+     "usedBytes": 2147483648,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "diagnostics",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "nx",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "leases",
+     "usedBytes": 0,
+     "envelopeBytes": 1073741824,
+     "evictableBytes": null
+    },
+    {
+     "id": "loose",
+     "usedBytes": 6442450944,
+     "envelopeBytes": null,
+     "evictableBytes": 6442450944
+    }
+   ],
+   "expect": {
+    "pressure": false,
+    "derived": true,
+    "evicts": false,
+    "withinReserve": false
+   }
+  },
+  {
+   "name": "explicit budget is never relabelled",
+   "totalBytes": 42949672960,
+   "source": "argument",
+   "hostTotalBytes": 244813135872,
+   "hostFreeBytes": 214748364800,
+   "uses": [
+    {
+     "id": "rust",
+     "usedBytes": 10737418240,
+     "envelopeBytes": 103079215104,
+     "evictableBytes": null
+    },
+    {
+     "id": "products",
+     "usedBytes": 4294967296,
+     "envelopeBytes": 32212254720,
+     "evictableBytes": null
+    },
+    {
+     "id": "tools",
+     "usedBytes": 3221225472,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "dependencies",
+     "usedBytes": 6442450944,
+     "envelopeBytes": 17179869184,
+     "evictableBytes": null
+    },
+    {
+     "id": "graph",
+     "usedBytes": 2147483648,
+     "envelopeBytes": 8589934592,
+     "evictableBytes": null
+    },
+    {
+     "id": "diagnostics",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "nx",
+     "usedBytes": 1073741824,
+     "envelopeBytes": 4294967296,
+     "evictableBytes": null
+    },
+    {
+     "id": "leases",
+     "usedBytes": 0,
+     "envelopeBytes": 1073741824,
+     "evictableBytes": null
+    },
+    {
+     "id": "loose",
+     "usedBytes": 2147483648,
+     "envelopeBytes": null,
+     "evictableBytes": 2147483648
+    }
+   ],
+   "expect": {
+    "pressure": false,
+    "derived": false,
+    "evicts": false,
+    "withinReserve": false
+   }
+  }
+ ]
+}

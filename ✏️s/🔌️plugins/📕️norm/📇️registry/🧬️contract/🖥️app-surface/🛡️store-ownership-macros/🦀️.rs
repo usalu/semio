@@ -8,6 +8,9 @@ macro_rules! norm_exact_store_ownership {
         $crate::norm_exact_store_ownership!(live, store::os_store::ColdMutationApplyFactory<Self::Snapshot, Self::Mutation>);
     };
     (live, $factory:ty) => {
+        $crate::norm_exact_store_ownership!(live, $factory, <$factory>::default);
+    };
+    (live, $factory:ty, $ctor:expr) => {
         fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
             let children = semio_plugin::__value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
             store::os_store::document_store_owners::bounded_artifact_store_owners_shared_semantic_source_demands::<Self::Snapshot, Self::Mutation, $factory>(children, 0)
@@ -15,7 +18,7 @@ macro_rules! norm_exact_store_ownership {
 
         fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
             let children = semio_plugin::__value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
-            Some(store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation::<Self::Snapshot, Self::Mutation, $factory>(grant, children, 0, <$factory>::default).map(|(mut owners, progress)| {
+            Some(store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation::<Self::Snapshot, Self::Mutation, $factory>(grant, children, 0, $ctor).map(|(mut owners, progress)| {
                 owners.operation_wire = store::os_store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_encoded_binary_receiving().with_original_target(store::os_store::whole_document_target::<Self::Mutation>);
                 (owners, progress)
             }))

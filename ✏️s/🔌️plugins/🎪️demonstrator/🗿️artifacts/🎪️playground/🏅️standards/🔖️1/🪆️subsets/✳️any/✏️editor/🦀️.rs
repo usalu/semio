@@ -146,6 +146,7 @@ fn playground_store_preparation_factory() -> std::sync::Arc<dyn store::os_store:
         maximum_bytes: PLAYGROUND_STORE_MAXIMUM_BYTES,
         mutation_bytes: |mutation| match mutation { PlaygroundMutation::ChangeSchema(payload) => payload.new_schema.len() },
         snapshot_bytes: |snapshot| snapshot.schema.len(),
+        heap_quote: |snapshot, mutation| store::ColdHeapQuote::reference(snapshot.schema.len(), match mutation { PlaygroundMutation::ChangeSchema(payload) => payload.new_schema.len() }),
     })
 }
 //#endregion 📬️StorePreparation

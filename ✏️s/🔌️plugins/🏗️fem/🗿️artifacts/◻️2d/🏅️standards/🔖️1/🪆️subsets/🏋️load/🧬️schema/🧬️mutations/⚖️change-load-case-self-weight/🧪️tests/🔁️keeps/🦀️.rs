@@ -50,7 +50,7 @@ fn no_op_leaves_the_document_untouched() {
 #[test]
 fn the_no_op_is_a_warning_not_a_rejection() {
     let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op change-load-case-self-weight must carry the empty diff");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op change-load-case-self-weight must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "change-load-case-self-weight/keeps-self-weight-ff696b: an unchanged value is reported as no-op");
@@ -111,15 +111,15 @@ fn produces_committed_diff() {
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-load-case-self-weight/keeps-self-weight-ff696b: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into Fem2dDiff");
-    assert_eq!(typed, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op delta is the artifact's Default diff");
+    let typed: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into Fem2dDiff");
+    assert_eq!(typed, semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op delta is the artifact's Default diff");
 }
 
 /// 🔣️ The committed diff is itself canonical. `Fem2dDiff` carries a container-level `default` and no
 /// per-field skip, so all nine sparse slots must be present as `null`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
     let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-load-case-self-weight/keeps-self-weight-ff696b: committed diff JSON is not canonical");
@@ -131,7 +131,7 @@ fn committed_diff_is_canonical() {
 /// is the identity — and still a real assertion: `apply` must leave every other member alone too.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-load-case-self-weight/keeps-self-weight-ff696b: committed diff did not carry before to after");
 }

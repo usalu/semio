@@ -29,3 +29,22 @@ Counts: `.d` classes (12 `.d`-only, 60 combined with rlib/rmeta/deps; 11 of 11 r
 
 Landing: lock remote-cache (released), tests action-result 4, provenance 10, portable 37 pass, typecheck passed, dangling-imports 0.
 Unverified: live divergence counts after restart; the rmeta/stderr causes.
+
+# Round 3: root cause of the `.rmeta`/`.rlib` divergences found and fixed (landed 04:00)
+
+## Classification of the divergences recorded after 01:00 CET (81 unit rows, 01:00-03:14; 64 evidence entries)
+- `.rmeta` only 34 rows (m13/m15 10, m01/m15 5, m02/m14 4, m06/m11 4, ...); no-output-diff (stream or metadata only) 40 rows (m07/m08 26, m02/m07 5, m13/m15 4, ...); `.d+.rlib+.rmeta+deps` 1, `.rlib+.rmeta` 1, `.rlib` 1.
+- The server had not restarted yet with the round 2 stream change (restart policy 3 h), so the stream-only pairs have no blobs: that class (40) is still unclassified; the evidence will keep them after the next server restart.
+- Kept vs refused `.rmeta` (e.g. `replication_crypto`, 15106 vs 14996 bytes, `-Z ls=root` and `=items` identical: same SVH, same stable crate id, same dependencies, same items): same content, entries of the lazy tables in another order and shifted positions.
+
+## Root cause
+`.cargo/config.toml` builds with `-Z threads=0` (parallel front end, one thread per core). With more than one thread the compiler numbers the definitions it creates while lowering (opaque types of `async fn` in a trait, return-position `impl Trait`) in the order the threads arrive, so the metadata tables and the rlib differ between two compilations of one unit, on one machine too. The crates that diverge are exactly those with async-fn-in-trait (`replication_crypto`, `async`, `actor_pack`, ...). Reproduction with one real compiler (nightly-2026-07-20, 60 traits with `async fn`, same command line): `-Z threads=0` 6 runs gave 6 different `.rmeta` shas; `-Z threads=4` 3 runs gave 3; `-Z threads=1` 5 runs gave 1. (The earlier synthetic crates without async-fn-in-trait, and `syn`, were deterministic: that is why round 1 ruled threads out wrongly.)
+
+## Fix (landed 04:00, lock caching-cargo released)
+`deterministicFrontEndArgumentsV1` (`🔏️key/🟦️.ts`): every spelling of `-Z threads=N` becomes `threads=1`. `📜️script.ts` applies it to the compile of every unit that is shared through the fleet (`shared`); units that are not shared (no fleet) keep the parallel front end. The key keeps what Cargo gave (all machines give the same), so no unit is re-keyed. Cost: the compile of a shared unit uses one front-end thread (codegen stays parallel); accepted for bit-identical outputs.
+Tests: portable 39 pass: argument rewrite (both spellings, `--cfg threads=0` untouched) and a real-compiler check (4 compiles of an async-fn-in-trait crate give one `.rmeta` sha).
+Dangling imports 0; typecheck result below.
+
+## Still open / measure
+- Stream-only (40 rows, m07/m08 pair dominant): blobs kept after the next cache-server restart; classify with `repo remote-cache evidence show <id>` then. No guess normalisation landed.
+- Rate: 1135 at 03:14 (53/h). Measure again at about 05:15, after workers restart on the new wrapper and the server restarts; expected: `.rmeta`/`.rlib` classes (34 of 81 recent) stop, only stream-only and pre-existing keys remain. Not measured yet.

@@ -417,7 +417,7 @@ fn geometry_oracle_agrees_with_third_party_libraries() {
         "rust": { "area": properties(&rr).area, "cu": 0.0, "cv": 0.0, "ixx": 0.0, "iyy": 0.0, "ixy": 0.0 },
     }));
     let input = serde_json::json!({ "cases": cases }).to_string();
-    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔮️oracles/🐍️.py");
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🔮️oracles/🐍️.py");
     let out = python_oracle::run_ok(&script, &[], Some(input.as_bytes()));
     let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(report["failures"], serde_json::json!([]), "{report}");

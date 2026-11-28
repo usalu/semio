@@ -148,6 +148,11 @@
           "type": "string",
           "minLength": 1
         },
+        "module": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🏷️ The import name when it differs from the distribution name; the host that provisions this reference reads it."
+        },
         "license": {
           "type": "string",
           "minLength": 1
@@ -234,6 +239,11 @@
         },
         "version": {
           "type": "string"
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🏷️ The import name when it differs from the distribution name; the host that provisions this reference reads it."
         },
         "lockDigest": {
           "$ref": "#/$defs/Sha256"
@@ -1960,9 +1970,11 @@
     "OracleHostPackage": {
       "type": "object",
       "additionalProperties": false,
+      "description": "🖥️ A LOCAL in-repo package a test host links for an owner's adapters, by `path`. An external distribution is never declared here: registering the oracle (its package, linked packages, module and version) is the declaration and the host row is derived from it.",
       "required": [
         "implementation",
-        "package"
+        "package",
+        "path"
       ],
       "properties": {
         "implementation": {

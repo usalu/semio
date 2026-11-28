@@ -4,7 +4,16 @@
   "role": "plugin",
   "manifest": {
     "pluginId": "stdio-pdf",
-    "label": "Stdio PDF",
+    "label": {
+      "native": {
+        "en": "Stdio PDF",
+        "de": "Stdio PDF"
+      },
+      "reuse": {
+        "en": "Stdio PDF",
+        "de": "Stdio PDF"
+      }
+    },
     "version": "0.1.0",
     "apps": [
       {

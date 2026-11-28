@@ -123,11 +123,13 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     if (!isCurrentEffectOwner(actionOwner)) {
       const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
       if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
+      if (completion?.fault !== undefined) return programInputResultV1(refuse("dispatch-failed", completion.fault.fault.code, true, inputDiagnosticV1(completion.fault.fault)), settledProgramOutputV1(response.output, startedOperation !== undefined, null));
       return programInputResultV1(applied(), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
     }
     await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
     const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
     if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
+    if (completion?.fault !== undefined) return programInputResultV1(refuse("dispatch-failed", completion.fault.fault.code, true, inputDiagnosticV1(completion.fault.fault)), settledProgramOutputV1(response.output, startedOperation !== undefined, null));
     const loadRefusal = documentLoadRefusalDetailV1(actionOwner);
     if (loadRefusal !== undefined) return programInputResultV1(refuse("not-applied", loadRefusal, true), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
     return programInputResultV1(applied(completion === null ? undefined : inputCommitReceiptV1(completion.operation, completion.revision)), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));

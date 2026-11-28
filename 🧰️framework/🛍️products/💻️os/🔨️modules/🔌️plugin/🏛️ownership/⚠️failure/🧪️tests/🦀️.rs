@@ -131,3 +131,18 @@ fn original_quoted_typed_owner_denial_and_paid_work(){
  for _ in 0..100000{if source.is_none()&&active.is_none(){break}caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let before=cx.fuel_remaining();let birth=source.is_some()&&active.is_none();let demand=crate::bounded_ownership::plugin_typed_owner_demand(&source,&active,stock.maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|crate::bounded_ownership::plugin_typed_owner_original(&mut source,&mut active,effect))?;if birth{assert_eq!(before-cx.fuel_remaining(),paid_case["fuelDebit"].as_u64().unwrap())}observed_paid|=cx.fuel_remaining()<before;Ok(())})).unwrap();}
  assert!(source.is_none()&&active.is_none());assert!(observed_paid);caller.retire(stock);
 }
+
+/// 🧭️ LAW: only a fault that spent and retained nothing and carries no refusal is a plain refusal, the one a per-operation boundary answers as that operation's own terminal fault; a value refusal, a spent receipt or a refused debit keeps it a turn failure.
+#[test]
+fn only_a_plain_fault_is_a_plain_refusal(){
+ let fault=||Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.stale"),"the document changed");
+ let plain=PluginLifecycleFailure::from(fault());
+ assert_eq!(plain.plain_refusal().map(|fault|fault.code.0.as_str()),Some("interactive-job.stale"));
+ let mut spent=PluginLifecycleFailure::from(fault());spent.effects.copied_items=1;
+ assert!(spent.plain_refusal().is_none(),"a refusal that spent a receipt is not plain");
+ let mut refused=PluginLifecycleFailure::from(fault());refused.receipt_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"the debit was refused"));
+ assert!(refused.plain_refusal().is_none(),"a refused receipt debit is not plain");
+ let value=PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"a value refusal"));
+ assert!(value.plain_refusal().is_none(),"a value refusal is not a semantic fault");
+ std::mem::forget((plain,spent,refused,value));
+}

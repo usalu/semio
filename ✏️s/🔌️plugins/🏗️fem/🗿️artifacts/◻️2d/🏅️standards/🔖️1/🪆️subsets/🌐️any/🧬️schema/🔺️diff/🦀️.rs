@@ -1,10 +1,10 @@
 //! 🧬️ Fem2d diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
-use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemLoadCase, FemRegion, FemSection, FemSupport, element_id, load_id};
-use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemLoadCase, FemRegion, FemSection, FemSupport, load_id};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::list_delta::RowPatch;
 use protocol::{ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
@@ -60,13 +60,6 @@ protocol::list_delta! {
         patch: Fem2dNodePatch,
         list: Vec<FemNodeValue>,
         key: String = by Fem2dNodeKey
-    }
-}
-
-impl protocol::list_delta::Keyed for FemElement {
-    type Key = String;
-    fn key(&self) -> String {
-        element_id(self).to_string()
     }
 }
 
@@ -174,7 +167,8 @@ protocol::list_delta! {
         modification: Fem2dRegionsModification,
         row: FemRegion,
         patch: Fem2dRegionPatch,
-        key: id
+        list: Vec<FemRegion>,
+        key: String = keyed
     }
 }
 
@@ -201,7 +195,8 @@ protocol::list_delta! {
         modification: Fem2dSectionsModification,
         row: FemSection,
         patch: Fem2dSectionPatch,
-        key: id
+        list: Vec<FemSection>,
+        key: String = keyed
     }
 }
 
@@ -214,7 +209,8 @@ protocol::list_delta! {
         modification: Fem2dSupportsModification,
         row: FemSupport,
         patch: Fem2dSupportPatch,
-        key: id
+        list: Vec<FemSupport>,
+        key: String = keyed
     }
 }
 
@@ -227,7 +223,8 @@ protocol::list_delta! {
         modification: Fem2dLoadCasesModification,
         row: FemLoadCase,
         patch: Fem2dLoadCasePatch,
-        key: id
+        list: Vec<FemLoadCase>,
+        key: String = keyed
     }
 }
 
@@ -249,10 +246,10 @@ pub struct Fem2dCombinationTermPatch {
     #[value(skip_serializing_if="Option::is_none",deserialize_with="protocol::list_delta::supplied_value",deserialize_controlled_with="protocol::list_delta::supplied_value_controlled",default_controlled="protocol::list_delta::supplied_value_default",retire_with="protocol::list_delta::supplied_value_retire")]
     pub factor: Option<f64>,
 }
-impl RowPatch<crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm> for Fem2dCombinationTermPatch {
-    fn commit_into(&self,row:&mut crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm,_:ApplyCapability)->Result<(),MutationApplyError>{if let Some(value)=self.factor{row.factor=value;}Ok(())}
+impl RowPatch<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm> for Fem2dCombinationTermPatch {
+    fn commit_into(&self,row:&mut semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm,_:ApplyCapability)->Result<(),MutationApplyError>{if let Some(value)=self.factor{row.factor=value;}Ok(())}
     fn absorb(&mut self,later:Self){self.factor=later.factor.or(self.factor);}
-    fn inverse(&self,row:&crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm)->Self{Self{factor:self.factor.map(|_|row.factor)}}
+    fn inverse(&self,row:&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm)->Self{Self{factor:self.factor.map(|_|row.factor)}}
     fn is_empty(&self)->bool{self.factor.is_none()}
 }
 protocol::list_delta! {
@@ -262,9 +259,10 @@ protocol::list_delta! {
         insertion: Fem2dCombinationTermInsertion,
         relocation: Fem2dCombinationTermRelocation,
         modification: Fem2dCombinationTermsModification,
-        row: crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm,
+        row: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm,
         patch: Fem2dCombinationTermPatch,
-        key: case_id
+        list: Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm>,
+        key: String = keyed
     }
 }
 /// 📛️ Combination names and independently keyed terms have separate ownership.
@@ -291,7 +289,7 @@ impl Fem2dCombinationPatch {
     /// 💚️ Explicit replacement owns the name and every term in its live base.
     pub fn replacement(base:&FemCombination,row:&FemCombination)->Self{Self{name:Some(row.name.clone()),terms:Some(Self::replacing_terms(&base.terms,&row.terms))}}
     /// 🏗️ Builds exact keyed term intent from an explicit whole-list or whole-map replacement.
-    pub fn replacing_terms(base:&Vec<crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm>,rows:&Vec<crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm>)->Fem2dCombinationTermsDelta{
+    pub fn replacing_terms(base:&Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm>,rows:&Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm>)->Fem2dCombinationTermsDelta{
                 Fem2dCombinationTermsDelta {
             removed: base.iter().enumerate().map(|(index,row)| Fem2dCombinationTermRemoval { id: row.case_id.clone(), index }).collect(),
             inserted: rows.iter().enumerate().map(|(index,row)| Fem2dCombinationTermInsertion { index, row: row.clone() }).collect(),
@@ -482,7 +480,7 @@ pub struct Fem2dSupportPatch {
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub node_id: Option<String>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
-    pub fixed: Option<Vec<crate::standards::v1::subsets::any::schema::structure::FemDof>>,
+    pub fixed: Option<Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof>>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub tx: Option<bool>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
@@ -506,18 +504,18 @@ impl RowPatch<FemSupport> for Fem2dSupportPatch {
         self.ty = later.ty.or_else(|| self.ty.take());
         self.rz = later.rz.or_else(|| self.rz.take());
     }
-    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Ty)), rz: self.rz.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Rz)) } }
+    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty)), rz: self.rz.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz)) } }
     fn is_empty(&self) -> bool { self.node_id.is_none() && self.fixed.is_none() && self.tx.is_none() && self.ty.is_none() && self.rz.is_none() }
 }
 impl Fem2dSupportPatch {
     /// 🛂️ Whole sets and membership setters are disjoint authored modes.
-    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| crate::standards::v1::subsets::any::schema::structure::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.rz.is_none()) }
-    fn memberships(&self, base: &[crate::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<crate::standards::v1::subsets::any::schema::structure::FemDof> {
+    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.rz.is_none()) }
+    fn memberships(&self, base: &[semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof> {
         let mut fixed = self.fixed.as_deref().unwrap_or(base).to_vec();
-        if let Some(value) = self.tx { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Tx); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Tx); } }
-        if let Some(value) = self.ty { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Ty); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Ty); } }
-        if let Some(value) = self.rz { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); } }
-        crate::standards::v1::subsets::any::schema::structure::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
+        if let Some(value) = self.tx { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); } }
+        if let Some(value) = self.ty { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); } }
+        if let Some(value) = self.rz { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz); } }
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
     }
     /// 🌋️ A replacement authors the node and whole restraint set.
     pub fn replacement(row: &FemSupport) -> Self { Self { node_id: Some(row.node_id.clone()), fixed: Some(row.fixed.clone()), ..Default::default() } }
@@ -590,7 +588,7 @@ pub enum Fem2dLoadPatch {
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
         node_id: Option<String>,
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
-        dof: Option<crate::standards::v1::subsets::any::schema::structure::FemDof>,
+        dof: Option<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof>,
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
         value: Option<f64>,
     },

@@ -3,6 +3,9 @@
 use super::*;
 
 // #region 🔖️Pcg
+/// 🏃️ Most scalar units one PCG run step advances before it re-reads the clock, fuel and cancellation.
+const PCG_UNITS_PER_CHUNK: usize = 1024;
+
 impl PcgJob {
     fn run(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
         if context.is_cancelled() {
@@ -36,7 +39,8 @@ impl PcgJob {
         context.set_stage("fem.pcg");
         let mut units = 0;
         while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
-            let advanced = self.state.advance_one();
+            let chunk = (self.state.batch_units - units).min(PCG_UNITS_PER_CHUNK).min(usize::try_from(context.fuel_remaining()).unwrap_or(usize::MAX)).max(1);
+            let advanced = self.state.advance(chunk);
             self.state.checkpoint_due &= self.publishes;
             self.state.preview_due &= self.publishes;
             units += advanced;

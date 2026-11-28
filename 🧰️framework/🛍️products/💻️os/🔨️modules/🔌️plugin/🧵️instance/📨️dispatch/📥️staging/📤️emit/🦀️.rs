@@ -31,7 +31,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// verb — the harness for laws about what the reactor does with an emit's effect list before
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
     /// which no registry-less typed command can reach and no reserved route carries.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         self.dispatch_emit(verb, emit, meta, identity).await
     }

@@ -262,6 +262,9 @@ where
     /// 🪞️ Delegates to [`StoreOwners::snapshot_read_leases_await_return`].
     #[inline] pub fn snapshot_read_leases_await_return(&self) -> bool { self.owners.snapshot_read_leases_await_return() }
 
+    /// 🪞️ Delegates to [`StoreOwners::returned_snapshot_reads_under_pressure`].
+    #[inline] pub fn returned_snapshot_reads_under_pressure(&self) -> bool { self.owners.returned_snapshot_reads_under_pressure() }
+
     /// 🪞️ Delegates to [`StoreOwners::returned_snapshot_read_count`].
     #[inline] pub fn returned_snapshot_read_count(&self) -> usize { self.owners.returned_snapshot_read_count() }
 

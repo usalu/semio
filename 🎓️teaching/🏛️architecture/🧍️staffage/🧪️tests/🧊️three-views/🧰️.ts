@@ -24,16 +24,34 @@ export type Extent = { readonly minX: number; readonly maxX: number; readonly mi
 /** 🧾️ One violated check of the guard. */
 export type Finding = { readonly asset: string; readonly scale: number; readonly check: string; readonly message: string };
 
-/** 🗂️ The catalog asset documents, in id order. */
-export function catalog(): Asset[] {
+const RECENT = new Map<string, Asset>();
+const RECENT_LIMIT = 4;
+
+/** 🗂️ The catalog asset documents, in id order; `only` names the folders to read, the other documents (up to 23 MB each) stay unread, and a single named asset is kept among the last {@link RECENT_LIMIT} asked for, so a suite that asks for one figure again and again parses it once and never holds more than a handful. */
+export function catalog(only?: readonly string[]): Asset[] {
+  const id = only?.length === 1 ? only[0]! : undefined;
+  if (id !== undefined && RECENT.has(id)) return [RECENT.get(id)!];
   const root = join(STAFFAGE_ROOT, "🗂️catalog");
   const assets: Asset[] = [];
   for (const group of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()))
-    for (const folder of readdirSync(join(root, group.name), { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
+    for (const folder of readdirSync(join(root, group.name), { withFileTypes: true }).filter((entry) => entry.isDirectory() && (only === undefined || only.includes(entry.name)))) {
       const file = join(root, group.name, folder.name, "🔣️.json");
       if (existsSync(file)) assets.push((JSON.parse(readFileSync(file, "utf8")) as { asset: Asset }).asset);
     }
+  if (id !== undefined && assets.length === 1) {
+    RECENT.set(id, assets[0]!);
+    for (const [oldest] of RECENT) if (RECENT.size > RECENT_LIMIT) RECENT.delete(oldest);
+  }
   return assets.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** 🪪️ The ids of the catalog assets, in id order, read from the folder names alone: no document is opened. */
+export function catalogIds(): string[] {
+  const root = join(STAFFAGE_ROOT, "🗂️catalog");
+  const ids: string[] = [];
+  for (const group of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()))
+    for (const folder of readdirSync(join(root, group.name), { withFileTypes: true }).filter((entry) => entry.isDirectory())) if (existsSync(join(root, group.name, folder.name, "🔣️.json"))) ids.push(folder.name);
+  return ids.sort((a, b) => a.localeCompare(b));
 }
 
 /** 🔢️ The denominators with an authored representation. */

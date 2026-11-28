@@ -5,13 +5,11 @@
  * @see ./🥒️.feature — the scenarios
  */
 import { describe, expect, it } from "vitest";
-import type { Asset } from "../../🧬️schema/🟦️.ts";
 import { writeGlb } from "../../🔨️modules/📤️export/🧊️glb/🟦️.ts";
 import { type GlbJson, visibleGlyphs } from "../🧊️model-catalog/🔍️oracles/🟦️.ts";
-import { loadGlb, sampleFigure, validateGlb, volumeAssets } from "../🧰️support/🧊️.ts";
+import { catalogAssetsWithVolume, loadGlb, sampleFigure, validateGlb } from "../🧰️support/🧊️.ts";
 
-const withGlyphs = (assets: readonly Asset[]): Asset[] => assets.filter((a) => ["cantilever-balcony", "electric-fan-heater", "tied-canopy"].includes(a.id));
-const assets = [sampleFigure(), ...withGlyphs(volumeAssets())];
+const assets = [sampleFigure(), ...catalogAssetsWithVolume(["cantilever-balcony", "electric-fan-heater", "tied-canopy"])];
 
 describe("🧊️ the feature edges of glyphs follow the variant of their glyph", () => {
   it.each(assets.map((a) => [a.id, a] as const))("%s: validator-clean GLB in which no hidden glyph has a visible outline", async (_id, asset) => {

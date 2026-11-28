@@ -1,5 +1,10 @@
 {
   "version": 1,
+  "receivingBudget": {
+    "invocationMilliseconds": 110000,
+    "probeMilliseconds": 90000,
+    "testMilliseconds": 120000
+  },
   "signals": [
     {
       "id": "live",

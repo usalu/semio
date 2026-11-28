@@ -10,7 +10,7 @@ const check=(name:string,value:unknown):boolean=>ajv.validate({$ref:"native#/def
 test("a host that is not Windows answers the typed unknown in both languages and the schema agrees",()=>{
  for(const platform of["darwin","linux","freebsd"] as const){
   const port=systemWindowsMemoryPortV1(platform),memory=port.memory(),table=port.processes();
-  expect(memory).toEqual(table);expect(memory.known).toBe(false);
+  expect<unknown>(memory).toEqual(table);expect(memory.known).toBe(false);
   if(!memory.known){expect(memory.reason).toBe("platform");expect(memory.text.en.length).toBeGreaterThan(0);expect(memory.text.de).toContain("Windows");}
   expect(check("Unknown",memory)).toBe(true);expect(check("Answer",table)).toBe(true);
  }

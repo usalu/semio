@@ -1,0 +1,99 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "before load state",
+  "js": "(async()=>{const s=(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))();window.__before=await s;return window.__before})()",
+  "settleMs": 100
+ },
+ {
+  "name": "arm instant cancel observer",
+  "js": "(async()=>{window.__cancel={seen:null,clicked:null,banner:null,progress:null};const t0=performance.now();const find=()=>[...document.querySelectorAll('[data-semio-history-reprojection=load] button')].find(b=>/Cancel replay|Wiedergabe abbrechen/.test(b.innerText));const mo=new MutationObserver(()=>{const c=window.__cancel;const r=document.querySelector('[data-semio-history-reprojection=load]');if(r&&c.banner===null){c.banner=Math.round(performance.now()-t0);c.progress=(r.innerText||'').replace(/\\n/g,' ')}const b=find();if(b&&c.clicked===null){c.seen=Math.round(performance.now()-t0);b.click();c.clicked=Math.round(performance.now()-t0);mo.disconnect()}});mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true});return 'armed'})()",
+  "settleMs": 100
+ },
+ {
+  "name": "open example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "pick Concrete Forest",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 200
+ },
+ {
+  "name": "banner shown and Cancel replay clicked",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__cancel.clicked!==null))()",
+  "timeoutMs": 240000,
+  "settleMs": 300
+ },
+ {
+  "name": "cancel record",
+  "js": "(async()=>JSON.stringify(window.__cancel))()",
+  "settleMs": 500
+ },
+ {
+  "name": "load stops",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(!/Loading document/.test(document.body.innerText)&&!document.querySelector('[data-semio-history-reprojection=load]')))()",
+  "timeoutMs": 240000,
+  "settleMs": 3000
+ },
+ {
+  "name": "document unchanged after cancel",
+  "js": "(async()=>{const now=JSON.parse(await((async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()));const before=JSON.parse(window.__before);if(now[0]!==before[0])return '[exception] '+('example changed '+now[0]+' vs '+before[0]);if(now[1]<1)return '[exception] '+('canvas lost');return JSON.stringify([before,now])})()",
+  "settleMs": 500
+ },
+ {
+  "name": "settle 30 s",
+  "js": "(async()=>'w')()",
+  "settleMs": 30000
+ },
+ {
+  "name": "still unchanged 30 s later",
+  "js": "(async()=>{const now=JSON.parse(await((async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()));const before=JSON.parse(window.__before);if(now[0]!==before[0]||now[2])return '[exception] '+('document drifted '+JSON.stringify(now));return JSON.stringify(now)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "app usable: Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Viewer')).click();return 'v'})()",
+  "settleMs": 2000,
+  "until": "(async()=>String(!document.querySelector('[role=combobox]')&&document.querySelectorAll('canvas').length>=1))()",
+  "timeoutMs": 120000
+ },
+ {
+  "name": "app usable: Editor",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Editor')).click();return 'e'})()",
+  "settleMs": 2000,
+  "until": "(async()=>String(!!document.querySelector('[role=combobox]')&&document.querySelectorAll('canvas').length>=1))()",
+  "timeoutMs": 120000
+ },
+ {
+  "name": "open Actions",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Actions')).click();return 'a'})()",
+  "settleMs": 6000
+ },
+ {
+  "name": "apply action Increase",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Increase')).click();return 'i'})()",
+  "settleMs": 6000
+ },
+ {
+  "name": "undo",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Undo')).click();return 'u'})()",
+  "settleMs": 6000
+ },
+ {
+  "name": "final state",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,document.querySelector('[role=combobox]').innerText]))()",
+  "settleMs": 500
+ }
+]

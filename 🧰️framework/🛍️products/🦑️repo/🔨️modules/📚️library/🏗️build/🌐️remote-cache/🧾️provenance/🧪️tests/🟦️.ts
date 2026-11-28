@@ -6,7 +6,8 @@ import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {encodeProtobufV1,REAPI_V1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 import {parseRemoteCacheStableResultV1} from "../../🔬️action-result/🟦️.ts";
-import {openProvenanceV1,PROVENANCE_ADVISORY_OUTPUTS_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1} from "../🟦️.ts";
+import {divergenceKindV1} from "../🗂️evidence/🟦️.ts";
+import {openProvenanceV1,PROVENANCE_ADVISORY_OUTPUTS_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1,provenanceStreamIdentityV1,provenanceStreamsEquivalentV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 /** 🧾️ The fingerprint ignores the manifest names that carry timestamps, and the consumption record counts who read whose results. The fingerprint cases are one shared fixture checked by an independent Python implementation. */
@@ -23,7 +24,7 @@ test("the fingerprint of an action result leaves out the volatile manifest and e
   expect(parsed.manifest,row.name).toBe(row.manifest);
  }
  const python=spawnSync("python3",["-I",resolve(here,"🐍️.py"),resolve(here,"🧫️fixtures/🔣️.json")],{encoding:"utf8"});
- if(python.error===undefined)expect(python.stdout.trim(),python.stderr).toBe(`ok ${fixture.cases.length}\nok classes ${fixture.classes.length} differing ${fixture.differing.length}`);
+ if(python.error===undefined)expect(python.stdout.trim(),python.stderr).toBe(`ok ${fixture.cases.length}\nok classes ${fixture.classes.length} differing ${fixture.differing.length}\nok streams ${fixture.streams.length}`);
 });
 
 test("the class of a result and the paths that differ between two results equal the independent Python computation on every fixture case",()=>{
@@ -81,6 +82,23 @@ test("consumption counts producer>consumer pairs with the compiled units among t
  await second.flush();
 });
 
+test("the divergences are counted per clock hour and per kind of output, and a flood of one kind never pushes out the evidence of the others",async()=>{
+ const hour=3_600_000,root=directory();let now=10*hour+5;
+ const first=await openProvenanceV1(root,{now:()=>now});
+ const row=(index:number,differing:string[])=>({namespace:"main",kind:"ac" as const,key:String(index).padStart(64,"0"),keptOrigin:"g1-m01",keptSha256:"a".repeat(64),refusedOrigin:"g1-m02",refusedSha256:"b".repeat(64),sort:"unit",differing});
+ first.diverged(row(1,["⟨stderr⟩"]));first.diverged(row(2,["⟨stderr⟩"]));first.diverged(row(3,["out/liba@@semio-extra@@.rlib","out/liba@@semio-extra@@.rmeta","out/liba@@semio-extra@@.rmeta.semio-deps"]));
+ now+=hour;first.diverged(row(4,["out/b@@semio-extra@@.d"]));first.diverged(row(5,["out/build_script_build-1a2b"]));
+ expect(first.summary().hourly).toEqual([{hour:10*hour,count:3,byKind:{"rlib+rmeta":1,stream:2}},{hour:11*hour,count:2,byKind:{binary:1,"dep-info":1}}]);
+ now+=25*hour;expect(first.summary().hourly).toEqual([]);
+ expect(divergenceKindV1([])).toBe("none");expect(divergenceKindV1(["⟨stdout⟩","⟨stderr⟩"])).toBe("stream");expect(divergenceKindV1(["x.dylib","y.so"])).toBe("dylib");expect(divergenceKindV1(["a.json"])).toBe("other");
+ const blobs=new Map<string,Uint8Array>([["h1",new Uint8Array([1])],["h2",new Uint8Array([2])]]);
+ const input=(key:string,path:string)=>({outcome:"refused" as const,sort:"unit",namespace:"main",key,keptOrigin:"g1-m01",refusedOrigin:"g1-m02",differing:[path],kept:new Uint8Array([9]),refused:new Uint8Array([8]),keptRows:[{path,hash:"h1"}],refusedRows:[{path,hash:"h2"}],blob:async(hash:string)=>blobs.get(hash)});
+ for(let index=0;index<3;index++){now+=1;await first.evidence.keep(input(String(100+index).padStart(64,"0"),"out/c.rlib"));}
+ for(let index=0;index<40;index++){now+=1;await first.evidence.keep(input(String(index).padStart(64,"0"),"⟨stderr⟩"));}
+ const kept=first.evidence.list().map(entry=>divergenceKindV1(entry.differing));
+ expect(kept.filter(kind=>kind==="stream").length).toBe(16);expect(kept.filter(kind=>kind==="rlib").length).toBe(3);
+});
+
 test("evidence keeps both sides of a divergence, replaces one per key and origin, keeps the newest 64 per class and survives a restart",async()=>{
  const root=directory();let now=100;
  const first=await openProvenanceV1(root,{now:()=>now}),blobs=new Map<string,Uint8Array>([["h1",new Uint8Array([1,2,3])],["h2",new Uint8Array([4,5,6])]]);
@@ -94,4 +112,17 @@ test("evidence keeps both sides of a divergence, replaces one per key and origin
  for(let index=0;index<70;index++){now=300+index;await first.evidence.keep(input(String(index).padStart(64,"0"),"project-inference"));}
  expect(first.evidence.summary().byClass).toEqual({"project-inference":64,unit:1});
  const second=await openProvenanceV1(root,{now:()=>now});expect(second.evidence.summary().count).toBe(65);expect(second.summary().evidence.count).toBe(65);
+});
+
+test("two captured streams with the same diagnostics in another rendering, order or long-type number are the same result, another or additional diagnostic is not, equal to the independent Python computation on every fixture case",async()=>{
+ for(const row of fixture.streams){
+  expect(provenanceStreamIdentityV1(row.kept)===provenanceStreamIdentityV1(row.refused),row.name).toBe(row.equal);
+  const rows=[{path:"⟨stderr⟩",hash:"k"}],other=[{path:"⟨stderr⟩",hash:"r"}],blobs:Record<string,string>={k:row.kept,r:row.refused};
+  expect(await provenanceStreamsEquivalentV1(["⟨stderr⟩"],rows,other,async hash=>new TextEncoder().encode(blobs[hash]!)),row.name).toBe(row.equal);
+ }
+ const rows=[{path:"⟨stderr⟩",hash:"k"},{path:"out/x.rlib",hash:"a"}],other=[{path:"⟨stderr⟩",hash:"r"},{path:"out/x.rlib",hash:"b"}];
+ expect(await provenanceStreamsEquivalentV1(["out/x.rlib"],rows,other,async()=>new Uint8Array()),"an output file differs").toBe(false);
+ expect(await provenanceStreamsEquivalentV1(["⟨stderr⟩","out/x.rlib"],rows,other,async()=>new Uint8Array()),"a stream and an output file differ").toBe(false);
+ expect(await provenanceStreamsEquivalentV1(["⟨stderr⟩"],rows,other,async()=>undefined),"a blob is gone").toBe(false);
+ expect(await provenanceStreamsEquivalentV1([],rows,other,async()=>new Uint8Array()),"nothing differs").toBe(false);
 });

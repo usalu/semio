@@ -27,7 +27,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
         semio_framework::ActionArgDef::object("/pivot", LocalizedLabel::native("Pivot", "Drehpunkt"), vec![semio_framework::ActionArgDef::number("/x", LocalizedLabel::native("x", "x"))]),
     ];
     editor.value = dsl(&serde_json::json!({ "dx": 1.0, "pivot": { "x": 2.0 } }));
-    let history = render_history(&mut app, Locale::En).await;
+    let history = render_history(&mut app, Locale::En,cx).await;
     let accept_row = find_node(&history, text(&keys["accept"]["row"])).unwrap_or_else(|| panic!("the Accept row: {history}"));
     assert!(find_node(accept_row, text(&keys["accept"]["control"])).is_some(), "Accept sits in its row: {accept_row}");
     let inputs = find_node(&history, "framework.history.editor.inputs").expect("the inputs section");
@@ -37,7 +37,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
         let holder = find_node(inputs, text(&row["row"])).expect("the input row");
         assert!(find_node(holder, text(&row["control"])).is_some(), "{} edits through {}: {holder}", text(&row["pointer"]), text(&row["control"]));
     }
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -47,8 +47,8 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
 
 //#region 🩹️HistoryViewPatch
 /// ✏️ Applies one toy edit straight on the document store — a row the command log backfills, like a seeded or ingested edit.
-async fn apply_toy_edit(app: &mut ToyApp, value: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, identity).await.expect("toy edit applies");
+async fn apply_toy_edit(app: &mut ToyApp, value: i32, cx: &mut semio_framework_job::StepContext<'_>) {
+    in_original_loan!(cx, |identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, &mut identity)).expect("toy edit applies");
 }
 
 /// 🧮️ Refreshes the history and answers how many rows it built and whether the cached view equals a full rebuild.
@@ -74,7 +74,7 @@ async fn the_history_view_patches_only_the_rows_a_change_touched() {
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for value in 0..200 {
-        apply_toy_edit(&mut app, value, mounted_policy, &mut identity).await;
+        apply_toy_edit(&mut app, value, cx).await;
     }
     let seeded = app.history.command_log.len();
     let built = refreshed_rows(&mut app).await;
@@ -82,17 +82,21 @@ async fn the_history_view_patches_only_the_rows_a_change_touched() {
     assert_eq!(rows, seeded + 200, "the 200 edits are backfilled rows");
     assert!(built <= 200 + 2, "the first refresh after 200 backfilled edits builds the new rows once ({built})");
     assert_eq!(refreshed_rows(&mut app).await, 0, "a refresh without a change builds no row");
-    apply_toy_edit(&mut app, 1_000, mounted_policy, &mut identity).await;
+    apply_toy_edit(&mut app, 1_000, cx).await;
     assert!(refreshed_rows(&mut app).await <= 3, "an appended edit rebuilds its own row and its neighbours only");
-    app.stores.store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
+    in_original_loan!(cx, |identity| app.stores.store.dispatch(ArtifactCommand::Undo, &mut identity)).expect("undo");
     assert!(refreshed_rows(&mut app).await <= 3, "an undo rebuilds the undone row and the uncovered top only");
-    app.stores.store.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("redo");
+    in_original_loan!(cx, |identity| app.stores.store.dispatch(ArtifactCommand::Redo, &mut identity)).expect("redo");
     assert!(refreshed_rows(&mut app).await <= 3, "a redo rebuilds the redone row and the covered top only");
-    let _ = render_history(&mut app, Locale::En).await;
+    let _ = render_history(&mut app, Locale::En,cx).await;
     assert_eq!(refreshed_rows(&mut app).await, 0, "rendering the history builds no row");
     let target = app.stores.store.mutation_ops().expect("mutation ops")[0].mutation_id.clone();
-    app.stores.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }, &mut identity).await.expect("a history edit lands");
-    assert!(refreshed_rows(&mut app).await >= rows, "a history edit rebuilds the whole view");
+    in_original_loan!(cx, |identity| app.stores.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }, &mut identity)).expect("a history edit lands");
+    HISTORY_ROWS_BUILT.with(|built| built.set(0));
+    pump_until(&mut app, "the history edit settles", |app| !app.stores.store.local_step_pending(), mounted_policy, &mut identity, cx).await;
+    let driven = HISTORY_ROWS_BUILT.with(std::cell::Cell::get);
+    let rebuilt = driven + refreshed_rows(&mut app).await;
+    assert!(rebuilt >= rows, "a history edit rebuilds the whole view ({rebuilt} of {rows})");
     close(&mut app,cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
@@ -128,12 +132,13 @@ async fn every_route_authors_as_its_acting_actor() {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut app, "ada").await;
     let first: TestMutation = SetCount { value: 1 }.into();
-    PluginApp::ingest_operations_text(&mut app, &::protocol::OpText::print_op(&first), &mut identity).await.expect("the text ingest applies");
+    let first_text = ::protocol::OpText::print_op(&first);
+    in_original_loan!(cx, |identity| PluginApp::ingest_operations_text(&mut app, &first_text, &mut identity)).expect("the text ingest applies");
     let ingested = edit_authors(&app);
     let pack = app.document_pack().await.expect("Ada's authoritative document");
     let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into()), mounted_policy, &mut identity).await;
-    artifact_app_laws::load_document(&mut grace, &pack, &mut identity).await.expect("Grace opens Ada's shared history");
-    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
+    artifact_app_laws::load_document(&mut grace, &pack, &mut identity,cx).await.expect("Grace opens Ada's shared history");
+    grace.dispatch_ctx().dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
     let emitted = edit_authors(&grace);
     close(&mut app,cx);
     close(&mut grace,cx);

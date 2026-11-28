@@ -1,3 +1,4 @@
+import{requireNativeStorageRootCapabilityV1}from"../🛂️root-capability/🟦️.ts";
 import{nativeRecoveredChildRetirementFailureV1}from"./🧾️failure/🟦️.ts";
 import{captureNativeRecomputableRetirementV1,readNativeRecomputableRetirementV1,resumeNativeRecomputableRetirementV1,withNativeRecomputableRetirementCoordinatorV1,requireNativeRecomputableRetirementSettledV1,type NativePlatformRecomputableRetirementV1,type NativeRecomputableRetirementObserverV1,type NativeRetirementPortsV1}from"../🧹️whole/🟦️.ts";
 import{withNativeImageStorageV1}from"../🍎️image/🟦️.ts";
@@ -56,7 +57,7 @@ export function withNativePlatformImageStorageV1<T>(options:NativeFixedPlatformO
 export function openPreparedNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,preparation:ResourceLeaseControl,selection?:NativeStorageSelectionV1):Promise<NativeImageStorageV1>{requireIssuedResourceControlRefinementV1(options.control,preparation);if(checkResourceLeaseControl(preparation)===null)throw Error("Finite Native preparation control required");return openNativePlatformStorageV1(Object.freeze({...options,preparationControl:preparation}),selection);}
 
 /** ♻️ Retires only an exclusively held exact native backing through its declared host protocol. */
-export async function retireNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,request?:NativeImageRetirementRequestV1,selection?:NativeStorageSelectionV1):Promise<boolean>{requireNativeImageEnvelopeV1(options);const admitted=readNativeImageRetirementRequestV1(request??{version:1,wait:true});return nativeStorageOperationsV1(nativePlatformBackendV1(options.directory,selection,true)).retire(options,admitted);}
+export async function retireNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,request?:NativeImageRetirementRequestV1,selection?:NativeStorageSelectionV1):Promise<boolean>{requireNativeStorageRootCapabilityV1(options.directory,"retire-storage");requireNativeImageEnvelopeV1(options);const admitted=readNativeImageRetirementRequestV1(request??{version:1,wait:true});return nativeStorageOperationsV1(nativePlatformBackendV1(options.directory,selection,true)).retire(options,admitted);}
 
 import {nativeImageRootV1,requireNativeImageEnvelopeV1,readNativeImageRetirementRequestV1} from "./📋️contract/🟦️.ts";
 import {existsSync} from "node:fs";

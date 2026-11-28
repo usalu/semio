@@ -1,0 +1,59 @@
+# FEM matrix v3 harness (2D editor, 3D editor, 2D viewer, 3D viewer)
+
+Folder: `$T22/matrix-v3/` (`$T22` = `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-FEM-PLUGIN-WORKING-END-TO-END`). Outputs: `$T22/🗑️generated/matrix-v3/<app>/` (`results.jsonl`, `shots/<check>.png`, `boot-hang-console.txt`), report `$T22/feature-matrix-v3.md`. No product source was touched.
+
+## Usage
+
+```bash
+cd "$T22"
+bash matrix-v3/serve-viewers.sh start both      # 2D viewer on 6088, 3D viewer on 6089 (vite, ~85 s to ready), check|stop likewise
+node matrix-v3/run.mjs 3d                       # one app per run: 2d | 3d | viewer2d | viewer3d
+node matrix-v3/run.mjs 3d --only shell.,E3D-16,tree.select-node   # ids, id prefix ending in ".", area, or inventory id
+node matrix-v3/run.mjs 2d --list                # lists checks (id, area, inventory ids, expected) without a browser
+node matrix-v3/run.mjs 3d --skip-slow           # skips House and Concrete Forest examples
+node matrix-v3/report.mjs                       # JSONL -> $T22/feature-matrix-v3.md (per app table + FAIL summary + inventory coverage)
+node matrix-v3/coverage.mjs                     # static check-vs-inventory coverage, no browser
+```
+
+Flags of `run.mjs`: `--boot-timeout <s>` (default 180), `--headed`, `--url`, `--append` (keep earlier rows), `--force` (continue after a boot-hang; smoke of shell selectors only, rows are marked `forced`). Exit code 3 means boot-hang. Run one app at a time; it only closes its own Chromium. The editors on 6086/6087 are never started or stopped.
+
+Row schema (`results.jsonl`): `{id, app, area, action, expected, observed, pass, status, ms, shot, inv[], console{errors,fatal,noise,first[]}}`; `pass` is true, false or null (SKIP); `status` is PASS, FAIL, SKIP or BOOT-HANG.
+
+## Design
+
+- Boot gate: opens the app, then polls every 3 s until the Model view exists, the tree shows Nodes > 0 and the Results caption is solved (2D `Converged|Residual`, 3D `Case: <name>` without `·`, never `Pending|Preparing`). After 180 s it writes one `<app>.boot-hang` row (observed text of the last state, screenshot, console tail) and exits with code 3 without running any check. Viewers wait for no `Loading plugins…` plus the view element.
+- Each check carries an explicit expected effect asserted from DOM, aria, inspection text, tree counts, command log, console and (for canvas effects) screenshot hashes or pixel probes. Per-check timeout (default 120 s), console capture per check (a panic, wasm trap, `pageerror`, `stale`, `native-return-refused` turns a PASS into FAIL; `[DEBUG]` noise is counted separately), a screenshot per check.
+- State isolation: checks run in a fixed order by area; `fresh` checks (window focus/close, language, role, delete group, playback, examples) start from a new browser context (clean storage, Demo reloaded, 40-120 s). A timeout or a missing model view also forces a new context. Other checks share the page, as in the v2 matrices.
+- Canvas picks use calibration at boot: line/dot pixel analysis of the Model view finds two pickable entities, a marquee box and an empty point (`calibrate()`), instead of the fixed v2 pixels. Hover 1.5 s before every click, slow drags, modifiers via `keyboard.down`.
+- Layout rule (found in the live 3D build): panels are docked overlays that resize the Model view. With Artifact open the Model view is x 300-800 and the camera is framed for that width; closing Artifact re-frames the camera. A canvas selection re-opens Artifact by itself, so closing it is not stable. All canvas work therefore runs with Artifact and Inspection open and the Actions palette and other side panels closed (`canvasLayout()`, called by every `hover`). Calibration runs in the same layout. Utilities hug and Transform options sit under the Artifact panel/bottom bar overlay, so they are clicked with `tap()` (click, then `dispatchEvent("click")` fallback).
+- Gumball handles are located colour-agnostically by toggling one Transform option and diffing two screenshots, then dragged; effect = History command added + image changed.
+- Palette actions: arg input ids are discovered from `framework.window.<pfx>.action.<id>.arg.*.input`; semantic arg names are matched by alias list (`a|b|c`) or substring, `#n` picks the n-th option, unspecified comboboxes get their first option. The discovered arg ids are in the row's `observed`, so a wrong guess is visible and cheap to fix in `checks-model.mjs`.
+- Viewers: `serve-viewers.sh` uses the same env as `$M25/native-fem-dev.sh serve2d|serve3d` with `VITE_SEMIO_APP_ID="s.fem.$v@1/*#viewer"` (the component descriptor `🌎️hub/🧩️compositions/🏗️fem/🧩️component/🔣️.json` declares `s.fem.fem2d@1/*#viewer` and `s.fem.fem3d@1/*#viewer`; the dispatch crates are `🗃️apps/{◻️2d,🧊️3d}/👁️viewer`) plus `VITE_SEMIO_APP_ROLE=viewer`, because the boot role is last-wins over the app id (ShellHost `resolveBootPrimaryAppV1`). Without the role var the pinned `#viewer` app is projected back to Editor. The editors also open as viewer with `?role=viewer`. Separate vite cache dir `native-<v>-viewer`, log `🗑️generated/matrix-v3/viewer-<v>.log`, pid files for `stop`.
+
+Files: `run.mjs` (runner), `lib.mjs` (Ctx helpers), `apps.mjs` (per-app ids/rows), `checks-core.mjs` (shell, windows, language/theme, roles, examples, utilities, selection, camera, delete/history, import/export, clipboard), `checks-model.mjs` (inspection edits, tree, every palette action), `checks-results.mjs` (display, playback, analysis, re-solve), `checks-viewer.mjs`, `report.mjs`, `coverage.mjs`, `serve-viewers.sh`, `explore*.mjs` (dump aria/text/screenshot of a live page for selector work).
+
+## Coverage vs `feature-inventory-v3.md`
+
+`node matrix-v3/coverage.mjs`: 2D editor 174 checks, 3D editor 201, 2D viewer 8, 3D viewer 9; all 320 inventory rows (E2D 138, E3D 169, V2D 7, V3D 6) are mapped to at least one check. Mapping is by inventory id in each check (`inv`), so the report prints one inventory table with v3 result per row. E3D-123 (Set Camera, host gesture only) is a SKIP row that points at the camera gesture checks; E2D-138 is asserted by the 2D viewer app run; V2D-01..03/V3D-01..03 by `role.viewer-editor` (role switch in the editor) and by the standalone viewers.
+
+Areas: shell (13-14 per app), windows (focus, restore, close, reset panels, Display reopen, per-window camera), language EN/DE/EN, theme, role Viewer/Editor, examples (listing, each example, No example then Demo), utilities (Direct Select armed, click, marquee, tiny marquee, lasso, pan, wheel zoom, hover, Transform gumball, each option, translate/plane/rotate small+large/scale axis+uniform/cancel/undo step/guide line), selection (replace, Shift, Ctrl, Shift+Ctrl, empty click, 2D mode radios), camera (3D orbit/pan buttons), delete/history (canvas and tree Delete/Backspace, Inspection Delete for element/node/support/load/region|solid/combination/load case/section/material, remove-selection, term factor 0, Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, History buttons, command log, palette undo/redo, commit/alternative/switch/checkout), inspection edits (every field of every entity type of the inventory, member load via addMemberUdl precondition, Add/Delete Term, read-only rows), tree (groups, expand, load-case children, row select per entity, Analysis row, label overlap, Poisson clipping), every palette action with args (add node/bar/beam|frame/material/section/support/nodal/UDL/area/region|solid/load case/combination, self weight, analysis settings, clear/select all/mode/granularity, translate/rotate/scale, result display, active example, unknown solid material), results (source x3, mode x3, mode index, deformation scale, modal/buckling count, step +/-, play/pause, readouts, Space, speed, loop, waveform, phase, caption, re-solve after edit, error caption, 6-edit stability), import/export (export download, JSON probe rejected, archive round trip + edit), clipboard (copy/paste, cut/paste).
+
+## Smoke against the live servers (2026-11-27)
+
+- Boot-hang path verified on the old hanging build: 2D reported `2d.boot-hang` after the boot timeout (`modelView=0/1 nodes=12 caption=""`), exit 3, no checks run.
+- Later the coordinator build rendered. 3D booted to `Case: dead` in 85-116 s and the harness ran the shell, selection and tree areas live; 2D shell checks (editor role, windows, panels, settings, command, fullscreen, window focus/close) ran live before the 2D Results window solved. 2D viewer (6088) and 3D viewer (6089) booted in 38-41 s and their 8/9 viewer checks ran.
+- Selector facts learned from the live app and now encoded: panel buttons toggle overlay panels that share the `tree` role (only one side panel may be open when reading Inspection, otherwise `tree.last()` is the wrong panel); `Step −` uses U+2212; Transform options are native `<input type=checkbox>` without `aria-checked` (use `isChecked`); Command menu entries are buttons (`Reset panels`, `Set Locale…`); window re-open handles are `Results Reorder`/`Model Reorder` in Display; the Model Utilities hug sits under the Artifact panel and under the bottom bar overlay (use `dispatchEvent("click")` fallback); Language and Appearance are comboboxes named `Language`, `Appearance` in Settings.
+- Observations the matrix already surfaces: 3D hover highlight only showed in one of two runs (viewport and tree changed once, unchanged once); 3D click at a column/beam joint selects 2 entities at once (Shift+click grows the selection from 1 to 3, Ctrl+click removes both); 3D Utilities lists only Transform (no Marquee/Lasso/Pan), so E3D-24 has no UI; standalone viewers show an enabled `Actions` hug (3D) and greyed hugs while the inventory says viewers declare none; 2D viewer: left-drag and right-drag do not move the view, only middle-drag does (wheel zoom works); 3D viewer shows no live results caption.
+
+## Known gaps and risks
+
+- 2D editor was not driven past the shell with a solved Results window, so 2D-only selectors are unverified live: results caption regex (`Converged|Pending...`), 2D Inspection ids (`node.x`, ... used as fallbacks after label lookup), 2D gumball handles, 2D calibration (blue node dots; ridge/p0_l2/p8_l2 assumed), 2D mode radios, the 2D region/section/support arg names.
+- Palette arg names (`dofs`, `terms`, region outline points, solid size args) are guesses with aliases; the row shows the discovered ids. Wrong guesses read as FAIL until aliases are adjusted.
+- Gumball translate/rotate/scale checks were NOT confirmed green live (utility/option clicks were fixed last, the final end-to-end run of the utilities area did not complete). Gumball isolation depends on the Transform option checkboxes and the image diff; the 3D options popover must be open (check re-opens it). Gumball rotate/scale checks and the guide-line check were not confirmed green live.
+- Pixel rules assume the light theme and default camera; the theme check restores System.
+- Language support is English and German only. The DE check counts tokens (`Aktionen`, `Inspektion`, ...).
+- Slow checks: examples House (about 260 s analysis) and Concrete Forest, re-solve per edit 25-33 s in 3D, 36 s for 2D Add Material and 31 s for Add Region; a full run of one editor is expected to take well over an hour. `--skip-slow` drops the two large examples.
+- Checks run in one page and can leak state (a deleted entity stays deleted until the next `fresh` check); ordering is fixed in `run.mjs` (`RANK`), delete/history checks are sequential by design.
+- The harness cannot cancel an in-flight check after a timeout, it discards the context instead.
+- Needs `playwright` resolvable from `matrix-v3/` (as for `console-all-probe.mjs`) and Node 20+. Windows paths with emoji are handled through `fileURLToPath`.
+- 6088/6089 need the repo-wide vite config to load; at one point a peer's half-written module (`🧮️client-counters`) made it fail until that file appeared.

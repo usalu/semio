@@ -1133,6 +1133,18 @@
         }
       }
     },
+    "OrphanCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "state", "digest", "identity", "accepted"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 64},
+        "state": {"enum": ["clean", "dirty", "retiring"]},
+        "digest": {"anyOf": [{"type": "string", "pattern": "^[a-f0-9]{64}$"}, {"type": "null"}]},
+        "identity": {"type": "boolean"},
+        "accepted": {"type": "boolean"}
+      }
+    },
     "ChildRetireCase": {
       "type": "object",
       "additionalProperties": false,

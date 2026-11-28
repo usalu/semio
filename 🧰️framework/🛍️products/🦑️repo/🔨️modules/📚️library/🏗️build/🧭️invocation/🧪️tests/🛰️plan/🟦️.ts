@@ -20,7 +20,8 @@ import {HOST_POLICY_V1} from "../../../🏡️resident/📨️protocol/🎚️po
 import {appendFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {SCHEDULED_JOB_V1} from "../../../🗓️scheduler/🎟️ticket/🟦️.ts";
-import {recordPlanSuccessV1,runRepoInvocationV1} from "../../🏃️run/🟦️.ts";
+import yargsParser from "yargs-parser";
+import {planOnlyInvocationV1,recordPlanSuccessV1,runRepoInvocationV1} from "../../🏃️run/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
 import {createTaskRecorderV1} from "../../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs";
 import {workspaceIdV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
@@ -304,4 +305,19 @@ test("a foreground run asks the host for the interactive priority and a backgrou
  expect(planPriorityV1({})).toBe(1);
  expect(planPriorityV1({SEMIO_GRAPH_BACKGROUND:"0"})).toBe(1);
  expect(planPriorityV1({SEMIO_GRAPH_BACKGROUND:"1"})).toBe(8);
+});
+
+test("a dry run plans but is never admitted by the scheduler, whichever side of the task the flag stands on, and yargs-parser agrees which rows ask for a plan",async()=>{
+ const directory=join(base,"plans-plan-only"),graph=graphOf(["app"]),document=JSON.stringify({graph}),hash=createHash("sha256").update(document).digest("hex"),skip=Error("executor reached");
+ mkdirSync(directory,{recursive:true});writeFileSync(join(directory,hash+".json"),document);
+ const tasks=[{id:"app:build",dependsOn:[],stale:true,key:"b".repeat(64)}];
+ const ports={probeConsentV1:async()=>({state:"unprotected" as const,folder:""}),requestPlanV1:async()=>({reply:{revision:"a".repeat(64),slice:{hash,size:Buffer.byteLength(document)},cacheHits:0},runtime:{directory:base,tag:"plan-only"},plan:{tasks}})};
+ for(const {args,planOnly} of argumentFixture.planOnly){
+  const parsed=yargsParser(args.slice(0,Math.max(0,args.indexOf("--")<0?args.length:args.indexOf("--"))),{boolean:["dry-run"],string:["graph","lang"],configuration:{"boolean-negation":false}}),oracle=parsed["dry-run"]===true||parsed.graph!==undefined;
+  expect(planOnlyInvocationV1(args),args.join(" ")).toBe(planOnly);expect(oracle,"yargs-parser "+args.join(" ")).toBe(planOnly);
+  const touched:string[]=[],store=new Proxy({},{get:(_target,name)=>{touched.push(String(name));throw Error("scheduler admission");}}) as never,written:string[]=[];
+  const outcome=await runRepoInvocationV1({root,args,environment:{SEMIO_BUILD_TOOL:"nx"},ports,store,write:line=>written.push(line),execute:async()=>{throw skip;}}).then(()=>null,(error:unknown)=>error);
+  expect(touched.length>0,"admission "+args.join(" ")).toBe(!planOnly);
+  expect(outcome===skip,"execute "+args.join(" ")).toBe(planOnly);
+ }
 });

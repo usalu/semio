@@ -17,7 +17,7 @@ export async function startHostedRemoteCacheV1(options:HostedRemoteCacheOptionsV
    hostStore:createCasStoreV1({root}),directory:join(root,"remote-cache"),host:policy.host,port:options.port??policy.port,
    maximumBytes:policy.maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(policy.maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,
    defaultInstance:all.defaults.instance,instances:[all.defaults.instance],tokens:{read:value(names.read),write:value(names.write)},readOnly:policy.readOnly,
-   validation:policy.actionResults as RemoteCacheValidationV1,maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,graph:policy.graph,graceMilliseconds:policy.graceSeconds*1000,signal:options.signal
+   validation:policy.actionResults as RemoteCacheValidationV1,maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,blobRoom:policy.blobRoom,graph:policy.graph,graceMilliseconds:policy.graceSeconds*1000,signal:options.signal
   });
   return Object.freeze({url:server.url,stop:()=>server.stop()});
  }catch(error){

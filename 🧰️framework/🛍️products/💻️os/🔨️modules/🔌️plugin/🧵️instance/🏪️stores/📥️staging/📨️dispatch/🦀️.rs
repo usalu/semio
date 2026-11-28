@@ -229,7 +229,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
 impl<A: ArtifactApp> LocalInteraction<A> {
     /// 🧪️ The persisted-plus-leftover selection half the panels and every app read —
     /// what a folded interaction verb must have moved.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_interaction_selection_snapshot(&self, stores: &InstanceStores<A>) -> protocol::InteractionState {
         self.interaction_selection_snapshot(stores)
     }

@@ -1,0 +1,17 @@
+{
+ "version": 1,
+ "owner": "repository:native-storage-root-capability",
+ "runner": {
+  "environment": ["SEMIO_TEST_SANDBOX", "SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_IMAGE_ROOT", "SEMIO_TEST_CACHE_ROOT", "SEMIO_ISOLATED_BUILD_TEST"],
+  "nodeEnvironment": "test"
+ },
+ "sandbox": {
+  "environment": ["SEMIO_TEST_SANDBOX", "SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_IMAGE_ROOT", "SEMIO_TEST_CACHE_ROOT"]
+ },
+ "live": {
+  "checkoutEnvironment": ["SEMIO_TEST_CHECKOUT_ROOT", "SEMIO_WORKSPACE_ROOT"],
+  "markers": [".git", ".🧬semio"],
+  "storeRoots": ["/Users/Shared/semio-store"],
+  "partitionParent": [".cache", "b"]
+ }
+}

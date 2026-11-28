@@ -237,5 +237,177 @@
    -2,
    0
   ]
+ },
+ "repeated": {
+  "document": {
+   "version": "semio.model/v1",
+   "id": "skinning-repeated",
+   "title": {
+    "en": "A weighted solid repeated on a turned node",
+    "de": "Ein gewichteter Körper, wiederholt auf einem gedrehten Knoten"
+   },
+   "nodes": [
+    {
+     "id": "turned",
+     "parent": null,
+     "translation": [
+      1,
+      2,
+      3
+     ],
+     "rotation": [
+      0,
+      0.7071067811865476,
+      0,
+      0.7071067811865476
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ]
+    },
+    {
+     "id": "slide",
+     "parent": null,
+     "translation": [
+      0,
+      0,
+      0
+     ],
+     "rotation": [
+      0,
+      0,
+      0,
+      1
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "joint": {
+      "type": "prismatic",
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "min": 0,
+      "max": 1
+     }
+    }
+   ],
+   "solids": [
+    {
+     "id": "tape",
+     "kind": "box",
+     "node": "turned",
+     "material": "skin",
+     "size": [
+      0.1,
+      0.2,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0,
+       0,
+       0.8
+      ]
+     },
+     "weights": [
+      {
+       "node": "turned",
+       "weight": 1
+      },
+      {
+       "node": "slide",
+       "weight": 1
+      }
+     ]
+    }
+   ],
+   "meshes": [],
+   "skins": [],
+   "materials": [
+    {
+     "id": "skin",
+     "title": {
+      "en": "Skin",
+      "de": "Haut"
+     },
+     "baseColor": [
+      0.8,
+      0.7,
+      0.6,
+      1
+     ],
+     "metallic": 0,
+     "roughness": 0.8,
+     "emissive": [
+      0,
+      0,
+      0
+     ],
+     "alphaMode": "opaque",
+     "doubleSided": false,
+     "unlit": false
+    }
+   ],
+   "variants": [],
+   "poses": [],
+   "animations": []
+  },
+  "expected": {
+   "note": "node frame to model space: a quarter turn about +Y maps (x, y, z) to (z, y, -x), then the translation (1, 2, 3); copy k sits at the node-frame centre (0.1, 0, 0.8 k)",
+   "copies": [
+    {
+     "min": [
+      0.85,
+      1.9,
+      2.85
+     ],
+     "max": [
+      1.15,
+      2.1,
+      2.95
+     ]
+    },
+    {
+     "min": [
+      1.65,
+      1.9,
+      2.85
+     ],
+     "max": [
+      1.95,
+      2.1,
+      2.95
+     ]
+    },
+    {
+     "min": [
+      2.45,
+      1.9,
+      2.85
+     ],
+     "max": [
+      2.75,
+      2.1,
+      2.95
+     ]
+    }
+   ],
+   "tolerance": 1e-09
+  }
  }
 }

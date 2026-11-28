@@ -1,0 +1,31 @@
+{
+ "_comment": "Inputs hand-authored: a 16 GB worker that is also a dev workstation. Two agent jobs started with `repo capacity run --memory=...` hold retained reservations (command grants) while they hold almost nothing resident; an older 5200 MB batch request waits at the head of the line; the readiness stage command (2048 MB, minimum 1024 MB) arrives. Expected verdicts come from the independent Python oracle (python3 -I oracle.py), never from the TypeScript implementation.",
+ "totalMegabytes": 16384,
+ "foreignMegabytes": 1500,
+ "nowMs": 10000000,
+ "memory": {
+  "interactiveReserveBasisPoints": 2500,
+  "interactiveReserveMinimumMegabytes": 2048,
+  "interactiveReserveMaximumMegabytes": 8192,
+  "rampIdleObservedBasisPoints": 2500
+ },
+ "wait": {"headOfLineMilliseconds": 60000, "interactiveAhead": true},
+ "headMegabytes": 5200,
+ "stage": {"fixedMegabytes": 2048, "minimumMegabytes": 1024},
+ "smallBatchMegabytes": 1024,
+ "environments": [
+  {"value": "interactive", "class": "interactive"},
+  {"value": "batch", "class": "batch"},
+  {"value": "urgent", "class": null},
+  {"value": "", "class": null},
+  {"value": null, "class": null}
+ ],
+ "cases": [
+  {"name": "batch-behind-head", "lenders": [[3500, 100, 3600000], [3500, 100, 3600000]], "stage": "batch", "small": false},
+  {"name": "interactive-passes-head-shrunk", "lenders": [[3500, 100, 3600000], [3500, 100, 3600000]], "stage": "interactive", "small": false},
+  {"name": "interactive-borrows-idle-reservation", "lenders": [[4000, 100, 3600000], [4000, 100, 3600000]], "stage": "interactive", "small": false},
+  {"name": "busy-lender-lends-nothing", "lenders": [[4000, 3500, 3600000], [4000, 3500, 3600000]], "stage": "interactive", "small": false},
+  {"name": "young-lender-lends-nothing", "lenders": [[4000, 100, 5000], [4000, 100, 5000]], "stage": "interactive", "small": false},
+  {"name": "batch-never-spends-the-loan", "lenders": [[4000, 100, 3600000], [4000, 100, 3600000]], "stage": "interactive", "small": true}
+ ]
+}

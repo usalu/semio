@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "EN: Ticket output is local by design: `.gitignore` keeps `🗑️generated` folders out of the shared worktree, so the replica neither copies them to another machine nor propagates their deletion. A folder that a lane left behind therefore stays on the machine that wrote it until something here removes it. This policy says which folders, how long they must have been idle and when the volume is short. DE: Ticket-Ausgaben sind absichtlich lokal: `.gitignore` hält `🗑️generated`-Ordner aus dem gemeinsamen Arbeitsbaum, das Replikat kopiert sie also nicht auf andere Rechner und gibt ihre Löschung nicht weiter. Ein Ordner, den eine Spur zurückgelassen hat, bleibt deshalb auf dem schreibenden Rechner, bis hier etwas ihn entfernt. Diese Richtlinie sagt, welche Ordner, wie lange sie ruhen müssen und wann das Volume knapp ist.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": [".🧬semio", "🦑️repo", "🎫️tickets"],
+        "levels": 5,
+        "names": ["🗑️generated", "🗑generated"],
+        "firstDelayMilliseconds": 120000,
+        "intervalMilliseconds": 600000,
+        "idleMilliseconds": 86400000,
+        "pressureIdleMilliseconds": 7200000,
+        "pressureFreeBytes": 34359738368,
+        "pressureFreeBasisPoints": 300,
+        "entryBudget": 4000000,
+        "yieldEvery": 1000
+      }
+    },
+    "Messages": {
+      "const": {
+        "version": 1,
+        "id": "ticket-generated",
+        "languages": ["en", "de"],
+        "messages": {
+          "sweep.removed": {
+            "en": "Removed idle ticket output {path}: {files} files, {bytes}, untouched for {hours} h ({why}).",
+            "de": "Ruhende Ticket-Ausgabe {path} entfernt: {files} Dateien, {bytes}, seit {hours} h unberührt ({why})."
+          },
+          "sweep.would-remove": {
+            "en": "Would remove idle ticket output {path}: {files} files, {bytes}, untouched for {hours} h ({why}).",
+            "de": "Würde ruhende Ticket-Ausgabe {path} entfernen: {files} Dateien, {bytes}, seit {hours} h unberührt ({why})."
+          },
+          "sweep.failed": {
+            "en": "Could not remove ticket output {path}: {message}",
+            "de": "Ticket-Ausgabe {path} konnte nicht entfernt werden: {message}"
+          },
+          "sweep.pressure": {
+            "en": "the volume has {free} free",
+            "de": "das Volume hat {free} frei"
+          },
+          "sweep.age": {
+            "en": "older than the idle limit",
+            "de": "älter als die Ruhegrenze"
+          }
+        }
+      }
+    }
+  }
+}

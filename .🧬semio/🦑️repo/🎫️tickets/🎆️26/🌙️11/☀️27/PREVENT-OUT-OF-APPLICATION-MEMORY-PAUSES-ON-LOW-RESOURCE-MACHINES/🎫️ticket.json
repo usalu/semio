@@ -1,0 +1,86 @@
+{
+  "title": "Prevent Out of Application Memory Pauses on Low Resource Machines",
+  "emoji": "🧯",
+  "status": "closed",
+  "description": "On 2026-11-27 around 17:35–18:01 macOS ran out of application memory and paused Claude Code (resumed 18:01:21 per kernel memorystatus). Find the root causes and make sure it can never happen again: the repo tools (capacity queue, memory warden/guard) must hold the whole machine safe, including processes outside their grants, and packages must be carved so everything compiles on a low resource machine. Findings so far: the Claude desktop app's diff pane repeatedly runs `git diff -M --numstat` against old-repo/1/⛳wip (277881dca, 315,851 files, 100M insertions; no `main` ref exists), reaching over 2 GB RSS per run; the warden restarts frequently (\"its own source changed\", \"no subject for 10 minutes\"), leaving unguarded gaps; the warden only acts on its own grant subjects; darwin footprint reads fail and fall back to RSS.",
+  "summary": "Root cause of the 2026-11-27 17:30 out-of-application-memory pause (swap 95 % full, compressor 8.26 GB, swap-out 705 MB/s, warden blind to the ~13 GB outside its grants, 151 warden restarts with gaps) is in 🧾️root-cause.md.\n\nCures:\n- Warden (MEM-GUARD): counts foreign memory, enforces grants and vitest workers, hands over without a gap on source change, cancels git above 1.5 GB, uses a swap-free line, and acts on compressed memory only with live danger signals. The compressed-only regression was fixed the same evening.\n- Units (MEM-CARVE): 9 staffage test cases no longer parse the whole catalog (peak 3946 to 1295 MB). The export CLI no longer caches all assets, and the model-catalog audit frees memory per file.\n- Admission (MEM-ADMIT): elastic reservations converge to the observed peak plus a margin, and cargo/rustc jobs are derived from memory (1 on 8 GB, 3 on 16 GB).\n- CAP-REDS: 4 red capacity tests cured; host-capacity tests are 123/123 green.\n\nOpen for the dev: fast-forward refs/heads/⛳wip and refs/remotes/origin/⛳wip (git update-ref) so the desktop diff pane stops diffing 315k files. Hub wasm finals are owned by the wasm split ticket. Details are in 📋️summary.md and the lane reports.",
+  "goal": "🎯repomechanisms",
+  "sessions": [
+    "39cdb80f-d932-4f35-9c09-2ccb91477c76"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 18:06:01",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "On 2026-11-27 around 17:35–18:01 macOS ran out of application memory and paused Claude Code (resumed 18:01:21 per kernel memorystatus). Find the root causes and make sure it can never happen again: the repo tools (capacity queue, memory warden/guard) must hold the whole machine safe, including processes outside their grants, and packages must be carved so everything compiles on a low resource machine. Findings so far: the Claude desktop app's diff pane repeatedly runs `git diff -M --numstat` against old-repo/1/⛳wip (277881dca, 315,851 files, 100M insertions; no `main` ref exists), reaching over 2 GB RSS per run; the warden restarts frequently (\"its own source changed\", \"no subject for 10 minutes\"), leaving unguarded gaps; the warden only acts on its own grant subjects; darwin footprint reads fail and fall back to RSS.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-28 00:31:40",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "fa8a184f7cbd3f441e968a53d815f833fc4eea85",
+      "summary": "Root cause of the 2026-11-27 17:30 out-of-application-memory pause (swap 95 % full, compressor 8.26 GB, swap-out 705 MB/s, warden blind to the ~13 GB outside its grants, 151 warden restarts with gaps) is in 🧾️root-cause.md.\n\nCures:\n- Warden (MEM-GUARD): counts foreign memory, enforces grants and vitest workers, hands over without a gap on source change, cancels git above 1.5 GB, uses a swap-free line, and acts on compressed memory only with live danger signals. The compressed-only regression was fixed the same evening.\n- Units (MEM-CARVE): 9 staffage test cases no longer parse the whole catalog (peak 3946 to 1295 MB). The export CLI no longer caches all assets, and the model-catalog audit frees memory per file.\n- Admission (MEM-ADMIT): elastic reservations converge to the observed peak plus a margin, and cargo/rustc jobs are derived from memory (1 on 8 GB, 3 on 16 GB).\n- CAP-REDS: 4 red capacity tests cured; host-capacity tests are 123/123 green.\n\nOpen for the dev: fast-forward refs/heads/⛳wip and refs/remotes/origin/⛳wip (git update-ref) so the desktop diff pane stops diffing 315k files. Hub wasm finals are owned by the wasm split ticket. Details are in 📋️summary.md and the lane reports.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🦀️cargogrant💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🎫️gate🗃️📖️status💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️📡️sampling💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🔼️upgrade💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🛡️warden🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🛡️warden🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🎟️capacity🗃️🧪️tests🗃️🔐️inheritance💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️📐️estimates💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🎫️gate💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🛡️warden🗃️⌨️main💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🛡️warden🗃️🔁️loop💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌡️hostcapacity🗃️🧹️diskrecovery🗃️🖼️imageslack🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🧰️support💻🧊️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️📏️decision💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🛡️warden💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🎟️capacity🗃️🧪️tests🗃️🪆️scope🗃️🧫️fixtures⚙️🔣️"
+        }
+      ]
+    }
+  ]
+}

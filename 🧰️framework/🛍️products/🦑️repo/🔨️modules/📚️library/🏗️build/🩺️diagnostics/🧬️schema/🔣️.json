@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/build/diagnostics/schema.json",
+  "title": "Repository Diagnostics Channel",
+  "description": "🩺️ Typed, area scoped permanent diagnostics of the repo tooling (SEMIO_DIAGNOSTICS=<area,...>) and the law that no temporary debug line survives in landed build system code. / Typisierte, bereichsweise Dauerdiagnose der repo-Werkzeuge (SEMIO_DIAGNOSTICS=<Bereich,...>) und das Gesetz, dass keine temporäre Debugzeile in gelandetem Buildsystem-Code bleibt.",
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "required": ["en", "de"],
+      "additionalProperties": false,
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "Area": {
+      "type": "string",
+      "enum": ["cache", "capacity", "cargo-admission", "graph", "leases", "ready", "remote-execution", "resident", "timing"]
+    },
+    "Protocol": {
+      "const": {
+        "variable": "SEMIO_DIAGNOSTICS",
+        "everything": "all",
+        "silent": ["", "0", "off", "false", "none"],
+        "linePrefix": "[diagnostic:",
+        "lineSuffix": "] ",
+        "maximumLineCharacters": 4096
+      }
+    },
+    "Areas": {
+      "const": {
+        "cache": {"en": "Unit cache and remote cache lookups, hits, misses and skips", "de": "Einheiten- und Remote-Cache-Abfragen, Treffer, Fehlschläge und Auslassungen"},
+        "capacity": {"en": "Host capacity admission, grants and waits", "de": "Zulassung, Zusagen und Wartezeiten der Hostkapazität"},
+        "cargo-admission": {"en": "Why the Cargo argument admission refused a configuration", "de": "Warum die Cargo-Argumentzulassung eine Konfiguration abgelehnt hat"},
+        "graph": {"en": "Graph service requests, generations and custody", "de": "Graphdienst-Anfragen, Generationen und Verwahrung"},
+        "leases": {"en": "Lease acquisition, waits and releases", "de": "Erwerb, Wartezeiten und Freigabe von Leihen"},
+        "ready": {"en": "Readiness stages of a worker", "de": "Bereitschaftsstufen eines Workers"},
+        "remote-execution": {"en": "Remote execution offers, refusals and fallbacks", "de": "Angebote, Ablehnungen und Rückfälle der Fernausführung"},
+        "resident": {"en": "Resident host events", "de": "Ereignisse des residenten Hosts"},
+        "timing": {"en": "Stage timings of writers and readers", "de": "Stufenzeiten von Schreibern und Lesern"}
+      }
+    },
+    "Law": {
+      "const": {
+        "forbiddenMarkerParts": ["[DEB", "UG] "],
+        "roots": [
+          "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",
+          "🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "🔨️modules/🏃️process"
+        ],
+        "skipDirectories": [".cache", ".git", "dist", "node_modules", "target"],
+        "maximumFileBytes": 16777216,
+        "recordedData": [
+          {
+            "suffix": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+            "reason": {
+              "en": "Reads the pinned historical producer log of a fixture image selection; it never writes such a line",
+              "de": "Liest das festgelegte historische Produzentenprotokoll einer Fixture-Image-Auswahl; schreibt nie eine solche Zeile"
+            }
+          },
+          {
+            "suffix": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔣️.json",
+            "reason": {
+              "en": "Captured historical producer log (its SHA-256 is pinned by the selection)",
+              "de": "Erfasstes historisches Produzentenprotokoll (sein SHA-256 ist durch die Auswahl festgelegt)"
+            }
+          }
+        ]
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "required": ["path", "line"],
+      "additionalProperties": false,
+      "properties": {"path": {"type": "string"}, "line": {"type": "integer", "minimum": 1}}
+    }
+  }
+}

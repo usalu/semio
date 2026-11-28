@@ -6,12 +6,39 @@ use super::*;
 #[derive(Clone, Copy)]
 pub(super) struct RetiringShell { pub(super) shell: u16, pub(super) app_instance_id: u32 }
 
+/// 🔏️ The document revision a mounted generation answers for: its own solve revision, or a later revision whose edits left the physics fingerprint unchanged.
+#[derive(Clone, Copy)]
+pub(super) struct RevisionBinding {
+    base_revision: semio_framework_job::RevisionId,
+    generation: semio_framework_job::Generation,
+    canonical_base_revision: [u8; 32],
+}
+
+impl RevisionBinding {
+    pub(super) fn of_identity(identity: MountedIdentity) -> Self {
+        Self { base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision }
+    }
+
+    pub(super) fn of_render(render: AppRenderOperationContext) -> Self {
+        Self { base_revision: render.base_revision, generation: render.generation, canonical_base_revision: render.canonical_base_revision }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(super) struct CurrentSession {
     pub(super) app_instance_id: u32,
     pub(super) shell: u16,
     pub(super) identity: MountedIdentity,
     pub(super) previous_valid: Option<u16>,
+    pub(super) bound: RevisionBinding,
+    pub(super) fingerprint: u64,
+}
+
+impl CurrentSession {
+    /// 🔏️ Whether this generation is the answer for the render's revision, directly or by an unchanged physics fingerprint.
+    pub(super) fn matches(&self, render: AppRenderOperationContext) -> bool {
+        render.matches_revision(self.app_instance_id, self.bound.base_revision, self.bound.generation, &self.bound.canonical_base_revision)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -272,6 +299,7 @@ pub(super) struct MountedRegistry {
     pub(super) snapshot_owners: [Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>; SESSION_ACTIVE_CAPACITY],
     pub(super) shell_requests: [Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>; SESSION_SHELL_CAPACITY],
     pub(super) request_cursor: usize,
+    pub(super) fingerprint_memo: Option<([u8; 32], u64)>,
     pub(super) consumer_cursor: usize,
     pub(super) verified_sources: [Option<(semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,RequestKey)>;SESSION_CONSUMER_CAPACITY],
     pub(super) source_kinds: [u8;SESSION_ACTIVE_CAPACITY],
@@ -305,6 +333,7 @@ impl MountedRegistry {
             snapshot_owners: [None; SESSION_ACTIVE_CAPACITY],
             shell_requests: [None; SESSION_SHELL_CAPACITY],
             request_cursor: 0,
+            fingerprint_memo: None,
             consumer_cursor: 0,
             verified_sources:[None;SESSION_CONSUMER_CAPACITY],
             source_kinds:[2;SESSION_ACTIVE_CAPACITY],

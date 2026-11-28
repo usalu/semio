@@ -149,6 +149,15 @@ pub fn require_page(snapshot: &PdfSnapshot, page: usize) -> Result<(), Fault> {
     }
 }
 
+const CATALOG_STRUCTURE: [&str; 17] = ["Type", "Version", "Pages", "Outlines", "Names", "Dests", "PageLabels", "OutputIntents", "AcroForm", "PageLayout", "PageMode", "ViewerPreferences", "OpenAction", "Lang", "MarkInfo", "Metadata", "OCProperties"];
+const TRAILER_STRUCTURE: [&str; 8] = ["Root", "Info", "Size", "Prev", "Encrypt", "ID", "XRefStm", "Type"];
+
+/// 🛡️ Refuses an entry key the typed document model owns (catalog or trailer structure), because overwriting it by name would corrupt the file; its dedicated action sets it.
+pub fn free_entry_key(family: &str, key: &str) -> Result<(), Fault> {
+    let owned: &[&str] = match family { "catalog" => &CATALOG_STRUCTURE, "trailer" => &TRAILER_STRUCTURE, _ => &[] };
+    if owned.contains(&key) { Err(fault(format!("the {family} key '{key}' belongs to the document structure and has its own action"))) } else { Ok(()) }
+}
+
 pub fn none_if_empty(text: &str) -> Option<String> {
     if text.is_empty() { None } else { Some(text.to_string()) }
 }

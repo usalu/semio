@@ -8,6 +8,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { SphereGeometry } from "three";
 import { describe, expect, it } from "vitest";
 import { scenesOf, tessellateSolid, type Quality, type Solid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import type { Asset } from "../../🧬️schema/🟦️.ts";
@@ -17,9 +18,9 @@ import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
 import { python } from "../🧰️support/🐍️.ts";
 
-type Rule = { paperFeatureMm: number; chordPerFeature: number; largestPerChord: number; roundSegments: number; minSegments: number; maxSegments: Record<string, number> };
+type Rule = { paperFeatureMm: number; chordPerFeature: number; largestPerChord: number; referenceScale: number; roundSegments: number; minSegments: number; maxSegments: Record<string, number> };
 type Kind = "cylinder" | "sphere" | "capsule" | "loft";
-type Vectors = { rule: Rule; scales: number[]; assets: { name: string; largestM: number }[]; radiiM: number[]; kinds: Kind[]; catalog: string[] };
+type Vectors = { rule: Rule; markers: { markerFeatures: number; largestM: number[]; scales: number[] }; scales: number[]; assets: { name: string; largestM: number }[]; radiiM: number[]; kinds: Kind[]; catalog: string[] };
 type Measured = { expectedSegments: number; meridians: number; gapM: number; normalErrorDeg: number; hardRim: number; triangles: number };
 type Entry = { name: string; kind: Kind | "revolved"; radiusM: number; lengthM: number; chordM: number; featureM: number; minSegments: number; maxSegments: number; roundSegments: number; positions: number[]; normals: number[]; indices: number[] };
 
@@ -49,7 +50,7 @@ describe("⭕️ the quality of a scale follows the roundness rule", () => {
   it.each(vectors.assets)("$name: chord, bounds and round floor at every scale", ({ largestM }) => {
     const chords = vectors.scales.map((scale) => {
       const quality = qualityOf(assetOf(largestM), scale);
-      expect(quality.chordM).toBeCloseTo(Math.min(largestM / rule.largestPerChord, rule.chordPerFeature * featureOf(scale)), 12);
+      expect(quality.chordM).toBeCloseTo(Math.min((largestM * Math.max(scale, rule.referenceScale)) / (rule.referenceScale * rule.largestPerChord), rule.chordPerFeature * featureOf(scale)), 12);
       expect(quality.chordM).toBeLessThanOrEqual(rule.chordPerFeature * featureOf(scale) * (1 + 1e-12));
       expect(quality.minSegments).toBe(rule.minSegments);
       expect(quality.maxSegments).toBe(rule.maxSegments[String(scale)]);
@@ -111,6 +112,42 @@ describe("⭕️ cylinders, spheres, capsules and round lofts are round at the q
     for (const asset of vectors.assets) for (const radiusM of vectors.radiiM) for (const kind of vectors.kinds) {
       const counts = vectors.scales.map((scale) => all()[`${asset.name}/1:${scale}/${kind}/${radiusM}`]!.triangles);
       for (let i = 1; i < counts.length; i += 1) expect(counts[i]!, `${asset.name} ${kind} ${radiusM} 1:${vectors.scales[i]}`).toBeLessThanOrEqual(counts[i - 1]!);
+    }
+  });
+});
+
+describe("⭕️ a marker sized by the scale never has more triangles at a coarser scale", () => {
+  const { markerFeatures, largestM, scales } = vectors.markers;
+  const segmentsOf = (chordM: number, radiusM: number, scale: number): number => {
+    const ratio = Math.min(1, chordM / radiusM);
+    const byChord = ratio >= 1 ? rule.minSegments : Math.ceil(Math.PI / Math.acos(1 - ratio));
+    return Math.min(rule.maxSegments[String(scale)]!, Math.max(rule.minSegments, byChord, radiusM > featureOf(scale) ? rule.roundSegments : 0));
+  };
+  const kinds: Kind[] = vectors.kinds;
+
+  it.each(largestM)("an asset of %s m: the chord does not fall and the triangles of every marker kind do not grow from 1:50 to 1:500", (size) => {
+    const chords = scales.map((scale) => qualityOf(assetOf(size), scale).chordM);
+    expect(chords, `${size} m chords`).toEqual([...chords].sort((a, b) => a - b));
+    for (const kind of kinds) {
+      const counts = scales.map((scale) => tessellateSolid(solidOf(kind, (markerFeatures * featureOf(scale)) / 2), qualityOf(assetOf(size), scale)).indices.length / 3);
+      for (let i = 1; i < counts.length; i += 1) expect(counts[i]!, `${size} m ${kind} 1:${scales[i]} (${counts.join(" / ")})`).toBeLessThanOrEqual(counts[i - 1]!);
+    }
+  });
+
+  it.each(largestM)("an asset of %s m: the triangles of a marker sphere are those of three's SphereGeometry for the segments of the rule", (size) => {
+    for (const scale of scales) {
+      const radiusM = (markerFeatures * featureOf(scale)) / 2;
+      const quality = qualityOf(assetOf(size), scale);
+      const n = segmentsOf(quality.chordM, radiusM, scale);
+      const own = tessellateSolid(solidOf("sphere", radiusM), quality).indices.length / 3;
+      expect(own, `${size} m 1:${scale}`).toBe(new SphereGeometry(radiusM, n, Math.ceil(n / 2)).index!.count / 3);
+    }
+  });
+
+  it("a marker of one feature keeps the triangles of 1:50 or fewer for every asset above 10 cm at every scale", () => {
+    for (const size of largestM.filter((m) => m >= 0.1)) {
+      const counts = scales.map((scale) => tessellateSolid(solidOf("sphere", (markerFeatures * featureOf(scale)) / 2), qualityOf(assetOf(size), scale)).indices.length / 3);
+      expect(Math.max(...counts), `${size} m ${counts.join(" / ")}`).toBe(counts[0]);
     }
   });
 });

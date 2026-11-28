@@ -11,7 +11,7 @@ export const SERVICE_LABEL_PREFIX_V1="tech.semio.repo.service.";
 const escapeXml=text=>String(text).replace(/&/gu,"&amp;").replace(/</gu,"&lt;").replace(/>/gu,"&gt;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/gu,"");
 const string=value=>"<string>"+escapeXml(value)+"</string>";
 const ALLOWED_NAMES_V1=Object.freeze(["HOME","PATH","LANG","LANGUAGE","LC_ALL","LC_CTYPE","LC_MESSAGES","TMPDIR","USER","LOGNAME","SHELL","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_STATE_HOME","XDG_CONFIG_HOME","XDG_RUNTIME_DIR","BUN_JSC_forceRAMSize"]);
-const SECRET_NAME_V1=/TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|COOKIE|EMAIL|SESSION|UUID|KEY|AUTH|INVOCATION|PROCESS_OWNER/iu;
+const SECRET_NAME_V1=/TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|COOKIE|EMAIL|SESSION|UUID|KEY|AUTH|INVOCATION|PROCESS_OWNER|LEASE_OWNER/iu;
 
 /** 🧹️ The environment a persistent job may carry: an allow-list (`HOME`, `PATH`, the locale, `TMPDIR`, the XDG folders, the memory bound of the runtime) and the `SEMIO_*` variables whose names do not look like a secret or a session; never the rest of the environment of the process that asked for the start (agent sessions, tokens, mail addresses). */
 export function allowedEnvironmentV1(environment){
@@ -71,15 +71,23 @@ export function cleanServiceJobsV1(route,{run,files=directory=>{try{return readd
  return removed;
 }
 
-/** 🚀 Loads the job and starts it by demand: removes stale jobs and plists, boots out an old job of the same label, writes the property list owner-only (allow-listed environment only), bootstraps it into the graphical session, `kickstart`s it and waits up to `verifyMilliseconds` until launchd reports a pid or a run. `run(program, arguments)` answers the exit status or `{status, stdout}`. Answers `{started, reason}`; on failure the job and its file are removed so the caller spawns the service directly. */
+/** 🚀 Loads the job and starts it by demand, idempotently: removes stale jobs and plists, then looks at the label. A job that is already loaded (another client of the same implementation loaded it a moment ago) is never booted out or bootstrapped again, because a second bootstrap of a loaded label is refused by launchd (`5: Input/output error`) and a boot out would kill the service that client is starting; otherwise the property list is written owner-only (allow-listed environment only) and bootstrapped into the graphical session, and a refusal that finds the label loaded afterwards (a concurrent client won the race) counts as loaded. `kickstart` (without `-k`, a running job is left alone) starts it by demand and the start waits up to `verifyMilliseconds` until launchd reports a pid or a run. `run(program, arguments)` answers the exit status or `{status, stdout, stderr}`. Answers `{started, reason}`; the reason of a refusal carries what launchctl said, and only a job this call created is removed again on failure, so the caller spawns the service directly.
+ * @see ../../../🧪️tests/🍎️launchd/🟦️.ts */
 export function startViaLaunchdV1(route,{environment,log,run,write=writePrivate,remove=path=>rmSync(path,{force:true}),files,wait=sleepSync,verifyMilliseconds=6000,pollMilliseconds=200}){
- const undo=()=>{try{run("launchctl",["bootout",route.target]);}catch{}try{remove(route.plistPath);}catch{}};
+ let created=false;
+ const undo=()=>{if(!created)return;try{run("launchctl",["bootout",route.target]);}catch{}try{remove(route.plistPath);}catch{}};
+ const loaded=()=>answer(run("launchctl",["print",route.target])).status===0;
+ const said=value=>{const text=String(value.stderr??value.stdout??"").trim().split("\n")[0].slice(0,200);return text===""?"":": "+text;};
  try{
   cleanServiceJobsV1(route,{run,...files?{files}:{},remove});
-  run("launchctl",["bootout",route.target]);
-  write(route.plistPath,launchAgentPlistV1({label:route.label,program:route.program,arguments:route.arguments,workingDirectory:route.workingDirectory,environment,log}));
-  if(answer(run("launchctl",["bootstrap",route.domain,route.plistPath])).status!==0){undo();return{started:false,reason:"bootstrap refused"};}
-  if(answer(run("launchctl",["kickstart",route.target])).status!==0){undo();return{started:false,reason:"kickstart refused"};}
+  if(!loaded()){
+   write(route.plistPath,launchAgentPlistV1({label:route.label,program:route.program,arguments:route.arguments,workingDirectory:route.workingDirectory,environment,log}));
+   const boot=answer(run("launchctl",["bootstrap",route.domain,route.plistPath]));
+   if(boot.status!==0&&!loaded()){try{remove(route.plistPath);}catch{}return{started:false,reason:"bootstrap refused"+said(boot)};}
+   created=boot.status===0;
+  }
+  const kick=answer(run("launchctl",["kickstart",route.target]));
+  if(kick.status!==0){undo();return{started:false,reason:"kickstart refused"+said(kick)};}
   for(let waited=0;waited<=verifyMilliseconds;waited+=pollMilliseconds){
    const{status,stdout}=answer(run("launchctl",["print",route.target]));
    if(status===0&&(/\bpid = \d+/u.test(stdout)||/\bruns = [1-9]\d*/u.test(stdout)))return{started:true,reason:"running"};

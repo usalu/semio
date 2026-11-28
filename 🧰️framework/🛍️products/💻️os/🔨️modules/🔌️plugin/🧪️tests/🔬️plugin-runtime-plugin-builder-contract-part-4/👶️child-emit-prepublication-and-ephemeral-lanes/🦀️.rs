@@ -22,12 +22,12 @@
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
         let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
         let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,crate::job_close_fixture::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
-        let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();
+        let mut decoder=caller.receipted_decoder(policy.preparation);
         let drive_to_publish = |job:&mut semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
             for expected_stage in ["preflight", "work"] {
-                match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(job,cx))).unwrap() {
+                match caller.turn(policy.maintenance,|cx|Ok(job_step(job,cx))).unwrap() {
                     semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
-                    _ => panic!("retained child job failed at {expected_stage}"),
+                    other => panic!("retained child job failed at {expected_stage}: {other:?}"),
                 }
             }
         };
@@ -93,7 +93,7 @@
         assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|duplicate.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut duplicate,&mut caller);
         
-        match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut duplicate,cx))).unwrap() {
+        match caller.turn(policy.maintenance,|cx|Ok(job_step(&mut duplicate,cx))).unwrap() {
             semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
             _ => panic!("duplicate completion must reject the handoff"),
         }
@@ -110,7 +110,7 @@
         drive_to_publish(&mut busy,&mut caller);
         busy_completion.with_busy_test_lock(|| {
             
-            match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut busy,cx))).unwrap() {
+            match caller.turn(policy.maintenance,|cx|Ok(job_step(&mut busy,cx))).unwrap() {
                 semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
                 _ => panic!("busy completion must reject the handoff"),
             }
@@ -118,7 +118,7 @@
         assert!(busy.test_pending_emit_shape().is_some(), "busy rejection returns the exact emit owner");
         close_and_observe(&mut busy,&mut caller);busy_issuer.close(&mut caller);
         assert!(busy_consumer.take_emit().expect("busy completion remains readable").is_none(), "busy completion remains untouched");
-        crate::job_close_fixture::retire_fixture_owned(busy_consumer,&mut caller);crate::job_close_fixture::retire_fixture_owned(busy_completion,&mut caller);crate::job_close_fixture::close_fixture_decoder(&mut caller,&mut decoder);caller.retire(crate::job_close_fixture::original_fixture_stock());
+        crate::job_close_fixture::retire_fixture_owned(busy_consumer,&mut caller);crate::job_close_fixture::retire_fixture_owned(busy_completion,&mut caller);caller.turn(policy.close,|cx|{close_job_origins(cx);Ok(())}).unwrap();crate::job_close_fixture::close_fixture_decoder(&mut caller,&mut decoder);caller.retire(crate::job_close_fixture::original_fixture_stock());
     }
 
     fn interaction_empty_target_args(extra: Value) -> DslValue {
@@ -166,7 +166,7 @@
         assert_eq!(app.stores.transient_store.generation().await, 0);
 
         let frame = meta();
-        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("mount increment");
+        let started = artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TestCommand::Increment, &frame, artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("mount increment");
         assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
         assert_eq!(app.stores.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
         assert_eq!(app.stores.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");

@@ -1,9 +1,11 @@
 import {createHash,randomBytes} from "node:crypto";
 import {createReplicaProgressWatchV1,replicaProgressRestartDueV1,type ReplicaProgressScopeV1} from "./💓️progress/🟦️.ts";
 import {createStagedPutsV1,stagedPutStampV1} from "./📥️staged-put/🟦️.ts";
+import {createApplyGuardV1,type ApplySpaceV1} from "./🛑️apply-guard/🟦️.ts";
 import {bootModuleRelativeV1} from "./🧭️boot-path/🟦️.ts";
 import {ignoreWatchEventV1} from "./👁️watch-ignore/🟦️.ts";
-import {closeSync,createReadStream,fsyncSync,lstatSync,openSync,readlinkSync,watch,type BigIntStats,type Stats} from "node:fs";
+import {StatBudgetV1,isStatsV1,type StatResultV1} from "./🐌️slow-fs/🟦️.ts";
+import {createReadStream,lstatSync,readlinkSync,watch,type BigIntStats,type Stats} from "node:fs";
 import {chmod,copyFile,link,lstat,mkdir,mkdtemp,open,opendir,readdir,readFile,readlink,rename,rm,rmdir,stat,symlink,truncate,unlink,utimes,writeFile} from "node:fs/promises";
 import {homedir,tmpdir,uptime,userInfo} from "node:os";
 import {spawnSync} from "node:child_process";
@@ -38,7 +40,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {parseProcessIdentityV1,processHolderAliveV1,ownProcessIdentityV1} from "../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🎚️ The explicit inputs of every replica operation: both directories, the identity of this machine and the tunables that default to the topology's `replica` block. `modeless` (default: Windows) says that the volume cannot represent the executable bit: such a replica never reads the bit from disk, keeps the bit of the manifest entry when a file changes, takes it from the staged index entry for a new file and never writes it. */
-export type ReplicaOptionsV1=Readonly<{concurrentEditMilliseconds?:number;storeStuckRestartMilliseconds?:number;rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
+export type ReplicaOptionsV1=Readonly<{concurrentEditMilliseconds?:number;storeStuckRestartMilliseconds?:number;rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;space?:(directory:string)=>Promise<ApplySpaceV1|undefined>;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
 
 /** 📡️ One NDJSON progress line, shaped by `ProgressEvent` of the schema. */
 export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|"progress"|"published"|"applied"|"overwritten"|"merged"|"kept"|"linearised"|"repaired"|"state-rebuilt"|"state-missing"|"refused"|"skipped"|"blocked"|"unstable"|"store-unreachable"|"store-reachable"|"ignore-reloaded"|"clock-refused"|"clock-skew"|"blob-missing"|"rejoin-required"|"relayed"|"snapshot"|"compacted"|"sync"|"restarting"|"store-stuck"|"restart-refused"|"code-reverted"|"journal-repaired"|"retired"|"superseded"|"stale-republish"|"stale-base"|"drift"|"blob-repaired"|"error";stage?:string;path?:string;origin?:string;originId?:string;groupId?:string;hlc?:string;reason?:string;message?:string;lost?:string;winner?:string;loser?:string;result?:string;count?:number;done?:number;total?:number;bytes?:number;seconds?:number}>;
@@ -47,7 +49,7 @@ export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|
 export type ReplicaSinkV1=(event:ReplicaEventV1)=>void;
 
 type Say=(event:Omit<ReplicaEventV1,"version">)=>void;
-type Settings=Readonly<{worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds:number;scanSeconds:number;debounceMilliseconds:number;retentionDays:number;concurrency:number;persistMilliseconds:number;modeless:boolean;symlinks:boolean|undefined;caseInsensitive:boolean|undefined;now:()=>number;concurrentEditMilliseconds:number;compaction:CompactionSettingsV1}>;
+type Settings=Readonly<{worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds:number;scanSeconds:number;debounceMilliseconds:number;retentionDays:number;concurrency:number;persistMilliseconds:number;modeless:boolean;symlinks:boolean|undefined;caseInsensitive:boolean|undefined;now:()=>number;space?:(directory:string)=>Promise<ApplySpaceV1|undefined>;concurrentEditMilliseconds:number;compaction:CompactionSettingsV1}>;
 type StateEntry=ReplicaStateEntryV1;
 type Machine=Readonly<{version:1;originId:string;groupId:string;storeRoot:string;key?:string}>;
 type Drift=Readonly<{path:string;kind:"missing-local"|"extra-local"|"content"|"target"|"state";expected?:string;actual?:string}>;
@@ -463,18 +465,18 @@ async function readJson(file:string):Promise<unknown>{
  try{return JSON.parse(await readFile(file,"utf8")) as unknown;}catch(error){if(gone(error))return undefined;throw error;}
 }
 
-function syncPath(path:string,directory:boolean):void{
+async function syncPath(path:string,directory:boolean):Promise<void>{
  if(directory&&process.platform==="win32")return;
- try{const descriptor=openSync(path,directory?"r":"r+");try{fsyncSync(descriptor);}finally{closeSync(descriptor);}}catch{}
+ try{const handle=await open(path,directory?"r":"r+");try{await handle.sync();}finally{await handle.close();}}catch{}
 }
 
-const syncDirectory=async(directory:string):Promise<void>=>{syncPath(directory,true);};
+const syncDirectory=async(directory:string):Promise<void>=>{await syncPath(directory,true);};
 
 async function writeJson(paths:LocalPathsV1,file:string,value:unknown):Promise<void>{
  await mkdir(paths.tmp,{recursive:true});
  const temporary=join(paths.tmp,token());
  try{
-  await writeFile(temporary,JSON.stringify(value));syncPath(temporary,false);
+  await writeFile(temporary,JSON.stringify(value));await syncPath(temporary,false);
   await rename(temporary,file);await syncDirectory(dirname(file));
  }catch(error){await rm(temporary,{force:true});throw error;}
 }
@@ -777,7 +779,7 @@ async function loadLocal(paths:LocalPathsV1,tables:Tables,mode:LoadMode="read"):
 export function settle(options:ReplicaOptionsV1):Settings{
  requireOriginIdV1(options.originId);
  if(!originPattern.test(options.groupId))throw Error(`Closed replica group id required: ${options.groupId}`);
- return {worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId,groupId:options.groupId,pollMilliseconds:options.pollMilliseconds??250,scanSeconds:options.scanSeconds??90,debounceMilliseconds:options.debounceMilliseconds??150,retentionDays:options.retentionDays??14,concurrency:options.concurrency??8,persistMilliseconds:options.persistMilliseconds??5000,modeless:options.modeless??process.platform==="win32",symlinks:options.symlinks,caseInsensitive:options.caseInsensitive,now:options.now??Date.now,concurrentEditMilliseconds:options.concurrentEditMilliseconds??concurrentEditMillisecondsV1,compaction:options.compaction??compactionDefaultsV1};
+ return {worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId,groupId:options.groupId,pollMilliseconds:options.pollMilliseconds??250,scanSeconds:options.scanSeconds??90,debounceMilliseconds:options.debounceMilliseconds??150,retentionDays:options.retentionDays??14,concurrency:options.concurrency??8,persistMilliseconds:options.persistMilliseconds??5000,modeless:options.modeless??process.platform==="win32",symlinks:options.symlinks,caseInsensitive:options.caseInsensitive,now:options.now??Date.now,...options.space===undefined?{}:{space:options.space},concurrentEditMilliseconds:options.concurrentEditMilliseconds??concurrentEditMillisecondsV1,compaction:options.compaction??compactionDefaultsV1};
 }
 
 export const filesKey=(id:number):number=>id*2,queueKey=(id:number):number=>id*2+1;
@@ -1617,8 +1619,9 @@ export function trustWalkV1(replica:ReplicaV1,startedMs:number,found:ReplicaFoun
 }
 
 /** 🔏️ Whether a file the file sweep found different is drift: the hot set does not know it and it is older than the drift grace (or gone). */
-export function sweptDriftV1(replica:ReplicaV1,name:string,startedMs:number):boolean{
+export function sweptDriftV1(replica:ReplicaV1,name:string,startedMs:number,found?:StatResultV1):boolean{
  if(replica.hot.has(name))return false;
+ if(found!==undefined)return !isStatsV1(found)||found.mtimeMs<=startedMs-trustPolicyV1.driftGraceMilliseconds;
  try{return lstatSync(absolute(replica.settings.worktree,name)).mtimeMs<=startedMs-trustPolicyV1.driftGraceMilliseconds;}catch{return true;}
 }
 
@@ -2429,6 +2432,8 @@ async function healGitSliceV1(replica:ReplicaV1,sweep:GitHealSweepV1,signal:Abor
  return sweep.next===sweep.end;
 }
 
+const applyGuards=new WeakMap<ReplicaV1,ReturnType<typeof createApplyGuardV1>>();
+
 export async function applyQueue(replica:ReplicaV1,signal:AbortSignal|undefined,stage?:string):Promise<Applied>{
  replica.applying++;
  try{
@@ -2521,7 +2526,16 @@ async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,sta
  await applyStage(replica,signal,otherObjects.length===0?undefined:hydrateOtherObjects);
  await hydrateOtherObjects();
  await pool(worktree.removals,replica.settings.concurrency,worktreeWork,signal);
- await pool(worktree.creations,replica.settings.concurrency,worktreeWork,signal);
+ const diskGuard=applyGuards.get(replica)??createApplyGuardV1({directory:replica.settings.worktree,now:replica.settings.now,...replica.settings.space===undefined?{}:{read:replica.settings.space}});
+ applyGuards.set(replica,diskGuard);
+ const guardedWork=async(id:number):Promise<void>=>{
+  const verdict=await diskGuard.check();
+  if(verdict.short){noteOnce(replica,"blocked:disk-short",{event:"blocked",reason:"disk-short",message:verdict.message});return;}
+  resolved(replica,"blocked:disk-short");
+  await worktreeWork(id);
+ };
+ if(worktree.creations.length===0||!(await diskGuard.check()).short)await pool(worktree.creations,replica.settings.concurrency,guardedWork,signal);
+ else noteOnce(replica,"blocked:disk-short",{event:"blocked",reason:"disk-short",message:(await diskGuard.check()).message,count:worktree.creations.length});
  if(later.length>0){
   if(packsComplete(replica)){packWaits.delete(replica);await pool(later,replica.settings.concurrency,work,signal);}
   else{
@@ -2775,11 +2789,11 @@ const meter=():(()=>number)=>{
 
 const ancestors=(path:string):string[]=>{const found:string[]=[];for(let cut=path.lastIndexOf("/");cut>0;cut=path.lastIndexOf("/",cut-1))found.push(path.slice(0,cut));return found;};
 
-function hotChanged(replica:ReplicaV1,path:string,now:number,target:string=absolute(replica.settings.worktree,path)):boolean{
+function hotChanged(replica:ReplicaV1,path:string,now:number,target:string=absolute(replica.settings.worktree,path),found?:StatResultV1):boolean{
  const {files,queue}=replica,id=replica.book.find(path);
  if(id!==undefined&&queue.hasId(id))return false;
  let info:Stats;
- try{info=lstatSync(target);}
+ try{if(found===undefined)info=lstatSync(target);else if(isStatsV1(found))info=found;else throw found;}
  catch(error){return gone(error)&&id!==undefined&&files.live(id)&&files.operationAt(id)!=="delete"&&!linkless(replica,id);}
  if(info.isDirectory())return false;
  if(id===undefined||!files.live(id)||files.operationAt(id)==="delete")return (info.isFile()||info.isSymbolicLink())&&sharedV1(path,false,replica.ignore);
@@ -2790,10 +2804,10 @@ function hotChanged(replica:ReplicaV1,path:string,now:number,target:string=absol
  return !(files.operationAt(id)==="put"&&files.bytes[id]===info.size&&files.mtime[id]===info.mtimeMs&&(!files.racyAt(id)||now-info.mtimeMs<racyMilliseconds)&&(replica.settings.modeless||files.executableAt(id)===((info.mode&0o111)!==0)));
 }
 
-function directoryMoved(replica:ReplicaV1,directory:string):boolean{
+function directoryMoved(replica:ReplicaV1,directory:string,found?:StatResultV1):boolean{
  const recorded=replica.dirs.get(directory);
  if(recorded===undefined)return false;
- try{return lstatSync(directory===""?replica.settings.worktree:absolute(replica.settings.worktree,directory)).mtimeMs!==recorded;}catch(error){return gone(error);}
+ try{if(found!==undefined&&!isStatsV1(found))throw found;return (found??lstatSync(directory===""?replica.settings.worktree:absolute(replica.settings.worktree,directory))).mtimeMs!==recorded;}catch(error){return gone(error);}
 }
 
 const viewDirtLimit=4000;
@@ -2847,7 +2861,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
  const hintEvery=options.hintMilliseconds??hintMilliseconds,hotEvery=options.hotMilliseconds??hotMilliseconds,sweepEvery=options.sweepMilliseconds??sweepMilliseconds,slow=Math.max(settings.pollMilliseconds,Math.min(1000,settings.pollMilliseconds*4));
  let rounds=0,walk:Promise<void>|undefined,walked:WalkV1|undefined,wake:(()=>void)|undefined,lastTouch=0,full=false,nextWalk=0,outage=false,recovering=true,watcher:ReturnType<typeof watch>|undefined,suspended=false,ignoreSeen=replica.ignoreHash,hinting=false,settledAt=-1,failed=0,healthAt=-Infinity,maintainedAt=-Infinity,tendedAt=-Infinity;
  const stageWatch={signature:undefined as string|undefined,pollAt:0,retryAt:Infinity,attempts:0};
- const hot={list:[] as string[],dirs:[] as string[],cursor:0,active:false,spent:0,next:0},sweep={active:false,spent:0,next:0,startedMs:0},file={active:false,ids:new Int32Array(0),index:0,spent:0,next:0,startedMs:0,drift:false},walkEvery=options.walkSeconds??defaultWalkSeconds,walkNext=(cost:number):number=>{const delay=nextDelayV1(scanDelayV1(walkEvery),cost,walkDuty);replica.latency.tiers.record("walk",cost,delay);return settings.now()+delay;};
+ const stats=new StatBudgetV1(),hot={list:[] as string[],dirs:[] as string[],cursor:0,active:false,spent:0,next:0},sweep={active:false,spent:0,next:0,startedMs:0},file={active:false,ids:new Int32Array(0),index:0,spent:0,next:0,startedMs:0,drift:false},walkEvery=options.walkSeconds??defaultWalkSeconds,walkNext=(cost:number):number=>{const delay=nextDelayV1(scanDelayV1(walkEvery),cost,walkDuty);replica.latency.tiers.record("walk",cost,delay);return settings.now()+delay;};
  if(replica.dirs.size>0)nextWalk=settings.now()+scanDelayV1(walkEvery);
  const large=largePublishV1(replica,signal,path=>{if(largeReady.size<hotLimit)largeReady.add(path);else full=true;wake?.();});
  const pause=(milliseconds:number)=>new Promise<void>(done=>{
@@ -3182,11 +3196,15 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
       if(hot.active){
        activityV1("hot");
        const started=performance.now(),stop=meter(),total=hot.list.length+hot.dirs.length;
-       while(hot.cursor<total){
-        const index=hot.cursor++;
-        if(index<hot.list.length){const path=hot.list[index]!;if(hotChanged(replica,path,now))batch.add(path);}
-        else{const directory=hot.dirs[index-hot.list.length]!;if(directoryMoved(replica,directory))flat.add(directory);}
-        if((hot.cursor&63)===0&&performance.now()-started>=hotSliceMilliseconds)break;
+       while(hot.cursor<total&&performance.now()-started<hotSliceMilliseconds){
+        const first=hot.cursor,last=Math.min(total,first+stats.chunk(hotSliceMilliseconds)),targets:string[]=[];
+        for(let index=first;index<last;index++){const directory=hot.dirs[index-hot.list.length]??"";targets.push(index<hot.list.length?absolute(settings.worktree,hot.list[index]!):directory===""?settings.worktree:absolute(settings.worktree,directory));}
+        const found=await stats.many(targets);signal.throwIfAborted();
+        for(let index=first;index<last;index++){
+         hot.cursor=index+1;
+         if(index<hot.list.length){const path=hot.list[index]!;if(hotChanged(replica,path,now,targets[index-first],found[index-first]))batch.add(path);}
+         else{const directory=hot.dirs[index-hot.list.length]!;if(directoryMoved(replica,directory,found[index-first]))flat.add(directory);}
+        }
        }
        hot.spent+=stop();
        if(hot.cursor>=total){
@@ -3199,17 +3217,15 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
       if(sweep.active){
        activityV1("sweep");
        const started=performance.now(),stop=meter(),vanished:string[]=[],prefix=`${settings.worktree}${sep}`;
-       let count=0;
-       for(;;){
-        const id=replica.dirs.next();
-        if(id<0){sweep.active=false;break;}
-        const name=replica.dirs.nameAt(id);
-        try{
-         const info=lstatSync(name===""?settings.worktree:prefix+name,{throwIfNoEntry:false});
-         if(info===undefined){replica.dirs.delete(name);vanished.push(name);}
-         else if(info.mtimeMs!==replica.dirs.mtimeAt(id))flat.add(name);
-        }catch(error){if(gone(error)){replica.dirs.delete(name);vanished.push(name);}}
-        if((++count&63)===0&&performance.now()-started>=sweepSliceMilliseconds)break;
+       while(sweep.active&&performance.now()-started<sweepSliceMilliseconds){
+        const ids:number[]=[],limit=stats.chunk(sweepSliceMilliseconds);
+        while(ids.length<limit){const id=replica.dirs.next();if(id<0){sweep.active=false;break;}ids.push(id);}
+        const names=ids.map(id=>replica.dirs.nameAt(id)),found=await stats.many(names.map(name=>name===""?settings.worktree:prefix+name));signal.throwIfAborted();
+        for(let index=0;index<ids.length;index++){
+         const name=names[index]!,info=found[index]!;
+         if(isStatsV1(info)){if(info.mtimeMs!==replica.dirs.mtimeAt(ids[index]!))flat.add(name);}
+         else if(gone(info)){replica.dirs.delete(name);vanished.push(name);}
+        }
        }
        sweep.spent+=stop();
        if(!sweep.active){replica.trust.verified("directory",sweep.startedMs);const delay=nextDelayV1(sweepEvery,sweep.spent,sweepDuty);sweep.next=settings.now()+delay;replica.latency.tiers.record("sweep",sweep.spent,delay);}
@@ -3221,12 +3237,19 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
       if(file.active){
        activityV1("file");
        const started=performance.now(),stop=meter(),prefix=`${settings.worktree}${sep}`;
-       while(file.index<file.ids.length){
-        const id=file.ids[file.index++]!;
-        if(replica.files.operationAt(id)==="delete")continue;
-        const name=replica.book.name(id);
-        if(!indexRealmV1(name)&&hotChanged(replica,name,now,prefix+name)){cold.push(name);if(!file.drift&&sweptDriftV1(replica,name,file.startedMs))file.drift=true;}
-        if((file.index&63)===0&&performance.now()-started>=sweepSliceMilliseconds)break;
+       while(file.index<file.ids.length&&performance.now()-started<sweepSliceMilliseconds){
+        const names:string[]=[],limit=stats.chunk(sweepSliceMilliseconds);
+        while(file.index<file.ids.length&&names.length<limit){
+         const id=file.ids[file.index++]!;
+         if(replica.files.operationAt(id)==="delete")continue;
+         const name=replica.book.name(id);
+         if(!indexRealmV1(name))names.push(name);
+        }
+        const found=await stats.many(names.map(name=>prefix+name));signal.throwIfAborted();
+        for(let index=0;index<names.length;index++){
+         const name=names[index]!;
+         if(hotChanged(replica,name,now,prefix+name,found[index])){cold.push(name);if(!file.drift&&sweptDriftV1(replica,name,file.startedMs,found[index]))file.drift=true;}
+        }
        }
        file.spent+=stop();
        if(file.index>=file.ids.length){file.active=false;file.ids=new Int32Array(0);if(file.drift)replica.trust.lost("sweep-drift");else replica.trust.verified("file",file.startedMs);const delay=nextDelayV1(scanDelayV1(settings.scanSeconds),file.spent,fileDuty);file.next=settings.now()+delay;replica.latency.tiers.record("file",file.spent,delay);}

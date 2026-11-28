@@ -62,6 +62,17 @@ mod tests {
         assert!(world3d_projection_action_moves_pose("setProjection", Some(&semio_framework_pack_json::object([("field".into(), semio_framework_pack_json::Value::from("obliqueVariant"))]))));
     }
 
+    /// 🎚️ Each sun slider dispatches its own setter with no baked-in `value`: the renderer attaches the slider
+    /// value as `args.value` (`WindowMeasureSlider`), so a baked-in value would be overwritten and a missing
+    /// setter would silently drop the drag.
+    #[semio_framework_async_macros::async_test]
+    async fn sun_sliders_dispatch_their_setters_leaving_the_value_to_the_renderer() {
+        let action = |action: &str, args: Option<semio_framework::DslValue>| ActionDescriptor { controller_id: "t".into(), action: action.into(), args };
+        let WindowMeasure::Group { children, .. } = world3d_sun_measures("t", &WorldSunConfig::default(), false, action) else { panic!("expected sun group") };
+        let dispatched: Vec<(String, bool)> = children.iter().filter_map(|child| match child { WindowMeasure::Slider { id, on_change, .. } => Some((format!("{id}={}", on_change.action), on_change.args.is_none())), _ => None }).collect();
+        assert_eq!(dispatched, vec![("t-measure-sun-azimuth=setSunAzimuth".to_string(), true), ("t-measure-sun-elevation=setSunElevation".to_string(), true), ("t-measure-sun-intensity=setSunIntensity".to_string(), true)]);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn projection_measures_tree_matches_the_requested_taxonomy() {
         let p = WorldProjectionConfig::default();

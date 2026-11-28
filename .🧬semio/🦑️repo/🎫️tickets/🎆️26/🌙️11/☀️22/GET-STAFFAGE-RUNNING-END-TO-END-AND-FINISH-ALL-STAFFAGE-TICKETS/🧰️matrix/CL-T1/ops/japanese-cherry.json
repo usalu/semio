@@ -6,13 +6,94 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
  },
  {
   "facet": ".*",
   "list": "body",
   "kinds": [
    "ellipsoid"
+  ],
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.28,
+  "above": 0.0078,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0078,
+  "scales": [
+   100
+  ],
+  "smooth": true
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "above": 0.039,
+  "scales": [
+   500
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.039,
+  "scales": [
+   500
   ]
  },
  {
@@ -22,13 +103,94 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
  },
  {
   "facet": ".*",
   "list": "thermal",
   "kinds": [
    "ellipsoid"
+  ],
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.28,
+  "above": 0.0078,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0078,
+  "scales": [
+   100
+  ],
+  "smooth": true
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "above": 0.039,
+  "scales": [
+   500
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.039,
+  "scales": [
+   500
   ]
  },
  {
@@ -38,19 +200,99 @@
    "ellipsoid"
   ],
   "segments": 16,
-  "below": 0.35
+  "below": 0.28,
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
  },
  {
   "facet": ".*",
   "list": "structure",
   "kinds": [
    "ellipsoid"
+  ],
+  "above": 0.0039,
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 0.56,
+  "above": 0.0078,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0078,
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 1.12,
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.0156,
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 16,
+  "below": 2.8,
+  "above": 0.039,
+  "scales": [
+   500
+  ]
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "above": 0.039,
+  "scales": [
+   500
   ]
  },
  {
   "decision": {
-   "en": "Budget: every soft mass (leaf lobe, flower, fruit, transpiration outlet) and every joint and mass sphere of the structure is a faceted lobe, a polyhedron with the facets of its ellipsoid at 24 to 64 segments around (the surface every check of the volumes measures), so it keeps about 530 triangles at every scale instead of the 2000 to 4000 of a smooth ellipsoid; a lobe of at most 0.35 m radius has 16 segments around and 8 rings (224 triangles) and is sized so that its outline straddles that measured surface, within 2 mm.",
-   "de": "Budget: Jede weiche Masse (Laubballen, Blüte, Frucht, Transpirationsauslass) und jede Gelenk- und Massenkugel des Tragwerks ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 24 bis 64 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst), und behält damit in jedem Maßstab rund 530 Dreiecke statt der 2000 bis 4000 eines glatten Ellipsoids; ein Ballen mit höchstens 0,35 m Radius hat 16 Segmente im Umfang und 8 Ringe (224 Dreiecke) und ist so bemessen, dass sein Umriss diese gemessene Fläche umspielt, auf 2 mm genau."
+   "en": "Budget: every soft mass (leaf lobe, flower, fruit, transpiration outlet) and every joint and mass sphere of the structure is a faceted lobe, a polyhedron with the facets of its ellipsoid at 24 to 64 segments around (the surface every check of the volumes measures), so it keeps about 530 triangles at every scale instead of the 2000 to 4000 of a smooth ellipsoid; a lobe of at most 0.28 m at 1:50 and 0.28 m at 1:100 and 1.12 m at 1:200 and 2.8 m at 1:500 radius has 16 segments around and 8 rings (224 triangles) and is sized so that its outline straddles that measured surface, within 0.54 % of its radius (a joint or mass sphere of the structure up to 0.28 m at 1:50, 0.56 m at 1:100, 1.12 m at 1:200 and 2.8 m at 1:500, so that its triangles never grow towards a coarser scale); a sphere of just the smallest feature of its scale stays a smooth ellipsoid. At 1:100 the lobes of 24 and more facets are sized to straddle the smooth ellipsoid, because the front view of that scale leaves the outline no room inwards.",
+   "de": "Budget: Jede weiche Masse (Laubballen, Blüte, Frucht, Transpirationsauslass) und jede Gelenk- und Massenkugel des Tragwerks ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 24 bis 64 Segmenten im Umfang (die Fläche, die jede Prüfung der Volumen misst), und behält damit in jedem Maßstab rund 530 Dreiecke statt der 2000 bis 4000 eines glatten Ellipsoids; ein Ballen mit höchstens 0,28 m bei 1:50 und 0,28 m bei 1:100 und 1,12 m bei 1:200 und 2,8 m bei 1:500 Radius hat 16 Segmente im Umfang und 8 Ringe (224 Dreiecke) und ist so bemessen, dass sein Umriss diese gemessene Fläche umspielt, auf 0,54 % seines Radius genau (eine Gelenk- oder Massenkugel des Tragwerks bis 0,28 m bei 1:50, 0,56 m bei 1:100, 1,12 m bei 1:200 und 2,8 m bei 1:500, damit ihre Dreiecke zu einem gröberen Maßstab hin nie zunehmen); eine Kugel von gerade dem kleinsten Merkmal ihres Maßstabs bleibt ein glattes Ellipsoid. Bei 1:100 sind die Ballen mit 24 und mehr Facetten so bemessen, dass sie das glatte Ellipsoid umspielen, weil die Vorderansicht dieses Maßstabs dem Umriss nach innen keinen Spielraum lässt."
   }
  }
 ]

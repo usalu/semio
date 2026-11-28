@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "reference": {
+    "en": "Milliseconds on the reference machine (8 cores, 16 GB, idle, warm graph); a smaller machine's limits are lengthened by its speed factor. Provisional: calibrated from the measured phases of waves 1125-1127 (H38, H43, H61), to be recalibrated by the first idle `repo bench latency` runs.",
+    "de": "Millisekunden auf der Referenzmaschine (8 Kerne, 16 GB, unbelastet, warmer Graph); die Grenzen einer kleineren Maschine werden um ihren Geschwindigkeitsfaktor verlängert. Vorläufig: aus den gemessenen Phasen der Wellen 1125-1127 (H38, H43, H61) kalibriert, mit den ersten unbelasteten `repo bench latency`-Läufen neu zu kalibrieren."
+  },
+  "targets": {
+    "project": "@teaching/proctor:build",
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🧪️tests/🟦️.ts"
+  },
+  "commands": [
+    {
+      "id": "inputs",
+      "args": ["inputs", "{project}"],
+      "title": {"en": "repo inputs <project:target>", "de": "repo inputs <Projekt:Ziel>"},
+      "wallMs": 60000,
+      "phases": {"door": 8000, "graph": 30000, "source": 5000, "tools": 15000, "leases": 3000, "children": 10000, "other": 5000, "uncovered": 5000},
+      "trips": {"graphService": 3, "cacheLookup": 20, "spawn": 40}
+    },
+    {
+      "id": "run",
+      "args": ["run", "{project}", "--exclude-dependencies", "--dry-run"],
+      "title": {"en": "repo run --exclude-dependencies --dry-run <project:target>", "de": "repo run --exclude-dependencies --dry-run <Projekt:Ziel>"},
+      "wallMs": 70000,
+      "phases": {"door": 8000, "graph": 30000, "source": 5000, "tools": 20000, "leases": 3000, "children": 15000, "other": 5000, "uncovered": 5000},
+      "trips": {"graphService": 3, "cacheLookup": 30, "spawn": 50}
+    },
+    {
+      "id": "test-file",
+      "args": ["test-file", "{file}"],
+      "title": {"en": "repo test-file <file>", "de": "repo test-file <Datei>"},
+      "wallMs": 45000,
+      "phases": {"door": 8000, "graph": 20000, "source": 3000, "tools": 10000, "leases": 3000, "children": 25000, "other": 4000, "uncovered": 4000},
+      "trips": {"graphService": 3, "cacheLookup": 10, "spawn": 30}
+    },
+    {
+      "id": "typecheck",
+      "args": ["typecheck", "{file}"],
+      "title": {"en": "repo typecheck <file>", "de": "repo typecheck <Datei>"},
+      "wallMs": 30000,
+      "phases": {"door": 8000, "graph": 10000, "source": 3000, "tools": 5000, "leases": 3000, "children": 20000, "other": 4000, "uncovered": 4000},
+      "trips": {"graphService": 2, "cacheLookup": 5, "spawn": 20}
+    },
+    {
+      "id": "fleet-status",
+      "args": ["fleet", "status"],
+      "title": {"en": "repo fleet status", "de": "repo fleet status"},
+      "wallMs": 10000,
+      "phases": {"door": 4000, "graph": 1000, "source": 1000, "tools": 1000, "leases": 1000, "children": 3000, "other": 6000, "uncovered": 2000},
+      "trips": {"graphService": 1, "cacheLookup": 0, "spawn": 15}
+    }
+  ]
+}

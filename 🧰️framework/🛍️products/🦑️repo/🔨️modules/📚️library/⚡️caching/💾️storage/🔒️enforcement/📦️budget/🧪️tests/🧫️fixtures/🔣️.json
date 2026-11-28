@@ -268,6 +268,372 @@
       "mounted": false
     }
   ],
-  "imageCap": [{"id": "darwin-cap", "platform": "darwin", "receipt": null, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-at-cap", "platform": "darwin", "receipt": 34359738368, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-one-unit-above", "platform": "darwin", "receipt": 34360786944, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-live-rust", "platform": "darwin", "receipt": 57982058496, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-missing", "platform": "darwin", "receipt": "missing", "capBytes": 34359738368, "oversize": false}, {"id": "darwin-unreadable", "platform": "darwin", "receipt": "unreadable", "capBytes": 34359738368, "oversize": false}, {"id": "linux-live-rust", "platform": "linux", "receipt": 57982058496, "capBytes": 137438953472, "oversize": false}, {"id": "linux-above", "platform": "linux", "receipt": 138512695296, "capBytes": 137438953472, "oversize": true}, {"id": "windows-above", "platform": "win32", "receipt": 69793218560, "capBytes": 68719476736, "oversize": true}, {"id": "without-images", "platform": "freebsd", "receipt": 106300440576, "capBytes": null, "oversize": false}],
-  "imageCapGrowth": [{"id": "ample-host", "capacityBytes": 17179869184, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 25769803776}, {"id": "clamped-at-cap", "capacityBytes": 25769803776, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "at-cap-stays", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "linux-grows-on", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "linux", "growthBytes": 34359738368}, {"id": "oversize-live-never-shrinks", "capacityBytes": 57982058496, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 57982058496}]
+  "imageCap": [
+    {
+      "id": "darwin-cap",
+      "platform": "darwin",
+      "receipt": null,
+      "capBytes": 34359738368,
+      "oversize": false
+    },
+    {
+      "id": "darwin-at-cap",
+      "platform": "darwin",
+      "receipt": 34359738368,
+      "capBytes": 34359738368,
+      "oversize": false
+    },
+    {
+      "id": "darwin-one-unit-above",
+      "platform": "darwin",
+      "receipt": 34360786944,
+      "capBytes": 34359738368,
+      "oversize": true
+    },
+    {
+      "id": "darwin-live-rust",
+      "platform": "darwin",
+      "receipt": 57982058496,
+      "capBytes": 34359738368,
+      "oversize": true
+    },
+    {
+      "id": "darwin-missing",
+      "platform": "darwin",
+      "receipt": "missing",
+      "capBytes": 34359738368,
+      "oversize": false
+    },
+    {
+      "id": "darwin-unreadable",
+      "platform": "darwin",
+      "receipt": "unreadable",
+      "capBytes": 34359738368,
+      "oversize": false
+    },
+    {
+      "id": "linux-live-rust",
+      "platform": "linux",
+      "receipt": 57982058496,
+      "capBytes": 137438953472,
+      "oversize": false
+    },
+    {
+      "id": "linux-above",
+      "platform": "linux",
+      "receipt": 138512695296,
+      "capBytes": 137438953472,
+      "oversize": true
+    },
+    {
+      "id": "windows-above",
+      "platform": "win32",
+      "receipt": 69793218560,
+      "capBytes": 68719476736,
+      "oversize": true
+    },
+    {
+      "id": "without-images",
+      "platform": "freebsd",
+      "receipt": 106300440576,
+      "capBytes": null,
+      "oversize": false
+    }
+  ],
+  "imageCapGrowth": [
+    {
+      "id": "ample-host",
+      "capacityBytes": 17179869184,
+      "hostFreeBytes": 536870912000,
+      "allocatedBytes": 0,
+      "maximumBytes": 34359738368,
+      "platform": "darwin",
+      "growthBytes": 25769803776
+    },
+    {
+      "id": "clamped-at-cap",
+      "capacityBytes": 25769803776,
+      "hostFreeBytes": 536870912000,
+      "allocatedBytes": 0,
+      "maximumBytes": 34359738368,
+      "platform": "darwin",
+      "growthBytes": 34359738368
+    },
+    {
+      "id": "at-cap-stays",
+      "capacityBytes": 34359738368,
+      "hostFreeBytes": 536870912000,
+      "allocatedBytes": 0,
+      "maximumBytes": 34359738368,
+      "platform": "darwin",
+      "growthBytes": 34359738368
+    },
+    {
+      "id": "linux-grows-on",
+      "capacityBytes": 34359738368,
+      "hostFreeBytes": 536870912000,
+      "allocatedBytes": 0,
+      "maximumBytes": 34359738368,
+      "platform": "linux",
+      "growthBytes": 34359738368
+    },
+    {
+      "id": "oversize-live-never-shrinks",
+      "capacityBytes": 57982058496,
+      "hostFreeBytes": 536870912000,
+      "allocatedBytes": 0,
+      "maximumBytes": 34359738368,
+      "platform": "darwin",
+      "growthBytes": 57982058496
+    }
+  ],
+  "imageShardPlan": {
+    "capBytes": 34359738368,
+    "alignBytes": 1073741824,
+    "minimumBytes": 6442450944,
+    "highWaterBasisPoints": 8750,
+    "hostFreeReservePercent": 66,
+    "cases": [
+      {
+        "origin": "g1-m01",
+        "bytes": 129092508994,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m01",
+        "bytes": 129092508994,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m01",
+        "bytes": 129092508994,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m02",
+        "bytes": 107748695996,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m02",
+        "bytes": 107748695996,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m02",
+        "bytes": 107748695996,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m03",
+        "bytes": 95302458988,
+        "backingBytes": 57981050880,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m03",
+        "bytes": 95302458988,
+        "backingBytes": 57981050880,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m03",
+        "bytes": 95302458988,
+        "backingBytes": 57981050880,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m06",
+        "bytes": 88127073876,
+        "backingBytes": 71939694592,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m06",
+        "bytes": 88127073876,
+        "backingBytes": 71939694592,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m06",
+        "bytes": 88127073876,
+        "backingBytes": 71939694592,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m07",
+        "bytes": 110491767443,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m07",
+        "bytes": 110491767443,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m07",
+        "bytes": 110491767443,
+        "backingBytes": 103079256064,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m08",
+        "bytes": 91403860551,
+        "backingBytes": 59054792704,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m08",
+        "bytes": 91403860551,
+        "backingBytes": 59054792704,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m08",
+        "bytes": 91403860551,
+        "backingBytes": 59054792704,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m10",
+        "bytes": 32785193063,
+        "backingBytes": 27916279808,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m10",
+        "bytes": 32785193063,
+        "backingBytes": 27916279808,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m10",
+        "bytes": 32785193063,
+        "backingBytes": 27916279808,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m11",
+        "bytes": 55357578386,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m11",
+        "bytes": 55357578386,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m11",
+        "bytes": 55357578386,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m12",
+        "bytes": 65795197109,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m12",
+        "bytes": 65795197109,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m12",
+        "bytes": 65795197109,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m13",
+        "bytes": 60567212462,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m13",
+        "bytes": 60567212462,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m13",
+        "bytes": 60567212462,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m14",
+        "bytes": 51650388870,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m14",
+        "bytes": 51650388870,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m14",
+        "bytes": 51650388870,
+        "backingBytes": 42948665344,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "g1-m15",
+        "bytes": 46053460031,
+        "backingBytes": 34358730752,
+        "hostFreeBytes": 25769803776
+      },
+      {
+        "origin": "g1-m15",
+        "bytes": 46053460031,
+        "backingBytes": 34358730752,
+        "hostFreeBytes": 68719476736
+      },
+      {
+        "origin": "g1-m15",
+        "bytes": 46053460031,
+        "backingBytes": 34358730752,
+        "hostFreeBytes": 214748364800
+      },
+      {
+        "origin": "synthetic 70 GiB working set",
+        "bytes": 75161927680,
+        "backingBytes": 0,
+        "hostFreeBytes": 429496729600
+      },
+      {
+        "origin": "synthetic empty",
+        "bytes": 5,
+        "backingBytes": 9,
+        "hostFreeBytes": 429496729600
+      },
+      {
+        "origin": "synthetic exactly the usable part of one image",
+        "bytes": 30064771072,
+        "backingBytes": 0,
+        "hostFreeBytes": 429496729600
+      },
+      {
+        "origin": "synthetic one byte above it",
+        "bytes": 30064771073,
+        "backingBytes": 0,
+        "hostFreeBytes": 429496729600
+      }
+    ]
+  }
 }

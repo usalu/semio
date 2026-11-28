@@ -184,8 +184,8 @@ test("the native manifest binds each model to its mode, crate, and unique plugin
    let valid = Boolean(oracle(manifest));
    for (const model of row.models) {
     const key = createHash("sha256").update(model.cratePath).digest("hex").slice(0, 24);
-    const expected = `browser/${row.mode}/components/${key}`;
-    if (model.location !== expected || model.cratePath.split("/").includes("..") || !db.query("INSERT OR IGNORE INTO owners VALUES (?, ?)").run(model.pluginId, expected).changes) valid = false;
+    const expected = `browser/${row.mode}/component-models/${key}`;
+    if (!/^[a-f0-9]{24}$/.test(model.location.slice(expected.length + 1)) || model.location.slice(0, expected.length) !== expected || model.cratePath.split("/").includes("..") || !db.query("INSERT OR IGNORE INTO owners VALUES (?, ?)").run(model.pluginId, expected).changes) valid = false;
    }
    expect(valid, row.name).toBe(row.expected);
    if (row.expected) expect(JSON.parse(encodeMcpComponentModelManifestV1(manifest))).toEqual(manifest);

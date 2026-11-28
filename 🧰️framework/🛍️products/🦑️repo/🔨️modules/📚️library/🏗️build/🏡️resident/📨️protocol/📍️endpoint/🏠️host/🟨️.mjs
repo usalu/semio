@@ -34,10 +34,10 @@ export function hostEndpointsV1(implementation,environment=process.env,platform=
  const owner=user??(()=>{try{return String(userInfo().uid);}catch{return"0";}})(),checkout=checkoutRootOfV1(root),state=machineStateDirectoryV1(environment)??"",tag=createHash("sha256").update("semio-repo-host-v2\0"+implementation+"\0"+checkout+"\0"+state).digest("hex").slice(0,12),identity={implementation,root:checkout,state};
  if(platform==="win32"){
   const directory=join(environment.LOCALAPPDATA||tmpdir(),"semio","repo","host");
-  return{tag,identity,directory,endpoint:"\\\\.\\pipe\\semio-repo-host-"+owner+"-"+tag,key:join(directory,"key"),descriptor:join(directory,"host-"+tag+".json"),lock:join(directory,"start-"+tag+".lock"),log:join(directory,"host-"+tag+".log")};
+  return{tag,identity,directory,endpoint:"\\\\.\\pipe\\semio-repo-host-"+owner+"-"+tag,key:join(directory,"key-"+tag),descriptor:join(directory,"host-"+tag+".json"),lock:join(directory,"start-"+tag+".lock"),log:join(directory,"host-"+tag+".log")};
  }
  const base=environment.XDG_RUNTIME_DIR||(environment.TMPDIR||"/tmp").replace(/\/+$/u,""),socket="h-"+tag+".sock";
  const directory=[join(base,"semio-repo",owner),join(base,"sr"+owner)].find(candidate=>Buffer.byteLength(join(candidate,socket))<=HOST_SOCKET_BYTES_V1);
  if(directory===undefined)throw new HostRuntimePathErrorV1(base,Buffer.byteLength(join(base,"sr"+owner,socket)));
- return{tag,identity,directory,endpoint:join(directory,socket),key:join(directory,"key"),descriptor:join(directory,"host-"+tag+".json"),lock:join(directory,"start-"+tag+".lock"),log:join(directory,"host-"+tag+".log")};
+ return{tag,identity,directory,endpoint:join(directory,socket),key:join(directory,"key-"+tag),descriptor:join(directory,"host-"+tag+".json"),lock:join(directory,"start-"+tag+".lock"),log:join(directory,"host-"+tag+".log")};
 }

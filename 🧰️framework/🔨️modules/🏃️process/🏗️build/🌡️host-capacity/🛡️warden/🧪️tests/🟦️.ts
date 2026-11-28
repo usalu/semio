@@ -28,8 +28,8 @@ const mutable=<T>(value:unknown):T=>value as T;
 
 test("the schema is closed and every kind names a pattern, a rank, actions and a source that exists in the repository",()=>{
  const kinds=schema.definitions.Kinds.const;
- expect(kinds.map(kind=>kind.name)).toEqual(["remote-unit","local-unit","pool-child","farm-worker","warm-deriver","heavy-question","browser","headless-browser","test","test-binary","slice-worker","cargo","stage"]);
- expect(kinds.map(kind=>kind.rank)).toEqual([10,20,25,30,35,40,45,46,50,55,60,65,90]);
+ expect(kinds.map(kind=>kind.name)).toEqual(["remote-unit","local-unit","pool-child","farm-worker","warm-deriver","heavy-question","browser","headless-browser","test","vitest-worker","test-binary","foreign-git-read","slice-worker","cargo","stage"]);
+ expect(kinds.map(kind=>kind.rank)).toEqual([10,20,25,30,35,40,45,46,50,52,55,56,60,65,90]);
  expect(kinds.map(kind=>kind.rank),"kinds are listed by ascending cost").toEqual([...kinds.map(kind=>kind.rank)].sort((a,b)=>a-b));
  for(const kind of kinds){
   expect(existsSync(join(repoRoot,kind.source)),`${kind.name}: ${kind.source}`).toBe(true);
@@ -38,10 +38,10 @@ test("the schema is closed and every kind names a pattern, a rank, actions and a
  }
  expect(kinds.find(kind=>kind.name==="stage")).toMatchObject({actions:["cancel"],signal:"SIGTERM",scope:"tree"});
  const capped=Object.fromEntries(kinds.filter(kind=>"capMegabytes" in kind).map(kind=>[kind.name,(kind as {capMegabytes:number}).capMegabytes]));
- expect(capped).toEqual({"remote-unit":10240,"local-unit":10240,"pool-child":6144,"farm-worker":4096,"warm-deriver":6144,"heavy-question":8192,browser:4096,"headless-browser":4096,test:8192,"test-binary":8192,"slice-worker":6144});
+ expect(capped).toEqual({"remote-unit":10240,"local-unit":10240,"pool-child":6144,"farm-worker":4096,"warm-deriver":6144,"heavy-question":8192,browser:4096,"headless-browser":4096,test:8192,"vitest-worker":8192,"test-binary":8192,"foreign-git-read":1536,"slice-worker":6144});
  expect(kinds.filter(kind=>"capCritical" in kind).map(kind=>kind.name),"the build-critical kinds are never the first response to a cap").toEqual(["remote-unit","local-unit","pool-child","slice-worker"]);
  expect(kinds.filter(kind=>"ceiling" in kind).map(kind=>[kind.name,(kind as {ceiling:string}).ceiling]),"the kinds that run compile units carry a runtime ceiling of the admission law").toEqual([["remote-unit","unit"],["local-unit","unit"]]);
- expect(HOST_WARDEN_POLICY_V1).toMatchObject({swapUsedGuardBasisPoints:3500,swapUsedDangerBasisPoints:5500,swapShareGuardBasisPoints:4500,swapShareDangerBasisPoints:6000,compressedGuardBasisPoints:3500,compressedDangerBasisPoints:5000,capMaximumBasisPoints:6000,capMilliseconds:5000,capProbeMaximum:8,holdMinimumMegabytes:512,othersMaximum:5,ceilingNearBasisPoints:7500});
+ expect(HOST_WARDEN_POLICY_V1).toMatchObject({swapUsedGuardBasisPoints:3500,swapUsedDangerBasisPoints:5500,swapShareGuardBasisPoints:4500,swapShareDangerBasisPoints:6000,compressedGuardBasisPoints:3000,compressedDangerBasisPoints:3600,swapFileDefaultMegabytes:1024,swapFreeGuardBasisPointsOfFile:10000,swapFreeDangerBasisPointsOfFile:5000,swapFreeMinimumUsedBasisPoints:5000,grantOverMinimumMegabytes:512,grantOverBasisPoints:2500,foreignHeavyMegabytes:1024,handoverWaitMilliseconds:15000,capMaximumBasisPoints:6000,capMilliseconds:5000,capProbeMaximum:8,holdMinimumMegabytes:512,othersMaximum:5,ceilingNearBasisPoints:7500});
  for(const kind of kinds.filter(candidate=>"capMegabytes" in candidate))expect(kind.actions,`${kind.name}: a capped kind can be cancelled`).toContain("cancel");
  expect(kinds.find(kind=>kind.name==="pool-child")).toMatchObject({rank:25,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
  expect(kinds.find(kind=>kind.name==="warm-deriver")).toMatchObject({rank:35,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
@@ -50,7 +50,7 @@ test("the schema is closed and every kind names a pattern, a rank, actions and a
  expect(kinds.find(kind=>kind.name==="cargo")).toMatchObject({rank:65,actions:["cancel"],signal:"SIGTERM",scope:"tree"});
  expect(Math.min(...kinds.filter(kind=>["browser","test-binary","cargo"].includes(kind.name)).map(kind=>kind.rank)),"new kinds cost more to redo than a compile unit").toBeGreaterThan(kinds.find(kind=>kind.name==="local-unit")!.rank);
  expect(kinds.find(kind=>kind.name==="cargo")!.rank,"cancelling cargo loses every unit of its tree, so it ranks after its units and its test binaries").toBeGreaterThan(kinds.find(kind=>kind.name==="test-binary")!.rank);
- expect(HOST_WARDEN_POLICY_V1).toMatchObject({guardBasisPoints:1000,guardMinimumMegabytes:1024,guardMaximumMegabytes:4096,dangerBasisPoints:500,dangerMinimumMegabytes:512,dangerMaximumMegabytes:2048,resumeBasisPoints:1500,swapActiveMegabytesPerSecond:16,swapDiskReserveMegabytes:4096,swapRoomMaximumBasisPoints:5000,headroomGuardBasisPoints:2500,headroomGuardMinimumMegabytes:2048,headroomGuardMaximumMegabytes:8192,headroomDangerBasisPoints:1250,headroomDangerMinimumMegabytes:1024,headroomDangerMaximumMegabytes:4096,calmTicks:3,suspendMaximumSeconds:120,maximumSuspendsPerTick:4,maximumCancelsPerTick:2,keepRunning:1,calmMilliseconds:2000,tightMilliseconds:500,idleMilliseconds:600000,codeCheckMilliseconds:60000,lastAlarms:8,alarmsMaximumBytes:1048576,cancelRecordMaximumAgeMilliseconds:3600000,stateFile:"state.json",lockFile:"lock.json",alarmsFile:"alarms.jsonl",modeFile:"mode",protectFile:"protect.json",cancelledDirectory:"cancelled",directory:"warden",logFile:"warden.log",logMaximumBytes:4194304,defaultMode:"enforce",ensureMilliseconds:15000});
+ expect(HOST_WARDEN_POLICY_V1).toMatchObject({guardBasisPoints:1000,guardMinimumMegabytes:1024,guardMaximumMegabytes:4096,dangerBasisPoints:500,dangerMinimumMegabytes:512,dangerMaximumMegabytes:2048,resumeBasisPoints:1500,swapActiveMegabytesPerSecond:64,swapSustainedSeconds:10,swapDiskReserveMegabytes:4096,swapRoomMaximumBasisPoints:5000,headroomGuardBasisPoints:2500,headroomGuardMinimumMegabytes:2048,headroomGuardMaximumMegabytes:8192,headroomDangerBasisPoints:1250,headroomDangerMinimumMegabytes:1024,headroomDangerMaximumMegabytes:4096,calmTicks:3,suspendMaximumSeconds:120,maximumSuspendsPerTick:4,maximumCancelsPerTick:2,keepRunning:1,calmMilliseconds:2000,tightMilliseconds:500,idleMilliseconds:600000,codeCheckMilliseconds:60000,lastAlarms:8,alarmsMaximumBytes:1048576,cancelRecordMaximumAgeMilliseconds:3600000,stateFile:"state.json",lockFile:"lock.json",alarmsFile:"alarms.jsonl",modeFile:"mode",protectFile:"protect.json",cancelledDirectory:"cancelled",directory:"warden",logFile:"warden.log",logMaximumBytes:4194304,defaultMode:"enforce",ensureMilliseconds:15000});
  for(const pattern of[...schema.definitions.Roots.const,...schema.definitions.Never.const,...schema.definitions.Identities.const])expect(()=>new RegExp(pattern,"u")).not.toThrow();
  for(const pattern of[...schema.definitions.Identities.const,...kinds.map(kind=>kind.pattern)])expect(()=>new RegExp(expandWardenPatternV1(pattern,["/w/s"])!,"u"),pattern).not.toThrow();
 });
@@ -73,6 +73,29 @@ test("victim choice: with every pausable subject suspended past the pause deadli
  expect(decision.actions.some(action=>action.id===small.id)).toBe(false);
  const running=subjects.map(subject=>subject.suspended?{...subject,suspended:false,suspendedSeconds:0}:subject);
  expect(decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(row.host),running,mutable(row.previous)).actions.every(action=>action.action==="suspend"),"while suspension can still recover, nothing is cancelled").toBe(true);
+});
+
+test("progress: a subject that keeps progress (a granted foreground run) is never cancelled, at any danger and after any suspension, and is resumed once stuck",()=>{
+ for(const row of fixture.decisions.filter(item=>item.name.startsWith("progress:"))){
+  const decision=decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(row.host),mutable<HostWardenSubjectV1[]>(row.subjects),mutable(row.previous));
+  expect(decision.actions.some(action=>action.action==="cancel"),row.name).toBe(false);
+ }
+ const stuck=fixture.decisions.find(item=>item.name.includes("beyond the hard limit"))!;
+ expect(decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(stuck.host),mutable<HostWardenSubjectV1[]>(stuck.subjects),mutable(stuck.previous)).actions).toEqual([{action:"resume",id:"p101",reason:"overdue"}]);
+ const killable=mutable<HostWardenSubjectV1[]>(stuck.subjects).map(subject=>({...subject,keepsProgress:false}));
+ expect(decideHostWardenV1(HOST_WARDEN_POLICY_V1,mutable<HostWardenHostV1>(stuck.host),killable,mutable(stuck.previous)).actions.some(action=>action.action==="cancel"),"without the flag the same run is cancelled").toBe(true);
+});
+
+test("attribution: a process the warden cancelled learns sender, reason and both texts from the record the warden wrote before the signal, an unannounced kill stays anonymous",async()=>{
+ const {attributedTerminationV1}=await import("../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+ const directory=fresh(),cancelled=join(directory,"warden","cancelled"),now=Date.now();mkdirSync(cancelled,{recursive:true});
+ const record={version:1 as const,pid:63164,start:"s",kind:"granted",owner:"bun door",command:"bun door",megabytes:4813,atMs:now-1000,reason:"overdue" as const,ancestors:[1],grantMegabytes:3510};
+ writeFileSync(join(cancelled,"63164.aaaaaaaa.json"),JSON.stringify(record));
+ const error=attributedTerminationV1(63164,directory) as HostWardenCancelledErrorV1;
+ expect(error).toBeInstanceOf(HostWardenCancelledErrorV1);
+ expect(error.cancels[0]).toMatchObject({pid:63164,reason:"overdue",kind:"granted"});
+ for(const language of["en","de"] as const)expect(error.message).toContain(formatHostWardenCancelFailureV1(language,[record]));
+ expect(attributedTerminationV1(1234,directory)).toBeUndefined();
 });
 
 test("every decision equals the independent Python oracle and the expectation stored in the fixture",()=>{
@@ -193,7 +216,7 @@ test("the alarm text names the trigger that decided the level, and agrees with t
  expect(low.trigger).toBe("available");expect(low.en).toContain("available memory is below the danger line");expect(low.de).toContain("unter der Gefahrenlinie");
  const warn=words({...base,availableMegabytes:2000,pressure:"warn"},"guard");
  expect(warn.trigger).toBe("pressure");expect(warn.en).toContain("memory pressure is warn");expect(warn.de).toContain("der Speicherdruck ist Warnung");
- const swap=words({...base,availableMegabytes:2000,swapOutMegabytesPerSecond:50},"guard");
+ const swap=words({...base,availableMegabytes:2000,swapOutMegabytesPerSecond:80,intervalMilliseconds:10000},"guard");
  expect(swap.trigger).toBe("swap");expect(swap.en).toContain("swap-out rate is high");expect(swap.de).toContain("Swap-Auslagerungsrate");
  const guard=words({...base,availableMegabytes:1000},"guard");
  expect(guard.trigger).toBe("available");expect(guard.en).toContain("below the guard line");
@@ -327,7 +350,7 @@ test("MOUNTED: observe mode decides and alarms once per decision but signals not
 });
 
 test("MOUNTED: the loop ends by itself when no subject was seen for the idle time and when its sources changed",async()=>{
- const idle=await runHostWardenLoopV1({ports:scripted(fresh(),[host(3000)],[]),policy:{...quickPolicy,idleMilliseconds:50},tables:{roots:["nothing-matches-this"],never:[],kinds:[]},maxTicks:50,code:"idle"});
+ const idle=await runHostWardenLoopV1({ports:scripted(fresh(),[host(3000)],[]),policy:{...quickPolicy,idleMilliseconds:50,foreignHeavyMegabytes:Number.MAX_SAFE_INTEGER},tables:{roots:["nothing-matches-this"],never:[],kinds:[]},maxTicks:50,code:"idle"});
  expect(idle.reason).toBe("idle");
  const digest="two",changed=await runHostWardenLoopV1({ports:scripted(fresh(),[host(3000)],[]),policy:{...quickPolicy,codeCheckMilliseconds:1},tables:testTables,within:process.pid,maxTicks:50,code:"one",sources:()=>digest});
  expect(changed.reason).toBe("code");
@@ -385,10 +408,10 @@ test("the rollout switch: a missing or invalid mode file answers the authored de
  const base=fresh(),ports=defaultHostWardenPortsV1({hostPolicy:readHostCapacityPolicyV1((buildPolicy as unknown as {hostCapacity:unknown}).hostCapacity),directory:base});
  expect(schema.definitions.Policy.const.defaultMode).toBe("enforce");
  expect(HOST_WARDEN_POLICY_V1.defaultMode).toBe("enforce");
- expect(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
+ expect<unknown>(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
  mkdirSync(join(base,"warden"),{recursive:true});
  writeFileSync(join(base,"warden","mode"),"banana");
- expect(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
+ expect<unknown>(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
  writeFileSync(join(base,"warden","mode"),"enforce\n");
  expect(ports.mode()).toBe("enforce");
  writeFileSync(join(base,"warden","mode"),"observe");
@@ -414,9 +437,9 @@ test("cancel records carry the command; readers list the records since a time; t
  const state={version:1,atMs:now,pid:process.pid,mode:"observe",code:"x",host:host(3000),level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:1,headroomDangerMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
  writeFileSync(join(dir,"state.json"),JSON.stringify(state));
  const mirrored=currentHostWardenMirrorV1(directory,now);
- expect(mirrored).toEqual(state);
+ expect<unknown>(mirrored).toEqual(state);
  const path=join(directory,"memory.json");
- writeFileSync(path,JSON.stringify(mirrored));expect(readHostWardenMirrorV1(path)).toEqual(state);
+ writeFileSync(path,JSON.stringify(mirrored));expect<unknown>(readHostWardenMirrorV1(path)).toEqual(state);
  writeFileSync(path,JSON.stringify(absent));expect(readHostWardenMirrorV1(path)).toEqual(absent);
  writeFileSync(path,JSON.stringify({...absent,absent:false}));expect(readHostWardenMirrorV1(path)).toBeNull();
  writeFileSync(path,JSON.stringify({...state,extra:1}));expect(readHostWardenMirrorV1(path)).toBeNull();
@@ -457,7 +480,7 @@ test("the default ports read this machine: a host sample that validates, a two-s
  const commands=new Map(full.map(row=>[row.pid,row.command]));
  let compared=0;for(const row of second){const reference=commands.get(row.pid);if(reference!==undefined&&row.command!==""&&row.elapsedSeconds>=5&&!reference.startsWith("(")){expect(row.command).toBe(reference);compared++;}}
  expect(compared).toBeGreaterThan(10);
- expect(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
+ expect<unknown>(ports.mode()).toBe(HOST_WARDEN_POLICY_V1.defaultMode);
  mkdirSync(join(base,"warden"),{recursive:true});
  writeFileSync(join(base,"warden","mode"),"observe");
  expect(ports.mode()).toBe("observe");
@@ -530,7 +553,7 @@ test("the headroom law: available memory plus the swap room, bounded by the free
 });
 
 test("the alarm names the headroom as the trigger and prints it in both languages; a headroom trigger never says 'available memory is below the guard line'",()=>{
- const host:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:1856,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:1000,swapVolumeFreeMegabytes:1500};
+ const host:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:800,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:1000,swapVolumeFreeMegabytes:1500};
  const decision=decideHostWardenV1(HOST_WARDEN_POLICY_V1,host,[],{level:"calm",calmTicks:0});
  expect(decision.level).toBe("guard");
  const alarm=buildHostWardenAlarmV1({atMs:1,observed:false,level:"guard",action:{action:"suspend",id:"7.abcd",reason:"guard"},subject:{pid:7,kind:"local-unit",megabytes:683,owner:"zsh"},host,decision});
@@ -561,7 +584,7 @@ test("MOUNTED: a pinned rustc and a cargo test binary started from a shell (no r
  expect(states[2]!.unit.startsWith("T"),"the build-critical pinned rustc keeps running").toBe(false);
  expect(states[2]!.foreign.startsWith("T"),"a rustc outside the pinned toolchain path is never touched").toBe(false);
  const state=JSON.parse(readFileSync(join(directory,"state.json"),"utf8"));
- expect(requireHostWardenV1("State",state).subjects.byKind["local-unit"].count).toBe(1);
+ expect(requireHostWardenV1<{subjects:{byKind:Record<string,{count:number}>}}>("State",state).subjects.byKind["local-unit"].count).toBe(1);
  expect(state.subjects.byKind["test-binary"].count).toBe(1);
  expect(Object.keys(state.subjects.byKind).sort()).toEqual(["local-unit","test-binary"]);
  const lines=readFileSync(join(directory,"alarms.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line));
@@ -574,10 +597,10 @@ test("the swap reader runs the commands of the schema per platform and a failing
  const calls:string[]=[],texts:Record<string,string>={"sysctl -n vm.swapusage":"total = 3072.00M  used = 1832.19M  free = 1239.81M  (encrypted)","df -k /System/Volumes/VM":fixture.swaps[0]!.texts.disk!};
  const run=async(command:string,args:readonly string[])=>{const key=[command,...args].join(" ");calls.push(key);const text=texts[key];if(text===undefined)throw Error("no such command");return text;};
  expect(await readWardenSwapV1("darwin",{run,read:async()=>null})).toEqual({swapFreeMegabytes:1239,swapVolumeFreeMegabytes:60487});
- expect(calls).toEqual(["sysctl -n vm.swapusage","df -k /System/Volumes/VM"]);
+ expect(calls).toEqual(["sysctl -n vm.swapusage","sysctl -n vm.compressor.swapper.swapfile_size_max","df -k /System/Volumes/VM"]);
  calls.length=0;delete texts["df -k /System/Volumes/VM"];texts["df -k /System/Volumes/Data"]=fixture.swaps[1]!.texts.disk!;
  expect(await readWardenSwapV1("darwin",{run,read:async()=>null})).toEqual({swapFreeMegabytes:1239,swapVolumeFreeMegabytes:2307});
- expect(calls).toEqual(["sysctl -n vm.swapusage","df -k /System/Volumes/VM","df -k /System/Volumes/Data"]);
+ expect(calls).toEqual(["sysctl -n vm.swapusage","sysctl -n vm.compressor.swapper.swapfile_size_max","df -k /System/Volumes/VM","df -k /System/Volumes/Data"]);
  expect(await readWardenSwapV1("darwin",{run:async()=>{throw Error("x");},read:async()=>null})).toEqual({swapFreeMegabytes:null,swapVolumeFreeMegabytes:null});
  expect(await readWardenSwapV1("linux",{run,read:async path=>path==="/proc/meminfo"?fixture.swaps[5]!.texts.meminfo!:null})).toEqual({swapFreeMegabytes:4882,swapVolumeFreeMegabytes:null});
  expect(await readWardenSwapV1("win32",{run,read:async()=>null})).toEqual({swapFreeMegabytes:null,swapVolumeFreeMegabytes:null});
@@ -587,13 +610,22 @@ const memoryCase=(available:number,over:Partial<HostWardenHostV1>={}):HostWarden
 
 test("swap and compressed depth: lines are shares of the physical memory, a fixed swap is also read as a share of itself, a growing swap is not",()=>{
  const policy=HOST_WARDEN_POLICY_V1;
- expect(swapDepthHostWardenV1(policy,memoryCase(9000))).toEqual({depth:0,compressed:0,source:null});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:5735}))).toEqual({depth:1,compressed:0,source:"swap-used"});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:9012}))).toEqual({depth:2,compressed:0,source:"swap-used"});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:8192}))).toEqual({depth:2,compressed:2,source:"compressed"});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3000,swapFreeMegabytes:1500}))).toEqual({depth:2,compressed:0,source:"swap-share"});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3000,swapFreeMegabytes:1500,swapVolumeFreeMegabytes:60000}))).toEqual({depth:0,compressed:0,source:null});
- expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:null,compressedMegabytes:null}))).toEqual({depth:0,compressed:0,source:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:5735}))).toEqual({depth:1,compressed:0,source:"swap-used",compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:9012}))).toEqual({depth:2,compressed:0,source:"swap-used",compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:5900,pressure:"warn"}))).toEqual({depth:2,compressed:2,source:"compressed",compressedSource:"compressed"});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:4920,pressure:"warn"}))).toEqual({depth:1,compressed:1,source:"compressed",compressedSource:"compressed"});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:4800,pressure:"warn"}))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3000,swapFreeMegabytes:1500}))).toEqual({depth:2,compressed:0,source:"swap-share",compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3000,swapFreeMegabytes:1500,swapVolumeFreeMegabytes:60000}))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:null,compressedMegabytes:null}))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3060,swapFreeMegabytes:160,swapVolumeFreeMegabytes:60000}))).toEqual({depth:2,compressed:2,source:"swap-free",compressedSource:"swap-free"});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:2000,swapFreeMegabytes:900,swapVolumeFreeMegabytes:60000}))).toEqual({depth:1,compressed:1,source:"swap-free",compressedSource:"swap-free"});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:3060,swapFreeMegabytes:160,swapVolumeFreeMegabytes:60000,swapFileMegabytes:128}))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{swapUsedMegabytes:4,swapFreeMegabytes:16}))).toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:8260})),"sticky compressed memory alone on a healthy host is no signal").toEqual({depth:0,compressed:0,source:null,compressedSource:null});
+ expect(swapDepthHostWardenV1(policy,memoryCase(9000,{compressedMegabytes:8260,swapOutMegabytesPerSecond:100})).compressed,"with active swap-out it counts").toBe(2);
+ expect(swapDepthHostWardenV1(policy,memoryCase(1000,{compressedMegabytes:8260})).compressed,"with available memory under the guard line it counts").toBe(2);
 });
 
 test("the alarm names a deep swap or compressed memory as the trigger, and a cap kill names the cap, in both languages",()=>{
@@ -606,7 +638,7 @@ test("the alarm names a deep swap or compressed memory as the trigger, and a cap
  };
  const swap=words(memoryCase(2300,{swapUsedMegabytes:6000}),"guard");
  expect(swap.trigger).toBe("swap-used");expect(swap.en).toContain("swap in use is above its line");expect(swap.de).toContain("der belegte Swap liegt über seiner Linie");
- const compressed=words(memoryCase(1500,{compressedMegabytes:8500}),"danger");
+ const compressed=words(memoryCase(1500,{compressedMegabytes:12000}),"danger");
  expect(compressed.trigger).toBe("compressed");expect(compressed.en).toContain("compressed memory is above its danger line");expect(compressed.de).toContain("der komprimierte Speicher liegt über seiner Gefahrenlinie");
  const share=words(memoryCase(1500,{swapUsedMegabytes:3000,swapFreeMegabytes:1500}),"danger");
  expect(share.trigger).toBe("swap-share");expect(share.en).toContain("share of the swap in use");
@@ -673,7 +705,7 @@ test("watchdog cancels an overdue stopped tree whose page-in cost and guard floo
  expect(rows[1]).toMatchObject({memoryKilobytes:4700*1024,nonresidentKilobytes:900*1024});
  expect(rows[2]).toMatchObject({memoryKilobytes:900*1024,nonresidentKilobytes:400*1024});
  let now=Date.now();
- const ports:HostWardenPortsV1={directory,now:()=>now,write:()=>undefined,mode:()=>"enforce",sample:async()=>memoryCase(2863,{pressure:"warn",swapOutMegabytesPerSecond:3.75}),table:async()=>rows,signal:(pid,name)=>{signals.push(`${name}:${pid}`);},sleep:async()=>{now+=121000;}};
+ const ports:HostWardenPortsV1={directory,now:()=>now,write:()=>undefined,mode:()=>"enforce",sample:async()=>memoryCase(1500,{pressure:"warn",swapOutMegabytesPerSecond:3.75}),table:async()=>rows,signal:(pid,name)=>{signals.push(`${name}:${pid}`);},sleep:async()=>{now+=121000;}};
  await runHostWardenLoopV1({ports,tables,maxTicks:2,code:"fake",sources:async()=>"fake",platform:"linux",workspaces:[]});
  expect(signals).toEqual(["SIGKILL:11","SIGKILL:12"]);
  expect(readHostWardenCancelsBelowV1(10,now-242000,base,now)).toMatchObject([{reason:"overdue",megabytes:5600}]);
@@ -726,7 +758,7 @@ test("the state names the trigger and the largest consumers the warden does not 
  const run=await watchdog(rows,{available:2300});
  const state=readHostWardenStateV1(run.base)!;
  expect(isHostWardenV1("State",state)).toBe(true);
- expect(state.level).toBe("calm");expect(state.trigger).toBeNull();expect(state.others).toEqual([]);
+ expect(state.level).toBe("calm");expect(state.trigger).toBeNull();expect(state.others![0]).toMatchObject({command:"Hog",megabytes:3000});
  const tight=await watchdog(rows,{available:1000});
  const held=readHostWardenStateV1(tight.base)!;
  expect(held).toMatchObject({level:"guard",hold:true,trigger:"available"});
@@ -750,11 +782,26 @@ test("watchdog: a build-critical kind over its cap is reported once, other work 
  expect(calm.alarms.find(alarm=>alarm.action==="report").text.en).toContain("crossed the cap of 1000 MB for slice");
  expect(calm.alarms.find(alarm=>alarm.action==="report").text.de).toContain("überschritten");
  expect(calm.signals.some(entry=>entry.startsWith("SIGKILL")),"nothing is killed at a calm host").toBe(false);
- expect(calm.signals.includes("SIGSTOP:22"),"the non-critical work is suspended first").toBe(true);
+ expect(calm.signals.some(entry=>entry.startsWith("SIGSTOP")),"a host without shortage suspends no other work for a crossing").toBe(false);
  expect(calm.signals.some(entry=>entry.endsWith(":21")&&entry.startsWith("SIGSTOP")),"the critical subject keeps running").toBe(false);
  expect(calm.state).toMatchObject({level:"guard",trigger:"cap",hold:true});
  const danger=await run(300,1);
  expect(danger.alarms.some(alarm=>alarm.action==="cancel"&&alarm.reason==="cap"&&alarm.kind==="slice"),"at danger the crossing is killed").toBe(true);
+ const short=await run(1500,1);
+ expect(short.signals.includes("SIGSTOP:21"),"with a shortage the subject that crossed its cap is the first victim").toBe(true);
+ expect(short.signals.includes("SIGSTOP:22"),"the others keep running while the crosser covers the deficit").toBe(false);
+});
+
+test("loop: a granted tree the warden stopped is resumed after the quiet ticks while a critical unit keeps running over its cap, never suspended for that crossing",async()=>{
+ const critical:HostWardenTablesV1={roots:["^/fake/root"],never:[],kinds:[{name:"slice",rank:60,pattern:"^/fake/slice",actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree",capMegabytes:1000,capCritical:true}]};
+ const base=fresh(),directory=join(base,"warden"),signals:string[]=[];let stopped=true;
+ const table=async()=>[rowOf(1,0,1,"/sbin/launchd"),rowOf(10,1,50,"/fake/root run"),rowOf(21,10,1800,"/fake/slice worker"),{...rowOf(30,1,3328,"/fake/bun door"),stopped}];
+ const ports:HostWardenPortsV1={directory,now:Date.now,write:()=>undefined,mode:()=>"enforce",sample:async()=>memoryCase(6800),table,signal:(pid,name)=>{signals.push(`${name}:${pid}`);if(pid===30&&name==="SIGCONT")stopped=false;if(pid===30&&name==="SIGSTOP")stopped=true;},sleep:async()=>undefined};
+ await runHostWardenLoopV1({ports,tables:critical,policy:{...quickPolicy,capMilliseconds:0,resumeSettleSeconds:0},grants:()=>[{id:"g",pid:30,reservedMegabytes:5400}],maxTicks:6,code:"fake",platform:"linux",workspaces:[]});
+ expect(signals.filter(entry=>entry.startsWith("SIGCONT")&&entry.endsWith(":30")),"resumed exactly once").toHaveLength(1);
+ expect(signals.includes("SIGSTOP:30"),"never suspended again for the crossing of another subject").toBe(false);
+ expect(signals.some(entry=>entry.endsWith(":21")),"the crossing unit is never signalled").toBe(false);
+ expect(readHostWardenStateV1(base)!.suspended).toEqual([]);
 });
 
 const unitTables:HostWardenTablesV1={roots:["^/fake/root"],never:[],kinds:[{name:"unit",rank:20,pattern:"^/fake/rustc",actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree",capMegabytes:10240,capCritical:true,ceiling:"unit"}]};
@@ -895,7 +942,7 @@ test("warn alone is no measured signal: the level holds admissions and nothing i
  const subject:HostWardenSubjectV1={id:"p1",pid:1,kind:"local-unit",rank:20,elapsedSeconds:4400,megabytes:2983,suspended:false,suspendedSeconds:0,canSuspend:true,canCancel:true,capMegabytes:10240,capCritical:true};
  const warn=decideHostWardenV1(HOST_WARDEN_POLICY_V1,memoryCase(3921,{pressure:"warn",swapFreeMegabytes:4000,swapVolumeFreeMegabytes:60000}),[subject,{...subject,id:"p2",pid:2,elapsedSeconds:5,megabytes:300}],{level:"calm",calmTicks:0});
  expect(warn).toMatchObject({level:"guard",hold:true,trigger:"pressure",actions:[]});
- const measured=decideHostWardenV1(HOST_WARDEN_POLICY_V1,memoryCase(3921,{pressure:"warn",swapOutMegabytesPerSecond:40,swapFreeMegabytes:4000,swapVolumeFreeMegabytes:60000}),[subject,{...subject,id:"p2",pid:2,elapsedSeconds:5,megabytes:300}],{level:"calm",calmTicks:0});
+ const measured=decideHostWardenV1(HOST_WARDEN_POLICY_V1,memoryCase(3921,{pressure:"warn",swapOutMegabytesPerSecond:80,intervalMilliseconds:10000,swapFreeMegabytes:4000,swapVolumeFreeMegabytes:60000}),[subject,{...subject,id:"p2",pid:2,elapsedSeconds:5,megabytes:300}],{level:"calm",calmTicks:0});
  expect(measured.actions.map(action=>[action.action,action.id]),"the young unit goes first, the long running one is the dearest and stays").toEqual([["suspend","p2"]]);
 });
 

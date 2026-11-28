@@ -105,6 +105,19 @@ export const faultMessageV1 = (error: unknown): string => error instanceof Aggre
 /** 🔖️ The reference of an unexpected fault: eight hexadecimal digits of the digest of its name and message, so the same fault carries the same reference on every machine and a report can be matched without a stack. */
 export const faultReferenceV1 = (error: unknown): string => createHash("sha256").update(`${error instanceof Error ? error.name : typeof error}\n${faultMessageV1(error)}`).digest("hex").slice(0, 8);
 
+/** 🔬️ The line of the cause chain of an unexpected fault for the failed-stage log of a fleet worker: reference, then name, message and top stack frames of the fault, of its causes and of the faults it aggregates, bounded by `FaultDetail`. */
+export const faultDetailLineV1 = (error: unknown): string => {
+  const policy = schema.definitions.FaultDetail.const, chain: object[] = [];
+  const visit = (value: unknown): void => {
+    if (chain.length >= policy.maximumErrors) return;
+    chain.push(value instanceof Error ? { name: value.name, message: value.message, stack: (value.stack ?? "").split("\n").slice(1, 1 + policy.maximumStackLines).map((row) => row.trim()) } : { name: typeof value, message: String(value), stack: [] });
+    if (value instanceof AggregateError) for (const member of value.errors) visit(member);
+    else if (value instanceof Error && value.cause !== undefined) visit(value.cause);
+  };
+  visit(error);
+  return `${policy.prefix}${faultReferenceV1(error)} ${JSON.stringify(chain)}`.slice(0, policy.maximumCharacters);
+};
+
 /** 🧯️ Turns anything that is not a typed refusal into a refusal that keeps the original message and never the stack: an expired resource loan is classified as such, a full disk (`ENOSPC`, `database or disk is full`) becomes the typed disk refusal that names the partition, its free bytes and the command that frees space, and only the rest is an internal fault with its reference. */
 export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceof Error && error.name === "ResourceLoanDeadlineExhausted"
   ? refuseProcessV1("failed", "execution.loan-expired", { label: "repo", message: error.message }, { cause: error })
@@ -134,5 +147,8 @@ export function reportBoundaryErrorV1(error: unknown, options: RefusalOptionsV1 
     (options.setExitCode ?? ((code) => { process.exitCode = code; }))(SCRIPT_INTERRUPTED_EXIT_CODE_V1);
     return;
   }
-  if (!reportRepoErrorV1(error, options)) reportRepoErrorV1(refuseInternalV1(error), options);
+  if (reportRepoErrorV1(error, options)) return;
+  const detail = schema.definitions.FaultDetail.const;
+  if ((options.environment ?? process.env)[detail.environment] === detail.enabled) (options.write ?? processWriteV1)(faultDetailLineV1(error));
+  reportRepoErrorV1(refuseInternalV1(error), options);
 }

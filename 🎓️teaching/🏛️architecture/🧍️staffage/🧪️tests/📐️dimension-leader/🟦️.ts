@@ -7,7 +7,7 @@
 import { JSDOM } from "jsdom";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Asset } from "../../🧬️schema/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { catalogAssetsById } from "../🧰️support/🧊️.ts";
 import { DIMENSION_FIT_MM } from "../../🔨️modules/🎨️depiction/🏷️annotations/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -19,7 +19,7 @@ const TEXT_BELOW = 0.25;
 let catalog: readonly Asset[];
 
 beforeAll(async () => {
-  catalog = (await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets;
+  catalog = [...(await catalogAssetsById(["standing-adult", "tealight", "thermostatic-radiator-valve"])).values()];
 });
 
 type Layout = { spanMm: number; leader: boolean; textTop: number; textBottom: number; lines: number[]; ticks: number[]; textX: number; tickRight: number; label: string };

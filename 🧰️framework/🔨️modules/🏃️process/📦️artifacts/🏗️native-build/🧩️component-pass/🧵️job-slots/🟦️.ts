@@ -33,8 +33,8 @@ export type FleetJobsOptionsV1<T>=Readonly<{maximum:number;slots:()=>Promise<num
 /** 🛑️ Raised by the body of a pass that holds a fleet slot when the worker placement of its final failed: the runner gives the fleet slot back and queues the pass for a LOCAL slot, where it waits for its reservation instead of compiling in memory nobody reserved. */
 export class FleetPlacementFailedErrorV1 extends Error{constructor(message:string){super(message);this.name="FleetPlacementFailedErrorV1";}}
 
-/** 🌱️ How a parent grant that may still grow tells and learns: `ceilingMegabytes` is the most it could ever hold, `waitMilliseconds` how long a requirement above the grant waits for it, `refresh` reads the allowance it holds now (megabytes, undefined when unreadable) and `declare` tells the holder what the run needs, so the class learns it even when the run is refused. */
-export type ParentComponentGrowthV1=Readonly<{ceilingMegabytes:number;waitMilliseconds:number;refresh:()=>number|undefined;declare:(megabytes:number)=>void}>;
+/** 🌱️ How a parent grant that may still grow tells and learns: `ceilingMegabytes` is the most this machine could ever give it (its memory less the floor of the capacity gate), `exact` that its holder never grows it in place (a requirement above it is carried only by `acquire`, a supplementary reservation of the difference beside the grant, `undefined` when the gate refuses it; without `acquire` an exact grant refuses at once), `waitMilliseconds` how long a requirement above the grant waits for it, `refresh` reads the allowance it holds now (megabytes, undefined when unreadable) and `declare` tells the holder what the run needs, so the class learns it even when the run is refused. */
+export type ParentComponentGrowthV1=Readonly<{ceilingMegabytes:number;waitMilliseconds:number;refresh:()=>number|undefined;declare:(megabytes:number)=>void;exact?:boolean;acquire?:(extraMegabytes:number,signal?:AbortSignal)=>Promise<Readonly<{release:()=>void}>|undefined>}>;
 
 /** 🧮️ The explicit memory allowance shared across every profile lane of a component build, with each pass charged until its body settles. A grant that may still grow (`growth`) follows the allowance the holder grants now, never below what it held, so a requirement above it waits instead of refusing while it can still be carried. */
 export class ParentComponentMemoryV1{
@@ -49,7 +49,16 @@ export class ParentComponentMemoryV1{
   if(live!==undefined&&Number.isFinite(live))this.#allowanceMegabytes=Math.max(this.#allowanceMegabytes,Math.floor(live));
   return this.#allowanceMegabytes;
  }
- growable(megabytes:number):boolean{return this.growth!==undefined&&this.baselineMegabytes+megabytes<=this.growth.ceilingMegabytes;}
+ #releases:(()=>void)[]=[];
+ growable(megabytes:number):boolean{return this.growth!==undefined&&this.baselineMegabytes+megabytes<=this.growth.ceilingMegabytes&&(this.growth.acquire!==undefined||this.growth.exact!==true);}
+ async acquire(megabytes:number,signal?:AbortSignal):Promise<boolean>{
+  const extra=this.baselineMegabytes+megabytes-this.#allowanceMegabytes;
+  if(extra<=0)return true;
+  const held=await this.growth?.acquire?.(extra,signal);
+  if(held===undefined)return false;
+  this.#releases.push(held.release);this.#allowanceMegabytes+=extra;return true;
+ }
+ releaseGrowth():void{for(const release of this.#releases.splice(0))release();}
  reserve(megabytes:number):()=>void{
   if(megabytes>this.remainingMegabytes)throw this.required(megabytes);
   this.#heldMegabytes+=megabytes;
@@ -138,7 +147,11 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
   }
   const localFits=parentMemory===undefined||required<=parentMemory.maximumPassMegabytes;
   const fleetBusy=fleet?.waitForCompatibleSlot&&fleetVerdict?.reason==="fleet-busy"&&waited<policy.fleetBusyWaitMilliseconds;
-  const growing=parentMemory!==undefined&&!localFits&&parentMemory.growable(required)&&(state.waitedSince===undefined||waited<parentMemory.growth!.waitMilliseconds);
+  const growing=parentMemory!==undefined&&!localFits&&!fleetBusy&&parentMemory.growable(required)&&(state.waitedSince===undefined||waited<parentMemory.growth!.waitMilliseconds);
+  if(growing&&parentMemory.growth!.acquire!==undefined){
+   if(await parentMemory.acquire(required,options.signal))return"poll";
+   throw parentMemory.required(required);
+  }
   if(growing&&state.waitedSince===undefined)parentMemory.growth!.declare(parentMemory.baselineMegabytes+required);
   if(parentMemory&&!localFits&&!growing&&!fleetBusy&&!fleetVerdict?.admit)throw parentMemory.required(required);
   if(!fleetVerdict&&!(verdict&&local))return"settle";

@@ -204,14 +204,14 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-rail-derailment-loaded-length | ⚙️change-rail-derailment-loaded-length | ✅apply  |
       | change-rail-derailment-assumed-line-load | ⚙️change-rail-derailment-assumed-line-load | ✅apply  |
       | change-rail-load-group-assumed-lateral | ⚙️change-rail-load-group-assumed-lateral | ✅apply  |
-      | change-rail-load-group-assumed-longitudinal | ⚙️change-rail-load-group-assumed-longitudinal | ✅apply  |
+      | change-rail-load-group-assumed-longitudinal | ⚙️change-rail-group-assumed-longitudinal | ✅apply  |
       | change-rail-load-group-assumed-udl | ⚙️change-rail-load-group-assumed-udl | ✅apply  |
       | change-rail-load-group-assumed-axle-load | ⚙️change-rail-load-group-assumed-axle-load | ✅apply  |
       | change-rail-load-group-factor-lateral | ⚙️change-rail-load-group-factor-lateral | ✅apply  |
-      | change-rail-load-group-factor-longitudinal | ⚙️change-rail-load-group-factor-longitudinal | ✅apply  |
+      | change-rail-load-group-factor-longitudinal | ⚙️change-rail-group-factor-longitudinal | ✅apply  |
       | change-rail-load-group-factor-vertical | ⚙️change-rail-load-group-factor-vertical | ✅apply  |
       | change-dust-explosion-design-pressure | ⚙️change-dust-explosion-design-pressure | ✅apply  |
-      | change-dust-explosion-static-opening-pressure | ⚙️change-dust-explosion-static-opening-pressure | ✅apply  |
+      | change-dust-explosion-static-opening-pressure | ⚙️change-dust-explosion-static-pressure | ✅apply  |
       | change-dust-explosion-vent-area | ⚙️change-dust-explosion-vent-area | ✅apply  |
       | change-dust-explosion-volume | ⚙️change-dust-explosion-volume | ✅apply  |
       | change-dust-explosion-p-max | ⚙️change-dust-explosion-p-max | ✅apply  |
@@ -541,14 +541,14 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-rail-derailment-loaded-length | ⚙️change-rail-derailment-loaded-length | ✅apply  |
       | change-rail-derailment-assumed-line-load | ⚙️change-rail-derailment-assumed-line-load | ✅apply  |
       | change-rail-load-group-assumed-lateral | ⚙️change-rail-load-group-assumed-lateral | ✅apply  |
-      | change-rail-load-group-assumed-longitudinal | ⚙️change-rail-load-group-assumed-longitudinal | ✅apply  |
+      | change-rail-load-group-assumed-longitudinal | ⚙️change-rail-group-assumed-longitudinal | ✅apply  |
       | change-rail-load-group-assumed-udl | ⚙️change-rail-load-group-assumed-udl | ✅apply  |
       | change-rail-load-group-assumed-axle-load | ⚙️change-rail-load-group-assumed-axle-load | ✅apply  |
       | change-rail-load-group-factor-lateral | ⚙️change-rail-load-group-factor-lateral | ✅apply  |
-      | change-rail-load-group-factor-longitudinal | ⚙️change-rail-load-group-factor-longitudinal | ✅apply  |
+      | change-rail-load-group-factor-longitudinal | ⚙️change-rail-group-factor-longitudinal | ✅apply  |
       | change-rail-load-group-factor-vertical | ⚙️change-rail-load-group-factor-vertical | ✅apply  |
       | change-dust-explosion-design-pressure | ⚙️change-dust-explosion-design-pressure | ✅apply  |
-      | change-dust-explosion-static-opening-pressure | ⚙️change-dust-explosion-static-opening-pressure | ✅apply  |
+      | change-dust-explosion-static-opening-pressure | ⚙️change-dust-explosion-static-pressure | ✅apply  |
       | change-dust-explosion-vent-area | ⚙️change-dust-explosion-vent-area | ✅apply  |
       | change-dust-explosion-volume | ⚙️change-dust-explosion-volume | ✅apply  |
       | change-dust-explosion-p-max | ⚙️change-dust-explosion-p-max | ✅apply  |

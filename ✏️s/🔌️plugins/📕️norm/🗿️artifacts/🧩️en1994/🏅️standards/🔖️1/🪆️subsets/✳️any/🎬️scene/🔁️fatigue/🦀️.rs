@@ -1,7 +1,7 @@
 //! 🔁️ Fatigue (EN 1994-2 6.8) of a bridge girder: the S–N diagram of the three detail categories (steel detail, headed stud, reinforcement) with the design points, damage and utilisation, the stress range and damage of every stud row along the girder, and the 3D highlight of the governing stud row. The curve constants stay unverified (`ndp.en1994.2.rebar-fatigue-range`).
 
 use super::beams::local_frame;
-use super::checks::catalogue::fatigue::{self, governing_row, stud_rows, Curve, Row};
+use semio_s_artifact_norm_en1994_checks_catalogue_fatigue::{self as fatigue, governing_row, stud_rows, Curve, Row};
 use super::checks::part_2;
 use super::diagrams as dg;
 use super::facts::BeamFacts;

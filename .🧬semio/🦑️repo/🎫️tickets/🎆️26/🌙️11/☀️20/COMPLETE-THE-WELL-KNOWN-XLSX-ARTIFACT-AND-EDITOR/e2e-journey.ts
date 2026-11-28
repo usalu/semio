@@ -1,65 +1,16 @@
-import {copyFileSync, writeFileSync} from "node:fs";
+import {writeFileSync} from "node:fs";
 import {join} from "node:path";
-import {spawnSync} from "node:child_process";
-import {matrix, root, session} from "./e2e-harness.ts";
+import {matrix, session} from "./e2e-harness.ts";
+import {near, oracle, workbook} from "./e2e-workbook.ts";
 import {budgetWorkbook} from "./e2e-fixture.ts";
 
-const {detailsControlId} = await import(join(root, "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🎯️artifact-acceptance/🏃️browser/🎯️details/🟦️.ts"));
 const [locale = "en", serve = "http://127.0.0.1:6072/"] = process.argv.slice(2) as ["en" | "de", string];
 const out = join(import.meta.dir, "🗑️generated/e2e/journey-" + locale);
 const s = await session(locale, serve, out);
 const {page, record, waitFor, shot} = s;
 const de = locale === "de";
 const num = (text: string) => de ? text.replace(".", ",") : text;
-const details = '[id*="s.stdio.window.snapshot-details"]';
-const cell = (sheet: string, ref: string) => page.locator(`[role="grid"][aria-label="${sheet}"] input[aria-label="${ref}"]`).first();
-const value = (sheet: string, ref: string) => cell(sheet, ref).inputValue({timeout: 5_000}).catch(() => null);
-const sheetLabels = () => page.evaluate(() => [...document.querySelectorAll('[role="treeitem"][id*="xlsx-sheet-"]')].map(e => ((e as HTMLElement).innerText ?? "").trim().split("\n")[0]!.trim()));
-
-async function setCell(sheet: string, ref: string, text: string, shown = text) {
-  const input = cell(sheet, ref);
-  await input.waitFor({state: "visible", timeout: 30_000}).catch(() => undefined);
-  if ((await input.count()) === 0) return record(`edit:${sheet}!${ref}`, false, "cell input absent");
-  await input.fill(text); await input.press("Enter"); await input.blur().catch(() => undefined);
-  const ok = await waitFor(30_000, async () => page.evaluate(({sheet, ref, shown}) => { const c = document.querySelector<HTMLInputElement>(`[role="grid"][aria-label="${sheet}"] input[aria-label="${ref}"]`); return c?.value === shown && !c.hasAttribute("data-draft-dirty"); }, {sheet, ref, shown}));
-  return record(`edit:${sheet}!${ref}`, !!ok, `typed ${JSON.stringify(text)} shows ${JSON.stringify(await value(sheet, ref))}`);
-}
-async function openSheet(name: string) {
-  const item = page.locator(`[role="treeitem"][id*="xlsx-sheet-"]`, {hasText: name}).first();
-  if ((await item.count()) === 0) return false;
-  if ((await item.getAttribute("aria-expanded")) === "false") await item.locator("button[aria-expanded], [aria-expanded]").first().click({timeout: 8_000}).catch(() => item.click());
-  return !!(await waitFor(30_000, async () => (await page.locator(`[role="grid"][aria-label="${name}"]`).count()) > 0));
-}
-async function stagedAction(verb: string, args: Record<string, string>) {
-  await s.clickAction(verb);
-  const filled: string[] = [];
-  for (const [key, v] of Object.entries(args)) filled.push(await matrix.fillStagedArgument(page, key, v, "@liveId"));
-  return `${filled.join(" ")} submit=${await matrix.submitStagedVerb(page, verb)}`;
-}
-async function detailsText(pointer: string) {
-  const input = page.locator(`${details} [data-ui-node-key="${detailsControlId(pointer, "text")}"]`).first();
-  return (await input.count()) > 0 ? input.inputValue() : null;
-}
-async function editDetails(step: string, pointer: string, next: string) {
-  const input = page.locator(`${details} [data-ui-node-key="${detailsControlId(pointer, "text")}"]`).first();
-  let via = "details-field";
-  if ((await input.count()) > 0) { await input.scrollIntoViewIfNeeded().catch(() => undefined); await input.fill(next); await input.press("Enter"); await input.blur().catch(() => undefined); }
-  else via = `rail setSnapshotValue ${await stagedAction("setSnapshotValue", {path: pointer, value: next})}`;
-  await page.waitForTimeout(2_500);
-  return via;
-}
-async function partIndex(path: string) {
-  for (let n = 0; n < 16; n += 1) if ((await detailsText(`/xmlParts/${n}/path`)) === path) return n;
-  return path === "xl/workbook.xml" ? 0 : path === "xl/worksheets/sheet1.xml" ? 3 : -1;
-}
-function oracle(file: string) {
-  const script = "/tmp/e2e-oracle.py";
-  copyFileSync(join(import.meta.dir, "e2e-oracle.py"), script);
-  const run = spawnSync("uv", ["run", "-q", "--no-project", "--with", "openpyxl", "--with", "formulas", "python", "-I", "-W", "ignore", script, file], {cwd: "/tmp", encoding: "utf8"});
-  writeFileSync(file + ".oracle.json", run.stdout);
-  return JSON.parse(run.stdout) as {sheetNames: string[]; calcPr: string | null; recalculated: Record<string, unknown>; sheets: Record<string, {cells: Record<string, {value: unknown; type: string; cached: unknown; bold: boolean; numberFormat: string; fill: string | null}>; merged: string[]; widths: Record<string, number>}>};
-}
-const near = (a: unknown, b: number) => typeof a === "number" ? Math.abs(a - b) < 1e-9 : Number(a) === b;
+const {value, sheetLabels, openSheet, setCell, stagedAction, editDetails, partIndex} = workbook(s);
 
 function judge(tag: string, file: string, expect: {sheets: string[]; summary: boolean}) {
   const o = oracle(file), d = o.sheets.Data?.cells ?? {};
@@ -98,7 +49,7 @@ try {
   await setCell("Data", "A5", "Tax");
   await setCell("Data", "B5", "=B4*0.1");
   await setCell("Data", "D2", num("1.5"));
-  await setCell("Data", "A6", "'007", "007");
+  await setCell("Data", "A6", "'007");
   await setCell("Data", "E5", "temporary");
   await s.clickAction("undo");
   const undone = await waitFor(20_000, async () => (await value("Data", "E5")) === "");
@@ -110,9 +61,9 @@ try {
 
   const wb = await partIndex("xl/workbook.xml"), ws = await partIndex("xl/worksheets/sheet1.xml");
   record("details:parts", wb >= 0 && ws >= 0, `workbook=xmlParts/${wb} sheet1=xmlParts/${ws}`);
-  const styleVia = await editDetails("format", `/xmlParts/${ws}/document/root/children/2/children/1/children/1/attrs/1/value`, "3");
+  const styleVia = await editDetails(`/xmlParts/${ws}/document/root/children/2/children/1/children/1/attrs/1/value`, "3");
   record("format:B2-bold", true, `style s=2→3 on B2 via ${styleVia}`);
-  const renameVia = await editDetails("rename", `/xmlParts/${wb}/document/root/children/0/children/1/attrs/0/value`, "Memo");
+  const renameVia = await editDetails(`/xmlParts/${wb}/document/root/children/0/children/1/attrs/0/value`, "Memo");
   await waitFor(20_000, async () => (await sheetLabels()).includes("Memo"));
   record("sheet:rename", JSON.stringify(await sheetLabels()) === '["Data","Memo"]', `via ${renameVia}: ${JSON.stringify(await sheetLabels())}`);
   const sheetJson = (name: string) => JSON.stringify({kind: "element", name: "sheet", attrs: [{name: "name", value: name}], children: []});

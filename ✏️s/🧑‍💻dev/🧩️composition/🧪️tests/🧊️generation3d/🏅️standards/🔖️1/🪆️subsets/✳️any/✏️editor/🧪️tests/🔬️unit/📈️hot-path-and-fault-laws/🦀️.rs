@@ -33,7 +33,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view
     semio_os_flow::reset_flow_eval_publication_ledger();
     semio_os_flow::reset_flow_eval_step_ledger();
     let mut budget = BootBudget { turns: 0, turns_to_first_mesh: None, worst_turn_us: 0, total_turn_us: 0, round_trips: 0, ledger: semio_os_flow::FlowEvalPublicationLedger::default(), steps: semio_os_flow::FlowEvalStepLedger::default(), meshes: 0 };
-    let action_meta = semio_plugin::ActionMeta { view_state: Some(view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     let mut owed = app.pending_effects(Some(view)).await;
     for _ in 0..100_000 {
         if app.has_pending_typed_operations() {

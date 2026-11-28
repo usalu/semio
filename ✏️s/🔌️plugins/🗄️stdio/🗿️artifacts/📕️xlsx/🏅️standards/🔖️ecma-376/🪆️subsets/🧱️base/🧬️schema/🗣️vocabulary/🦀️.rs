@@ -218,15 +218,16 @@ pub struct PositionedWorksheetChild<'a> {
 /// See [Microsoft's optional cell reference semantics](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/2fd4e47f-0965-4c60-95bd-cff980b6c325).
 pub fn positioned_worksheet_children<'a>(
     children: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlNode],
-    parent_scope: &'a [(String, String)],
-    namespace: &'a str,
+    parent_scope: &[(String, String)],
+    namespace: &str,
     axis: WorksheetAxis,
 ) -> impl Iterator<Item = Result<PositionedWorksheetChild<'a>, String>> + 'a {
+    let (parent_scope, namespace) = (parent_scope.to_vec(), namespace.to_owned());
     let local = match axis { WorksheetAxis::Rows => "row", WorksheetAxis::Columns(_) => "c" };
     let mut previous = None;
     children.iter().enumerate().filter_map(move |(index, node)| {
-        let scope = namespace_scope(parent_scope, node);
-        match element_matches(node, &scope, &[namespace], local) {
+        let scope = namespace_scope(&parent_scope, node);
+        match element_matches(node, &scope, &[namespace.as_str()], local) {
             Ok(false) => return None,
             Err(error) => return Some(Err(error)),
             Ok(true) => {}

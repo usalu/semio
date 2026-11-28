@@ -1,7 +1,7 @@
 /** 🥇️ Contract: the first worker of a farm can start when free memory is short; the floor applies to additional workers. Critical pressure and active swap hold every worker.
  * @see ../../📏️decision/🟦️.ts */
 import {expect,test} from "bun:test";
-import {decideHostCapacityV1,evaluateHostCapacityV1,readHostCapacityPolicyV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../🟦️.ts";
+import {decideHostCapacityV1,evaluateHostCapacityV1,readHostCapacityPolicyV1,sizeHostRequestV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 import lendFixture from "../🤲️lend/🧫️fixtures/🔣️.json";
 import {sqliteHostOracleV1} from "../🔮️sqlite/🟦️.ts";
@@ -60,4 +60,21 @@ test("when the memory carries more than one worker the essential request gets th
  const roomy=verdict([waiter({essential:true})],[],host({availableMegabytes:4096+20000}));
  expect(roomy.verdict).toBe("admit");expect(roomy.jobs,"the preferred jobs fit: no reduction to the minimum").toBeGreaterThan(1);
  expect(roomy.reason).not.toBe("override");
+});
+
+test("a prerequisite (the dependency restore) is admitted although memory is short, the queue is ordered and its session holds its share, and only a hard stop holds it",()=>{
+ const fixed=(request:Record<string,unknown>={})=>waiter({elastic:false,...request});
+ expect(verdict([fixed()]).verdict,"an ordinary fixed request waits").toBe("wait");
+ expect(verdict([fixed({prerequisite:true})])).toMatchObject({verdict:"admit",jobs:1});
+ expect(verdict([fixed({prerequisite:true})],ledger,host({availableMegabytes:4096-233})).verdict).toBe("admit");
+ for(const row of hardStops){
+  const sample=host({platform:row.platform,...row.sample} as Partial<HostSampleV1>);
+  expect(verdict([fixed({prerequisite:true})],ledger,sample),row.name).toMatchObject(row.expected);
+ }
+});
+
+test("the dependencies operation of a policy sizes a request that carries the prerequisite, any other fixed operation does not",()=>{
+ const named={...policy,operations:[...policy.operations.filter(row=>row.name!=="dependencies"),{name:"dependencies",shape:"fixed",fixedMegabytes:3584,cpu:2,priority:"interactive",prerequisite:true,minimumMegabytes:2304}]} as typeof policy;
+ expect(sizeHostRequestV1(named,{id:"aaaaaaaa1",operation:"dependencies"})).toMatchObject({priority:"interactive",prerequisite:true,fixedMegabytes:3584});
+ expect(sizeHostRequestV1(policy,{id:"aaaaaaaa1",operation:"show"})).not.toHaveProperty("prerequisite");
 });

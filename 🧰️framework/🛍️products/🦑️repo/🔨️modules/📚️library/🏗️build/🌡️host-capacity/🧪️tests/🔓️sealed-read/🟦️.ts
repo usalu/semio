@@ -44,7 +44,7 @@ test("a sealed current show asks for no capacity, any other invocation keeps its
 
 test("the flag form of a sealed current show passes the capacity door untouched: no grant, no disk admission, the body runs with the original arguments",async()=>{
  for(const args of [["show","project","p","--graph-policy=current"],["show","projects","--graph-policy","current"],["show","project","p","--tool=nx","--graph-policy=current"]]){
-  const written:string[]=[],granted=await withBuildCapacityV1(args,{},async value=>value,{write:line=>written.push(line),disk:{partition:()=>{throw new Error("[DEBUG] disk admission must not run");}}});
+  const written:string[]=[],granted=await withBuildCapacityV1(args,{},async value=>value,{write:line=>written.push(line),disk:{partition:()=>{throw new Error("disk admission must not run");}}});
   expect(granted.handle).toBeUndefined();
   expect(granted.args).toEqual(args);
   expect(written).toEqual([]);

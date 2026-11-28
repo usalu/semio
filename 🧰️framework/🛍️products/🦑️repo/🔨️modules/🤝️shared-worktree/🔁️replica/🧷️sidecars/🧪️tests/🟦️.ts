@@ -49,7 +49,7 @@ test("nothing starts before the daemon is healthy and the delay has passed; then
  await until(()=>starts(facts).length===1,5000,"started once healthy");
  expect(supervisor.report()[0]).toMatchObject({state:"running"});expect(typeof supervisor.report()[0]!.pid).toBe("number");
  await until(()=>existsSync(join(facts.worktree,"env.json")),5000,"environment written");
- expect(JSON.parse(readFileSync(join(facts.worktree,"env.json"),"utf8"))).toEqual({origin:"g1-m03",group:"g1",store:facts.storeRoot,root:facts.worktree,name:"a",record:join(facts.worktree,".cache","f","sidecars","a.json"),lease:join(facts.worktree,".cache","f","sidecars","a.lease"),leaseMs:"600000"});
+ expect(JSON.parse(readFileSync(join(facts.worktree,"env.json"),"utf8"))).toEqual({origin:"g1-m03",group:"g1",store:facts.storeRoot,root:facts.worktree,name:"a",record:join(facts.worktree,".cache","f","sidecars","a.json"),lease:join(facts.worktree,".cache","f","sidecars","a.lease"),leaseMs:"7200000"});
  expect(JSON.parse(readFileSync(join(facts.worktree,".cache","f","sidecars",`a.${supervisor.report()[0]!.pid}.lease`),"utf8"))).toMatchObject({version:1,pid:process.pid});
  expect(existsSync(join(facts.worktree,".cache","f","sidecars","a.lease")),"the shared lease of older launchers is gone: they leave by themselves").toBe(false);
  expect(readFileSync(join(facts.worktree,".cache","f","sidecars","a.log"),"utf8")).toContain("child stay started");

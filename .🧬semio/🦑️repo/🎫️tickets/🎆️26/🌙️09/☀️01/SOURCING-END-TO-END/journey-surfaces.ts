@@ -10,7 +10,7 @@ type Language = "en" | "de";
 type Row = { id: string; module: string; typology: string[]; en: string; de: string; availability: number };
 const stockRows: Row[] = [
   { id: "beam-glulam-gl24h", module: "beams", typology: ["beams", "solid-timber", "glulam"], en: "Glulam GL24h 200×400", de: "Brettschichtholz GL24h 200×400", availability: 24 },
-  { id: "beam-kvh-c24", module: "beams", typology: ["beams", "solid-timber", "kvh"], en: "KVH C24 100×200", de: "KVH C24 100×200", availability: 60 },
+  { id: "beam-kvh-c24", module: "beams", typology: ["beams", "solid-timber", "kvh"], en: "KVH C24 100×200", de: "Konstruktionsvollholz C24 100×200", availability: 60 },
   { id: "beam-steel-ipe200", module: "beams", typology: ["beams", "steel", "ipe"], en: "Steel IPE 200", de: "Stahl IPE 200", availability: 12 },
   { id: "beam-steel-hea160", module: "beams", typology: ["beams", "steel", "hea"], en: "Steel HEA 160", de: "Stahl HEA 160", availability: 8 },
   { id: "window-casement-100x120", module: "windows", typology: ["windows", "casement"], en: "Casement Window 100×120", de: "Drehflügelfenster 100×120", availability: 18 },

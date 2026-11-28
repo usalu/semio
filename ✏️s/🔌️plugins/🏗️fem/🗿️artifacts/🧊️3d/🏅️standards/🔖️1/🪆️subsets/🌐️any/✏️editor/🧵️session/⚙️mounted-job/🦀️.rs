@@ -76,6 +76,10 @@ impl BoundedJob for MountedJob {
         Some(bytes)
     }
 
+    fn replay_input(&self) -> Option<&[u8]> {
+        self.input.as_deref()
+    }
+
     fn terminal_drop_is_shallow(&self) -> bool {
         self.input.is_none() && self.restored.is_none()
     }

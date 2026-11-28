@@ -62,7 +62,7 @@ async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
-    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(flow_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
         .await
         .expect("the generator pane's boot dispatches setActiveExample under the flow window");

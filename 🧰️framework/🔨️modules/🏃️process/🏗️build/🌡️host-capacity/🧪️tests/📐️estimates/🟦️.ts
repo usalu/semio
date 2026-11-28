@@ -4,10 +4,13 @@ import Ajv from "ajv";
 import {mkdirSync,mkdtempSync,readdirSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {churnProtocolV1} from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {tmpdir} from "node:os";
+import {fileURLToPath} from "node:url";
 import {join} from "node:path";
 import {readHostCapacityPolicyV1,isHostCapacityV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../📏️decision/🟦️.ts";
 import {emptyHostEstimateStoreV1,estimateHostRatioV1,robustHostSamplesV1,hostEstimateLineageV1,hostRequestPriorityV1,learnableHostRunV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostOutcomeV1,scaleHostRequestV1,updateHostEstimateStoreV1,type HostEstimateStoreV1,type HostEstimateV1,type HostOutcomeV1,type HostRunStatusV1} from "../../📐️estimates/🟦️.ts";
+import buildPolicy from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json";
 import schema from "../../🧬️schema/🔣️.json";
+const buildPolicyStale=(buildPolicy.hostCapacity.estimates as {staleTrustBasisPoints?:number}).staleTrustBasisPoints;
 import fixture from "./🧫️fixtures/🔣️.json";
 import host from "../🧫️fixtures/🔣️.json";
 
@@ -86,6 +89,25 @@ test("Estimates decay: the same history weighs less as it ages, and old peaks st
  const recent=estimateHostRatioV1(policy,store,["run"],policy.estimates.halfLifeMilliseconds*6+10);
  expect(recent.ratioBasisPoints).toBeLessThan(5000);
  expect(estimateHostRatioV1(policy,store,["run"],10).ratioBasisPoints).toBeGreaterThan(estimateHostRatioV1(policy,store,["run"],policy.estimates.halfLifeMilliseconds*40).ratioBasisPoints-1);
+});
+
+test("Law: a class nobody ran for days keeps the trust its stored runs earn when they say it needs less than the default, and an old heavy class is never raised by it, exactly as the Python oracle",()=>{
+ const oracle=fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url)),day=86400000;
+ const samples=(ratio:number,count:number)=>Array.from({length:count},(_,index)=>({atMs:1000+index,ratioBasisPoints:ratio,activeMilliseconds:60000,peakAtMilliseconds:30000}));
+ const rows=[["light",2200,16],["light-few",2200,2],["heavy",18000,16],["single",1500,1]] as const,floored={...policy,estimates:{...policy.estimates,staleTrustBasisPoints:7000}};
+ const store={version:1 as const,classes:Object.fromEntries(rows.map(([name,ratio,count])=>[name,{samples:samples(ratio,count)}]))};
+ const script=`import importlib.util,json,sys\nspec=importlib.util.spec_from_file_location("oracle",sys.argv[1]);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)\nrows=json.load(sys.stdin);print(json.dumps([m.estimate({"estimates":dict(m.POLICY,**r["extra"])},r["store"],[r["name"]],r["now"]) for r in rows]))`;
+ const cases=[...rows.map(([name])=>name)].flatMap(name=>[0,3*day,10*day,40*day].flatMap(age=>[{},{staleTrustBasisPoints:7000}].map(extra=>({name,now:1000+16+age,extra,store}))));
+ const done=Bun.spawnSync([Bun.which("python3")??"python3","-I","-c",script,oracle],{stdin:new TextEncoder().encode(JSON.stringify(cases))});expect(done.exitCode,new TextDecoder().decode(done.stderr)).toBe(0);
+ const expected=JSON.parse(new TextDecoder().decode(done.stdout)) as HostEstimateV1[];
+ cases.forEach((row,index)=>expect(estimateHostRatioV1((row.extra as {staleTrustBasisPoints?:number}).staleTrustBasisPoints===undefined?policy:floored,store as HostEstimateStoreV1,[row.name],row.now),JSON.stringify([row.name,row.now,row.extra])).toEqual(expected[index]!));
+ const idle=(name:string,use:HostCapacityPolicyV1)=>estimateHostRatioV1(use,store as HostEstimateStoreV1,[name],1016+40*day).ratioBasisPoints;
+ expect(idle("light",policy),"without the floor 40 days of idleness give back the whole default").toBeGreaterThan(9000);
+ expect(idle("light",floored),"with it the class keeps 70 % of what it learned").toBeLessThan(5000);
+ expect(idle("heavy",floored),"an old heavy class is not raised above what the decay gives").toBe(idle("heavy",policy));
+ expect(idle("single",floored),"a single run earns a third of the floor only").toBeGreaterThan(idle("light",floored));
+ expect(idle("light-few",floored)).toBeGreaterThan(idle("light",floored));
+ expect(buildPolicyStale).toBe(7000);
 });
 
 test("Learned sizes are always inside the authored bounds and the reservation never falls under the minimum, while the tool envelope stays at the default",()=>{

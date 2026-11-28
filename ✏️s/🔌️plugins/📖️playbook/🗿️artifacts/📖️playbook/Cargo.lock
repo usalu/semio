@@ -3042,16 +3042,9 @@ dependencies = [
 name = "semio-framework-job-context"
 version = "0.1.0"
 dependencies = [
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-job",
  "semio-framework-job-context-step",
- "semio-framework-job-payload",
  "semio-framework-job-receiving",
  "semio-framework-job-return-budget",
- "semio-framework-job-testing-caller",
- "semio-framework-test-fixtures",
- "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-outcome",
@@ -3059,9 +3052,6 @@ dependencies = [
  "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
- "semio-framework-value-testing-allocator",
- "semio-framework-value-testing-effect-bank",
- "serde_json",
 ]
 
 [[package]]
@@ -3082,7 +3072,6 @@ dependencies = [
  "semio-framework-job-return-budget",
  "semio-framework-job-return-escrow-publication",
  "semio-framework-job-work-grant",
- "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-call",
@@ -3093,9 +3082,6 @@ dependencies = [
  "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
- "semio-framework-value-testing-allocator",
- "semio-framework-value-testing-effect-bank",
- "serde_json",
 ]
 
 [[package]]
@@ -5511,7 +5497,9 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-pack-json",
+ "semio-framework-value",
  "semio-os-semio",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8266,6 +8254,7 @@ dependencies = [
  "semio-plugin-registration",
  "semio-plugin-store-lifecycle",
  "semio-plugin-window-kits",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8667,6 +8656,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
+ "semio-ui-locale",
  "serde",
  "serde_json",
 ]
@@ -9586,6 +9576,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-store-lifecycle",
  "semio-ui-contract",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10926,7 +10917,9 @@ dependencies = [
  "semio-os-command",
  "semio-os-flow",
  "semio-os-kernel",
+ "semio-os-store-mutation-report",
  "semio-os-store-one-item",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-playbook-playbook-snapshot",
  "semio-s-artifact-stdio-json",
@@ -11093,6 +11086,7 @@ dependencies = [
  "semio-os-flow",
  "semio-os-kernel",
  "semio-os-store-mutation-report",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-playbook-playbook-examples",
  "semio-s-artifact-playbook-playbook-inferences",
@@ -11137,6 +11131,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-flow",
  "semio-os-kernel",
+ "semio-os-store-test-support",
  "semio-plugin",
  "semio-s-artifact-playbook-playbook-examples",
  "semio-s-artifact-playbook-playbook-snapshot",

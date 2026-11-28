@@ -1,0 +1,35 @@
+{
+  "_comment": "Inputs hand-authored from the live gate at about 10:30 on the 16 GB Mac (repo capacity status --json): 4973 MB available, three cargo-orchestration grants that reserve 1536 MB and hold 531 to 550 MB (one holds 1447 MB, one 2244 MB), three quiet 512 MB runs that hold about 73 MB, and a graph plan that waited 3138 s for its minimum of 2048 MB. The expected verdicts and reservations of every case are computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
+  "totalMegabytes": 16384,
+  "cores": 10,
+  "swapUsedMegabytes": 2900,
+  "swapOutMegabytesPerSecond": 1,
+  "load": 9.8,
+  "compressedMegabytes": 3800,
+  "grants": [
+    {"id": "gis2d", "operation": "cargo-orchestration", "reservedMegabytes": 1536, "observedMegabytes": 550, "ageSeconds": 3600, "retain": true, "session": "a"},
+    {"id": "stdio", "operation": "cargo-orchestration", "reservedMegabytes": 1536, "observedMegabytes": 1447, "ageSeconds": 3600, "retain": true, "session": "b"},
+    {"id": "tile", "operation": "cargo-orchestration", "reservedMegabytes": 1536, "observedMegabytes": 2244, "ageSeconds": 3600, "retain": true, "session": "c"},
+    {"id": "terrain", "operation": "cargo-orchestration", "reservedMegabytes": 1536, "observedMegabytes": 531, "ageSeconds": 3600, "retain": true, "session": "c"},
+    {"id": "dev", "operation": "run", "reservedMegabytes": 512, "observedMegabytes": 74, "ageSeconds": 3500, "quiet": true, "session": "c"},
+    {"id": "composition", "operation": "run", "reservedMegabytes": 512, "observedMegabytes": 73, "ageSeconds": 3500, "quiet": true, "session": "c"},
+    {"id": "build", "operation": "run-many", "reservedMegabytes": 512, "observedMegabytes": 72, "ageSeconds": 3500, "quiet": true, "session": "d"}
+  ],
+  "waiters": [
+    {"id": "plan1", "operation": "graph-plan", "priority": "interactive", "fixedMegabytes": 6553, "minimumMegabytes": 2048, "floorMegabytes": 2048, "waitedSeconds": 3138, "retain": true, "session": "e"},
+    {"id": "plan2", "operation": "graph-plan", "priority": "interactive", "fixedMegabytes": 6553, "minimumMegabytes": 2048, "floorMegabytes": 2048, "waitedSeconds": 520, "retain": true, "session": "f"},
+    {"id": "decoder", "operation": "cargo-orchestration", "priority": "batch", "fixedMegabytes": 1536, "minimumMegabytes": 1536, "waitedSeconds": 1526, "retain": true, "session": "g"},
+    {"id": "editor", "operation": "cargo-orchestration", "priority": "batch", "fixedMegabytes": 1536, "minimumMegabytes": 1536, "waitedSeconds": 53, "retain": true, "session": "c"},
+    {"id": "small", "operation": "run", "priority": "batch", "fixedMegabytes": 512, "waitedSeconds": 5, "quiet": true, "session": "h"}
+  ],
+  "cases": [
+    {"name": "the live snapshot: the planner is admitted at the room the idle cargo headroom frees", "availableMegabytes": 4973, "waiters": ["plan1", "plan2", "decoder", "editor"]},
+    {"name": "without the settle rule the same snapshot starves the planner (the live bug)", "availableMegabytes": 4973, "settle": false, "waiters": ["plan1", "plan2", "decoder", "editor"]},
+    {"name": "cargo grants younger than the settle time are charged in full", "availableMegabytes": 4973, "grantAgeSeconds": 600, "waiters": ["plan1", "plan2", "decoder", "editor"]},
+    {"name": "a graph plan grant keeps its whole reservation: only what is really free counts", "availableMegabytes": 4973, "extraGrants": [{"id": "planner", "operation": "graph-plan", "reservedMegabytes": 3000, "observedMegabytes": 600, "ageSeconds": 3600, "retain": true, "session": "i"}], "waiters": ["plan1"]},
+    {"name": "head of the line: a newer small request that fits alone does not overtake the planner that cannot fit yet", "availableMegabytes": 4400, "waiters": ["plan1", "small"]},
+    {"name": "head of the line: the planner takes the room when it fits, the newer request waits behind it", "availableMegabytes": 5100, "waiters": ["plan1", "small"]},
+    {"name": "two planners of different clients: one is admitted, the other queues behind it without double booking", "availableMegabytes": 4973, "waiters": ["plan2", "plan1"]},
+    {"name": "a planner takes at most the room the share of the host leaves, never its whole ask, and the second planner waits", "availableMegabytes": 15000, "waiters": ["plan1", "plan2"]}
+  ]
+}

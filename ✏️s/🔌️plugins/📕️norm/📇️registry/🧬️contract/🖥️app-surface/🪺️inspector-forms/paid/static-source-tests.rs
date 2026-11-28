@@ -4,7 +4,8 @@ use semio_framework_replication_mutation::MutationSourceProvenance;
 use semio_framework_value::{DslValue,OriginalRetirementFailure};
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedOwnedProjection,RetainedOwnedProjectionAdmission};
 use semio_framework_value_native_owned::native_decoding::{NativeReceiver,NativeReceivingFailure as Failure};
-use semio_framework_value_testing_admission::{EffectBank,session_driven,session_nested,session_open,session_step};
+use semio_framework_value_native_owned::native_decoding::owned::NATIVE_SCHEMA_METADATA_ITEMS;
+use semio_framework_value_testing_admission::{EffectBank,session_driven,session_nested,session_open};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 #[path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/receiver-driver.rs"]mod driver;
 static COMPILED:CompiledMutationInputDefinitions=CompiledMutationInputDefinitions{
@@ -33,7 +34,7 @@ const BODY:usize=4096;
 const MAXIMUM:u64=1<<20;
 type Prep<T>=NormInspectorStaticSourcePreparation<T>;
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
-fn exact(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+fn exact(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:NATIVE_SCHEMA_METADATA_ITEMS,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 fn denied(axis:usize)->RetainedCloneGrant{let mut value=grant();match axis{0=>value.maximum_items=0,1=>value.maximum_copy_bytes=0,2=>value.maximum_capacity_bytes=0,3=>value.maximum_release_bytes=0,_=>value.maximum_depth=0}value}
 fn denied_from(base:RetainedCloneGrant,axis:usize)->RetainedCloneGrant{let mut value=base;match axis{0=>value.maximum_items=0,1=>value.maximum_copy_bytes=value.maximum_copy_bytes.saturating_sub(1),2=>value.maximum_capacity_bytes=value.maximum_capacity_bytes.saturating_sub(1),3=>value.maximum_release_bytes=value.maximum_release_bytes.saturating_sub(1),_=>value.maximum_depth=value.maximum_depth.saturating_sub(1)}value}
 fn limits()->JsonReadLimits{JsonReadLimits{maximum_bytes:1<<20,maximum_allocation_bytes:1<<20,maximum_depth:4096,maximum_items:2_000_000}}
@@ -52,12 +53,6 @@ impl Owner{
   let mut done=None;
   let(poll,heap)=observe(||session_nested(&self.bank,granted,|control,_|{let(result,receipt,work)=run(control);done=Some((result,receipt));RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok::<(),ValueError>(()),work})}));
   let(result,receipt)=done.expect("receiving turn ran");assert!(matches!(poll,RetainedWorkPoll::Complete(_)));
-  result.unwrap();self.bank.post(receipt,granted,heap);
- }
- fn step_under(&mut self,granted:RetainedCloneGrant,run:impl FnOnce(&mut NativeDecodeControl<'_>)->(Result<(),ValueError>,RetainedCloneProgress,u128)){
-  let mut done=None;
-  let(stepped,heap)=observe(||session_step(&self.bank,granted,MAXIMUM,|control,_|{let(result,receipt,_)=run(control);done=Some((result,receipt))}));
-  stepped.expect("Read turn quote admitted");let(result,receipt)=done.expect("receiving turn ran");
   result.unwrap();self.bank.post(receipt,granted,heap);
  }
  fn close(&mut self,quote:RetirementDemand,work:u64,denial:Option<RetainedCloneGrant>,run:impl FnOnce(&mut dyn OriginalRetirementControl,&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
@@ -87,10 +82,9 @@ fn prepare<T:NativeReceive<dyn NativeValueSource>+Sync+'static>(owner:&mut Owner
 fn advance<T:NativeReceive<dyn NativeValueSource>+Sync+'static>(owner:&mut Owner,preparation:&mut Prep<T>){
  let demand=preparation.demands(BODY,MAXIMUM).unwrap();
  let funded=exact(demand);
- let reading=matches!(preparation.phase,Phase::Read);
- for axis in axes(demand){let denial=denied_from(funded,axis);let turn=|control:&mut NativeDecodeControl<'_>|{let turn=preparation.advance(control,BODY,MAXIMUM,denial);quiet(&turn);(Ok(()),RetainedCloneProgress::default(),turn.work)};if reading{owner.step_under(denial,turn)}else{owner.receive_under(denial,turn)}}
+ for axis in axes(demand){let denial=denied_from(funded,axis);let turn=|control:&mut NativeDecodeControl<'_>|{let turn=preparation.advance(control,BODY,MAXIMUM,denial);quiet(&turn);(Ok(()),RetainedCloneProgress::default(),turn.work)};owner.receive_under(denial,turn)}
  let funded_turn=|control:&mut NativeDecodeControl<'_>|{let turn=preparation.advance(control,BODY,MAXIMUM,funded);let receipt=turn.result.as_ref().map(|step|step.progress()).unwrap_or_default();(turn.result.map(|_|()).map_err(failure),receipt,turn.work)};
- if reading{owner.step_under(funded,funded_turn)}else{owner.receive_under(funded,funded_turn)}
+ owner.receive_under(funded,funded_turn)
 }
 fn close<T:NativeReceive<dyn NativeValueSource>+Sync+'static>(owner:&mut Owner,source:&mut Prep<T>){
  source.begin_close();
@@ -105,7 +99,7 @@ fn run<T:NativeReceive<dyn NativeValueSource>+Sync+serde::Serialize+'static>(see
  let mut owner=Owner::new();
  let mut preparation=prepare(&mut owner,|control|Prep::<T>::admit(&COMPILED,if seeds{COMPILED.seed_definitions_json}else{COMPILED.definitions_json},limits(),control,grant()));
  let mut count=0;
- while !preparation.ready()&&cancel!=Some(count){advance(&mut owner,&mut preparation);count+=1;assert!(count<10_000)}
+ while !preparation.ready()&&cancel!=Some(count){advance(&mut owner,&mut preparation);count+=1;if count==9_999{eprintln!("[DEBUG] stuck phase={} demand={:?}",preparation.phase as u8,preparation.demands(BODY,MAXIMUM));}assert!(count<10_000)}
  let mut output=None;
  if cancel.is_none(){
   assert!(preparation.ready());owner.receive(|control|{let turn=preparation.take(control,grant());match turn.result{Ok(Some((value,receipt)))=>{output=Some(value);(Ok(()),receipt,turn.work)},Ok(None)=>panic!("ready output omitted"),Err(error)=>(Err(error),Default::default(),turn.work)}});

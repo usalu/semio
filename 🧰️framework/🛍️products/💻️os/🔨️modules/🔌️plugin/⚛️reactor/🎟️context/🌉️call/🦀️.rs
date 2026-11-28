@@ -139,6 +139,12 @@ impl OriginalActorGuestEntry{
   }));
   let result=match call.result{Ok(_)=>Ok(RetainedCloneStep::Progress(call.receipt_spent)),Err(OriginalActorCallError::Authority(error))=>Err(OriginalActorContextError::Refused(error)),Err(OriginalActorCallError::Semantic(error))=>Err(OriginalActorContextError::Original(error))};OriginalActorCall{input:call.input,receipt_spent:call.receipt_spent,work_units_spent:call.work_units_spent,result}
  }
+ /// 🪦️ The guest Source releases its pending native roots and return cells exactly as the native host does before it closes.
+ fn close_native_step(&mut self,input:RetainedTurnInput,budget:StepBudget)->OriginalActorCall<RetainedCloneStep,OriginalActorContextError>{
+  let Some(clock)=self.context.original_clock_source()else{return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(OriginalActorContextError::Refused(refusal("guest native cleanup has no original admitted clock")))}};let mut spent=RetainedCloneProgress::default();
+  let call=self.context.dispatch_step(input,budget,&mut spent,clock,|cx|cx.close_original_native_step());
+  let result=match call.result{Ok(_)=>Ok(RetainedCloneStep::Progress(call.receipt_spent)),Err(OriginalActorCallError::Authority(error))=>Err(OriginalActorContextError::Refused(error)),Err(OriginalActorCallError::Semantic(error))=>{*self.close_fault=Some(error);Err(OriginalActorContextError::Refused(refusal("original guest native cleanup retains its failed Source").with_retained_progress(call.receipt_spent)))}};OriginalActorCall{input:call.input,receipt_spent:call.receipt_spent,work_units_spent:call.work_units_spent,result}
+ }
  fn has_close_failure(&self)->bool{self.bootstrap_fault.is_some()||self.close_fault.is_some()||self.close_fault_retirement.is_some()||self.debit_fault.is_some()||self.debit_fault_retirement.is_some()}
  pub fn original_close_fault(&self)->Option<&ValueError>{self.close_fault.as_ref().and_then(OriginalTurnFailure::primary_value)}
  pub fn original_debit_fault(&self)->Option<&ValueError>{self.debit_fault.as_ref().and_then(OriginalTurnFailure::primary_value).or_else(||self.close_fault.as_ref().and_then(|original|original.receipt_refusal.as_ref()))}
@@ -181,6 +187,7 @@ impl OriginalActorGuestEntry{
   if !self.jobs.is_registered()&&!self.jobs.has_source()&&!self.jobs.has_output()&&self.has_close_causes(){return self.close_causes_step(input,budget)}
   if self.jobs.is_registered()||self.jobs.has_source()||self.jobs.has_output()||self.has_close_failure(){let result=self.context.validate_call_policy(input,policy).map(|()|RetainedCloneStep::Progress(Default::default())).map_err(OriginalActorContextError::Refused);return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result}}
   if !self.ui_arena.terminal_is_empty(){return self.close_ui_step(input,budget)}
+  if self.context.native_sources_pending(){return self.close_native_step(input,budget)}
   if self.fault.is_none()&&self.retirement.is_none()&&self.value_fault.is_none()&&self.value_retirement.is_none()&&self.publication.terminal_is_empty()&&self.value_publication.terminal_is_empty()&&self.cleanup_fault.is_none()&&self.cleanup_fault_retirement.is_none(){return self.context.close_step(input,budget)}
   let Some(clock)=self.context.original_clock_source()else{return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(OriginalActorContextError::Refused(refusal("guest cause retirement requires its admitted Source clock")))}};let entry=self as*const Self as usize;let mut spent=Default::default();let Self{context,fault,retirement,publication,value_fault,value_retirement,cleanup_fault,cleanup_fault_retirement,value_publication,failure_origin,cleanup_origin,input_failure_identity,close_fault,..}=self;
   let call=context.dispatch_step(input,budget,&mut spent,clock,|cx|cx.with_original_retirement(|cx|{

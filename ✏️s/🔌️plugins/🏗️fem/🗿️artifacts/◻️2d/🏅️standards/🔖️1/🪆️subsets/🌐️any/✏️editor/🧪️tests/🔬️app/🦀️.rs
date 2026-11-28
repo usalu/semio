@@ -35,3 +35,5 @@ mod patch_load_case;
 mod patch_material;
 #[path = "../../🎮️commands/🩹️patch-node/🧪️tests/🔬️unit/🦀️.rs"]
 mod patch_node;
+#[path = "../⚖️declared-verbs/🦀️.rs"]
+mod declared_verbs;

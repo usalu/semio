@@ -1,15 +1,16 @@
 import {availableParallelism}from"node:os";
 import {validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {currentHostProbeV1,parseDarwinCountersV1,readHostCountersV1,type HostProbeV1}from"../../🌡️host-capacity/📡️sampling/🟦️.ts";
-import {readLiveHostCapacityPlanV1}from"../../🌡️host-capacity/🎫️gate/🟦️.ts";
+import {readLiveHostCapacityJobMegabytesV1,readLiveHostCapacityPlanV1}from"../../🌡️host-capacity/🎫️gate/🟦️.ts";
+import {cargoUnitsFittingV1}from"../../🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
 import type{CompilerCapacityRequestV1}from"../🎫️lease/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 const MEGABYTE=1048576,policy=Object.freeze({...schema.definitions.Policy.const});
 /** 🧮️ Why a compile was planned below the share of the host: the tightest limit that applied. */
-export type CompileUnitsReasonV1="share"|"needed"|"granted"|"memory"|"pressure-warn"|"pressure-critical";
+export type CompileUnitsReasonV1="share"|"needed"|"granted"|"reservation"|"memory"|"pressure-warn"|"pressure-critical";
 /** 🌡️ The live host facts one plan reads; `null` marks a fact the platform does not offer (no limit from it): the jobs the enclosing machine admission holds now and the memory its jobs may hold (`grantedMegabytes`), and the measured footprint of one compile unit (`unitMegabytes`, `compileUnitMegabytesV1`). */
-export type CompileUnitsHostV1=Readonly<{cores:number;availableMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;grantedJobs:number|null;grantedMegabytes:number|null;unitMegabytes:number}>;
+export type CompileUnitsHostV1=Readonly<{cores:number;availableMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;grantedJobs:number|null;grantedMegabytes:number|null;reservedJobMegabytes?:number|null;unitMegabytes:number}>;
 /** 🎯️ What the work can use at most (`null`: any number of cores). */
 export type CompileUnitsIntentV1=Readonly<{needed:number|null}>;
 /** ⚖️ The planned units: ask for up to `preferred` cores, start as soon as `minimum` are free; `budgetMegabytes` is the memory the compile may hold under its machine admission (null without one), which bounds the memory-admitting compiler broker. */
@@ -58,7 +59,7 @@ export function compileUnitMegabytesV1(history:ReadonlyMap<string,readonly Reado
  return Math.max(policy.minimumUnitMegabytes,Math.ceil(peaks[Math.max(0,Math.ceil(peaks.length*policy.unitQuantileBasisPoints/10000)-1)]!/MEGABYTE));
 }
 
-/** 🔨️ Plans counted compile capacity from the live host: one compile may use `shareBasisPoints` of the cores (so at least two run side by side), never more than its work can use, than the machine admission carries (its granted jobs, or more when the memory its jobs may hold carries more compile units at the measured footprint of one: a compile is one action that runs several units), than the free memory carries (`unitMegabytes` each above the reserve), one core under critical pressure and half under raised pressure; it starts once `minimumShareBasisPoints` of that are free. Under a machine admission the compile may hold the memory of its grant, and never less than its planned units need at the measured footprint (`budgetMegabytes`).
+/** 🔨️ Plans counted compile capacity from the live host: one compile may use `shareBasisPoints` of the cores (so at least two run side by side), never more than its work can use, than the machine admission carries (its granted jobs, or more when the memory its jobs may hold carries more compile units at the measured footprint of one: a compile is one action that runs several units), than the memory its admission reserved carries at the worst case of the largest rustc classes (`reservedJobMegabytes`, `cargoUnitsFittingV1`: a build fits its grant, whatever the cores say), than the free memory carries (`unitMegabytes` each above the reserve), one core under critical pressure and half under raised pressure; it starts once `minimumShareBasisPoints` of that are free. Under a machine admission the compile may hold the memory of its grant, and never less than its planned units need at the measured footprint (`budgetMegabytes`).
  * @see ./🧬️schema/🔣️.json
  * @see ./🧪️tests/🐍️oracle/🐍️.py */
 export function planCompileUnitsV1(hostValue:CompileUnitsHostV1,intentValue:CompileUnitsIntentV1={needed:null}):CompileUnitsDecisionV1{
@@ -67,6 +68,7 @@ export function planCompileUnitsV1(hostValue:CompileUnitsHostV1,intentValue:Comp
  const limit=(value:number,why:CompileUnitsReasonV1)=>{if(value<units){units=Math.max(1,value);reason=why;}};
  if(intent.needed!==null)limit(intent.needed,"needed");
  if(host.grantedJobs!==null)limit(Math.max(host.grantedJobs,host.grantedMegabytes===null?0:Math.floor(host.grantedMegabytes/host.unitMegabytes)),"granted");
+ if(host.reservedJobMegabytes!==undefined&&host.reservedJobMegabytes!==null)limit(cargoUnitsFittingV1(host.reservedJobMegabytes),"reservation");
  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes)/host.unitMegabytes),"memory");
  if(host.pressure==="critical")limit(1,"pressure-critical");
  else if(host.pressure==="warn")limit(Math.ceil(units/policy.localPressureWarnDivisor),"pressure-warn");
@@ -102,7 +104,7 @@ export async function readCompileUnitsHostV1(options:Readonly<{environment?:Read
   counters=probe.platform==="darwin"?parseDarwinCountersV1(...await Promise.all([probe.run("vm_stat",[],probe.signal),probe.run("sysctl",["-n","vm.swapusage"],probe.signal),probe.run("sysctl",["-n","kern.memorystatus_vm_pressure_level"],probe.signal)])):await readHostCountersV1(probe);
  }catch(error){if(options.signal?.aborted)throw options.signal.reason;}
  const available=counters?.availableBytes===null||counters?.availableBytes===undefined?null:Math.floor(Math.min(counters.availableBytes,counters.constrainedBytes??Infinity)/MEGABYTE);
- return Object.freeze({cores:options.cores??availableParallelism(),availableMegabytes:available,pressure:counters?.pressureLevel??null,grantedJobs:plan?.jobs??null,grantedMegabytes:plan?.memoryMegabytes??null,unitMegabytes:compileUnitMegabytesV1(options.history)});
+ return Object.freeze({cores:options.cores??availableParallelism(),availableMegabytes:available,pressure:counters?.pressureLevel??null,grantedJobs:plan?.jobs??null,grantedMegabytes:plan?.memoryMegabytes??null,reservedJobMegabytes:plan===undefined?null:readLiveHostCapacityJobMegabytesV1(environment)??null,unitMegabytes:compileUnitMegabytesV1(options.history)});
 }
 
 /** 🚦️ Plans and requests in one step from the live host: the request the compile hands to the compiler capacity scope and the plan it logs. */

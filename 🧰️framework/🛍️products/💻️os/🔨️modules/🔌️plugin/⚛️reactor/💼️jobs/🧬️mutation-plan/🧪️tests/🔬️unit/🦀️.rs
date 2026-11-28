@@ -2,7 +2,7 @@ use crate::{BoundedJob, JOB_KIND_MUTATION_PLAN, PHASE_DECODED, checkpoint_jobs, 
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::future::Future;
 use semio_framework_actor::OriginalJobStep as JobStep;
-use crate::tests::{slice_fixture, start_fixture, terminal_fixture, cancel_fixture};
+use crate::tests::Fixture;
 use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
 use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
 use crate::mutation_plan::job_test_mutation_fixture::JobTestSnapshot;
@@ -33,25 +33,26 @@ async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec
 /// `Planner`, not just `job.unknown-kind`.
 #[semio_framework_async_macros::async_test]
 async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
+    let mut fx = Fixture::default();
     let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a").await;
     let payload = semio_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
     let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload).await;
-    start_fixture(300, JOB_KIND_MUTATION_PLAN, input.clone(), None);
+    fx.start(300, JOB_KIND_MUTATION_PLAN, input.clone(), None);
 
-    match slice_fixture(300) {
+    match fx.slice(300) {
         JobStep::Running(Some(progress)) => {
             let (artifact_kind, decoded_mutation_id): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
             assert_eq!(artifact_kind, "s.jobtest.mutation-echo");
             assert_eq!(decoded_mutation_id, mutation_id);
         }
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 1 must be Running(Some(identity)), not fail: {} {}", fault.code.0, fault.message);
+            let fault = crate::tests::fault_view(&bytes);
+            panic!("slice 1 must be Running(Some(identity)), not fail: {} {}", fault.code, fault.message);
         }
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
         JobStep::Running(None) => panic!("slice 1 must be Running(Some(identity)), not a bare Running(None)"),
     }
-    match slice_fixture(300) {
+    match fx.slice(300) {
         JobStep::Done(bytes) => {
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
             let result: semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult = semio_framework_value::FromValue::from_value(value).expect("result decodes");
@@ -62,8 +63,8 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
             assert_eq!(op, JobTestOp::AddValue(AddValue { delta: 5 }));
         }
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 2 must dispatch to the registered kind, not fail: {} {}", fault.code.0, fault.message);
+            let fault = crate::tests::fault_view(&bytes);
+            panic!("slice 2 must dispatch to the registered kind, not fail: {} {}", fault.code, fault.message);
         }
         JobStep::Running(_) => panic!("slice 2 must finish Done, the native mutation-plan call is atomic"),
     }
@@ -73,27 +74,29 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
 /// resumed run reaches the SAME `Done` output as an uninterrupted run.
 #[semio_framework_async_macros::async_test]
 async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
+    let mut fx = Fixture::default();
     let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b").await;
     let payload = semio_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 3 }).await;
     let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload).await;
 
-    start_fixture(301, JOB_KIND_MUTATION_PLAN, input.clone(), None);
-    slice_fixture(301);
-    let baseline = match slice_fixture(301) {
+    fx.start(301, JOB_KIND_MUTATION_PLAN, input.clone(), None);
+    fx.slice(301);
+    let baseline = match fx.slice(301) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("uninterrupted run must finish Done within 2 slices"),
     };
 
-    start_fixture(302, JOB_KIND_MUTATION_PLAN, input.clone(), None);
-    slice_fixture(302);
+    fx.start(302, JOB_KIND_MUTATION_PLAN, input.clone(), None);
+    fx.slice(302);
     let entries = checkpoint_jobs().await;
     let entry = entries.iter().find(|entry| entry.job == 302).expect("job 302 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
     let checkpoint = entry.checkpoint.clone();
-    cancel_fixture(302);
-    terminal_fixture(302);
-    start_fixture(302, JOB_KIND_MUTATION_PLAN, input.clone(), checkpoint);
-    let restored_final = match slice_fixture(302) {
+    assert_eq!(entry.input.as_deref(), Some(input.as_slice()));
+    fx.cancel(302);
+    fx.terminal(302);
+    fx.start(302, JOB_KIND_MUTATION_PLAN, entry.input.clone().expect("the checkpoint keeps the replay input"), checkpoint);
+    let restored_final = match fx.slice(302) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call"),
     };
@@ -102,11 +105,12 @@ async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
-    start_fixture(303, JOB_KIND_MUTATION_PLAN, b"not a wire value".to_vec(), None);
-    match slice_fixture(303) {
+    let mut fx = Fixture::default();
+    fx.start(303, JOB_KIND_MUTATION_PLAN, b"not a wire value".to_vec(), None);
+    match fx.slice(303) {
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            assert_eq!(fault.code.0, "job.mutation-plan.decode");
+            let fault = crate::tests::fault_view(&bytes);
+            assert_eq!(fault.code, "job.mutation-plan.decode");
         }
         _ => panic!("garbage mutation-plan input must fail on slice 1"),
     }

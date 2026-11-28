@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/ready-image-guard/v1",
+  "description": "EN: The free-space rule of the per-purpose cache images (`.cache/b/<partition>/m`) that a worker checks before and while a stage writes into them, so that a full image is a typed, retried refusal and never a stage that dies half an hour later with `No space left on device`. DE: Die Freiraum-Regel der Cache-Images je Zweck (`.cache/b/<Partition>/m`), die ein Worker vor und während einer Stufe prüft, damit ein volles Image eine typisierte, wiederholte Ablehnung ist und nie eine Stufe, die eine halbe Stunde später mit `No space left on device` stirbt.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": [
+          ".cache",
+          "b"
+        ],
+        "mount": "m",
+        "excluded": [
+          "c",
+          "l"
+        ],
+        "floorBasisPoints": 400,
+        "floorMinimumMegabytes": 128,
+        "floorMaximumMegabytes": 3072,
+        "floorShareBasisPoints": 2500,
+        "floorHardBasisPoints": 5000,
+        "floorGraceMilliseconds": 60000,
+        "growCapMegabytes": 32768,
+        "growKeepMegabytes": 3072,
+        "floorRule": {
+          "en": "The guard floor is a function of the image size alone: floorBasisPoints of the image, at least floorMinimumMegabytes, at most floorMaximumMegabytes, never above floorShareBasisPoints of the image (so 4 % of a 19.3 GB image is 771 MB and 4 % of a 32 GiB image is 1311 MB). It never depends on what lanes or collectors hold. Below the floor a stage with a collector is not stopped at once: the image is collected in place first and the stage runs on while that works (at most floorGraceMilliseconds); only below floorHardBasisPoints of the floor, or when the collection ended and the image is still below the floor, is the stage stopped. A stopped image is grown by the heal before the next start (growCapMegabytes, host free kept: growKeepMegabytes), so the stop names how much it can still grow.",
+          "de": "Die Wächtergrenze ist allein eine Funktion der Image-Größe: floorBasisPoints des Images, mindestens floorMinimumMegabytes, höchstens floorMaximumMegabytes, nie über floorShareBasisPoints des Images (4 % eines 19,3-GB-Images sind also 771 MB, 4 % eines 32-GiB-Images 1311 MB). Sie hängt nie davon ab, was Lanes oder Sammler halten. Unter der Grenze wird eine Stufe mit Sammler nicht sofort gestoppt: zuerst wird im Image an Ort und Stelle gesammelt, und die Stufe läuft währenddessen weiter (höchstens floorGraceMilliseconds); erst unter floorHardBasisPoints der Grenze oder wenn das Sammeln endete und das Image noch unter der Grenze liegt, wird die Stufe gestoppt. Ein gestopptes Image wird vor dem nächsten Start vom Heilen vergrößert (growCapMegabytes, Wirts-Frei bleibt: growKeepMegabytes), der Stopp nennt also, wie viel es noch wachsen kann."
+        },
+        "needBasisPoints": 1000,
+        "needMinimumMegabytes": 256,
+        "needMaximumMegabytes": 6144,
+        "minimumTotalMegabytes": 512,
+        "recheckMilliseconds": 300000,
+        "recheckGrowthMegabytes": 256,
+        "retainMinimumMegabytes": 512,
+        "stages": {
+          "dependencies": [
+            "d"
+          ],
+          "tools": [
+            "t"
+          ],
+          "workspace": [
+            "r",
+            "g",
+            "n"
+          ]
+        },
+        "purposes": {
+          "r": {
+            "en": "Rust build",
+            "de": "Rust-Build"
+          },
+          "d": {
+            "en": "dependencies",
+            "de": "Abhängigkeiten"
+          },
+          "g": {
+            "en": "project graph",
+            "de": "Projektgraph"
+          },
+          "p": {
+            "en": "products",
+            "de": "Produkte"
+          },
+          "t": {
+            "en": "tools",
+            "de": "Werkzeuge"
+          },
+          "n": {
+            "en": "Nx native data",
+            "de": "Nx-Nativdaten"
+          },
+          "o": {
+            "en": "diagnostics",
+            "de": "Diagnose"
+          }
+        },
+        "healStages": [
+          "dependencies",
+          "workspace"
+        ],
+        "reliefBasisPoints": 2000,
+        "reliefMinimumMegabytes": 1024,
+        "reliefMaximumMegabytes": 8192,
+        "reliefRetryMilliseconds": 120000,
+        "reliefPartitions": ["r"],
+        "checkMilliseconds": 1000,
+        "noSpaceScanBytes": 268435456,
+        "noSpaceLineCharacters": 600,
+        "hostLimitedBytes": 16777216,
+        "hostLimitedBasisPoints": 100,
+        "hostLimited": {
+          "en": "The free bytes of this image are those of the host volume (the sparse backing file cannot grow further), so the host volume is the limit and space freed on it helps too.",
+          "de": "Die freien Bytes dieses Images sind die des Wirtsvolumens (die dünn besetzte Sicherungsdatei kann nicht weiter wachsen), das Wirtsvolumen ist also die Grenze und dort freigegebener Platz hilft ebenfalls."
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "totalBytes",
+        "freeBytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "freeBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, validateCaseContract, ratchetDependencies, stubSerializerBreaches, subjectHostPackagesFor, testCacheDir, testFilenameForKind, testTaxonomy, caseContractBreaches, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, noOracleMisuseBreaches, reimplementationOracleBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, validateCaseContract, ratchetDependencies, stubSerializerBreaches, subjectHostPackagesFor, testCacheDir, testFilenameForKind, testTaxonomy, caseContractBreaches, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, noOracleMisuseBreaches, reimplementationOracleBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { contributed, exemptAreas, relativeToRepo, repoCases, repoOracleHits, repoRegistry, repoRoot, repoWideBreaches, withTestArtifacts } from "../🧰️repository-scan/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -347,14 +347,9 @@ describe("🧩️ cross-language oracle hosts", () => {
     expect(new Set(selected).size).toBeGreaterThan(1);
   }, 60_000);
 
-  test("a host package carrying a path is local source; one without a path is an external distribution", () => {
-    const registry = repoRegistry;
-    const external = externalOracleHostPackages(registry);
-    const declared = registry.contributions.flatMap((entry) => entry.oracleHostPackages);
-    const taxonomy = testTaxonomy(repoRoot);
-    const contributionFilename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
-    expect(external.map((entry) => `${entry.ecosystem}:${entry.name}`).sort()).toEqual([...new Set(declared.filter((entry) => entry.path === undefined).map((entry) => `${dependencyEcosystemOf(entry.implementation)}:${entry.package}`))].sort());
-    for (const entry of external) expect(entry.users.every((user) => user.endsWith(contributionFilename))).toBe(true);
+  test("an explicit host package is local in-repo source: every declared row carries a path, external distributions are derived from oracles", () => {
+    const declared = repoRegistry.contributions.flatMap((entry) => entry.oracleHostPackages);
+    expect(declared.filter((entry) => entry.path === undefined)).toEqual([]);
     expect(dependencyEcosystemOf("typescript")).toBe("js");
     expect(dependencyEcosystemOf("python")).toBe("python");
   }, 30_000);
@@ -412,17 +407,6 @@ describe("🧩️ cross-language oracle hosts", () => {
     expect(verdict.ok).toBe(false);
     expect(verdict.unregisteredTestDeps).toEqual(["python:an-unregistered-reference-library"]);
   });
-
-  test("the committed baseline classifies every external host package as a test-only dependency", () => {
-    const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { ecosystem: string; name: string; kinds: string[]; productionReachable: boolean }[] };
-    for (const host of externalOracleHostPackages(repoRegistry)) {
-      const entry = baseline.entries.find((candidate) => candidate.ecosystem === host.ecosystem && candidate.name === host.name);
-      expect(entry, `${host.ecosystem}:${host.name} is on a generated host's import path but is absent from the dependency baseline`).toBeDefined();
-      if (repoRegistry.oracles.some((oracle) => oracle.productionDebt !== undefined && oracleLinkedPackages(oracle).some((linked) => linked.package === host.name))) continue;
-      expect(entry!.kinds).toEqual(["test-oracle"]);
-      expect(entry!.productionReachable).toBe(false);
-    }
-  }, 30_000);
 });
 
 describe("🔒️ recorded production debt", () => {

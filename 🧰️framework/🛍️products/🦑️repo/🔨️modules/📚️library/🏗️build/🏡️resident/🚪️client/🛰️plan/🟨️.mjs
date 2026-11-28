@@ -6,6 +6,7 @@ import {closeSync,fstatSync,openSync,readFileSync,readSync,statSync} from "node:
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.mjs";
+import {profileRoundTripV1} from "../../../⏱️profile/🟨️.mjs";
 import {mintCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import {canonicalRootV1} from "../../📨️protocol/📍️endpoint/🟨️.mjs";
 import {hostEndpointsV1,workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
@@ -13,6 +14,7 @@ import {HOST_POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../../📨�
 import waitSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 import {ownedSliceReportSinkV1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
+import {LEASE_OWNER_ENVIRONMENT_V1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 
 /** 🚨 The host service could not answer; `reason` is a refusal code or `down`, `timeout`, `protocol`. */
 export class HostUnavailableErrorV1 extends Error{
@@ -189,32 +191,63 @@ function planSilenceNoticeV1(diagnostic,language){
 /** 🔇 Reports the last confirmed evidence for a silent plan on this connection. */
 const silentErrorV1=(diagnostic,progressed)=>Object.assign(new HostUnavailableErrorV1("silent","Host graph service unavailable (silent): "+["en","de"].map(language=>planSilenceNoticeV1(diagnostic,language)).join(" / ")),{progressed,planSilence:Object.freeze(diagnostic)});
 
-function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds,retainForRetry,onJobProgress}){
+/** 🩺 What a quiet plan connection says about the service process: `answered` (a fresh connection gets a `welcome` within `milliseconds`: the service is responsive, so a plan that stays quiet is a plan it no longer holds), `starved` (the connection is accepted and the process lives, but it answers nothing: a service paged out by a swapping host stalls for minutes, which is not a lost plan), `dead` (nothing listens or the process is gone). The silence of one plan is never the silence of the service: a slice worker that the host holds, a job that waits at the capacity gate or a read that is handed over are kept audible by the service itself.
+ * @see ../../🧪️tests/🫥️quiet-service/🟦️.ts */
+export async function probeServiceV1({runtime,implementation,agent,workspace,servicePid,milliseconds=HOST_POLICY_V1.quietProbeMilliseconds}){
+ const socket=await tryConnect(runtime.endpoint);
+ if(!socket)return"dead";
+ const lives=()=>{if(!Number.isSafeInteger(servicePid)||servicePid<=0)return false;try{process.kill(servicePid,0);return true;}catch(error){return error?.code==="EPERM";}};
+ return new Promise(resolve=>{
+  let done=false;
+  const finish=value=>{if(done)return;done=true;clearTimeout(timer);socket.destroy();resolve(value);},timer=setTimeout(()=>finish(lives()?"starved":"dead"),milliseconds);
+  const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,onFrame:message=>{if(message?.t==="welcome")finish("answered");},onError:()=>finish("dead")});
+  socket.on("data",chunk=>decoder.push(chunk));socket.on("error",()=>finish("dead"));socket.on("close",()=>finish(lives()?"starved":"dead"));
+  try{socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo-probe",pid:process.pid,lane:agent},languages:["en"],cap:mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+HOST_POLICY_V1.capabilityLifetimeMilliseconds},{k:"worktree",v:workspace},{k:"agent",v:agent}]),implementation}));}catch{finish("dead");}
+ });
+}
+
+function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds,retainForRetry,onJobProgress,probe=probeServiceV1,quietHoldMilliseconds=HOST_POLICY_V1.quietHoldMilliseconds}){
  return new Promise((resolve,reject)=>{
-  let finished=false,welcome,accepted=false,jobProgressed=false,lastProgress,heardAt=Date.now(),watch;
+  let finished=false,welcome,accepted=false,jobProgressed=false,lastProgress,heardAt=Date.now(),quietSince,probing=false,watch;
+  const heard=()=>{heardAt=Date.now();quietSince=undefined;};
   const end=(settle,value,retain=false)=>{if(finished)return;finished=true;clearInterval(watch);signal?.removeEventListener("abort",abort);if(retain)retainForRetry(socket,runtime.endpoint,silenceMilliseconds);else socket.destroy();settle(value);};
-  if(silenceMilliseconds>0){watch=setInterval(()=>{if(Date.now()-heardAt>=silenceMilliseconds)end(reject,silentErrorV1({stage:welcome===undefined?"before-welcome":accepted?"after-acceptance":"before-acceptance",limitMilliseconds:silenceMilliseconds,lastProgress},lastProgress!==undefined),jobProgressed&&retainForRetry!==undefined);},Math.max(10,Math.min(5000,Math.floor(silenceMilliseconds/4))));watch.unref?.();}
+  const silent=()=>end(reject,silentErrorV1({stage:welcome===undefined?"before-welcome":accepted?"after-acceptance":"before-acceptance",limitMilliseconds:silenceMilliseconds,lastProgress},lastProgress!==undefined),jobProgressed&&retainForRetry!==undefined);
+  if(silenceMilliseconds>0){watch=setInterval(()=>{
+   if(finished||probing||Date.now()-heardAt<silenceMilliseconds)return;
+   quietSince??=heardAt;
+   const held=Date.now()-quietSince;
+   if(welcome===undefined||held>=quietHoldMilliseconds){silent();return;}
+   probing=true;
+   void Promise.resolve().then(()=>probe({runtime,implementation,agent,workspace,servicePid:welcome?.service?.pid})).catch(()=>"dead").then(verdict=>{
+    probing=false;if(finished)return;
+    if(verdict!=="starved"){silent();return;}
+    heardAt=Date.now();
+    onProgress({phase:"alive",done:0,total:0,message:renderBothV1("host-service-quiet",{seconds:Math.round(held/1000),held:Math.round(held/1000),limit:Math.round(quietHoldMilliseconds/1000)})});
+   });
+  },Math.max(10,Math.min(5000,Math.floor(silenceMilliseconds/4))));watch.unref?.();}
   const abort=()=>{try{socket.write(encodeFrameV1({t:"cancel",id:frame.id}));}catch{}end(reject,signal.reason??new Error("aborted"));};
   let token;
-  try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+60000},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch(error){end(reject,Object.assign(new HostUnavailableErrorV1("key"),{missing:error?.code==="ENOENT"}));return;}
+  try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+HOST_POLICY_V1.capabilityLifetimeMilliseconds},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch(error){end(reject,Object.assign(new HostUnavailableErrorV1("key"),{missing:error?.code==="ENOENT"}));return;}
   const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,
    onFrame:message=>{
     if(finished||message===null||typeof message!=="object")return;
     if(message.t==="welcome"){
      if(welcome!==undefined)return;
      if(message.v!==1||!Array.isArray(message.features)||!message.features.includes("plan")){end(reject,new HostUnavailableErrorV1("protocol","service does not answer plan requests"));return;}
-     welcome=message;heardAt=Date.now();return;
+     welcome=message;heard();return;
     }
     if(message.t==="refused"&&(message.id===undefined||message.id===frame.id)){
+     if(message.code==="capability"&&message.retry==="later"){end(reject,Object.assign(new HostUnavailableErrorV1("capability","Host graph service unavailable (capability): "+String(message.message?.en??"the capability token was refused")),{refusal:message,progressed:lastProgress!==undefined}));return;}
+     if(message.code==="handover"){end(reject,Object.assign(new HostUnavailableErrorV1("handover","Host graph service unavailable (handover): the service hands this plan to its successor"),{progressed:true}));return;}
      if(message.retry==="fallback")end(reject,new HostUnavailableErrorV1(message.code));
      else end(reject,Object.assign(new PlanRefusedErrorV1(message),{servicePid:welcome?.service?.pid}));
      return;
     }
     if(welcome===undefined||message.id!==frame.id)return;
-    if(message.t==="accepted"&&validatePlanAcceptance(message).length===0){if(!accepted){accepted=true;heardAt=Date.now();}return;}
-    if(message.t==="slice-report"&&sliceReport!==undefined&&typeof message.report==="string"){accepted=true;heardAt=Date.now();sliceReport(message.report);return;}
+    if(message.t==="accepted"&&validatePlanAcceptance(message).length===0){if(!accepted){accepted=true;heard();}return;}
+    if(message.t==="slice-report"&&sliceReport!==undefined&&typeof message.report==="string"){accepted=true;heard();sliceReport(message.report);return;}
     if(message.t==="progress"&&validatePlanProgress(message).length===0){
-     accepted=true;heardAt=Date.now();lastProgress=message.phase;
+     accepted=true;heard();lastProgress=message.phase;
      if(["queued","load","plan","slice"].includes(message.phase)){jobProgressed=true;onJobProgress?.();}
      onProgress(message);return;
     }
@@ -230,12 +263,16 @@ function exchange({socket,runtime,implementation,frame,agent,workspace,languages
   socket.on("close",disconnected);
   if(signal?.aborted){abort();return;}
   signal?.addEventListener("abort",abort,{once:true});
+  profileRoundTripV1("graph-service");
   socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo",pid:process.pid,lane:agent},languages,cap:token,implementation})+encodeFrameV1({...frame,cap:token}));
  });
 }
 
 /** 🗝️ How long a plan request waits for the key file of a service that is being replaced: the old generation removed it and the new one writes it once it listens. */
 export const PLAN_KEY_WAIT_V1=Object.freeze({maximum:30,milliseconds:1000});
+
+/** 🔁️ How often a request starts the graph service again when it ended while it started (it never wrote an exit record: its sources moved under a landing, the machine was out of memory for the start, a peer ended it) and the growing pause before each start (`milliseconds` times the number of the restart): the request then waits for the new service instead of failing its stage; only a service that is lost `maximum` times in a row ends the request as `lost`. */
+export const HOST_LOST_START_RESTARTS_V1=Object.freeze({maximum:3,milliseconds:5000});
 
 /** 🗝️ Whether a request retries after an unreadable key: only a key file that is missing (ENOENT, the service is between two generations) and not more than `maximum` times; any other failure (permission, damage) stays a refusal.
  * @see ../../🧪️tests/🚪️client/🗝️key/🟦️.ts */
@@ -249,12 +286,13 @@ export function planKeyActionV1(error,waited,restarted){
 }
 
 /** 🛰 Requests a plan and retries lost connections. Exact progress preserves an attempt up to `reattachMaximum`. After `silenceMilliseconds` without activity for this connection's plan, the request reports its last confirmed stage and retries like a lost connection. When a silent request received job progress, its connection stays open for at most one silence interval while the retry joins the existing job. Only the current connection may answer the request. Zero disables the silence timeout.
+ * A client never loses a plan to a change of the service generation: a lost connection, a silent service or a hand-over refusal after the job reported progress follows the successor (the read keeps what it finished on disk) up to `generationFollowMaximum` times without using up the attempts; the silence of a plan counts only while the service itself does not answer (`probeServiceV1`).
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export async function requestPlanV1(options){
- const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
+ const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify,probe,quietHoldMilliseconds,lostStarts=HOST_LOST_START_RESTARTS_V1}=options;
  const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)],sliceReport=ownedSliceReportSinkV1(canonical,environment);
- const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...(/^[A-Za-z0-9_-]{8,32}$/u.test(environment.SEMIO_HOST_CAPACITY_GRANT??"")?{grant:environment.SEMIO_HOST_CAPACITY_GRANT}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
- let last,reattached=0,keyWaits=0,keyRestarted=false,previous;
+ const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...(/^[A-Za-z0-9_-]{8,32}$/u.test(environment.SEMIO_HOST_CAPACITY_GRANT??"")?{grant:environment.SEMIO_HOST_CAPACITY_GRANT}:{}),...(/^[A-Za-z0-9:._-]{1,128}$/u.test(environment[LEASE_OWNER_ENVIRONMENT_V1]??"")?{owner:environment[LEASE_OWNER_ENVIRONMENT_V1]}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
+ let last,reattached=0,followed=0,capabilityRetries=0,keyWaits=0,keyRestarted=false,previous,lostRestarts=0;
  const releasePrevious=()=>previous?.release();
  const retainForRetry=(socket,endpoint,milliseconds)=>{
   releasePrevious();
@@ -270,11 +308,20 @@ export async function requestPlanV1(options){
  try{
   for(let attempt=0;attempt<attempts;attempt++){
    signal?.throwIfAborted();
-   const{socket,runtime,implementation:connected}=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
+   let started;
+   try{started=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});}
+   catch(error){
+    if(!(error instanceof HostUnavailableErrorV1&&error.reason==="lost"&&spawnService!==undefined&&lostRestarts<lostStarts.maximum))throw error;
+    last=error;lostRestarts++;attempt--;
+    onProgress({phase:"start",done:0,total:0,message:{en:"The graph service ended while it started ("+error.message.replace(/^Host graph service unavailable \(lost\): /u,"").split("\n")[0].slice(0,300)+"); starting it again, "+lostRestarts+" of "+lostStarts.maximum,de:"Der Graphdienst endete beim Start ("+error.message.replace(/^Host graph service unavailable \(lost\): /u,"").split("\n")[0].slice(0,300)+"); er wird erneut gestartet, "+lostRestarts+" von "+lostStarts.maximum}});
+    await sleep(lostStarts.milliseconds*lostRestarts,signal);
+    continue;
+   }
+   const{socket,runtime,implementation:connected}=started;
    if(previous&&previous.endpoint!==runtime.endpoint)releasePrevious();
    try{
     const canRetry=attempt+1<attempts||reattached<HOST_POLICY_V1.reattachMaximum;
-    const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,retainForRetry:canRetry?retainForRetry:undefined,onJobProgress:releasePrevious,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
+    const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,retainForRetry:canRetry?retainForRetry:undefined,onJobProgress:releasePrevious,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...probe===undefined?{}:{probe},...quietHoldMilliseconds===undefined?{}:{quietHoldMilliseconds},...ignorePids?{ignorePids}:{}});
     return{reply,welcome,runtime,plan:resolvePlanV1(reply,runtime)};
    }catch(error){
     if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
@@ -287,7 +334,21 @@ export async function requestPlanV1(options){
      else{keyRestarted=true;await retireHostServiceV1({implementation,environment,platform,signal}).catch(()=>undefined);}
      continue;
     }
-    if((error.reason==="lost"||error.reason==="silent")&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
+    if(error.reason==="capability"){
+     if(capabilityRetries>=HOST_POLICY_V1.capabilityRetryMaximum)throw Object.assign(new PlanRefusedErrorV1({...error.refusal,retry:"never"}),{servicePid:undefined});
+     capabilityRetries++;attempt--;
+     onProgress({phase:"start",done:0,total:0,message:error.refusal.message});
+     await sleep(HOST_POLICY_V1.generationFollowMilliseconds/4,signal);
+     continue;
+    }
+    if(["lost","silent","handover"].includes(error.reason)&&error.progressed===true){
+     const current=(()=>{try{return identify?.();}catch{return undefined;}})(),moved=error.reason==="handover"||typeof current==="string"&&current!==(connected??implementation);
+     if(moved&&followed<HOST_POLICY_V1.generationFollowMaximum){
+      followed++;attempt--;
+      onProgress({phase:"start",done:0,total:0,message:renderBothV1("host-service-handover-follow",{count:followed,limit:HOST_POLICY_V1.generationFollowMaximum})});
+      await sleep(HOST_POLICY_V1.generationFollowMilliseconds,signal);
+     }else if(reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
+    }
    }
   }
   throw last;

@@ -150,7 +150,7 @@ export type {
 } from "../../🌿️mutation-leaves/🟦️.ts";
 export {
   classifyLegacyKind, DEPENDENCY_CLASSES, DEPENDENCY_ECOSYSTEMS, dependencyEcosystemOf, dependencyEcosystemOfRegistryValue, dotnetPackageReferences,
-  externalOracleHostPackages, goProductionClosure, importProbe, isProductionClass, pythonRuntimeImports, ratchetDependencies,
+  goProductionClosure, importProbe, isProductionClass, pythonRuntimeImports, ratchetDependencies,
   scanDeclaredDependencies,
 } from "../../🔒️oracle-dependencies/🟦️.ts";
 export type {

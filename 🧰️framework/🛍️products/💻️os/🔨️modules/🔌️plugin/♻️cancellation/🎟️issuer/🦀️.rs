@@ -152,8 +152,10 @@ impl ToolCancellationIssuer{
 
  /// 🪢️ Live cleanup waits while the lease's original source or another registry handle retains custody.
  pub fn live_cleanup_awaits_custody(&self) -> bool {
-  self.has_cleanup_work() && (self.pending.is_some() || self.renew_swapped
-   || self.pending_close.is_none() && self.issued.as_ref().is_some_and(|handle| !Self::owns_cleanup_registry(handle)))
+  let value=self.has_cleanup_work() && (self.pending.is_some() || self.renew_swapped
+   || self.pending_close.is_none() && self.issued.as_ref().is_some_and(|handle| !Self::owns_cleanup_registry(handle)));
+  if value{eprintln!("[DEBUG] custody: pending_close={} active={} pending={} swapped={} issued_strong={:?}",self.pending_close.is_some(),self.active_operation_count(),self.pending.is_some(),self.renew_swapped,self.issued.as_ref().map(|h|(Arc::strong_count(&h.state),Arc::weak_count(&h.state))))}
+  value
  }
 
  fn owns_cleanup_registry(handle: &ToolCancellationHandle) -> bool {

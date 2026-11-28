@@ -10,17 +10,41 @@ use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the DIN 4108, DIN 16798, ISO 16757 and VDI 3805 editor/viewer pairs.
+    /// 🗃️ Closed runtime app fleet for the DIN 4108, DIN 16798, ISO 16757 and VDI 3805 editor/viewer pairs; each app is instantiated once in its own crate.
     pub enum NormApps: PluginApp {
-        Din4108Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din4108_editor::Din4108PlayApp>>),
-        Din4108Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din4108_viewer::Din4108Viewer>>),
-        Din16798Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din16798_editor::Din16798PlayApp>>),
-        Din16798Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din16798_viewer::Din16798Viewer>>),
-        Iso16757Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>>),
-        Iso16757Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer>>),
-        Vdi3805Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>>),
-        Vdi3805Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer>>),
+        Din4108Editor(semio_hub_norm_din4108_editor::Din4108EditorApp),
+        Din4108Viewer(semio_hub_norm_din4108_viewer::Din4108ViewerApp),
+        Din16798Editor(semio_hub_norm_din16798_editor::Din16798EditorApp),
+        Din16798Viewer(semio_hub_norm_din16798_viewer::Din16798ViewerApp),
+        Iso16757Editor(semio_hub_norm_iso16757_editor::Iso16757EditorApp),
+        Iso16757Viewer(semio_hub_norm_iso16757_viewer::Iso16757ViewerApp),
+        Vdi3805Editor(semio_hub_norm_vdi3805_editor::Vdi3805EditorApp),
+        Vdi3805Viewer(semio_hub_norm_vdi3805_viewer::Vdi3805ViewerApp),
     }
+}
+
+/// 🪄️ Implements `From<instance>` for the fleet, so the builder takes each editor and viewer instance and routes it into the app crate that instantiates it.
+macro_rules! apps_from_instance {
+    ($($variant:ident($wrapper:ty): $instance:ty),+ $(,)?) => {
+        $(
+            impl From<$instance> for NormApps {
+                fn from(app: $instance) -> Self {
+                    Self::$variant(<$wrapper>::from(app))
+                }
+            }
+        )+
+    };
+}
+
+apps_from_instance! {
+    Din4108Editor(semio_hub_norm_din4108_editor::Din4108EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_din4108_editor::Din4108PlayApp>>,
+    Din4108Viewer(semio_hub_norm_din4108_viewer::Din4108ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din4108_viewer::Din4108Viewer>>,
+    Din16798Editor(semio_hub_norm_din16798_editor::Din16798EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_din16798_editor::Din16798PlayApp>>,
+    Din16798Viewer(semio_hub_norm_din16798_viewer::Din16798ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din16798_viewer::Din16798Viewer>>,
+    Iso16757Editor(semio_hub_norm_iso16757_editor::Iso16757EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>>,
+    Iso16757Viewer(semio_hub_norm_iso16757_viewer::Iso16757ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer>>,
+    Vdi3805Editor(semio_hub_norm_vdi3805_editor::Vdi3805EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>>,
+    Vdi3805Viewer(semio_hub_norm_vdi3805_viewer::Vdi3805ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer>>,
 }
 //#endregion 🗃️Apps
 

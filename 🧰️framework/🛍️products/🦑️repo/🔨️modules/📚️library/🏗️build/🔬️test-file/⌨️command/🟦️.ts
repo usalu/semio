@@ -16,7 +16,7 @@ export async function runTestFileCliV1(root:string,args:readonly string[],enviro
   const plan:TestFilePlanV1={version:1,files:routes},planProblems=validateTestFileDocumentV1("Plan",plan);
   if(planProblems.length)throw refuseTestFileV1("failed","result.invalid",{details:planProblems.slice(0,3).join("; ")});
   if(options.dryRun){write(options.json?JSON.stringify(plan,null,2):renderTestFilePlanV1(plan,shown));return 0;}
-  const {runTestFileRoutesV1}=await import("../🏃️run/🟦️.ts"),result=await runTestFileRoutesV1(root,routes,{bail:options.bail,json:options.json,language:shown},{...ports.run,tables,notice}),problems=validateTestFileDocumentV1("Result",result);
+  const {runTestFileRoutesV1}=await import("../🏃️run/🟦️.ts"),{createTestFileRemoteV1}=await import("../🌐️remote/🟦️.ts"),remote=ports.run?.remote??await createTestFileRemoteV1(root,environment),result=await runTestFileRoutesV1(root,routes,{bail:options.bail,json:options.json,language:shown},{...ports.run,tables,notice,...remote===undefined?{}:{remote}}),problems=validateTestFileDocumentV1("Result",result);
   if(problems.length)throw refuseTestFileV1("failed","result.invalid",{details:problems.slice(0,3).join("; ")});
   write(options.json?JSON.stringify(result,null,2):renderTestFileResultV1(result,shown));
   return result.status==="passed"?0:1;

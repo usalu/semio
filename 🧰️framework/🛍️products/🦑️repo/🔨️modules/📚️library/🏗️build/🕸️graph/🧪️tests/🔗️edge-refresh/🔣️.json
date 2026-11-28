@@ -690,7 +690,7 @@
    }
   },
   {
-   "id": "a stale owner that is inferred again, a tagged one and one under a dirty root are never refreshed alone",
+   "id": "a stale owner that is inferred again and a tagged one are never refreshed alone, one under a scanned root is",
    "world": {
     "cold": false,
     "roots": [
@@ -793,12 +793,16 @@
      },
      "environment": "e2",
      "cold": false,
-     "healed": 1
+     "healed": 1,
+     "tried": [
+      "b",
+      "c"
+     ]
     }
    }
   },
   {
-   "id": "heal after two rounds: nothing is left to try",
+   "id": "heal after the round limit: nothing is left to try",
    "world": {
     "heal": {
      "owners": {
@@ -818,7 +822,7 @@
      },
      "environment": "e2",
      "cold": false,
-     "healed": 2
+     "healed": 64
     }
    }
   },
@@ -859,6 +863,188 @@
      "environment": "e2",
      "cold": false,
      "healed": 0
+    }
+   }
+  },
+  {
+   "id": "heal: an owner that was given its edges and inferred once is not inferred again",
+   "world": {
+    "heal": {
+     "owners": {
+      "a": {
+       "edgesEnv": "e2"
+      },
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      },
+      "t": {
+       "edgesEnv": "e1",
+       "tag": "tests-v2"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 5,
+     "tried": [
+      "b",
+      "c"
+     ],
+     "inferred": [
+      "b"
+     ]
+    }
+   }
+  },
+  {
+   "id": "heal: every stale owner was given its edges and inferred: nothing is left to try",
+   "world": {
+    "heal": {
+     "owners": {
+      "a": {
+       "edgesEnv": "e2"
+      },
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      },
+      "t": {
+       "edgesEnv": "e1",
+       "tag": "tests-v2"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 5,
+     "tried": [
+      "b",
+      "c"
+     ],
+     "inferred": [
+      "b",
+      "c",
+      "t"
+     ]
+    }
+   }
+  },
+  {
+   "id": "heal: five rounds in, a new stale owner is still given its edges first",
+   "world": {
+    "heal": {
+     "owners": {
+      "a": {
+       "edgesEnv": "e2"
+      },
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      },
+      "t": {
+       "edgesEnv": "e1",
+       "tag": "tests-v2"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 5,
+     "tried": [
+      "b"
+     ],
+     "inferred": [
+      "t"
+     ]
+    }
+   }
+  },
+  {
+   "id": "heal: only the untagged owners that were given their edges and stayed stale are inferred",
+   "world": {
+    "heal": {
+     "owners": {
+      "a": {
+       "edgesEnv": "e2"
+      },
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      },
+      "t": {
+       "edgesEnv": "e1",
+       "tag": "tests-v2"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 1,
+     "tried": [
+      "b"
+     ]
+    }
+   }
+  },
+  {
+   "id": "heal: an owner still pending for inference in a later wave is not stale",
+   "world": {
+    "heal": {
+     "owners": {
+      "a": {
+       "edgesEnv": "e2"
+      },
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "t": {
+       "edgesEnv": "e1",
+       "tag": "tests-v2"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 2,
+     "pending": [
+      "c",
+      "t"
+     ],
+     "tried": [
+      "b"
+     ],
+     "inferred": [
+      "b"
+     ]
+    }
+   }
+  },
+  {
+   "id": "heal: every stale owner is pending, nothing to do",
+   "world": {
+    "heal": {
+     "owners": {
+      "b": {
+       "edgesEnv": "e1"
+      },
+      "c": {
+       "edgesEnv": "e0"
+      }
+     },
+     "environment": "e2",
+     "cold": false,
+     "healed": 3,
+     "pending": [
+      "b",
+      "c"
+     ]
     }
    }
   }

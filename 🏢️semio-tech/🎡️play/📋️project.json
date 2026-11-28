@@ -879,6 +879,53 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📄️value-source/🔣️.json"
       ]
     },
+    "test-matrix-forms": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-forms-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-matrix-forms",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_TECH_PLAY_SCOPE": "forms"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🧮️matrix/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧮️matrix/📋️forms/🔣️.json"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Forms Interaction Matrix",
+              "de": "Formulare-Interaktionsmatrix Testen"
+            },
+            "description": {
+              "en": "Run the Forms interaction matrix, found by accessible roles and names in English and German, in parallel on idle fleet machines against one isolated browser service.",
+              "de": "Die Formulare-Interaktionsmatrix, gefunden über barrierefreie Rollen und Namen auf Englisch und Deutsch, parallel auf freien Flottenmaschinen gegen einen isolierten Browserdienst ausführen."
+            }
+          }
+        }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🧫️fixtures/🌊️embedded-flow.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🧫️fixtures/📝️answer*.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📄️value-source/🔣️.json"
+      ]
+    },
     "prepare-standards-e2e": {
       "executor": "repo:script",
       "cache": false,

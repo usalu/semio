@@ -36,11 +36,11 @@ export function createPassReuseV1(ports:ReusePortsV1={}){
     memo,carried,
     boundary(input:{readonly round:number;readonly moved:readonly string[]}):void{
       if(passes++===0)return;
-      const evicted=memo.evictReferencing(input.moved),heapBytes=enabled?measure():Number.NaN,heap=Number.isFinite(heapBytes)?Math.round(heapBytes/1048576):0;
+      const before=memo.size,evicted=memo.evictReferencing(input.moved),kept=before-evicted,heapBytes=enabled?measure():Number.NaN,heap=Number.isFinite(heapBytes)?Math.round(heapBytes/1048576):0;
       const values={pass:passes,round:input.round,moved:input.moved.length,evicted,entries:memo.size,heap},template=schema.$defs.Texts.const.boundary;
       emitGraphPassNoticeV1({round:input.round,moved:input.moved.length,evicted,heap});
       say("[graph-reuse] "+JSON.stringify({version:1,...values,recycles:carried.recycles,text:{en:fill(template.en,values),de:fill(template.de,values)}})+"\n");
-      const decision=enabled?sliceRecycleDecisionV1({environment,heapBytes,carried}):undefined;
+      const decision=enabled?sliceRecycleDecisionV1({environment,heapBytes,kept,evicted,carried}):undefined;
       if(decision!==undefined)throw sliceRecycleErrorV1({decision,round:input.round,passes:passes-1,owners:memo.size,carried});
     },
   });

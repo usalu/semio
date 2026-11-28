@@ -18,6 +18,15 @@ impl pack::snapshot::ArtifactPack for DependencyTestSnapshot {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
+impl pack::snapshot::ArtifactDsl for DependencyTestSnapshot {
+    const EXTENSION: &'static str = "dependency-test";
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| store::TextError::from_value_error(error, store::TextSpan::at(1, 1)))
+    }
+    fn print_dsl(&self) -> String {
+        semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(self))
+    }
+}
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DependencyTestSnapshot {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 

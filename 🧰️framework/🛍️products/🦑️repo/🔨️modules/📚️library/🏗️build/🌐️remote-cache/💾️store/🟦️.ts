@@ -25,6 +25,9 @@ export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismat
 
 const hostPutFailureV1=(error:unknown):RemoteCachePutOutcomeV1=>{const row=error as {code?:unknown;key?:unknown}|null;return error instanceof CasCapRefusalV1||row?.code==="ENOSPC"||row?.code==="EDQUOT"||(typeof row?.key==="string"&&row.key.endsWith("disk.low-space"))?"capacity":"unavailable";};
 
+/** 🚨️ The shortest time between two collections that a capacity refusal of the host store asks for: the refusal says the store is at its cap in force, the next upload of the same unit comes seconds later (`retry-after`), so the room is made now and not when the admitted bytes next reach their trigger (five percent of the bound, at most every thirty seconds). */
+const CAPACITY_RELIEF_MILLISECONDS_V1=5000;
+
 /** 📡️ Progress and housekeeping events of one store, published to the caller without any logging dependency. */
 export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:number}>|Readonly<{stage:"evict";entries:number;bytes:number}>|Readonly<{stage:"reclaim";entries:number;bytes:number}>|Readonly<{stage:"ready";entries:number;bytes:number}>;
 
@@ -67,6 +70,7 @@ export class RemoteCacheStoreV1{
  private evictedEntries=0;
  private evictedBytes=0;
  private evictedBlobBytes=0;
+ private relievedAt=0;
  private referencedBlobBytes:number|null=null;
  private lastBound:number|null=null;
  private graphProtected:Readonly<{keys:ReadonlySet<string>;bytes:number}>={keys:new Set(),bytes:0};
@@ -264,6 +268,12 @@ export class RemoteCacheStoreV1{
   if(this.lastBound===null||this.admitted<this.lastBound*0.05||now-this.lastTrigger<30000)return;
   this.admitted=0;this.lastTrigger=now;void this.collect().catch(()=>undefined);
  }
+
+ /** 🚨️ Makes room after the host store refused a write at its cap in force: one collection (the blob bound included) at most once per `CAPACITY_RELIEF_MILLISECONDS_V1`, in the background; the refused write is answered 507 as before and its retry meets the room. */
+ private relieve():void{
+  const now=Date.now();if(now-this.relievedAt<CAPACITY_RELIEF_MILLISECONDS_V1)return;
+  this.relievedAt=now;void this.collect().catch(()=>undefined);
+ }
  private async blobSize(hash:string):Promise<number>{
   const known=this.blobSizes.get(hash);if(known!==undefined)return known;
   const size=await stat(this.options.host!.objectPath(hash)).then(info=>info.size,()=>undefined);
@@ -398,7 +408,7 @@ export class RemoteCacheStoreV1{
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
    let result;
    try{result=await this.options.host.putChecked(body??[],{hash:key,maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared}),...(input.transient===true?{transient:true}:{})},this.writeSignal());}
-   catch(error){if(this.options.signal?.aborted)throw error;return hostPutFailureV1(error);}
+   catch(error){if(this.options.signal?.aborted)throw error;if(error instanceof CasCapRefusalV1)this.relieve();return hostPutFailureV1(error);}
    if(result.outcome==="created"){this.admitted+=result.digest?.size??declared??0;this.sizeTrigger();}
    return result.outcome==="exists"?"exists":result.outcome;
   }
@@ -408,7 +418,7 @@ export class RemoteCacheStoreV1{
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
    let result;
    try{result=await this.options.host!.putChecked(body??[],{maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.writeSignal());}
-   catch(error){if(this.options.signal?.aborted)throw error;return hostPutFailureV1(error);}
+   catch(error){if(this.options.signal?.aborted)throw error;if(error instanceof CasCapRefusalV1)this.relieve();return hostPutFailureV1(error);}
    if(!result.digest)return result.outcome as RemoteCachePutOutcomeV1;
    if(result.outcome==="created"){this.admitted+=result.digest.size;this.sizeTrigger();}
    const target=this.path(relative),temporary=join(this.temporary,randomUUID());

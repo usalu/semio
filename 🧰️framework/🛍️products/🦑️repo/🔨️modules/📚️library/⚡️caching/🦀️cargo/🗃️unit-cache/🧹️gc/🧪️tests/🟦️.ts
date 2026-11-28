@@ -2,6 +2,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {ballastPathV1} from "../🛟️ballast/🟦️.ts";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {expect,test} from "bun:test";
@@ -10,7 +11,7 @@ import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {relieveUnitCachePressureV1,retryWhenFullV1,startUnitCacheCollectorV1} from "../../🚪️launch/🟦️.ts";
 import {tryClaimV1} from "../../🔒️lock/🟦️.ts";
-import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1,type GcPressureV1} from "../🟦️.ts";
+import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcCapacityBytesV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,measureUnitImagesV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1,worstImageNeedBytesV1,type GcPressureV1} from "../🟦️.ts";
 import {readFillSamplesV1} from "../📈️fill/🟦️.ts";
 import {retryAfterOutOfSpaceV1,withUnitPressureRecheckV1} from "../../🚪️launch/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
@@ -90,6 +91,37 @@ test("a collection frees exactly down to the low-water mark when enough is colle
   const plan=planGcV1(input(free)),freed=plan.removeLanes.length*20,need=gcNeedBytesV1(volume,free);
   expect(freed,"free "+free).toBeGreaterThanOrEqual(need);expect(freed-need,"free "+free).toBeLessThan(20);
  }
+});
+
+test("pressure never removes the retained lane that lives in its own image: its bytes are what filled the image, so a removal only restarts the same build empty, while every other idle lane still goes first and a retained lane of the home image still goes last",()=>{
+ const lane=(id:string,lastUsedMs:number,extra:Record<string,unknown>={})=>({id,bytes:20,incrementalBytes:0,lastUsedMs,live:false,...extra});
+ const cases=[
+  {name:"sole own retained lane",lanes:[lane("pf943c0",1000,{retained:true,own:true})],free:50},
+  {name:"own retained lane and an older idle lane",lanes:[lane("pa",100),lane("pf943c0",1000,{retained:true,own:true})],free:100},
+  {name:"retained lane of the home image still goes last",lanes:[lane("pa",100),lane("pb",1000,{retained:true})],free:100},
+  {name:"own lane that is not retained goes as any other",lanes:[lane("pa",100,{own:true}),lane("pb",1000,{retained:true,own:true})],free:100}
+ ].map(row=>({...row,input:{capacityBytes:1000000,volumeBytes:1000,freeBytes:row.free,nowMs:2000,lanes:row.lanes}}));
+ const python=pythonOracle(`
+import json,sys
+v=json.load(sys.stdin)
+out=[]
+for case in v["cases"]:
+ lanes=sorted([l for l in case["lanes"] if not l["live"]],key=lambda l:(l["lastUsedMs"],l["id"]))
+ volume,free=case["volumeBytes"],case["freeBytes"]
+ used=volume-free
+ need=used-int(volume*v["low"]) if used>int(volume*v["high"]) else 0
+ order=[l for l in lanes if not l.get("retained")]+[l for l in lanes if l.get("retained") and not l.get("own")]
+ removed=[];freed=0
+ for l in order:
+  if freed>=need:break
+  removed.append(l["id"]);freed+=l["bytes"]
+ out.append(sorted(removed))
+print(json.dumps(out))
+`,{low:rules.lowWaterShare,high:rules.highWaterShare,cases:cases.map(row=>({...row.input,lanes:row.lanes}))}) as string[][];
+ cases.forEach((row,index)=>{const plan=planGcV1(row.input);expect(plan.removeLanes,row.name).toEqual(python[index]!);});
+ expect(planGcV1(cases[0]!.input).removeLanes).toEqual([]);
+ expect(planGcV1(cases[1]!.input).removeLanes).toEqual(["pa"]);
+ expect(planGcV1(cases[2]!.input).removeLanes).toContain("pa");
 });
 
 test("compiler output is classified as out of space by the operating system's error number or message, never by an unrelated error",()=>{
@@ -216,7 +248,7 @@ test("a long compile re-checks the image on a timer and stops checking when it e
   const value=await retryAfterOutOfSpaceV1({store,language:"en",report:line=>lines.push(line)},async()=>{if(++runs===1)throw Object.assign(Error("rustc failed: No space left on device (os error 28)"),{});return "ok";});
   expect(value).toBe("ok");expect(runs).toBe(2);expect(lines.length).toBe(1);expect(lines[0]).toContain("ran out of space");
   await expect(retryAfterOutOfSpaceV1({store,language:"en",report:()=>undefined},async()=>{throw Error("type error");})).rejects.toThrow("type error");
-  let twice=0;await expect(retryAfterOutOfSpaceV1({store,language:"de",report:()=>undefined},async()=>{twice++;throw Error("ENOSPC: no space");})).rejects.toThrow("ENOSPC");expect(twice).toBe(2);
+  let twice=0;const waits:number[]=[];await expect(retryAfterOutOfSpaceV1({store,language:"de",report:()=>undefined,sleep:async ms=>{waits.push(ms);}},async()=>{twice++;throw Error("ENOSPC: no space");})).rejects.toMatchObject({name:"NativeImageFullErrorV1",code:"ENOSPC"});expect(twice).toBe(4);expect(waits).toEqual([0,2000,8000]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -227,5 +259,31 @@ test("a cache root whose volume can be read reports its facts, one that cannot i
   expect(real.unmeasured).toBeUndefined();expect(Math.abs(real.volumeBytes-independent[0])/independent[0]).toBeLessThan(0.01);expect(real.freeBytes).toBeLessThanOrEqual(real.volumeBytes);
   expect(measureVolumeV1(join(root,"missing"),4096)).toEqual({volumeBytes:4096,freeBytes:4096,unmeasured:true});
   expect(gcNeedBytesV1(4096,4096)).toBe(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a split cache root is measured image by image: a path belongs to the longest mount point that leads it, a plain root is one image, and a full image alone makes the volume needy",()=>{
+ const directory=scratch();
+ try{
+  const root=join(directory,"m","u");mkdirSync(join(root,"l/pa/prototype"),{recursive:true});mkdirSync(join(directory,"m/b/p"),{recursive:true});
+  expect(measureUnitImagesV1(root),"no ledger, no split").toBeUndefined();expect(worstImageNeedBytesV1(root)).toBe(0);
+  mkdirSync(join(directory,"s/pa"),{recursive:true});writeFileSync(join(directory,"s/pa/fixed.dmg"),"x");writeFileSync(join(directory,"fixed.dmg"),"x");
+  writeFileSync(join(directory,"shards.jsonl"),JSON.stringify({type:"born",id:"pa",key:"pa",root:0,path:"u/l/pa",capacityBytes:2*GIB,atMs:1})+"\n");
+  const images=measureUnitImagesV1(root)!;expect(images).toBeDefined();
+  expect(images.of(join(root,"l/pa/prototype/build/serde/x"))).toBe("pa");expect(images.of(join(root,"l/pa"))).toBe("pa");expect(images.of(join(root,"l/pab/build"))).toBe("home");expect(images.of(join(directory,"m/b/p/prototype"))).toBe("home");
+  expect(images.needBytes("pa")).toBeGreaterThanOrEqual(0);expect(images.budgetBytes!("pa")).toBeGreaterThan(0);expect(typeof images.satisfied("pa")).toBe("boolean");expect(images.needBytes("gone")).toBe(0);
+  expect(measureVolumeV1(root,GIB).imageNeedBytes).toBe(worstImageNeedBytesV1(root));
+  expect(gcCapacityBytesV1(root,GIB),"a split root is at least as large as its images").toBeGreaterThanOrEqual(2*GIB);expect(gcCapacityBytesV1(root,1000*GIB)).toBe(1000*GIB);
+  expect(measureVolumeV1(root,GIB).volumeBytes,"the home image alone does not clip the volume").toBeGreaterThanOrEqual(2*GIB);expect(gcCapacityBytesV1(join(directory,"plain"),123)).toBe(123);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("the watching collector reacts to the host watermarks: below the hard one it collects for the host's shortfall though its image is roomy, at the critical one it gives the ballast back, and it shrinks idle images once per poll; above them it does nothing",async()=>{
+ const root=scratch();mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
+ try{
+  const time=clock();let host=60*gib,collected=0,shrunk=0;const atCollect:boolean[]=[];const measure=()=>({volumeBytes:volume,freeBytes:30*gib}),shrink=async()=>{shrunk++;},collect=(async()=>{collected++;atCollect.push(existsSync(ballastPathV1(root)));host+=30*gib;return{running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:3}};}) as never;
+  const calm=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect,host:()=>host,shrink});expect(calm).toMatchObject({state:"done",reason:"quiet",collections:0});expect(shrunk).toBe(0);
+  writeFileSync(ballastPathV1(root),Buffer.alloc(1048576));host=15*gib;const hard=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect,host:()=>host,shrink});expect(hard).toMatchObject({state:"done",collections:1});expect(collected).toBe(1);expect(shrunk).toBeGreaterThan(0);
+  writeFileSync(ballastPathV1(root),Buffer.alloc(1048576));host=3*gib;const critical=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect,host:()=>host,shrink});expect(critical).toMatchObject({state:"done",collections:1});expect(collected).toBe(2);expect(atCollect,"the ballast was given back before the collection at the critical watermark").toEqual([true,false]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

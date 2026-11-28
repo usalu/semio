@@ -33,7 +33,7 @@ fn sourcing_curation_mutation_bytes(mutation: &SourcingMutation) -> usize {
 
 /// 📏️ The fixed document envelope, priced by the domain's own measures.
 fn sourcing_curation_preparation_bounds() -> store::ColdPreparationBounds<CurationSnapshot, SourcingMutation> {
-    store::ColdPreparationBounds { maximum_bytes: SOURCING_CURATION_DOCUMENT_MAXIMUM_BYTES, mutation_bytes: sourcing_curation_mutation_bytes, snapshot_bytes: sourcing_curation_document_bytes }
+    store::ColdPreparationBounds { maximum_bytes: SOURCING_CURATION_DOCUMENT_MAXIMUM_BYTES, mutation_bytes: sourcing_curation_mutation_bytes, snapshot_bytes: sourcing_curation_document_bytes, heap_quote: |document, mutation| store::ColdHeapQuote::reference(sourcing_curation_document_bytes(document), sourcing_curation_mutation_bytes(mutation)) }
 }
 
 /// 🏭️ The one semantic issuer of the curation document: publication, replay, report and initialization all prepare through the shared cold apply over the curation cold semantics, within the fixed document envelope.

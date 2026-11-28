@@ -51,11 +51,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         for position in 0..MAINTENANCE_POSITIONS{
             if cx.should_yield(){semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
             let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
-            let Some(unit)=self.ladder_ref().maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
+            let Some(unit)=self.ladder_ref().maintenance_unit_at(position,cursor)else{if position!=0{cx.consume_fuel(1);}continue};
             let archive=matches!(unit,MaintenanceUnit::Stage(24));
             let available_items=loan.maximum_items.min(cx.retained_grant().maximum_items);
             if archive_pending{
-                let archive_dependency = matches!(unit, MaintenanceUnit::Stage(8 | 14 | 15));
+                let archive_dependency = matches!(unit, MaintenanceUnit::Stage(8 | 14 | 15) | MaintenanceUnit::Pressure(8));
                 if archive && available_items < DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS || !archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { semio_plugin_reactor_app::maintenance_starved_mark(); cx.consume_fuel(1); continue; }
             }
             let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes,cx.fuel_remaining())?else{cx.consume_fuel(1);continue};

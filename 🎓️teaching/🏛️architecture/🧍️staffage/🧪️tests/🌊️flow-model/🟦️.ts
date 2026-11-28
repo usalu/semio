@@ -7,7 +7,7 @@
 import { Box3, Color, Line3, Vector3, type BufferGeometry, type Object3D } from "three";
 import { describe, expect, it } from "vitest";
 import type { Asset, Environment } from "../../🧬️schema/🟦️.ts";
-import { CancelledError, loftFault, validateModel, type ModelDocument, type Solid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { CancelledError, loftFault, validateModel, type ModelDocument, type Node, type Solid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import type { DisplayRange, FlowField, Vec3 } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { FLOW_DEVELOP_S } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { FLOW_STYLE, SHARED_FLOW_EXCESS_K, SHARED_FLOW_FOG_GKG, SHARED_FLOW_VAPOUR_GKG, excessOfBin, flowPaint } from "../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts";
@@ -30,7 +30,14 @@ const vectors = fixture<Vectors>("🌊️flow-model");
 const neutral = (p: Vec3): [number, number, number] => [p.z, p.y, p.x];
 const lofts = (solids: readonly Solid[], node: string) => solids.filter((s) => s.node === node && s.kind === "loft") as Extract<Solid, { kind: "loft" }>[];
 const cones = (solids: readonly Solid[], node: string) => solids.filter((s) => s.node === node && s.kind === "revolve") as Extract<Solid, { kind: "revolve" }>[];
-const balls = (solids: readonly Solid[], node: string) => solids.filter((s) => s.node === node && s.kind === "polyhedron") as Extract<Solid, { kind: "polyhedron" }>[];
+const ballsOf = (solids: readonly Solid[], parent: string) => solids.filter((s) => s.node.startsWith(`${parent}-`) && s.kind === "polyhedron") as Extract<Solid, { kind: "polyhedron" }>[];
+const placed = (solid: Extract<Solid, { kind: "polyhedron" }>, nodes: readonly Node[]): Extract<Solid, { kind: "polyhedron" }> => {
+  const node = nodes.find((n) => n.id === solid.node)!;
+  expect(node.rotation, `${solid.id} node rotation`).toEqual([0, 0, 0, 1]);
+  expect(node.scale[0], `${solid.id} node scale`).toBe(node.scale[1]);
+  expect(node.scale[0]).toBe(node.scale[2]);
+  return { ...solid, vertices: solid.vertices.map((v) => [node.translation[0] + node.scale[0] * v[0], node.translation[1] + node.scale[1] * v[1], node.translation[2] + node.scale[2] * v[2]]) };
+};
 const linear = (hex: string): number[] => new Color().setStyle(hex).toArray();
 const near = (a: readonly number[], b: readonly number[], eps: number, label: string): void => a.forEach((v, i) => expect(Math.abs(v - b[i]!), `${label}[${i}]`).toBeLessThanOrEqual(eps));
 
@@ -72,7 +79,12 @@ describe("🌊️ the flow parts of a synthetic field match the numpy and trimes
     const paint = flowPaint(vectors.theme, field, vectors.range);
     expect(flowUnitOf(scale, extentM)).toBeCloseTo(want.unitMPerMm, 15);
     expect(parts.nodes[0]).toMatchObject({ id: "flow", parent: null, tags: ["glyph", FLOW_TAG] });
-    expect(parts.nodes.slice(1).map((n) => [n.id, n.parent])).toEqual([...want.streams.map((s) => [`flow-stream-${s.stream}`, "flow"]), ["flow-vapour", "flow"], ["flow-fog", "flow"]]);
+    expect(parts.nodes.slice(1).map((n) => [n.id, n.parent])).toEqual([
+      ...want.streams.map((s) => [`flow-stream-${s.stream}`, "flow"]),
+      ...(want.vapour.length > 0 ? [["flow-vapour", "flow"], ...want.vapour.map((_, i) => [`flow-vapour-${i}`, "flow-vapour"])] : []),
+      ...(want.fog.length > 0 ? [["flow-fog", "flow"], ...want.fog.map((_, i) => [`flow-fog-${i}`, "flow-fog"])] : []),
+    ]);
+    for (const node of parts.nodes) expect(node.tags, node.id).toEqual(["glyph", FLOW_TAG]);
     for (const solid of parts.solids) expect(solid.tags).toEqual(["glyph", FLOW_TAG]);
     let counted = 0;
     for (const stream of want.streams) {
@@ -83,6 +95,8 @@ describe("🌊️ the flow parts of a synthetic field match the numpy and trimes
       tubes.forEach((tube, i) => {
         const expected = stream.tubes[i]!;
         expect([tube.capStart, tube.capEnd]).toEqual([true, true]);
+        expect(tube.segments).toBe(FLOW_MODEL.tubeSegments);
+        for (const section of tube.sections) expect(section.rx * (1 - Math.cos(Math.PI / FLOW_MODEL.tubeSegments)), `${tube.id} ring deviation from its circle`).toBeLessThanOrEqual(FLOW_MODEL.chordMm * (scale / 1000));
         expect(tube.sections.map((s) => s.at)).toEqual(expected.stations.map((index) => neutral(points[index]!)));
         near(tube.sections.map((s) => s.rx), expected.radiiM, tol.lengthM, `${tube.id} radius`);
         for (const s of tube.sections) expect(s.ry).toBe(s.rx);
@@ -92,13 +106,15 @@ describe("🌊️ the flow parts of a synthetic field match the numpy and trimes
       heads.forEach((head, j) => {
         const arrow = stream.arrows[j]!;
         expect(head.origin).toEqual(neutral(points[arrow.index]!));
+        expect(head.segments).toBe(FLOW_MODEL.tubeSegments);
+        expect(Math.max(...head.profile.map((q) => q[1]!)) * (1 - Math.cos(Math.PI / FLOW_MODEL.tubeSegments)), `${head.id} ring deviation from its circle`).toBeLessThanOrEqual(FLOW_MODEL.chordMm * (scale / 1000));
         near(head.axis, [arrow.direction[2]!, arrow.direction[1]!, arrow.direction[0]!], tol.lengthM, `${head.id} axis`);
         near(head.profile.flat(), [-want.headLengthM, 0, -want.headLengthM, want.headRadiusM, 0, 0], tol.lengthM, `${head.id} profile`);
       });
       counted += tubes.length + heads.length;
     }
     for (const [kind, list] of [["vapour", want.vapour], ["fog", want.fog]] as const) {
-      const made = balls(parts.solids, `flow-${kind}`).map((solid) => ({ solid, ...measure(solid) }));
+      const made = ballsOf(parts.solids, `flow-${kind}`).map((solid) => ({ solid, ...measure(placed(solid, parts.nodes)) }));
       expect(made.length).toBe(list.length);
       for (const expected of list) {
         const centre = neutral(field.puffs[expected.puff]!.at);
@@ -107,6 +123,9 @@ describe("🌊️ the flow parts of a synthetic field match the numpy and trimes
         const unit = vectors.expected.unitSpheres[`${expected.triangles}`]!;
         expect(ball!.solid.material).toBe(`flow-${kind}-${expected.bin}`);
         expect([ball!.solid.triangles.length, ball!.solid.vertices.length]).toEqual([expected.triangles, unit.vertices]);
+        const instance = parts.nodes.find((n) => n.id === ball!.solid.node)!;
+        near(instance.scale, [expected.radiusM, expected.radiusM, expected.radiusM], tol.lengthM, `${ball!.solid.id} scale`);
+        expect(ball!.solid.vertices.every((v) => Math.abs(Math.hypot(v[0], v[1], v[2]) - 1) < 1e-12), `${ball!.solid.id} vertices on the unit sphere`).toBe(true);
         for (const radius of ball!.radii) expect(Math.abs(radius - expected.radiusM)).toBeLessThanOrEqual(tol.lengthM);
         expect(Math.abs(ball!.volume / (unit.volume * expected.radiusM ** 3) - 1)).toBeLessThanOrEqual(tol.sphereRelative);
         expect(Math.abs(ball!.area / (unit.area * expected.radiusM ** 2) - 1)).toBeLessThanOrEqual(tol.sphereRelative);
@@ -184,9 +203,9 @@ describe("🌊️ the model of a flowing asset carries the developed flow of its
         expect(cones(document.solids, node).map((h) => h.origin)).toEqual(ribbon.arrows.map((a) => neutral(a.at)));
         for (const tube of lofts(document.solids, node)) for (const s of tube.sections) expect(s.rx).toBeLessThanOrEqual(Math.min((FLOW_STYLE.streamMaxMm / 2) * (scale / 1000), FLOW_MODEL.tubeShare * extent) * (1 + 1e-12));
       }
-      expect(balls(document.solids, `${scene}-flow-vapour`).length).toBe(marks.puffs.filter((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg).length);
-      expect(balls(document.solids, `${scene}-flow-fog`).length).toBe(marks.puffs.filter((p) => p.condensateKgPerKg > 0).length);
-      if (c.fog) expect(balls(document.solids, `${scene}-flow-fog`).length, `fog at 1:${scale}`).toBeGreaterThan(0);
+      expect(ballsOf(document.solids, `${scene}-flow-vapour`).length).toBe(marks.puffs.filter((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg).length);
+      expect(ballsOf(document.solids, `${scene}-flow-fog`).length).toBe(marks.puffs.filter((p) => p.condensateKgPerKg > 0).length);
+      if (c.fog) expect(ballsOf(document.solids, `${scene}-flow-fog`).length, `fog at 1:${scale}`).toBeGreaterThan(0);
     }
     const paint = flowPaint("light", field, { mode: "shared" });
     for (const material of new Set(flowSolids.map((s) => s.material))) {
@@ -296,7 +315,25 @@ describe("🌊️ the model of a flowing asset carries the developed flow of its
         near(box.min.toArray(), points.min.toArray(), reach, `${node.name} lower corner`);
         near(box.max.toArray(), points.max.toArray(), reach, `${node.name} upper corner`);
       }
-      expect(nodes.some((n) => n.name.endsWith("-flow-vapour"))).toBe(marks.puffs.some((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg));
+      expect(nodes.some((n) => /-flow-vapour-\d+$/u.test(n.name))).toBe(marks.puffs.some((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg));
+      const mm = scale / 1000;
+      const sphereData = new Set<number>();
+      for (const [kind, list] of [["vapour", marks.puffs.filter((p) => p.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg)], ["fog", marks.puffs.filter((p) => p.condensateKgPerKg > 0)]] as const)
+        list.forEach((puff, i) => {
+          const node = nodes.find((n) => n.name === `${scene.name}-flow-${kind}-${i}`);
+          expect(node, `${scene.name} ${kind} puff ${i} is a node of its own`).toBeDefined();
+          const radius = Math.min(FLOW_STYLE.puffMaxMm * mm, Math.max(FLOW_STYLE.puffMinMm * mm, puff.radiusM));
+          const box = new Box3().setFromObject(node!, true);
+          near(box.getCenter(new Vector3()).toArray(), neutral(puff.at), 1e-6 + 1e-6 * radius, `${node!.name} centre`);
+          const half = box.getSize(new Vector3()).multiplyScalar(0.5).toArray();
+          for (const h of half) {
+            expect(h, `${node!.name} half extent`).toBeLessThanOrEqual(radius * (1 + 1e-5));
+            expect(h, `${node!.name} half extent`).toBeGreaterThanOrEqual(0.8 * radius);
+          }
+          const placed = json.nodes.find((n) => n.name === node!.name)!;
+          for (const primitive of json.meshes[placed.mesh].primitives) if (primitive.mode === undefined || primitive.mode === 4) sphereData.add(primitive.attributes.POSITION);
+        });
+      expect(sphereData.size, `the vertices of all puffs at 1:${scale}`).toBeLessThanOrEqual(2);
     }
   });
 });

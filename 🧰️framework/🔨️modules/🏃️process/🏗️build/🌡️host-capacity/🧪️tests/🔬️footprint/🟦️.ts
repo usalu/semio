@@ -77,7 +77,7 @@ test("An attached graph worker cuts its subtree out of the enclosing grant, and 
 test("on macOS one footprint call prices the whole tree, a process it did not print is priced by its resident set, and a refusal falls back to the resident set once in every language",async()=>{
  for(const [index,row] of fixture.darwin.cases.entries()){
   const calls:string[][]=[],lines:string[]=[],run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args]);return command==="ps"?row.ps:row.output;};
-  const observed=await observeTreeMegabytesV1(row.root,run,"darwin",undefined,line=>{lines.push(line);});
+  const observed=await observeTreeMegabytesV1(row.root,run,"darwin",undefined,line=>{lines.push(line);},"footprint",undefined,undefined,null);
   expect(observed,row.name).toBe(fixture.expect.darwin[index]!.megabytes);
   if(oracle)expect(observed,row.name+" (oracle)").toBe(oracle.darwin[index].megabytes);
   expect(calls[0],row.name).toEqual(["ps","-A","-o","pid=,ppid=,rss="]);

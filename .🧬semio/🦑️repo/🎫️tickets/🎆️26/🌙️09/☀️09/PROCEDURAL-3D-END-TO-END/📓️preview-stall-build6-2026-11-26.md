@@ -40,10 +40,19 @@ screen -S g3d -X quit; screen -dmS g3d "<T>/serve-generation3d-native.sh"
 
 `react-journey-probe.mjs` `SEMIO_PROBE_EXTENSION_TRACE=1` was stale: its `EXT_FAULT` patch matched `encodePackValue(fault)` (the source now says `encodeFaultPack(fault)`), so a faulted extension call left no trace line. The patch now matches the current source and prints the whole fault (BigInt-safe). That is what exposed the `flowEvaluation.pack` fault above.
 
-## Build blockers hit on the rebuild (not source defects)
+## Build blockers hit on the rebuild (not source defects of this ticket)
 
-1. First math package run (13 min): `compiler broker admission failed: compiler needs an estimated 2163 MiB but its parent memory grant allows 1638 MiB` for `semio_framework_artifact_flow_flow_model`. Memory pressure from other agents' runs.
-2. Retries of math and brep (23:00 to 23:16): `Internal error: Exact canonical persistent Native publication required: .cache/b/d {"filesystemBytes":[38653657088,34358689792],"maximumPhysicalBytes":[38654705664,34359738368]}`. An uncommitted edit to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json` (another agent) lowered the `d` image from 36 GiB to 32 GiB (`capacityBytes 38654705664 -> 34359738368`) while the existing `.cache/b/d/fixed.dmg` is still 36 GiB, so every build now refuses to publish. The image has to be re-provisioned (or the policy edit finished/reverted) by its owner; it was not touched here.
+Every attempt to rebuild the extensions between 22:50 and 01:45 failed for reasons outside the preview code. The host ran with a negative memory margin (12 to 13 active grants, `warden at level guard`) and the shared tree was edited under the build:
+
+1. `compiler broker admission failed: compiler needs 2163 MiB but its parent memory grant allows 1638 MiB` (`semio_framework_artifact_flow_flow_model`), 13 min lost.
+2. `Exact canonical persistent Native publication required: .cache/b/d`: an uncommitted edit of `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json` (another agent) lowered the `d` image from 36 GiB to 32 GiB while `.cache/b/d/fixed.dmg` was 36 GiB. It cleared by itself after about 20 minutes.
+3. `error[E0425]: cannot find type OriginalCancelRootIdentity in the crate root` in `semio-framework-job-context`: `🎟️source/🏭️admission/🦀️.rs` (19:52) uses `crate::OriginalCancelRootIdentity` while the facade `🧰️framework/🔨️modules/🧵️job/⏱️context/🪟️facade/🦀️.rs` did not re-export it. FIXED here: added `OriginalCancelRootIdentity` to the facade's `pub use semio_framework_job_context_step::{...}` list (the step crate root already re-exports it from `semio_framework_async`).
+4. `Original artifact bytes or identity changed` while publishing `.cache/b/p/m/browser/prototype/components/ffb5e9c49afaee1fbf8dec6b` (a concurrent writer of the same artifact directory).
+5. `cannot update the lock file ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock because --locked was passed`: another agent was editing plugin builder `Cargo.toml` files (`🔌️plugin/🏗️builder/...`).
+6. `Private Nx engine import missing: ./🧱️partition-census/🟦️.ts` (graph slice worker exit 75, three times): the repo build engine was mid-refactor (`partition-census` moved under `🛰️sidecar/🚦️ready`).
+7. Last attempt (22 min): `Descriptor emitter prerequisite build failed` for `@semio-tech/os-plugin-describe-rs`, no rustc diagnostic in the log (the cargo log ends in warnings; the native owner command exited 1 without a message, consistent with a host-warden kill under memory pressure).
+
+None of this is verified yet: as of the end of this pass `modules/🧮️flow-extension-math` and `modules/🧊️flow-extension-brep` are still the 2026-11-25 builds, the server still serves them, and the journey rows are unchanged (all 19 fail as in build 6). The retry loop (`rebuild-extensions-retry.sh`, math then brep, retries every 2 minutes) was stopped so it would not keep the host in memory pressure.
 
 ## Root cause 2: native-return refusals (analysis only)
 
@@ -58,5 +67,20 @@ screen -S g3d -X quit; screen -dmS g3d "<T>/serve-generation3d-native.sh"
 
 ## Files changed
 
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🪟️facade/🦀️.rs`: re-export `OriginalCancelRootIdentity` (unblocks `semio-framework-job-context`).
 - `react-journey-probe.mjs` (ticket): extension fault trace.
+- `rebuild-extensions-retry.sh` (ticket): retrying math then brep package build.
 - This note.
+
+## Probe results
+
+| Run | Result |
+| --- | --- |
+| builds 7 to 12 (`SEMIO_PROBE_ONLY=1` and `=4`, long baseline) | boot never reaches meshes > 0; evaluation is issued, both extensions return `flowEvaluation.pack`, preview stays `4/7`, 2 in flight. Row 4 fails at the baseline (before any edit, undo or redo). |
+| full 19-row run | not repeated: it would reproduce the build 6 outcome until the extensions are rebuilt. |
+
+## Next steps (in order)
+
+1. When the host has memory: `repo run @semio-tech/flow-extension-math-rust:package -c prototype --exclude-dependencies`, same for `flow-extension-brep-rust`, then `repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype --exclude-dependencies`, restart `screen -S g3d`.
+2. `SEMIO_PROBE_OUT=build13 SEMIO_PROBE_ONLY=4 SEMIO_PROBE_BASELINE_FIRST=1 SEMIO_PROBE_EXTENSION_TRACE=1 SEMIO_PROBE_BASELINE_MS=400000 repo tools exec --light bun -- react-journey-probe.mjs`. Expect `EXT_ANSWER` (87 bytes) instead of `EXT_FAULT`.
+3. If `EXT_FAULT flowEvaluation.pack` persists after a fresh build, the cursor fix is not sufficient: instrument `OwnedProjectedPackWireCursor::advance_one` to print `admission.phase()` before the generic `advance`.

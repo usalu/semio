@@ -85,7 +85,7 @@ test.skipIf(process.platform!=="darwin")("borrowed private Darwin backing sample
     const actual=capture({...options,control:custody.control},request,custody.proof);
     counts.geometry=counts.proof=counts.receipt=0;
     for(let index=0;index<work.iterations;index++)actual.check(custody.control);
-    const expected=db.query("select ?*? geometry, ?*? proof, ? receipt").get(work.iterations,work.optimized.geometry,work.iterations,work.optimized.proof,work.iterations);
+    const expected=db.query("select ?*? geometry, ?*? proof, ? receipt").get(work.iterations,work.optimized.geometry,work.iterations,work.optimized.proof,work.iterations) as typeof counts;
     expect(counts).toEqual(expected);
     expect(nativeImageFilesystemBytesV1(root,options.filesystemBytes)).toBeGreaterThan(0);
    });
@@ -131,7 +131,7 @@ test("protected maintenance validates each immutable envelope once under real cu
    const physical=capture(parent.options,parent.request,proof);
    parent.options.filesystemBytes++;
    for(let index=0;index<work.iterations;index++)physical.check(control);
-   const expected=db.query("select ? envelope, (?+1)*? geometry, (?+1)*? proof, ?+1 receipt").get(work.optimized.envelope,work.iterations,work.optimized.geometry,work.iterations,work.optimized.proof,work.iterations);
+   const expected=db.query("select ? envelope, (?+1)*? geometry, (?+1)*? proof, ?+1 receipt").get(work.optimized.envelope,work.iterations,work.optimized.geometry,work.iterations,work.optimized.proof,work.iterations) as {envelope:number;geometry:number;proof:number;receipt:number};
    expect(counts).toEqual(expected);
    const declaration={...child.options,current:child.request};
    expect(()=>physical.captureChild({...declaration,filesystemBytes:child.options.filesystemBytes+1,validatedEnvelope:true},control,[child.association])).toThrow("Invalid fixed image allocation envelope");

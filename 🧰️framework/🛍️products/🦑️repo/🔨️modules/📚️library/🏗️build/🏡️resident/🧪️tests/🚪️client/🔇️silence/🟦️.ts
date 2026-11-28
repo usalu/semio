@@ -34,9 +34,10 @@ async function observe(row:typeof cases[number],interruption?:string){
  let connections=0,progress=0,overlap=0;
  const stop=new AbortController();
  const sockets=new Set<Socket>(),server=createServer(socket=>{
-  const connection=++connections;sockets.add(socket);overlap=Math.max(overlap,sockets.size);
+  let connection=0;
   socket.once("close",()=>sockets.delete(socket));
   const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,onError:()=>socket.destroy(),onFrame:frame=>{
+   if(frame.t==="hello"&&(frame as {client?:{name?:string}}).client?.name!=="repo-probe"){connection=++connections;sockets.add(socket);overlap=Math.max(overlap,sockets.size);}
    if(frame.t==="hello"&&row.welcome)socket.write(encodeFrameV1(welcome));
    if(frame.t==="plan"){
     if(interruption&&connection>1){

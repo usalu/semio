@@ -95,7 +95,7 @@ export function readyLeaseVerdictV1(input:Readonly<{lease:Readonly<{pid:number;s
 /** 🐢️ The tree policy for a machine `factor` times slower than the reference: the windows without progress (the stall window, the stall stop and the wait for a holder) are lengthened by it, so a small machine that waits more often is not stopped for waiting; the caps of other kinds stay as authored.
  * @see ./🧪️tests/🟦️.ts */
 export function readyScaledTreePolicyV1(factor:number,policy:typeof P=P):typeof P{
- return {...policy,speedFactor:Math.max(1,factor),stallMilliseconds:scaledMillisecondsV1(policy.stallMilliseconds,factor),stallStopMilliseconds:scaledMillisecondsV1(policy.stallStopMilliseconds,factor),holderWaitRestartMilliseconds:scaledMillisecondsV1(policy.holderWaitRestartMilliseconds,factor),holderSilentMilliseconds:scaledMillisecondsV1(policy.holderSilentMilliseconds,factor),holderYieldMilliseconds:scaledMillisecondsV1(policy.holderYieldMilliseconds,factor),staleStageMilliseconds:scaledMillisecondsV1(policy.staleStageMilliseconds,factor)};
+ return {...policy,speedFactor:Math.max(1,factor),stallMilliseconds:scaledMillisecondsV1(policy.stallMilliseconds,factor),stallStopMilliseconds:scaledMillisecondsV1(policy.stallStopMilliseconds,factor),holderWaitRestartMilliseconds:scaledMillisecondsV1(policy.holderWaitRestartMilliseconds,factor),holderSilentMilliseconds:scaledMillisecondsV1(policy.holderSilentMilliseconds,factor),holderYieldMilliseconds:scaledMillisecondsV1(policy.holderYieldMilliseconds,factor),staleStageMilliseconds:scaledMillisecondsV1(policy.staleStageMilliseconds,factor),staleWaitingMilliseconds:scaledMillisecondsV1(policy.staleWaitingMilliseconds,factor)};
 }
 
 /** 🔁️ What follows the `consecutive`-th stop in a row of one silent stage: a restart after an exponential back-off (`stallRestartBackoffMilliseconds` doubling up to `stallRestartBackoffMaximumMilliseconds`), and a failed state once more than `stallRestartMaximum` stops followed each other, so a stage that waits for something that never comes ends with its reason instead of being stopped every ten minutes for ever. A pure function.
@@ -180,6 +180,44 @@ export function readyWardenCancelOfStageV1<Row extends Readonly<{pid:number;atMs
  for(const record of cancels)if(record.pid===pid&&(newest===undefined||record.atMs>newest.atMs))newest=record;
  return newest;
 }
+
+/** 🗞️ The signals of the stage runner that its kill record `kills.log` lists since `sinceMs`: time, pid of the process that received the signal, the signal, the runner process that sent it and its stage, parsed from the English half of each line: the ready stage runner's `Process <pid> (<name>) received <signal> from the ready stage runner of this worker (runner process <killer>, stage <stage>, ...)` and the owned execution's `Process <pid> received <signal> from owned execution <label> (killing process <killer>): ...` (the label is the stage); lines of other forms are ignored. A pure function.
+ * @see ./🧪️tests/🛑️stop-sender */
+export type ReadyKillRowV1=Readonly<{atMs:number;pid:number;signal:"SIGTERM"|"SIGKILL";killer:number;stage:string}>;
+export function readyKillRowsV1(text:string,sinceMs:number):readonly ReadyKillRowV1[]{
+ const rows:ReadyKillRowV1[]=[],expressions=[/^(\S+) Process (\d+) \(.*?\) received (SIGTERM|SIGKILL) from the ready stage runner of this worker \(runner process (\d+), stage ([^,]+),/u,/^(\S+) Process (\d+) received (SIGTERM|SIGKILL) from owned execution (.+?) \(killing process (\d+)\):/u];
+ for(const line of text.split("\n").slice(-P.senderRecordLines)){
+  const first=expressions[0]!.exec(line),second=first===null?expressions[1]!.exec(line):null,match=first??(second===null?null:[second[0],second[1],second[2],second[3],second[5],second[4]]as unknown as RegExpExecArray);
+  if(match===null)continue;
+  const atMs=Date.parse(match[1]!);
+  if(Number.isFinite(atMs)&&atMs>=sinceMs)rows.push({atMs,pid:Number(match[2]),signal:match[3] as "SIGTERM"|"SIGKILL",killer:Number(match[4]),stage:match[5]!});
+ }
+ return rows;
+}
+
+/** 📟️ Who stopped a stage whose command ended by a signal, answered only from what this machine recorded before the signal was sent: `supervisor` (the stage record carries `stopBy`), `deadline` (the wrapper recorded its own deadline), `warden` (a cancel row of the host warden names the stage process), `runner` (the kill record of the stage runner names the stage process), and otherwise `outside-wrapper` (the wrapper itself received the signal) or `outside-child` (only the tree below it was signalled); `none` when the stage did not end by a signal (`ended` is `null`). A record counts only within `senderMatchMilliseconds` of the end, so an old row never explains a later end. The platform does not tell the pid of a sender, so an unrecorded sender is named by what it was not. A pure function.
+ * @see ./🧪️tests/🛑️stop-sender */
+export type ReadyStopSenderV1=Readonly<{kind:"supervisor"|"deadline"|"warden"|"runner"|"outside-wrapper"|"outside-child"|"none";line:string}>;
+export type ReadyStopSenderInputV1=Readonly<{ended:string|null;stagePid:number;endedMs:number;observer:number;stopBy?:Readonly<{supervisor:number;reason:string;atMs:number}>;received?:readonly Readonly<{signal:string;atMs:number}>[];sent?:readonly Readonly<{signal:string;reason:string;atMs:number}>[];kills:readonly ReadyKillRowV1[];warden?:Readonly<{atMs:number;kind:string;reason:string;megabytes:number}>}>;
+export function readyStopSenderV1(input:ReadyStopSenderInputV1,policy:typeof P=P):ReadyStopSenderV1{
+ if(input.ended===null)return{kind:"none",line:""};
+ const texts=schema.definitions.SenderTexts.const,near=(atMs:number):boolean=>Math.abs(input.endedMs-atMs)<=policy.senderMatchMilliseconds,time=(atMs:number):string=>new Date(atMs).toISOString();
+ const say=(key:keyof typeof texts.en,values:Readonly<Record<string,string|number>>):string=>(["en","de"] as const).map(language=>texts[language][key].replace(/\{(\w+)\}/gu,(_all,name:string)=>String(values[name]??""))).join(" / ");
+ const rowOf=input.kills.find(row=>row.pid===input.stagePid&&near(row.atMs)),others=input.kills.filter(row=>row!==rowOf).length;
+ const deadline=input.sent?.find(row=>row.reason==="deadline"&&near(row.atMs));
+ if(deadline!==undefined)return{kind:"deadline",line:say("deadline",{signal:deadline.signal,time:time(deadline.atMs)})};
+ const by=input.stopBy;
+ if(by!==undefined&&near(by.atMs))return{kind:"supervisor",line:say(by.supervisor===input.observer?"supervisorSelf":"supervisorOther",{supervisor:by.supervisor,time:time(by.atMs),reason:by.reason})};
+ const warden=input.warden;
+ if(warden!==undefined&&near(warden.atMs))return{kind:"warden",line:say("warden",{time:time(warden.atMs),kind:warden.kind,reason:warden.reason,megabytes:warden.megabytes})};
+ if(rowOf!==undefined)return{kind:"runner",line:say("runner",{killer:rowOf.killer,signal:rowOf.signal,time:time(rowOf.atMs)})};
+ const first=input.received?.[0];
+ return first!==undefined?{kind:"outside-wrapper",line:say("outsideWrapper",{signal:first.signal,time:time(first.atMs),rows:others})}:{kind:"outside-child",line:say("outsideChild",{signal:input.ended,rows:others})};
+}
+
+/** 🪧️ Where the stall clock of a stage starts that a supervisor adopts without the watchdog history of the one that started it (no record, or one the current schema does not accept): at the adoption, never at the start of the stage. The adopting supervisor cannot know how long the stage was quiet, so a stage is never stopped for lack of history; with history the recorded clock and the time nobody watched are used instead. A pure function.
+ * @see ./🧪️tests/🛑️stop-sender */
+export function readyAdoptionClockV1(input:Readonly<{startedMs:number;observedMs:number}>):number{return Math.max(input.startedMs,input.observedMs);}
 
 /** 🔐️ Whether the read of the stage is queued for the storage mapping: its own fresh slice report (younger than `grantWaitFreshMilliseconds`) lists a waiter of the mapping queue (`presence.mappingQueue.waiting`) whose current wait is shorter than `grantWaitMaximumMilliseconds`. With the shared grant never queued behind long exclusive work a wait lasts seconds, so this is only a bounded safety: the stall window does not run while a short wait is pending, and a wait past the maximum is a wedge the stall rule ends. A pure function.
  * @see ./🧪️tests/🔐️grant-wait */
@@ -335,6 +373,33 @@ export function readyHolderRestartV1(waitingMs:number,codeChanged:boolean,policy
 /** 🕰️ Whether a stage that shows progress is stopped to start again with the new code: it has run for `staleStageMilliseconds` and the code it loaded at its start changed since, so a read that reports progress on code that is hours behind hands over (what it finished is stored and kept) and one that started a moment ago is not interrupted by every landing. A pure function.
  * @see ./🧪️tests/🕰️stale-stage */
 export function readyStaleRestartV1(ageMs:number,codeChanged:boolean,policy:typeof P=P):boolean{return codeChanged&&ageMs>=policy.staleStageMilliseconds;}
+
+/** ⏳️ Whether a log line only says that the stage WAITS for the capacity gate or a named holder (`waitPatterns`): such a line changes its numbers with every look (`short by 790 MB`, `load 6.99`) and is therefore never progress. A pure function.
+ * @see ./🧪️tests/🕰️stale-waiting */
+export function readyWaitLineV1(line:string,policy:typeof P=P):boolean{return policy.waitPatterns.some(pattern=>new RegExp(pattern,"u").test(line))||readyCapacityWaitLineV1(line,policy);}
+
+/** 🚦️ Whether a log line says that the read or the command WAITS for the capacity gate of the host (`capacityWaitPatterns`: the `[capacity] waiting` line of a command and the slice reservation, memory headroom and previous generation lines of the graph service, in both languages). A pure function.
+ * @see ./🧪️tests/🚦️capacity-wait */
+export function readyCapacityWaitLineV1(line:string,policy:typeof P=P):boolean{return policy.capacityWaitPatterns.some(pattern=>new RegExp(pattern,"u").test(line));}
+
+/** 🚦️ Whether one of the last `capacityWaitLookbackLines` lines of the log is a capacity wait. A pure function.
+ * @see ./🧪️tests/🚦️capacity-wait */
+export function readyCapacityWaitingV1(lines:readonly string[],policy:typeof P=P):boolean{return lines.slice(-policy.capacityWaitLookbackLines).some(line=>readyCapacityWaitLineV1(line,policy));}
+
+/** 🚦️ Whether a stage that waits in the capacity gate is alive and is exempt from the stall stop: the wait is current (a wait line is among the last lines), its log was written within `capacityWaitFreshMilliseconds` (a waiting planner says so again every few seconds, a wedged one does not) and it has not lasted `capacityWaitMaximumMilliseconds` (a gate that never answers ends in the stall stop, so no stage waits for ever). A queue wait is no silence: it shows nothing new and uses no processor time by design. A pure function.
+ * @see ./🧪️tests/🚦️capacity-wait */
+export function readyCapacityWaitLiveV1(input:Readonly<{sinceMs:number|null;logWrittenMs:number|null;nowMs:number;policy?:typeof P}>):boolean{
+ const policy=input.policy??P;
+ return input.sinceMs!==null&&input.logWrittenMs!==null&&input.nowMs-input.logWrittenMs<policy.capacityWaitFreshMilliseconds&&input.nowMs-input.sinceMs<policy.capacityWaitMaximumMilliseconds;
+}
+
+/** ⏱️ How long the wait line says the stage has been waiting (`[capacity] waiting 15549s for command: ...`), in milliseconds; `null` for any other line. A supervisor that adopts a stage hours into its wait learns the age of the wait from the line itself instead of starting its own clock, so a worker whose supervisor is restarted by every landing still reaches the stale-waiting verdict. A pure function.
+ * @see ./🧪️tests/🕰️stale-waiting */
+export function readyWaitedMillisecondsV1(line:string):number|null{const found=/^\[(?:capacity\] waiting|Kapazität\] wartet) (\d{1,9}) ?s\b/u.exec(line);return found===null?null:Number(found[1])*1000;}
+
+/** 🕰️ Whether a stage that runs older code than the code now running is stopped to start again on the current one: its last line is a wait (`waiting`) and nothing but waits was new for `staleWaitingMilliseconds` (`quietMs`: no new line besides waits, no processor time, no new process, no counter), 15 minutes, three times the quiet window of a stale read. Code that is not older never stops by it, and a stage that makes progress has a young `quietMs`, so it is never stopped. A pure function.
+ * @see ./🧪️tests/🕰️stale-waiting */
+export function readyStaleWaitingV1(input:Readonly<{older:boolean;waiting:boolean;quietMs:number;policy?:typeof P}>):boolean{return input.older&&input.waiting&&input.quietMs>=(input.policy??P).staleWaitingMilliseconds;}
 
 /** 🧭️ The phase a stage run is in as its log shows it: reading or planning the project graph, executing planned tasks, or unknown. */
 export type ReadyPhaseV1="reading"|"executing"|null;

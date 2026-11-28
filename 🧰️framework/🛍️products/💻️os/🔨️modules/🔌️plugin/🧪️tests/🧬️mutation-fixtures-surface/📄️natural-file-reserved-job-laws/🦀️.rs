@@ -16,7 +16,7 @@ fn surface_reserved_request(
     let completion = ArtifactToolCompletion::<EditorApp<SurfaceEditorFixture>>::new();
     let request = ArtifactReservedToolJobRequest {
         source_binding:semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
-        retained: SURFACE_ONE_UNIT_POLICY,
+        retained: SURFACE_STEP_POLICY,
         controller_id: SURFACE_CONTROLLER_ID.into(),
         tool_id: "framework.reserved.import-media".into(),
         payload_schema_id: "semio.testkit-surface-natural/v1".into(),
@@ -52,13 +52,13 @@ fn surface_natural_file_reserved_job(snapshot_read:store::os_store::snapshot_rea
     let mut request=Some(request);let mut body=None;let mut job=None;let mut construction=semio_framework_job::OriginalConstructionAdmission::default();
     for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
         if job.is_some(){break}
-        cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{if body.is_none(){<SurfaceEditorFixture as ArtifactEditor>::build_reserved_tool_job(&mut request,&mut body,&mut construction,same)?;}else{ArtifactReservedToolJob::admit_boxed_original(&mut body,&mut job,same)?;}Ok(())}).expect("original natural-file retained admission");
+        cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{if body.is_none(){<SurfaceEditorFixture as ArtifactEditor>::build_reserved_tool_job(&mut request,&mut body,&mut construction,same)?;}else{ArtifactReservedToolJob::admit_boxed_original(&mut body,&mut job,same)?;}Ok(())}).expect("original natural-file retained admission");
     }
     retire_construction(&mut construction,cx);let job=job.expect("mounted natural-file codec owns its original reserved route");assert!(request.is_none()&&body.is_none());
     (job, completion, snapshot, history)
 }
 
-fn retire_construction(construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>){for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if construction.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|construction.close_step(same)).unwrap();}panic!("original construction admission must retire")}
+fn retire_construction(construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>){for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if construction.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|construction.close_step(same)).unwrap();}panic!("original construction admission must retire")}
 
 #[derive(Default)]
 struct SurfaceRequestCustodyWork{
@@ -74,25 +74,25 @@ fn original_reserved_preparation_pages_metadata_moves_arguments_and_cancels_part
     for cancel_phase in 0..=4{
         let text="argument 💧/Ä".repeat(80);let pointer=text.as_ptr();let expected=serde_json::to_vec(&("copy",Some(&text))).unwrap();let mut args=Some(semio_framework_value::DslValue::String(text));
         let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original=caller.context();let cx=&mut original;let mut preparation=None;let mut birth=None;let bus=semio_framework::ActionBus::new();
-        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if preparation.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|Prep::admit(&mut preparation,&mut birth,[0;32],same)).unwrap();}
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if preparation.is_some(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|Prep::admit(&mut preparation,&mut birth,[0;32],same)).unwrap();}
         let owner=preparation.as_mut().expect("original preparation admitted");
         if cancel_phase>=1{
-            let page=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:1,..SURFACE_ONE_UNIT_POLICY};let mut complete=false;
+            let page=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:1,..SURFACE_STEP_POLICY};let mut complete=false;
             for turn in 0..32{complete=cx.with_retained_loan(page,|same|owner.copy_metadata(1,["copy",""],same)).unwrap();if cancel_phase==1&&owner.metadata.as_ref().unwrap()[1].len()==1{break}if complete{break}assert!(turn<31);}
             if cancel_phase>1{assert!(complete);assert_eq!(owner.metadata.as_ref().unwrap()[1],b"copy");}
         }
-        if cancel_phase>=2{assert!(cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|owner.begin_action(&mut args,same)).unwrap());assert!(args.is_none());}
+        if cancel_phase>=2{assert!(cx.with_retained_loan(SURFACE_STEP_POLICY,|same|owner.begin_action(&mut args,8,same)).unwrap());assert!(args.is_none());}
         if cancel_phase>=3{
             for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
                 if cancel_phase==3&&owner.action_wire.as_ref().unwrap().phase()=="initialize"||cancel_phase==4&&owner.raw_wire.is_some(){break}
-                cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|owner.advance_action_wire(8192,same)).unwrap();
+                cx.with_retained_loan(SURFACE_STEP_POLICY,|same|owner.advance_action_wire(8192,same)).unwrap();
             }
             if cancel_phase==3{assert_eq!(owner.action_wire.as_ref().unwrap().phase(),"initialize");}
             else{assert_eq!(owner.raw_wire.as_deref().unwrap(),expected);let actual=owner.action_returned.as_ref().unwrap().1.as_ref().unwrap().as_str().unwrap();assert_eq!(actual.as_ptr(),pointer);}
         }
         cx.original_cancel_token().cancel_now();
-        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|owner.close_step(&bus,same)).unwrap();}
-        assert!(owner.terminal_is_empty());let demand=Prep::slot_close_demands(&preparation,&birth,32768).unwrap();let denied=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..SURFACE_ONE_UNIT_POLICY};assert_eq!(cx.with_retained_loan(denied,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap().progress(),Default::default());assert!(preparation.is_some());cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap();assert!(preparation.is_none());let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|owner.close_step(&bus,same)).unwrap();}
+        assert!(owner.terminal_is_empty());let demand=Prep::slot_close_demands(&preparation,&birth,32768).unwrap();let denied=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..SURFACE_STEP_POLICY};assert_eq!(cx.with_retained_loan(denied,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap().progress(),Default::default());assert!(preparation.is_some());cx.with_retained_loan(SURFACE_STEP_POLICY,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap();assert!(preparation.is_none());let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
     }
 }
 
@@ -102,12 +102,12 @@ fn original_completion_birth_denies_preserves_and_closes_each_partial_native_roo
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../📜️declaration/🧩️app/🛬️lifted/♻️retirement/🌱️birth/🧪️tests/🔣️.json")).unwrap();assert_eq!(law["completionBirth"]["phases"].as_array().unwrap().len(),3);
     for cancel_phase in 0..=3{
         let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original=caller.context();let cx=&mut original;let mut birth=Birth::default();let mut output=None;
-        if cancel_phase==1{cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut output,same)).unwrap();}
-        if cancel_phase>=2{for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if cancel_phase==2&&birth.output_ready()||cancel_phase==3&&output.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut output,same)).unwrap();}if cancel_phase==2{assert!(birth.output_ready());}}
+        if cancel_phase==1{cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.advance(&mut output,same)).unwrap();}
+        if cancel_phase>=2{for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if cancel_phase==2&&birth.output_ready()||cancel_phase==3&&output.is_some(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.advance(&mut output,same)).unwrap();}if cancel_phase==2{assert!(birth.output_ready());}}
         if cancel_phase<3{assert!(output.is_none());}
-        else{assert!(output.is_some());assert!(birth.terminal_is_empty());}
+        else{assert!(output.is_some());}
         cx.original_cancel_token().cancel_now();
-        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if birth.terminal_is_empty(){break}let demand=birth.close_demands();let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..SURFACE_ONE_UNIT_POLICY};assert_eq!(cx.with_retained_loan(denied,|same|birth.close_step(same)).unwrap().progress(),Default::default());assert_eq!(birth.close_demands(),demand);cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.close_step(same)).unwrap();}
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if birth.terminal_is_empty(){break}let demand=birth.close_demands();let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..SURFACE_STEP_POLICY};assert_eq!(cx.with_retained_loan(denied,|same|birth.close_step(same)).unwrap().progress(),Default::default());assert_eq!(birth.close_demands(),demand);cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.close_step(same)).unwrap();}
         assert!(birth.terminal_is_empty());if let Some(output)=output{assert!(output.take_emit().unwrap().is_none());crate::app_testing::mutation_fixture::job_close::retire_completion(output,cx,SURFACE_JOB_POLICY);}
         let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
     }
@@ -120,10 +120,10 @@ fn reserved_argument_wire_returns_actual_original_allocation_after_independent_e
     let input="original 💧/Ä".repeat(300);let pointer=input.as_ptr();let expected=serde_json::to_vec(&input).unwrap();let mut owner=semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor::new(input);let mut returned=None;let mut output=None;
     for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
         if output.is_some(){break}
-        cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{
+        cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{
             if owner.phase()=="sourceClose"{
                 let demand=owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?;
-                let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..same.retained_grant()};assert!(same.with_original_effect(denied,|_,effect|owner.return_original(&mut returned,effect))?.is_none());assert!(returned.is_none());assert_eq!(owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?,demand);
+                let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..same.retained_grant()};let was_returned=returned.is_some();let denied_turn=same.with_original_effect(denied,|_,effect|owner.return_original(&mut returned,effect))?;assert!(denied_turn.is_none_or(|(turn,_)|turn.result.is_ok_and(|step|step.progress()==Default::default())),"a denied grant makes no progress");assert_eq!(returned.is_some(),was_returned);assert_eq!(owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?,demand);
                 let Some((turn,performed))=same.with_original_effect(same.retained_grant(),|_,effect|owner.return_original(&mut returned,effect))?else{return Ok(())};semio_framework_job::receive_original_retained_work(same,RetainedWorkOutcome{result:turn.result,work:turn.work.max(performed)})?;
             }else{
                 let Some((result,performed))=same.with_original_effect(same.retained_grant(),|_,effect|owner.advance(effect).map(|step|{output=step.output;RetainedCloneStep::Progress(step.progress)}))?else{return Ok(())};semio_framework_job::receive_original_retained_work(same,RetainedWorkOutcome{result,work:performed})?;
@@ -133,7 +133,7 @@ fn reserved_argument_wire_returns_actual_original_allocation_after_independent_e
     }
     assert!(owner.terminal_is_empty());let returned=returned.expect("wire hands back the actual argument owner");assert_eq!(returned.as_ptr(),pointer);let output=output.unwrap();assert_eq!(output,expected);
     let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain((returned,output));
-    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
     assert!(close.terminal_is_empty());let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
 }
 
@@ -170,17 +170,18 @@ async fn reserved_request_keeps_all_lanes_on_denied_birth_and_continues_after_in
         let(mut request,completion,snapshot,history)=surface_reserved_request(app.stores.store.snapshot_read().unwrap(),vec![7;4096],64,cx);request.raw_wire=vec![3;1024];
         let mut request=Some(request);let mut body=None;let mut job=None;let mut construction=semio_framework_job::OriginalConstructionAdmission::default();let source=request.as_ref().unwrap().authoring_seed.as_ptr();let snapshot_count=std::sync::Arc::strong_count(&snapshot);let history_count=std::sync::Arc::strong_count(&history);
         for axis in 0..4{
-            let mut denied=SURFACE_ONE_UNIT_POLICY;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=0,2=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0}
+            let mut denied=SURFACE_STEP_POLICY;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=0,2=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0}
             assert!(!cx.with_retained_loan(denied,|same|crate::tool_contract::admit_reserved_work::<EditorApp<SurfaceEditorFixture>,SurfaceRequestCustodyWork>(&mut request,&mut body,&mut construction,same)).unwrap());
             let retained=request.as_ref().expect("denied birth keeps complete original request");assert_eq!(retained.authoring_seed.as_ptr(),source);assert!(body.is_none()&&retained.input.is_some());assert!(std::sync::Arc::ptr_eq(&retained.snapshot,&snapshot));assert_eq!(std::sync::Arc::strong_count(&snapshot),snapshot_count);assert_eq!(std::sync::Arc::strong_count(&history),history_count);
         }
-        let mut no_release=SURFACE_ONE_UNIT_POLICY;no_release.maximum_release_bytes=0;for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if body.is_some(){break}cx.with_retained_loan(no_release,|same|crate::tool_contract::admit_reserved_work::<EditorApp<SurfaceEditorFixture>,SurfaceRequestCustodyWork>(&mut request,&mut body,&mut construction,same)).unwrap();}assert!(body.is_some(),"birth requires no fabricated release budget");
-        let mut foreign_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut foreign=foreign_caller.context();assert!(foreign.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|semio_framework_job::InteractiveJob::close_step(&mut **body.as_mut().unwrap(),same)).is_err(),"foreign cancellation cannot mark or retire private Work");let foreign_fuel=foreign.fuel_remaining();drop(foreign);foreign_caller.retire(foreign_fuel).unwrap();
+        let mut no_release=SURFACE_STEP_POLICY;no_release.maximum_release_bytes=0;for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if body.is_some(){break}cx.with_retained_loan(no_release,|same|crate::tool_contract::admit_reserved_work::<EditorApp<SurfaceEditorFixture>,SurfaceRequestCustodyWork>(&mut request,&mut body,&mut construction,same)).unwrap();}assert!(body.is_some(),"birth requires no fabricated release budget");
+        let mut foreign_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut foreign=foreign_caller.context();assert!(foreign.with_retained_loan(SURFACE_STEP_POLICY,|same|semio_framework_job::InteractiveJob::close_step(&mut **body.as_mut().unwrap(),same)).is_err(),"foreign cancellation cannot mark or retire private Work");let foreign_fuel=foreign.fuel_remaining();drop(foreign);foreign_caller.retire(foreign_fuel).unwrap();
         for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             if job.is_some(){break}
-            cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{if body.is_none(){crate::tool_contract::admit_reserved_work::<EditorApp<SurfaceEditorFixture>,SurfaceRequestCustodyWork>(&mut request,&mut body,&mut construction,same)?;}else{ArtifactReservedToolJob::admit_boxed_original(&mut body,&mut job,same)?;}Ok(())}).unwrap();
+            cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{if body.is_none(){crate::tool_contract::admit_reserved_work::<EditorApp<SurfaceEditorFixture>,SurfaceRequestCustodyWork>(&mut request,&mut body,&mut construction,same)?;}else{ArtifactReservedToolJob::admit_boxed_original(&mut body,&mut job,same)?;}Ok(())}).unwrap();
         }
         assert!(request.is_none()&&body.is_none());retire_construction(&mut construction,cx);let mut job=job.expect("original retained request body admitted");
+        surface_admit_job_origin(&mut job,cx);
         if cancel==1{cx.original_cancel_token().cancel_now();}
         else if cancel==2{assert!(matches!(surface_natural_file_step(&mut job,cx),crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle|crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield));cx.original_cancel_token().cancel_now();}
         let outcome=surface_natural_file_outcome(&mut job,cx);if cancel==0{assert!(matches!(outcome,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Complete{..}));}else{assert!(matches!(outcome,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled));}
@@ -192,31 +193,37 @@ async fn reserved_request_keeps_all_lanes_on_denied_birth_and_continues_after_in
     }
 }
 
-const SURFACE_JOB_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
+/// 🌱️ Funds the closing turns that retire a handed-off completion birth's construction control, which the birth keeps until its own paid close.
+fn retire_completion_birth(birth:&mut semio_plugin_decl_app::OriginalCompletionBirth<EditorApp<SurfaceEditorFixture>>,cx:&mut semio_framework_job::StepContext<'_>){
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if birth.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.close_step(same).map(|_|())).expect("original completion birth close")}
+    assert!(birth.terminal_is_empty(),"completion birth closed within its turn bound")
+}
+/// 🪙️ One funded step of a reserved job: the item axis carries the whole settled construction of its decode owner and the copy axis the natural-file import job frame its first step takes custody of.
+const SURFACE_JOB_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096};
 #[test]
 fn original_emission_handoff_moves_ok_payload_without_heap_and_accounts_busy_work(){
  type App=EditorApp<SurfaceEditorFixture>;type Birth=semio_plugin_decl_app::OriginalCompletionBirth<App>;
  let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original=caller.context();let cx=&mut original;
  let mut birth=Birth::default();let mut completion=None;
- for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
- let completion=completion.unwrap();assert!(birth.terminal_is_empty());
+ for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
+ let completion=completion.unwrap();retire_completion_birth(&mut birth,cx);
  let invocation=crate::app_emission::ExtensionInvocation::new("original.extension","evaluate","{\"unicode\":\"💧\"}","complete");
  let pointer=invocation.request_json.as_ptr();
  let mut source=Some((Ok(Emit{extension_invocations:vec![invocation],..Default::default()}),crate::app_emission::EphemeralEmit::<App>::default()));let mut published=false;
- cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{
+ cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{
   let progress=same.retained_progress();let fuel=same.fuel_remaining();
   let(result,heap)=completion.with_busy_test_lock(||semio_framework_trace::observe_heap_allocations_on_this_thread(||completion.complete_emit_original(&mut source,&mut published,same)));
   assert!(!result?);assert_eq!(same.retained_progress(),progress);assert_eq!(fuel-same.fuel_remaining(),1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));Ok(())
  }).unwrap();
  assert_eq!(source.as_ref().unwrap().0.as_ref().ok().unwrap().extension_invocations[0].request_json.as_ptr(),pointer);
- cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{
+ cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{
   let before=same.retained_progress();let fuel=same.fuel_remaining();
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||completion.complete_emit_original(&mut source,&mut published,same));
   assert!(result?);assert_eq!(fuel-same.fuel_remaining(),1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(same.retained_progress().copied_bytes>before.copied_bytes);Ok(())
  }).unwrap();
  assert!(source.is_none()&&published);let accepted=completion.take_emit().unwrap().unwrap();assert_eq!(accepted.0.as_ref().ok().unwrap().extension_invocations[0].request_json.as_ptr(),pointer);
  let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain(accepted);
- for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
+ for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
  assert!(close.terminal_is_empty());crate::app_testing::mutation_fixture::job_close::retire_completion(completion,cx,SURFACE_JOB_POLICY);
  let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
 }
@@ -228,16 +235,16 @@ fn original_emission_handoff_preserves_denied_busy_and_occupied_sources(){
  for row in cases["cases"].as_array().unwrap(){
   let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original=caller.context();let cx=&mut original;
   let mut birth=Birth::default();let mut completion=None;
-  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
-  assert!(birth.terminal_is_empty());let completion=completion.unwrap();
+  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
+  retire_completion_birth(&mut birth,cx);let completion=completion.unwrap();
   if row["receiver"].as_bool().unwrap(){
    let mut first=Some((Err(Fault::from("already accepted original fault")),crate::app_emission::EphemeralEmit::<App>::default()));let mut first_published=false;
-   assert!(cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|completion.complete_emit_original(&mut first,&mut first_published,same)).unwrap());assert!(first.is_none());
+   assert!(cx.with_retained_loan(SURFACE_STEP_POLICY,|same|completion.complete_emit_original(&mut first,&mut first_published,same)).unwrap());assert!(first.is_none());
   }
   let mut published=row["published"].as_bool().unwrap();
   let mut source=row["source"].as_bool().unwrap().then(||(Err(Fault::from("original emission fault 💧".repeat(40))),crate::app_emission::EphemeralEmit::<App>::default()));
   let pointer=source.as_ref().map(|(emit,_)|emit.as_ref().err().unwrap().message.as_ptr());
-  let mut grant=SURFACE_ONE_UNIT_POLICY;if !row["items"].as_bool().unwrap(){grant.maximum_items=0;}if !row["copy"].as_bool().unwrap(){grant.maximum_copy_bytes=0;}if !row["depth"].as_bool().unwrap(){grant.maximum_depth=0;}
+  let mut grant=SURFACE_STEP_POLICY;if !row["items"].as_bool().unwrap(){grant.maximum_items=0;}if !row["copy"].as_bool().unwrap(){grant.maximum_copy_bytes=0;}if !row["depth"].as_bool().unwrap(){grant.maximum_depth=0;}
   if row["cancel"].as_bool().unwrap(){cx.original_cancel_token().cancel_now();}
   let mut outcome=None;let fuel=if row["fuel"].as_bool().unwrap(){8}else{0};
   cx.with_retained_loan(grant,|same|same.with_original_work_loan(fuel,same.deadline_us(),|same|{
@@ -249,25 +256,30 @@ fn original_emission_handoff_preserves_denied_busy_and_occupied_sources(){
   let taken=completion.take_emit().unwrap();assert_eq!(taken.is_some(),row["afterReceiver"].as_bool().unwrap(),"{}",row["id"]);
   if row["id"]=="publish"{assert_eq!(taken.as_ref().unwrap().0.as_ref().err().unwrap().message.as_ptr(),pointer.unwrap());}
   let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain((source,taken));
-  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
+  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
   assert!(close.terminal_is_empty());crate::app_testing::mutation_fixture::job_close::retire_completion(completion,cx,SURFACE_JOB_POLICY);
   let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
  }
 }
-const SURFACE_ONE_UNIT_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:262144,maximum_release_bytes:1048576,maximum_depth:4096};
+/// 🪙️ One funded step of a settled original construction: its bind, constructor, candidate and Source settle commit in one turn, so the grant carries the whole settled quote of items (never one bare unit) while every byte axis stays bounded.
+const SURFACE_STEP_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096};
 thread_local!{static SURFACE_ORIGINS:std::cell::RefCell<std::collections::HashMap<usize,semio_framework_job::OriginalJobReturnOrigin>>=std::cell::RefCell::new(std::collections::HashMap::new());}
 fn surface_prepare_origin(origin:&mut semio_framework_job::OriginalJobReturnOrigin,cx:&mut semio_framework_job::StepContext<'_>){
-    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){return}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.admit(same).map(|_|())).expect("original surface return origin admission")}
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){return}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|origin.admit(same).map(|_|())).expect("original surface return origin admission")}
     assert!(origin.body_ready(),"original surface return origin admitted within its turn bound")
 }
 fn surface_close_origin(origin:&mut semio_framework_job::OriginalJobReturnOrigin,cx:&mut semio_framework_job::StepContext<'_>){
-    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.close_step(same).map(|_|())).expect("original surface return origin close")}
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|origin.close_step(same).map(|_|())).expect("original surface return origin close")}
     assert!(origin.terminal_is_empty(),"original surface return origin closed within its turn bound")
 }
 fn surface_natural_file_step(job:&mut ArtifactReservedToolJob,cx:&mut semio_framework_job::StepContext<'_>)->crate::app_testing::artifact_app_laws::FixtureStepOutcome{
     let key=job as *const ArtifactReservedToolJob as usize;
     SURFACE_ORIGINS.with(|origins|{let mut origins=origins.borrow_mut();let origin=origins.entry(key).or_insert_with(semio_framework_job::OriginalJobReturnOrigin::empty);surface_prepare_origin(origin,cx);
-        let mut outcome=None;cx.with_retained_loan(SURFACE_JOB_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(job,same,origin.receiver()?));Ok(())}).expect("original surface job event");outcome.expect("original surface event returned")})
+        let mut outcome=None;cx.with_retained_loan(SURFACE_JOB_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(job,same,origin.receiver()?));Ok(())}).expect("original surface job event");let outcome=outcome.expect("original surface event returned");if !cx.is_cancelled(){surface_prepare_origin(origin,cx)}outcome})
+}
+fn surface_admit_job_origin(job:&mut ArtifactReservedToolJob,cx:&mut semio_framework_job::StepContext<'_>){
+    let key=job as *const ArtifactReservedToolJob as usize;
+    SURFACE_ORIGINS.with(|origins|{let mut origins=origins.borrow_mut();surface_prepare_origin(origins.entry(key).or_insert_with(semio_framework_job::OriginalJobReturnOrigin::empty),cx)})
 }
 fn surface_natural_file_outcome(job:&mut ArtifactReservedToolJob,cx:&mut semio_framework_job::StepContext<'_>)->crate::app_testing::artifact_app_laws::FixtureStepOutcome{
     for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){let outcome=surface_natural_file_step(job,cx);if !matches!(outcome,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle|crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield){return outcome}}
@@ -298,7 +310,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     let row = &fixture["registeredEditor"];
     let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
     let turn = row["accountBytesPerTurn"].as_u64().expect("account turn bytes");
-    let cancel_after = row["cancelAfterAccountedBytes"].as_u64().expect("cancelled accounted bytes");
+    let first_checkpoint = u64::try_from(data.len()).expect("u64 octet count");
     let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), data,turn,cx);
     let mut first = crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle;
     for _ in 0..64 {
@@ -307,7 +319,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     }
     match first {
         crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
-            assert_eq!(applied_progress, cancel_after);
+            assert_eq!(applied_progress, first_checkpoint, "checkpoints coalesce by the contract quantum, so the first one is the decode stage change");
         }
         other => panic!("first bounded natural-file turn must checkpoint accounted bytes, got {other:?}"),
     }
@@ -410,8 +422,11 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), data, work,cx);
     let mut completed_stages = Vec::new();
     let mut checkpoints = 0;
+    let mut turns = 0;
     let mut last_progress = 0;
     loop {
+        turns += 1;
+        assert!(turns <= 100_000, "controlled natural-file decode did not complete within its authored turn bound");
         match surface_natural_file_step(&mut job,cx) {
             crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, state } => {
                 if applied_progress == (word_count * 4) as u64 { completed_stages.push(state[0]); }
@@ -432,7 +447,8 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
         }
     }
     assert_eq!(serde_json::json!(completed_stages), row["completedDecodeStages"]);
-    assert!(checkpoints >= expected_minimum_turns, "fixture must cross many scheduler turns");
+    assert!(turns >= expected_minimum_turns, "fixture must cross many scheduler turns");
+    assert!(checkpoints >= 1 && checkpoints < expected_minimum_turns, "checkpoints coalesce by the contract quantum instead of one per scheduler turn, got {checkpoints} over {turns} turns");
     let (emit, _) = completion.take_emit().expect("controlled completion cell").expect("controlled completion value");
     let emit = emit.expect("controlled import emit");
     assert!(emit.artifact_mutations.is_empty(), "natural-file Open is a document load: it emits no mutation");
@@ -457,12 +473,49 @@ fn natural_file_publication_checkpoints_follow_the_contract_quantum_not_every_pa
         let previous = work;
         work += if poll % empty_every == 0 { 0 } else { slice };
         legacy_actual += u64::from(work != previous);
-        if crate::natural_file_import::publication_checkpoint_due(previous, work, quantum, poll == polls) { actual.push(serde_json::json!([poll, work])); }
+        if semio_plugin_decl_surface::natural_file_import::publication_checkpoint_due(previous, work, quantum, poll == polls) { actual.push(serde_json::json!([poll, work])); }
     }
     assert_eq!(legacy_actual, legacy);
     assert_eq!(serde_json::Value::Array(actual), law["expectedCheckpoints"]);
-    assert!(crate::natural_file_import::publication_checkpoint_due(0, 0, 0, true));
-    assert!(!crate::natural_file_import::publication_checkpoint_due(3, 3, 0, false));
-    assert!(!crate::natural_file_import::publication_checkpoint_due(u64::MAX, u64::MAX, quantum, false));
-    assert!(crate::natural_file_import::publication_checkpoint_due(quantum - 1, 2 * quantum + 1, quantum, false));
+    assert!(semio_plugin_decl_surface::natural_file_import::publication_checkpoint_due(0, 0, 0, true));
+    assert!(!semio_plugin_decl_surface::natural_file_import::publication_checkpoint_due(3, 3, 0, false));
+    assert!(!semio_plugin_decl_surface::natural_file_import::publication_checkpoint_due(u64::MAX, u64::MAX, quantum, false));
+    assert!(semio_plugin_decl_surface::natural_file_import::publication_checkpoint_due(quantum - 1, 2 * quantum + 1, quantum, false));
+}
+
+/// 🧺️ A parser that needs its whole input charges it as bounded slices (never a stalled zero-progress step), decodes once on the last slice and yields exactly what the format's own one-shot decode yields.
+/// @see [`crate::app_contract::build_buffered_natural_decode`]
+#[test]
+fn buffered_natural_decoder_charges_bounded_slices_then_decodes_once_like_the_format() {
+    use crate::app_contract::{NaturalFileDecodeOwner, NaturalFileDecodeStep};
+    let decode: fn(&[u8]) -> Result<SurfaceSnapshot, semio_framework::MediaError> = |bytes| Ok(SurfaceSnapshot { count: bytes.iter().map(|byte| i32::from(*byte)).sum() });
+    let data = (0..=250u8).cycle().take(1_000).collect::<Vec<_>>();
+    let oracle: i32 = data.iter().map(|byte| i32::from(*byte)).sum();
+    let mut caller = crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");
+    let mut original = caller.context();
+    let cx = &mut original;
+    let contract = ToolExecutionContract::resumable(8_192, 8_192, 256, 8_192, 7_500, 1, 1);
+    let NaturalFileDecodeOwner::Controlled(mut cursor) = crate::app_contract::build_buffered_natural_decode(data.clone(), contract, decode) else { panic!("buffered decode is a controlled owner") };
+    let mut previous = 0;
+    let mut slices = 0;
+    let snapshot = loop {
+        match cursor.advance(cx).expect("buffered decode step") {
+            NaturalFileDecodeStep::Yield => panic!("an available grant never yields without progress"),
+            NaturalFileDecodeStep::Progress(progress) => {
+                assert!(progress.consumed_input_bytes > previous && progress.consumed_input_bytes - previous <= 256, "each slice is positive and within the contract quantum");
+                previous = progress.consumed_input_bytes;
+                slices += 1;
+            }
+            NaturalFileDecodeStep::Complete { snapshot, progress } => {
+                assert_eq!((progress.consumed_input_bytes, progress.decoded_items), (data.len(), 1));
+                break snapshot;
+            }
+        }
+    };
+    assert_eq!(slices, 3, "1000 bytes at 256 per slice: three progress slices, then the completing slice");
+    assert_eq!(snapshot.count, oracle);
+    assert!(cursor.advance(cx).is_err(), "a completed decoder is not advanceable");
+    let fuel = cx.fuel_remaining();
+    drop(original);
+    caller.retire(fuel).expect("original caller paid terminal retirement");
 }

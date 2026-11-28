@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/graph/owner-vouch/v1",
+  "title": "Owner vouch ledger / Bestätigungsbuch der Projekte",
+  "description": "EN: The owners of one selected read (`key` names scope and admission format) whose rows were verified or observed after the journal cursor `epoch`:`seq`, written while the read runs (at most every `flushMilliseconds`) and removed once its admission memo is published. A restarted worker asks the journal for the changes since that cursor and skips the probe of every path row of a listed owner that no change touched, so a killed worker repeats no completed owner check. DE: Die Projekte eines ausgewählten Lesevorgangs, deren Zeilen nach dem Journal-Cursor `epoch`:`seq` bestätigt oder beobachtet wurden; ein neu gestarteter Worker überspringt die Prüfung aller Pfadzeilen, die seither keine Änderung berührte.",
+  "$defs": {
+    "Limits": {"const": {"flushMilliseconds": 15000, "maximumOwners": 200000, "timeoutMilliseconds": 5000}},
+    "Ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "epoch", "seq", "owners"],
+      "properties": {
+        "version": {"const": 1},
+        "key": {"type": "string", "minLength": 1, "maxLength": 512},
+        "epoch": {"type": "string", "minLength": 1, "maxLength": 128},
+        "seq": {"type": "integer", "minimum": 0},
+        "owners": {"type": "array", "maxItems": 200000, "items": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checked", "linked"],
+          "properties": {"checked": {"type": "array", "items": {"type": "string"}}, "linked": {"type": "array", "items": {"type": "string"}}}
+        }
+      }
+    }
+  }
+}

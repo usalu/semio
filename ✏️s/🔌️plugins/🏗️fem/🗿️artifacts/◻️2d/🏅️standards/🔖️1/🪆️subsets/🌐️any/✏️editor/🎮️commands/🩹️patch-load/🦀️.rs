@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-load`: one-field edit of a load (`nodeId`, `dof`, `value`, `elementId`, `wx`, `wy`, `regionId`, `pressure`) → `ChangeLoad`.
 
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;

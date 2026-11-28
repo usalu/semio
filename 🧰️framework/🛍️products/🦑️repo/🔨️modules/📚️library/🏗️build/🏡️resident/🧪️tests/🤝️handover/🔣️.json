@@ -1,0 +1,10 @@
+{
+  "maximum": 3,
+  "cases": [
+    {"name": "the first hand-over without progress asks again", "stalled": 0, "progressed": false, "next": 1},
+    {"name": "the third hand-over in a row without progress asks again", "stalled": 2, "progressed": false, "next": 3},
+    {"name": "the fourth hand-over in a row without progress gives up", "stalled": 3, "progressed": false, "next": null},
+    {"name": "a hand-over after progress asks again and forgets the stalled ones", "stalled": 3, "progressed": true, "next": 0},
+    {"name": "progress resets even when nothing was stalled before", "stalled": 0, "progressed": true, "next": 0}
+  ]
+}

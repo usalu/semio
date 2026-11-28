@@ -29,6 +29,7 @@ export {
   pythonSeriesV1,
   pythonEnvironmentV1,
   pythonEnvironmentOfProjectV1,
+  provisionedPythonV1,
   dotnetGlobalJsonV1,
   dotnetDirectoryBuildPropsV1,
   nativeToolSpecV1,

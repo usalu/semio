@@ -24,7 +24,7 @@ describe("admitted artifact producer identity",()=>{
   const database=new Database(":memory:");
   try{
    const statement=database.query("SELECT CASE WHEN $cancel THEN 'cancel' WHEN $publication='foreign' THEN 'refuse' WHEN $publication='matching' AND $rechecked THEN 'consume' WHEN $publication='matching' THEN 'recheck' WHEN $plan='same' AND (NOT $settled OR NOT $released) THEN 'join' ELSE 'produce' END AS action");
-   for(const row of corpus.lifecycle){const {id,expected,...observation}=row;expect(cargoArtifactAcquisitionStepV1(observation)).toBe(expected);expect((statement.get({$cancel:Number(row.consumerCancelled),$publication:row.publication,$rechecked:Number(row.publicationRechecked),$plan:row.producerPlan,$settled:Number(row.producerSettled),$released:Number(row.custodyReleased)}) as {action:string}).action).toBe(row.expected);}
+   for(const row of corpus.lifecycle){const {id,expected,...observation}=row;expect<unknown>(cargoArtifactAcquisitionStepV1(observation)).toBe(expected);expect((statement.get({$cancel:Number(row.consumerCancelled),$publication:row.publication,$rechecked:Number(row.publicationRechecked),$plan:row.producerPlan,$settled:Number(row.producerSettled),$released:Number(row.custodyReleased)}) as {action:string}).action).toBe(row.expected);}
   }finally{database.close();}
  });
 });

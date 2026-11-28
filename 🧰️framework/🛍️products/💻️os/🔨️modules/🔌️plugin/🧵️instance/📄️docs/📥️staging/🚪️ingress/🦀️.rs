@@ -71,6 +71,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         self.next_snapshot_read_return_stage(stores, interaction).is_none()
     }
 
+    /// 🌡️ True once any store's returned reads fill an eighth of its issuer table: the pump then runs ahead of the fair rotation, so unrelated perpetual work can never starve the issuers into refusing every read.
+    pub fn snapshot_read_returns_under_pressure(&self, stores: &InstanceStores<A>) -> bool {
+        stores.store.returned_snapshot_reads_under_pressure() || stores.config_store.returned_snapshot_reads_under_pressure() || stores.interaction_store.returned_snapshot_reads_under_pressure() || stores.draft_store.returned_snapshot_reads_under_pressure()
+    }
+
     /// 🧭️ The first rotation stage at or after the cursor whose pump or store still holds a returned read.
     pub fn next_snapshot_read_return_stage(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> Option<u8> {
         (0..5u8).map(|offset| (interaction.snapshot_read_return_stage + offset) % 5).find(|stage| match stage {

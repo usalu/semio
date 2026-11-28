@@ -425,7 +425,7 @@ fn masks_forms_transitions_and_dictionary_entries_publish() {
     assert_eq!(snapshot.pages[0].duration, Some(2.0));
     apply(&mut snapshot, edit_from_action("set-catalog-entry", Some(&args(vec![("object", semio_framework_value::DslValue::String("Marker".into())), ("text", semio_framework_value::DslValue::String("Yes".into()))]))).unwrap());
     assert!(matches!(&snapshot.catalog_extra[0].value, PdfObject::Name(name) if name == "Yes"));
-    apply(&mut snapshot, edit_from_action("set-trailer-entry", Some(&args(vec![("object", semio_framework_value::DslValue::String("Info".into())), ("text", semio_framework_value::DslValue::String("Kept".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-trailer-entry", Some(&args(vec![("object", semio_framework_value::DslValue::String("Foo".into())), ("text", semio_framework_value::DslValue::String("Kept".into()))]))).unwrap());
     assert!(matches!(&snapshot.trailer[0].value, PdfObject::Name(name) if name == "Kept"));
     apply(&mut snapshot, edit_from_action("set-catalog-entry", Some(&args(vec![("object", semio_framework_value::DslValue::String("Marker".into())), ("text", semio_framework_value::DslValue::String(String::new()))]))).unwrap());
     assert!(snapshot.catalog_extra.is_empty());
@@ -482,6 +482,11 @@ fn pointer_down_selects_the_hit_object_and_clears_a_miss() {
     assert_eq!(value["merge"], "invertive");
     let moved = emit_page_edit(&snapshot, "canvasPointerMove", &edit.payload).expect("move");
     assert!(moved.effects.is_empty() && moved.artifact_mutations.is_empty());
+    let world = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(-500.0)), ("y", semio_framework_value::DslValue::float(-500.0)), ("worldX", semio_framework_value::DslValue::float(x)), ("worldY", semio_framework_value::DslValue::float(y))]))).expect("world");
+    let hit = emit_page_edit(&snapshot, &world.action, &world.payload).expect("world select");
+    let semio_plugin::Effect::DispatchAction { action, args: effect_args, .. } = &hit.effects[0] else { panic!("world effect") };
+    assert_eq!(action, "interactionSelect");
+    assert!(serde_json::Value::from(effect_args.clone().expect("args"))["targets"].as_str().expect("targets").contains(&text.id));
 }
 
 #[test]
@@ -634,6 +639,7 @@ fn page_window_declares_object_selection() {
     assert!(window.actions.iter().any(|action| action.id == "canvasPointerDown"));
     let inspector = definition.window_kinds.iter().find(|window| window.id == INSPECTOR_WINDOW_KIND_ID).expect("object window");
     assert_eq!(inspector.body_key, INSPECTOR_BODY_KEY);
+    assert_eq!(inspector.interactions[0].as_str(), OBJECT_DOMAIN);
 }
 
 /// 🧾️ Every action id a pane's bindings name, collected from the rendered tree.
@@ -2014,4 +2020,41 @@ fn page_number_conversion_is_one_based_and_total_over_every_page_action() {
     assert_eq!(apply_payload(&snapshot, &beyond.action, &beyond.payload).expect_err("only 1..=3 slots").param("last"), Some("3"));
     let moved = edit_from_action("move-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(3.0))]))).unwrap();
     assert_eq!(apply_payload(&snapshot, &moved.action, &moved.payload).expect_err("target 3 of 2").code.as_str(), "stdio.pdf.page-number-out-of-range");
+}
+
+/// 🛡️ LAW: a catalog or trailer entry the typed document model owns (`/Pages`, `/Root`, `/Size`, ...) is refused instead of overwritten, and removing a named destination or embedded file that does not exist is refused instead of silently doing nothing.
+#[test]
+fn structural_entries_and_missing_removals_are_refused() {
+    let snapshot = sample();
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    for (action, key) in [("set-catalog-entry", "Pages"), ("set-catalog-entry", "Type"), ("set-trailer-entry", "Root"), ("set-trailer-entry", "Size"), ("set-trailer-entry", "Info"), ("set-trailer-entry", "ID")] {
+        let edit = edit_from_action(action, Some(&args(vec![("object", text(key)), ("text", text("Foo"))]))).unwrap();
+        assert!(apply_payload(&snapshot, &edit.action, &edit.payload).is_err(), "{action} {key} must be refused");
+    }
+    for (family, key) in [("catalog", "Pages"), ("trailer", "Root")] {
+        let edit = edit_from_action("set-entry", Some(&args(vec![("object", text(family)), ("extra", text(key)), ("text", text("Foo"))]))).unwrap();
+        assert!(apply_payload(&snapshot, &edit.action, &edit.payload).is_err(), "set-entry {family} {key} must be refused");
+    }
+    for action in ["remove-named-destination", "remove-embedded-file"] {
+        let edit = edit_from_action(action, Some(&args(vec![("object", text("does-not-exist"))]))).unwrap();
+        assert!(apply_payload(&snapshot, &edit.action, &edit.payload).is_err(), "{action} of an unknown name must be refused");
+    }
+    let edit = edit_from_action("set-catalog-entry", Some(&args(vec![("object", text("Marker")), ("text", text("Yes"))]))).unwrap();
+    assert!(apply_payload(&snapshot, &edit.action, &edit.payload).is_ok());
+}
+
+/// 🛡️ LAW: an open action of kind `page` needs its page, text-only viewer preferences need no `x`, and the clear-capable document verbs refuse an omitted `text` instead of deleting the entry.
+#[test]
+fn omitted_arguments_are_refused_instead_of_clearing() {
+    let snapshot = sample();
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    for action in ["set-language", "set-page-layout", "set-page-mode", "set-metadata"] {
+        assert!(edit_from_action(action, Some(&args(vec![]))).is_err(), "{action} without text must be refused");
+        let cleared = edit_from_action(action, Some(&args(vec![("text", text(""))]))).expect("an explicit empty text clears");
+        assert!(apply_payload(&snapshot, &cleared.action, &cleared.payload).is_ok());
+    }
+    assert!(edit_from_action("set-open-action", Some(&args(vec![("object", text("page"))]))).is_err());
+    let direction = edit_from_action("set-viewer-preferences", Some(&args(vec![("object", text("direction")), ("text", text("R2L"))]))).expect("text-only key without x");
+    assert!(apply_payload(&snapshot, &direction.action, &direction.payload).is_ok());
+    assert!(edit_from_action("set-viewer-preferences", Some(&args(vec![("object", text("fitWindow"))]))).is_err());
 }

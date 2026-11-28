@@ -25,7 +25,7 @@ pub struct ReplaceElement {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ReplaceElement
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "element", kind: "replace-element", record: "ReplacedElement" };
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
@@ -38,10 +38,10 @@ where
 }
 impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ReplaceElement
 where
-    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
 
 
-    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
 

@@ -1,0 +1,25 @@
+{
+  "_comment": "Inputs hand-authored from the live gate of the 16 GB Mac at 23:19 on 2026-11-27 (repo capacity status): 5304 MB available, two explicit-memory commands (1900 MB reserved holding 852, 3600 MB reserved holding 1557), a graph plan (4599 MB reserved holding 2746) and a quiet run, while seven requests of 1200 to 3600 MB waited 7 to 22 minutes under '-2558 MB spare'. The peaks, deviations and heartbeat counts are what the grants measured about themselves. The expected charges, headroom and verdicts of every case are computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
+  "totalMegabytes": 16384,
+  "cores": 10,
+  "swapUsedMegabytes": 1718,
+  "swapOutMegabytesPerSecond": 0,
+  "load": 3,
+  "compressedMegabytes": 3108,
+  "grants": [
+    {"id": "old", "operation": "command", "reservedMegabytes": 1900, "observedMegabytes": 852, "ageSeconds": 7079, "peakMegabytes": 910, "deviationMegabytes": 40, "observations": 470, "retain": true, "session": "a"},
+    {"id": "plan", "operation": "graph-plan", "reservedMegabytes": 4599, "observedMegabytes": 2746, "ageSeconds": 727, "peakMegabytes": 2900, "deviationMegabytes": 120, "observations": 48, "retain": true, "session": "b"},
+    {"id": "fresh", "operation": "command", "reservedMegabytes": 3600, "observedMegabytes": 1557, "ageSeconds": 395, "peakMegabytes": 1600, "deviationMegabytes": 120, "observations": 26, "retain": true, "session": "a"},
+    {"id": "tiny", "operation": "run-many", "reservedMegabytes": 512, "observedMegabytes": 68, "ageSeconds": 727, "quiet": true, "session": "b"}
+  ],
+  "cases": [
+    {"name": "warming: younger than the warm-up or measured fewer than three times, every grant is charged in full", "availableMegabytes": 5304, "ages": {"old": 30, "plan": 30, "fresh": 30}, "observations": 2, "probe": 1200},
+    {"name": "converging: 30 s into the 120 s window the charge is a quarter of the way to the target", "availableMegabytes": 5304, "ages": {"old": 90, "plan": 90, "fresh": 90}, "probe": 1200},
+    {"name": "converged live snapshot: the 1200 MB request that waited 7 minutes fits the headroom the over-reservation held", "availableMegabytes": 5304, "probe": 1200},
+    {"name": "converged live snapshot: a 1900 MB request fits as well", "availableMegabytes": 5304, "probe": 1900},
+    {"name": "converged live snapshot: 3600 MB still waits, the room is real", "availableMegabytes": 5304, "probe": 3600},
+    {"name": "grown back: the fresh command holds 3300 MB and peaked at 3400, its charge is its whole reservation again and nothing is admitted into its room", "availableMegabytes": 3500, "overrides": {"fresh": {"observedMegabytes": 3300, "peakMegabytes": 3400}}, "probe": 1200},
+    {"name": "a peak above the reservation is charged by what the grant holds, never lower", "availableMegabytes": 3500, "overrides": {"fresh": {"observedMegabytes": 3900, "peakMegabytes": 4100}}, "probe": 1200},
+    {"name": "without elastic reservations the live snapshot reproduces the starvation", "availableMegabytes": 5304, "elastic": false, "probe": 1200}
+  ]
+}

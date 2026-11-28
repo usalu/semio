@@ -27,7 +27,7 @@ pub struct OriginalTypedCommandSource<A:ArtifactApp>{
  body:Option<usize>,binding:Option<OriginalSourceBinding>,decoder:Option<(NativeAllocationIdentity,u64)>,retirement:RetainedCloneClose,construction:OriginalConstructionAdmission,
 }
 impl<A:ArtifactApp> Default for OriginalTypedCommandSource<A>{fn default()->Self{Self{qualification:ManuallyDrop::new(None),registration:ManuallyDrop::new(None),admitting:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),wire:ManuallyDrop::new(None),action:None,argument:None,catalog:None,qualified_action:None,runtime_input:ManuallyDrop::new(None),runtime_ignored:false,host_event:false,command:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),preview_admission:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None),caller:ManuallyDrop::new(None),operation:None,original_typing_ready:false,tool_tag_ready:false,tool_tag_dispatch:None,receipt:None,result:ManuallyDrop::new(None),body:None,binding:None,decoder:None,retirement:Default::default(),construction:Default::default()}}}
-fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"typed command requires its complete original source and receiving recipient")}
+fn refused()->ValueError{eprintln!("[DEBUG] typed refused: {}",std::backtrace::Backtrace::force_capture());ValueError::literal(ValueRefusalKind::InvariantViolated,"typed command requires its complete original source and receiving recipient")}
 impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
  pub fn pending(&self)->bool{self.has_command_custody()||!self.construction.terminal_is_empty()}
  fn has_command_custody(&self)->bool{
@@ -50,7 +50,7 @@ impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
      *self.preview_admission = Some(metadata);
      (command, wire)
  }
- pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.is_some_and(|source|source.matches(cx))||self.decoder!=cx.native_receiving_identity(){return Err(refused().into())}if let Some(caller)=self.caller.as_ref(){caller.validate_context(cx)?}Ok(())}
+ pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.is_some_and(|source|source.matches(cx))||self.decoder!=cx.native_receiving_identity(){eprintln!("[DEBUG] typed validate: binding={:?} matches={} decoder={:?} cx={:?}",self.binding.is_some(),self.binding.is_some_and(|source|source.matches(cx)),self.decoder,cx.native_receiving_identity());return Err(refused().into())}if let Some(caller)=self.caller.as_ref(){caller.validate_context(cx)?}Ok(())}
  /// 📥️ The fixed source is funded before its producer attaches any command or wire owner.
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.body.is_some(){self.validate(cx)?;return Ok(true)}

@@ -10,6 +10,8 @@
         "stallEnvironment": "SEMIO_SCRIPT_STALL_MS",
         "idleTreeMilliseconds": 1800000,
         "idleTreeEnvironment": "SEMIO_SCRIPT_IDLE_TREE_MS",
+        "defunctIdleMilliseconds": 300000,
+        "defunctIdleEnvironment": "SEMIO_SCRIPT_DEFUNCT_IDLE_MS",
         "waitCeilingMilliseconds": 14400000,
         "waitCeilingEnvironment": "SEMIO_SCRIPT_WAIT_CEILING_MS",
         "waitEpisodeGapMilliseconds": 2000,
@@ -39,6 +41,7 @@
         "idleMilliseconds": { "type": "integer", "minimum": 0 },
         "liveChildren": { "type": "integer", "minimum": 0 },
         "treeIdleMilliseconds": { "type": "integer", "minimum": 0 },
+        "defunct": { "type": "integer", "minimum": 0, "description": "Exited descendants nobody reaped (state Z): a parent that never notices its child exited is wedged, so the tree is stalled after defunctIdleMilliseconds without CPU instead of idleTreeMilliseconds." },
         "waiting": { "type": "integer", "minimum": 0, "description": "Outstanding queue or capacity waits of the process; any wait makes it healthy." }
       }
     },

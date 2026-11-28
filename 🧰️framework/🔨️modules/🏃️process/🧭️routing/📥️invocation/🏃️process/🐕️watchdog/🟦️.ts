@@ -6,12 +6,12 @@ import schema from"./🧬️schema/🔣️.json" with{type:"json"};
 import budgetSchema from"../../../../⏱️budget/🧬️schema/🔣️.json" with{type:"json"};
 const policy=Object.freeze({...schema.definitions.Policy.const}),notices=schema.definitions.Notice.const;
 /** 🐕️ What the stall rule depends on. */
-export type ScriptProcessStallStateV1=Readonly<{idleMilliseconds:number;liveChildren:number;treeIdleMilliseconds:number;waiting:number}>;
+export type ScriptProcessStallStateV1=Readonly<{idleMilliseconds:number;liveChildren:number;treeIdleMilliseconds:number;waiting:number;defunct?:number}>;
 /** 📜️ The single pure rule: stalled once nothing progressed for the stall period and no child process is alive; tree-stalled once, with children alive, the whole descendant tree additionally used no CPU time for the idle-tree period (a build tool parked on a lock it will never get). @see ./🧬️schema/🔣️.json */
-export function scriptProcessStallDecisionV1(state:ScriptProcessStallStateV1,stallMilliseconds:number=policy.stallMilliseconds,idleTreeMilliseconds:number=policy.idleTreeMilliseconds):(typeof schema.definitions.Decision.enum)[number]{
+export function scriptProcessStallDecisionV1(state:ScriptProcessStallStateV1,stallMilliseconds:number=policy.stallMilliseconds,idleTreeMilliseconds:number=policy.idleTreeMilliseconds,defunctIdleMilliseconds:number=policy.defunctIdleMilliseconds):(typeof schema.definitions.Decision.enum)[number]{
  if(state.idleMilliseconds<stallMilliseconds||state.waiting>0)return"healthy";
  if(state.liveChildren===0)return"stalled";
- return state.treeIdleMilliseconds>=idleTreeMilliseconds?"tree-stalled":"healthy";
+ return state.treeIdleMilliseconds>=((state.defunct??0)>0?Math.min(defunctIdleMilliseconds,idleTreeMilliseconds):idleTreeMilliseconds)?"tree-stalled":"healthy";
 }
 let serving=0,lastProgress=Date.now(),lastActivity=lastProgress,activityDemanded=false,outputObserved=false,ticket=0,episodeStart=0,lastWaitEnd=0;const waits=new Map<number,number>();
 const naturalV1=(name:string):number|undefined=>{const value=Number(process.env[name]);return Number.isSafeInteger(value)&&value>=1000?value:undefined;};
@@ -60,6 +60,17 @@ export function liveChildPidsV1(pid:number=process.pid):readonly number[]|undefi
   return found;
  }catch{return undefined;}
 }
+/** 🧟️ Counts the exited but unreaped (state Z) processes among the descendants of `pid`; `0` where the table cannot be read (Windows has no zombies). */
+export function defunctChildCountV1(pid:number=process.pid):number{
+ if(process.platform==="win32")return 0;
+ try{
+  const snapshot=spawnSync("ps",["-axo","pid=,ppid=,stat="],{encoding:"utf8",windowsHide:true,timeout:10000});
+  if(snapshot.status!==0||typeof snapshot.stdout!=="string")return 0;
+  const rows=new Map<number,{parent:number;zombie:boolean}>();for(const line of snapshot.stdout.split("\n")){const fields=line.trim().split(/\s+/u),id=Number(fields[0]),parent=Number(fields[1]);if(Number.isSafeInteger(id)&&Number.isSafeInteger(parent))rows.set(id,{parent,zombie:(fields[2]??"").startsWith("Z")});}
+  let count=0;for(const[child,row]of rows){if(!row.zombie)continue;for(let at=row.parent,steps=0;steps<64&&at>1;steps++){if(at===pid){count++;break;}at=rows.get(at)?.parent??0;}}
+  return count;
+ }catch{return 0;}
+}
 /** 🔢️ Counts live descendants; an unreadable table counts as one live child (fail safe). */
 export function liveChildCountV1(pid:number=process.pid):number{return liveChildPidsV1(pid)?.length??1;}
 /** 🌳️ Sums the CPU time (milliseconds) the given processes have used so far; `undefined` when it cannot be read (Windows, vanished pids). */
@@ -81,8 +92,8 @@ export function scriptProcessWatchdogNoticeV1(kind:keyof typeof notices,values:R
 /** 🧵️ What a stall does: a stalled main thread ends the process; a stalled worker thread of a long-lived service only aborts its own work, so one silent plan never takes the whole service down. */
 export function scriptProcessStallActionV1(mainThread:boolean):"exit"|"abort"{return mainThread?"exit":"abort";}
 /** ▶️ Starts the stall watchdog; `onStall` runs once with the idle time, the decision and the live child pids. */
-export function startScriptProcessWatchdogV1(options:Readonly<{onStall:(idleMilliseconds:number,decision:"stalled"|"tree-stalled",children:readonly number[],treeIdleMilliseconds:number)=>void;now?:()=>number;children?:()=>readonly number[]|undefined;cpu?:(pids:readonly number[])=>number|undefined;stallMilliseconds?:number;idleTreeMilliseconds?:number;checkMilliseconds?:number}>):()=>void{
- const now=options.now??Date.now,children=options.children??liveChildPidsV1,cpu=options.cpu??treeCpuMillisecondsV1,natural=naturalV1,stall=options.stallMilliseconds??natural(policy.stallEnvironment)??policy.stallMilliseconds,idleTree=options.idleTreeMilliseconds??natural(policy.idleTreeEnvironment)??policy.idleTreeMilliseconds;let observed=now(),treeCpu:number|undefined,treeSince=observed;lastProgress=observed;
+export function startScriptProcessWatchdogV1(options:Readonly<{onStall:(idleMilliseconds:number,decision:"stalled"|"tree-stalled",children:readonly number[],treeIdleMilliseconds:number)=>void;now?:()=>number;children?:()=>readonly number[]|undefined;cpu?:(pids:readonly number[])=>number|undefined;stallMilliseconds?:number;idleTreeMilliseconds?:number;checkMilliseconds?:number;defunct?:()=>number}>):()=>void{
+ const now=options.now??Date.now,children=options.children??liveChildPidsV1,cpu=options.cpu??treeCpuMillisecondsV1,natural=naturalV1,stall=options.stallMilliseconds??natural(policy.stallEnvironment)??policy.stallMilliseconds,idleTree=options.idleTreeMilliseconds??natural(policy.idleTreeEnvironment)??policy.idleTreeMilliseconds;const defunctIdle=natural(policy.defunctIdleEnvironment)??policy.defunctIdleMilliseconds,defunctOf=options.defunct??defunctChildCountV1;let observed=now(),treeCpu:number|undefined,treeSince=observed;lastProgress=observed;
  const timer=setInterval(()=>{
   const clock=now(),idle=clock-Math.max(lastProgress,observed);
   if(serving>0){observed=clock;return;}
@@ -93,7 +104,7 @@ export function startScriptProcessWatchdogV1(options:Readonly<{onStall:(idleMill
   const used=pids===undefined?undefined:cpu(pids);
   if(used===undefined||treeCpu===undefined||used!==treeCpu){treeCpu=used;treeSince=clock;return;}
   const treeIdle=clock-treeSince;
-  if(scriptProcessStallDecisionV1({idleMilliseconds:Math.round(idle),liveChildren:pids?.length??1,treeIdleMilliseconds:Math.round(treeIdle),waiting},stall,idleTree)==="tree-stalled"){clearInterval(timer);options.onStall(idle,"tree-stalled",pids??[],treeIdle);}
+  if(scriptProcessStallDecisionV1({idleMilliseconds:Math.round(idle),liveChildren:pids?.length??1,treeIdleMilliseconds:Math.round(treeIdle),waiting,defunct:defunctOf()},stall,idleTree,defunctIdle)==="tree-stalled"){clearInterval(timer);options.onStall(idle,"tree-stalled",pids??[],treeIdle);}
  },options.checkMilliseconds??policy.checkMilliseconds);
  timer.unref();return()=>clearInterval(timer);
 }

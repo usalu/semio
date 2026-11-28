@@ -15,5 +15,5 @@ fn empty_batch_refuses_without_editing_the_scene() {
     assert!(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️splice-scene-row-batch/🚫️empty/🔺️diff/🚫️.absent").is_empty());
     assert_eq!(protocol::apply_diff_cold(delta.diff(), &before).unwrap(), after);
     assert_eq!(after, before);
-    assert!(inverse_puzzle5d_mutation(&before, &op).is_err());
+    assert!(inverse_puzzle5d_mutation(&before, &op).expect("valid retained mutation inverse fixture").is_empty(), "splice-scene-row-batch/empty: a refusal must yield no inverse step");
 }

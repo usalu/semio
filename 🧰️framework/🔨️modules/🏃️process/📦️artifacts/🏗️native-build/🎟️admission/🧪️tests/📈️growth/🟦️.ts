@@ -33,9 +33,9 @@ const connect=(endpoint:string,request:AdmitRequestV1)=>{
 const eventually=async(check:()=>boolean)=>{const started=Date.now();while(!check()&&Date.now()-started<2000)await new Promise(done=>setTimeout(done,10));return check();};
 
 type Ask=Parameters<GrantGrowthPortV1["acquire"]>[0];
-const scenario=async(options:Readonly<{peakMiB:number;parentMiB:number;local:GrowthHostV1|undefined;fleet:readonly GrowthHostV1[]|undefined;acquire:(ask:Ask)=>ReturnType<GrantGrowthPortV1["acquire"]>}>,body:(context:Readonly<{broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;client:ReturnType<typeof connect>;lines:string[];asks:Ask[]}>)=>Promise<void>)=>{
+const scenario=async(options:Readonly<{peakMiB:number;parentMiB:number;local:GrowthHostV1|undefined;fleet:readonly GrowthHostV1[]|undefined;growthPolicy?:Partial<typeof ADMISSION_POLICY_V1.growth>;acquire:(ask:Ask)=>ReturnType<GrantGrowthPortV1["acquire"]>}>,body:(context:Readonly<{broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;client:ReturnType<typeof connect>;lines:string[];asks:Ask[]}>)=>Promise<void>)=>{
  const lines:string[]=[],asks:Ask[]=[],port:GrantGrowthPortV1={local:()=>options.local,fleet:()=>options.fleet,acquire:ask=>{asks.push(ask);return options.acquire(ask);}};
- const broker=await startAdmissionBrokerV1({physicalBytes:32*1024*MiB,history:history({big:options.peakMiB}),parentMemoryAllowanceBytes:options.parentMiB*MiB,growth:port,available:()=>undefined,warden:()=>"calm",cancels:()=>[],log:line=>lines.push(line)});
+ const broker=await startAdmissionBrokerV1({physicalBytes:32*1024*MiB,history:history({big:options.peakMiB}),parentMemoryAllowanceBytes:options.parentMiB*MiB,growth:port,available:()=>undefined,warden:()=>"calm",cancels:()=>[],log:line=>lines.push(line),...options.growthPolicy?{growthPolicy:options.growthPolicy}:{}});
  broker.registerPass(pass);
  const client=connect(broker.endpoint,unit("big"));
  try{await body({broker,client,lines,asks});}finally{client.socket.destroy();await broker.close();}
@@ -102,8 +102,9 @@ test("only a unit no machine of the fleet can hold is refused, with a bilingual 
 test("a growth that is not granted in time ends as the old refusal, and a vanished client cancels the wait",async()=>{
  await scenario({peakMiB:4894,parentMiB:1536,local:host("g1-server",32768,20000),fleet:[],acquire:async()=>({granted:false,reason:"timeout"})},async({client,lines})=>{
   expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
-  expect(await client.next()).toMatchObject({op:"refused",reason:"parent-memory",allowanceBytes:1536*MiB});
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:true});
   expect(lines.some(line=>line.includes("got no grant growth")&&line.includes("kein Zuteilungswachstum"))).toBe(true);
+  expect(lines.some(line=>line.includes("alone")||line.includes("allein"))).toBe(true);
  });
  let signal:AbortSignal|undefined;
  await scenario({peakMiB:4894,parentMiB:1536,local:host("g1-server",32768,3000),fleet:[],acquire:ask=>new Promise(accept=>{signal=ask.signal;ask.signal.addEventListener("abort",()=>accept({granted:false,reason:"cancelled"}),{once:true});})},async({broker,client,asks})=>{
@@ -112,6 +113,33 @@ test("a growth that is not granted in time ends as the old refusal, and a vanish
   client.socket.destroy();
   expect(await eventually(()=>signal?.aborted===true)).toBe(true);
   expect(broker.stats()).toMatchObject({running:0,waiting:0});
+ });
+});
+
+test("a growth wait that really waits keeps the client connected with heartbeats and ends granted once room appears",async()=>{
+ let released=0,answer:(row:Awaited<ReturnType<GrantGrowthPortV1["acquire"]>>)=>void=()=>undefined;
+ await scenario({peakMiB:2191,parentMiB:1536,local:host("g1-m07",16384,6000),fleet:[],growthPolicy:{progressMilliseconds:30},acquire:()=>new Promise(accept=>{answer=accept;})},async({broker,client,asks})=>{
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(await eventually(()=>asks.length===1)).toBe(true);
+  expect(asks[0]!.waitMilliseconds).toBe(ADMISSION_POLICY_V1.growth.waitMilliseconds);
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(client.socket.destroyed).toBe(false);expect(asks[0]!.signal.aborted).toBe(false);
+  expect(broker.stats()).toMatchObject({running:0});
+  answer({granted:true,release:()=>{released++;}});
+  expect(await eventually(()=>broker.stats().running===1)).toBe(true);
+  expect(asks[0]!.signal.aborted).toBe(false);
+  client.socket.write(JSON.stringify({v:1,op:"done",exit:0,peakRssBytes:2191*MiB,userMs:1,sysMs:1,startMs:1,endMs:2,rmetaMs:null})+"\n");
+  expect(await eventually(()=>released===1)).toBe(true);
+ });
+});
+
+test("a gate that answers cancelled while the client is still connected never closes the connection: the unit runs alone beside its grant",async()=>{
+ await scenario({peakMiB:2191,parentMiB:1536,local:host("g1-m07",16384,6000),fleet:[],acquire:async()=>({granted:false,reason:"cancelled"})},async({client,lines})=>{
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(await client.next()).toMatchObject({op:"verdict",admitted:true});
+  expect(client.socket.destroyed).toBe(false);
+  expect(lines.some(line=>line.includes("cancelled after"))).toBe(false);
  });
 });
 

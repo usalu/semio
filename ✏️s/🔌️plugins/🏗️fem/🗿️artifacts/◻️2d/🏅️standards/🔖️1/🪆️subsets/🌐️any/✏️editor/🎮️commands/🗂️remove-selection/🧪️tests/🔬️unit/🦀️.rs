@@ -154,7 +154,7 @@ async fn mounted_delete_body() {
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");
         if selection == "protectedSelection" {
             let refusal = dispatch_refused(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids })).await;
-            assert!(refusal.contains("interactive-job.publication-rejected"), "{refusal}");
+            assert!(refusal.contains("fem2d.remove-selection.material-referenced"), "{refusal}");
             assert_eq!(app.snapshot().expect("unchanged snapshot"), *before, "an unselected referrer blocks the complete transaction");
             continue;
         }
@@ -183,4 +183,32 @@ fn remove_selection_without_ids_speaks_for_the_live_selection() {
     assert_eq!(with_selection(&named, &selection), named);
     let history = semio_plugin::HistoryView::empty();
     assert!(!remove_ids(&ArtifactView::new(&*before, &history), &key.ids).expect("selection command").artifact_mutations.is_empty(), "the key must remove the selected entity");
+}
+
+/// 🗑️ LAW: removing a material, section or load case that something unselected still names is refused up front with a localized EN and DE notice naming it and its referrers (read from the shared JSON fixture by a third-party parser), and the same removal together with those referrers is not refused.
+#[test]
+fn remove_selection_of_a_referenced_target_is_refused_with_a_localized_notice_2d() {
+    let (fixture, before) = selection_fixture();
+    let history = semio_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&*before, &history);
+    let named = |key: &str, field: &str, id: &str| fixture["before"][key].as_array().unwrap().iter().filter(|row| row[field] == id || row[field].as_array().is_some_and(|terms| terms.iter().any(|term| term["caseId"] == id))).map(|row| row["id"].as_str().unwrap().to_owned()).collect::<Vec<_>>();
+    let table = semio_framework::fault_notice_definitions(<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp as semio_plugin::ArtifactEditor>::fault_notices());
+    assert!(semio_framework::validate_fault_notices(&table).is_empty());
+    let target = |kind: &str, id: &str| semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(kind, id).expect("target");
+    let material = [named("elements", "materialId", "steel"), named("regions", "materialId", "steel")].concat().join(", ");
+    for (kind, id, code, referrers, english, german) in [
+        ("material", "steel", "fem2d.remove-selection.material-referenced", material, "'steel' is still used by", "'steel' wird noch von"),
+        ("section", "section", "fem2d.remove-selection.section-referenced", named("elements", "sectionId", "section").join(", "), "'section' is still used by", "'section' wird noch von"),
+        ("loadCase", "dead", "fem2d.remove-selection.load-case-referenced", named("combinations", "terms", "dead").join(", "), "'dead' is still used by the combinations", "'dead' wird noch von den Kombinationen"),
+    ] {
+        assert!(!referrers.is_empty(), "{kind}: the fixture names a referrer");
+        let fault = remove_ids(&doc, &[target(kind, id)]).err().expect("a referenced target is refused");
+        assert_eq!(fault.code.0.as_str(), code);
+        for (locale, expected) in [(semio_ui_locale::Locale::En, format!("{english} {referrers}")), (semio_ui_locale::Locale::De, format!("{german} {referrers}"))] {
+            let shown = semio_framework::fault_notice_text(&table, code, fault.params.as_deref(), semio_ui_locale::Terminology::Native, locale).expect("notice");
+            assert!(shown.contains(&expected), "{locale:?}: {shown}");
+        }
+    }
+    let together = [target("material", "steel"), target("element", "e1"), target("node", "n1")];
+    assert!(!remove_ids(&doc, &together).expect("removed with its referrers").artifact_mutations.is_empty());
 }

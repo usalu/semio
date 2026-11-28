@@ -61,6 +61,12 @@ use semio_plugin_window_transient::{ui_label, ui_text};
 /// severity, and its row actions ([`history_panel_mutation_row`]): Edit, then Withdraw (design §22.1) — or Restore, on a
 /// mutation holding an accepted draft — each disabled, naming why, wherever a viewer, the mutation, the store, the
 /// session or the instance refuses it ([`time_travel::mutation_row_refusals`]: gap N15, audit W2A-9, design §22.20).
+/// ⌨️ The default chords of the `undo` verb as `aria-keyshortcuts` tokens (ctrl on Windows and Linux, meta on macOS); the keybinding table owns the binding, so a user override changes the key, not this announcement of the defaults.
+pub const HISTORY_UNDO_SHORTCUT: &str = "Control+Z Meta+Z";
+
+/// ⌨️ The default chords of the `redo` verb as `aria-keyshortcuts` tokens, twin of [`HISTORY_UNDO_SHORTCUT`].
+pub const HISTORY_REDO_SHORTCUT: &str = "Control+Shift+Z Control+Y Meta+Shift+Z";
+
 #[allow(clippy::too_many_arguments)]
 pub async fn ui_history_panel(
     history: &HistoryView,
@@ -75,12 +81,16 @@ pub async fn ui_history_panel(
 ) -> UiAssemblyResult<BuiltNode> {
     let frozen = time_travel.is_some();
     let text_of = |text: semio_plugin_command::lifted_command::HistoryPanelText| text.text(locale);
-    let action_item = |id: &str, icon_id: IconName, label: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
+    let action_item = |id: &str, icon_id: IconName, label: &str, action: &str, enabled: bool, shortcut: Option<&str>| -> UiAssemblyResult<BuiltNode> {
         let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
         let button_id = UiText::try_format(format_args!("{id}.run")).ok_or_else(|| ui_assembly_error("history-panel.button-id"))?;
         let icon = ui_text(icon_id.as_str(), "history-panel.icon")?;
         let builder = button(ui_label(label, "history-panel.button-label")?).icon(icon.clone()).disabled(!enabled);
         let builder = builder.try_id(&button_id).map_err(|_| ui_assembly_error("history-panel.button-id"))?;
+        let builder = match shortcut {
+            Some(shortcut) => builder.try_shortcut(shortcut).map_err(|_| ui_assembly_error("history-panel.button-shortcut"))?,
+            None => builder,
+        };
         let button = builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("history-panel.button-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.button-build"))?;
         let builder = tree_item(ui_label(label, "history-panel.item-label")?).icon(icon).disabled(!enabled);
         let builder = builder.try_id(id).map_err(|_| ui_assembly_error("history-panel.item-id"))?;
@@ -188,11 +198,11 @@ pub async fn ui_history_panel(
     let mutable = !read_only && !frozen;
     let mut action_items = BuiltChildren::default();
     for item in [
-        Some(action_item("framework.history.undo", IconName::Undo, text_of(semio_plugin_command::lifted_command::HistoryPanelText::Undo), "undo", mutable)?),
-        Some(action_item("framework.history.redo", IconName::Redo, text_of(semio_plugin_command::lifted_command::HistoryPanelText::Redo), "redo", history.can_redo && mutable)?),
-        Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, text_of(semio_plugin_command::lifted_command::HistoryPanelText::CommitCheckpoint), "commitCheckpoint", mutable)?),
+        Some(action_item("framework.history.undo", IconName::Undo, text_of(semio_plugin_command::lifted_command::HistoryPanelText::Undo), "undo", mutable, Some(HISTORY_UNDO_SHORTCUT))?),
+        Some(action_item("framework.history.redo", IconName::Redo, text_of(semio_plugin_command::lifted_command::HistoryPanelText::Redo), "redo", history.can_redo && mutable, Some(HISTORY_REDO_SHORTCUT))?),
+        Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, text_of(semio_plugin_command::lifted_command::HistoryPanelText::CommitCheckpoint), "commitCheckpoint", mutable, None)?),
         checkin_item,
-        Some(action_item("framework.history.createAlternative", IconName::GitBranch, text_of(semio_plugin_command::lifted_command::HistoryPanelText::CreateAlternative), "createAlternative", mutable)?),
+        Some(action_item("framework.history.createAlternative", IconName::GitBranch, text_of(semio_plugin_command::lifted_command::HistoryPanelText::CreateAlternative), "createAlternative", mutable, None)?),
         Some(filter_item),
     ]
     .into_iter()

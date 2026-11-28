@@ -15609,15 +15609,15 @@
           },
           {
             "id": "mass-top",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "top",
             "material": "pine-timber",
             "role": "detail",
             "tone": 0.3,
-            "radii": [
-              0.0375,
-              0.0375,
-              0.0375
+            "size": [
+              0.075,
+              0.075,
+              0.075
             ],
             "transform": {
               "translation": [
@@ -15631,15 +15631,15 @@
           },
           {
             "id": "mass-frame-a",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "frame",
             "material": "pine-timber",
             "role": "detail",
             "tone": 0.3,
-            "radii": [
-              0.0375,
-              0.0375,
-              0.0375
+            "size": [
+              0.075,
+              0.075,
+              0.075
             ],
             "transform": {
               "translation": [
@@ -15653,15 +15653,15 @@
           },
           {
             "id": "mass-frame-b",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "frame",
             "material": "pine-timber",
             "role": "detail",
             "tone": 0.3,
-            "radii": [
-              0.0375,
-              0.0375,
-              0.0375
+            "size": [
+              0.075,
+              0.075,
+              0.075
             ],
             "transform": {
               "translation": [
@@ -15675,15 +15675,15 @@
           },
           {
             "id": "mass-bench-r",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "bench-r",
             "material": "pine-timber",
             "role": "detail",
             "tone": 0.3,
-            "radii": [
-              0.0375,
-              0.0375,
-              0.0375
+            "size": [
+              0.075,
+              0.075,
+              0.075
             ],
             "transform": {
               "translation": [
@@ -15697,15 +15697,15 @@
           },
           {
             "id": "mass-bench-l",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "bench-l",
             "material": "pine-timber",
             "role": "detail",
             "tone": 0.3,
-            "radii": [
-              0.0375,
-              0.0375,
-              0.0375
+            "size": [
+              0.075,
+              0.075,
+              0.075
             ],
             "transform": {
               "translation": [
@@ -15724,8 +15724,8 @@
             "de": "Körper, für 75 mm gebaut: die Platte mit ihren Riegeln als eine 75-mm-Scheibe, jeder A-Bock als eine 90-mm-Scheibe aus beiden Beinen und der Zange (Beine und Zange behalten ihre 95 mm), jede Bank als 75-mm-Brett mit Oberkante auf Sitzhöhe, jede Konsole als 75-mm-Block unter dem Brettende, der bis an die Innenfläche des A-Bocks reicht, sodass die Bank zwischen den Böcken hängt; die Streben (45 mm) entfallen."
           },
           {
-            "en": "Thermal: one surface per region. Structure: slab on two A-frames, boards on bracket blocks, 75 mm pivot pins, seat blocks of the slab and foot pads; the model is minimal at this scale.",
-            "de": "Thermik: eine Oberfläche je Region. Tragwerk: Scheibe auf zwei A-Böcken, Bretter auf Konsolblöcken, 75-mm-Drehbolzen, Auflagerblöcke der Scheibe und Fußauflager; das Modell ist in diesem Maßstab minimal."
+            "en": "Thermal: one surface per region. Structure: slab on two A-frames, boards on bracket blocks, 75 mm pivot pins, seat blocks of the slab and foot pads; the model is minimal at this scale. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+            "de": "Thermik: eine Oberfläche je Region. Tragwerk: Scheibe auf zwei A-Böcken, Bretter auf Konsolblöcken, 75-mm-Drehbolzen, Auflagerblöcke der Scheibe und Fußauflager; das Modell ist in diesem Maßstab minimal. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
           }
         ]
       }

@@ -10,6 +10,17 @@ export const ComponentType = { Byte: 5120, UnsignedByte: 5121, Short: 5122, Unsi
 /** 🎯️ The buffer view targets of vertex attributes and indices. */
 export const BufferTarget = { Attribute: 34962, Index: 34963 } as const;
 
+/** 🔢️ The shortest decimal that reads back as the same 32-bit float: every glTF reader stores these factors as floats, so the 17 digits of a double carry nothing. */
+export function shortFloat(value: number): number {
+  const target = Math.fround(value);
+  if (!Number.isFinite(target)) return value;
+  for (let digits = 1; digits <= 9; digits += 1) {
+    const candidate = Number(target.toPrecision(digits));
+    if (Math.fround(candidate) === target) return candidate;
+  }
+  return target;
+}
+
 /** 📏️ The element types of an accessor and their component counts. */
 export const ElementCount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 } as const;
 /** 🔤️ An accessor element type. */
@@ -20,7 +31,7 @@ export type ComponentCode = (typeof ComponentType)[keyof typeof ComponentType];
 /** 🧾️ A glTF buffer view. */
 export type BufferView = { buffer: 0; byteOffset: number; byteLength: number; byteStride?: number; target?: number };
 /** 🪪️ A glTF accessor. */
-export type Accessor = { bufferView: number; componentType: number; count: number; type: ElementType; normalized?: true; min?: number[]; max?: number[] };
+export type Accessor = { bufferView: number; byteOffset?: number; componentType: number; count: number; type: ElementType; normalized?: true; min?: number[]; max?: number[] };
 
 /** 🔢️ The byte width of one component. */
 export const componentWidth = (component: ComponentCode): number => (component === ComponentType.Byte || component === ComponentType.UnsignedByte ? 1 : component === ComponentType.Short || component === ComponentType.UnsignedShort ? 2 : 4);
@@ -28,10 +39,16 @@ export const componentWidth = (component: ComponentCode): number => (component =
 /** 📐️ The options of one accessor: the buffer view target, min/max per component, `normalized` integers and `aligned` elements (each element padded with zeros to a 4-byte boundary, written as the view's `byteStride`, as glTF requires for the small vertex attribute types). */
 export type AddOptions = { target?: number; bounds?: boolean; normalized?: boolean; aligned?: boolean };
 
-/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Repeated payloads share a typed accessor after an exact encoded comparison. Large documents also reuse short payloads through a bounded index. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. */
+type Lane = { readonly writer: ByteWriter; readonly target: number | undefined; readonly stride: number | undefined };
+type Place = { readonly writer: ByteWriter; readonly offset: number; readonly stride: number | undefined };
+
+/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Repeated payloads share a typed accessor after an exact encoded comparison. Large documents also reuse short payloads through a bounded index. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. `compact` writes min and max as the shortest decimals of the same 32-bit floats and packs the accessors of one kind (same target and element stride) into one shared buffer view each, addressed by the accessors' `byteOffset`; every vertex attribute view then carries its `byteStride`, as glTF requires of a view that several accessors share. */
 export class BufferBuilder {
-  readonly views: BufferView[] = [];
   readonly accessors: Accessor[] = [];
+  private readonly plain: BufferView[] = [];
+  private readonly lanes: Lane[] = [];
+  private readonly places: Place[] = [];
+  private total = 0;
   private readonly writer = new ByteWriter();
 
   private readonly shared = new Map<string, number[]>();
@@ -39,7 +56,30 @@ export class BufferBuilder {
   private readonly float = new Float32Array(1);
   private readonly bits = new Uint32Array(this.float.buffer);
 
-  constructor(private readonly pace: Pace = new Pace()) {}
+  constructor(private readonly pace: Pace = new Pace(), private readonly compact = false) {}
+
+  private lane(target: number | undefined, stride: number | undefined): Lane {
+    const found = this.lanes.find((lane) => lane.target === target && lane.stride === stride);
+    if (found !== undefined) return found;
+    const lane = { writer: new ByteWriter(), target, stride };
+    this.lanes.push(lane);
+    return lane;
+  }
+
+  private layout(): { views: BufferView[]; length: number } {
+    let at = 0;
+    const views = this.lanes.map((lane): BufferView => {
+      const view: BufferView = { buffer: 0, byteOffset: at, byteLength: lane.writer.length, ...(lane.stride === undefined ? {} : { byteStride: lane.stride }), ...(lane.target === undefined ? {} : { target: lane.target }) };
+      at += lane.writer.length;
+      return view;
+    });
+    return { views, length: at };
+  }
+
+  /** 🧾️ The buffer views: one per accessor, or one per accessor kind when `compact`. */
+  get views(): BufferView[] {
+    return this.compact ? this.layout().views : this.plain;
+  }
 
   private key(values: ArrayLike<number>, component: ComponentCode, type: ElementType, target: number | undefined, bounds: boolean, flags: string): string {
     let hash = 2166136261;
@@ -54,11 +94,11 @@ export class BufferBuilder {
   }
 
   private matches(index: number, values: ArrayLike<number>, component: ComponentCode): boolean {
-    const stored = this.views[this.accessors[index]!.bufferView]!;
-    const bytes = new DataView(this.writer.bytes.buffer, stored.byteOffset, stored.byteLength);
+    const stored = this.places[index]!;
+    const bytes = new DataView(stored.writer.bytes.buffer, stored.offset);
     const width = componentWidth(component);
     const components = ElementCount[this.accessors[index]!.type];
-    const stride = stored.byteStride ?? width * components;
+    const stride = stored.stride ?? width * components;
     const read = (i: number): number => {
       const at = Math.floor(i / components) * stride + (i % components) * width;
       return component === ComponentType.Float ? bytes.getFloat32(at, true)
@@ -78,7 +118,7 @@ export class BufferBuilder {
 
   /** 📐️ The byte length of the buffer so far, padding included. */
   get byteLength(): number {
-    return this.writer.length;
+    return this.compact ? this.layout().length : this.writer.length;
   }
 
   /** 📥️ Adds one accessor holding `values` (`type` elements, `componentType` components); returns its index. `bounds` writes min/max per component. */
@@ -87,26 +127,33 @@ export class BufferBuilder {
     if (values.length % components !== 0) throw new Error(`accessor of ${type} needs a multiple of ${components} values, got ${values.length}`);
     const width = componentWidth(componentType);
     const stride = options.aligned === true ? Math.ceil((width * components) / 4) * 4 : width * components;
-    const indexForSize = values.length*width >= 1024 ? this.shared : this.writer.length >= 128*1024 ? this.short : undefined;
+    const indexForSize = values.length*width >= 1024 ? this.shared : this.total >= 128*1024 ? this.short : undefined;
     const key = indexForSize && this.key(values, componentType, type, options.target, options.bounds === true, `${options.normalized === true ? "n" : ""}${options.aligned === true ? "a" : ""}`);
     const candidates = key === undefined ? undefined : indexForSize?.get(key);
     const match = candidates?.find((index) => this.matches(index, values, componentType));
     if (match !== undefined) return match;
-    const byteOffset = this.writer.length;
-    const write = componentType === ComponentType.Float ? (v: number) => this.writer.f32(v) : componentType === ComponentType.UnsignedInt ? (v: number) => this.writer.u32(v) : componentType === ComponentType.UnsignedShort || componentType === ComponentType.Short ? (v: number) => this.writer.u16(v) : (v: number) => this.writer.u8(v);
+    const lane = this.compact ? this.lane(options.target, options.target === BufferTarget.Attribute ? stride : undefined) : undefined;
+    const writer = lane?.writer ?? this.writer;
+    const byteOffset = writer.length;
+    const write = componentType === ComponentType.Float ? (v: number) => writer.f32(v) : componentType === ComponentType.UnsignedInt ? (v: number) => writer.u32(v) : componentType === ComponentType.UnsignedShort || componentType === ComponentType.Short ? (v: number) => writer.u16(v) : (v: number) => writer.u8(v);
     const gap = stride - width * components;
     for (let i = 0; i < values.length; i += 1) {
       this.pace.tick();
       const value = values[i]!;
       if (!Number.isFinite(value)) throw new Error(`non-finite value at ${i} of an accessor of ${type}`);
       write(value);
-      if (gap > 0 && i % components === components - 1) for (let g = 0; g < gap; g += 1) this.writer.u8(0);
+      if (gap > 0 && i % components === components - 1) for (let g = 0; g < gap; g += 1) writer.u8(0);
     }
-    const byteLength = this.writer.length - byteOffset;
-    this.writer.pad(4);
-    const viewIndex = this.views.length;
-    this.views.push({ buffer: 0, byteOffset, byteLength, ...(stride !== width * components ? { byteStride: stride } : {}), ...(options.target === undefined ? {} : { target: options.target }) });
-    const accessor: Accessor = { bufferView: viewIndex, componentType, count: values.length / components, type, ...(options.normalized === true ? { normalized: true as const } : {}) };
+    const byteLength = writer.length - byteOffset;
+    writer.pad(4);
+    this.total += writer.length - byteOffset;
+    let viewIndex: number;
+    if (lane === undefined) {
+      viewIndex = this.plain.length;
+      this.plain.push({ buffer: 0, byteOffset, byteLength, ...(stride !== width * components ? { byteStride: stride } : {}), ...(options.target === undefined ? {} : { target: options.target }) });
+    } else viewIndex = this.lanes.indexOf(lane);
+    this.places.push({ writer, offset: byteOffset, stride: lane === undefined ? (stride !== width * components ? stride : undefined) : lane.stride });
+    const accessor: Accessor = { bufferView: viewIndex, ...(lane !== undefined && byteOffset > 0 ? { byteOffset } : {}), componentType, count: values.length / components, type, ...(options.normalized === true ? { normalized: true as const } : {}) };
     if (options.bounds === true && values.length > 0) {
       const min = new Array<number>(components).fill(Infinity);
       const max = new Array<number>(components).fill(-Infinity);
@@ -117,8 +164,8 @@ export class BufferBuilder {
         if (value < min[c]!) min[c] = value;
         if (value > max[c]!) max[c] = value;
       }
-      accessor.min = min;
-      accessor.max = max;
+      accessor.min = this.compact ? min.map(shortFloat) : min;
+      accessor.max = this.compact ? max.map(shortFloat) : max;
     }
     const index = this.accessors.push(accessor) - 1;
     if (indexForSize && key !== undefined) {
@@ -133,7 +180,10 @@ export class BufferBuilder {
 
   /** 📦️ The buffer bytes (a multiple of four long). */
   bytes(): Uint8Array {
-    return this.writer.finish();
+    if (!this.compact) return this.writer.finish();
+    const out = new ByteWriter(this.layout().length);
+    for (const lane of this.lanes) out.append(lane.writer.written());
+    return out.finish();
   }
 }
 

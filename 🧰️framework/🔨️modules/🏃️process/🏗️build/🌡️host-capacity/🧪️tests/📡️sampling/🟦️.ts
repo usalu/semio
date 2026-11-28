@@ -31,7 +31,7 @@ test("Declared scheduling memory preserves physical and cgroup pressure",()=>{
  const available=oracle.query("SELECT min(?1,?2,coalesce(?3,?2)) AS value");
  const pressure=oracle.query(`SELECT CASE max(CASE ?1 WHEN 'critical' THEN 2 WHEN 'warn' THEN 1 ELSE 0 END,
    CASE WHEN ?2*10000<coalesce(?4,32768)*?5 THEN 2 WHEN ?2*10000<coalesce(?4,32768)*?6 THEN 1 ELSE 0 END,
-   CASE WHEN ?3*10000<32768*?7 THEN 0 WHEN ?3*10000<32768*?8 THEN 1 WHEN ?3 IS NOT NULL THEN 2 ELSE 0 END)
+   CASE WHEN ?2*10000>=coalesce(?4,32768)*?6 THEN 0 WHEN ?3*10000<32768*?7 THEN 0 WHEN ?3*10000<32768*?8 THEN 1 WHEN ?3 IS NOT NULL THEN 2 ELSE 0 END)
    WHEN 2 THEN 'critical' WHEN 1 THEN 'warn' ELSE 'normal' END AS value`);
  const basis=policy.pressure;
  for(const row of fixture.profilePressure){
@@ -41,7 +41,7 @@ test("Declared scheduling memory preserves physical and cgroup pressure",()=>{
   expect(available.get(row.available,8192,row.cgroup),row.name).toEqual({value:row.expectedAvailable});
   expect(pressure.get(row.kernel,row.available,row.compressed,row.cgroup,basis.availableCriticalBasisPoints,basis.availableWarnBasisPoints,basis.compressedWarnBasisPoints,basis.compressedCriticalBasisPoints),row.name).toEqual({value:row.expectedPressure});
   expect(sample.availableMegabytes,row.name).toBe(row.expectedAvailable);
-  expect(sample.pressure,row.name).toBe(row.expectedPressure);
+  expect<unknown>(sample.pressure,row.name).toBe(row.expectedPressure);
  }
 });
 
@@ -59,7 +59,7 @@ test("Every platform reads through injected ports, so Linux and Windows parse on
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toEqual(fixture.darwin[0]!.expect as never);
  expect(calls.sort()).toEqual(["/usr/bin/hdiutil info","sysctl -n kern.memorystatus_vm_pressure_level","sysctl -n vm.swapusage","sysctl kern.num_files kern.maxfiles","vm_stat"]);
  expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin",undefined,undefined,undefined,undefined,undefined,null)).toBe(22);
- expect(await observeTreeMegabytesV1(102,undefined,"win32",undefined,()=>undefined,"footprint",{memory:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})})).toBeNull();
+ expect(await observeTreeMegabytesV1(102,undefined,"win32",undefined,()=>undefined,"footprint",{memory:()=>({known:false,reason:"platform",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"platform",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})})).toBeNull();
 });
 
 test("The optional open file table and image count fall back to unknown when their probes fail, and never fail the sample",async()=>{
@@ -67,7 +67,7 @@ test("The optional open file table and image count fall back to unknown when the
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,availableBytes:fixture.darwin[0]!.expect.availableBytes});
  const only=new Map<string,string>([["/proc/meminfo",fixture.linux[0]!.meminfo],["/proc/vmstat",fixture.linux[0]!.vmstat]]);
  expect(await readHostCountersV1({platform:"linux",run:async()=>"",read:async path=>only.get(path)??null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null});
- expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no command");},read:async()=>null,windows:{memory:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})},notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
+ expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no command");},read:async()=>null,windows:{memory:()=>({known:false,reason:"platform",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"platform",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})},notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
 });
 
 test("A missing Linux counter file fails closed",async()=>{

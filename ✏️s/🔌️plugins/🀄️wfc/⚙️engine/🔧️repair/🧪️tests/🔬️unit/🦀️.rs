@@ -1,4 +1,5 @@
 use super::*;
+use crate::outcome::SolveOutcome;
 use crate::ids::RegionId;
 
 fn line_adjacency(n: usize) -> AdjacencyView {

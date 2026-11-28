@@ -175,6 +175,7 @@ export function validateModel(document: ModelDocument, operation: Operation = si
         if (vec(s.axis, 3, `${p}/axis`) && portable.hypot(...s.axis) < 1e-9) error("invalid-dimension", `${p}/axis`);
         vec(s.origin, 3, `${p}/origin`);
         if (s.sweepRad !== undefined && !(s.sweepRad > 0 && s.sweepRad <= Math.PI * 2 + 1e-9)) error("invalid-dimension", `${p}/sweepRad`);
+        if (s.segments !== undefined && (!Number.isInteger(s.segments) || s.segments < 3)) error("invalid-dimension", `${p}/segments`);
         if (s.lateralScale !== undefined) positive(s.lateralScale, `${p}/lateralScale`);
         break;
       case "extrude":
@@ -208,6 +209,7 @@ export function validateModel(document: ModelDocument, operation: Operation = si
           if (sec.exponent !== undefined) positive(sec.exponent, `${p}/sections/${k}/exponent`);
           if (sec.rotation && vec(sec.rotation, 4, `${p}/sections/${k}/rotation`) && Math.abs(portable.hypot(...sec.rotation) - 1) > 1e-3) error("non-unit-quaternion", `${p}/sections/${k}/rotation`);
         });
+        if (s.segments !== undefined && (!Number.isInteger(s.segments) || s.segments < 3)) error("invalid-dimension", `${p}/segments`);
         if (issues.length === mark && s.sections.length >= 2 && loftFault(s.sections)) add("warning", "loft-fold", `${p}/sections`);
         break;
       default:

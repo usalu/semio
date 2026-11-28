@@ -56,7 +56,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         let mut reloaded = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let status = drive_test_archive_load(&mut reloaded, 21, archive.clone(), cx).await;
         assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault));
-        assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
+        assert_eq!(reloaded.stores.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
         let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
         let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
@@ -69,7 +69,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         let refusal = format!("{:?}", semio_framework_diagnostic::decode_fault_bytes(&refused.fault));
         assert_eq!(refused.state, protocol::DocumentArchiveLoadState::Fault, "a parent that declares a member never loads without it: {refusal}");
         assert!(refusal.contains("closure-rejected"), "the ownership closure names the refusal: {refusal}");
-        assert!(halved.test_snapshot().await.slot.is_empty() && halved.child_store("slot", "child-1").await.is_none(), "a refused load leaves the open document as it was");
+        assert!(halved.stores.test_snapshot().await.slot.is_empty() && halved.child_store("slot", "child-1").await.is_none(), "a refused load leaves the open document as it was");
 
         drain_and_close_composed_fixture(&mut halved, mounted_policy,cx);
         drain_and_close_composed_fixture(&mut reloaded, mounted_policy,cx);
@@ -102,7 +102,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         app.dispatch_action("redo", None, &meta(), &mut identity,cx).await.expect("redo");
         assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
 
-        artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
+        drain_and_close_composed_fixture(&mut *app, mounted_policy, cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
@@ -146,7 +146,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
 
 
-        artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
+        drain_and_close_composed_fixture(&mut *app, mounted_policy, cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

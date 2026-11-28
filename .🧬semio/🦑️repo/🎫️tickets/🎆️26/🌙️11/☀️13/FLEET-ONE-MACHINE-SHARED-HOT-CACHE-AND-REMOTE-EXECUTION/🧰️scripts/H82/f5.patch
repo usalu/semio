@@ -1,0 +1,132 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs
+@@ -602,11 +602,17 @@
+ export function heavyProgressSignV1(names, taken) { return names.filter(name => taken.has(name)).length; }
+ 
+ /** 🧱️ The most one owner may take while it runs alone on a machine that has a plan limit: the solo grant, but never more than the share `planShareBasisPoints` of what the plan guard allows the whole plan, and never less than the grant of an owner beside others, so the owner's own limit always stops it before the plan guard blames the plan. An unlimited plan leaves the solo grant. */
+-export function hereLimitBytesV1({ limitBytes, soloBytes, planBytes, planShareBasisPoints = 9000 }) {
++export function hereLimitBytesV1({ limitBytes, soloBytes, planBytes, planShareBasisPoints = 9000, aloneBytes = 0 }) {
+   const capped = Number.isFinite(planBytes) ? Math.min(soloBytes, Math.floor(planBytes * planShareBasisPoints / 10000)) : soloBytes;
+-  return Math.max(limitBytes, capped);
++  return Math.max(limitBytes, capped, aloneBytes);
+ }
+ 
++/** 🏔️ The managed bytes one owner may always take while it runs alone, derived from the HOST and never from the memory that happens to be free: what the farm lets a solo child reach (`farmAloneCapV1` of the host, a physical footprint) in managed bytes, never more than the grant the host's own memory gives one owner (`hostSoloBytes`). The momentary availability only raises the limit above this floor, so an owner is never stopped at a number that a busy moment of a 16 GB machine made smaller than the cap its own child process runs under (m06 2026-11-27: limit 4096 MB, child alone cap 4200 MB). A pure function. */
++export function aloneFloorBytesV1({ hostMegabytes, hostSoloBytes, factor }) {
++  const childBytes = Math.floor(farmAloneCapV1(hostMegabytes) * 1048576 / (factor > 0 ? factor : 1));
++  return Math.min(hostSoloBytes, childBytes);
++}
++
+ /** 📏️ The peak a farm child reports (its physical footprint in bytes) in the unit of the cost table, the managed bytes: divided by the footprint factor, so `known` multiplies it back to the footprint once and not twice; undefined stays undefined, no factor leaves the bytes. */
+ export function ownerMeasuredManagedBytesV1(bytes, factor) { return bytes === undefined ? undefined : factor > 0 ? bytes / factor : bytes; }
+ 
+@@ -628,6 +634,7 @@
+     const slow = names => { const owners = recorder.table().owners ?? {}; return names.filter(name => (owners[name]?.seconds ?? 0) >= OWNER_SLOW_SECONDS_V1); };
+     if (!Number.isFinite(grant.managedMegabytes)) return { cost, recorder, limitBytes: undefined, slow };
+     const limitBytes = Math.max(grant.managedMegabytes * 1048576, budgetBytes), available = availableBytes ?? sampling.hostAvailableBytesV1;
++    const aloneBytes = aloneFloorBytesV1({ hostMegabytes: host, hostSoloBytes: cost.soloGrantV1({ hostMegabytes: host }, wanted.wantedPolicyV1).managedMegabytes * 1048576, factor: cost.ownerCostPolicyV1.footprintFactor });
+     const soloBytes = () => { const bytes = available(); return cost.soloGrantV1({ hostMegabytes: host, ...(bytes === undefined ? {} : { availableMegabytes: Math.floor(bytes / 1048576) }) }, wanted.wantedPolicyV1).managedMegabytes * 1048576; };
+     const stoppedOf = name => { const entry = recorder.table().owners[name], stopped = entry === undefined ? [] : entry.samples.filter(sample => sample.stopped && sample.atMs >= STOPS_ATTRIBUTABLE_FROM_MS_V1); return stopped.length === 0 ? undefined : Math.round(cost.estimateOwnerCostV1({ ...recorder.table(), owners: { [name]: { ...entry, samples: stopped } } }, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }).megabytes * cost.ownerCostPolicyV1.footprintFactor); };
+     return {
+@@ -636,9 +643,9 @@
+       recordedBytes: name => { const row = cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return row.source === "recorded" ? row.megabytes * 1048576 : undefined; },
+       stopped: stoppedOf,
+       known: name => { const row = cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return cost.ownerCostPolicyV1.heavySources.includes(row.source) ? Math.round(row.megabytes * cost.ownerCostPolicyV1.footprintFactor) : undefined; },
+-      neverHere: (names, childFootprintMegabytes) => { const here = hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment) }), table = ownHostTableV1(recorder.table(), context.hostMegabytes ?? host), estimate = (source, name) => cost.estimateOwnerCostV1(source, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return names.filter(name => { if (childFootprintMegabytes !== undefined) { const footprint = stoppedOf(name); return footprint !== undefined && footprint > childFootprintMegabytes; } const row = estimate(table, name); if (row.source !== "recorded") return false; return row.saturated === true || row.megabytes * 1048576 > here; }); },
++      neverHere: (names, childFootprintMegabytes) => { const here = hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment), aloneBytes }), table = ownHostTableV1(recorder.table(), context.hostMegabytes ?? host), estimate = (source, name) => cost.estimateOwnerCostV1(source, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return names.filter(name => { if (childFootprintMegabytes !== undefined) { const footprint = stoppedOf(name); return footprint !== undefined && footprint > childFootprintMegabytes; } const row = estimate(table, name); if (row.source !== "recorded") return false; return row.saturated === true || row.megabytes * 1048576 > here; }); },
+       heavy: names => cost.classifyOwnersV1(names, name => cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }), grant).heavy.map(row => row.name),
+-      soloLimitBytes: () => hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment) }),
++      soloLimitBytes: () => hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment), aloneBytes }),
+     };
+   } catch { return {}; }
+ }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🪜️plan-stage/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🪜️plan-stage/🧬️schema/🔣️.json
+@@ -4,7 +4,7 @@
+   "description": "EN: After the projects of a wave are inferred, the plan of the graph still assembles the wave: the environment, the test and policy owners, the file ownership, the edges and the metadata. Each of these stages is named, timed and measured, and the whole plan runs as ONE owner of the memory governor: when the managed bytes it added pass what this machine gives a plan (a declared share of the physical memory, never on a serving machine), the plan is stopped at its next yield point or stage boundary with the typed refusal graph.plan-too-heavy, which names the stage and the size, long before the host runs short of memory. The slice pool of the service stops a worker whose process tree passes the same kind of limit from outside (code plan-memory), because a worker busy in synchronous work cannot stop itself. DE: Nachdem die Projekte einer Welle abgeleitet sind, setzt der Graph-Plan die Welle noch zusammen: die Umgebung, die Test- und Richtlinien-Eigner, die Dateizuordnung, die Kanten und die Metadaten. Jede dieser Stufen wird benannt, zeitlich erfasst und gemessen, und der ganze Plan läuft als EIN Eigner des Speicher-Reglers: wächst er über das, was diese Maschine einem Plan gibt (ein deklarierter Anteil des physischen Speichers, nie auf einer bedienenden Maschine), wird er an der nächsten Abgabestelle oder Stufengrenze mit der typisierten Ablehnung graph.plan-too-heavy gestoppt, die Stufe und Größe nennt, lange bevor dem Rechner der Speicher ausgeht. Der Slice-Pool des Dienstes stoppt einen Arbeiter, dessen Prozessbaum eine Grenze gleicher Art überschreitet, von außen (Code plan-memory), weil ein Arbeiter in synchroner Arbeit sich nicht selbst stoppen kann.",
+   "definitions": {
+     "Policy": {
+-      "description": "EN: The limit of a plan is hostShare of the physical memory, at least minimumMegabytes (raised to the parent and one inference child of the lean plan, 3200 MB, within the ceiling share of the lean plan: a plan limit below them stops the smallest read) and at most maximumMegabytes; a machine of serveHostMegabytes or more serves the fleet and has none; SEMIO_GRAPH_PLAN_LIMIT_MB names another number of megabytes, off disables it. EN: The worker processes a plan starts (the project farm, the walk farm) count with their processes, not with the managed bytes of the plan: together with the plan they stay within treeShare of the physical memory, which is the plan limit of the slice guard (hostCapBasisPoints of the host policy), below its ceiling; all farms of a process draw from this one share, a farm of a higher priority (farmPriority) asks the lower ones to give their children back. EN: The width of the project farm follows the footprint, which is what the slice guard judges: with hard = treeShare x host x hardPercent of the footprint gate, parentFootprintMegabytes (the live slice worker read 1251 to 1333 MB) and what other farms hold, a farm of n children fits when parent + (n - 1) x typicalMegabytes + capMegabytes stays within hard, i.e. one child at its cap beside n - 1 children at the footprint measured on a normal child (R129 2026-11-17, after the retained-memory trim: 450 to 560 MB working, 930 MB at the peak of the first cold Rust owner, 40 MB idle; 1719 to 1833 MB before it), typicalMegabytes 900 booking a child at its working size with fragmentation, capMegabytes 1400 the peak with half again; a child above capMegabytes is stopped and runs alone (see the farm pool), and alone it may reach aloneCapMegabytes; a worker is booked at typicalMegabytes. EN: A parent that plans farms counts for at least parentMegabytes (the slice worker measured 3.9 GB when the inference started, 3.1 GB when it was sized) and a project farm worker costs farmWorkerPeakMegabytes (measured: three workers took 6.3 GB around a 3.9 GB parent, budgeted 1536 MB each by the grant). DE: Die Breite der Projekt-Farm folgt dem Footprint, den die Slice-Wache beurteilt: mit hard = treeShare x Host x hardPercent des Footprint-Tors, parentFootprintMegabytes (der lebende Slice-Worker las 1251 bis 1333 MB) und dem, was andere Farmen halten, passen n Kinder, wenn Eltern + (n - 1) x typicalMegabytes + capMegabytes innerhalb von hard bleibt, also ein Kind an seiner Obergrenze neben n - 1 Kindern mit dem an einem normalen Kind gemessenen Footprint (R129, nach dem Zurückschneiden des gehaltenen Speichers: 450 bis 560 MB im Betrieb, 930 MB an der Spitze des ersten kalten Rust-Projekts; vorher 1719 bis 1833 MB), typicalMegabytes 900 bucht ein Kind mit Fragmentierung, capMegabytes 1400 die Spitze mit der Hälfte obendrauf; ein Kind über capMegabytes wird gestoppt und läuft allein, allein darf es aloneCapMegabytes erreichen; ein Arbeiter wird mit typicalMegabytes gebucht. DE: Alle Farmen eines Prozesses ziehen aus diesem einen Anteil, eine Farm mit höherer Priorität (farmPriority) lässt die niedrigeren ihre Kinder zurückgeben; ein Elternprozess zählt mindestens parentMegabytes und ein Projekt-Farm-Arbeiter kostet farmWorkerPeakMegabytes. DE: Die Arbeitsprozesse, die ein Plan startet (die Projekt-Farm), zählen mit ihren Prozessen, nicht mit den verwalteten Bytes des Plans: zusammen mit dem Plan bleiben sie innerhalb von treeShare des physischen Speichers, unter der Obergrenze der Slice-Wache. DE: Die Grenze eines Plans ist hostShare des physischen Speichers, mindestens minimumMegabytes und höchstens maximumMegabytes; eine Maschine ab serveHostMegabytes bedient die Flotte und hat keine; SEMIO_GRAPH_PLAN_LIMIT_MB nennt eine andere Anzahl Megabyte, off schaltet sie ab. EN: A stage may have a budget of its own (stageMegabytes): the growth of the plan since that stage started, checked with the same rules as the limit of the plan; the environment of a graph read reads about 26 MB of manifests and costs 131 MB, and the sweep of the closure store that runs beside it holds at most about 650 MB, so its budget is 1024 MB. DE: Eine Stufe kann ein eigenes Budget haben (stageMegabytes): das Wachstum des Plans seit Beginn der Stufe, mit denselben Regeln geprüft wie die Grenze des Plans; die Umgebung eines Graph-Lesens liest etwa 26 MB Manifeste und kostet 131 MB, und das Aufräumen des Hüllen-Speichers daneben hält höchstens etwa 650 MB, ihr Budget sind 1024 MB.",
++      "description": "EN: The limit of a plan is hostShare of the physical memory, at least minimumMegabytes (raised to the parent and one inference child of the lean plan, 3200 MB, within the ceiling share of the lean plan: a plan limit below them stops the smallest read) and at most maximumMegabytes; a machine of serveHostMegabytes or more serves the fleet and has none; SEMIO_GRAPH_PLAN_LIMIT_MB names another number of megabytes, off disables it. EN: The worker processes a plan starts (the project farm, the walk farm) count with their processes, not with the managed bytes of the plan: together with the plan they stay within treeShare of the physical memory, which is the plan limit of the slice guard (hostCapBasisPoints of the host policy), below its ceiling; all farms of a process draw from this one share, a farm of a higher priority (farmPriority) asks the lower ones to give their children back. EN: The width of the project farm follows the footprint, which is what the slice guard judges: with hard = treeShare x host x hardPercent of the footprint gate, parentFootprintMegabytes (the live slice worker read 1251 to 1333 MB) and what other farms hold, a farm of n children fits when parent + (n - 1) x typicalMegabytes + capMegabytes stays within hard, i.e. one child at its cap beside n - 1 children at the footprint measured on a normal child (R129 2026-11-17, after the retained-memory trim: 450 to 560 MB working, 930 MB at the peak of the first cold Rust owner, 40 MB idle; 1719 to 1833 MB before it), typicalMegabytes 900 booking a child at its working size with fragmentation, capMegabytes 1400 the peak with half again; a child above capMegabytes is stopped and runs alone (see the farm pool), and alone it may reach aloneCapMegabytes, the declared MAXIMUM (16384 MB: the lean plan ceiling of the host less the parent decides on every host below it: 8530 MB on a 16 GB worker, 3615 MB on 8 GB, never a constant that is lower than the machine can give); a worker is booked at typicalMegabytes. EN: A parent that plans farms counts for at least parentMegabytes (the slice worker measured 3.9 GB when the inference started, 3.1 GB when it was sized) and a project farm worker costs farmWorkerPeakMegabytes (measured: three workers took 6.3 GB around a 3.9 GB parent, budgeted 1536 MB each by the grant). DE: Die Breite der Projekt-Farm folgt dem Footprint, den die Slice-Wache beurteilt: mit hard = treeShare x Host x hardPercent des Footprint-Tors, parentFootprintMegabytes (der lebende Slice-Worker las 1251 bis 1333 MB) und dem, was andere Farmen halten, passen n Kinder, wenn Eltern + (n - 1) x typicalMegabytes + capMegabytes innerhalb von hard bleibt, also ein Kind an seiner Obergrenze neben n - 1 Kindern mit dem an einem normalen Kind gemessenen Footprint (R129, nach dem Zurückschneiden des gehaltenen Speichers: 450 bis 560 MB im Betrieb, 930 MB an der Spitze des ersten kalten Rust-Projekts; vorher 1719 bis 1833 MB), typicalMegabytes 900 bucht ein Kind mit Fragmentierung, capMegabytes 1400 die Spitze mit der Hälfte obendrauf; ein Kind über capMegabytes wird gestoppt und läuft allein, allein darf es aloneCapMegabytes erreichen; ein Arbeiter wird mit typicalMegabytes gebucht. DE: Alle Farmen eines Prozesses ziehen aus diesem einen Anteil, eine Farm mit höherer Priorität (farmPriority) lässt die niedrigeren ihre Kinder zurückgeben; ein Elternprozess zählt mindestens parentMegabytes und ein Projekt-Farm-Arbeiter kostet farmWorkerPeakMegabytes. DE: Die Arbeitsprozesse, die ein Plan startet (die Projekt-Farm), zählen mit ihren Prozessen, nicht mit den verwalteten Bytes des Plans: zusammen mit dem Plan bleiben sie innerhalb von treeShare des physischen Speichers, unter der Obergrenze der Slice-Wache. DE: Die Grenze eines Plans ist hostShare des physischen Speichers, mindestens minimumMegabytes und höchstens maximumMegabytes; eine Maschine ab serveHostMegabytes bedient die Flotte und hat keine; SEMIO_GRAPH_PLAN_LIMIT_MB nennt eine andere Anzahl Megabyte, off schaltet sie ab. EN: A stage may have a budget of its own (stageMegabytes): the growth of the plan since that stage started, checked with the same rules as the limit of the plan; the environment of a graph read reads about 26 MB of manifests and costs 131 MB, and the sweep of the closure store that runs beside it holds at most about 650 MB, so its budget is 1024 MB. DE: Eine Stufe kann ein eigenes Budget haben (stageMegabytes): das Wachstum des Plans seit Beginn der Stufe, mit denselben Regeln geprüft wie die Grenze des Plans; die Umgebung eines Graph-Lesens liest etwa 26 MB Manifeste und kostet 131 MB, und das Aufräumen des Hüllen-Speichers daneben hält höchstens etwa 650 MB, ihr Budget sind 1024 MB.",
+       "const": {
+         "version": 1,
+         "hostShare": 0.3,
+@@ -23,7 +23,7 @@
+           "project-farm": {
+             "typicalMegabytes": 900,
+             "capMegabytes": 1400,
+-            "aloneCapMegabytes": 4200
++            "aloneCapMegabytes": 16384
+           }
+         },
+         "minimumMegabytes": 2048,
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🐘️never-here/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🐘️never-here/🟦️.ts
+@@ -2,10 +2,11 @@
+  * @see ../../🟨️.mjs
+  * @see ../../../../../🧠️memory/🪜️plan-stage/🟨️.mjs */
+ import{afterAll,expect,test}from"bun:test";
++import{spawnSync}from"node:child_process";
+ import{mkdtempSync,rmSync}from"node:fs";
+ import{tmpdir}from"node:os";
+ import{join}from"node:path";
+-import{STOPS_ATTRIBUTABLE_FROM_MS_V1,graphOwnerEnforcementV1,ownerMeasuredManagedBytesV1}from"../../🟨️.mjs";
++import{STOPS_ATTRIBUTABLE_FROM_MS_V1,aloneFloorBytesV1,graphOwnerEnforcementV1,hereLimitBytesV1,ownerMeasuredManagedBytesV1}from"../../🟨️.mjs";
+ import{farmAloneCapV1}from"../../../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
+ import{recordOwnerCostFileV1}from"../../../../../🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts";
+ 
+@@ -28,7 +29,7 @@
+  const path=join(root,".cache/f/graph-costs/owner-costs.3.json"),now=Math.max(Date.now(),STOPS_ATTRIBUTABLE_FROM_MS_V1);
+  recordOwnerCostFileV1(path,{name:"@semio-tech/fits",kind:"project",megabytes:1500,seconds:90,rows:10,stopped:false,atMs:now});
+  recordOwnerCostFileV1(path,{name:"@semio-tech/noisy",kind:"project",megabytes:3000,seconds:90,rows:10,stopped:false,atMs:now});
+- recordOwnerCostFileV1(path,{name:"@semio-tech/over",kind:"project",megabytes:3000,seconds:90,rows:10,stopped:true,atMs:now});
++ recordOwnerCostFileV1(path,{name:"@semio-tech/over",kind:"project",megabytes:5000,seconds:90,rows:10,stopped:true,atMs:now});
+  for(const host of [16384,8192]){
+   const enforcement=await enforce(root,host),cap=farmAloneCapV1(host);
+   expect(enforcement.neverHere!(["@semio-tech/fits","@semio-tech/noisy","@semio-tech/over","@semio-tech/unknown"],cap),`child on ${host} MB`).toEqual(["@semio-tech/over"]);
+@@ -61,8 +62,44 @@
+  const root=mkdtempSync(join(tmpdir(),"never-old-stop-"));scratch.push(root);
+  const path=join(root,".cache/f/graph-costs/owner-costs.3.json");
+  recordOwnerCostFileV1(path,{name:"@semio-tech/old",kind:"project",megabytes:2400,seconds:90,rows:10,stopped:true,atMs:Date.parse("2026-11-17T23:00:00Z")});
+- recordOwnerCostFileV1(path,{name:"@semio-tech/new",kind:"project",megabytes:2400,seconds:90,rows:10,stopped:true,atMs:Math.max(Date.now(),STOPS_ATTRIBUTABLE_FROM_MS_V1)});
++ recordOwnerCostFileV1(path,{name:"@semio-tech/new",kind:"project",megabytes:5000,seconds:90,rows:10,stopped:true,atMs:Math.max(Date.now(),STOPS_ATTRIBUTABLE_FROM_MS_V1)});
+  const enforcement=await enforce(root,16384),cap=farmAloneCapV1(16384);
+  expect(enforcement.stopped!("@semio-tech/old")).toBeUndefined();
+  expect(enforcement.neverHere!(["@semio-tech/old","@semio-tech/new"],cap)).toEqual(["@semio-tech/new"]);
+ });
++
++test("m06 2026-11-27: the alone cap of a child derives from the host (8530 MB on a 16 GB worker), so a child that reached 4300 MB on a busy moment is no 'too heavy' owner, and the owner limit never falls below what its own child may take",async()=>{
++ expect(farmAloneCapV1(16384)).toBe(8530);
++ expect(farmAloneCapV1(8192)).toBe(3615);
++ expect(farmAloneCapV1(32768)).toBeGreaterThan(farmAloneCapV1(16384));
++ expect(farmAloneCapV1(131072)).toBe(16384);
++ const root=mkdtempSync(join(tmpdir(),"never-m06-"));scratch.push(root);
++ const path=join(root,".cache/f/graph-costs/owner-costs.3.json"),now=Math.max(Date.now(),STOPS_ATTRIBUTABLE_FROM_MS_V1);
++ recordOwnerCostFileV1(path,{name:"@semio-tech/repo-script-providers",kind:"project",megabytes:2150,seconds:90,rows:10,stopped:true,atMs:now,hostMegabytes:16384});
++ const busy=await withTotal(16384,()=>graphOwnerEnforcementV1(root,process.env,1024*MB,undefined,()=>5000*MB,()=>16384));
++ expect(busy.stopped!("@semio-tech/repo-script-providers")).toBe(4300);
++ expect(busy.neverHere!(["@semio-tech/repo-script-providers"],farmAloneCapV1(16384))).toEqual([]);
++ expect(busy.soloLimitBytes!()).toBeGreaterThanOrEqual(Math.floor(4300*MB/2));
++ expect(Math.round(busy.soloLimitBytes!()/MB*2)).toBeGreaterThan(4200);
++});
++
++test("the alone floor equals an independent Python model over the host sizes and never lets a busy moment lower the limit below the child's own cap",()=>{
++ const hosts=[4096,8192,12288,16384,24576,32768,65536],factor=2,solo=(host:number)=>Math.floor(Math.max(0,host-Math.max(1024,Math.min(2048,Math.floor(host*1875/10000)))-Math.min(3072,Math.floor(host*3750/10000)))/2/1.25);
++ const script=`
++import json,sys
++rows=json.loads(sys.argv[1]);out=[];MB=1048576
++for host,hostSolo,factor in rows:
++    cap=min(16384,max(1400,host*6000//10000-1300))
++    out.append(min(hostSolo*MB,cap*MB//factor))
++print(json.dumps(out))`;
++ const run=spawnSync("python3",["-I","-c",script,JSON.stringify(hosts.map(host=>[host,solo(host),factor]))],{encoding:"utf8"});
++ expect(run.status).toBe(0);
++ const model=JSON.parse(run.stdout) as number[];
++ expect<unknown>(hosts.map(host=>aloneFloorBytesV1({hostMegabytes:host,hostSoloBytes:solo(host)*MB,factor}))).toEqual(model);
++ for(const [index,host] of hosts.entries()){
++  const limit=hereLimitBytesV1({limitBytes:2048*MB,soloBytes:600*MB,planBytes:Infinity,aloneBytes:model[index]!});
++  expect(limit).toBeGreaterThanOrEqual(model[index]!);
++  expect(hereLimitBytesV1({limitBytes:2048*MB,soloBytes:600*MB,planBytes:Infinity})).toBe(2048*MB);
++  if(host>=16384)expect(limit*factor).toBeGreaterThanOrEqual(4200*MB);
++ }
++});

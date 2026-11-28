@@ -88,7 +88,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [features]
-testkit = []
+testkit = ["semio-s-artifact-puzzle-5d-diff/testkit", "semio-s-artifact-puzzle-5d-diff-2/testkit", "semio-s-artifact-puzzle-5d-document-records/testkit", "semio-s-artifact-puzzle-5d-kind-catalogs/testkit", "semio-s-artifact-puzzle-5d-mut-any/testkit", "semio-s-artifact-puzzle-5d-mut-any-2/testkit", "semio-s-artifact-puzzle-5d-mut-any-3/testkit", "semio-s-artifact-puzzle-5d-mut-any-4/testkit", "semio-s-artifact-puzzle-5d-mut-any-part2d/testkit"]
 
 [dev-dependencies]
 semio-s-artifact-puzzle-5d-diff = { path = "../../../../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }

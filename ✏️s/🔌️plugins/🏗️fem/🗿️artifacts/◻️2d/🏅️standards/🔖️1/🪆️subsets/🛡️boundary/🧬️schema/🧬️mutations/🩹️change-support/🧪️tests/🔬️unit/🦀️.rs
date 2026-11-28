@@ -1,4 +1,4 @@
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::{ColdMutation, Mutation};
@@ -75,7 +75,7 @@ fn support_field_intent_wire_refuses_unknown_outer_fields() {
 /// 📨️ Sparse wire fields retain absence, authored empty collections and controlled decode ownership.
 #[test]
 fn sparse_patch_codec_preserves_authored_presence(){
-    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportPatch;
+    use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportPatch;
     use semio_framework_value::FromValue;
     use semio_framework_value::ToValue;
     let patch=semio_framework_pack_json::from_json_str::<Fem2dSupportPatch>(r#"{"tx":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sparse patch");

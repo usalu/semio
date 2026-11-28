@@ -133,7 +133,7 @@ self.addEventListener("message", async (event) => {
         const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
         const driveDeadline = originalDriveSource.deadlineUs;
         let drivePolls = 0;
-        let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
+        let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? (msg.batched === true ? "batched" : "") : "carried") : "idle";
         while (driveStopped === "") {
           if (hostInputMoved(inputMark, actorId)) { driveStopped = "input"; break; }
           if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }

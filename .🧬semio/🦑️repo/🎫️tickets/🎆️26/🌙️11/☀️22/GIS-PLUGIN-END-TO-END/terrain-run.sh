@@ -2,7 +2,7 @@
 # usage: terrain-run.sh NAME -- repo cargo args...
 T="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GIS-PLUGIN-END-TO-END"
 N="$1"; shift
-L="$T/🗑️generated/compile.lock"
+L="$T/🗑️generated/compile.lock3"
 until mkdir "$L" 2>/dev/null; do if [ $(( $(date +%s) - $(stat -f %m "$L") )) -gt 7200 ]; then rmdir "$L"; fi; sleep 20; done
 echo terrain-lane > "$L/owner"
 trap 'rm -rf "$L"' EXIT

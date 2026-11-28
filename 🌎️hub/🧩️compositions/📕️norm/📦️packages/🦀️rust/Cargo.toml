@@ -24,6 +24,14 @@ name = "compliance_gate"
 path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
 
 [dependencies]
+semio-hub-norm-din4108-editor = { workspace = true }
+semio-hub-norm-din4108-viewer = { workspace = true }
+semio-hub-norm-din16798-editor = { workspace = true }
+semio-hub-norm-din16798-viewer = { workspace = true }
+semio-hub-norm-iso16757-editor = { workspace = true }
+semio-hub-norm-iso16757-viewer = { workspace = true }
+semio-hub-norm-vdi3805-editor = { workspace = true }
+semio-hub-norm-vdi3805-viewer = { workspace = true }
 semio-s-artifact-norm-iso16757-viewer = { workspace = true }
 semio-s-artifact-norm-iso16757-model = { workspace = true }
 semio-s-artifact-norm-iso16757-editor = { workspace = true }

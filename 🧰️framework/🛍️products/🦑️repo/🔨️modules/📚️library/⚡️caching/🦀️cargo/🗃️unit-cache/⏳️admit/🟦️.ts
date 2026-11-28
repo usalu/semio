@@ -5,16 +5,16 @@ import {UNIT_CACHE_POLICY_V1,type AdmitFactsV1} from "../🔏️key/🟦️.ts";
 import type {FleetHoldV1} from "../🛰️fleet/🟦️.ts";
 
 type Environment=Readonly<Record<string,string|undefined>>;
-type Kind="slotTimeout"|"aloneTimeout"|"headroomTimeout"|"claimParked"|"claimLostAfterPark";
+type Kind="slotTimeout"|"aloneTimeout"|"headroomTimeout"|"claimParked"|"claimLostAfterPark"|"recheckHit";
 
 /** ⌚️ The bounds of the local admission wait, from the unit cache policy (`slot`, `broker`); every field can be narrowed for a test. */
-export type CompileWaitBoundsV1=Readonly<{slotMaximumWaitMilliseconds:number;aloneMaximumWaitMilliseconds:number;parkAfterMilliseconds:number;headroomMaximumWaitMilliseconds:number;headroomPauseMilliseconds:number}>;
+export type CompileWaitBoundsV1=Readonly<{slotMaximumWaitMilliseconds:number;aloneMaximumWaitMilliseconds:number;parkAfterMilliseconds:number;recheckAfterMilliseconds:number;headroomMaximumWaitMilliseconds:number;headroomPauseMilliseconds:number}>;
 
 /** 🕰️ The authored bounds. */
-export const COMPILE_WAIT_BOUNDS_V1:CompileWaitBoundsV1=Object.freeze({slotMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.slot.maximumWaitMilliseconds,aloneMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.slot.aloneMaximumWaitMilliseconds,parkAfterMilliseconds:UNIT_CACHE_POLICY_V1.slot.parkAfterMilliseconds,headroomMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.broker.headroomMaximumWaitMilliseconds,headroomPauseMilliseconds:UNIT_CACHE_POLICY_V1.broker.headroomPauseMilliseconds});
+export const COMPILE_WAIT_BOUNDS_V1:CompileWaitBoundsV1=Object.freeze({slotMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.slot.maximumWaitMilliseconds,aloneMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.slot.aloneMaximumWaitMilliseconds,parkAfterMilliseconds:UNIT_CACHE_POLICY_V1.slot.parkAfterMilliseconds,recheckAfterMilliseconds:UNIT_CACHE_POLICY_V1.slot.recheckAfterMilliseconds,headroomMaximumWaitMilliseconds:UNIT_CACHE_POLICY_V1.broker.headroomMaximumWaitMilliseconds,headroomPauseMilliseconds:UNIT_CACHE_POLICY_V1.broker.headroomPauseMilliseconds});
 
 /** 🎟️ How the wait ended: the compile slot (`undefined` when its bound passed, the unit then compiles without it and the memory broker still admits it), the time spent waiting, and what became of the fleet claim the unit held (`kept`, `lost` to another machine while it waited, `none` when it held none). */
-export type CompileAdmissionV1=Readonly<{slot:ClaimV1|undefined;waitedMs:number;timedOut:"slot"|"alone"|"headroom"|undefined;claim:"kept"|"lost"|"none"}>;
+export type CompileAdmissionV1=Readonly<{slot:ClaimV1|undefined;waitedMs:number;timedOut:"slot"|"alone"|"headroom"|undefined;claim:"kept"|"lost"|"none";served:boolean}>;
 
 /** 🪂️ Runs `work` (a wait for local admission) and, when it lasts longer than `afterMilliseconds`, gives the fleet claim of the unit back for the rest of the wait (`hold.park`) and takes it again when the wait is over (`hold.resume`), whatever way the wait ended: a unit that waits does not compile, so it must not keep other machines waiting for it. `claim` says what became of the claim; `onParked` and `onLost` report the two moments.
  * @see ../🛰️fleet/🟦️.ts (`FleetHoldV1`) */
@@ -37,9 +37,11 @@ export async function whileClaimParkedV1<T>(hold:Pick<FleetHoldV1,"park"|"resume
 }
 
 /** 🛎️ Waits until a unit may compile on this machine: the broker's headroom first (the slot is only taken once the broker would admit the unit), then the compile slot, or the whole host for a unit that needs it. EVERY wait is bounded and ends in a bilingual line (`report`); a unit that finds the broker admitting and the slot free passes at once and never touches the fleet. A unit that has to wait longer than `parkAfterMilliseconds` gives its fleet claim back (`whileClaimParkedV1`), so no claim is held while the unit waits for admission; it takes the claim again before it runs.
+ * A unit that waited at least `recheckAfterMilliseconds` (or lost its claim while parked) asks `recheck` once more before it runs: another machine may have stored it meanwhile, then `served` is true, the slot is given back and the caller must not compile.
  * @see ../🧪️tests/🪢️wedge/🟦️.ts
+ * @see ../🧪️tests/🔄️recheck/🟦️.ts
  * @see ../🛰️fleet/🟦️.ts (`FleetHoldV1`) */
-export async function awaitCompileAdmissionV1(world:Readonly<{root:string;slots:number;crate:string;since:number;environment:Environment;facts:AdmitFactsV1|undefined;alone:boolean;hold?:Pick<FleetHoldV1,"park"|"resume">|undefined;report:(text:string)=>void;event:(waitedMs:number,reason?:string)=>void;count?:(reason:string)=>void;signal?:AbortSignal;bounds?:Partial<CompileWaitBoundsV1>}>):Promise<CompileAdmissionV1>{
+export async function awaitCompileAdmissionV1(world:Readonly<{root:string;slots:number;crate:string;since:number;environment:Environment;facts:AdmitFactsV1|undefined;alone:boolean;hold?:Pick<FleetHoldV1,"park"|"resume">|undefined;recheck?:()=>Promise<boolean>;report:(text:string)=>void;event:(waitedMs:number,reason?:string)=>void;count?:(reason:string)=>void;signal?:AbortSignal;bounds?:Partial<CompileWaitBoundsV1>}>):Promise<CompileAdmissionV1>{
  const bounds={...COMPILE_WAIT_BOUNDS_V1,...world.bounds},started=Date.now();
  const text=(kind:Kind,parameters:Readonly<Record<string,string|number>>={}):string=>(["en","de"] as const).map(language=>laneMessageV1(kind,{crate:world.crate,...parameters},language)).join(" / ");
  const say=(kind:Kind,parameters:Readonly<Record<string,string|number>>={}):void=>{try{world.report(text(kind,parameters));}catch{void 0;}};
@@ -59,5 +61,10 @@ export async function awaitCompileAdmissionV1(world:Readonly<{root:string;slots:
   catch(error){if(!(error instanceof SlotWaitTimeoutV1))throw error;timedOut="slot";say("slotTimeout",{seconds:seconds(),bound:Math.round(bounds.slotMaximumWaitMilliseconds/1000)});world.event(error.waitedMs,"timeout: compiled without the slot");world.count?.("slot-timeout");}
  };
  const outcome=await whileClaimParkedV1(world.hold,bounds.parkAfterMilliseconds,wait,{onParked:()=>world.event(Date.now()-started,"claim-parked: "+text("claimParked")),onLost:()=>say("claimLostAfterPark")});
- return Object.freeze({slot,waitedMs:Date.now()-started,timedOut,claim:outcome.claim});
+ let served=false;
+ if(world.recheck!==undefined&&(Date.now()-started>=bounds.recheckAfterMilliseconds||outcome.claim==="lost")){
+  served=await world.recheck().catch(()=>false);
+  if(served){slot?.release();slot=undefined;say("recheckHit");world.event(Date.now()-started,"recheck-hit: the unit was stored by another machine while this one waited");}
+ }
+ return Object.freeze({slot,waitedMs:Date.now()-started,timedOut,claim:outcome.claim,served});
 }

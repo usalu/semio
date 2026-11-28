@@ -179,8 +179,8 @@
     "densityKgM3": 7200,
     "conductivityWmK": 50,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 100000000000.0,
-    "strengthPa": 200000000.0,
+    "elasticModulusPa": 100000000000,
+    "strengthPa": 200000000,
     "source": "literature",
     "reference": "duffie-beckman-2013"
    },
@@ -195,8 +195,8 @@
     "densityKgM3": 7200,
     "conductivityWmK": 50,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 100000000000.0,
-    "strengthPa": 200000000.0,
+    "elasticModulusPa": 100000000000,
+    "strengthPa": 200000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -211,8 +211,8 @@
     "densityKgM3": 7200,
     "conductivityWmK": 50,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 100000000000.0,
-    "strengthPa": 200000000.0,
+    "elasticModulusPa": 100000000000,
+    "strengthPa": 200000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -227,8 +227,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -243,8 +243,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-10255"
    },
@@ -273,8 +273,8 @@
     "densityKgM3": 2800,
     "conductivityWmK": 3.5,
     "specificHeatJKgK": 1000,
-    "elasticModulusPa": 50000000000.0,
-    "strengthPa": 15000000.0,
+    "elasticModulusPa": 50000000000,
+    "strengthPa": 15000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -317,8 +317,8 @@
     "densityKgM3": 2300,
     "conductivityWmK": 1.65,
     "specificHeatJKgK": 1000,
-    "elasticModulusPa": 31000000000.0,
-    "strengthPa": 25000000.0,
+    "elasticModulusPa": 31000000000,
+    "strengthPa": 25000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    }
@@ -377,14 +377,14 @@
      "mass": {
       "kg": 39.24,
       "comX": 0.26642,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "din-en-1561"
      },
      "section": {
       "areaM2": 0.00486,
-      "secondMomentM4": 1.02e-05,
+      "secondMomentM4": 0.0000102,
       "extremeFibreM": 0.0705,
       "material": "cast-iron-painted",
       "title": {
@@ -420,7 +420,7 @@
      },
      "section": {
       "areaM2": 0.00825,
-      "secondMomentM4": 1.201e-05,
+      "secondMomentM4": 0.00001201,
       "extremeFibreM": 0.065,
       "material": "cast-iron-painted",
       "title": {
@@ -438,7 +438,7 @@
      },
      "x": 0.44,
      "y": 0.1,
-     "angleDeg": 75.0,
+     "angleDeg": 75,
      "lengthM": 0.64,
      "joint": {
       "type": "revolute",
@@ -448,14 +448,14 @@
      "mass": {
       "kg": 5.806,
       "comX": 0.2378,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "literature",
       "reference": "din-en-1561"
      },
      "section": {
       "areaM2": 0.0012,
-      "secondMomentM4": 1.6e-07,
+      "secondMomentM4": 1.6e-7,
       "extremeFibreM": 0.02,
       "material": "cast-iron-painted",
       "title": {
@@ -484,14 +484,14 @@
      "mass": {
       "kg": 1.614,
       "comX": 0.10694,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "literature",
       "reference": "din-en-1561"
      },
      "section": {
       "areaM2": 0.0002,
-      "secondMomentM4": 3.217e-09,
+      "secondMomentM4": 3.217e-9,
       "extremeFibreM": 0.008,
       "material": "steel-rod-greased",
       "title": {
@@ -633,7 +633,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       }
      },
@@ -646,11 +646,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.02515
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -690,7 +690,7 @@
         0.02515
        ],
        [
-        0.0,
+        0,
         0.02515
        ]
       ],
@@ -700,9 +700,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -752,9 +752,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -792,9 +792,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -840,11 +840,11 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
+        0,
         0.04
        ],
        [
-        0.0,
+        0,
         0.09
        ],
        [
@@ -864,7 +864,7 @@
         0.04
        ],
        [
-        0.0,
+        0,
         0.04
        ]
       ],
@@ -874,9 +874,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -918,9 +918,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -958,9 +958,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -999,9 +999,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -1074,9 +1074,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1289,7 +1289,7 @@
       "profile": [
        [
         -0.036,
-        0.0
+        0
        ],
        [
         -0.036,
@@ -1301,7 +1301,7 @@
        ],
        [
         0.036,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1312,7 +1312,7 @@
       "origin": [
        0.44,
        0.1,
-       0.0
+       0
       ]
      },
      {
@@ -1341,7 +1341,7 @@
        ],
        [
         -0.12053,
-        0.0
+        0
        ],
        [
         -0.11923,
@@ -1372,7 +1372,7 @@
         -0.02318
        ],
        [
-        0.0,
+        0,
         -0.024
        ],
        [
@@ -1408,7 +1408,7 @@
         0.02318
        ],
        [
-        0.0,
+        0,
         0.024
        ],
        [
@@ -1438,7 +1438,7 @@
       "profile": [
        [
         0.5,
-        0.0
+        0
        ],
        [
         0.5,
@@ -1466,7 +1466,7 @@
        ],
        [
         0.64,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1475,9 +1475,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1490,7 +1490,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -1502,7 +1502,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1512,8 +1512,8 @@
       ],
       "origin": [
        -0.10353,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1526,7 +1526,7 @@
       "profile": [
        [
         0.04,
-        0.0
+        0
        ],
        [
         0.04,
@@ -1538,7 +1538,7 @@
        ],
        [
         0.27321,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1547,9 +1547,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1567,8 +1567,8 @@
       "transform": {
        "translation": [
         0.29321,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -1581,11 +1581,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0395
        ],
        [
@@ -1594,7 +1594,7 @@
        ],
        [
         0.04,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1603,9 +1603,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1624,7 +1624,7 @@
        "translation": [
         0.45,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -1638,11 +1638,11 @@
       "profile": [
        [
         -0.3,
-        0.0
+        0
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         0.3,
@@ -1695,11 +1695,11 @@
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         -0.3,
-        0.0
+        0
        ],
        [
         -0.3,
@@ -1820,7 +1820,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       }
      },
@@ -1833,11 +1833,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0115
        ],
        [
@@ -1846,7 +1846,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1855,9 +1855,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1869,11 +1869,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0105
        ],
        [
@@ -1882,7 +1882,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1891,9 +1891,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1905,11 +1905,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.01
        ],
        [
@@ -1918,7 +1918,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -1927,9 +1927,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -2217,8 +2217,8 @@
       "transform": {
        "translation": [
         0.45,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "trough",
@@ -2240,7 +2240,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -2261,8 +2261,8 @@
       "transform": {
        "translation": [
         0.26642,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "column",
@@ -2284,7 +2284,7 @@
        "translation": [
         0.17755,
         -0.0186,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -2305,8 +2305,8 @@
       "transform": {
        "translation": [
         0.2378,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -2327,8 +2327,8 @@
       "transform": {
        "translation": [
         0.10694,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "rod",
@@ -2350,7 +2350,7 @@
        "translation": [
         0.44997,
         0.21991,
-        0.0
+        0
        ]
       },
       "member": "trough",
@@ -2372,7 +2372,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       },
       "member": "water",
@@ -2394,7 +2394,7 @@
        "translation": [
         0.24625,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -2433,7 +2433,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       }
      },
@@ -2446,11 +2446,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.02515
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -2482,7 +2482,7 @@
         0.02515
        ],
        [
-        0.0,
+        0,
         0.02515
        ]
       ],
@@ -2492,9 +2492,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2540,9 +2540,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2554,11 +2554,11 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
+        0,
         0.04
        ],
        [
-        0.0,
+        0,
         0.09
        ],
        [
@@ -2578,7 +2578,7 @@
         0.04
        ],
        [
-        0.0,
+        0,
         0.04
        ]
       ],
@@ -2588,9 +2588,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2628,9 +2628,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2758,7 +2758,7 @@
       "profile": [
        [
         -0.036,
-        0.0
+        0
        ],
        [
         -0.036,
@@ -2770,7 +2770,7 @@
        ],
        [
         0.036,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -2781,7 +2781,7 @@
       "origin": [
        0.44,
        0.1,
-       0.0
+       0
       ]
      },
      {
@@ -2797,7 +2797,7 @@
         -0.017
        ],
        [
-        0.0,
+        0,
         -0.022
        ],
        [
@@ -2809,7 +2809,7 @@
         0.016
        ],
        [
-        0.0,
+        0,
         0.022
        ],
        [
@@ -2831,7 +2831,7 @@
       "profile": [
        [
         0.5,
-        0.0
+        0
        ],
        [
         0.5,
@@ -2847,7 +2847,7 @@
        ],
        [
         0.64,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -2856,9 +2856,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2871,7 +2871,7 @@
       "profile": [
        [
         0.04,
-        0.0
+        0
        ],
        [
         0.04,
@@ -2883,7 +2883,7 @@
        ],
        [
         0.27321,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -2892,9 +2892,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -2912,8 +2912,8 @@
       "transform": {
        "translation": [
         0.29321,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -2933,7 +2933,7 @@
        "translation": [
         0.45,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -2947,11 +2947,11 @@
       "profile": [
        [
         -0.3,
-        0.0
+        0
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         0.3,
@@ -3004,11 +3004,11 @@
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         -0.3,
-        0.0
+        0
        ],
        [
         -0.3,
@@ -3129,7 +3129,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       }
      },
@@ -3142,11 +3142,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -3155,7 +3155,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3164,9 +3164,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -3178,11 +3178,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -3191,7 +3191,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3200,9 +3200,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -3214,11 +3214,11 @@
       "tone": 0.9,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -3227,7 +3227,7 @@
        ],
        [
         0.096,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3236,9 +3236,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -3456,7 +3456,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -3468,7 +3468,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3478,8 +3478,8 @@
       ],
       "origin": [
        -0.10353,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "member": "rod",
       "part": "joint"
@@ -3493,11 +3493,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -3506,7 +3506,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3515,9 +3515,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "column",
       "part": "joint"
@@ -3532,7 +3532,7 @@
       "profile": [
        [
         -0.01,
-        0.0
+        0
        ],
        [
         -0.01,
@@ -3544,7 +3544,7 @@
        ],
        [
         0.01,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3553,9 +3553,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "head",
       "part": "joint"
@@ -3575,8 +3575,8 @@
       "transform": {
        "translation": [
         0.45,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "trough",
@@ -3598,7 +3598,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -3619,8 +3619,8 @@
       "transform": {
        "translation": [
         0.26642,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "column",
@@ -3642,7 +3642,7 @@
        "translation": [
         0.17755,
         -0.0186,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -3663,8 +3663,8 @@
       "transform": {
        "translation": [
         0.2378,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -3685,8 +3685,8 @@
       "transform": {
        "translation": [
         0.10694,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "rod",
@@ -3708,7 +3708,7 @@
        "translation": [
         0.44997,
         0.21991,
-        0.0
+        0
        ]
       },
       "member": "trough",
@@ -3730,7 +3730,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       },
       "member": "water",
@@ -3752,7 +3752,7 @@
        "translation": [
         0.2425,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -3791,7 +3791,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       }
      },
@@ -3804,11 +3804,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -3825,7 +3825,7 @@
        ],
        [
         0.1,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3834,9 +3834,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -3849,7 +3849,7 @@
       "profile": [
        [
         0.1,
-        0.0
+        0
        ],
        [
         0.1,
@@ -3869,7 +3869,7 @@
        ],
        [
         0.66,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3878,9 +3878,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -3892,11 +3892,11 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.09
        ],
        [
@@ -3921,7 +3921,7 @@
        ],
        [
         0.36,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -3930,9 +3930,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -4081,7 +4081,7 @@
       "profile": [
        [
         0.5,
-        0.0
+        0
        ],
        [
         0.5,
@@ -4093,7 +4093,7 @@
        ],
        [
         0.64,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4102,9 +4102,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -4122,8 +4122,8 @@
       "transform": {
        "translation": [
         0.29321,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -4143,7 +4143,7 @@
        "translation": [
         0.45,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -4157,11 +4157,11 @@
       "profile": [
        [
         -0.3,
-        0.0
+        0
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         0.3,
@@ -4214,11 +4214,11 @@
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         -0.3,
-        0.0
+        0
        ],
        [
         -0.3,
@@ -4315,7 +4315,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       }
      }
@@ -4486,7 +4486,7 @@
       "profile": [
        [
         0.04,
-        0.0
+        0
        ],
        [
         0.04,
@@ -4498,7 +4498,7 @@
        ],
        [
         0.29321,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4507,9 +4507,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true,
       "member": "rod",
@@ -4525,7 +4525,7 @@
       "profile": [
        [
         -0.036,
-        0.0
+        0
        ],
        [
         -0.036,
@@ -4537,7 +4537,7 @@
        ],
        [
         0.036,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4548,7 +4548,7 @@
       "origin": [
        0.44,
        0.1,
-       0.0
+       0
       ],
       "member": "lever",
       "part": "joint"
@@ -4563,7 +4563,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -4575,7 +4575,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4585,8 +4585,8 @@
       ],
       "origin": [
        -0.10353,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "member": "rod",
       "part": "joint"
@@ -4600,11 +4600,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -4613,7 +4613,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4622,9 +4622,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "column",
       "part": "joint"
@@ -4639,7 +4639,7 @@
       "profile": [
        [
         -0.015,
-        0.0
+        0
        ],
        [
         -0.015,
@@ -4651,7 +4651,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4660,9 +4660,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "head",
       "part": "joint"
@@ -4682,8 +4682,8 @@
       "transform": {
        "translation": [
         0.45,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "trough",
@@ -4705,7 +4705,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -4726,8 +4726,8 @@
       "transform": {
        "translation": [
         0.26642,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "column",
@@ -4749,7 +4749,7 @@
        "translation": [
         0.17755,
         -0.0186,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -4770,8 +4770,8 @@
       "transform": {
        "translation": [
         0.2378,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -4792,8 +4792,8 @@
       "transform": {
        "translation": [
         0.10694,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "rod",
@@ -4815,7 +4815,7 @@
        "translation": [
         0.44997,
         0.21991,
-        0.0
+        0
        ]
       },
       "member": "trough",
@@ -4837,7 +4837,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       },
       "member": "water",
@@ -4859,7 +4859,7 @@
        "translation": [
         0.235,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -4898,7 +4898,7 @@
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       }
      },
@@ -4911,11 +4911,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -4928,7 +4928,7 @@
        ],
        [
         0.1,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4937,9 +4937,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -4952,7 +4952,7 @@
       "profile": [
        [
         0.1,
-        0.0
+        0
        ],
        [
         0.1,
@@ -4972,7 +4972,7 @@
        ],
        [
         0.66,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -4981,9 +4981,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -4995,11 +4995,11 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.075
        ],
        [
@@ -5008,7 +5008,7 @@
        ],
        [
         0.36,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5017,9 +5017,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5183,7 +5183,7 @@
        "translation": [
         0.45,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -5197,11 +5197,11 @@
       "profile": [
        [
         -0.3,
-        0.0
+        0
        ],
        [
         0.3,
-        0.0
+        0
        ],
        [
         0.3,
@@ -5290,7 +5290,7 @@
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       }
      }
@@ -5427,7 +5427,7 @@
       "profile": [
        [
         0.04,
-        0.0
+        0
        ],
        [
         0.04,
@@ -5439,7 +5439,7 @@
        ],
        [
         0.29321,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5448,9 +5448,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true,
       "member": "rod",
@@ -5471,8 +5471,8 @@
       "transform": {
        "translation": [
         0.26,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "slender": true,
@@ -5489,7 +5489,7 @@
       "profile": [
        [
         -0.0375,
-        0.0
+        0
        ],
        [
         -0.0375,
@@ -5501,7 +5501,7 @@
        ],
        [
         0.0375,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5512,7 +5512,7 @@
       "origin": [
        0.44,
        0.1,
-       0.0
+       0
       ],
       "member": "lever",
       "part": "joint"
@@ -5527,7 +5527,7 @@
       "profile": [
        [
         -0.0375,
-        0.0
+        0
        ],
        [
         -0.0375,
@@ -5539,7 +5539,7 @@
        ],
        [
         0.0375,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5549,8 +5549,8 @@
       ],
       "origin": [
        -0.10353,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "member": "rod",
       "part": "joint"
@@ -5564,11 +5564,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -5577,7 +5577,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5586,9 +5586,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "column",
       "part": "joint"
@@ -5603,7 +5603,7 @@
       "profile": [
        [
         -0.0375,
-        0.0
+        0
        ],
        [
         -0.0375,
@@ -5615,7 +5615,7 @@
        ],
        [
         0.0375,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5624,9 +5624,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "head",
       "part": "joint"
@@ -5646,8 +5646,8 @@
       "transform": {
        "translation": [
         0.45,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "trough",
@@ -5655,21 +5655,21 @@
      },
      {
       "id": "mass-footing",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "footing",
       "material": "concrete-weathered",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.125,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -5677,21 +5677,21 @@
      },
      {
       "id": "mass-column",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "column",
       "material": "cast-iron-painted",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.26642,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "column",
@@ -5699,21 +5699,21 @@
      },
      {
       "id": "mass-head",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "head",
       "material": "cast-iron-painted",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.17755,
         -0.0186,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -5721,21 +5721,21 @@
      },
      {
       "id": "mass-lever",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "lever",
       "material": "cast-iron-painted",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.2378,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -5743,21 +5743,21 @@
      },
      {
       "id": "mass-rod",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "rod",
       "material": "steel-rod-greased",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.10694,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "rod",
@@ -5765,21 +5765,21 @@
      },
      {
       "id": "mass-trough",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "trough",
       "material": "granite-weathered",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.44997,
         0.21991,
-        0.0
+        0
        ]
       },
       "member": "trough",
@@ -5787,21 +5787,21 @@
      },
      {
       "id": "mass-water",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "water",
       "material": "water",
       "role": "detail",
       "tone": 0.15,
-      "radii": [
-       0.04,
-       0.04,
-       0.04
+      "size": [
+       0.08,
+       0.08,
+       0.08
       ],
       "transform": {
        "translation": [
         0.37,
         0.16025,
-        0.0
+        0
        ]
       },
       "member": "water",
@@ -5823,7 +5823,7 @@
        "translation": [
         0.2125,
         0.44,
-        0.0
+        0
        ]
       },
       "member": "footing",
@@ -5837,8 +5837,8 @@
       "de": "Körper 1:500 für 75 mm: Bettung, Ständer mit 40-mm-Fuß und Glocke, ein 150-mm-Kopfzylinder mit eingeschmolzenem Deckel, Auslauf und Lippe als 75-mm-Blöcke, ein 75-mm-Bockblock, Schwengel und Griff als 75-mm-Stäbe, der Trog als Boden und ein Wandring (Kerbe und Ecke liegen unter dem Merkmal), Algenplatte, Wasser."
      },
      {
-      "en": "Thermal 1:500 by reference, total area only; structure 1:500: the lever and the rod keep their true 30 x 40 mm and 16 mm sections as declared slender members inside the thickened body, the other members by reference, 75 mm pivot and rod pin joints, masses and supports.",
-      "de": "Thermik 1:500 als Verweis, nur Gesamtfläche; Tragwerk 1:500: Schwengel und Stange behalten ihre wahren Querschnitte 30 x 40 mm und 16 mm als erklärte schlanke Stäbe im verdickten Körper, die übrigen Stäbe als Verweis, 75-mm-Dreh- und Stangenbolzengelenke, Massen und Auflager."
+      "en": "Thermal 1:500 by reference, total area only; structure 1:500: the lever and the rod keep their true 30 x 40 mm and 16 mm sections as declared slender members inside the thickened body, the other members by reference, 75 mm pivot and rod pin joints, masses and supports. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Thermik 1:500 als Verweis, nur Gesamtfläche; Tragwerk 1:500: Schwengel und Stange behalten ihre wahren Querschnitte 30 x 40 mm und 16 mm als erklärte schlanke Stäbe im verdickten Körper, die übrigen Stäbe als Verweis, 75-mm-Dreh- und Stangenbolzengelenke, Massen und Auflager. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }
@@ -5984,11 +5984,11 @@
          1.1
         ],
         [
-         0.0,
+         0,
          1.1
         ],
         [
-         0.0,
+         0,
          -0.22
         ]
        ],
@@ -6007,7 +6007,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -6043,7 +6043,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -6167,7 +6167,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.09
         ],
         [
@@ -6203,7 +6203,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.09
         ]
        ],
@@ -6653,7 +6653,7 @@
         ],
         [
          -0.12053,
-         0.0
+         0
         ],
         [
          -0.11923,
@@ -6684,7 +6684,7 @@
          -0.02318
         ],
         [
-         0.0,
+         0,
          -0.024
         ],
         [
@@ -6720,7 +6720,7 @@
          0.02318
         ],
         [
-         0.0,
+         0,
          0.024
         ],
         [
@@ -6751,7 +6751,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -6779,7 +6779,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -6821,7 +6821,7 @@
        "points": [
         [
          -0.09753,
-         0.0
+         0
         ],
         [
          -0.09833,
@@ -6845,7 +6845,7 @@
         ],
         [
          -0.10953,
-         0.0
+         0
         ],
         [
          -0.10872,
@@ -6925,8 +6925,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.9,
        "h": 0.5,
        "region": "trough-granite",
@@ -7021,7 +7021,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.0115
         ],
         [
@@ -7033,7 +7033,7 @@
          -0.0125
         ],
         [
-         0.0,
+         0,
          -0.0115
         ]
        ],
@@ -7051,7 +7051,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.0105
         ],
         [
@@ -7063,7 +7063,7 @@
          -0.0115
         ],
         [
-         0.0,
+         0,
          -0.0105
         ]
        ],
@@ -7081,7 +7081,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.01
         ],
         [
@@ -7093,7 +7093,7 @@
          -0.0105
         ],
         [
-         0.0,
+         0,
          -0.01
         ]
        ],
@@ -7263,7 +7263,7 @@
        "points": [
         [
          0.15,
-         0.0
+         0
         ],
         [
          0.15,
@@ -7299,7 +7299,7 @@
         ],
         [
          -0.15,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -7872,7 +7872,7 @@
         ],
         [
          -0.12053,
-         0.0
+         0
         ],
         [
          -0.11923,
@@ -7903,7 +7903,7 @@
          -0.02318
         ],
         [
-         0.0,
+         0,
          -0.024
         ],
         [
@@ -7939,7 +7939,7 @@
          0.02318
         ],
         [
-         0.0,
+         0,
          0.024
         ],
         [
@@ -7976,7 +7976,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -8004,7 +8004,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -8052,7 +8052,7 @@
        "points": [
         [
          -0.09753,
-         0.0
+         0
         ],
         [
          -0.09833,
@@ -8076,7 +8076,7 @@
         ],
         [
          -0.10953,
-         0.0
+         0
         ],
         [
          -0.10872,
@@ -8148,7 +8148,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.6,
        "h": 0.5,
        "region": "trough-granite",
@@ -8363,8 +8363,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15,
        "region": "pump-rust",
@@ -8378,8 +8378,8 @@
        "filled": true,
        "tone": 0.42,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -8453,8 +8453,8 @@
        "filled": true,
        "tone": 0.45,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -8468,8 +8468,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.075,
        "ry": 0.075,
        "region": "pump-paint",
@@ -8483,8 +8483,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.073,
        "ry": 0.073,
        "region": "pump-paint",
@@ -8498,8 +8498,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.073,
        "ry": 0.073,
        "region": "pump-paint",
@@ -8573,8 +8573,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.022,
        "ry": 0.022,
        "region": "pump-rust",
@@ -8850,7 +8850,7 @@
         ],
         [
          -0.12053,
-         0.0
+         0
         ],
         [
          -0.11923,
@@ -8881,7 +8881,7 @@
          -0.02318
         ],
         [
-         0.0,
+         0,
          -0.024
         ],
         [
@@ -8917,7 +8917,7 @@
          0.02318
         ],
         [
-         0.0,
+         0,
          0.024
         ],
         [
@@ -8954,7 +8954,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -8982,7 +8982,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -9030,7 +9030,7 @@
        "points": [
         [
          -0.09753,
-         0.0
+         0
         ],
         [
          -0.09833,
@@ -9054,7 +9054,7 @@
         ],
         [
          -0.10953,
-         0.0
+         0
         ],
         [
          -0.10872,
@@ -9095,8 +9095,8 @@
        "filled": true,
        "tone": 0.32,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.008,
        "ry": 0.008,
        "region": "pump-rust",
@@ -9177,7 +9177,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.0125,
        "ry": 0.0125,
        "region": "water",
@@ -9192,7 +9192,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.0115,
        "ry": 0.0115,
        "region": "water",
@@ -9207,7 +9207,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.0105,
        "ry": 0.0105,
        "region": "water",
@@ -9409,11 +9409,11 @@
          1.1
         ],
         [
-         0.0,
+         0,
          1.1
         ],
         [
-         0.0,
+         0,
          -0.22
         ]
        ],
@@ -9432,7 +9432,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -9460,7 +9460,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -9524,7 +9524,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.09
         ],
         [
@@ -9560,7 +9560,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.09
         ]
        ],
@@ -9745,7 +9745,7 @@
          -0.017
         ],
         [
-         0.0,
+         0,
          -0.022
         ],
         [
@@ -9757,7 +9757,7 @@
          0.016
         ],
         [
-         0.0,
+         0,
          0.022
         ],
         [
@@ -9780,7 +9780,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -9796,7 +9796,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.632,
@@ -9868,8 +9868,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.9,
        "h": 0.5,
        "region": "trough-granite",
@@ -9964,7 +9964,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.012
         ],
         [
@@ -9976,7 +9976,7 @@
          -0.012
         ],
         [
-         0.0,
+         0,
          -0.012
         ]
        ],
@@ -9994,7 +9994,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.012
         ],
         [
@@ -10006,7 +10006,7 @@
          -0.012
         ],
         [
-         0.0,
+         0,
          -0.012
         ]
        ],
@@ -10024,7 +10024,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.012
         ],
         [
@@ -10036,7 +10036,7 @@
          -0.012
         ],
         [
-         0.0,
+         0,
          -0.012
         ]
        ],
@@ -10160,7 +10160,7 @@
        "points": [
         [
          0.15,
-         0.0
+         0
         ],
         [
          0.15,
@@ -10188,7 +10188,7 @@
         ],
         [
          -0.15,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -10490,7 +10490,7 @@
          -0.017
         ],
         [
-         0.0,
+         0,
          -0.022
         ],
         [
@@ -10502,7 +10502,7 @@
          0.016
         ],
         [
-         0.0,
+         0,
          0.022
         ],
         [
@@ -10531,7 +10531,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -10547,7 +10547,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.632,
@@ -10611,7 +10611,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.6,
        "h": 0.5,
        "region": "trough-granite",
@@ -10826,8 +10826,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15,
        "region": "pump-rust",
@@ -10841,8 +10841,8 @@
        "filled": true,
        "tone": 0.42,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -10856,8 +10856,8 @@
        "filled": true,
        "tone": 0.45,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -10871,8 +10871,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.075,
        "ry": 0.075,
        "region": "pump-paint",
@@ -11043,7 +11043,7 @@
          -0.017
         ],
         [
-         0.0,
+         0,
          -0.022
         ],
         [
@@ -11055,7 +11055,7 @@
          0.016
         ],
         [
-         0.0,
+         0,
          0.022
         ],
         [
@@ -11084,7 +11084,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -11100,7 +11100,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.632,
@@ -11133,8 +11133,8 @@
        "filled": true,
        "tone": 0.32,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.008,
        "ry": 0.008,
        "region": "pump-rust",
@@ -11215,7 +11215,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.012,
        "ry": 0.012,
        "region": "water",
@@ -11230,7 +11230,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.012,
        "ry": 0.012,
        "region": "water",
@@ -11245,7 +11245,7 @@
        "tone": 0.9,
        "kind": "ellipse",
        "cx": 0.3,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.012,
        "ry": 0.012,
        "region": "water",
@@ -11365,11 +11365,11 @@
          1.1
         ],
         [
-         0.0,
+         0,
          1.1
         ],
         [
-         0.0,
+         0,
          -0.22
         ]
        ],
@@ -11387,7 +11387,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -11415,7 +11415,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -11479,7 +11479,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.09
         ],
         [
@@ -11523,7 +11523,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.09
         ]
        ],
@@ -11682,7 +11682,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -11694,7 +11694,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -11732,8 +11732,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.9,
        "h": 0.5,
        "region": "trough-granite",
@@ -11820,7 +11820,7 @@
        "points": [
         [
          0.15,
-         0.0
+         0
         ],
         [
          0.15,
@@ -11848,7 +11848,7 @@
         ],
         [
          -0.15,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -12138,7 +12138,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -12150,7 +12150,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -12195,7 +12195,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.6,
        "h": 0.5,
        "region": "trough-granite",
@@ -12271,8 +12271,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15,
        "region": "pump-rust",
@@ -12286,8 +12286,8 @@
        "filled": true,
        "tone": 0.42,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -12301,8 +12301,8 @@
        "filled": true,
        "tone": 0.45,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -12483,7 +12483,7 @@
        "points": [
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
@@ -12495,7 +12495,7 @@
         ],
         [
          0.64,
-         0.0
+         0
         ],
         [
          0.64,
@@ -12652,11 +12652,11 @@
          1.1
         ],
         [
-         0.0,
+         0,
          1.1
         ],
         [
-         0.0,
+         0,
          -0.22
         ]
        ],
@@ -12674,7 +12674,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -12694,7 +12694,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -12758,7 +12758,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.075
         ],
         [
@@ -12770,7 +12770,7 @@
          0.075
         ],
         [
-         0.0,
+         0,
          0.075
         ]
        ],
@@ -12936,8 +12936,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.9,
        "h": 0.5,
        "region": "trough-granite",
@@ -13024,7 +13024,7 @@
        "points": [
         [
          0.15,
-         0.0
+         0
         ],
         [
          0.15,
@@ -13044,7 +13044,7 @@
         ],
         [
          -0.15,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -13316,7 +13316,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.6,
        "h": 0.5,
        "region": "trough-granite",
@@ -13362,8 +13362,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15,
        "region": "pump-rust",
@@ -13377,8 +13377,8 @@
        "filled": true,
        "tone": 0.42,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -13392,8 +13392,8 @@
        "filled": true,
        "tone": 0.45,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.09,
        "ry": 0.09,
        "region": "pump-paint",
@@ -13708,7 +13708,7 @@
       },
       "algae-film": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.7,
        "contact": {
         "fraction": 0.5,
@@ -13718,7 +13718,7 @@
       "water": {
        "exposedFraction": 0.23,
        "sunlitFraction": 0.75,
-       "wettedness": 1.0,
+       "wettedness": 1,
        "contact": {
         "fraction": 0.77,
         "tempC": 18
@@ -13796,7 +13796,7 @@
       },
       "algae-film": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.7,
        "contact": {
         "fraction": 0.5,
@@ -13806,7 +13806,7 @@
       "water": {
        "exposedFraction": 0.23,
        "sunlitFraction": 0.75,
-       "wettedness": 1.0,
+       "wettedness": 1,
        "contact": {
         "fraction": 0.77,
         "tempC": 18
@@ -13885,7 +13885,7 @@
       },
       "algae-film": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.7,
        "contact": {
         "fraction": 0.5,
@@ -13895,7 +13895,7 @@
       "water": {
        "exposedFraction": 0.23,
        "sunlitFraction": 0.75,
-       "wettedness": 1.0,
+       "wettedness": 1,
        "contact": {
         "fraction": 0.77,
         "tempC": 18
@@ -13941,7 +13941,7 @@
     },
     "bones": {
      "lever": {
-      "angleDeg": 35.0
+      "angleDeg": 35
      },
      "rod": {
       "dx": 0.0622
@@ -13994,7 +13994,7 @@
       },
       "algae-film": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.7,
        "contact": {
         "fraction": 0.5,
@@ -14004,7 +14004,7 @@
       "water": {
        "exposedFraction": 0.25,
        "sunlitFraction": 0.75,
-       "wettedness": 1.0,
+       "wettedness": 1,
        "contact": {
         "fraction": 0.8,
         "tempC": 10
@@ -14086,7 +14086,7 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "in-service",
       "ease": "smooth"
      },
@@ -14201,24 +14201,24 @@
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14228,19 +14228,19 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14250,19 +14250,19 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14272,19 +14272,19 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14300,13 +14300,13 @@
         "dx": 0.00411
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14322,13 +14322,13 @@
         "dx": 0.01552
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14344,13 +14344,13 @@
         "dx": 0.03131
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14366,13 +14366,13 @@
         "dx": 0.04699
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14388,13 +14388,13 @@
         "dx": 0.05819
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14404,24 +14404,24 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 35.0
+        "angleDeg": 35
        },
        "rod": {
         "dx": 0.0622
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -14432,13 +14432,13 @@
         "dx": 0.05819
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14457,10 +14457,10 @@
         "dy": 0.28472
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14479,10 +14479,10 @@
         "dy": 0.285
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14504,7 +14504,7 @@
         "dy": 0.28471
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14526,7 +14526,7 @@
         "dy": 0.285
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -14646,10 +14646,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -14751,7 +14751,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -14778,7 +14778,7 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 35.0
+        "angleDeg": 35
        },
        "rod": {
         "dx": 0.0622
@@ -14910,10 +14910,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -14971,7 +14971,7 @@
       }
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -15042,7 +15042,7 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 35.0
+        "angleDeg": 35
        },
        "rod": {
         "dx": 0.0622
@@ -15174,10 +15174,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -15191,7 +15191,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -15306,7 +15306,7 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 35.0
+        "angleDeg": 35
        },
        "rod": {
         "dx": 0.0622
@@ -15411,7 +15411,7 @@
       }
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -15438,10 +15438,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -15504,10 +15504,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -15526,10 +15526,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.285
@@ -15548,10 +15548,10 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
         "dy": 0.00029
@@ -15570,13 +15570,13 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
         "dy": 0.285
@@ -15592,13 +15592,13 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
         "dy": 0.00029
@@ -15614,16 +15614,16 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
         "dy": 0.285
@@ -15636,16 +15636,16 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
         "dy": 0.114
@@ -15658,16 +15658,16 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
         "dy": 0.00029
@@ -15680,19 +15680,19 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -15702,19 +15702,19 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
@@ -15724,41 +15724,41 @@
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
        "lever": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "rod": {
-        "dx": 0.0
+        "dx": 0
        },
        "jet-1": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-2": {
-        "dy": 0.0
+        "dy": 0
        },
        "jet-3": {
-        "dy": 0.0
+        "dy": 0
        }
       }
      }
@@ -15774,7 +15774,7 @@
      {
       "id": "priming",
       "fromS": 0,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "First stroke, priming",
        "de": "Erster Hub, Ansaugen"
@@ -15782,7 +15782,7 @@
      },
      {
       "id": "flowing",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 5.5,
       "title": {
        "en": "Water flowing",
@@ -15801,7 +15801,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "motion",
       "title": {
        "en": "Water reaches the spout",
@@ -15860,7 +15860,7 @@
         "v": 0
        },
        {
-        "t": 3.0,
+        "t": 3,
         "v": 1
        },
        {
@@ -15934,7 +15934,7 @@
         "v": 0
        },
        {
-        "t": 3.0,
+        "t": 3,
         "v": 1
        },
        {

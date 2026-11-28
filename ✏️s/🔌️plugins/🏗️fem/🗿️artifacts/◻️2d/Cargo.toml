@@ -19,7 +19,9 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🛡️guards/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🪜️mutations-2/📦️packages/🦀️rust",
@@ -241,6 +243,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/�
 
 [workspace.dependencies.semio-s-artifact-fem-2d-mesh]
 path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-guards]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🛡️guards/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-fem-2d-diff-document]
 path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust"

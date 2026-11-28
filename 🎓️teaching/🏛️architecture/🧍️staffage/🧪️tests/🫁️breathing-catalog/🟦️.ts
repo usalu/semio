@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { catalogAsset, catalogIds } from "../../🧫️fixtures/🌡️thermal/🟦️.ts";
 
-const assets = catalogIds().map(catalogAsset);
+const assets = catalogIds().map((id) => catalogAsset(id, false));
 const humans = assets.filter((a) => a.thermal.body?.species === "human");
 const adults = humans.filter((a) => a.thermal.body!.massKg >= 40);
 const RESTING_MET = 1.2;

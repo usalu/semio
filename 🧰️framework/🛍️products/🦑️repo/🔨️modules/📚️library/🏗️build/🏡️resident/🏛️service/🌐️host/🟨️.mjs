@@ -1,6 +1,6 @@
 import{freeSpaceSyncV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
-import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
+import {ownProcessIdentityV1,processHolderAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 /** 🌐 The per-host graph service: one process per user holds the fact index once and answers plan and status requests from every agent, worktree and workspace over one local socket or pipe. */
 
 import {createServer,connect} from "node:net";
@@ -39,24 +39,56 @@ function memoryStatusV1(workers=[]){
 const validateClient=validatorV1("ClientFrame");
 const validateReply=validatorV1("PlanReply");
 
-/** 🔀️ Whether a service that a newer one superseded (since `supersededSinceMs`, debounced by `graceMilliseconds`) ends now: once idle (no connection, no plan in flight), or while plans are in flight only when none of them observed original work for `stallMilliseconds`, so a progressing load always drains to its answer on the code it started with and a stalled one is handed over to the newer service; never before the grace.
+/** 🔀️ Whether a service that a newer one superseded (since `supersededSinceMs`, debounced by `graceMilliseconds`) ends now: once idle (no connection, no plan in flight; a connection without a plan and without traffic for `idleConnectionMilliseconds` does not hold it either, so an idle holder never blocks the hand-over), or while plans are in flight only when none of them observed original work for `stallMilliseconds`, so a progressing load always drains to its answer on the code it started with and a stalled one is handed over to the newer service; never before the grace.
  * @see ../../🧪️tests/🔀️supersession-drain/🟦️.ts */
-export const supersededDrainDueV1=({supersededSinceMs,nowMs,lastProgressMs,connections,inFlight,graceMilliseconds,stallMilliseconds})=>supersededSinceMs!==undefined&&nowMs-supersededSinceMs>=graceMilliseconds&&(connections===0&&inFlight===0||inFlight>0&&nowMs-Math.max(supersededSinceMs,lastProgressMs)>=stallMilliseconds);
+export const supersededDrainDueV1=({supersededSinceMs,nowMs,lastProgressMs,lastActivityMs=nowMs,connections,inFlight,graceMilliseconds,stallMilliseconds,idleConnectionMilliseconds=Infinity})=>supersededSinceMs!==undefined&&nowMs-supersededSinceMs>=graceMilliseconds&&(connections===0&&inFlight===0||connections>0&&inFlight===0&&nowMs-Math.max(supersededSinceMs,lastActivityMs)>=idleConnectionMilliseconds||inFlight>0&&nowMs-Math.max(supersededSinceMs,lastProgressMs)>=stallMilliseconds);
 
 /** 🚨 Another live host service already owns the endpoint. */
 export class HostRunningErrorV1 extends Error{constructor(endpoint){super("A host graph service already listens on "+endpoint);this.name="HostRunningErrorV1";this.code="running";}}
 
 const MiB=1024*1024;
 /** 🧭️ The decisions of a slice read that end or restart a worker or start a pass again, and how long the line that names the last one stays in every progress line after it (the next progress frame would otherwise replace it before anyone reads it). */
-const NOTICE_KEYS_V1=new Set(["recycled","cut","handoff","restarted","restarted-cause","round"]),NOTICE_MILLISECONDS_V1=300000;
+const NOTICE_KEYS_V1=new Set(["recycled","cut","killed","handoff","restarted","restarted-cause","round"]),NOTICE_MILLISECONDS_V1=300000;
 /** 🔑 What makes two plan requests the same job: the digest of the index, the content scope (the digest of the captured inputs where the planner can bind a reply to each workspace, else the one workspace), revision, parent, tool, graph policy, arguments, targets and the dirty set. */
-const jobKeyV1=(indexKey,scope,frame)=>sha(JSON.stringify([indexKey,scope,frame.revision??null,frame.parent??null,frame.tool??null,frame.graphPolicy??null,frame.grant??null,frame.arguments??null,[...new Set(frame.targets)].sort(),frame.dirty??null]));
+const jobKeyV1=(indexKey,scope,frame)=>sha(JSON.stringify([indexKey,scope,frame.revision??null,frame.parent??null,frame.tool??null,frame.graphPolicy??null,frame.grant??null,frame.owner??null,frame.arguments??null,[...new Set(frame.targets)].sort(),frame.dirty??null]));
 const sha=text=>createHash("sha256").update(text).digest("hex");
 /** 💓 Whether a request that has been quiet for `intervalMilliseconds` is sent a keepalive frame: only while the service really holds it, that is before it is attached to a job and while a job holds it as a client, so that a request no job holds any more falls silent and its client's silence deadline ends the wait instead of a keepalive hiding the loss.
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export const keepaliveDueV1=({stage,held,sentAt,now,intervalMilliseconds})=>now-sentAt>=intervalMilliseconds&&(stage==="starting"||stage==="attached"&&held===true);
 const hangUp=socket=>{socket.end();setTimeout(()=>socket.destroy(),100).unref?.();};
-const alive=pid=>processPidExistsV1(pid);
+const alive=(pid,startMs)=>processHolderAliveV1({pid,startMs:Number.isSafeInteger(startMs)&&startMs>0?startMs:0});
+const ownStartMsV1=()=>{try{return ownProcessIdentityV1().startMs;}catch{return 0;}};
+
+/** 🏘️ Whether two service descriptors belong to one checkout and state directory: the services of other checkouts that share the runtime directory neither supersede this one nor does it wait for them. A descriptor without identity belongs to no checkout.
+ * @see ../../🧪️tests/🔀️supersession-drain/🟦️.ts */
+export const sameCheckoutV1=(left,right)=>left?.root!==undefined&&left.root===right?.root&&left.state===right.state;
+
+/** 🥇️ The older service generation of this checkout that is still reading slices (its descriptor says `busy` and its process lives), `undefined` when there is none: a younger generation waits for it before it starts a worker, so one generation at a time works on the graph and no parallel queue forms.
+ * @see ../../🧪️tests/🥇️generation-handover/🟦️.ts */
+export function olderBusyServiceV1({directory,tag,since,identity,alive:exists=alive,read=name=>JSON.parse(readFileSync(join(directory,name),"utf8")),list=()=>readdirSync(directory)}){
+ try{
+  for(const name of list()){
+   if(!/^host-[0-9a-f]{12}\.json$/u.test(name)||name==="host-"+tag+".json")continue;
+   const other=read(name);
+   if(sameCheckoutV1(identity,other.identity)&&other.startedAt<since&&other.busy>0&&exists(other.pid,other.startMs))return{pid:other.pid,busy:other.busy};
+  }
+ }catch{}
+ return undefined;
+}
+
+/** 🧬️ The live service generations of this checkout, newest first: every descriptor of the runtime directory with this identity whose process lives and that is not stopping, with its implementation and whether it still holds plans (`busy`). A client that wants a new generation while `generations` of them live rides the newest instead (see `settleHostImplementationV1`), so at most that many services share the host.
+ * @see ../../🧪️tests/🧬️generation-cap/🟦️.ts */
+export function liveGenerationsV1({directory,identity,alive:exists=alive,read=name=>JSON.parse(readFileSync(join(directory,name),"utf8")),list=()=>readdirSync(directory)}){
+ const found=[];
+ try{
+  for(const name of list()){
+   if(!/^host-[0-9a-f]{12}\.json$/u.test(name))continue;
+   let other;try{other=read(name);}catch{continue;}
+   if(sameCheckoutV1(identity,other.identity)&&other.stopping!==true&&typeof other.implementation==="string"&&exists(other.pid,other.startMs))found.push({implementation:other.implementation,pid:other.pid,startedAt:Number(other.startedAt)||0,busy:Number(other.busy)||0});
+  }
+ }catch{}
+ return found.sort((left,right)=>right.startedAt-left.startedAt);
+}
 
 function probe(endpoint,timeout=500){
  return new Promise(resolve=>{
@@ -187,8 +219,10 @@ export function createHostServiceV1(options){
   if(supersededSince!==undefined&&connection.implementation!==implementation)return refuse(connection,frame.id,"stale","host-stale",{},"fallback");
   if(requireCapability){
    const token=frame.cap??connection.cap,caveats=token?verifyCapabilityV1(rootKey,token):undefined;
-   if(!caveats)return refuse(connection,frame.id,"capability","capability",{},"never");
+   if(!token)return refuse(connection,frame.id,"capability","capability-missing",{},"later");
+   if(!caveats)return refuse(connection,frame.id,"capability","capability-forged",{tag:runtime.tag},"later");
    const denial=authorizeCapabilityV1(caveats,{commandClass:"query",command:"plan",cwd:frame.root,now:now(),projects:frame.targets.map(target=>target.split(":")[0]),worktree:frame.workspace,agent:frame.agent});
+   if(denial?.code==="capability"&&denial.reason==="expired")return refuse(connection,frame.id,"capability","capability-expired",{},"later");
    if(denial)return refuse(connection,frame.id,denial.code,denial.code==="scope"?"scope":"capability",{class:"query"},"never");
   }
   const controller=new AbortController();connection.requests.set(frame.id,controller);
@@ -212,6 +246,7 @@ export function createHostServiceV1(options){
    if(outcome.error)throw outcome.error;
   }catch(error){
    if(error instanceof BusyErrorV1)await refuse(connection,frame.id,"busy","busy",{inFlight:error.inFlight,queued:error.queued},"later");
+   else if(error?.code==="handover")await refuse(connection,frame.id,"handover","host-service-handover",{reason:String(error.reason)},"later");
    else if(error?.code==="memory-pressure"){planned.budgetRefusals++;await refuse(connection,frame.id,"memory","host-memory-pressure-"+error.kind,{value:error.value,limit:error.limit,seconds:error.seconds},"later");}
    else if(error?.code==="slice-worker-failing"){await refuse(connection,frame.id,"failed","host-slice-worker-failing",{count:error.count,exit:error.exit,cause:error.cause},"never");}
    else if(error?.code==="slice-restarts"){await refuse(connection,frame.id,"stale","host-slice-restarts",{restarts:error.restarts,exit:error.exit},"later");}
@@ -259,7 +294,7 @@ export function createHostServiceV1(options){
   if(typeof message!=="object"||message===null||typeof extra!=="object"||extra===null)return message;
   return Object.fromEntries(Object.entries(message).map(([language,line])=>[language,extra[language]===undefined?line:line+" | "+extra[language]]));
  };
- const sendProgress=(client,{phase,done,total,key,fields})=>{const{running,decision,reservation,leaseWait,notice,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:withNoticeV1(client.connection,notice,rest,leaseWait!==undefined?renderLeaseWaitV1(leaseWait,rest.seconds,client.connection.languages):reservation===undefined?text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}}):renderSliceReservationV1(reservation,rest.seconds,client.connection.languages))});};
+ const sendProgress=(client,{phase,done,total,key,fields},observed=false)=>{const{running,decision,reservation,leaseWait,notice,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,...observed?{observed:true}:{},message:withNoticeV1(client.connection,notice,rest,leaseWait!==undefined?renderLeaseWaitV1(leaseWait,rest.seconds,client.connection.languages):reservation===undefined?text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}}):renderSliceReservationV1(reservation,rest.seconds,client.connection.languages))});};
 
  const settleAfterJobV1=async()=>{if(jobs.size>0||governor.inFlight>0)return;try{await ports.settle?.();}catch{}};
  function startJob(key,workspace,frame,indexKey){
@@ -268,7 +303,7 @@ export function createHostServiceV1(options){
   const progress=(phase,done,total,messageKey,fields,observed=true)=>{
    if(observed)lastProgressAt=now();
    const row={phase,done,total,key:messageKey,fields};job.progress.set(phase,row);
-   return Promise.all([...job.clients].map(client=>sendProgress(client,row)));
+   return Promise.all([...job.clients].map(client=>sendProgress(client,row,observed===true&&phase==="slice")));
   };
   const finish=outcome=>{for(const client of[...job.clients])client.resolve?.(outcome.error===undefined&&!job.answered.has(client)?{error:Object.assign(new Error("The graph job ended without an answer for this client"),{code:"unanswered"})}:outcome);job.clients.clear();if(jobs.get(key)===job)jobs.delete(key);};
   job.settled=run(job,workspace,frame,progress,indexKey).then(()=>finish({}),error=>finish({error})).then(settleAfterJobV1);
@@ -295,6 +330,9 @@ export function createHostServiceV1(options){
      const subscribers=()=>[...job.clients].filter(client=>client.frame.sliceReport===true&&!client.controller.signal.aborted&&!client.reportPending);
      const reportProgress=(milliseconds,detail,observed)=>{
       if(detail?.decision!==undefined&&NOTICE_KEYS_V1.has(detail.decision.key))job.notice={decision:detail.decision,atMs:Date.now()};
+      if(observed===true)job.quietAt=undefined;else job.quietAt??=Date.now();
+      const quietMilliseconds=job.quietAt===undefined?0:Date.now()-job.quietAt;
+      if(quietMilliseconds>=policy.workerQuietNoticeMilliseconds)job.quietNotice={key:"worker-quiet",used:0,budget:0,limit:Math.round(quietMilliseconds/1000)};else job.quietNotice=undefined;
       if(detail?.sliceReport!==undefined){
        const report=detail.sliceReport;
        if(typeof report==="string"&&Buffer.byteLength(report)<=READY_SLICE_REPORT_POLICY_V1.fileBytes)return Promise.all(subscribers().map(client=>{
@@ -303,9 +341,9 @@ export function createHostServiceV1(options){
        }));
        return;
       }
-      return progress("slice",milliseconds,0,detail===undefined?"host-slice":detail.step===true?(detail.done>detail.total?"host-slice-step-over":"host-slice-step"):"host-slice-detail",{seconds:detail?.step===true?detail.done:Math.round(milliseconds/1000),...detail?{bound:detail.total,phase:detail.phase,done:detail.done,total:detail.total,...detail.reservation===undefined?{}:{reservation:detail.reservation},...detail.leaseWait===undefined?{}:{leaseWait:detail.leaseWait},...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{},...detail?.decision===undefined&&job.notice!==undefined&&Date.now()-job.notice.atMs<NOTICE_MILLISECONDS_V1?{notice:job.notice.decision}:{}},observed);
+      return progress("slice",milliseconds,0,detail===undefined?"host-slice":detail.step===true?(detail.done>detail.total?"host-slice-step-over":"host-slice-step"):"host-slice-detail",{seconds:detail?.step===true?detail.done:Math.round(milliseconds/1000),...detail?{bound:detail.total,phase:detail.phase,done:detail.done,total:detail.total,...detail.reservation===undefined?{}:{reservation:detail.reservation},...detail.leaseWait===undefined?{}:{leaseWait:detail.leaseWait},...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{},...job.quietNotice!==undefined?{notice:job.quietNotice}:detail?.decision===undefined&&job.notice!==undefined&&Date.now()-job.notice.atMs<NOTICE_MILLISECONDS_V1?{notice:job.notice.decision}:{}},observed);
      };
-     const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,priority:frame.priority,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,grant:frame.grant,signal:job.controller.signal,progress:reportProgress,wantsReport:()=>subscribers().length>0});
+     const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,priority:frame.priority,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,grant:frame.grant,owner:frame.owner,signal:job.controller.signal,progress:reportProgress,wantsReport:()=>subscribers().length>0});
     planned.computed++;planned.lastMilliseconds=Math.round(performance.now()-started);planned.milliseconds+=planned.lastMilliseconds;planned.captureFiles=answer.stats?.captureFiles??0;planned.captureProbes=answer.stats?.captureProbes??0;planned.unstaged=answer.stats?.unstaged??0;planned.load=answer.stats?.load;
     plan={revision:answer.revision,tasks:answer.tasks,...answer.slice?{slice:spill(answer.slice).ref}:{},...answer.manifest?{manifest:answer.manifest}:{},...answer.pin?{pin:answer.pin}:{}};
     if(!live&&!answer.pin){memo.set(memoKey,plan);while(memo.size>policy.planMemoEntries)memo.delete(memo.keys().next().value);}
@@ -387,8 +425,9 @@ export function createHostServiceV1(options){
   if(posix)try{chmodSync(runtime.endpoint,0o600);}catch{}
  }
 
+ let lastBusy=0;const ownStartMs=ownStartMsV1();
  const writeDescriptor=(stopping=false)=>{
-  try{atomicWrite(runtime.descriptor,JSON.stringify({v:1,pid:process.pid,instance,startedAt,endpoint:runtime.endpoint,protocol:1,implementation,owner,...(stopping?{stopping:true}:{})}));}catch(error){log("descriptor-failed",String(error));}
+  try{atomicWrite(runtime.descriptor,JSON.stringify({v:1,pid:process.pid,startMs:ownStartMs,instance,startedAt,endpoint:runtime.endpoint,protocol:1,implementation,...runtime.identity?{identity:runtime.identity}:{},owner,busy:lastBusy,...(stopping?{stopping:true}:{})}));}catch(error){log("descriptor-failed",String(error));}
  };
 
  const newerSibling=()=>{
@@ -396,11 +435,13 @@ export function createHostServiceV1(options){
    for(const name of readdirSync(runtime.directory)){
     if(!/^host-[0-9a-f]{12}\.json$/u.test(name)||name==="host-"+runtime.tag+".json")continue;
     const other=JSON.parse(readFileSync(join(runtime.directory,name),"utf8"));
-    if(other.startedAt>startedAt&&!other.stopping&&alive(other.pid))return true;
+    if(sameCheckoutV1(runtime.identity,other.identity)&&other.startedAt>startedAt&&!other.stopping&&alive(other.pid,other.startMs))return true;
    }
   }catch{}
   return false;
  };
+
+ const plansInFlight=()=>Math.max(governor.inFlight,[...connections].reduce((count,connection)=>count+connection.requests.size,0));
 
  const sweep=()=>{
   const at=now();
@@ -412,10 +453,19 @@ export function createHostServiceV1(options){
    pool.clear();memo.clear();globalThis.Bun?.gc?.(true);
    if((ports.resident?.rss??(()=>process.memoryUsage().rss))()>policy.maximumResidentBytes*1.25)void drainAndExit("memory");
   }
-  if(newerSibling()){supersededSince??=at;}else supersededSince=undefined;
-  if(supersededDrainDueV1({supersededSinceMs:supersededSince,nowMs:at,lastProgressMs:lastProgressAt,connections:connections.size,inFlight:governor.inFlight,graceMilliseconds:policy.supersededGraceMilliseconds,stallMilliseconds:policy.reload.drainStallMilliseconds}))void drainAndExit("superseded");
+  const busy=ports.workers?.active?.()??0;
+  if(busy!==lastBusy&&listening){lastBusy=busy;writeDescriptor(closing);}
+  supersededSince=newerSibling()?supersededSince??at:undefined;
+  if(supersededDrainDueV1({supersededSinceMs:supersededSince,nowMs:at,lastProgressMs:lastProgressAt,lastActivityMs:lastActivity,connections:connections.size,inFlight:plansInFlight(),graceMilliseconds:policy.supersededGraceMilliseconds,stallMilliseconds:policy.reload.drainStallMilliseconds,idleConnectionMilliseconds:policy.supersededIdleConnectionMilliseconds}))void drainAndExit("superseded");
  };
 
+ /** 🥇️ Hands every plan that has not started its worker over to the service that follows once the drain is cut (never at the supersession itself: a read queued, waiting for capacity or restarting after a cut keeps its place and finishes on the code it pinned): the clients of a job still queued here (governor or slice pool) get the refusal `handover` (retry `later`) and ask the newer generation, so the queue lives in one generation; a worker that already runs is not touched.
+ * @see ../../🧪️tests/🥇️generation-handover/🟦️.ts */
+ function handOverQueued(reason){
+  const error=Object.assign(new Error("handover"),{code:"handover",reason});
+  for(const job of jobs.values())if(job.progress.has("queued"))job.controller.abort(error);
+  try{ports.workers?.handover?.(error);}catch{}
+ }
  const cacheStop=new AbortController();let cacheRunning=false;
  /** 🔄 The reload of this service onto a newer implementation (`ports.reload` = `{identify,replace}`, see `createHostReloadV1`): the replacement starts first, then this service drains: it refuses new plans, lets every plan in flight run to completion (it is cut only after `policy.reload.drainStallMilliseconds` without an original work observation) and ends with the reason `reload`. */
  const reload=ports.reload?createHostReloadV1({implementation,identify:ports.reload.identify,replace:ports.reload.replace,drain:()=>drainAndExit("reload"),policy:policy.reload,now,log}):undefined;
@@ -438,12 +488,13 @@ export function createHostServiceV1(options){
   const began=now(),cut=()=>reason==="reload"?now()-Math.max(began,lastProgressAt)>=policy.reload.drainStallMilliseconds:now()-began>=5000;
   while((governor.inFlight>0||[...connections].some(c=>c.requests.size>0))&&!cut())await new Promise(resolve=>setTimeout(resolve,20));
   const handover=Object.assign(new Error("handover"),{code:"handover",reason}),flushed=performance.now();
+  handOverQueued(reason);
   for(const connection of connections)for(const controller of connection.requests.values())controller.abort(reason==="access-denied"?new Error("shutdown"):handover);
   while([...connections].some(connection=>connection.requests.size>0)&&performance.now()-flushed<policy.handoverFlushMilliseconds)await new Promise(resolve=>setTimeout(resolve,10));
   for(const connection of connections)connection.socket.destroy();
   for(const id of[...workspaces.keys()])closeWorkspace(id);
   pool.clear();memo.clear();
-  if(listening){if(posix)rmSync(runtime.endpoint,{force:true});rmSync(runtime.descriptor,{force:true});}
+  if(listening){if(posix)rmSync(runtime.endpoint,{force:true});rmSync(runtime.descriptor,{force:true});rmSync(runtime.key,{force:true});}
   closeResolve(reason);onExit(reason);
  }
 

@@ -203,7 +203,7 @@ fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapsho
 #[semio_framework_async_macros::async_test]
 async fn every_variant_registers_an_approved_semantic_descriptor() {
     for mutation in every_mutation() {
-        let descriptor = protocol::SemanticMutation::semantics(&mutation);
+        let descriptor = <En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::semantics(&mutation);
         assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
     }
     assert_eq!(<En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");

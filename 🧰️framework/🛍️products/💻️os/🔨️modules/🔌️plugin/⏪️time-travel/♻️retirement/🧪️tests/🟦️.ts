@@ -89,3 +89,9 @@ test("original constructor cursor refuses shallow Drop before typed sources and 
 });
 
 test("original ZST mutation vector closes by physical allocation and logical items",()=>{expect(new Ajv().compile(custodySchema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.physicalVectors){const expected=db.query("SELECT CASE WHEN ?2=0 THEN 0 ELSE ?3*?2 END bytes, (?1=0 AND (?2=0 OR ?3=0)) terminal").get(row.length,row.width,row.capacity)as{bytes:number;terminal:number};expect(expected.bytes).toBe(row.allocatedBytes);expect(Boolean(expected.terminal)).toBe(row.terminal);}}finally{db.close();}});
+
+test("original snapshot issuers stay with a live selected preview base until it is retired",()=>{
+ const source=pluginSubtreeText("⏪️time-travel");const take=source.indexOf("self.snapshot_issuers.take()");
+ expect(take).toBeGreaterThan(0);expect(source.slice(take-80,take)).toContain("self.preview_base.is_none()");
+ expect(source).toContain("self.snapshot_issuers.is_some()&&self.preview_base.is_none()");
+});

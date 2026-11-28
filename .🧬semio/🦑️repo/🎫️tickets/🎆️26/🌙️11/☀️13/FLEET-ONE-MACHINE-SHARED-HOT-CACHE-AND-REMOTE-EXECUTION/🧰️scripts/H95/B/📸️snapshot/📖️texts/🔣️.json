@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "snapshot",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "capture.begin": {
+      "en": "Capturing a consistent source snapshot for repo {command} ...",
+      "de": "Erfasse eine konsistente Quelltext-Momentaufnahme für repo {command} ..."
+    },
+    "capture.done": {
+      "en": "Source snapshot {digest}: {files} files ({copied} copied, {removed} removed, {rounds} rounds, {seconds} s). This run reads only the snapshot; edits by others from now on do not touch it.",
+      "de": "Quelltext-Momentaufnahme {digest}: {files} Dateien ({copied} kopiert, {removed} entfernt, {rounds} Runden, {seconds} s). Dieser Lauf liest nur die Momentaufnahme; Änderungen anderer ab jetzt berühren ihn nicht."
+    },
+    "capture.inconsistent": {
+      "en": "Source snapshot {digest} was taken while others kept editing ({moved} files moved in the last round, for example {first}). Every file is a complete version, but the set may mix two moments.",
+      "de": "Quelltext-Momentaufnahme {digest} entstand, während andere weiter bearbeiteten ({moved} Dateien bewegten sich in der letzten Runde, zum Beispiel {first}). Jede Datei ist eine vollständige Fassung, die Menge kann aber zwei Zeitpunkte mischen."
+    },
+    "capture.failed": {
+      "en": "The source snapshot could not be taken ({reason}); the command runs on the live tree.",
+      "de": "Die Quelltext-Momentaufnahme war nicht möglich ({reason}); der Befehl läuft auf dem lebenden Baum."
+    },
+    "run.report": {
+      "en": "Result is bound to source snapshot {digest} ({mode}).",
+      "de": "Das Ergebnis gehört zur Quelltext-Momentaufnahme {digest} ({mode})."
+    },
+    "lane.busy": {
+      "en": "Another command of this agent holds the snapshot {lane}; using {other}.",
+      "de": "Ein anderer Befehl dieses Agenten hält die Momentaufnahme {lane}; verwende {other}."
+    },
+    "base.building": {
+      "en": "Building the persistent source snapshot of this machine (once; later commands only apply what changed) ...",
+      "de": "Baue die dauerhafte Quelltext-Momentaufnahme dieses Rechners (einmalig; spätere Befehle übernehmen nur Änderungen) ..."
+    },
+    "base.absent": {
+      "en": "No persistent source snapshot on this machine yet; the command runs on the live tree (build it once with SEMIO_SOURCE_SNAPSHOT_MODE=on).",
+      "de": "Noch keine dauerhafte Quelltext-Momentaufnahme auf diesem Rechner; der Befehl läuft auf dem lebenden Baum (einmalig bauen mit SEMIO_SOURCE_SNAPSHOT_MODE=on)."
+    }
+  }
+}

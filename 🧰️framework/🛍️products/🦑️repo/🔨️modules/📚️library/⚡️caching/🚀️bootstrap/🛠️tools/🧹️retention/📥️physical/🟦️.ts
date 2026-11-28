@@ -1,9 +1,9 @@
 import type{NxSdkPhysicalFileIdentityV1}from"../../📦️sdk/🪪️identity/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🟦️.ts";
+import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🐧️libc/🟦️.ts";
 import{types}from"node:util";
-import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
-const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
+import managersV1 from "../../../📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptLockV1=managersV1.selectedManagerV1("javascript").primaryLockName;
 import{withRepositoryToolingOperationV1,type ToolingRetirementReadContextV1}from"../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{copiedToolingRetirementMaterialV1,captureCopiedToolingRetirementInventoryV1,recheckCopiedToolingRetirementInventoryV1,type CopiedToolingRetirementInventoryV1}from"../📦️generation/🟦️.ts";

@@ -80,7 +80,10 @@ enum MaintenanceTool {
 const ROTATION_START: usize = 14;
 
 #[doc(hidden)]
-pub const MAINTENANCE_POSITIONS: usize = ROTATION_START + MAINTENANCE_STAGES as usize;
+pub const MAINTENANCE_POSITIONS: usize = 1 + ROTATION_START + MAINTENANCE_STAGES as usize;
+
+/// 🌡️ The rotation stage that pumps returned snapshot reads; the ladder also visits it first while any issuer is under return pressure.
+const MAINTENANCE_SNAPSHOT_RETURN_STAGE: u8 = 8;
 
 fn maintenance_fault(code: &'static str, message: &'static str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
@@ -777,6 +780,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     }
 
     pub fn maintenance_unit_at(&self, position: usize, cursor: u8) -> Option<MaintenanceUnit> {
+        let Some(position) = position.checked_sub(1) else { return self.ingest.snapshot_read_returns_under_pressure(&*self.stores).then_some(MaintenanceUnit::Pressure(MAINTENANCE_SNAPSHOT_RETURN_STAGE)) };
         match position {
             0 => (self.history.command_prune_requested() || self.history.pending_command_prune.is_some() || !self.history.command_log.pruned_terminal_is_empty()).then_some(MaintenanceUnit::CommandPrune),
             1 => self.tools.next_closing_private_child_group(&*self.child_composition).map(MaintenanceUnit::PrivateChildGroup),

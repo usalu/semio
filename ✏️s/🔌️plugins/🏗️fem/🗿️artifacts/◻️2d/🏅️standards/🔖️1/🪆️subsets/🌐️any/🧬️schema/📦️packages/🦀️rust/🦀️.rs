@@ -1,11 +1,9 @@
-//! 🧬️ `s.fem.fem2d` model: structural entities, artifact schema, snapshot, diff, inferences and the shared mutation guards.
+//! 🧬️ `s.fem.fem2d` model: structural entities, artifact schema, snapshot and inferences; the diff and the shared mutation guards live in their own crates.
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-extern crate semio_os_kernel as vcs;
 
 #[path = "."]
 pub mod standards {
@@ -21,15 +19,11 @@ pub mod standards {
                     pub mod text {
                         #[path = "../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
-                        #[path = "../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod binary {
                         #[path = "../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
-                        #[path = "../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod sqlite {
@@ -44,8 +38,6 @@ pub mod standards {
                     pub use component::*;
                     #[path = "../../🏗️structure/🦀️.rs"]
                     pub mod structure;
-                    #[path = "../../🛡️guards/🦀️.rs"]
-                    pub mod guards;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]
@@ -63,12 +55,6 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                         }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "../../🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
                     }
                 }
             }

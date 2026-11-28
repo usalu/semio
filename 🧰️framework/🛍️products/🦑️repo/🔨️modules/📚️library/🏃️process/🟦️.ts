@@ -86,7 +86,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
   if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
   {
   checkResourceLeaseControl(control);
-  const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_UNSTABLE_MTIME_ON_USE:"true",CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
   const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
   child.stdout!.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });

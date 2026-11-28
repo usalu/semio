@@ -16,7 +16,7 @@ build() {
   local id="$1" attempt
   rm -f "$G/confirmed/$id.json"
   trap 'forget_snapshot "$SEMIO_SOURCE_SNAPSHOT_STEP"; trap - RETURN' RETURN
-  for attempt in 1 2; do
+  for attempt in 1 2 3 4; do
     [ -z "${SEMIO_SOURCE_SNAPSHOT_STEP:-}" ] || forget_snapshot "$SEMIO_SOURCE_SNAPSHOT_STEP"
     export SEMIO_SOURCE_SNAPSHOT_STEP="browser-$id-$$-$attempt-$(date +%s)"
     [ -f "$G/browser-$id.log" ] && mv "$G/browser-$id.log" "$G/browser-$id.log.prev"

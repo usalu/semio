@@ -6,9 +6,9 @@ import type{ScriptInvocation}from"../../../🧭️routing/📥️invocation/🟦
 import{resolveTypescriptCompilerV1}from"../../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import{runtimeTypeEnvironmentV1}from"../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import{PROCESS_TEXTS_V1,refuseProcessV1}from"../../../📖️texts/🟦️.ts";
-import{describeClampedBudgetV1,stretchedBudgetV1}from"../../🎚️budget/⏲️contention/🟦️.ts";
+import{budgetStretchEnvironmentV1,describeClampedBudgetV1,stretchedBudgetV1}from"../../🎚️budget/⏲️contention/🟦️.ts";
 import{requireArtifactOutsideManagedParentV1,safeTemporaryDirectoryV1,testSandboxEnvironmentV1}from"../../🏖️sandbox/🟦️.ts";
-import{runOwnedBunFilesV1}from"../../🟨️bun/📁️files/🟦️.ts";
+import{runOwnedBunFilesV1,type OwnedBunFileResultV1}from"../../🟨️bun/📁️files/🟦️.ts";
 import{pinnedRustToolchainV1,pinnedTestToolsV1}from"../../🧰️toolchain/📌️pinned/🟦️.ts";
 import{textV1}from"../../../🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import{toolLanguageV1}from"../../../🧰️tools/📖️registry/🟦️.ts";
@@ -22,8 +22,12 @@ export type ProcessTestLaunchersV1=Readonly<Record<string,(file:string)=>readonl
 
 /** 👷️ Names how many test files run at once: the worker policy (the authored one unless a test brings its own), the store the size of a file process is learned in, the declared test file budgets (the authored ones unless a test brings its own), how the process table is read and how often, and where a reduced count is worded. */
 export type ProcessTestWorkersV1=Readonly<{policy?:TestWorkerPolicyV1;learning?:TestWorkerLearningV1;budgets?:TestFileBudgetsV1;rows?:()=>Promise<TestFileProcessRowsV1>;intervalMilliseconds?:number;write?:(line:string)=>void}>;
+/** 🌐️ What a file that ran on another machine answers: where it ran (`origin`), how long it took, whether it passed, and its output (already prefixed and complete lines). */
+export type ProcessTestRemoteRanV1=Readonly<{origin:string;seconds:number;passed:boolean;output:string}>;
+/** 🌐️ Offloads the files of a suite to idle machines: `width` files are out at once, `file` answers the run of one checkout-relative file on another machine or `undefined` when it must run here (`budgetMs` is its declared budget; `index` and `total` name it among the files of the run), `measure` hears how long a file took here, and `environment` is what every file process of the run gets so a file never offers its own nested suites again. */
+export type ProcessTestRemoteV1=Readonly<{width:number;environment:Readonly<Record<string,string>>;file:(file:string,context:Readonly<{budgetMs:number;index:number;total:number;signal:AbortSignal}>)=>Promise<ProcessTestRemoteRanV1|undefined>;measure?:(file:string,seconds:number)=>void|Promise<void>}>;
 /** 📋️ Names one run of a suite of a route table: the module root its files are relative to, the checkout every child runs in, the owner label of its budgets and the authored artifact directory. */
-export type ProcessTestSuiteRunV1=Readonly<{invocation:ScriptInvocation;root:string;checkout:string;table:ProcessTestTableV1;suite:string;owner:string;output:string;environment:NodeJS.ProcessEnv;launchers?:ProcessTestLaunchersV1;workers?:ProcessTestWorkersV1;report?:(line:string)=>void}>;
+export type ProcessTestSuiteRunV1=Readonly<{invocation:ScriptInvocation;root:string;checkout:string;table:ProcessTestTableV1;suite:string;owner:string;output:string;environment:NodeJS.ProcessEnv;launchers?:ProcessTestLaunchersV1;workers?:ProcessTestWorkersV1;remote?:ProcessTestRemoteV1;report?:(line:string)=>void}>;
 
 /** 🧭️ Finds the checkout a route runs its children in: the nearest ancestor of `start` holding `MODULE.bazel`, else `fallback` (the bun workspace root is not the checkout). */
 export function processTestCheckoutV1(start:string,fallback:string):string{
@@ -68,9 +72,13 @@ export async function runProcessTestSuiteV1(run:ProcessTestSuiteRunV1):Promise<v
  if(bunSources.length)await withTestWorkerLearningV1(run.workers?.learning,plan,suite.id,()=>runOwnedBunFilesV1({
   invocation,control:createIssuedResourceControlV1(invocation,owner+":"+suite.id,0),cwd:checkout,files:bunSources,
   arguments:suite.testNamePattern?["--test-name-pattern="+suite.testNamePattern]:[],timeoutMilliseconds:stretched,...(authored?{capabilities:authored}:{}),...(suite.launches?{launches:processTestSuiteLaunchesV1(suite,root)}:{}),
-  environment:{...environment,...pinnedRustToolchainV1(undefined,environment).environment,...tools,SEMIO_WORKSPACE_ROOT:checkout,SEMIO_TEST_ARTIFACT_DIR:output,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},
+  environment:{...environment,...pinnedRustToolchainV1(undefined,environment).environment,...tools,SEMIO_WORKSPACE_ROOT:checkout,SEMIO_TEST_ARTIFACT_DIR:output,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1",...budgetStretchEnvironmentV1(),...(run.remote?.environment??{})},
+  ...(run.remote===undefined?{}:{remote:{width:run.remote.width,...(run.remote.measure===undefined?{}:{measure:(file:string,seconds:number)=>run.remote!.measure!(relative(checkout,file).split(sep).join("/"),seconds)}),take:async(file:string,index:number,signal:AbortSignal):Promise<OwnedBunFileResultV1|undefined>=>{
+   const ran=await run.remote!.file(relative(checkout,file).split(sep).join("/"),{budgetMs:suite.budgetMs,index,total:bunSources.length,signal});
+   return ran===undefined?undefined:Object.freeze({file,capture:Object.freeze({version:1 as const,stdout:"",stderr:ran.output===""||ran.output.endsWith("\n")?ran.output:ran.output+"\n",status:ran.passed?0:1,signal:null})});
+  }}}),
   policy:{version:1,maximumParallelFiles:plan.workers,...processTestProtocolV1.output},memory:createTestFileMemoryV1({budgets,checkout,defaultMegabytes,shareMegabytes:plan.memoryMegabytes,environment,...(run.workers?.rows?{rows:run.workers.rows}:{}),...(run.workers?.intervalMilliseconds?{intervalMilliseconds:run.workers.intervalMilliseconds}:{})}),
   onFileResult:async row=>{process.stdout.write(row.capture.stdout);process.stderr.write(row.capture.stderr);if(row.capture.status!==0||row.capture.signal!==null)failed.push(relative(root,row.file).split(sep).join("/"));},
  }));
- if(failed.length)throw refuseProcessV1("failed","script.suite-files-failed",{suite:suite.id,count:String(failed.length),files:failed.join(", ")});
+ if(failed.length){const order=new Map(files.map((file,position)=>[file,position] as const));failed.sort((left,right)=>(order.get(left)??0)-(order.get(right)??0));throw refuseProcessV1("failed","script.suite-files-failed",{suite:suite.id,count:String(failed.length),files:failed.join(", ")});}
 }

@@ -23,7 +23,10 @@ import { type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt
 import { artifactsStorageSchema as publicationSchema } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { artifactsReadingSchema as inspectionSchema } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {readComponentModelIntentV1,componentModelLayoutV1,type ComponentModelIntentV1} from "./📋️contract/🟦️.ts";
+import {readComponentModelIntentV1,componentModelLayoutV1,componentModelGenerationV1,componentModelGenerationPathV1,type ComponentModelIntentV1} from "./📋️contract/🟦️.ts";
+import {promoteComponentModelGenerationV1} from "./🧭️head/🟦️.ts";
+import {recordStoreContentV1} from "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟨️.mjs";
+import {machinePathV1} from "../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import type {captureComponentProductLeaseTaskV1} from "./🔒️lease-task/🟦️.ts";
 import {dirname,join,resolve} from "node:path";
 import {lstat,open,writeFile} from "node:fs/promises";
@@ -37,7 +40,7 @@ export interface ComponentModelPublicationOptionsV1{readonly workspace:string;re
 declare const modelBrand:unique symbol;
 export type ComponentModelPublicationV1=Readonly<{readonly[modelBrand]:true}>;
 type Scope={options:ComponentModelPublicationOptionsV1;allowed:ReadonlyMap<string,ComponentModelDeclarationV1>;live:boolean;accepting:boolean;pending:Set<Promise<unknown>>;failures:unknown[];seen:Set<string>;describing:Set<string>;records:Map<string,{component:LinkedComponentV1;emission:SemanticDescriptorEmissionV1}>;retainedBytes:number;toolchainIdentity?:Promise<string>};
-const scopes=new WeakMap<ComponentModelPublicationV1,Scope>(),policy=publicationSchema.definitions.Protocol.const,protocol=schema.definitions.Protocol.const;
+const scopes=new WeakMap<ComponentModelPublicationV1,Scope>(),policy=publicationSchema.definitions.Protocol.const,protocol=schema.definitions.Protocol.const,layoutPolicy=schema.definitions.Layout.const;
 function live(token:ComponentModelPublicationV1,operation?:ResourceLeaseControl):Scope{const scope=scopes.get(token);if(!scope?.live||!scope.accepting)throw Error("Live original component model publication required");requireIssuedResourceControlInvocationV1(scope.options.control,scope.options.invocation);requireNativeStorageReservationV1(scope.options.storage,scope.options.control);const writer=operation??scope.options.control;requireIssuedResourceControlRefinementV1(scope.options.control,writer);requireCompilerWriterCustodyV1(scope.options.storage.backing.root,writer);return scope;}
 
 /** 🧷️ Captures genuine compiler writer custody, closes births and drains every accepted model before its roots leave. */
@@ -89,17 +92,18 @@ export function publishComponentModelV1(token:ComponentModelPublicationV1,compon
   const receipt:ComponentReceiptV1=Object.freeze({schema:COMPONENT_RECEIPT_SCHEMA_ID,pluginId:declared.intent.pluginId,packageId:declared.packageId,profile:componentProfileV1(component.pass.profile),target:COMPONENT_TARGET,wasmSha256:emission.componentSha256,wasmBytes:facts.size,semanticDescriptorSha256:pair.semanticSha256,toolchain:await(scope.toolchainIdentity??=(async()=>{await requireRepositoryRustToolchainV1(options.toolchain);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),version=await captureOwnedCommandV1(options.toolchain.rustc,["-vV"],options.workspace,{control:options.control,env:options.toolchain.environment,output:authority.transport});await options.toolchain.recheck();return rustToolchainIdentityFromVersionV1(version);})()),sourceTreeDigest:provenance.sourceTreeDigest,provenanceSha256:provenance.root}),receiptBytes=new TextEncoder().encode(encodeComponentReceiptV1(receipt));
   if(!componentReceiptBindsV1(receipt,{profile:declared.intent.mode,pluginId:declared.intent.pluginId,packageId:declared.packageId,wasmSha256:emission.componentSha256,semanticDescriptorSha256:pair.semanticSha256})||pair.pluginId!==receipt.pluginId||pair.packageId!==receipt.packageId)throw Error("Actual linked model receipt and descriptor tuple required");
   const modelFiles: [string, Uint8Array][] = [[protocol.descriptor, json], [protocol.descriptorPack, pack], [protocol.receipt, receiptBytes]];
+  let bindingBytes:Uint8Array|undefined,actorImageSha256:string|undefined;
   if(emission.emitterPin){
    const actual={mode:receipt.profile,componentSha256:receipt.wasmSha256,semanticSha256:receipt.semanticDescriptorSha256};
    const binding=readDescriptorEmitterBindingV1({version:1,componentSha256:actual.componentSha256,semanticSha256:actual.semanticSha256,emitter:emission.emitterPin},actual);
    const bytes=new TextEncoder().encode(JSON.stringify(binding)+"\n");
    if(bytes.length>descriptorEmitterBindingPolicyV1.maximumBytes)throw Error("Bounded descriptor emitter binding required");
-   modelFiles.push([descriptorEmitterBindingPolicyV1.name,bytes]);
+   modelFiles.push([descriptorEmitterBindingPolicyV1.name,bytes]);bindingBytes=bytes;
   }
   if (emission.actorImage) {
     const image = emission.actorImage;
     assertActorPreparationBindingV1(image, receipt.wasmSha256);
-    const imageSha256 = createHash("sha256").update(image).digest("hex");
+    const imageSha256 = createHash("sha256").update(image).digest("hex");actorImageSha256=imageSha256;
     const actor = actorPreparationReceiptV1({version: 1, componentSha256: receipt.wasmSha256, imageSha256, imageBytes: image.length}, receipt.wasmSha256, imageSha256, image.length);
     modelFiles.push([actorPreparationPolicyV1.image, image], [actorPreparationPolicyV1.receipt, new TextEncoder().encode(JSON.stringify(actor) + "\n")]);
   }
@@ -115,8 +119,10 @@ export function publishComponentModelV1(token:ComponentModelPublicationV1,compon
     await withArtifactDescriptorSlotV1(()=>writeFile(path,bytes,{flag:"wx",signal:sink.control.signal}));
     files.set(name,path);
    }
-   const layout=componentModelLayoutV1(store.root,declared.intent);
-   await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:layout.path},destination=>stageRepositoryArtifacts(destination,layout.owner,files));
+   const layout=componentModelLayoutV1(store.root,declared.intent),generation=componentModelGenerationV1({receipt:receiptBytes,...bindingBytes?{binding:bindingBytes}:{},...actorImageSha256?{actorImageSha256}:{}});
+   await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:componentModelGenerationPathV1(layout,generation)},destination=>stageRepositoryArtifacts(destination,layout.owner,files,{immutable:true,timeoutMs:layoutPolicy.writerTimeoutMilliseconds}));
+   await promoteComponentModelGenerationV1(layout,generation,{leaseDirectory:machinePathV1(options.workspace,".cache/b/l/m/data"),signal:sink.control.signal,control:sink.control});
+   await recordStoreContentV1({workspaceRoot:options.workspace,paths:[layout.head]});
    await options.storage.recheck();
   }))));
   scope.retainedBytes-=json.length+pack.length+(emission.actorImage?.length??0);

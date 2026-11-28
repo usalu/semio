@@ -1,9 +1,9 @@
 //! 🔺️ Validates supplied section fields on the current replay base.
 use super::ChangeSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionsModification;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 pub fn diff(payload: &ChangeSection, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {

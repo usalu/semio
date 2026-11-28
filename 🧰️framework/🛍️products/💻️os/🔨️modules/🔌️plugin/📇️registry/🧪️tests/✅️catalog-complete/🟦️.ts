@@ -133,7 +133,7 @@ function syntheticDescriptor(pluginId: string): { readonly descriptor: Record<st
     descriptorVersion: 1,
     packageId: `semio:${pluginId}`,
     role: "plugin",
-    manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
+    manifest: { pluginId, label: { native: { en: pluginId, de: pluginId }, reuse: { en: pluginId, de: pluginId } }, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
     execution: "isolated",
     executionProtocol: { appChannelVersion: APP_CHANNEL_VERSION },
     quotas: {},

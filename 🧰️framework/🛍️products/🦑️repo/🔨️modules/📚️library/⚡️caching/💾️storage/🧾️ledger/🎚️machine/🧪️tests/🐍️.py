@@ -71,13 +71,25 @@ def plan(spec, case):
         rows.append((s, u, demand))
     floors = sum(s["floorBytes"] for s in stores)
     demand_total = sum(r[2] for r in rows)
+    need_total = sum(max(r[2], r[0]["floorBytes"]) for r in rows)
     free = case["hostFreeBytes"]
     floor_bytes = spec["hostFreeFloorBytes"]
     total_host = case.get("hostTotalBytes")
     if spec.get("hostFreeFloorPercent") is not None and total_host:
         floor_bytes = min(floor_bytes, max(spec["alignBytes"], total_host * spec["hostFreeFloorPercent"] // 100 // spec["alignBytes"] * spec["alignBytes"]))
-    pressure = floor_bytes - free if free is not None and free < floor_bytes else 0
-    effective = max(floors, min(case["totalBytes"], demand_total - pressure if pressure > 0 else case["totalBytes"]))
+    host_reserve = max(floor_bytes, spec["hostReserveBytes"]) if spec.get("hostReserveBytes") is not None else floor_bytes
+    if spec.get("hostReserveBytes") is not None and spec.get("hostReservePercent") is not None and total_host:
+        host_reserve = max(floor_bytes, min(spec["hostReserveBytes"], max(align, total_host * spec["hostReservePercent"] // 100 // align * align)))
+    pressure = host_reserve - free if free is not None and free < host_reserve else 0
+    used_total = sum(r[1]["usedBytes"] for r in rows)
+    slack = None if free is None else free - host_reserve
+    if slack is not None and used_total != 0:
+        slack = (slack * demand_total) // used_total if slack < 0 else slack * demand_total // used_total
+    host_budget = None if free is None else max(0, need_total + slack)
+    ceiling = case["totalBytes"]
+    if spec.get("hostSharePercent") is not None and total_host:
+        ceiling = min(ceiling, max(spec["alignBytes"], total_host * spec["hostSharePercent"] // 100 // spec["alignBytes"] * spec["alignBytes"]))
+    effective = max(floors, min(ceiling, host_budget if host_budget is not None else ceiling))
     quotas = split(effective, [{"id": s["id"], "weight": s["weightBasisPoints"], "floor": s["floorBytes"], "demand": d} for s, _, d in rows], True)
     out = []
     for s, u, demand in rows:
@@ -105,7 +117,7 @@ def plan(spec, case):
                 resize = fit
         out.append({"id": s["id"], "usedBytes": used, "demandBytes": demand, "quotaBytes": quota, "contentLimitBytes": limit, "excessBytes": excess, "evictBytes": evict, "blockedBytes": blocked, "envelopeBytes": env, "resizeToBytes": resize, "state": "blocked" if blocked > 0 else "evict" if evict > 0 else "within"})
     footprint = sum((u["envelopeBytes"] if u["envelopeBytes"] is not None else u["usedBytes"]) for _, u, _ in rows)
-    return {"totalBytes": case["totalBytes"], "effectiveTotalBytes": effective, "pressureBytes": pressure, "usedBytes": sum(u["usedBytes"] for _, u, _ in rows), "footprintBytes": footprint, "overBytes": max(0, footprint - case["totalBytes"]), "evictBytes": sum(o["evictBytes"] for o in out), "blockedBytes": sum(o["blockedBytes"] for o in out), "converged": all(o["blockedBytes"] == 0 for o in out), "stores": out}
+    return {"totalBytes": case["totalBytes"], "effectiveTotalBytes": effective, "reserveBytes": host_reserve, "hostBudgetBytes": host_budget, "pressureBytes": pressure, "usedBytes": sum(u["usedBytes"] for _, u, _ in rows), "footprintBytes": footprint, "overBytes": max(0, footprint - ceiling), "evictBytes": sum(o["evictBytes"] for o in out), "blockedBytes": sum(o["blockedBytes"] for o in out), "converged": all(o["blockedBytes"] == 0 for o in out), "stores": out}
 
 
 spec = json.load(open(sys.argv[1], encoding="utf8"))

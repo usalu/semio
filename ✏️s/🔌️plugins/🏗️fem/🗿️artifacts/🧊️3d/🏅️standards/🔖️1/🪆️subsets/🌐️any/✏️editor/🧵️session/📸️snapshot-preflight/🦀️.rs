@@ -3,11 +3,38 @@
 use super::*;
 
 //#region 💼️MountedSession
+/// 🔏️ The document revision a mounted generation answers for: its own solve revision, or a later revision whose edits left the physics fingerprint unchanged.
+#[derive(Clone, Copy)]
+pub(super) struct RevisionBinding {
+    base_revision: RevisionId,
+    generation: Generation,
+    canonical_base_revision: [u8; 32],
+}
+
+impl RevisionBinding {
+    pub(super) fn of_identity(identity: Identity) -> Self {
+        Self { base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision }
+    }
+
+    pub(super) fn of_render(render: AppRenderOperationContext) -> Self {
+        Self { base_revision: render.base_revision, generation: render.generation, canonical_base_revision: render.canonical_base_revision }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(super) struct Current {
     pub(super) app_instance_id: u32,
     pub(super) shell: u16,
     pub(super) identity: Identity,
+    pub(super) bound: RevisionBinding,
+    pub(super) fingerprint: u64,
+}
+
+impl Current {
+    /// 🔏️ Whether this generation is the answer for the render's revision, directly or by an unchanged physics fingerprint.
+    pub(super) fn matches(&self, render: AppRenderOperationContext) -> bool {
+        render.matches_revision(self.app_instance_id, self.bound.base_revision, self.bound.generation, &self.bound.canonical_base_revision)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

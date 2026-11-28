@@ -1,0 +1,8 @@
+[
+ {
+  "decision": {
+   "en": "Budget: the facets of the wood, of the foliage masses and of the members of the structure are thinned without moving a corner point, so that the model of every weather stays below 7.6 MiB. A corner point of the body is merged into a neighbour only where, in each of the three views, the facets around it cover the same patch before and after or lie where other solids cover the view, so the outline of the oak in side, front and plan stays as it was; every corner point taken away stays within 1 mm of paper of the new facets and within a tenth of the radius of its mass (0.15 radii of a limb, twig or member), every solid keeps at least four fifths of its volume, and the corner points under a transpiration outlet stay.",
+   "de": "Budget: Die Facetten des Holzes, der Laubmassen und der Stäbe des Tragwerks sind ausgedünnt, ohne einen Eckpunkt zu verschieben, damit das Modell jeder Witterung unter 7,6 MiB bleibt. Ein Eckpunkt des Körpers geht nur dort in einem Nachbarn auf, wo in jeder der drei Ansichten die Facetten um ihn vorher und nachher dieselbe Fläche decken oder dort liegen, wo andere Körper die Ansicht decken; der Umriss der Eiche in Seiten-, Vorderansicht und Grundriss bleibt damit, wie er war. Jeder entfernte Eckpunkt bleibt auf 1 mm Papier an den neuen Facetten und innerhalb eines Zehntels des Radius seiner Masse (0,15 Radien eines Asts, Zweigs oder Stabs), jeder Körper behält mindestens vier Fünftel seines Volumens, und die Eckpunkte unter einem Transpirationsauslass bleiben."
+  }
+ }
+]

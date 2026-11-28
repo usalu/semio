@@ -9,6 +9,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { join, resolve } from "node:path";
 
 import treeKill from "tree-kill";
+import "./🛡️identity/🟦️.ts";
+import "../🧹️reaper/🧪️tests/🟦️.ts";
+import "../🤝️shared-child/🧪️tests/🟦️.ts";
 
 
 type Terminator = "terminateOwnedChildTree" | "terminateOwnedChildTreeGracefullyV1" | "tree-kill" | "child.kill";
@@ -17,7 +20,7 @@ type Fixture = Readonly<{
   spawnDeadlineMs: number;
   settleDeadlineMs: number;
   cases: readonly Readonly<{ id: string; terminator: Terminator; survivors: number }>[];
-  records: readonly Readonly<{ pid: number; signal: "SIGTERM" | "SIGKILL"; killer: number; label: string; reason: string }>[];
+  records: readonly Readonly<{ pid: number; signal: "SIGTERM" | "SIGKILL"; killer: number; label: string; reason: string; startMs?: number; killerStartMs?: number }>[];
 }>;
 
 const ownerRoot = resolve(import.meta.dir, "..");
@@ -135,6 +138,8 @@ describe("process-tree termination", () => {
   test("the kill record names victim, signal, killer, command and reason in English and German, as the Python oracle derives it", () => {
     for (const row of fixture.records) {
       const line = ownedKillRecordLineV1(row);
+      expect(line.includes("Victim created at "), "identity only when both creation times are known").toBe(row.startMs !== undefined && row.killerStartMs !== undefined);
+      if (row.startMs !== undefined && row.killerStartMs !== undefined) expect(line).toContain(`Victim created at ${row.startMs}, sender created at ${row.killerStartMs} (ms since the epoch). / Prozess`);
       expect(line).toContain(`Process ${row.pid} received ${row.signal} from owned execution ${row.label} (killing process ${row.killer}): ${row.reason}`);
       expect(line).toContain(` / Prozess ${row.pid} erhielt ${row.signal} von der eigenen Ausführung ${row.label} (beendender Prozess ${row.killer}): ${row.reason}`);
     }

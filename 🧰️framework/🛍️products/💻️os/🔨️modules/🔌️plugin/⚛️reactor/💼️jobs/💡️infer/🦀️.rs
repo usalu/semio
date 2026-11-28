@@ -302,6 +302,7 @@ impl BoundedJob for OriginalInferenceJob {
     }
     fn cancel(&mut self){self.cancelled=true;if let Some(gateway)=&mut self.gateway{gateway.begin_close();}}
     fn checkpoint(&self)->Option<Vec<u8>>{None}
+    fn replay_input(&self)->Option<&[u8]>{self.input.as_deref()}
     fn terminal_drop_is_shallow(&self)->bool{self.input.is_none()&&self.restored.is_none()&&self.gateway.is_none()&&self.output.is_none()&&self.failure.is_none()&&self.closing_failure.is_none()&&self.reply.is_none()&&self.secondary.is_none()&&self.active.is_none()}
 }
 impl Drop for OriginalInferenceJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_drop_is_shallow(),"original inference job dropped before full source closure");}}

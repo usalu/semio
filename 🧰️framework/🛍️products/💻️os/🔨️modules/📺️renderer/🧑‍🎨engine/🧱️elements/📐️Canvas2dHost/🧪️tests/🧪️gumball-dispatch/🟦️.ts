@@ -96,6 +96,24 @@ describe("canvas2d gumball dispatch corpus", () => {
     stray.cases[0]!.layer.gumball.space = "fem2d";
   });
 
+  it("every stream tick of a live gesture is its whole offset from the press — what a release at that very point commits — so a tick dropped as stale costs nothing", () => {
+    let checked = 0;
+    for (const entry of cases.filter((candidate) => candidate.layer.gumball.liveDispatch && candidate.expect.handle && candidate.expect.handle !== "rotate")) {
+      const view = viewOf(entry);
+      const meta = entry.layer.gumball;
+      const handle = canvas2dGumballHandleAt(meta, view, entry.press.x, entry.press.y)!;
+      const moves = entry.events.filter((event): event is Extract<CorpusEvent, { kind: "move" }> => event.kind === "move");
+      const streamed = replay(entry).dispatches.filter((dispatch) => dispatch.args.phase === "stream");
+      for (const move of moves) {
+        const alone = canvas2dGumballRelease(canvas2dGumballBegin(meta, handle, entry.press.x, entry.press.y), view, move.x, move.y);
+        const tick = streamed.find((dispatch) => alone && JSON.stringify({ ...dispatch.args, phase: undefined }) === JSON.stringify({ ...alone.args, phase: undefined }));
+        expect(tick !== undefined || alone === null || streamed.length === 0, `${entry.name} @ (${move.x}, ${move.y})`).toBe(true);
+        if (tick) checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(5);
+  });
+
   for (const entry of cases) {
     it(`replays: ${entry.name}`, () => {
       const actual = replay(entry);
@@ -109,16 +127,19 @@ describe("canvas2d gumball dispatch corpus", () => {
 //#region 🔮️Oracle
 glMatrix.setMatrixArrayType(Array);
 
-/** 🔮️ The net motion a released gesture's dispatches add up to: offsets summed, angles summed, factors multiplied. */
+/** 🔮️ The net motion a released gesture's dispatches add up to: every live tick and the commit are CUMULATIVE from the
+ * press, so the net is the commit alone (the one-shot of a non-live gesture) — whichever stream ticks the app dropped as
+ * stale. */
 function net(dispatches: readonly Canvas2dGumballTransformPayload[]): Record<string, number> {
   const motion = { dx: 0, dy: 0, angle: 0, sx: 1, sy: 1 };
-  for (const { args } of dispatches) {
-    if (typeof args.dx === "number") motion.dx += args.dx;
-    if (typeof args.dy === "number") motion.dy += args.dy;
-    if (typeof args.angle === "number") motion.angle += args.angle;
-    if (typeof args.sx === "number") motion.sx *= args.sx;
-    if (typeof args.sy === "number") motion.sy *= args.sy;
-  }
+  const settled = dispatches.filter(({ args }) => args.phase !== "stream" && args.phase !== "abort");
+  expect(settled.length, "one commit or one-shot per released gesture").toBe(1);
+  const { args } = settled[0]!;
+  if (typeof args.dx === "number") motion.dx = args.dx;
+  if (typeof args.dy === "number") motion.dy = args.dy;
+  if (typeof args.angle === "number") motion.angle = args.angle;
+  if (typeof args.sx === "number") motion.sx = args.sx;
+  if (typeof args.sy === "number") motion.sy = args.sy;
   return motion;
 }
 

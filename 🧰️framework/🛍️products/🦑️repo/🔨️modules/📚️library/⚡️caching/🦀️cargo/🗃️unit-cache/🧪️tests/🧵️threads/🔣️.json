@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "budgetMegabytes": 1536,
+  "cases": [
+    {"name": "small unit calm host", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "peakMegabytes": 300, "host": {"level": "calm", "availableMegabytes": 8000, "guardMegabytes": 1638}},
+    {"name": "peak at the budget is not over", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "peakMegabytes": 1536, "host": {"level": "calm", "availableMegabytes": 8000, "guardMegabytes": 1638}},
+    {"name": "peak one over the budget", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "peakMegabytes": 1537, "host": {"level": "calm", "availableMegabytes": 8000, "guardMegabytes": 1638}},
+    {"name": "peak over the budget without host", "args": ["--crate-name","a","--out-dir","o","-Zthreads=0"], "peakMegabytes": 2280},
+    {"name": "unknown peak calm host", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "host": {"level": "calm", "availableMegabytes": 8000, "guardMegabytes": 1638}},
+    {"name": "unknown peak no host", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"]},
+    {"name": "guard level", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "peakMegabytes": 100, "host": {"level": "guard", "availableMegabytes": 5000, "guardMegabytes": 1638}},
+    {"name": "danger level", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "host": {"level": "danger", "availableMegabytes": 900, "guardMegabytes": 1638}},
+    {"name": "calm level but below the guard line", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "host": {"level": "calm", "availableMegabytes": 1637, "guardMegabytes": 1638}},
+    {"name": "calm at the guard line", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "host": {"level": "calm", "availableMegabytes": 1638, "guardMegabytes": 1638}},
+    {"name": "peak wins over host as the reason", "args": ["--crate-name","a","--out-dir","o","-Z","threads=0"], "peakMegabytes": 4000, "host": {"level": "danger", "availableMegabytes": 100, "guardMegabytes": 1638}},
+    {"name": "probe without crate name", "args": ["-vV","-Z","threads=0"], "peakMegabytes": 4000},
+    {"name": "stable toolchain without unstable flag", "args": ["--crate-name","a","--out-dir","o"], "peakMegabytes": 4000, "host": {"level": "danger", "availableMegabytes": 100, "guardMegabytes": 1638}},
+    {"name": "no out dir", "args": ["--crate-name","a","-Z","threads=0"], "peakMegabytes": 4000}
+  ]
+}

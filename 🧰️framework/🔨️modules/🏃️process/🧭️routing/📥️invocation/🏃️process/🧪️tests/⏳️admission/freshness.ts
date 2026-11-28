@@ -8,9 +8,9 @@ import schema from"./freshness.schema.json";
 import*as api from"../../🟦️.ts";
 test("a shared short parent cannot authorize after real time elapsed in another branch",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
- const measured=[];
+ const measured:{delayRead:number;reads:number;delayed:boolean;authorized:boolean;parentExpired:boolean}[]=[];
  for(const delayRead of fixture.delayReads){
-  let result;
+  let result:(typeof measured)[number]|undefined;
   try{
    await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:fixture.owner,maximumElapsedMilliseconds:0},{fixture:"control-dag-freshness"},Date.now()),async original=>{
     const p=api.createIssuedResourceControlV1(original,"short",fixture.shortMilliseconds);
@@ -30,7 +30,7 @@ test("a shared short parent cannot authorize after real time elapsed in another 
     });
    });
   }catch{}
-  expect(result).toBeDefined();measured.push(result);
+  if(result===undefined)throw new Error("no measurement");measured.push(result);
  }
  expect(measured.filter(row=>row.delayed&&row.authorized&&row.parentExpired).length).toBe(fixture.expectedStaleAuthorizations);
 });

@@ -287,7 +287,7 @@ pub const TEST_RESTART_SCHEMA: &str = "semio.test.restart-command.v1";
 pub fn test_restart_proofs<const RETAINED: bool, const TOOLS: u8>() -> Vec<ArtifactBoundedFirstStepProof> {
     if RETAINED {
         return vec![
-            ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED, TOOLS>>(file!(), TestApp::<RETAINED, TOOLS>::APP_ID, "TestRestartFactory<true, 2>", TEST_RESTART_TOOL, TestApp::<RETAINED, TOOLS>::DOCUMENT_SCHEMA, ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1))
+            ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED, TOOLS>>(file!(), TestApp::<RETAINED, TOOLS>::APP_ID, "TestRestartFactory", TEST_RESTART_TOOL, TestApp::<RETAINED, TOOLS>::DOCUMENT_SCHEMA, ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1))
                 .with_factory_type::<TestApp<RETAINED, TOOLS>, TestRestartFactory<RETAINED, TOOLS>>(),
         ];
     }
@@ -297,7 +297,7 @@ pub fn test_restart_proofs<const RETAINED: bool, const TOOLS: u8>() -> Vec<Artif
     <TestCommand as ::protocol::OpBinary>::TOOL_JOB_IDS
         .iter()
         .map(|tool_id| {
-            ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED, TOOLS>>(file!(), TestApp::<RETAINED, TOOLS>::APP_ID, "TestAppCommandFactory<false, 2>", tool_id, TestApp::<RETAINED, TOOLS>::DOCUMENT_SCHEMA, test_app_command_contract())
+            ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED, TOOLS>>(file!(), TestApp::<RETAINED, TOOLS>::APP_ID, "TestAppCommandFactory", tool_id, TestApp::<RETAINED, TOOLS>::DOCUMENT_SCHEMA, test_app_command_contract())
                 .with_factory_type::<TestApp<RETAINED, TOOLS>, TestAppCommandFactory<RETAINED, TOOLS>>()
         })
         .collect()
@@ -440,8 +440,8 @@ pub async fn reactor_native_lifecycle_finish(runtime: &semio_plugin_reactor_life
 // `store::os_store::text_format::empty_document_spr`, and that lane had no native coverage at all. Every batch-A plugin
 // died on it with one opaque sentence (`📓️b1a-dormant-plugin-boots.md`).
 
-/// 🏛️ The app shape every `setActiveExample` plugin has: `bounded_document_store_owners`, a
-/// `bounded_document_store_initialization_job` over its own schema, a disposer, a one-item artifact
+/// 🏛️ The app shape every `setActiveExample` plugin has: cold-replay `bounded_document_store_owners`, the framework-default
+/// document store initialization job, a disposer, a one-item artifact
 /// preparation factory, and a snapshot with no `#[child]` field. Delegates every other hook to
 /// `TestApp::<true>` so this fixture states only what it is testing.
 #[doc(hidden)]
@@ -498,13 +498,8 @@ impl ArtifactApp for SingleDocumentApp {
         Some(test_document_preparation_factory())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -542,16 +537,21 @@ pub type SingleDocumentAppUnderTest = VcsArtifactApp<SingleDocumentApp, TestMemb
 #[doc(hidden)]
 pub async fn drive_single_document_archive(app: &mut SingleDocumentAppUnderTest, operation: u64, cx:&mut semio_framework_job::StepContext<'_>) -> protocol::DocumentArchiveLoadStatus {
     semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
-    for _ in 0..1_000_000 {
+    let mut last = None;
+    let (fresh, (fresh_grant, _)) = (semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), cx.original_turn_ceiling());
+    for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns() {
+        semio_plugin_testing_laws::artifact_app_laws::fixture_renew_turn(cx, fresh, fresh_grant).expect("single-document archive turn renewal");
+        cx.consume_fuel(1);
+        let grant = cx.retained_grant();
+        PluginApp::maintenance_step(app, cx, grant).expect("single-document archive maintenance step");
         let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx)).await.expect("single-document archive operation status");
+        last = Some(format!("{status:?}"));
         if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             return status;
         }
-        let demand = PluginApp::maintenance_retirement_demands(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES,cx.fuel_remaining()).expect("single-document archive maintenance quote");
-        let _ = PluginApp::maintenance_step(app,cx, RetainedCloneGrant { maximum_depth: semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_depth, ..plugin_demand_grant(demand) }).expect("single-document archive maintenance step");
         semio_framework_async::yield_once().await;
     }
-    panic!("single-document archive exceeded its public maintenance progress authority")
+    panic!("single-document archive exceeded its public maintenance progress authority: last status {last:?}, {}", PluginApp::typed_operation_diagnostic(app))
 }
 
 #[doc(hidden)]

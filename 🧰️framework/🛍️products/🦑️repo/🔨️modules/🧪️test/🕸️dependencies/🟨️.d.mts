@@ -23,9 +23,21 @@ export function ownerAncestors(owner: string): string[];
 /** 🧪️ Selects the same subject package for graph inference and generated host execution. */
 export function rustSubjectPackage(workspaceRoot: string, owner: string): { readonly name: string; readonly path: string } | null;
 
+/** 🔖️ Whether an oracle pin names an installable release rather than a lock marker. */
+export function isInstallablePin(version: unknown): version is string;
+
+/** 🌱️ The external host distributions one oracle declares, derived from its ecosystem and linked packages. */
+export function oracleHostPackagesOf(oracle: {
+  readonly ecosystem: string;
+  readonly package?: string;
+  readonly version?: string;
+  readonly module?: string;
+  readonly packages?: readonly { readonly package: string; readonly version?: string; readonly module?: string }[];
+}): { implementation: string; package: string; version?: string; module?: string }[];
+
 /** 🔮️ Selects every applicable ancestor contribution for one adapter implementation. */
 export function packagesForOwner<P extends { readonly implementation: string }>(
-  contributions: readonly { readonly owner: string; readonly oracleHostPackages?: readonly P[] }[],
+  contributions: readonly { readonly owner: string; readonly oracleHostPackages?: readonly P[]; readonly oracles?: readonly { readonly ecosystem: string }[] }[],
   owner: string,
   implementation?: string,
 ): P[];

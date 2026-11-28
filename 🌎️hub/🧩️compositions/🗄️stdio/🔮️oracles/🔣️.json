@@ -338,30 +338,6 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
-    },
-    {
-      "id": "pypdf-pdf-1-4-text",
-      "ecosystem": "python",
-      "package": "pypdf",
-      "version": "6.14.2",
-      "capabilities": [
-        "pdf-1-4-text-extraction"
-      ],
-      "comparisonProfiles": [
-        "ordered-json-v1"
-      ],
-      "license": "BSD-3-Clause",
-      "testOnly": true,
-      "homepage": "https://github.com/py-pdf/pypdf",
-      "rationale": "Text extraction is the one PDF capability this repository has no Rust reference for. `lopdf` — the registered editing and parsing oracle — exposes the object graph and the raw content streams, but reconstructing a page's reading order means decoding the font's /Encoding and /ToUnicode CMaps, undoing ligature and glyph-index mappings and re-assembling text-showing operators into lines; it does none of that, and no other crate linked by the oracle host does either. `pypdf` implements exactly that layer and is the reference every Python PDF toolchain builds text extraction on. Deterministic for a fixed document, pure Python, no network, no system libraries, cross-platform. Scoped to the text layer only: page geometry, object structure and rendering stay with the existing oracles.",
-      "kind": "third-party-library",
-      "engine": {
-        "family": "pypdf",
-        "implementation": "pypdf pure-Python PDF library",
-        "version": "6.14.2"
-      },
-      "productionReachable": false,
-      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [
@@ -476,24 +452,6 @@
       "implementation": "rust",
       "package": "semio-hub-stdio-test-oracle",
       "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    },
-    {
-      "implementation": "python",
-      "package": "pypdf",
-      "version": "6.14.2",
-      "module": "pypdf"
-    },
-    {
-      "implementation": "python",
-      "package": "simplejson",
-      "version": "4.1.1",
-      "module": "simplejson"
-    },
-    {
-      "implementation": "python",
-      "package": "ifcopenshell",
-      "version": "0.8.4.post1",
-      "module": "ifcopenshell"
     }
   ],
   "migrationStatus": {

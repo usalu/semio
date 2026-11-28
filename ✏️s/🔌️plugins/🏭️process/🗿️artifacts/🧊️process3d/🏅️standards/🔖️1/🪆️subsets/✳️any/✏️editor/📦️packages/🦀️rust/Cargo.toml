@@ -16,6 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [[test]]
+name = "process3d_example_archive_door"
+path = "../../🧪️tests/🚪️archive-door/🦀️.rs"
+
+[[test]]
 name = "process3d_bearbeiten_pane_smoke"
 path = "../../🧪️tests/🪧️pane-smoke-target/🦀️.rs"
 

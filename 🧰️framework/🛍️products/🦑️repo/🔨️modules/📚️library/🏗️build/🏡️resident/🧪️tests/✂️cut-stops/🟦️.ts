@@ -20,7 +20,7 @@ const harness=(options:{hostMegabytes?:number;tripped?:(env:Record<string,string
   observe:async()=>1000,
   createWorker:(_url:unknown,_data:unknown,env:Record<string,string|undefined>)=>{const listeners:Record<string,(value:unknown,extra?:unknown)=>void>={},fake:Fake={emit:(event,value,extra)=>listeners[event]?.(value,extra),env};workers.push(fake);current=fake;
    return{pid:4242,on:(event:string,listener:(value:unknown,extra?:unknown)=>void)=>{listeners[event]=listener;},send:()=>true,terminate:async()=>0};}});
- const start=(name:string,signal?:AbortSignal)=>pool.run({root:"/tmp/"+name},{signal,onProgress:(_ms:number,detail:any)=>{if(detail?.decision&&["cut","handoff"].includes(detail.decision.key))decisions.push(detail.decision);}});
+ const start=(name:string,signal?:AbortSignal)=>pool.run({root:"/tmp/"+name},{signal,onProgress:(_ms:number,detail:any)=>{if(detail?.decision&&["cut","killed","handoff"].includes(detail.decision.key))decisions.push(detail.decision);}});
  const next=async(count:number)=>{for(let tries=0;workers.length<count&&tries<300;tries++)await wait(10);return workers[count-1]!;};
  return{pool,workers,decisions,start,next};
 };
@@ -67,7 +67,12 @@ test("a worker killed from outside (the warden cancel: exit code null, signal SI
  const{pool,decisions,start,next}=harness({}),run=start("killed");
  (await next(1)).emit("exit",null,"SIGKILL");
  const second=await next(2);expect(cap(second)).toBe("2");second.emit("message",{type:"done",graph:{ok:1}});
- expect(await run).toEqual({graph:{ok:1}});expect(decisions.map(row=>row.key)).toEqual(["cut"]);await pool.close();
+ expect(await run).toEqual({graph:{ok:1}});expect(decisions.map(row=>row.key)).toEqual(["killed"]);await pool.close();
+});
+
+test("the line of a kill from outside says it was ended inside its grant and never that it grew past a limit, in English and German",()=>{
+ const text=renderBothV1("host-slice-owners-killed",{seconds:3,used:1,budget:6,kind:"3372",limit:4169})!;
+ for(const language of ["en","de"] as const){for(const part of ["3372","4169"])expect(text[language]).toContain(part);expect(text[language]).not.toContain("more than");}
 });
 
 test("a worker killed at the last cut level is started again as a restart with its cause named, and the next worker finishes; an exit code other than a signal stays a failure",async()=>{

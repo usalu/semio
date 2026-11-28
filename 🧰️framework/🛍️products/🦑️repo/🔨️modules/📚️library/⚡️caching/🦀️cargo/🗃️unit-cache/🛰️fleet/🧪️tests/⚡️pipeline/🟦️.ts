@@ -113,8 +113,8 @@ test("hostile or inconsistent entries are a miss: a corrupt blob, a size above t
 
 test("the wrapper settles the slot claims of a fleet hit before its process ends, and only there",()=>{
  const source=readFileSync(fileURLToPath(new URL("../../../📜️script.ts",import.meta.url)),"utf8");
- expect(source.match(/awaitFleetSettlesV1\(\)/gu)?.length).toBe(1);
- expect(source).toContain('countUnitV1(workspaceOf,"remoteHit");await awaitFleetSettlesV1();return 0;');
+ expect(source.match(/awaitFleetSettlesV1\(\)/gu)?.length,"the lookup before the claim and the lookup after a long admission wait").toBe(2);
+ expect(source.match(/countUnitV1\(workspaceOf,"remoteHit"\);await awaitFleetSettlesV1\(\);return 0;/gu)?.length).toBe(2);
 });
 
 let server:RemoteCacheServerV1|undefined;

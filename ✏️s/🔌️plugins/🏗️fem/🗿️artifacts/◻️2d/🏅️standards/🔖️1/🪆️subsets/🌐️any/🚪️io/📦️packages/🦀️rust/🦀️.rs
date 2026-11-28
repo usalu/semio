@@ -143,6 +143,10 @@ pub mod standards {
 }
 #[path = "."]
 pub mod examples {
+    /// 📚️ The one ordered declaration of this artifact's bundled examples: the host registry, the Artifact panel combobox and the `setActiveExample` palette options all derive from it.
+    pub fn sources() -> Vec<semio_plugin::ExampleSource> {
+        vec![demo::source()]
+    }
     #[path = "."]
     pub mod demo {
         #[path = "../../../📚️examples/🎬️demo/🦀️.rs"]

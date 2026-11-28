@@ -1,0 +1,20 @@
+{
+  "tree": {
+    "depth": 2,
+    "breadth": 2
+  },
+  "spawnDeadlineMs": 30000,
+  "settleDeadlineMs": 5000,
+  "cases": [
+    { "id": "owned-tree", "terminator": "terminateOwnedChildTree", "survivors": 0 },
+    { "id": "owned-tree-graceful", "terminator": "terminateOwnedChildTreeGracefullyV1", "survivors": 0 },
+    { "id": "third-party-tree", "terminator": "tree-kill", "survivors": 0 },
+    { "id": "root-only", "terminator": "child.kill", "survivors": 6 }
+  ],
+  "records": [
+    { "pid": 4711, "signal": "SIGTERM", "killer": 99, "label": "repository:cargo", "reason": "cancelled" },
+    { "pid": 4712, "signal": "SIGKILL", "killer": 99, "label": "repository:build", "reason": "the command made no progress for 3600 s" },
+    { "pid": 4713, "signal": "SIGTERM", "killer": 99, "label": "repository:cargo", "reason": "the last requester left", "startMs": 1767225600000, "killerStartMs": 1767225000000 },
+    { "pid": 4714, "signal": "SIGKILL", "killer": 99, "label": "repository:cargo", "reason": "sender identity unknown", "startMs": 1767225600000 }
+  ]
+}

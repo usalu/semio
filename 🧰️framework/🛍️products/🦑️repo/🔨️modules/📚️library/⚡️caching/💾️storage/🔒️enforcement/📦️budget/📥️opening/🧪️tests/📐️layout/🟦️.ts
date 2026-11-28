@@ -21,7 +21,7 @@ test("common Products entry repairs derived receipt from current journal after p
 });
 
 test("ordinary store maintenance and development State share canonical pre-layout opening",()=>{
- const opening=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),store=readFileSync(new URL("../../🏪️store/🟦️.ts",import.meta.url),"utf8");expect(opening).toContain('image=id==="products"?await openRepositoryProductsLayoutV1(workspace,control,open):await open()');expect(store.match(/await openRepositoryCachePartitionV1\(workspace,id,/gu)?.length).toBe(3);expect(opening).toContain('await open(workspace,"products",control)');expect(opening).toContain('parentPolicy:productsChargePolicyV1(workspace,scope.image.root)');expect(source).not.toContain('from"../🟦️.ts"');
+ const opening=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),store=readFileSync(new URL("../../🏪️store/🟦️.ts",import.meta.url),"utf8");expect(opening).toContain('image=id==="products"?await openRepositoryProductsLayoutV1(workspace,control,open):id==="graph"||id==="rust"?await openRepositoryElasticChargeV1(workspace,id,control,open):await open()');expect(store.match(/await openRepositoryCachePartitionV1\(workspace,id,/gu)?.length).toBe(3);expect(opening).toContain('await open(workspace,"products",control)');expect(opening).toContain('parentPolicy:productsChargePolicyV1(workspace,scope.image.root)');expect(source).not.toContain('from"../🟦️.ts"');
 });
 
 import readCases from"./📖️reads.json";

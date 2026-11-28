@@ -5,6 +5,8 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::remove_cell;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_target_revision;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address;
@@ -97,6 +99,15 @@ pub(crate) fn parse_xlsx_number(text: &str, locale: Option<Locale>) -> Option<f6
     canonical.parse::<f64>().ok().filter(|number| number.is_finite())
 }
 
+/// 🔤️ Spells literal text so that [`parse_xlsx_cell_value`] reads it back as the same text: text the parser would take for a number, boolean, formula, empty draft or apostrophe literal keeps a leading apostrophe.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn spell_xlsx_text(text: &str, locale: Option<Locale>) -> String {
+    match parse_xlsx_cell_value(text, locale) {
+        XlsxCellValue::InlineString(literal) if literal == text => text.to_string(),
+        _ => format!("'{text}"),
+    }
+}
+
 /// 🔎 Renders one cell value to display text. `SharedString` resolves against this document's own
 /// `workbook.shared_strings` (the typed semantic view's own index-keyed table — never `opc`'s raw
 /// XML, see the snapshot module's own doc comment on why the two must stay distinct); an
@@ -107,8 +118,8 @@ pub(crate) fn parse_xlsx_number(text: &str, locale: Option<Locale>) -> Option<f6
 pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String], locale: Option<Locale>) -> String {
     match value {
         XlsxCellValue::Number(n) => format_xlsx_number(*n, locale),
-        XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
-        XlsxCellValue::InlineString(text) => text.clone(),
+        XlsxCellValue::SharedString(index) => shared_strings.get(*index).map_or_else(|| format!("#{index}"), |text| spell_xlsx_text(text, locale)),
+        XlsxCellValue::InlineString(text) => spell_xlsx_text(text, locale),
         XlsxCellValue::Boolean(flag) => flag.to_string(),
         XlsxCellValue::Error(error) => error.clone(),
         XlsxCellValue::Formula { expr, .. } => format!("={expr}"),
@@ -132,13 +143,23 @@ pub(crate) fn parse_xlsx_cell_value(text: &str, locale: Option<Locale>) -> XlsxC
     if let Some(expr) = text.strip_prefix('=') {
         return XlsxCellValue::Formula { expr: expr.to_string(), cached: None };
     }
-    match text {
-        "true" => XlsxCellValue::Boolean(true),
-        "false" => XlsxCellValue::Boolean(false),
-        _ => match parse_xlsx_number(text, locale) {
-            Some(number) => XlsxCellValue::Number(number),
-            None => XlsxCellValue::InlineString(text.to_string()),
-        },
+    if let Some(flag) = parse_xlsx_boolean(text, locale) {
+        return XlsxCellValue::Boolean(flag);
+    }
+    match parse_xlsx_number(text, locale) {
+        Some(number) => XlsxCellValue::Number(number),
+        None => XlsxCellValue::InlineString(text.to_string()),
+    }
+}
+
+/// 🔘️ Reads a boolean literal the way Excel does: `TRUE`/`FALSE` in any letter case in every locale, plus the German `WAHR`/`FALSCH` when the input language is German.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_xlsx_boolean(text: &str, locale: Option<Locale>) -> Option<bool> {
+    let (truthy, falsy) = if locale == Some(Locale::De) { ("WAHR", "FALSCH") } else { ("TRUE", "FALSE") };
+    match () {
+        _ if text.eq_ignore_ascii_case("true") || text.eq_ignore_ascii_case(truthy) => Some(true),
+        _ if text.eq_ignore_ascii_case("false") || text.eq_ignore_ascii_case(falsy) => Some(false),
+        _ => None,
     }
 }
 
@@ -150,6 +171,7 @@ pub fn xlsx_canonical_cell_text(text: &str, locale: &str) -> String {
     };
     match parse_xlsx_cell_value(text, Some(locale)) {
         XlsxCellValue::Number(number) => format_xlsx_number(number, None),
+        XlsxCellValue::Boolean(flag) => if flag { "TRUE" } else { "FALSE" }.to_string(),
         XlsxCellValue::InlineString(literal) if literal == text && parse_xlsx_number(text, None).is_some() => format!("'{text}"),
         _ => text.to_string(),
     }
@@ -387,6 +409,12 @@ fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand, loca
     xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, locale, "stdio.xlsx")
 }
 
+/// 🎨️ Whether the addressed cell element carries a style, so that clearing its content keeps its formatting instead of removing the cell.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xlsx_cell_is_styled(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress) -> bool {
+    cell_address::resolve_xlsx_cell_address(snapshot, address).is_ok_and(|resolved| matches!(resolved.node, semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } if attrs.iter().any(|attr| attr.name == "s")))
+}
+
 pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, locale: Option<Locale>, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
     let fault = |suffix: &'static str, message: String| {
         Fault::new(
@@ -415,10 +443,19 @@ pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row:
         if address.revision != revision {
             return Err(fault("cell-conflict", format!("cell {sheet_name}!{row},{column} changed before this draft was applied")));
         }
-        if render_xlsx_cell_value(&cell.value, &workbook.shared_strings, locale) == value {
+        let parsed = parse_xlsx_cell_value(value, locale);
+        let unchanged = match (&cell.value, &parsed) {
+            (XlsxCellValue::SharedString(index), XlsxCellValue::InlineString(text)) => workbook.shared_strings.get(*index) == Some(text),
+            (current, parsed) => current == parsed || render_xlsx_cell_value(current, &workbook.shared_strings, locale) == value,
+        };
+        if unchanged {
             return Ok(Emit::default());
         }
-        return Ok(Emit { artifact_mutations: xlsx_with_recalculated_caches(snapshot, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value, locale), node: None })]), ..Default::default() });
+        let mutation = match parsed {
+            XlsxCellValue::Empty if !xlsx_cell_is_styled(snapshot, &address) => XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row: false }),
+            parsed => XlsxMutation::SetCell(set_cell::SetCell { address, value: parsed, node: None }),
+        };
+        return Ok(Emit { artifact_mutations: xlsx_with_recalculated_caches(snapshot, vec![mutation]), ..Default::default() });
     }
     let address = xlsx_cell_vacancy_address(snapshot, sheet_name, row, column).map_err(|message| fault("cell-stale", message))?;
     if address.worksheet.revision != revision {
@@ -443,7 +480,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEdi
     }
 
     fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
-        edit_rules::special(event, snapshot).map(|mutations| mutations.map(|mutations| xlsx_with_recalculated_caches(snapshot, mutations))).map_err(|error| Fault::from(error.to_string()))
+        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

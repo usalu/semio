@@ -260,7 +260,7 @@ test("the command: dry run prints the plan, a missing compiler is refused with e
  write(directory,"MODULE.bazel","");
  write(directory,"lib/a/🟦️.ts","export const a=1;");
  const out:string[]=[],notes:string[]=[],cache=join(directory,"cache");
- const run=async(args:string[],language="en")=>{out.length=0;notes.length=0;return runTypecheckCliV1(directory,args,{SEMIO_LANGUAGE:language,SEMIO_TYPECHECK_CACHE:cache},line=>out.push(line),{directory,notice:line=>notes.push(line)});};
+ const run=async(args:string[],language="en")=>{out.length=0;notes.length=0;return runTypecheckCliV1(directory,args,{SEMIO_LANGUAGE:language,SEMIO_TYPECHECK_CACHE:cache},line=>out.push(line),{directory,notice:line=>notes.push(line),run:{ensureCompiler:undefined}});};
  expect(await run(["--dry-run","--json","lib/a/🟦️.ts"])).toBe(0);
  expect(JSON.parse(out.join("\n"))).toMatchObject({version:1,touched:["lib/a/🟦️.ts"],truncated:false});
  expect(await run(["--dry-run","lib/a/🟦️.ts"])).toBe(0);
@@ -356,3 +356,17 @@ test("AMBIENT LAW programs: no program that `repo typecheck` composes for the pr
   for(const entry of policy.ambient)expect(files.some(file=>file.endsWith("/"+entry.declaration)),`${id} loads ${entry.declaration}`).toBe(entry.projects.includes(id));
  }
 }),600000);
+
+test("a missing compiler is restored through the ensure port with progress in the run language, then checked; an unfinished or failed ensure is a typed refusal",scratch(async directory=>{
+ write(directory,"lib/a/🟦️.ts","export const a=1;");write(directory,"tsconfig.json","{}");
+ const limits=miniPolicy({compiler:{...policy.compiler,script:"node_modules/typescript/lib/tsc.js",typeRoots:"node_modules/@types"}}),touched={check:["lib/a/🟦️.ts"],pairs:[]},options=typecheckArgumentsV1(["lib/a/🟦️.ts"],limits),cache=join(directory,"cache"),lines:string[]=[];
+ const run=(ports:object)=>runTypecheckV1(directory,touched,options,"de",{cacheDirectory:cache,compile:compileWith("",0),notice:line=>lines.push(line),...ports},limits);
+ expect(((await run({}).catch(error=>error)) as {key:string}).key).toBe("typecheck.compiler.missing");
+ let calls=0;
+ const healed=await run({ensureCompiler:async()=>{calls++;write(directory,"node_modules/typescript/lib/tsc.js","");}});
+ expect(healed.status).toBe("passed");expect(calls).toBe(1);expect(lines.some(line=>line.includes("Abhängigkeiten werden wiederhergestellt"))).toBe(true);
+ rmSync(join(directory,"node_modules"),{recursive:true,force:true});
+ expect(((await run({ensureCompiler:async()=>{}}).catch(error=>error)) as {key:string}).key).toBe("typecheck.compiler.missing");
+ const failed=await run({ensureCompiler:async()=>{throw Error("offline");}}).catch(error=>error) as {key:string;code:string};
+ expect(failed.key).toBe("typecheck.compiler.ensure-failed");expect(failed.code).toBe("failed");
+}));

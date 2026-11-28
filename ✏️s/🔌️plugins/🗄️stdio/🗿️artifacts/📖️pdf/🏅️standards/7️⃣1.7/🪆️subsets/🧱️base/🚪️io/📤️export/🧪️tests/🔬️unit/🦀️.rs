@@ -225,6 +225,21 @@ fn text_document_round_trips_and_shows_its_text() {
     assert_eq!(again, bytes, "a decoded document is its own fixed point");
 }
 
+/// 🏷️ A property list that only names an optional content group resolves to the group object itself, so no indirect object holds a bare reference and the saved file reopens with the group bound.
+#[test]
+fn property_list_naming_a_group_lowers_to_the_group_object() {
+    let mut seed = blank_pdf_snapshot();
+    seed.optional_content = Some(PdfOptionalContent { groups: vec![PdfOptionalContentGroup { id: "OCG1".into(), name: "Layer".into(), intent: vec!["View".into()], usage: Vec::new() }], on: vec!["OCG1".into()], ..Default::default() });
+    seed.properties.push(PdfNamedProperties { name: "MC0".into(), entries: vec![PdfDictEntry::new("OCG", PdfObject::Name("OCG1".into()))] });
+    seed.pages[0].content.extend(vec![PdfOp::BeginMarkedContentWithProperties { tag: "OC".into(), properties: PdfPropertyList::Named { name: "MC0".into() } }, PdfOp::EndMarkedContent]);
+    let lowered = lower_document(&seed, 1, LowerOptions::default()).unwrap();
+    assert!(lowered.objects.iter().all(|object| !matches!(object.value, PdfObject::Ref(_))), "no indirect object may hold only a reference");
+    let bytes = encode_pdf(&seed).unwrap();
+    let decoded = decode_pdf(&bytes).unwrap();
+    assert_eq!(decoded.properties.len(), 1);
+    assert_eq!(decoded.properties[0].entries, seed.properties[0].entries);
+}
+
 #[test]
 fn rich_document_round_trips_every_lane() {
     let seed = rich_document();

@@ -342,9 +342,9 @@ test("on macOS a checkout below a protected folder starts its service through la
   const marker=join(base,"direct-child-ran"),command=[process.execPath,"-e",`require("node:fs").writeFileSync(${JSON.stringify(marker)},"x")`];
   const route={platform:"darwin",home:fakeHome,exists:(path:string)=>path===identity,executable:process.execPath,uid:501},env=environment("launchd-spawn"),implementation=digest("impl-launchd-spawn"),runtime=hostEndpointsV1(implementation,env);
   const options={wait:()=>undefined,verifyMilliseconds:50,pollMilliseconds:10,files:()=>[]};
-  const calls:string[]=[],healthy=(program:string,args:readonly string[])=>{calls.push([program,...args].join(" "));return{status:0,stdout:args[0]==="print"?"\tstate = running\n\truns = 1\n\tpid = 99\n":""};};
+  const calls:string[]=[];let bootstrapped=false;const healthy=(program:string,args:readonly string[])=>{calls.push([program,...args].join(" "));if(args[0]==="bootstrap")bootstrapped=true;return args[0]==="print"&&!bootstrapped?{status:113,stdout:""}:{status:0,stdout:args[0]==="print"?"\tstate = running\n\truns = 1\n\tpid = 99\n":""};};
   spawnHostServiceV1({command,environment:{...env,X_TOKEN:"t0ken"},cwd,launchd:{route,run:healthy,options,ensure:()=>({state:"ready"})}})({runtime});
-  expect(calls.map(call=>call.split(" ").slice(0,2).join(" "))).toEqual(["launchctl list","launchctl bootout","launchctl bootstrap","launchctl kickstart","launchctl print"]);
+  expect(calls.map(call=>call.split(" ").slice(0,2).join(" "))).toEqual(["launchctl list","launchctl print","launchctl bootstrap","launchctl kickstart","launchctl print"]);
   await sleep(500);
   expect(existsSync(marker),"no direct child").toBe(false);
   expect(readServiceExitRowsV1(runtime.directory).at(-1)).toMatchObject({event:"start",via:"launchd"});

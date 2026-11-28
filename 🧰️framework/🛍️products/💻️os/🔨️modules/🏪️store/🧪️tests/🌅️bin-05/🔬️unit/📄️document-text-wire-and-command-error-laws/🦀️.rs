@@ -71,13 +71,11 @@ async fn parse_document_text_rejects_an_unknown_header_line_keyword() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }, &mut identity).await.expect("create alternative (auto-commits and activates it)");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply");
+    store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }, &mut *identity).await.expect("create alternative (auto-commits and activates it)");
     assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("branch ")), "an alternative must print as a `branch` transition line: {}", files.ops);
@@ -86,22 +84,19 @@ async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_descr
     assert!(parsed.envelope.active_alternative_id.is_none(), "the ops text is the shared log and hydrates to the trunk");
     assert_eq!(parsed.snapshot.n, store.snapshot().expect("snapshot").n);
     test_support::retire_parsed_document(parsed);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🔁️ E1 is withdrawn by a revert transition and stays withdrawn once the same author's e2 lands:
 /// the text states the events, the reload folds them into the same position.
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply e1");
-    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply e1");
+    store.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply e2");
     assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("revert ")), "the undo must print as a `revert` transition line: {}", files.ops);
@@ -109,8 +104,7 @@ async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving()
     assert_eq!(parsed.envelope.cursor, store.envelope().cursor.clone(), "cursor diverged across a print/parse round trip");
     assert_eq!(parsed.snapshot.n, Some(2), "restored snapshot must reflect only the applied edit (e2), not both");
     test_support::retire_parsed_document(parsed);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🔐️ The save→load→undo proof (contract's runtime-behavior requirement): a store's
@@ -126,16 +120,14 @@ async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving()
 /// Undo twice from here reaches the true initial state.
 #[semio_framework_async_macros::async_test]
 async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1 snapshot");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply e2");
     let post_e2 = store.snapshot().expect("post-e2 snapshot");
-    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e2");
+    store.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo e2");
     assert_eq!(store.snapshot().expect("live snapshot"), post_e1, "precondition: live store is back at post-e1");
     test_support::assert_live_equals_replay(&store).await;
 
@@ -149,27 +141,24 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
     test_support::assert_live_equals_replay(&reloaded).await;
 
-    reloaded.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("redo e2 after reload");
+    reloaded.dispatch(ArtifactCommand::Redo, &mut *identity).await.expect("redo e2 after reload");
     assert_eq!(reloaded.snapshot().expect("post-redo snapshot"), post_e2);
     test_support::assert_live_equals_replay(&reloaded).await;
 
-    reloaded.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e2 again");
-    reloaded.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e1");
+    reloaded.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo e2 again");
+    reloaded.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo e1");
     assert_eq!(reloaded.snapshot().expect("final snapshot"), DemoSnapshot { n: Some(0) });
     test_support::assert_live_equals_replay(&reloaded).await;
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn document_codecs_share_complete_authoritative_history_validation() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope = create_document_envelope("demo/v1", "codec-validation", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity).await.expect("commit");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply");
+    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut *identity).await.expect("commit");
     let text = print_document_text(store.envelope()).await.expect("text fixture");
     let duplicate_commit = text.ops.lines().find(|line| line.starts_with("commit ")).expect("one persisted commit transition");
     let malformed_text = format!("{}\n{duplicate_commit}", text.ops);
@@ -180,73 +169,57 @@ async fn document_codecs_share_complete_authoritative_history_validation() {
     history.transitions.push(history.transitions.first().expect("one persisted commit transition").clone());
     let malformed_spr = semio_os_spr::encode_history(&history, &semio_os_spr::EncodeOptions { write_backwards_section: true, ..semio_os_spr::EncodeOptions::default() }).await.expect("encode malformed history");
     assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("repeats transition")));
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 
 //#region 🔖️CommandErrorPaths
 #[semio_framework_async_macros::async_test]
 async fn apply_with_no_mutations_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), transaction: None }, &mut identity).await.unwrap_err();
+    let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), transaction: None }, &mut *identity).await.unwrap_err();
     assert_eq!(error, VcsError::EmptyApply);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_with_nothing_applied_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    assert_eq!(store.dispatch(ArtifactCommand::Undo, &mut identity).await.unwrap_err(), VcsError::NothingToUndo);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    assert_eq!(store.dispatch(ArtifactCommand::Undo, &mut *identity).await.unwrap_err(), VcsError::NothingToUndo);
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn redo_with_nothing_undone_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    assert_eq!(store.dispatch(ArtifactCommand::Redo, &mut identity).await.unwrap_err(), VcsError::NothingToRedo);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    assert_eq!(store.dispatch(ArtifactCommand::Redo, &mut *identity).await.unwrap_err(), VcsError::NothingToRedo);
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_of_an_unknown_checkpoint_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }, &mut identity).await.unwrap_err();
+    let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }, &mut *identity).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownChange("nope".into()));
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn switch_to_an_unknown_alternative_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }, &mut identity).await.unwrap_err();
+    let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }, &mut *identity).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -262,33 +235,46 @@ async fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_alternative_with_no_edits_and_no_checkpoints_branches_from_a_baseline_checkpoint() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }, &mut identity).await.expect("a document without any checkpoint still branches from a baseline checkpoint");
+    store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }, &mut *identity).await.expect("a document without any checkpoint still branches from a baseline checkpoint");
     assert_eq!(store.envelope().vcs.checkpoints.len(), 1, "the baseline checkpoint is the branch point");
     let named: Vec<_> = store.envelope().vcs.alternatives.iter().filter(|alternative| alternative.name == "x").collect();
     assert_eq!(named.len(), 1, "exactly one alternative named x: {:?}", store.envelope().vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect::<Vec<_>>());
     assert_eq!(named[0].checkpoint_ids, vec![store.envelope().vcs.checkpoints[0].id.clone()]);
     assert!(store.envelope().active_alternative_id.is_some());
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_second_alternative_and_an_empty_commit_never_fault_without_a_checkpoint() {
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    store.dispatch(ArtifactCommand::CreateAlternative { name: "y".into() }, &mut *identity).await.expect("the first alternative branches from a baseline checkpoint");
+    let baseline = store.envelope().vcs.checkpoints[0].id.clone();
+    let nothing_pending = store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, &mut *identity).await.expect_err("a commit with nothing pending is refused");
+    assert!(matches!(&nothing_pending, VcsError::ValidationFailed(message) if message.as_str() == "cannot create an empty checkpoint"), "the refusal is the empty-checkpoint one, never a checkpoint-less fault: {nothing_pending:?}");
+    store.dispatch(ArtifactCommand::CreateAlternative { name: "z".into() }, &mut *identity).await.expect("a second alternative branches from the checkpoint the first one pinned");
+    assert_eq!(store.envelope().vcs.checkpoints.len(), 1, "no further checkpoint was needed");
+    for name in ["y", "z"] {
+        let named: Vec<_> = store.envelope().vcs.alternatives.iter().filter(|alternative| alternative.name == name).collect();
+        assert_eq!(named.len(), 1, "exactly one alternative named {name}");
+        assert_eq!(named[0].checkpoint_ids, vec![baseline.clone()], "{name} pins the baseline checkpoint");
+    }
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn compensating_undo_without_a_semantic_command_is_rejected() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
-    let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }, &mut identity).await.unwrap_err();
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply");
+    let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }, &mut *identity).await.unwrap_err();
     assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -301,38 +287,32 @@ async fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let command_text = print_command(&ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("print command");
-    store.dispatch_text(&command_text, &mut identity).await.expect("dispatch text");
+    store.dispatch_text(&command_text, &mut *identity).await.expect("dispatch text");
     assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: Some(7) }).unwrap());
 
-    let error = store.dispatch_text("not a command", &mut identity).await.unwrap_err();
+    let error = store.dispatch_text("not a command", &mut *identity).await.unwrap_err();
     assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }.encode_command().expect("encode command");
-    store.dispatch_binary(&command_bytes, &mut identity).await.expect("dispatch binary");
+    store.dispatch_binary(&command_bytes, &mut *identity).await.expect("dispatch binary");
     assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: Some(7) }).unwrap());
 
     let mut wrong_format = command_bytes.clone();
     wrong_format[0] = 9;
-    let error = store.dispatch_binary(&wrong_format, &mut identity).await.unwrap_err();
+    let error = store.dispatch_binary(&wrong_format, &mut *identity).await.unwrap_err();
     assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]

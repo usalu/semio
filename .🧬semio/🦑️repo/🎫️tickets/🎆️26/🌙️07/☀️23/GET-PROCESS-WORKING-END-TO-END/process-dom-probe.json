@@ -1,0 +1,10 @@
+[
+ {"name":"wait for the initial document","js":"(async()=>'w')()","until":"(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()","timeoutMs":420000,"settleMs":2000},
+ {"name":"buttons","js":"(async()=>JSON.stringify([...document.querySelectorAll('button,[role=tab],[role=menuitem],[role=treeitem]')].map(b=>[b.tagName,b.getAttribute('role'),(b.getAttribute('aria-label')||'').slice(0,40),b.innerText.trim().replace(/\\n/g,'|').slice(0,40)])))()","settleMs":200},
+ {"name":"open Actions","js":"(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Actions')).click();return 'a'})()","settleMs":2000},
+ {"name":"panel html","js":"(async()=>{const e=[...document.querySelectorAll('*')].find(e=>e.children.length&&/^Step/.test(e.innerText)&&e.innerText.includes('Add Step'));return (e?e.outerHTML:'none').replace(/\\s+/g,' ').slice(0,6000)})()","settleMs":200},
+ {"name":"click Add Step","js":"(async()=>{[...document.querySelectorAll('button,[role=menuitem],[role=treeitem],[role=button]')].find(b=>b.innerText.trim().startsWith('Add Step')).click();return 'c'})()","settleMs":3000},
+ {"name":"dialog html","js":"(async()=>{const d=document.querySelector('[role=dialog],dialog[open],[aria-modal=true]');return (d?d.outerHTML:'none '+document.body.innerText.slice(0,1500)).replace(/\\s+/g,' ').slice(0,8000)})()","settleMs":200},
+ {"name":"escape","js":"(async()=>'k')()","keys":[""],"settleMs":1500},
+ {"name":"panel tabs text","js":"(async()=>document.body.innerText.replace(/\\n+/g,' | ').slice(0,3000))()","settleMs":200}
+]

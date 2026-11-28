@@ -438,6 +438,8 @@ test("the activity slot of the watchdog: the names of the supervisor and of the 
  const holder=globalThis as unknown as Record<symbol,unknown>,key=Symbol.for("semio.fleet.blockedRestart");
  holder[key]={count:3,lastMs:42};
  try{expect(blockedFailuresV1()).toEqual([{kind:"loop-blocked-restart",count:3,lastMs:42}]);}finally{delete holder[key];}
+ holder[key]={count:91,lastMs:7,activity:"walk"};
+ try{expect(blockedFailuresV1()).toEqual([{kind:"loop-blocked-restart",count:91,lastMs:7},{kind:"loop-blocked-in-walk",count:91,lastMs:7}]);expect(blockedFailuresV1().every(row=>/^[a-z][a-z0-9-]{0,39}$/u.test(row.kind))).toBe(true);}finally{delete holder[key];}
  expect(blockedFailuresV1()).toEqual([]);
 });
 

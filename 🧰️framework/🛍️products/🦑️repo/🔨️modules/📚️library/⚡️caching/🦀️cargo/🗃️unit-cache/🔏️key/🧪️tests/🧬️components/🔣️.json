@@ -194,6 +194,15 @@
       "to": "--emit=dep-info,metadata"
     },
     {
+      "name": "cargo identity",
+      "changes": [
+        "cargo"
+      ],
+      "set": {
+        "cargoIdentity": "-3c9971acb8b0a698"
+      }
+    },
+    {
       "name": "platform class",
       "changes": [
         "platform"

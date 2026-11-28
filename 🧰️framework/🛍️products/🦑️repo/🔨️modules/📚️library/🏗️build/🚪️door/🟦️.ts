@@ -47,6 +47,7 @@ export const buildDoorLightLoadersV1:Readonly<Record<string,()=>Promise<Readonly
  scheduler:()=>import("../🗓️scheduler/⌨️command/🟦️.ts"),
  "test-file":()=>import("../🔬️test-file/⌨️command/🟦️.ts"),
  typecheck:()=>import("../🔬️typecheck/⌨️command/🟦️.ts"),
+ land:()=>import("../🚉️land/⌨️command/🟦️.ts"),
 });
 
 const allowedValues=(source:BuildDoorCatalogueV1,option:string):readonly string[]|undefined=>{const name=source.flags.find(flag=>flag.name===option)?.valueName;return name!==undefined&&/^[A-Za-z0-9-]+(\|[A-Za-z0-9-]+)+$/u.test(name)?name.split("|"):undefined;};

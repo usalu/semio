@@ -145,6 +145,10 @@ pub trait ErasedSnapshotRetirement: Send + std::any::Any {
     /// 🧷️ Native owners override this port to preserve the caller's actual decoder ledger and recipient.
     fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(body,effect)}
     fn requires_original_control(&self) -> bool { false }
+    /// ❄️ Quotes the heap bytes and work an untouched cold frame releases at once, or `None` when it needs retirement steps.
+    fn cold_close_quote(&self)->Option<(usize,u64)>{None}
+    /// ❄️ Releases an untouched cold frame's whole custody at once and returns the bytes released; `None` leaves the frame unchanged.
+    fn cold_close(&mut self)->Option<usize>{None}
     /// 📮️ A reply-only owner lends the resident stash that keeps its unanswered turn between drivers.
     fn resident_reply(&mut self)->Option<&mut crate::ReplyStash<crate::OriginalRetirementFailure>>{None}
     /// 🚫️ A reply-only owner answers every close through its resident reply and refuses the poll form.

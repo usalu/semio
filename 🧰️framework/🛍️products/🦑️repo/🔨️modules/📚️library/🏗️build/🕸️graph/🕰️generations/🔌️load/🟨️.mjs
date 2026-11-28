@@ -53,6 +53,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   uploadedHead:"graph: published fleet head origin={origin} producerGeneration={generation} scope={scope} manifest={manifest}",
   exchangeFailed:"graph: the remote cache did not exchange the generation ({reason}), going on without it",
   storing:"graph: all project results are in, storing {count} project fragments",
+  restamped:"graph: {count} projects kept their edges: no part of the environment they read moved, nothing derived again",
   healing:"graph: {count} projects carry edges of an older environment, deriving them again under the published one",
   indexing:"graph: fragments stored, merging the facts of {count} projects into the fact index",
   resumed:"graph: generation {generation} ({owners} projects) was built by a command that was cut off and is published now; the tree is checked against it next",
@@ -64,6 +65,8 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   fleetHolds:" The fleet cache holds a sealed generation; the whole read fetches it first.",
   progressRunning:"The whole read of this machine is at {phase}, {done} of {total}, running for {held}.",
   progressIdle:"No whole read is running on this machine.",
+  overlay:"graph: a whole read of this machine holds the graph custody; this command refreshed {computed} projects for itself in {seconds} s on top of the sealed generation {generation} and published nothing, so it did not wait",
+  overlayFailed:"graph: the private refresh beside the whole read failed ({reason}); waiting for the custody as before",
  }),
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -104,6 +107,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   uploadedHead:"Graph: Flottenstand veröffentlicht origin={origin} producerGeneration={generation} scope={scope} manifest={manifest}",
   exchangeFailed:"Graph: der Remote-Cache hat die Generation nicht ausgetauscht ({reason}), es geht ohne sie weiter",
   storing:"Graph: alle Projektergebnisse liegen vor, {count} Projektfragmente werden gespeichert",
+  restamped:"Graph: {count} Projekte behalten ihre Kanten: kein Teil der Umgebung, den sie gelesen haben, hat sich bewegt, es wird nichts neu abgeleitet",
   healing:"Graph: {count} Projekte tragen Kanten einer älteren Umgebung, sie werden unter der veröffentlichten Umgebung neu abgeleitet",
   indexing:"Graph: Fragmente gespeichert, die Fakten von {count} Projekten werden in den Faktenindex eingefügt",
   resumed:"Graph: Generation {generation} ({owners} Projekte) wurde von einem abgebrochenen Befehl aufgebaut und wird jetzt veröffentlicht; danach wird der Arbeitsbaum dagegen geprüft",
@@ -115,6 +119,8 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   fleetHolds:" Der Flotten-Cache hält eine versiegelte Generation; das ganze Lesen holt sie zuerst.",
   progressRunning:"Das ganze Lesen dieser Maschine steht bei {phase}, {done} von {total}, seit {held}.",
   progressIdle:"Auf dieser Maschine läuft kein ganzes Lesen.",
+  overlay:"Graph: ein ganzes Lesen dieser Maschine hält die Graph-Obhut; dieser Befehl hat {computed} Projekte für sich in {seconds} s auf der versiegelten Generation {generation} erneuert und nichts veröffentlicht, er hat also nicht gewartet",
+  overlayFailed:"Graph: die private Erneuerung neben dem ganzen Lesen ist fehlgeschlagen ({reason}); es wird wie bisher auf die Obhut gewartet",
  }),
 });
 
@@ -596,7 +602,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
  if(sealedOnly&&(policy!=="current"||closure===undefined||slice!==undefined||pin!==undefined))throw Error("A current unpinned generation closure is required");
  host.scope?.(roots===undefined&&pin===undefined);
  const answersByRoot=new Map(),deniedRepairs=new Set();let pointer,published=false,repairs=0,carried,sealedAgeSeconds,fetchOnly=false;
- const attempt=async(builder,store,control,expectedHead,repair,localHead)=>{
+ const attempt=async(builder,store,control,expectedHead,repair,localHead,overlay=false)=>{
   const options=host.storeOptions(store,control),writer=builder&&!fetchOnly;
   if(localHead){
    const bytes=await (options.fs??createNodeFilePortV1()).read(join(options.root,GENERATION_POLICY_V1.pointer));
@@ -625,9 +631,9 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
     }
    }
   }
-  const restored=builder&&host.exchange?await restoreRemoteGenerationV1(host,options,implementation,builder,fetchOnly,expectedHead):undefined;
+  const restored=builder&&!overlay&&host.exchange?await restoreRemoteGenerationV1(host,options,implementation,builder,fetchOnly,expectedHead):undefined;
   if(fetchOnly){const missing=restored?.closures?.missing[0];if(missing)throw closureMissingErrorV1(missing);}
-   else await settleRestoredClosuresV1(host,engine,restored,implementation,builder,prepare);
+   else if(!overlay)await settleRestoredClosuresV1(host,engine,restored,implementation,builder,prepare);
   if(wholeCurrent||sealedOnly){
    const fs=options.fs??createNodeFilePortV1(),sealed=await engine.read(host.signal);
    if(sealed?.manifest?.identity!==identity){
@@ -653,7 +659,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
    const qualify=!quarantined?undefined:async(manifest,signal)=>{
     if(!await verifyClosureRepairCandidateV1({...closeStore,manifest,signal,verifyClosure}))throw Object.assign(Error("The repaired generation still has unavailable closures"),{code:"GENERATION_CLOSURE_REPAIR_UNQUALIFIED"});
    };
-   const base={identity,implementation,policy:writer?"fresh":policy,published:writer&&host.published?(generation,info)=>host.published(generation,info):undefined,wave:writer&&host.waveDone?info=>host.waveDone(info):undefined,membership:host.membership,compute,prime:writer?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:writer?body=>body(builder===true?undefined:builder):needsBuild,unchanged:writer&&host.planUnchanged?live=>host.planUnchanged(live):undefined,planned:writer&&carried&&host.planUnchanged?{...carried,holds:()=>host.planUnchanged(carried.live)}:undefined,repair:delta&&{generation:delta.generation,parent:delta.parent,owners:delta.owners,receipt:delta.receipt},qualify};
+   const base={identity,implementation,ephemeral:overlay,policy:writer?"fresh":policy,published:writer&&host.published?(generation,info)=>host.published(generation,info):undefined,wave:writer&&!overlay&&host.waveDone?info=>host.waveDone(info):undefined,membership:host.membership,compute,prime:writer?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:writer?body=>body(builder===true?undefined:builder):needsBuild,unchanged:writer&&host.planUnchanged?live=>host.planUnchanged(live):undefined,planned:writer&&carried&&host.planUnchanged?{...carried,holds:()=>host.planUnchanged(carried.live)}:undefined,repair:delta&&{generation:delta.generation,parent:delta.parent,owners:delta.owners,receipt:delta.receipt},qualify};
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
    const started=Date.now();
    let result;
@@ -674,7 +680,8 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   }
   if(result.needsBuild)return{needsBuild:true,pending:result.pending,planned:result.planned,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
-  if(result.served==="current"){host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});if(roots===undefined&&sealedAgeSeconds!==undefined)host.say("sealedAge",{generation,owners:Object.keys(result.current.manifest.owners).length,age:generationAgeTextV1(sealedAgeSeconds)});}
+  if(result.ephemeral)host.say("overlay",{generation:result.current.manifest.generation-1,computed:result.computed,seconds:Math.round((Date.now()-started)/1000)});
+  else if(result.served==="current"){host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});if(roots===undefined&&sealedAgeSeconds!==undefined)host.say("sealedAge",{generation,owners:Object.keys(result.current.manifest.owners).length,age:generationAgeTextV1(sealedAgeSeconds)});}
   else if(result.served==="covered")host.say("covered",{generation});
   else if(result.served==="pinned")host.say("pinned",{generation,count:result.names?result.names.size:Object.keys(result.current.manifest.owners).length});
   else if(result.served==="built"&&result.published){host.say(result.merged===undefined?"published":"merged",{generation,computed:result.computed,carried:result.carried??0,seconds:Math.round((Date.now()-started)/1000),theirs:result.merged??0});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
@@ -696,7 +703,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   const assembled=await stream.finish(),externalRoots=[...new Set(externalInputs.map(name=>resolveGenerationExternalInputV1(assembled.externalNodes,name)))].sort(compareCodePointsV1);
   const closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort(),...externalRoots.length?[externalRoots]:[]])).digest("hex"):assembled.membership;
   const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest,...externalRoots.length?{externalInputs:externalRoots}:{}}});
-  if(!sealedOnly&&host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
+  if(!sealedOnly&&!result.ephemeral&&host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
   return{graph,result,stats:generationLoadStatsV1(result,Date.now()-started)};
  };
  const readerAt=Date.now(),readShared=local=>host.withShared((store,control)=>attempt(false,store,control,undefined,undefined,local));
@@ -723,6 +730,15 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   }
   if(sealedOnly)throw Object.assign(Error(renderGenerationMessageV1("projectNeverSealed",{project:(closure??[]).join(", ")},host.language)),{code:"GENERATION_NONE_SEALED"});
   const progress=await Promise.resolve(host.wholeReadProgress?.()).catch(()=>undefined);throw Object.assign(Error(renderGenerationMessageV1("neverSealed",{fleet:first.fleetHolds?renderGenerationMessageV1("fleetHolds",{},host.language):"",progress:progress??""},host.language)),{code:"GENERATION_NONE_SEALED"});}
+ if(roots!==undefined&&pin===undefined&&!sealedOnly&&policy==="fresh"&&host.withOverlay&&host.wholeBusy&&first.pending?.dirty.length&&first.pending.structural!==true&&await Promise.resolve(host.wholeBusy()).catch(()=>false)){
+  try{
+   const overlaid=await host.withOverlay((store,control)=>attempt(true,store,control,undefined,undefined,undefined,true));
+   if(!overlaid.needsBuild){await host.release?.();return{graph:overlaid.graph,stats:overlaid.stats};}
+  }catch(error){
+   host.signal?.throwIfAborted();
+   host.say("overlayFailed",{reason:String(error?.message??error).replace(/\s+/gu," ").slice(0,200)});
+  }
+ }
  carried=first.planned;
  const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
  const now=host.now??Date.now,headRetries=new Map();

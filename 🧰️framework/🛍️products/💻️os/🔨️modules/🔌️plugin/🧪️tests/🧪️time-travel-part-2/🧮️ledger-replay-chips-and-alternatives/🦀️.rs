@@ -77,10 +77,10 @@ async fn reference_chips_fall_back_to_the_document_name_then_the_kind_and_a_shor
     for step in [serde_json::json!({ "begin": 2 }), serde_json::json!({ "input": { "path": "/children", "value": ["anon-1!s.test.child@native/*", "child-2!s.test.child@native/*"] } })] {
         run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
-    let history = render_history(&mut app, Locale::De).await;
+    let history = render_history(&mut app, Locale::De,cx).await;
     let chip = |index: usize| find_node(&history, &format!("framework.history.editor.input.children.chip.{index}.row")).and_then(|chip| chip["component"]["label"].as_str()).unwrap_or_else(|| panic!("chip {index}: {history}")).to_string();
     assert_eq!((chip(0), chip(1)), ("Kindelement anon-1".to_string(), "Kind child-2".to_string()), "the generic default where the app names nothing, the app's own label elsewhere");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -118,7 +118,7 @@ fn selection_values_follow_the_reference_domain_granularity_count_and_id_type() 
 
 /// 🌿️ The history transitions `app` gained since it held `before` of them, decoded.
 fn added_transitions(app: &ToyApp, before: usize) -> Vec<store::os_spr::HistoryTransition> {
-    app.stores.store.envelope().transitions[before..].iter().map(|envelope| store::os_spr::history_transition_from_envelope(envelope).expect("a transition decodes").expect("a history transition")).collect()
+    { let envelope = app.stores.store.envelope(); (before..envelope.transitions.len()).map(|index| store::os_spr::history_transition_from_envelope(envelope.transitions.get(index).expect("a transition")).expect("a transition decodes").expect("a history transition")).collect::<Vec<_>>() }
 }
 
 /// ⚖️ LAW (R15): from a clean review the user begins another mutation and accepts it, so the session holds both drafts;
@@ -145,7 +145,7 @@ async fn several_drafts_from_a_review_finalize_as_one_overwrite_supersede() {
             1 => SetLabel { value: "b".into() }.into(),
             _ => seed_op(op),
         };
-        fresh.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity).await.expect("fresh edit");
+        in_original_loan!(cx, |identity| fresh.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity)).expect("fresh edit");
     }
     assert_eq!(app.stores.store.snapshot().expect("edited head"), fresh.stores.store.snapshot().expect("fresh head"));
     close(&mut app,cx);

@@ -94,6 +94,20 @@
     "component"
    ],
    "capped": true
+  },
+  {
+   "args": [
+    "typecheck",
+    "path/to/changed-file.ts"
+   ],
+   "capped": false
+  },
+  {
+   "args": [
+    "test-file",
+    "path/to/test-file.ts"
+   ],
+   "capped": false
   }
  ]
 }

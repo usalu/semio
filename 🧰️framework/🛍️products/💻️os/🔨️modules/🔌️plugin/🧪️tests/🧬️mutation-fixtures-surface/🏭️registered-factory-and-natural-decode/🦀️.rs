@@ -5,7 +5,7 @@
 /// (`surface_app_id(SURFACE_TESTKIT_DIALECT, Editor)`), never `EditorApp::APP_ID`'s `"surface"`
 /// placeholder. It is the controller every tool key, manifest and proof row is stated against, and
 /// `surface_editor_controller_is_the_derived_id` joins this literal to the derived value.
-const SURFACE_CONTROLLER_ID: &str = "testkit.surface@1/*#editor";
+const SURFACE_CONTROLLER_ID: &str = "s.testkit.surface@1/*#editor";
 const SURFACE_TOOL_ID: &str = "increment";
 const SURFACE_PAYLOAD_SCHEMA: &str = "semio.testkit-surface.command.v1";
 const SURFACE_TOOL_CONTRACT: ToolExecutionContract = ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1);
@@ -126,7 +126,7 @@ async fn surface_manifest() -> crate::app_builder::App {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "surface.main", semio_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .app_command(SURFACE_TOOL_ID, LocalizedLabel::data("Increment"), "fixture", ActionKind::Mutation)
+            .mutation(SURFACE_TOOL_ID, LocalizedLabel::data("Increment"))
             .await
             .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             .await,

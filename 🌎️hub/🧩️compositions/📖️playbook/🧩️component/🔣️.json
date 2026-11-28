@@ -4,7 +4,16 @@
   "role": "plugin",
   "manifest": {
     "pluginId": "playbook",
-    "label": "Playbook",
+    "label": {
+      "native": {
+        "en": "Playbook",
+        "de": "Playbook"
+      },
+      "reuse": {
+        "en": "Playbook",
+        "de": "Playbook"
+      }
+    },
     "version": "0.1.0",
     "apps": [
       {

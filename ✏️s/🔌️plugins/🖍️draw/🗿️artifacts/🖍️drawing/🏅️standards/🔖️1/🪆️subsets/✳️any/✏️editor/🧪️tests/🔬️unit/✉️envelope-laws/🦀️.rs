@@ -54,38 +54,6 @@ fn drawing_envelope_with(asset: bool, edit: bool) -> Vec<u8> {
     wire
 }
 
-pub(super) fn admit_drawing_envelope(app: &mut DrawingAppFixture, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
-    let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Drawing live envelope ingress credits");
-    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-        bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Drawing envelope page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Drawing envelope page admission failed: {fault:?}"));
-    }
-    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("Drawing envelope seal"));
-    handle
-}
-
-/// ⏱️ Turn budget for one live Drawing envelope load. An accepted load ends by retiring the DISPLACED boot store one item per maintenance turn (the GIS twin measured 121 160 turns to `Ready`), so 100 000 could cut a correct load off mid-retirement. The bound asserts termination, not speed.
-const DRAWING_LIVE_LOAD_TURN_BUDGET: usize = 1_000_000;
-
-pub(super) async fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
-    let mut identity = artifact_laws::fixture_identity();
-    let grant = app.1.cx().retained_grant();
-    for _ in 0..DRAWING_LIVE_LOAD_TURN_BUDGET {
-        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("one Drawing load turn");
-        app.0.advance_typed_operation_publication(&mut identity, app.1.cx()).await.expect("one Drawing original decode publication turn");
-        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Drawing maintenance turn");
-        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Drawing load advancement");
-        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
-            return poll;
-        }
-        std::thread::yield_now();
-    }
-    panic!("Drawing retained envelope load did not reach terminal")
-}
-
 #[semio_framework_async_macros::async_test]
 async fn drawing_envelope_accepts_assets_without_edits() {
     let mut app = drawing_app().await;

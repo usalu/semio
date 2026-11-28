@@ -1,0 +1,5 @@
+within.sh shoulders parent-with-child-on-shoulders
+within.sh guide-dog person-with-guide-dog
+crown.sh rims european-beech
+within.sh shoulders-members parent-with-child-on-shoulders --parts member
+within.sh guide-dog-members person-with-guide-dog --parts member

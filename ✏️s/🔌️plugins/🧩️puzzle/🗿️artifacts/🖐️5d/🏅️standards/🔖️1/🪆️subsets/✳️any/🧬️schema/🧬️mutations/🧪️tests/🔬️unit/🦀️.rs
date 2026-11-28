@@ -152,7 +152,7 @@ fn dispatch_registers_semantic_descriptors() {
     for kind in <Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
         assert!(semio_os_command::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 39);
+    assert_eq!(<Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 41);
 }
 //#endregion 🔖️MutationLaws
 

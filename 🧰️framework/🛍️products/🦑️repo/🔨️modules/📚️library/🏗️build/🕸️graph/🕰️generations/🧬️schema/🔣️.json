@@ -9,6 +9,7 @@
       "const": {
         "version": 1,
         "pointer": "current.json",
+        "componentEdgeValidity": true,
         "manifests": "m",
         "fragments": "o",
         "indexes": "x",
@@ -78,6 +79,7 @@
           "pinned": "graph: generation {generation} pinned by the invoking build serves this command ({count} projects), no queue and no check of the live tree",
           "building": "graph: refreshing {dirty} projects (generation {generation})",
           "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges)",
+          "restamped": "graph: {count} projects kept their edges: no part of the environment they read moved, nothing derived again",
           "healing": "graph: {count} projects carry edges of an older environment, deriving them again under the published one",
           "indexed": "graph: fact index of generation {generation}: {rows} facts of {owners} projects, {expanded} MB expanded ({percent} % of the {limit} MB limit), {packed} MB packed",
           "swept": "graph: {removed} superseded observation blocks removed ({megabytes} MB, {headers} records kept their blocks)",
@@ -118,6 +120,8 @@
           "fleetHolds": " The fleet cache holds a sealed generation; the whole read fetches it first.",
           "progressRunning": "The whole read of this machine is at {phase}, {done} of {total}, running for {held}.",
           "progressIdle": "No whole read is running on this machine.",
+          "overlay": "graph: a whole read of this machine holds the graph custody; this command refreshed {computed} projects for itself in {seconds} s on top of the sealed generation {generation} and published nothing, so it did not wait",
+          "overlayFailed": "graph: the private refresh beside the whole read failed ({reason}); waiting for the custody as before",
           "resumed": "graph: generation {generation} ({owners} projects) was built by a command that was cut off and is published now; the tree is checked against it next",
           "resumedWaves": "graph: {done} of {total} projects were derived by a command that was cut off, deriving the rest"
         },
@@ -129,6 +133,7 @@
           "pinned": "Graph: die vom aufrufenden Build gepinnte Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
           "building": "Graph: {dirty} Projekte werden erneuert (Generation {generation})",
           "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten)",
+          "restamped": "Graph: {count} Projekte behalten ihre Kanten: kein Teil der Umgebung, den sie gelesen haben, hat sich bewegt, es wird nichts neu abgeleitet",
           "healing": "Graph: {count} Projekte tragen Kanten einer älteren Umgebung, sie werden unter der veröffentlichten Umgebung neu abgeleitet",
           "indexed": "Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
           "swept": "Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
@@ -169,6 +174,8 @@
           "fleetHolds": " Der Flotten-Cache hält eine versiegelte Generation; das ganze Lesen holt sie zuerst.",
           "progressRunning": "Das ganze Lesen dieser Maschine steht bei {phase}, {done} von {total}, seit {held}.",
           "progressIdle": "Auf dieser Maschine läuft kein ganzes Lesen.",
+          "overlay": "Graph: ein ganzes Lesen dieser Maschine hält die Graph-Obhut; dieser Befehl hat {computed} Projekte für sich in {seconds} s auf der versiegelten Generation {generation} erneuert und nichts veröffentlicht, er hat also nicht gewartet",
+          "overlayFailed": "Graph: die private Erneuerung neben dem ganzen Lesen ist fehlgeschlagen ({reason}); es wird wie bisher auf die Obhut gewartet",
           "resumed": "Graph: Generation {generation} ({owners} Projekte) wurde von einem abgebrochenen Befehl aufgebaut und wird jetzt veröffentlicht; danach wird der Arbeitsbaum dagegen geprüft",
           "resumedWaves": "Graph: {done} von {total} Projekten wurden von einem abgebrochenen Befehl abgeleitet, der Rest wird abgeleitet"
         }
@@ -284,6 +291,11 @@
         "edgesEnv": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "edgesReads": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "The digest of exactly the environment components the edges of this owner read (see 🧩️environment-components); written only when the policy flag componentEdgeValidity is on. An owner whose digest still holds under a newer environment keeps its edges and is stamped with that environment without deriving them again."
         },
         "targets": {
           "type": "array",

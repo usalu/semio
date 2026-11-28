@@ -543,6 +543,7 @@ export class UiDocumentStore {
   }
 
   getNodeSnapshot = (id: UiNodeId): UiNodeRecord | undefined => this.state.nodes.get(id);
+  findNode = (predicate: (record: UiNodeRecord) => boolean): UiNodeRecord | undefined => { for (const record of this.state.nodes.values()) if (predicate(record)) return record; return undefined; };
 
   subscribeRoot = (onStoreChange: Listener): (() => void) => {
     this.rootListeners.add(onStoreChange);

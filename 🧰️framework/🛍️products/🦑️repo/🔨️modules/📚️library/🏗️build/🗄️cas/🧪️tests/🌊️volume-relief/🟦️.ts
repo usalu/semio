@@ -18,7 +18,7 @@ const reserve=casReserveBytesV1(CAS_POLICY_V1,volume);
 
 test("the relief level is a declared factor above the hard reserve",()=>{
  expect(CAS_POLICY_V1.volumeReliefReserveFactor).toBeGreaterThan(1);
- expect(reserve).toBe(Math.floor(Math.max(0.08*volume.totalBytes,77309411328)));
+ expect(reserve).toBe(Math.floor(Math.max(0.08*volume.totalBytes,Math.min(77309411328,volume.totalBytes*CAS_POLICY_V1.sizing.reserveFloorMaxPercent/100))));
  expect(casPartitionPolicyForV1(CAS_POLICY_V1,{...volume,freeBytes:reserve}).partition.criticalUsedFraction).toBeGreaterThan(0);
 });
 

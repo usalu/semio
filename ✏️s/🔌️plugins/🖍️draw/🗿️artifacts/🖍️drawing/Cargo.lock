@@ -8600,6 +8600,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-draw-drawing-editor-tests-3"
+version = "0.1.0"
+dependencies = [
+ "png",
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-interaction",
+ "semio-framework-io-base64",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-testing-allocator",
+ "semio-os-kernel",
+ "semio-os-store-test-support",
+ "semio-plugin",
+ "semio-s-artifact-draw-drawing",
+ "semio-s-artifact-draw-drawing-editor",
+ "semio-s-artifact-draw-drawing-editor-commands",
+ "semio-s-artifact-draw-drawing-editor-interaction",
+ "semio-s-artifact-draw-drawing-editor-tool",
+ "semio-s-artifact-draw-drawing-examples",
+ "semio-s-artifact-draw-drawing-geometry",
+ "semio-s-artifact-draw-drawing-host-arena",
+ "semio-s-artifact-draw-drawing-io",
+ "semio-s-artifact-draw-drawing-metadata",
+ "semio-s-artifact-draw-drawing-model",
+ "semio-s-artifact-draw-drawing-mutations",
+ "semio-s-artifact-draw-drawing-scene",
+ "semio-s-artifact-draw-drawing-scene-mounted",
+ "semio-s-artifact-draw-drawing-scene-paint",
+ "semio-s-artifact-stdio-pdf",
+ "semio-ui-locale",
+ "semio-ui-scene",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-draw-drawing-editor-tool"
 version = "0.1.0"
 dependencies = [
@@ -13706,8 +13746,6 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",

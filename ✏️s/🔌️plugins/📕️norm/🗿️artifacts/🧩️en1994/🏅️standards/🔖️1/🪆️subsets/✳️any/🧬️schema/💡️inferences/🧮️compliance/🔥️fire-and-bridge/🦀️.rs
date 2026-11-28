@@ -239,7 +239,7 @@ pub(crate) fn evaluate_bridge(report: &mut CheckReport, doc: &En1994Snapshot, sc
             let m_hog = part_en1990::sls_characteristic(&beam.actions, beam.span_m, beam.adjacent_span_m, beam.support, beam.spacing_m, a, doc.reliability_class).m_hog_nm.abs().max(m_range);
             let st = cat::bridge::rebar_fatigue(m_hog, m_range, cr.y_na, cat::constants::HOGGING_REBAR_DEPTH_M, cr.i, d_ts);
             let d_s = st.delta_equ_pa;
-            let rebar_curve = cat::fatigue::rebar_curve();
+            let rebar_curve = semio_s_artifact_norm_en1994_checks_catalogue_fatigue::rebar_curve();
             let r_lim = rebar_curve.resistance_pa(beam.n_cycles);
             let mut rf = head(a, format!("en1994.2.6.8.2.rebar.{}", beam.id), "1994-2", "6.8.5.4", bref("asHoggingM2PerM"), "Reinforcement fatigue with tension stiffening", "Bewehrungsermüdung mit Zugversteifung")
                 .utilization(stress(d_s), stress(r_lim))

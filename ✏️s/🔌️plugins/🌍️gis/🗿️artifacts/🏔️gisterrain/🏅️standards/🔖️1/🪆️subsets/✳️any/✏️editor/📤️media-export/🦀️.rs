@@ -8,10 +8,8 @@ use crate::schema::imported_map::{TerrainGridMeshProjection, terrain_grid_origin
 
 #[path = "🏔️elevation/🦀️.rs"]
 mod elevation;
-#[path = "📐️scene/🦀️.rs"]
-mod scene;
 use elevation::ElevationJsonView;
-use scene::{TerrainSceneRange, TerrainSceneView};
+use semio_s_artifact_gis_gisterrain_inferences::terrain_scene_export::{TerrainSceneRange, TerrainSceneView};
 
 const TOOLS: &[&str] = &["export-media:elevation:out", "export-media:scene:out"];
 pub(super) struct TerrainMedia;

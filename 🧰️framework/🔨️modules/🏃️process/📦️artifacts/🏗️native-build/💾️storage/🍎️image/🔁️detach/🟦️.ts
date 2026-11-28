@@ -1,3 +1,4 @@
+import{requireNativeStorageRootCapabilityV1}from"../../🛂️root-capability/🟦️.ts";
 import{processIdentityOfV1}from"../../../../../🔖️identity/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../🛠️hdiutil/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -27,7 +28,7 @@ const both=(row:Readonly<{en:string;de:string}>,values:Readonly<Record<string,st
 const describe=(holders:readonly NativeImageHolderV1[])=>holders.length?holders.slice(0,policy.maximumReportedHolders).map(row=>row.command+" pid "+row.pid+(row.startMs>0?" start "+new Date(row.startMs).toISOString():"")).join(", ")+(holders.length>policy.maximumReportedHolders?", +"+(holders.length-policy.maximumReportedHolders):""):both(texts.none,{});
 /** 🔁️ Detaches an image politely and waits out a transient reader: a busy refusal (status 16) is retried with the declared back-off, every wait is reported in English and German with the holders named by pid and start time, cancellation (`check` throws) ends the wait at once, and a still busy image after the last attempt fails with the holders named. It never forces: a live reader keeps its files. Any other failure propagates unchanged. `ready` observes between attempts that the image is already gone (a concurrent detach) and then ends the loop. */
 export async function detachNativeImageWithRetryV1(given:Readonly<{port:NativeImageDetachPortV1;mountPoint:string;say:(line:string)=>void;check:()=>void;ready?:()=>boolean}>):Promise<void>{
- for(let attempt=0;;attempt++){
+ requireNativeStorageRootCapabilityV1(given.mountPoint,"detach-image");for(let attempt=0;;attempt++){
   given.check();
   try{await given.port.detach(given.mountPoint);return;}
   catch(error){

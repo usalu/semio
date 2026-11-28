@@ -5,6 +5,12 @@ import {planTypecheckV1,renderTypecheckPlanV1,renderTypecheckResultV1,resolveTyp
 import {refuseTypecheckV1,type TypecheckLanguageV1} from "../📖️texts/🟦️.ts";
 import {realpathSync} from "node:fs";
 
+/** 🩹️ Restores the compiler through the owner of `repo dependencies ensure` (one run per process, progress lines on stderr in the help language, cancellation ends its process tree). */
+async function ensureTypecheckCompilerV1(root:string,environment:NodeJS.ProcessEnv,signal:AbortSignal=new AbortController().signal):Promise<void>{
+ const{rootCommandRegistryV1}=await import("../../../🎛️commands/🗂️registry/🟦️.ts"),{ensureRootDependenciesV1}=await import("../../../🎛️commands/🗂️registry/🥾️provision/🟦️.ts");
+ await ensureRootDependenciesV1(root,rootCommandRegistryV1(),"typecheck",signal,environment);
+}
+
 /** 🎛️ What the command touches besides the checkout: the working directory and the ports of the run; tests replace them. */
 export type TypecheckCommandPortsV1=Readonly<{directory?:string;notice?:(line:string)=>void;run?:TypecheckPortsV1}>;
 
@@ -19,7 +25,7 @@ export async function runTypecheckCliV1(root:string,args:readonly string[],envir
    write(options.json?JSON.stringify(document,null,2):renderTypecheckPlanV1(document,shown));
    return 0;
   }
-  const result=await runTypecheckV1(root,touched,options,shown,{notice,cacheDirectory:typecheckCacheDirectoryV1(realpathSync(root),environment),...ports.run}),problems=validateTypecheckDocumentV1("Result",result);
+  const result=await runTypecheckV1(root,touched,options,shown,{notice,cacheDirectory:typecheckCacheDirectoryV1(realpathSync(root),environment),ensureCompiler:signal=>ensureTypecheckCompilerV1(root,environment,signal),...ports.run}),problems=validateTypecheckDocumentV1("Result",result);
   if(problems.length)throw refuseTypecheckV1("failed","result.invalid",{details:problems.slice(0,3).join("; ")});
   write(options.json?JSON.stringify(result,null,2):renderTypecheckResultV1(result,shown));
   return result.status==="passed"?0:1;

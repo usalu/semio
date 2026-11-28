@@ -1,0 +1,176 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__h&&window.__h.ready()))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "D0 demo document loaded: Timber Beam stock with 4 steps",
+  "js": "(async()=>{const h=window.__h;await h.actions();await h.stepsNow(s=>s.n===4,150000,'demo steps');window.__doc=async()=>{const h=window.__h;if(!h.find('Add Step…'))await h.actions();const s=h.steps();if(!h.labels().length||!document.querySelector('[data-slot=tree-label]')){h.click('Artifact');await h.wait(800)}return {steps:s,rows:h.labels(),picker:document.querySelector('[role=combobox][aria-label=Example]').innerText.trim()}};h.click('Artifact');await h.until(()=>h.find('Cut Lap Joint'),30000,'rows');const d=await window.__doc();h.ok(d.rows.includes('Timber Beam')&&Math.abs(d.steps.vol-0.174)<1e-3,'demo '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "timeoutMs": 170000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D1 Set Stock Cylinder replaces the stock and resets the timeline",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Stock…');await h.pick(\"Cylinder\");await h.exec();const s=await h.stepsNow(s=>s.n===0&&Math.abs(s.vol-0.282700)/0.282700<0.03,120000,'Cylinder stock with 0 steps and 0.2827 m³');h.click('Artifact');await h.wait(800);const rows=h.labels();h.ok(!rows.includes('Cut Lap Joint')&&!rows.includes('Drill Dowel Hole'),'old steps remain '+h.json(rows));return h.json({s,rows})})()",
+  "settleMs": 300,
+  "timeoutMs": 170000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D1 Set Stock Sphere replaces the stock and resets the timeline",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Stock…');await h.pick(\"Sphere\");await h.exec();const s=await h.stepsNow(s=>s.n===0&&Math.abs(s.vol-0.523600)/0.523600<0.03,120000,'Sphere stock with 0 steps and 0.5236 m³');h.click('Artifact');await h.wait(800);const rows=h.labels();h.ok(!rows.includes('Cut Lap Joint')&&!rows.includes('Drill Dowel Hole'),'old steps remain '+h.json(rows));return h.json({s,rows})})()",
+  "settleMs": 300,
+  "timeoutMs": 170000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D1 Set Stock Box replaces the stock and resets the timeline",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Stock…');await h.pick(\"Box\");await h.exec();const s=await h.stepsNow(s=>s.n===0&&Math.abs(s.vol-1.000000)/1.000000<0.03,120000,'Box stock with 0 steps and 1.0000 m³');h.click('Artifact');await h.wait(800);const rows=h.labels();h.ok(!rows.includes('Cut Lap Joint')&&!rows.includes('Drill Dowel Hole'),'old steps remain '+h.json(rows));return h.json({s,rows})})()",
+  "settleMs": 300,
+  "timeoutMs": 170000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D2 Set Stock keeps the installed workshop",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.until(()=>h.find('Table Saw'),30000,'workshop');const l=h.labels();for(const m of ['Generic Saw','Table Saw','CNC Router'])h.ok(l.includes(m),'workshop kept '+m+' '+h.json(l));h.click('Artifact');return h.json(l)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "D3 Set Active Example offers the registered examples",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Active Example…');const boxes=[...document.querySelectorAll('[role=combobox]')].filter(b=>b.getAttribute('aria-label')!=='Example');boxes[boxes.length-1].click();await h.wait(800);const opts=[...document.querySelectorAll('[role=option]')].map(e=>e.innerText.trim());document.activeElement&&document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await h.wait(500);for(const o of ['Timber Beam Joinery','Drilled Plate','Concrete Forest'])h.ok(opts.includes(o),'option '+o+' in '+h.json(opts));return h.json(opts)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "D4 Set Active Example Drilled Plate loads the plate document",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Active Example…');await h.pick('Drilled Plate');await h.exec();return 'requested'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "D5 plate document is active: Plate stock with 4 steps",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.rows.includes('Plate')&&!d.rows.includes('Timber Beam')&&d.steps.n===4,'plate '+h.json(d));window.__plate=d.steps;return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.steps&&d.steps.n===4&&d.rows.includes('Plate')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D6 Set Active Example Timber Beam Joinery loads the demo document",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Active Example…');await h.pick('Timber Beam Joinery');await h.exec();return 'requested'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "D7 timber document is active: Timber Beam stock, 4 steps, 0.1740 m³",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.rows.includes('Timber Beam')&&d.rows.includes('Cut Lap Joint')&&Math.abs(d.steps.vol-0.174)<1e-3,'timber '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.steps&&d.steps.n===4&&Math.abs(d.steps.vol-0.174)<1e-3&&d.rows.includes('Timber Beam')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D8 Set Active Example Concrete Forest loads the forest document",
+  "js": "(async()=>{const h=window.__h;await h.form('Set Active Example…');await h.pick('Concrete Forest');await h.exec();return 'requested'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "D9 forest document is active: forest stock with 7 steps",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.rows.includes('Hexagonal Cut Concrete Forest Left')&&d.steps.n===7,'forest '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.steps&&d.steps.n===7&&d.rows.includes('Hexagonal Cut Concrete Forest Left')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D10 navbar picker opens",
+  "js": "(async()=>{const h=window.__h;return 'o'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox][aria-label=Example]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D11 navbar picker Demo",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=await window.__h.until(()=>[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()===\"Demo\"),8000,'option Demo');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D12 navbar Demo loads the timber document",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.picker==='Demo'&&d.rows.includes('Timber Beam')&&d.steps.n===4&&Math.abs(d.steps.vol-0.174)<1e-3,'demo '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.picker==='Demo'&&d.steps&&d.steps.n===4&&Math.abs(d.steps.vol-0.174)<1e-3&&d.rows.includes('Timber Beam')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D13 navbar picker opens",
+  "js": "(async()=>{const h=window.__h;return 'o'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox][aria-label=Example]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D14 navbar picker Concrete Forest",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=await window.__h.until(()=>[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()===\"Concrete Forest\"),8000,'option Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D15 navbar Concrete Forest loads the forest document",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.picker==='Concrete Forest'&&d.rows.includes('Hexagonal Cut Concrete Forest Left')&&d.steps.n===7,'forest '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.picker==='Concrete Forest'&&d.steps&&d.steps.n===7&&d.rows.includes('Hexagonal Cut Concrete Forest Left')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ },
+ {
+  "name": "D16 navbar picker opens",
+  "js": "(async()=>{const h=window.__h;return 'o'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox][aria-label=Example]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D17 navbar picker No example",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=await window.__h.until(()=>[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()===\"No example\"),8000,'option No example');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D18 No example clears the active document to the empty default document",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.picker==='No example','picker '+d.picker);h.ok(!d.rows.includes('Hexagonal Cut Concrete Forest Left')&&!d.rows.includes('Timber Beam')&&!d.rows.includes('Plate'),'old stock still present '+h.json(d));h.ok(!d.steps||(d.steps.n===0),'steps remain '+h.json(d.steps));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.picker==='No example'&&(!d.steps||d.steps.n===0)&&!d.rows.includes('Hexagonal Cut Concrete Forest Left')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true
+ },
+ {
+  "name": "D19 the app stays usable after clearing: Demo loads again",
+  "js": "(async()=>{const h=window.__h;return 'o'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox][aria-label=Example]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D20 navbar picker Demo",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1000,
+  "pointer": "(async()=>{const e=await window.__h.until(()=>[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()===\"Demo\"),8000,'option Demo');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "D21 Demo document is back",
+  "js": "(async()=>{const h=window.__h;const d=await window.__doc();h.ok(d.picker==='Demo'&&d.steps.n===4&&d.rows.includes('Timber Beam'),'demo '+h.json(d));return h.json(d)})()",
+  "settleMs": 300,
+  "until": "(async()=>{try{const d=await window.__doc();return String(!/Loading document/.test(document.body.innerText)&&(d.picker==='Demo'&&d.steps&&d.steps.n===4&&d.rows.includes('Timber Beam')))}catch(e){return 'false'}})()",
+  "timeoutMs": 420000,
+  "capture": true,
+  "minCanvasPixels": 200
+ }
+]

@@ -206,29 +206,29 @@ impl<'a> StepContext<'a> {
     /// 🫴️ Loans original cancellation, clock, remaining credits and the shared construction receipt; with no quote its scope claims at most half of the turn, so it never starves the turn that drives it.
     pub fn with_native_receiving(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);self.original_receiving_outcome(out,None,semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
+        let mut operation=Some(operation);self.original_receiving_outcome(out,None,Default::default(),semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
     }
     /// 🤝️ Lends the decoder, grant and work available to its receiving body; the scope's share is raised to cover `floor`, the next indivisible action, never above the whole turn.
     pub fn with_native_receiving_work(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,floor:semio_framework_value_retained_clone::RetirementDemand,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         if self.receiving_floor_exceeds_turn(floor){return Ok(false)}
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);let quote=self.covering_receiving_quote(floor);self.original_receiving_outcome(out,quote,semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
+        let mut operation=Some(operation);let quote=self.covering_receiving_quote(floor);self.original_receiving_outcome(out,quote,Self::floor_grant(floor),semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
     }
     /// 🔪️ Like [`Self::with_native_receiving_work`], but the automatic claim never exceeds `slice` on any axis, so a held scope credit stays a bounded share of Source stock; `floor` raises it to cover the next indivisible action.
     pub fn with_native_receiving_slice(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,floor:semio_framework_value_retained_clone::RetirementDemand,slice:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         if self.receiving_floor_exceeds_turn(floor){return Ok(false)}
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);let quote=self.sliced_receiving_quote(floor,slice);self.original_receiving_outcome(out,Some(quote),semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
+        let mut operation=Some(operation);let quote=self.sliced_receiving_quote(floor,slice);self.original_receiving_outcome(out,Some(quote),Self::floor_grant(floor),semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
     }
     /// 🎯️ Like [`Self::with_native_receiving`], but its scope claims exactly the quoted grant and work plus its own control.
     pub fn with_native_receiving_quoted(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,quote:(RetainedCloneGrant,u64),operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);self.original_receiving_outcome(out,Some(quote),semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
+        let mut operation=Some(operation);let floor=Self::quote_floor(quote.0);self.original_receiving_outcome(out,Some(quote),floor,semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
     }
     /// 🎯️ Like [`Self::with_native_receiving_quoted`], and the callback receives the scope body fuel so its effect stays inside that fuel.
     pub fn with_native_receiving_quoted_work(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,quote:(RetainedCloneGrant,u64),operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);self.original_receiving_outcome(out,Some(quote),semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
+        let mut operation=Some(operation);let floor=Self::quote_floor(quote.0);self.original_receiving_outcome(out,Some(quote),floor,semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
     }
     /// 🛫️ Loans and commits this original Job caller’s work to the supplied encoder without replacing its physical owner.
     pub fn with_native_encoder_work<T,E:From<ValueError>>(&mut self,native:&mut semio_framework_value::NativeEncodeControl<'_>,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
@@ -607,7 +607,7 @@ impl<'a> StepContext<'a> {
     }
 
     pub fn fuel_remaining(&self) -> u64 {
-        self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(self.fuel_remaining,|budget|self.fuel_remaining.min(budget.get().remaining().map_or(0,|remaining|remaining.1)))
+        self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(self.fuel_remaining,|budget|self.fuel_remaining.min(budget.get().remaining_fuel()))
     }
 
     /// ⛽️ Debits one settled Work receipt from this turn's fuel, saturating at the scalar fuel width.
@@ -639,6 +639,11 @@ impl<'a> StepContext<'a> {
     /// 🎨️ Checks this step or ancestor cancellation; jobs check on entry and after every bounded unit.
     pub fn is_cancelled(&self) -> bool {
         matches!(self.cancel,StepCancelReference::Observed(_))||self.cancel.is_cancelled_now()
+    }
+
+    /// 🛑️ Entry gate shared by every job step: `Some` is the typed Cancelled turn (or its admission refusal) to return before any work or state change; `None` means the step may run.
+    pub fn cancelled_turn<'job>(&mut self)->Option<Result<Option<JobOutcomeBorrow<'job>>,OriginalTurnFailure>>{
+        self.is_cancelled().then(||JobOutcomeBorrow::admit_cancelled(self).map_err(OriginalTurnFailure::from))
     }
 
     pub fn observe_original_cancellation(&mut self)->Result<(),ValueError>{self.original_source_parent()?;if self.original_clock_binding.is_none(){return Err(ValueError::invariant("original cancellation observation requires its bound source clock"))}let original=self.borrowed_original_cancel_token()?;self.cancel=StepCancelReference::Observed(original);Ok(())}

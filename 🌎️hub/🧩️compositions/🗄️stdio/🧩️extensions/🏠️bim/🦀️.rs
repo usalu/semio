@@ -29,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
-    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioBimApps>::new("stdio-bim").label("Stdio BIM").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-bim").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioBimApps>::new("stdio-bim").label(semio_plugin::LocalizedLabel::native("Stdio BIM", "Stdio BIM")).version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-bim").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.runtime_host_artifact(semio_s_artifact_stdio_ifc_catalog::assembly()?.into_runtime()?);
     builder = builder.host_artifact(semio_s_artifact_stdio_bcf::declaration(semio_s_artifact_stdio_bcf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.contributes_topic(semio_hub_stdio_catalog_projection::hosted_artifact_catalog_contribution_for("stdio-bim", "semio:stdio-bim", &[semio_s_artifact_stdio_ifc_catalog::contribution()])?);

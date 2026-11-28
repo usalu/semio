@@ -134,7 +134,7 @@ impl ArtifactEditor for En1990PlayApp {
         semio_s_plugin_norm_app_surface::norm_artifact_store_preparation::<Self>()
     }
 
-    semio_s_plugin_norm_app_surface::norm_exact_store_ownership!(live, store::os_store::RetainedColdMutationApplyFactory<Self::Snapshot, Self::Mutation>);
+    semio_s_plugin_norm_app_surface::norm_exact_store_ownership!(live, store::os_store::RetainedColdMutationApplyFactory<Self::Snapshot, Self::Mutation>, || store::os_store::RetainedColdMutationApplyFactory::<Self::Snapshot, Self::Mutation>::bounded(semio_s_artifact_norm_en1990_mutations::en1990_cold_replay_bounds()));
 
     fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         En1990BoundedCommandJobFactory::register(registry)

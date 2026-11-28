@@ -5,15 +5,15 @@ import {expect,test} from "bun:test";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 
-const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number;leanBasisPoints:number},guard=HOST_POLICY_V1.slicePlanGuard as {reserveMegabytes:number;ceilingBasisPoints:number;settleWaitMilliseconds:number},growth=HOST_POLICY_V1.sliceGrantGrowth as {minimumMegabytes:number;headroomBasisPoints:number;triggerBasisPoints:number;maximum:number;cutsBeforeReadmit:number},MiB=1048576;
+const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number;leanBasisPoints:number},guard=HOST_POLICY_V1.slicePlanGuard as {reserveMegabytes:number;ceilingBasisPoints:number;settleWaitMilliseconds:number},growth=HOST_POLICY_V1.sliceGrantGrowth as {standingBasisPoints:number;minimumMegabytes:number;headroomBasisPoints:number;triggerBasisPoints:number;maximum:number;cutsBeforeReadmit:number},MiB=1048576;
 const wait=(milliseconds:number)=>new Promise<void>(resolve=>setTimeout(resolve,milliseconds));
 type Fake={emit:(event:string,...values:unknown[])=>void;env:Record<string,string|undefined>;calls:string[]};
-type Ask={megabytes:number;minimumMegabytes?:number;floorMegabytes?:number;queuedSinceMs?:number};
+type Ask={signal?:AbortSignal;megabytes:number;minimumMegabytes?:number;floorMegabytes?:number;queuedSinceMs?:number};
 
-const harness=(options:{hostMegabytes:number;footprint:(index:number)=>number;grant?:number;extra?:(ask:Ask,index:number)=>Promise<void>;refuseFull?:boolean;learned?:{read(scope?:string):number;write(megabytes:number,scope?:string):void}}) => {
- const workers:Fake[]=[],asks:Ask[]=[],released:number[]=[],claimed:{pid:number;grantMegabytes?:number;stopped:boolean}[]=[],freed:number[]=[];
+const harness=(options:{hostMegabytes:number;footprint:(index:number)=>number;grant?:number;extra?:(ask:Ask,index:number)=>Promise<void>;refuseFull?:boolean;growth?:Record<string,number>;learned?:{read(scope?:string):number;write(megabytes:number,scope?:string):void}}) => {
+ const workers:Fake[]=[],asks:Ask[]=[],released:number[]=[],claimed:{pid:number;grantMegabytes?:number;stopped:boolean;owner?:string}[]=[],freed:number[]=[];
  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,sampleMilliseconds:10,heartbeatMilliseconds:30,hostMegabytes:options.hostMegabytes,elasticity,unlearnedMegabytes:2048,
-  planGuard:{...guard,settleWaitMilliseconds:20},hostPressure:()=>"normal",report:()=>undefined,...options.learned===undefined?{}:{learned:options.learned},claims:{claim:(pid:number,facts:{grantMegabytes?:number;stopped:boolean})=>{claimed.push({pid,...facts});},release:(pid:number)=>{freed.push(pid);}},
+  planGuard:{...guard,settleWaitMilliseconds:20},hostPressure:()=>"normal",report:()=>undefined,...options.learned===undefined?{}:{learned:options.learned},...options.growth===undefined?{}:{growth:options.growth},claims:{claim:(pid:number,facts:{grantMegabytes?:number;stopped:boolean;owner?:string})=>{claimed.push({pid,...facts});},release:(pid:number)=>{freed.push(pid);}},
   headroom:()=>({limitBytes:Infinity,currentBytes:0,availableBytes:8000*MiB}),
   reserve:async(ask:Ask)=>{asks.push(ask);const index=asks.length;if(options.refuseFull&&index===1)throw new Error("the minimum never fits");return{megabytes:index===1&&options.grant!==undefined?options.grant:ask.megabytes,attach:()=>undefined,grow:async(more:Ask)=>{asks.push(more);await options.extra?.(more,asks.length);return more.megabytes;},release:()=>{released.push(index);}};},
   observe:async()=>options.footprint(workers.length),
@@ -70,7 +70,7 @@ test("a load cut twice asks the gate for its measured peak, not for the reduced 
 });
 
 test("a worker killed from outside names the grant it had instead of a limit of zero, and the next worker is admitted at its measured peak",async()=>{
- const{pool,workers,asks,next}=harness({hostMegabytes:65536,grant:2048,footprint:()=>1500}),cuts:{kind?:string;limit?:number}[]=[],run=pool.run({root:"/tmp/killed"},{onProgress:(_ms:number,detail:any)=>{if(detail?.decision?.key==="cut")cuts.push(detail.decision);}}),first=await next(1);
+ const{pool,workers,asks,next}=harness({hostMegabytes:65536,grant:2048,footprint:()=>1500}),cuts:{kind?:string;limit?:number}[]=[],run=pool.run({root:"/tmp/killed"},{onProgress:(_ms:number,detail:any)=>{if(["cut","killed"].includes(detail?.decision?.key))cuts.push(detail.decision);}}),first=await next(1);
  await wait(100);first.emit("exit",null,"SIGKILL");
  const second=await next(2);second.emit("message",{type:"done",graph:{}});await run;await pool.close();
  expect(workers.length).toBe(2);expect(cuts.length).toBeGreaterThan(0);expect(cuts[0]!.limit).toBe(2048);expect(asks.length).toBeGreaterThanOrEqual(2);
@@ -100,4 +100,25 @@ test("when the gate refuses the full booking the load falls back to the smaller 
  expect(asks[1]!.minimumMegabytes!,"the second ask accepts a reduced share").toBeLessThan(asks[1]!.megabytes);
  expect(pool.stats().bookedSmaller).toBe(1);
  first.emit("message",{type:"done",graph:{}});await run;await pool.close();expect(workers).toHaveLength(1);
+});
+
+test("the grant of a read stands at its measured peak: the first growth asks the gate once for the learned farm peak instead of one small step per outgrown grant, and a read with no history grows by the headroom step as before",async()=>{
+ const peak=6000,learned={read:()=>peak,write:()=>undefined};
+ const known=harness({hostMegabytes:65536,grant:2048,footprint:()=>3500,learned}),run=known.pool.run({root:"/tmp/standing"},{}),first=await known.next(1);
+ for(let tries=0;known.asks.length<2&&tries<300;tries++)await wait(10);
+ expect(known.asks[1]!.megabytes).toBeGreaterThanOrEqual(Math.ceil(peak*growth.standingBasisPoints/10000)-2048);
+ expect(known.asks[1]!.megabytes).toBeGreaterThan(Math.ceil(3500*growth.headroomBasisPoints/10000)-2048);
+ first.emit("message",{type:"done",graph:{}});await run;await known.pool.close();
+ const fresh=harness({hostMegabytes:65536,grant:2048,footprint:()=>3500}),again=fresh.pool.run({root:"/tmp/standing-fresh"},{}),second=await fresh.next(1);
+ for(let tries=0;fresh.asks.length<2&&tries<300;tries++)await wait(10);
+ expect(fresh.asks[1]!.megabytes).toBe(Math.ceil(3500*growth.headroomBasisPoints/10000)-2048);
+ second.emit("message",{type:"done",graph:{}});await again;await fresh.pool.close();
+});
+
+test("a growth that the gate cannot answer does not hold the worker stopped for ever: after the declared wait the worker runs on, the wait is abandoned and the pool does not ask again within the cooldown (two planners that each wait for the memory of the other cannot deadlock)",async()=>{
+ const{pool,asks,next}=harness({hostMegabytes:65536,grant:2048,footprint:()=>3500,growth:{...growth,waitMilliseconds:150,cooldownMilliseconds:60000},extra:ask=>new Promise((_resolve,reject)=>{ask.signal?.addEventListener("abort",()=>reject(ask.signal?.reason),{once:true});})}),run=pool.run({root:"/tmp/deadlock"},{}),first=await next(1);
+ for(let tries=0;!first.calls.includes("resume")&&tries<300;tries++)await wait(10);
+ expect(first.calls.slice(0,2)).toEqual(["suspend","resume"]);expect(first.calls).not.toContain("terminate");
+ const asked=asks.length;await wait(300);expect(asks.length).toBe(asked);
+ first.emit("message",{type:"done",graph:{ok:1}});expect(await run).toEqual({graph:{ok:1}});await pool.close();
 });

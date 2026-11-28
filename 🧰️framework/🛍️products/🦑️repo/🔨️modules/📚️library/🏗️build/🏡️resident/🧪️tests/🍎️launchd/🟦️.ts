@@ -11,14 +11,14 @@ const base={tag:"abc123def456",command,environment:{} as Record<string,string>,c
 const plistOracle=(text:string)=>JSON.parse(spawnSync("python3",["-I","-c","import plistlib,sys,json;print(json.dumps(plistlib.loads(sys.stdin.buffer.read())))"],{input:text,encoding:"utf8"}).stdout);
 
 type Job={label:string;pid?:number;runs:number};
-const launchd=(options:{bootstrap?:number;kickstart?:number;runsOnKick?:boolean;jobs?:Job[]}={})=>{
+const launchd=(options:{raced?:boolean;bootstrap?:number;kickstart?:number;runsOnKick?:boolean;jobs?:Job[]}={})=>{
  const jobs=new Map<string,Job>((options.jobs??[]).map(job=>[job.label,{...job}])),calls:string[]=[];
  const run=(program:string,args:readonly string[])=>{
   calls.push([program,...args].join(" "));expect(program).toBe("launchctl");
   const label=(args[1]??"").split("/").at(-1)!;
   if(args[0]==="list")return{status:0,stdout:"PID\tStatus\tLabel\n"+[...jobs.values()].map(job=>`${job.pid??"-"}\t0\t${job.label}`).join("\n")+"\n123\t0\tcom.apple.other\n"};
   if(args[0]==="bootout"){const had=jobs.delete(label);return had?0:113;}
-  if(args[0]==="bootstrap"){if(options.bootstrap)return options.bootstrap;jobs.set(plistLabel(args[2]!),{label:plistLabel(args[2]!),runs:0});return 0;}
+  if(args[0]==="bootstrap"){if(options.raced){jobs.set(plistLabel(args[2]!),{label:plistLabel(args[2]!),runs:0});return{status:5,stdout:"",stderr:"Bootstrap failed: 5: Input/output error"};}if(jobs.has(plistLabel(args[2]!)))return{status:5,stdout:"",stderr:"Bootstrap failed: 5: Input/output error"};if(options.bootstrap)return options.bootstrap;jobs.set(plistLabel(args[2]!),{label:plistLabel(args[2]!),runs:0});return 0;}
   if(args[0]==="kickstart"){if(options.kickstart)return options.kickstart;const job=jobs.get(label);if(!job)return 113;if(options.runsOnKick!==false){job.runs++;job.pid=4000;}return 0;}
   if(args[0]==="print"){const job=jobs.get(label);return job?{status:0,stdout:`\tstate = ${job.pid?"running":"not running"}\n\truns = ${job.runs}\n${job.pid?`\tpid = ${job.pid}\n`:""}`}:{status:113,stdout:""};}
   return 1;
@@ -58,7 +58,7 @@ test("the job is loaded and started by demand, in order: stale out, old out, fil
   const route=launchdRouteV1(base)!,fake=launchd(),files=new Map<string,string>();
   const outcome=startViaLaunchdV1(route,{environment:{HOME:home,X_TOKEN:"t"},log:"/l",run:fake.run,write:(path,text)=>{files.set(path,text);},remove:path=>{files.delete(path);},files:()=>[],...quick});
   expect(outcome).toEqual({started:true,reason:"running"});
-  expect(fake.calls).toEqual(["launchctl list",`launchctl bootout ${route.target}`,`launchctl bootstrap gui/501 ${route.plistPath}`,`launchctl kickstart ${route.target}`,`launchctl print ${route.target}`]);
+  expect(fake.calls).toEqual(["launchctl list",`launchctl print ${route.target}`,`launchctl bootstrap gui/501 ${route.plistPath}`,`launchctl kickstart ${route.target}`,`launchctl print ${route.target}`]);
   expect(files.get(route.plistPath)).toBeDefined();expect(files.get(route.plistPath)).not.toContain("X_TOKEN");
 });
 
@@ -124,4 +124,25 @@ test("the consent of the launcher is made sure by a probe job under the launcher
   expect(again.calls.some(call=>call.includes("bootstrap")||call.includes("kickstart")),"a probe that waits is not started twice").toBe(false);
   expect(ensureLauncherConsentV1({...common,run:launchd({bootstrap:5}).run,consented:()=>false})).toMatchObject({state:"failed"});
   expect(ensureLauncherConsentV1({...common,run:launchd({kickstart:5}).run,consented:()=>false})).toMatchObject({state:"failed"});
+});
+
+test("a label that is already loaded is neither booted out nor bootstrapped again: the second client of one implementation joins the job the first one loaded",()=>{
+  const route=launchdRouteV1(base)!,fake=launchd({jobs:[{label:route.label,runs:0}]});
+  const outcome=startViaLaunchdV1(route,{environment:{},log:"/l",run:fake.run,write:()=>undefined,remove:()=>undefined,files:()=>[],...quick});
+  expect(outcome).toEqual({started:true,reason:"running"});
+  expect(fake.calls.some(call=>call.includes("bootout")||call.includes("bootstrap"))).toBe(false);
+  expect(fake.jobs.get(route.label)?.pid).toBe(4000);
+});
+
+test("two clients racing for one label: the loser's bootstrap is refused (launchd answers 5 for a loaded label), finds the label loaded, starts it by demand and removes nothing of the winner",()=>{
+  const route=launchdRouteV1(base)!,fake=launchd({raced:true}),removed:string[]=[];
+  const outcome=startViaLaunchdV1(route,{environment:{},log:"/l",run:fake.run,write:()=>undefined,remove:path=>removed.push(path),files:()=>[],...quick});
+  expect(outcome).toEqual({started:true,reason:"running"});expect(removed).toEqual([]);expect(fake.calls.filter(call=>call.includes("bootout"))).toEqual([]);
+});
+
+test("a refusal names what launchctl said, and a job this call did not create is never booted out when the start fails",()=>{
+  const route=launchdRouteV1(base)!,fake=launchd({jobs:[{label:route.label,runs:0}],kickstart:5}),result=startViaLaunchdV1(route,{environment:{},log:"/l",run:fake.run,write:()=>undefined,remove:()=>undefined,files:()=>[],...quick});
+  expect(result.started).toBe(false);expect(fake.jobs.has(route.label)).toBe(true);
+  const refused=startViaLaunchdV1(route,{environment:{},log:"/l",run:(program,args)=>args[0]==="bootstrap"?{status:5,stdout:"",stderr:"Bootstrap failed: 5: Input/output error\nTry re-running"}:args[0]==="list"?{status:0,stdout:""}:{status:113,stdout:""},write:()=>undefined,remove:()=>undefined,files:()=>[],...quick});
+  expect(refused).toEqual({started:false,reason:"bootstrap refused: Bootstrap failed: 5: Input/output error"});
 });

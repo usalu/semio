@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Window Bottom Dock Reserve Cases",
+  "type": "object",
+  "required": ["schema", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "window-bottom-dock-reserve/v1" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "body", "docks", "reservePx"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "body": { "$ref": "#/$defs/rect" },
+          "docks": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+          "reservePx": { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rect": { "type": "object", "required": ["left", "right", "top", "bottom"], "additionalProperties": false, "properties": { "left": { "type": "number" }, "right": { "type": "number" }, "top": { "type": "number" }, "bottom": { "type": "number" } } }
+  }
+}

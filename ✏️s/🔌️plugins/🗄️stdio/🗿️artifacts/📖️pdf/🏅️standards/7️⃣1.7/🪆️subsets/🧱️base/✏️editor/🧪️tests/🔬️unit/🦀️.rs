@@ -236,7 +236,7 @@ type ShardApp = semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor
 
 /// 🧾️ What one reactor turn of the shard-driven open reported.
 #[derive(Debug)]
-struct ShardTurn { ingress: String, status: String, spent: u128, fuel_used: u64, retained: semio_framework_value::RetainedCloneProgress }
+struct ShardTurn { ingress: String, status: String, sources: String, spent: u128, fuel_used: u64, retained: semio_framework_value::RetainedCloneProgress }
 
 /// 🔄️ One reactor turn exactly as a shard grants it: the original caller's context renewed with the shard's fuel (armed through `arm_host_turn_fuel`) and grant, the fixture's retained input, one optional lifecycle event and one optional command page.
 async fn shard_turn<PA: semio_plugin::PluginApp>(runtime: &semio_plugin::plugin_runtime::PluginRuntime<PA>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, event: &mut Option<semio_plugin::kernel::Event>, page: &mut Option<(semio_plugin::kernel::CommandPageCursor, semio_plugin::kernel::FixedCommandPage)>) -> Option<(semio_plugin::kernel::TurnResult, ShardTurn)> {
@@ -249,7 +249,7 @@ async fn shard_turn<PA: semio_plugin::PluginApp>(runtime: &semio_plugin::plugin_
     let result = semio_plugin::reactor_turn_laws::poll_kernel(runtime, event, page, None, budget, &mut laws::fixture_identity(), scope.cx()).await.unwrap_or_else(|failure| panic!("shard reactor turn: {failure:?}"));
     let after = scope.cx().retained_progress();
     let retained = semio_framework_value::RetainedCloneProgress { copied_items: after.copied_items.saturating_sub(retained_before.copied_items), copied_bytes: after.copied_bytes.saturating_sub(retained_before.copied_bytes), retained_capacity_bytes: after.retained_capacity_bytes.saturating_sub(retained_before.retained_capacity_bytes), released_bytes: after.released_bytes.saturating_sub(retained_before.released_bytes) };
-    let turn = ShardTurn { ingress: format!("{:?}", result.command_ingress).chars().take(24).collect(), status: format!("{:?}", result.status), spent: scope.cx().original_work_units_spent().saturating_sub(before), fuel_used: result.fuel_used, retained };
+    let turn = ShardTurn { ingress: format!("{:?}", result.command_ingress).chars().take(240).collect(), status: format!("{:?}", result.status), sources: { let sources = semio_plugin::reactor_turn_laws::last_turn_more_work_sources(); format!("{:?}{}", sources.names(), if sources.typed_operation_contended { " contended" } else { "" }) }, spent: scope.cx().original_work_units_spent().saturating_sub(before), fuel_used: result.fuel_used, retained };
     Some((result, turn))
 }
 
@@ -560,7 +560,7 @@ async fn shard_media_in_open<PA: semio_plugin::PluginApp>(host: fn() -> ShardHos
 /// 📂️ The census a stalled shard open prints: how many turns ended in which ingress and turn status.
 fn shard_census(open: &ShardOpen) -> String {
     let mut census = std::collections::BTreeMap::<String, usize>::new();
-    for turn in &open.log { *census.entry(format!("{} / {}", turn.ingress, turn.status)).or_default() += 1; }
+    for turn in &open.log { *census.entry(format!("{} / {} / {}", turn.ingress, turn.status, turn.sources)).or_default() += 1; }
     let idle = open.log.iter().filter(|turn| turn.spent == 0 && turn.fuel_used == 0 && turn.retained == semio_framework_value::RetainedCloneProgress::default()).count();
     format!("{} turns ({idle} idle), mounted at {:?}, census {census:?}, last {:?}, app: {}", open.log.len(), open.mounted_at, open.log.iter().rev().take(3).collect::<Vec<_>>(), open.report)
 }
@@ -2822,5 +2822,16 @@ async fn registered_pdf_with_form_images_page_resources_and_an_acro_form_opens_l
         if name == "acro-form" { assert_eq!(oracle::reference_form_fields(&saved).unwrap(), oracle::reference_form_fields(input).unwrap(), "{name}: lopdf reads the same field tree and widgets after Save"); }
         laws::close_registered_fixture_app(&mut reopened_app, policy, scope.cx()).expect("reopened editor closes");
         laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+    }
+}
+
+/// 🔭️ Every view and presence tool publishes the transient view and the presence follow, so the typed-operation unit does not refuse `zoom-in` with `plugin.internal` ("emitted a store lane absent from its exact factory publication contract").
+#[test]
+fn view_and_presence_tools_declare_the_transient_and_presence_lanes() {
+    use semio_plugin::ArtifactToolPublicationLane::{Presence, Transient};
+    let contracts = <Pdf17Editor as semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor>::NATIVE_PUBLICATION_CONTRACTS;
+    for tool in ["zoom-in", "zoom-out", "fit-page", "fit-width", "actual-size", "go-to-page", "set-query", "toggle-match-case", "next-hit", "previous-hit"] {
+        let contract = contracts.iter().find(|contract| contract.tool_id == tool).unwrap_or_else(|| panic!("{tool} has no publication contract"));
+        assert!(contract.lanes.contains(&Transient) && contract.lanes.contains(&Presence), "{tool}: {:?}", contract.lanes);
     }
 }

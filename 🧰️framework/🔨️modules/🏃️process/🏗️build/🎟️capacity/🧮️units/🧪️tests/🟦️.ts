@@ -37,6 +37,16 @@ test("every state of a generated grid is planned like the Python model",()=>{
  const expected=python(grid);expect(grid.length).toBeGreaterThan(40000);
  grid.forEach((row,index)=>expect(planCompileUnitsV1(row.host,row.intent),JSON.stringify(row)).toEqual(expected[index] as never));
 });
+test("a build fits its reservation: the compile units follow the memory the grant reserved at the worst case of the largest rustc classes, like the Python model",()=>{
+ const grid:{host:CompileUnitsHostV1;intent:{needed:number|null}}[]=[];
+ for(const cores of[2,4,8,10,20,64])for(const granted of[null,1,4,12])for(const reserved of[null,0,1000,2149,2150,3599,3600,4687,4688,5776,6864,7952,9040,16000,64000])for(const unit of[512,2048])grid.push({host:{cores,availableMegabytes:null,pressure:null,grantedJobs:granted,grantedMegabytes:granted===null?null:granted*2048,reservedJobMegabytes:reserved,unitMegabytes:unit},intent:{needed:null}});
+ const expected=python(grid);
+ grid.forEach((row,index)=>expect(planCompileUnitsV1(row.host,row.intent),JSON.stringify(row)).toEqual(expected[index] as never));
+ const lowBuild=(reserved:number,cores:number)=>planCompileUnitsV1({cores,availableMegabytes:null,pressure:null,grantedJobs:cores,grantedMegabytes:cores*2048,reservedJobMegabytes:reserved,unitMegabytes:512},{needed:null});
+ expect(lowBuild(3300-1536,4),"the 8 GB host: a session may hold 3.3 GB, 1.8 GB above the fixed block of cargo: one rustc unit").toMatchObject({preferred:1,reason:"reservation"});
+ expect(lowBuild(7168-1536,10),"the 16 GB host: 7.1 GB share").toMatchObject({preferred:3,reason:"reservation"});
+ expect(lowBuild(64000,64),"a large reservation limits nothing: the half of the cores does").toMatchObject({preferred:32,reason:"share"});
+});
 test("the plan never exceeds half of the host, never starts below one core and keeps minimum within preferred",()=>{
  for(const cores of[1,2,3,4,5,7,10,33]){const plan=planCompileUnitsV1({cores,availableMegabytes:null,pressure:null,grantedJobs:null,grantedMegabytes:null,unitMegabytes:2048});expect(plan.preferred).toBeLessThanOrEqual(Math.max(1,Math.floor(cores/2)));expect(plan.minimum).toBeGreaterThanOrEqual(1);expect(plan.minimum).toBeLessThanOrEqual(plan.preferred);if(cores>=2)expect(plan.preferred*2).toBeLessThanOrEqual(cores);}
 });

@@ -93,13 +93,13 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
         .window_transient_snapshot(&preview_view)
         .expect("preview window transient snapshot")
         .and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()));
-    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(flow_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the shell dispatches setActiveExample under the flow window");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "a shell-dispatched setActiveExample published a fault lane");
     let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     assert_eq!(published, authored_node_ids(PROCEDURAL_EXAMPLE_BOX_SHELL), "the shell-dispatched switch did not republish the flow window's graph");
-    let polled = app.pending_effects(Some(&flow_view)).await;
+    let polled = semio_plugin::artifact_app_laws::fixture_pending_effects(&mut app.0, Some(&flow_view)).await.expect("the host pending-effects poll").unwrap_or_default();
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
     assert!(context::run_actions(&polled).is_empty(), "the refresh poll must ask for no second run, got {polled:?}");
     context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
@@ -121,7 +121,7 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, _preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
-    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(flow_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
@@ -212,7 +212,7 @@ async fn every_example_switch_row_of_the_fixture_holds() {
     for row in &fixture.rows {
         let mut app = app_with_registry().await;
         let (flow_view, preview_view) = example_switch_views(&fixture, &row.attached);
-        let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+        let action_meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(flow_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
         context::drain_armed_flow_eval_ticks(&mut app, &flow_view).await;
         let before_eval = preview_eval_text(&mut app, &preview_view);
         let mut armed = Vec::new();

@@ -86,7 +86,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  }
  pub fn granted_retirement_step(&mut self,cx:&mut job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,job::OriginalTurnFailure>{
   use semio_framework_value::retained_clone::RetainedCloneStep;
-  if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){if std::env::var_os("L3D_TRACE").is_some(){static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);if N.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<8{eprintln!("[DEBUG] granted guard ready={} pub_progress={} retire_receipt={}",self.granted_retirement_ready(),self.publication_ownership_progress.is_some(),self.original_retirement_receipt.is_some());}}return Ok(RetainedCloneStep::Progress(Default::default()));}
   let demand=self.granted_retirement_demands(grant.maximum_copy_bytes)?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if !self.publication_failure.terminal_is_empty(){let Some((turn,_))=cx.with_original_effect(grant,|_,effect|self.publication_failure.close_step(effect))?else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_work(turn.work);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}

@@ -165,7 +165,7 @@ export async function censusNxAuthorizerSourcesV1(workspace:string,entry:string,
 export async function captureNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal,options:NxAuthorizerCaptureOptionsV1={}):Promise<NxAuthorizerSourcesV1>{return await traverseNxAuthorizerSourcesV1(workspace,entry,signal,options) as NxAuthorizerSourcesV1;}
 const membershipRetryV1=authorizerSchema.$defs.SourceMembershipRetry.const;
 /** 🌊️ Whether a failure is the live tree moving under a capture (a path vanished, was replaced or changed between listing and reading) rather than a fact about the sources. */
-function membershipChangeV1(error:unknown):boolean{if(typeof error!=="object"||error===null)return false;const row=error as{code?:unknown;key?:unknown;message?:unknown};return row.code==="ENOENT"||row.code==="ENOTDIR"||row.key==="tools.authorizer-ancestry-changed"||row.message==="Authorizer source changed during capture"||row.message==="Authorizer DATA directory changed"||row.message==="Original authorizer descriptor required";}
+export function membershipChangeV1(error:unknown):boolean{if(typeof error!=="object"||error===null)return false;const row=error as{code?:unknown;key?:unknown;message?:unknown};return row.code==="ENOENT"||row.code==="ENOTDIR"||row.key==="tools.authorizer-ancestry-changed"||row.message==="Authorizer source changed during capture"||row.message==="Authorizer DATA directory changed"||row.message==="Original authorizer descriptor required";}
 async function traverseNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal,options:NxAuthorizerCaptureOptionsV1,progress?:((files:number,phase:"capture"|"projection")=>void)):Promise<NxAuthorizerSourcesV1|NxAuthorizerCensusV1>{
  let attempted=0;
  try{return await retryOnConcurrentEditV1("read",async attempt=>{attempted=attempt;try{return await walkNxAuthorizerSourcesV1(workspace,entry,signal,options,progress,attempt);}catch(error){signal.throwIfAborted();if(!membershipChangeV1(error))throw error;throw Object.assign(concurrentEditV1("vanished",(error as {path?:string}).path??entry,String((error as Error)?.message??error)),{membership:error});}},{signal,retryable:()=>attempted<membershipRetryV1.attempts,onRetry:event=>options.report?.("sources moved while they were read, walking the tool closure again ("+event.attempt+" of "+membershipRetryV1.attempts+") / Quellen änderten sich beim Lesen, der Werkzeugabschluss wird erneut durchlaufen ("+event.attempt+" von "+membershipRetryV1.attempts+")")});}
@@ -224,7 +224,16 @@ export function nxAuthorizerImportProjectionV1(workspace:string,bytes:ReadonlyMa
  return result;}
 /** 🔗️ Reads import edges only from an actual privately issued compiler capture. */
 export function nxAuthorizerCapturedImportsV1(workspace:string,source:NxAuthorizerSourcesV1):ReadonlyMap<string,Readonly<Record<string,string>>>{return capturedImports.get(source)??nxAuthorizerImportProjectionV1(workspace,nxAuthorizerCapturedBytesV1(source),source.manifest.resolutions,capturedInstalled.get(source));}
-/** ✅️ Re-enumerates the actual runtime closure before publishing compiled authorizers. */
-export async function nxAuthorizerSourcesHoldV1(root:string,original:NxAuthorizerSourcesV1,signal:AbortSignal):Promise<boolean>{
- try{return (await captureNxAuthorizerSourcesV1(root,original.manifest.entry,signal,{installed:capturedInstalled.has(original),roots:capturedInstalled.get(original)?.roots})).digest===original.digest;}catch(error){signal.throwIfAborted();return false;}
+/** 🔎️ Re-enumerates the actual runtime closure and names the first source whose bytes or membership moved since `original` was captured (the entry when only a failed walk shows it); `undefined` when the closure still holds. */
+export async function nxAuthorizerSourcesMovedV1(root:string,original:NxAuthorizerSourcesV1,signal:AbortSignal):Promise<string|undefined>{
+ try{
+  const live=await captureNxAuthorizerSourcesV1(root,original.manifest.entry,signal,{installed:capturedInstalled.has(original),roots:capturedInstalled.get(original)?.roots});
+  if(live.digest===original.digest)return undefined;
+  const before=new Map(original.manifest.sources.map(row=>[row.path,row.sha256])),after=new Map(live.manifest.sources.map(row=>[row.path,row.sha256]));
+  for(const[path,sha256]of after)if(before.get(path)!==sha256)return path;
+  for(const path of before.keys())if(!after.has(path))return path;
+  return original.manifest.entry;
+ }catch(error){signal.throwIfAborted();return (error as {path?:string})?.path??original.manifest.entry;}
 }
+/** ✅️ Re-enumerates the actual runtime closure before publishing compiled authorizers. */
+export async function nxAuthorizerSourcesHoldV1(root:string,original:NxAuthorizerSourcesV1,signal:AbortSignal):Promise<boolean>{return await nxAuthorizerSourcesMovedV1(root,original,signal)===undefined;}

@@ -11,7 +11,8 @@ class BuildSuiteScript extends Script{
   if(args.length!==1||!suite)throw refuseProcessV1("invalid","script.suite-unknown",{suite:args.join(" "),known:table.suites.map(row=>row.id).join(", ")});
   const{processTestCheckoutV1,runProcessTestSuiteV1,withProcessTestOutputV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts"),checkout=processTestCheckoutV1(this.root,this.repoRoot),{genuineBirthLaunchersV1}=await import("../../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts"),{testWorkerLearningV1}=await import("../🌡️host-capacity/🧪️workers/🟦️.ts"),launchers=genuineBirthLaunchersV1(join(this.root,"../../🧪️testing/🌱️genuine-birth/📜️script.ts"),checkout);
   const environment=(await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts")).processTestSuiteBindsToolV1(suite,buildTestRootV1,table,"python")?await(await import("./🐍️python/🟦️.ts")).workspaceTestPythonEnvironmentV1(checkout,process.env,this.invocation.control.signal):process.env;
-  await withProcessTestOutputV1(checkout,"build-contract",output=>runProcessTestSuiteV1({invocation:this.invocation,root:buildTestRootV1,checkout,table,suite:suite.id,owner:"build",output,environment,launchers,workers:{learning:testWorkerLearningV1(environment)}}),suite.scratch);
+  const{createSuiteRemoteV1}=await import("../🔬️test-file/🌐️remote/🗂️suite/🟦️.ts"),remote=await createSuiteRemoteV1(checkout,suite.id,process.env);
+  await withProcessTestOutputV1(checkout,"build-contract",output=>runProcessTestSuiteV1({invocation:this.invocation,root:buildTestRootV1,checkout,table,suite:suite.id,owner:"build",output,environment,launchers,workers:{learning:testWorkerLearningV1(environment)},...(remote===undefined?{}:{remote})}),suite.scratch);
  }
 }
 

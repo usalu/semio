@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/checkout-test-offload/v1",
+  "title": "Checkout test offload",
+  "description": "A machine under pressure hands one test file (every request carries a nonce, so no two requests are one action and the scheduler never answers a test from its result cache) to an idle Ready machine of the fleet that holds the same checkout revision (the requester names the Ready machines of its platform from their readiness records and pins the action to one of them at a time, `if-idle`, so a machine that is busy, not Ready or behind is answered at once and the next one is tried; at most `maximumCandidates`; when every one answered that it has no room, all of them are asked again every `pauseMilliseconds` for at most `retryMilliseconds`): the closed policy (program, platform property, environment mode, waits, limits), the wire messages (request shipped as the one input file of the action, result returned on the standard output of the action) and the texts in English and German. The worker runs the file with the same tool as the requester would (`repo test-file`) in its own replica of the checkout, so the file has the hermetic sandbox of its suite; nothing of the checkout travels. The mode is the environment variable SEMIO_TEST_FILE_OFFLOAD: `auto` (default: only while the host-capacity verdict of this machine is wait), `never`, `always` (whenever an idle machine exists).",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "program", "property", "environment", "request", "wait", "timeouts", "limits", "load", "stream"],
+      "properties": {
+        "version": {"const": 1},
+        "program": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {"name": {"type": "string", "minLength": 1}}
+        },
+        "property": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "formatValue"],
+          "properties": {"format": {"type": "string", "minLength": 1}, "formatValue": {"type": "string", "minLength": 1}}
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "modes", "default", "workerMode", "forward"],
+          "properties": {
+            "mode": {"type": "string", "minLength": 1},
+            "modes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+            "default": {"type": "string"},
+            "workerMode": {"type": "string"},
+            "forward": {"type": "array", "items": {"type": "string", "pattern": "^SEMIO_TEST_SERVICE_[A-Z0-9_]{1,40}$"}}
+          }
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {"path": {"type": "string", "minLength": 1}}
+        },
+        "wait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["replicaMilliseconds", "pollMilliseconds", "retryMilliseconds", "pauseMilliseconds"],
+          "properties": {
+            "replicaMilliseconds": {"type": "integer", "minimum": 0},
+            "pollMilliseconds": {"type": "integer", "minimum": 1},
+            "retryMilliseconds": {"type": "integer", "minimum": 0},
+            "pauseMilliseconds": {"type": "integer", "minimum": 1}
+          }
+        },
+        "timeouts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["marginSeconds", "uploadMilliseconds", "downloadMilliseconds", "idleMilliseconds"],
+          "properties": {
+            "marginSeconds": {"type": "integer", "minimum": 1},
+            "uploadMilliseconds": {"type": "integer", "minimum": 1},
+            "downloadMilliseconds": {"type": "integer", "minimum": 1},
+            "idleMilliseconds": {"type": "integer", "minimum": 1}
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumRequestBytes", "maximumResultBytes", "maximumTailCharacters", "maximumCandidates", "maximumParallel"],
+          "properties": {
+            "maximumRequestBytes": {"type": "integer", "minimum": 1},
+            "maximumResultBytes": {"type": "integer", "minimum": 1},
+            "maximumTailCharacters": {"type": "integer", "minimum": 1},
+            "maximumCandidates": {"type": "integer", "minimum": 1},
+            "maximumParallel": {"type": "integer", "minimum": 1}
+          }
+        },
+        "load": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["perCoreMeasured", "remoteWorthRatio", "maximumAgeSeconds", "maximumFiles", "file"],
+          "properties": {
+            "perCoreMeasured": {"type": "number", "minimum": 0},
+            "remoteWorthRatio": {"type": "number", "minimum": 0, "maximum": 1},
+            "maximumAgeSeconds": {"type": "integer", "minimum": 1},
+            "maximumFiles": {"type": "integer", "minimum": 1},
+            "file": {"type": "string", "minLength": 1}
+          }
+        },
+        "stream": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "flushMilliseconds", "pollMilliseconds", "maximumChunkBytes", "maximumChunks", "drainMilliseconds"],
+          "properties": {
+            "key": {"type": "string", "minLength": 1},
+            "flushMilliseconds": {"type": "integer", "minimum": 1},
+            "pollMilliseconds": {"type": "integer", "minimum": 1},
+            "maximumChunkBytes": {"type": "integer", "minimum": 1},
+            "maximumChunks": {"type": "integer", "minimum": 1},
+            "drainMilliseconds": {"type": "integer", "minimum": 1}
+          }
+        }
+      }
+    },
+    "Position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment", "bytes"],
+      "properties": {"segment": {"type": "integer", "minimum": 0}, "bytes": {"type": "integer", "minimum": 0}}
+    },
+    "ServiceOrigin": {"type": "string", "maxLength": 280, "pattern": "^https?://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?$"},
+    "Cut": {"type": "object", "additionalProperties": {"$ref": "#/definitions/Position"}},
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "nonce", "file", "fileSha256", "cut", "language", "budgetSeconds"],
+      "properties": {
+        "version": {"const": 1},
+        "nonce": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+        "file": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "fileSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "cut": {"$ref": "#/definitions/Cut"},
+        "language": {"enum": ["en", "de"]},
+        "budgetSeconds": {"type": "integer", "minimum": 1},
+        "stretchBasisPoints": {"type": "integer", "minimum": 10000, "maximum": 640000},
+        "environment": {"type": "object", "additionalProperties": false, "properties": {"SEMIO_TEST_SERVICE_ORIGIN": {"$ref": "#/definitions/ServiceOrigin"}}}
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "origin", "cut", "result"],
+      "properties": {
+        "version": {"const": 1},
+        "origin": {"type": "string", "minLength": 1},
+        "cut": {"$ref": "#/definitions/Cut"},
+        "result": {"type": "object"}
+      }
+    },
+    "Chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "nonce", "index", "offset", "origin", "data", "last"],
+      "properties": {
+        "version": {"const": 1},
+        "nonce": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+        "index": {"type": "integer", "minimum": 0},
+        "offset": {"type": "integer", "minimum": 0},
+        "origin": {"type": "string", "minLength": 1},
+        "data": {"type": "string", "pattern": "^[A-Za-z0-9+/]*={0,2}$"},
+        "last": {"type": "boolean"}
+      }
+    },
+    "Timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seconds", "at"],
+      "properties": {"seconds": {"type": "number", "minimum": 0}, "at": {"type": "integer", "minimum": 0}}
+    },
+    "Measure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"local": {"$ref": "#/definitions/Timing"}, "remote": {"$ref": "#/definitions/Timing"}}
+    },
+    "Measures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "files"],
+      "properties": {
+        "version": {"const": 1},
+        "files": {"type": "object", "additionalProperties": {"$ref": "#/definitions/Measure"}}
+      }
+    }
+  },
+  "policy": {
+    "version": 1,
+    "program": {"name": "@checkout-test:v1"},
+    "property": {"format": "semio-checkout-test", "formatValue": "1"},
+    "environment": {"mode": "SEMIO_TEST_FILE_OFFLOAD", "modes": ["auto", "never", "always"], "default": "auto", "workerMode": "never", "forward": ["SEMIO_TEST_SERVICE_ORIGIN"]},
+    "request": {"path": "checkout-test/request.json"},
+    "wait": {"replicaMilliseconds": 8000, "pollMilliseconds": 1000, "retryMilliseconds": 8000, "pauseMilliseconds": 3000},
+    "timeouts": {"marginSeconds": 120, "uploadMilliseconds": 60000, "downloadMilliseconds": 60000, "idleMilliseconds": 20000},
+    "limits": {"maximumRequestBytes": 65536, "maximumResultBytes": 8388608, "maximumTailCharacters": 6000, "maximumCandidates": 4, "maximumParallel": 4},
+    "load": {"perCoreMeasured": 0.5, "remoteWorthRatio": 0.8, "maximumAgeSeconds": 3600, "maximumFiles": 256, "file": "offload-test-measure.json"},
+    "stream": {"key": "checkout-test-chunk", "flushMilliseconds": 400, "pollMilliseconds": 600, "maximumChunkBytes": 16384, "maximumChunks": 4096, "drainMilliseconds": 3000}
+  },
+  "messages": {
+    "en": {
+      "offloaded": "Test file {file} ran on {origin} ({seconds} s).",
+      "declined": "Test file {file} stays here: {reason}.",
+      "fallback": "Test file {file} runs here after the remote run failed: {reason}.",
+      "refusal.disabled": "this worker runs no checkout tests",
+      "refusal.shape": "request not allowed: {detail}",
+      "refusal.not-ready": "this machine is not Ready ({detail})",
+      "refusal.behind": "the replica of this machine does not hold the revision of the requester: {detail}",
+      "refusal.file": "the test file of this machine differs from the one of the requester or is missing: {file}",
+      "detail.no-fleet": "this machine is no member of a fleet",
+      "detail.no-ready": "no other machine of this platform is Ready",
+      "detail.no-cut": "this replica has published no cut yet",
+      "detail.upload": "the upload of the request took too long",
+      "detail.too-large": "the result is larger than {maximum} bytes",
+      "detail.not-json": "the result is not JSON",
+      "detail.invalid": "the result violates its schema: {detail}",
+      "detail.exit": "the test run ended with status {code}: {tail}",
+      "detail.no-row": "the result does not name the test file",
+      "detail.claimed": "every Ready machine already runs another test file of this run",
+      "stage.queued": "Test file {file} waits for a machine.",
+      "stage.executing": "Test file {file} is running on another machine."
+    },
+    "de": {
+      "offloaded": "Die Testdatei {file} lief auf {origin} ({seconds} s).",
+      "declined": "Die Testdatei {file} bleibt hier: {reason}.",
+      "fallback": "Die Testdatei {file} läuft hier, nachdem der entfernte Lauf scheiterte: {reason}.",
+      "refusal.disabled": "dieser Worker führt keine Checkout-Tests aus",
+      "refusal.shape": "Anfrage nicht erlaubt: {detail}",
+      "refusal.not-ready": "dieser Rechner ist nicht Ready ({detail})",
+      "refusal.behind": "das Replikat dieses Rechners enthält die Revision des Anfragenden nicht: {detail}",
+      "refusal.file": "die Testdatei dieses Rechners weicht von der des Anfragenden ab oder fehlt: {file}",
+      "detail.no-fleet": "dieser Rechner ist kein Mitglied einer Flotte",
+      "detail.no-ready": "kein anderer Rechner dieser Plattform ist Ready",
+      "detail.no-cut": "dieses Replikat hat noch keinen Schnitt veröffentlicht",
+      "detail.upload": "das Hochladen der Anfrage dauerte zu lange",
+      "detail.too-large": "das Ergebnis ist größer als {maximum} Bytes",
+      "detail.not-json": "das Ergebnis ist kein JSON",
+      "detail.invalid": "das Ergebnis verletzt sein Schema: {detail}",
+      "detail.exit": "der Testlauf endete mit Status {code}: {tail}",
+      "detail.no-row": "das Ergebnis nennt die Testdatei nicht",
+      "detail.claimed": "jeder Ready-Rechner führt schon eine andere Testdatei dieses Laufs aus",
+      "stage.queued": "Die Testdatei {file} wartet auf einen Rechner.",
+      "stage.executing": "Die Testdatei {file} läuft auf einem anderen Rechner."
+    }
+  }
+}

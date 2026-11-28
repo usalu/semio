@@ -11,7 +11,7 @@ import {fileURLToPath} from "node:url";
 import {setTimeout as sleep} from "node:timers/promises";
 import {estimateHostRatioV1,readHostCapacityPolicyV1,readHostEstimateStoreV1,type HostSampleV1} from "../../🟦️.ts";
 import {createToolAdmissionV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
-import {CARGO_GRANT_POLICY_V1,capCargoGrantJobsV1,cargoGrantEnvironmentV1,cargoGrantJobsV1,cargoGrantLineageV1,cargoHostTripleV1,cargoPinnedToolchainV1,readCargoPinnedToolchainV1}from"../../🦀️cargo-grant/🟦️.ts";
+import {CARGO_GRANT_POLICY_V1,boundCargoRequestV1,capCargoGrantJobsV1,cargoMemoryJobsV1,cargoUnitsFittingV1,cargoGrantEnvironmentV1,cargoGrantJobsV1,cargoGrantLineageV1,cargoHostTripleV1,cargoPinnedToolchainV1,readCargoPinnedToolchainV1}from"../../🦀️cargo-grant/🟦️.ts";
 import {testPythonV1}from"../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from"../../🦀️cargo-grant/🧬️schema/🔣️.json";
 import decision from"../🧫️fixtures/🔣️.json";
@@ -38,14 +38,34 @@ test("lineage, jobs, caps and toolchains are written down exactly",()=>{
 });
 
 test("every case and a generated grid agree with the independent Python model, whose TOML parser is a third-party implementation",()=>{
+ const environments:Record<string,string>[]=[{},{CARGO_BUILD_JOBS:"5"},{CARGO_BUILD_JOBS:"zero"}];
  const grid:{arguments:string[];environment:Record<string,string>;cores:number;granted:number}[]=[];
- for(const subcommand of["check","test","build","+nightly check"])for(const packageFlag of[[],["-p","a"],["--package=b"],["--workspace"]])for(const jobsFlag of[[],["-j","3"],["-j7"],["--jobs=9"],["--jobs","0"],["--jobs=x"]])for(const tail of[[],["--","-j","2"]])for(const environment of[{},{CARGO_BUILD_JOBS:"5"},{CARGO_BUILD_JOBS:"zero"}])for(const cores of[1,10])for(const granted of[1,4])grid.push({arguments:[...subcommand.split(" "),...packageFlag,...jobsFlag,...tail],environment,cores,granted});
+ for(const subcommand of["check","test","build","+nightly check"])for(const packageFlag of[[],["-p","a"],["--package=b"],["--workspace"]])for(const jobsFlag of[[],["-j","3"],["-j7"],["--jobs=9"],["--jobs","0"],["--jobs=x"]])for(const tail of[[],["--","-j","2"]])for(const environment of environments)for(const cores of[1,10])for(const granted of[1,4])grid.push({arguments:[...subcommand.split(" "),...packageFlag,...jobsFlag,...tail],environment,cores,granted});
  const answer=python({lineage:[...cases.lineage,...grid],jobs:[...cases.jobs,...grid],caps:[...cases.caps,...grid],toolchains:cases.toolchains});
  [...cases.lineage,...grid].forEach((row,index)=>expect(cargoGrantLineageV1(row.arguments),JSON.stringify(row)).toEqual(answer.lineage[index]));
  [...cases.jobs,...grid].forEach((row,index)=>expect(cargoGrantJobsV1(row.arguments,row.environment,row.cores),JSON.stringify(row)).toBe(answer.jobs[index]));
  [...cases.caps,...grid].forEach((row,index)=>expect(capCargoGrantJobsV1(row.arguments,row.granted),JSON.stringify(row)).toEqual(answer.caps[index]));
  cases.toolchains.forEach((row,index)=>expect(cargoPinnedToolchainV1(row.file,row.triple),row.name).toBe(answer.toolchains[index]));
  expect(grid.length).toBeGreaterThan(1000);
+});
+
+test("a build fits its grant: the units follow the memory at the worst case of the largest rustc classes, as the Python model and as written down",()=>{
+ const classes={peaks:CARGO_GRANT_POLICY_V1.unitPeakClassesMegabytes,typical:CARGO_GRANT_POLICY_V1.typicalUnitMegabytes},grid=Array.from({length:240},(_,index)=>({name:String(index),megabytes:index*100,units:1})),answer=python({memory:[...cases.memory,...grid],classes});
+ [...cases.memory,...grid].forEach((row,index)=>expect(cargoUnitsFittingV1(row.megabytes),row.name).toBe(answer.memory[index]));
+ for(const row of cases.memory)expect(cargoUnitsFittingV1(row.megabytes),row.name).toBe(row.units);
+ for(let megabytes=0;megabytes<24000;megabytes+=50)expect(cargoUnitsFittingV1(megabytes)).toBeGreaterThanOrEqual(cargoUnitsFittingV1(Math.max(0,megabytes-50)));
+ expect(cargoUnitsFittingV1(3300-1536),"an 8 GB host builds with one rustc at a time").toBe(1);
+ expect(cargoMemoryJobsV1(10,5632,0),"ten cores, a 16 GB share").toBe(3);
+ expect(cargoMemoryJobsV1(2,20000,1536),"never more than the granted jobs").toBe(2);
+ expect(cargoMemoryJobsV1(8,1000,1536),"never below one").toBe(1);
+});
+
+test("a cargo request is priced and limited by memory: every job at least the typical rustc, the preferred jobs at most the units the ceiling carries, never below the minimum",()=>{
+ const request={fixedMegabytes:1536,perJobMegabytes:300,preferredJobs:10,minimumJobs:1};
+ expect(boundCargoRequestV1(request,3300)).toEqual({...request,perJobMegabytes:1088,preferredJobs:1});
+ expect(boundCargoRequestV1(request,7168)).toEqual({...request,perJobMegabytes:1088,preferredJobs:3});
+ expect(boundCargoRequestV1({...request,perJobMegabytes:2048,preferredJobs:2},64000)).toEqual({...request,perJobMegabytes:2048,preferredJobs:2});
+ expect(boundCargoRequestV1(request,0).preferredJobs).toBe(1);
 });
 
 test("a cap never exceeds the grant and never touches the arguments of the test binary",()=>{
@@ -77,6 +97,27 @@ test("the jobs follow the memory that is left above the floor: a roomy host gran
   await admission(fresh(),available)(ask(["check","-p","a","-j","10"]),async grant=>{granted.push(grant.jobs);expect(grant.environment.CARGO_BUILD_JOBS).toBe(String(grant.jobs));expect(grant.environment.RUSTUP_TOOLCHAIN).toMatch(/^nightly-/u);return{status:0};});
  }
  expect(granted[0]!).toBeGreaterThan(granted[2]!);expect(granted[0]!).toBeGreaterThanOrEqual(granted[1]!);expect(granted[1]!).toBeGreaterThanOrEqual(granted[2]!);expect(granted[2]!).toBeGreaterThanOrEqual(1);expect(granted[0]!).toBeLessThanOrEqual(10);
+},30000);
+
+test("a build fits its grant on every host: an 8 GB machine builds with one rustc job whatever -j asks, a 16 GB one with at most three, and the grant is the CARGO_BUILD_JOBS handed over",async()=>{
+ const sized=(total:number,cores:number)=>createToolAdmissionV1(policy,{directory:fresh(),environment:{SEMIO_HOST_CAPACITY_DIRECTORY:fresh(),SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:String(total),SEMIO_HOST_CAPACITY_CORES:String(cores),LANG:"en_US.UTF-8"},write:line=>{logged.push(line);},gate:{sample:async()=>({host:{version:1,atMs:Date.now(),platform:"darwin",cores,totalMegabytes:total,availableMegabytes:total,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0,openFiles:8000,openFilesMaximum:245760,attachedImages:10} as HostSampleV1,swappedOutMegabytes:0}),observe:async()=>0}});
+ const jobs:Record<string,number>={};
+ for(const [name,total,cores] of [["8gb",8192,4],["16gb",16384,10],["64gb",65536,16]] as const)await sized(total,cores)(ask(["check","-p","a","-j","16"]),async grant=>{jobs[name]=grant.jobs;expect(grant.environment.CARGO_BUILD_JOBS).toBe(String(grant.jobs));return{status:0};});
+ expect(jobs["8gb"]).toBe(1);
+ expect(jobs["16gb"]).toBeGreaterThanOrEqual(2);expect(jobs["16gb"]).toBeLessThanOrEqual(3);
+ expect(jobs["64gb"]).toBeGreaterThanOrEqual(jobs["16gb"]!);expect(jobs["64gb"]).toBeLessThanOrEqual(16);
+},30000);
+
+test("a grant writes what it measured about itself beside its row, not into it: older readers still read the row, the sidecar goes with the grant",async()=>{
+ const directory=fresh();let row:Record<string,unknown>={},stats:Record<string,unknown>={},path="";
+ await admission(directory,16000,3000)(ask(["check","-p","a","-j","1"]),async grant=>{
+  const id=grant.environment.SEMIO_HOST_CAPACITY_GRANT!;path=join(directory,"grants",`${id}.stats`);
+  for(let wait=0;wait<100&&!(()=>{try{stats=JSON.parse(readFileSync(path,"utf8"));return (stats.observations as number)>=2;}catch{return false;}})();wait++)await sleep(20);
+  row=JSON.parse(readFileSync(join(directory,"grants",`${id}.json`),"utf8"));return{status:0};
+ });
+ expect(stats).toMatchObject({peakMegabytes:3000,deviationMegabytes:0});expect(stats.observations as number).toBeGreaterThanOrEqual(2);
+ expect(Object.keys(row)).not.toContain("peakMegabytes");expect(Object.keys(row)).not.toContain("observations");expect(Object.keys(row)).not.toContain("deviationMegabytes");
+ expect(()=>readFileSync(path,"utf8")).toThrow();
 },30000);
 
 test("a successful run teaches the class of its own package, a failed or a signalled run teaches nothing, and another package borrows only the class above it",async()=>{

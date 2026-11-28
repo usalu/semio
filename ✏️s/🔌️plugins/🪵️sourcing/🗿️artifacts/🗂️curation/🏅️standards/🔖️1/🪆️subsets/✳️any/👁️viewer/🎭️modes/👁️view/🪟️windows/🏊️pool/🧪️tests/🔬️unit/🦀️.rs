@@ -29,7 +29,7 @@ async fn view_model_lists_every_stock_row_with_five_columns() {
 async fn view_model_is_localized_and_shows_the_curation_read_only() {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let first = stock_of(&document).remove(0);
-    crate::schema::curation_set(&mut document, &first.id, 2);
+    crate::schema::domain::curation_set(&mut document, &first.id, 2);
     let german = view_model(&document, semio_plugin::Locale::De);
     assert_eq!(german.columns, ["Name", "Modul", "Typologie", "Verfügbarkeit", "Kuratiert"]);
     assert_eq!(german.rows[0][0], "Brettschichtholz GL24h 200×400");

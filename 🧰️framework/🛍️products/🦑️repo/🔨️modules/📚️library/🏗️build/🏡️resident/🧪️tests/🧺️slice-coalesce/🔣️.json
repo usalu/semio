@@ -1,0 +1,285 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "id": "four lanes with four tasks arriving together are one worker reading the union",
+   "maximum": 2,
+   "requests": [
+    {
+     "name": "browser",
+     "arguments": [
+      "run",
+      "a:dev",
+      "--lang=en"
+     ],
+     "grant": "g1"
+    },
+    {
+     "name": "gismap",
+     "arguments": [
+      "run",
+      "b:test"
+     ],
+     "grant": "g2"
+    },
+    {
+     "name": "terrain",
+     "arguments": [
+      "run",
+      "c:test",
+      "--dry-run"
+     ],
+     "grant": "g3"
+    },
+    {
+     "name": "ts",
+     "arguments": [
+      "run",
+      "d:test"
+     ],
+     "grant": "g4"
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "browser",
+      "gismap",
+      "terrain",
+      "ts"
+     ],
+     "selection": {
+      "kind": "tasks",
+      "tasks": [
+       {
+        "project": "a",
+        "target": "dev"
+       },
+       {
+        "project": "b",
+        "target": "test"
+       },
+       {
+        "project": "c",
+        "target": "test"
+       },
+       {
+        "project": "d",
+        "target": "test"
+       }
+      ]
+     },
+     "grant": null
+    }
+   ]
+  },
+  {
+   "id": "the same task from two invocations with two grants is one worker that keeps no single grant",
+   "maximum": 2,
+   "requests": [
+    {
+     "name": "one",
+     "arguments": [
+      "run",
+      "a:test",
+      "--lang=en"
+     ],
+     "grant": "g1"
+    },
+    {
+     "name": "two",
+     "arguments": [
+      "run",
+      "a:test",
+      "--lang=de",
+      "--dry-run"
+     ],
+     "grant": "g2"
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "one",
+      "two"
+     ],
+     "selection": null,
+     "grant": null
+    }
+   ]
+  },
+  {
+   "id": "the same task and the same grant keeps the grant",
+   "maximum": 2,
+   "requests": [
+    {
+     "name": "one",
+     "arguments": [
+      "run",
+      "a:test"
+     ],
+     "grant": "g1"
+    },
+    {
+     "name": "two",
+     "arguments": [
+      "run",
+      "a:test"
+     ],
+     "grant": "g1"
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "one",
+      "two"
+     ],
+     "selection": null,
+     "grant": "g1"
+    }
+   ]
+  },
+  {
+   "id": "a lane that asks after the worker started and holds a task of the union joins it, another one starts its own worker",
+   "maximum": 2,
+   "requests": [
+    {
+     "name": "first",
+     "arguments": [
+      "run",
+      "a:test"
+     ]
+    },
+    {
+     "name": "second",
+     "arguments": [
+      "run",
+      "b:test"
+     ],
+     "after": 10
+    },
+    {
+     "name": "late member",
+     "arguments": [
+      "run",
+      "a:test"
+     ],
+     "after": 250
+    },
+    {
+     "name": "late other",
+     "arguments": [
+      "run",
+      "z:test"
+     ],
+     "after": 10
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "first",
+      "second",
+      "late member"
+     ],
+     "selection": {
+      "kind": "tasks",
+      "tasks": [
+       {
+        "project": "a",
+        "target": "test"
+       },
+       {
+        "project": "b",
+        "target": "test"
+       }
+      ]
+     },
+     "grant": null
+    },
+    {
+     "names": [
+      "late other"
+     ],
+     "selection": null,
+     "grant": null
+    }
+   ]
+  },
+  {
+   "id": "a direct task and a task with dependencies stay two workers",
+   "maximum": 2,
+   "requests": [
+    {
+     "name": "direct",
+     "arguments": [
+      "run",
+      "a:test",
+      "--exclude-dependencies"
+     ]
+    },
+    {
+     "name": "full",
+     "arguments": [
+      "run",
+      "b:test"
+     ]
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "direct"
+     ],
+     "selection": null,
+     "grant": null
+    },
+    {
+     "names": [
+      "full"
+     ],
+     "selection": null,
+     "grant": null
+    }
+   ]
+  },
+  {
+   "id": "a merged read that fails is read again per client so one bad task refuses only its own lane",
+   "maximum": 2,
+   "failFirstMerged": true,
+   "requests": [
+    {
+     "name": "good",
+     "arguments": [
+      "run",
+      "a:test"
+     ]
+    },
+    {
+     "name": "bad",
+     "arguments": [
+      "run",
+      "b:test"
+     ]
+    }
+   ],
+   "workers": [
+    {
+     "names": [
+      "good"
+     ],
+     "selection": null,
+     "grant": null
+    },
+    {
+     "names": [
+      "bad"
+     ],
+     "selection": null,
+     "grant": null
+    }
+   ]
+  }
+ ]
+}

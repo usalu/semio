@@ -69113,32 +69113,24 @@
      },
      {
       "id": "mast-ladder-rung",
-      "kind": "revolve",
+      "kind": "box",
       "bone": "mast",
       "material": "steel-s355",
       "role": "body",
       "tone": 0.3,
       "texture": true,
-      "profile": [
-       [
-        0,
-        0.0125
-       ],
-       [
-        0.4,
-        0.0125
+      "size": [
+       0.025,
+       0.025,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        -0.55,
+        0
        ]
-      ],
-      "axis": [
-       0,
-       0,
-       1
-      ],
-      "origin": [
-       0.5,
-       -0.55,
-       -0.2
-      ],
+      },
       "repeat": {
        "count": 125,
        "translation": [
@@ -75454,8 +75446,7 @@
         0.4,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "cross-base-z",
@@ -75475,8 +75466,7 @@
         0.4,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "base-pad-1",
@@ -75660,8 +75650,7 @@
         0.85,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "slew-ring",
@@ -80183,8 +80172,7 @@
         1.05,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "counterweight-slab-2",
@@ -80204,8 +80192,7 @@
         1.05,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "counterweight-slab-3",
@@ -80225,8 +80212,7 @@
         1.05,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "counterweight-slab-4",
@@ -80246,8 +80232,7 @@
         1.05,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "counterweight-beam",
@@ -82175,32 +82160,24 @@
      },
      {
       "id": "mast-ladder-bracket-r",
-      "kind": "revolve",
+      "kind": "box",
       "bone": "mast",
       "material": "steel-s355",
       "role": "body",
       "tone": 0.3,
       "texture": true,
-      "profile": [
-       [
-        0,
-        0.0125
-       ],
-       [
-        0.37,
-        0.0125
+      "size": [
+       0.025,
+       0.37,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        2,
+        -0.735,
+        -0.2
        ]
-      ],
-      "axis": [
-       0,
-       1,
-       0
-      ],
-      "origin": [
-       2,
-       -0.92,
-       -0.2
-      ],
+      },
       "repeat": {
        "count": 19,
        "translation": [
@@ -82212,32 +82189,24 @@
      },
      {
       "id": "mast-ladder-bracket-l",
-      "kind": "revolve",
+      "kind": "box",
       "bone": "mast",
       "material": "steel-s355",
       "role": "body",
       "tone": 0.3,
       "texture": true,
-      "profile": [
-       [
-        0,
-        0.0125
-       ],
-       [
-        0.37,
-        0.0125
+      "size": [
+       0.025,
+       0.37,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        2,
+        -0.735,
+        0.2
        ]
-      ],
-      "axis": [
-       0,
-       1,
-       0
-      ],
-      "origin": [
-       2,
-       -0.92,
-       0.2
-      ],
+      },
       "repeat": {
        "count": 19,
        "translation": [
@@ -89993,8 +89962,8 @@
     ],
     "decisions": [
      {
-      "en": "Detailed model, every member a bar of its real section: the round-2 mast (four 160 mm chords, 90 mm ties, 80 mm diagonals on four faces, rung ladder as texture) and A-frame tower head are kept; new are the triangular jib (one 140 mm top chord on the axis, two 120 x 140 mm bottom chords at +-0.6 m that carry the trolley, 80 mm Warren diagonals in both inclined faces, 50 mm horizontals and Z bracing in the bottom plane, heel frame pinned to the front tower-head legs, tip frame and sheave), the counter-jib as a flat box lattice pinned to the rear legs with a tail frame, three 50 mm pendant tie bars from the apex to the jib nodes at 22.5 m and 40.5 m and to the counter-jib tail, the cross-base (two 7 m box beams on four pads) with four 10.6 t ballast blocks on its arms and the mast-foot section, a circular 2.2 m slewing ring with two slewing gear motors, the cab beside the tower head on a console outboard of the trolley track (33 mm panels, raked windscreen and side window as glass), four vertical counterweight slabs under a suspension beam, the trolley as an open frame (side plates, wheels on the chords, cross beams, two sheaves), the hook block (side plates, sheave, crosshead, forged hook), a round 1 m3 skip with spout, gate, legs and bail, and the hoist rope in two 14 mm falls. Second round: the tower head is a 4.2 m pyramid that takes the jib heel and the counter-jib, carrying a slender braced spire to the apex 12.0 m above the slewing ring (6.86 m above the jib heel pin), so the pendants rise at 17 and 10 degrees as on a real 55 m hammerhead crane; the spire has ties at 7.0, 8.6 and 10.2 m and one diagonal per face and panel. Continuation: the three pendants are 50 mm tie bars (16 mm could not carry the jib); the counter-jib has a 30 mm deck between its top chords and 1.1 m handrails (40 mm tube, knee rail, posts every 1.83 m) that stop at the winch house; the slewing platform has the same handrail on three sides and up to the cab; the mast is built of 4 m sections with a 360 mm joint sleeve on every chord and has a rest platform beside the ladder every 8 m; the hoist rope runs from the winch through a roof fairlead over the head sheave, down inside the tower head to a heel sheave hung from the head tie at 4.0 m, and along the jib at the level of the trolley sheaves to an anchor under the tip; the two front panels of the head the rope passes carry a portal brace (two bars to the middle of the tie) instead of one diagonal. Fourth round: a scale models no bar below its smallest feature, and a bar of that size or more is a body, not a slender line: nothing is thinner than 7.5 mm here, the 14 mm rope keeps its section; no bar is declared slender, each is compared as its own mesh. The jib rails are 140 mm high and 120 mm wide.",
-      "de": "Detailliertes Modell, jeder Stab mit seinem realen Querschnitt: Der Mast aus Runde 2 (vier 160-mm-Gurte, 90-mm-Riegel, 80-mm-Diagonalen auf vier Seiten, Sprossenleiter als Textur) und die A-Bock-Turmspitze bleiben; neu sind der dreieckige Ausleger (ein 140-mm-Obergurt in der Achse, zwei Untergurte 120 x 140 mm bei +-0,6 m, auf denen die Laufkatze fährt, 80-mm-Strebenzug in beiden schrägen Wänden, 50-mm-Pfosten und Z-Verband in der Untergurtebene, Fußrahmen an den vorderen Turmspitzenbeinen, Spitzenrahmen mit Seilrolle), der Gegenausleger als flaches Kastengitter an den hinteren Beinen mit Endrahmen, drei 50-mm-Abspannstangen von der Spitze zu den Auslegerknoten bei 22,5 m und 40,5 m und zum Gegenauslegerende, der Kreuzrahmen (zwei 7-m-Kastenträger auf vier Platten) mit vier Ballastblöcken zu 10,6 t auf seinen Armen und dem Mastfußstück, ein runder Drehkranz von 2,2 m mit zwei Drehwerksmotoren, die Kabine neben der Turmspitze auf einer Konsole außerhalb der Katzfahrbahn (33-mm-Paneele, geneigte Frontscheibe und Seitenfenster als Glas), vier stehende Gegengewichtsplatten unter einem Tragbalken, die Laufkatze als offener Rahmen (Seitenschilde, Räder auf den Gurten, Querträger, zwei Seilrollen), die Hakenflasche (Seitenschilde, Seilrolle, Traverse, geschmiedeter Haken), ein runder 1-m3-Kübel mit Auslauf, Klappe, Füßen und Bügel und das Hubseil in zwei 14-mm-Strängen. Zweite Runde: Die Turmspitze ist eine 4,2 m hohe Pyramide, die Auslegerfuß und Gegenausleger aufnimmt und eine schlanke, ausgefachte Spitze bis zum Scheitel 12,0 m über dem Drehkranz trägt (6,86 m über dem Auslegerbolzen), sodass die Abspannungen wie bei einem echten 55-m-Obendreher mit 17 und 10 Grad ansteigen; die Spitze hat Riegel auf 7,0, 8,6 und 10,2 m und je Feld und Seite eine Diagonale. Fortsetzung: Die drei Abspannungen sind 50-mm-Zugstangen (16 mm könnten den Ausleger nicht tragen); der Gegenausleger hat einen 30-mm-Belag zwischen den Obergurten und 1,1 m hohe Geländer (40-mm-Rohr, Knieleiste, Pfosten alle 1,83 m), die am Windenhaus enden; die Drehbühne hat dasselbe Geländer auf drei Seiten und bis zur Kabine; der Mast besteht aus 4-m-Schüssen mit einer 360-mm-Stoßmuffe an jedem Gurt und hat alle 8 m ein Ruhepodest neben der Leiter; das Hubseil läuft von der Winde durch eine Dachführung über die Kopfrolle, im Turmkopf hinab zu einer Fußrolle, die am Kopfriegel auf 4,0 m hängt, und auf Höhe der Katzrollen den Ausleger entlang zu einer Verankerung unter der Spitze; die zwei vorderen Felder des Kopfes, durch die das Seil läuft, haben einen Portalverband (zwei Stäbe zur Riegelmitte) statt einer Diagonale. Vierte Runde: Ein Maßstab modelliert keinen Stab unter seinem kleinsten Merkmal, und ein Stab ab dieser Größe ist ein Körper, keine schlanke Linie: hier ist nichts dünner als 7,5 mm, das 14-mm-Seil behält seinen Querschnitt; kein Stab ist mehr als schlank deklariert, jeder wird als sein eigenes Netz verglichen. Die Auslegerschienen sind 140 mm hoch und 120 mm breit."
+      "en": "Detailed model, every member a bar of its real section: the round-2 mast (four 160 mm chords, 90 mm ties, 80 mm diagonals on four faces, rung ladder as texture) and A-frame tower head are kept; new are the triangular jib (one 140 mm top chord on the axis, two 120 x 140 mm bottom chords at +-0.6 m that carry the trolley, 80 mm Warren diagonals in both inclined faces, 50 mm horizontals and Z bracing in the bottom plane, heel frame pinned to the front tower-head legs, tip frame and sheave), the counter-jib as a flat box lattice pinned to the rear legs with a tail frame, three 50 mm pendant tie bars from the apex to the jib nodes at 22.5 m and 40.5 m and to the counter-jib tail, the cross-base (two 7 m box beams on four pads) with four 10.6 t ballast blocks on its arms and the mast-foot section, a circular 2.2 m slewing ring with two slewing gear motors, the cab beside the tower head on a console outboard of the trolley track (33 mm panels, raked windscreen and side window as glass), four vertical counterweight slabs under a suspension beam, the trolley as an open frame (side plates, wheels on the chords, cross beams, two sheaves), the hook block (side plates, sheave, crosshead, forged hook), a round 1 m3 skip with spout, gate, legs and bail, and the hoist rope in two 14 mm falls. Second round: the tower head is a 4.2 m pyramid that takes the jib heel and the counter-jib, carrying a slender braced spire to the apex 12.0 m above the slewing ring (6.86 m above the jib heel pin), so the pendants rise at 17 and 10 degrees as on a real 55 m hammerhead crane; the spire has ties at 7.0, 8.6 and 10.2 m and one diagonal per face and panel. Continuation: the three pendants are 50 mm tie bars (16 mm could not carry the jib); the counter-jib has a 30 mm deck between its top chords and 1.1 m handrails (40 mm tube, knee rail, posts every 1.83 m) that stop at the winch house; the slewing platform has the same handrail on three sides and up to the cab; the mast is built of 4 m sections with a 360 mm joint sleeve on every chord and has a rest platform beside the ladder every 8 m; the hoist rope runs from the winch through a roof fairlead over the head sheave, down inside the tower head to a heel sheave hung from the head tie at 4.0 m, and along the jib at the level of the trolley sheaves to an anchor under the tip; the two front panels of the head the rope passes carry a portal brace (two bars to the middle of the tie) instead of one diagonal. Fourth round: a scale models no bar below its smallest feature, and a bar of that size or more is a body, not a slender line: nothing is thinner than 7.5 mm here, the 14 mm rope keeps its section; no bar is declared slender, each is compared as its own mesh. The jib rails are 140 mm high and 120 mm wide. A box is rounded only where the drawing can show it: a corner radius below 18 mm cuts the corner by less than the smallest feature of 1:50 (7.5 mm) and is left out. The rungs and brackets of the ladder texture are square bars of their 25 mm: a round bar that thin stays within the smallest feature of 1:50 of its square, so the drawing cannot show the roundness.",
+      "de": "Detailliertes Modell, jeder Stab mit seinem realen Querschnitt: Der Mast aus Runde 2 (vier 160-mm-Gurte, 90-mm-Riegel, 80-mm-Diagonalen auf vier Seiten, Sprossenleiter als Textur) und die A-Bock-Turmspitze bleiben; neu sind der dreieckige Ausleger (ein 140-mm-Obergurt in der Achse, zwei Untergurte 120 x 140 mm bei +-0,6 m, auf denen die Laufkatze fährt, 80-mm-Strebenzug in beiden schrägen Wänden, 50-mm-Pfosten und Z-Verband in der Untergurtebene, Fußrahmen an den vorderen Turmspitzenbeinen, Spitzenrahmen mit Seilrolle), der Gegenausleger als flaches Kastengitter an den hinteren Beinen mit Endrahmen, drei 50-mm-Abspannstangen von der Spitze zu den Auslegerknoten bei 22,5 m und 40,5 m und zum Gegenauslegerende, der Kreuzrahmen (zwei 7-m-Kastenträger auf vier Platten) mit vier Ballastblöcken zu 10,6 t auf seinen Armen und dem Mastfußstück, ein runder Drehkranz von 2,2 m mit zwei Drehwerksmotoren, die Kabine neben der Turmspitze auf einer Konsole außerhalb der Katzfahrbahn (33-mm-Paneele, geneigte Frontscheibe und Seitenfenster als Glas), vier stehende Gegengewichtsplatten unter einem Tragbalken, die Laufkatze als offener Rahmen (Seitenschilde, Räder auf den Gurten, Querträger, zwei Seilrollen), die Hakenflasche (Seitenschilde, Seilrolle, Traverse, geschmiedeter Haken), ein runder 1-m3-Kübel mit Auslauf, Klappe, Füßen und Bügel und das Hubseil in zwei 14-mm-Strängen. Zweite Runde: Die Turmspitze ist eine 4,2 m hohe Pyramide, die Auslegerfuß und Gegenausleger aufnimmt und eine schlanke, ausgefachte Spitze bis zum Scheitel 12,0 m über dem Drehkranz trägt (6,86 m über dem Auslegerbolzen), sodass die Abspannungen wie bei einem echten 55-m-Obendreher mit 17 und 10 Grad ansteigen; die Spitze hat Riegel auf 7,0, 8,6 und 10,2 m und je Feld und Seite eine Diagonale. Fortsetzung: Die drei Abspannungen sind 50-mm-Zugstangen (16 mm könnten den Ausleger nicht tragen); der Gegenausleger hat einen 30-mm-Belag zwischen den Obergurten und 1,1 m hohe Geländer (40-mm-Rohr, Knieleiste, Pfosten alle 1,83 m), die am Windenhaus enden; die Drehbühne hat dasselbe Geländer auf drei Seiten und bis zur Kabine; der Mast besteht aus 4-m-Schüssen mit einer 360-mm-Stoßmuffe an jedem Gurt und hat alle 8 m ein Ruhepodest neben der Leiter; das Hubseil läuft von der Winde durch eine Dachführung über die Kopfrolle, im Turmkopf hinab zu einer Fußrolle, die am Kopfriegel auf 4,0 m hängt, und auf Höhe der Katzrollen den Ausleger entlang zu einer Verankerung unter der Spitze; die zwei vorderen Felder des Kopfes, durch die das Seil läuft, haben einen Portalverband (zwei Stäbe zur Riegelmitte) statt einer Diagonale. Vierte Runde: Ein Maßstab modelliert keinen Stab unter seinem kleinsten Merkmal, und ein Stab ab dieser Größe ist ein Körper, keine schlanke Linie: hier ist nichts dünner als 7,5 mm, das 14-mm-Seil behält seinen Querschnitt; kein Stab ist mehr als schlank deklariert, jeder wird als sein eigenes Netz verglichen. Die Auslegerschienen sind 140 mm hoch und 120 mm breit. Ein Quader ist nur dort gerundet, wo die Zeichnung es zeigen kann: ein Eckradius unter 18 mm schneidet die Ecke um weniger als das kleinste Merkmal von 1:50 (7,5 mm) und entfällt. Die Sprossen und Halter der Leitertextur sind Vierkantstäbe ihrer 25 mm: ein so dünner Rundstab bleibt innerhalb des kleinsten Merkmals von 1:50 an seinem Quadrat, die Zeichnung kann die Rundung nicht zeigen."
      },
      {
       "en": "Thermal: a reference to every body solid of its region; the cab panels are two shells each (3 mm steel skin outside, 30 mm lining inside) and each window three sheets (4 / 12 / 4 mm, interior first); the slewing drive is the ring and the two motors; the hoist motor stays a box inside the winch house and the vent emitter an outlet ring on its stack. Structure: every lattice bar, the cross-base beams, mast foot, platform and counterweight beam are members, the rope falls are members of their pieces, the bail bars of the skip; joints are the slew bearing, the jib and counter-jib heel pins, the trolley wheel line and the block sheave; masses sit at the ballast, the counterweight, the trolley, the winch and the skip content; the fixed support is a cross-shaped pad under the cross-base.",
@@ -96554,8 +96523,7 @@
         1.1,
         0
        ]
-      },
-      "cornerRadius": 0.02
+      }
      },
      {
       "id": "ballast-x-neg",
@@ -96575,8 +96543,7 @@
         1.1,
         0
        ]
-      },
-      "cornerRadius": 0.02
+      }
      },
      {
       "id": "ballast-z-pos",
@@ -96596,8 +96563,7 @@
         1.1,
         2.4
        ]
-      },
-      "cornerRadius": 0.02
+      }
      },
      {
       "id": "ballast-z-neg",
@@ -96617,8 +96583,7 @@
         1.1,
         -2.4
        ]
-      },
-      "cornerRadius": 0.02
+      }
      },
      {
       "id": "mast-foot",
@@ -96638,8 +96603,7 @@
         0.85,
         0
        ]
-      },
-      "cornerRadius": 0.01
+      }
      },
      {
       "id": "slew-ring",
@@ -96687,8 +96651,7 @@
         0.85,
         0
        ]
-      },
-      "cornerRadius": 0.03
+      }
      },
      {
       "id": "cab-console-1",
@@ -108431,8 +108394,8 @@
     ],
     "decisions": [
      {
-      "en": "Authored for 1:100 (15 mm feature): mast, tower head and winch house as in round 2 (chord pairs, diagonals and horizontals at their drawn widths); the triangular jib keeps chords, diagonals, bottom horizontals, heel and tip frames but drops the bottom Z bracing; the counter-jib keeps chords, diagonals, top and bottom horizontals and drops the top Z bracing; the cross-base is two beams standing on the ground (the pads merge into them) with the four ballast blocks; the counterweight is one block with its slab joints drawn as texture; the cab keeps its panels and glass, the trolley its plates, beams, wheels, cheeks and sheaves, the block its plates, sheave and crosshead; the skip loses its rim ring; the rope stays two 14 mm falls. Second round: the tower head is a 4.2 m pyramid that takes the jib heel and the counter-jib, carrying a slender braced spire to the apex 12.0 m above the slewing ring (6.86 m above the jib heel pin), so the pendants rise at 17 and 10 degrees as on a real 55 m hammerhead crane; the spire has ties at 7.0, 8.6 and 10.2 m and one diagonal per face and panel. Continuation: 50 mm pendant tie bars, counter-jib deck, mast joint sleeves and rest platforms, the hoist rope run over the head sheave and along the jib and the portal brace of the head are modelled as at 1:50; there are no handrails (the product measures a 40 mm tube at under 0.2 mm at 1:150, the end of this band); the heel sheave hangs between two 30 mm plates without a separate pin. Fourth round: a scale models no bar below its smallest feature, and a bar of that size or more is a body, not a slender line: the rope falls and the hoist rope run are 15 mm round bars (real 14 mm); no bar is declared slender, each is compared as its own mesh. The jib rails are 140 mm high and 120 mm wide.",
-      "de": "Für 1:100 gestaltet (Merkmal 15 mm): Mast, Turmspitze und Windenhaus wie in Runde 2 (Gurtpaare, Diagonalen und Riegel in gezeichneter Breite); der dreieckige Ausleger behält Gurte, Diagonalen, untere Pfosten, Fuß- und Spitzenrahmen, verliert aber den unteren Z-Verband; der Gegenausleger behält Gurte, Diagonalen, obere und untere Pfosten und verliert den oberen Z-Verband; der Kreuzrahmen sind zwei Träger direkt auf dem Boden (die Platten gehen in ihnen auf) mit den vier Ballastblöcken; das Gegengewicht ist ein Block, seine Plattenfugen sind Textur; die Kabine behält Paneele und Glas, die Laufkatze Schilde, Träger, Räder, Wangen und Rollen, die Flasche Schilde, Rolle und Traverse; der Kübel verliert seinen Randring; das Seil bleibt zwei 14-mm-Stränge. Zweite Runde: Die Turmspitze ist eine 4,2 m hohe Pyramide, die Auslegerfuß und Gegenausleger aufnimmt und eine schlanke, ausgefachte Spitze bis zum Scheitel 12,0 m über dem Drehkranz trägt (6,86 m über dem Auslegerbolzen), sodass die Abspannungen wie bei einem echten 55-m-Obendreher mit 17 und 10 Grad ansteigen; die Spitze hat Riegel auf 7,0, 8,6 und 10,2 m und je Feld und Seite eine Diagonale. Fortsetzung: 50-mm-Zugstangen, Belag des Gegenauslegers, Stoßmuffen und Ruhepodeste des Mastes, der Hubseillauf über die Kopfrolle und den Ausleger entlang und der Portalverband des Kopfes sind wie in 1:50 modelliert; Geländer gibt es keine (das Produkt misst ein 40-mm-Rohr bei 1:150, dem Ende dieses Bereichs, mit unter 0,2 mm); die Fußrolle hängt zwischen zwei 30-mm-Laschen ohne eigenen Bolzen. Vierte Runde: Ein Maßstab modelliert keinen Stab unter seinem kleinsten Merkmal, und ein Stab ab dieser Größe ist ein Körper, keine schlanke Linie: die Seilstränge und der Hubseillauf sind 15-mm-Rundstäbe (real 14 mm); kein Stab ist mehr als schlank deklariert, jeder wird als sein eigenes Netz verglichen. Die Auslegerschienen sind 140 mm hoch und 120 mm breit."
+      "en": "Authored for 1:100 (15 mm feature): mast, tower head and winch house as in round 2 (chord pairs, diagonals and horizontals at their drawn widths); the triangular jib keeps chords, diagonals, bottom horizontals, heel and tip frames but drops the bottom Z bracing; the counter-jib keeps chords, diagonals, top and bottom horizontals and drops the top Z bracing; the cross-base is two beams standing on the ground (the pads merge into them) with the four ballast blocks; the counterweight is one block with its slab joints drawn as texture; the cab keeps its panels and glass, the trolley its plates, beams, wheels, cheeks and sheaves, the block its plates, sheave and crosshead; the skip loses its rim ring; the rope stays two 14 mm falls. Second round: the tower head is a 4.2 m pyramid that takes the jib heel and the counter-jib, carrying a slender braced spire to the apex 12.0 m above the slewing ring (6.86 m above the jib heel pin), so the pendants rise at 17 and 10 degrees as on a real 55 m hammerhead crane; the spire has ties at 7.0, 8.6 and 10.2 m and one diagonal per face and panel. Continuation: 50 mm pendant tie bars, counter-jib deck, mast joint sleeves and rest platforms, the hoist rope run over the head sheave and along the jib and the portal brace of the head are modelled as at 1:50; there are no handrails (the product measures a 40 mm tube at under 0.2 mm at 1:150, the end of this band); the heel sheave hangs between two 30 mm plates without a separate pin. Fourth round: a scale models no bar below its smallest feature, and a bar of that size or more is a body, not a slender line: the rope falls and the hoist rope run are 15 mm round bars (real 14 mm); no bar is declared slender, each is compared as its own mesh. The jib rails are 140 mm high and 120 mm wide. A box is rounded only where the drawing can show it: a corner radius below 36 mm cuts the corner by less than the smallest feature of 1:100 (15 mm) and is left out.",
+      "de": "Für 1:100 gestaltet (Merkmal 15 mm): Mast, Turmspitze und Windenhaus wie in Runde 2 (Gurtpaare, Diagonalen und Riegel in gezeichneter Breite); der dreieckige Ausleger behält Gurte, Diagonalen, untere Pfosten, Fuß- und Spitzenrahmen, verliert aber den unteren Z-Verband; der Gegenausleger behält Gurte, Diagonalen, obere und untere Pfosten und verliert den oberen Z-Verband; der Kreuzrahmen sind zwei Träger direkt auf dem Boden (die Platten gehen in ihnen auf) mit den vier Ballastblöcken; das Gegengewicht ist ein Block, seine Plattenfugen sind Textur; die Kabine behält Paneele und Glas, die Laufkatze Schilde, Träger, Räder, Wangen und Rollen, die Flasche Schilde, Rolle und Traverse; der Kübel verliert seinen Randring; das Seil bleibt zwei 14-mm-Stränge. Zweite Runde: Die Turmspitze ist eine 4,2 m hohe Pyramide, die Auslegerfuß und Gegenausleger aufnimmt und eine schlanke, ausgefachte Spitze bis zum Scheitel 12,0 m über dem Drehkranz trägt (6,86 m über dem Auslegerbolzen), sodass die Abspannungen wie bei einem echten 55-m-Obendreher mit 17 und 10 Grad ansteigen; die Spitze hat Riegel auf 7,0, 8,6 und 10,2 m und je Feld und Seite eine Diagonale. Fortsetzung: 50-mm-Zugstangen, Belag des Gegenauslegers, Stoßmuffen und Ruhepodeste des Mastes, der Hubseillauf über die Kopfrolle und den Ausleger entlang und der Portalverband des Kopfes sind wie in 1:50 modelliert; Geländer gibt es keine (das Produkt misst ein 40-mm-Rohr bei 1:150, dem Ende dieses Bereichs, mit unter 0,2 mm); die Fußrolle hängt zwischen zwei 30-mm-Laschen ohne eigenen Bolzen. Vierte Runde: Ein Maßstab modelliert keinen Stab unter seinem kleinsten Merkmal, und ein Stab ab dieser Größe ist ein Körper, keine schlanke Linie: die Seilstränge und der Hubseillauf sind 15-mm-Rundstäbe (real 14 mm); kein Stab ist mehr als schlank deklariert, jeder wird als sein eigenes Netz verglichen. Die Auslegerschienen sind 140 mm hoch und 120 mm breit. Ein Quader ist nur dort gerundet, wo die Zeichnung es zeigen kann: ein Eckradius unter 36 mm schneidet die Ecke um weniger als das kleinste Merkmal von 1:100 (15 mm) und entfällt."
      },
      {
       "en": "Thermal and structure as at 1:50 with one skin per region (the cab and glazing layers are merged into their panels); the same joints, masses and the cross-shaped fixed pad.",

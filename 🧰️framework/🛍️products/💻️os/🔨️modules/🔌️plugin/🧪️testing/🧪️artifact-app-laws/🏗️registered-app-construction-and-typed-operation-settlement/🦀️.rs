@@ -34,10 +34,19 @@ pub async fn import_media<P: PluginApp>(app: &mut P, port: &str, media: semio_fr
 /// 🧲️ Re-polls one pending-aware media consumption until it settles; refuses once its fixture scope is no longer funded.
 pub async fn consume_media<P: PluginApp>(app: &mut P, port: &str, artifact: semio_plugin_document_media::MediaArtifact, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_decl_app::MediaConsumption, semio_plugin_decl_app::MediaArtifactOperationFailure> {
     let mut artifact = Some(artifact);
-    while !cx.is_cancelled() && !cx.should_yield() {
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = cx.original_turn_ceiling();
+    for turn in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, fuel, grant)?;
+        if cx.is_cancelled() || cx.should_yield() { break }
         if let Some(consumed) = app.consume_media(port, &mut artifact, cx).await? { return Ok(consumed) }
+        if turn == 0 {
+            app.history_snapshot().await?;
+            ensure_fixture_cancellation_issuer(app, cx)?;
+        }
+        app.maintenance_step(cx, fixture_mounted_policy().maintenance).map_err(semio_framework_job::OriginalTurnFailure::from)?;
     }
-    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media consumption was not funded to settle").into())
+    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, format!("fixture media consumption on {port} exceeded its authored turn bound: {}", app.typed_operation_diagnostic())).into())
 }
 
 /// 🚫️ Polls one media consumption under steps that fund no retained work: each must stay pending without decoding or taking its source; the funded polls then settle it.
@@ -45,7 +54,11 @@ pub async fn consume_media_refused_then_funded<P: PluginApp>(app: &mut P, port: 
     let original = artifact.data.len();
     let mut artifact = Some(artifact);
     let (mut refused, mut donated) = (0usize, false);
-    while !cx.is_cancelled() && !cx.should_yield() {
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = cx.original_turn_ceiling();
+    for turn in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, fuel, grant)?;
+        if cx.is_cancelled() || cx.should_yield() { break }
         let mut polled = None;
         cx.with_retained_loan(semio_framework_value::RetainedCloneGrant::default(), |unfunded| {
             let mut poll = std::pin::pin!(app.consume_media(port, &mut artifact, unfunded));
@@ -64,8 +77,13 @@ pub async fn consume_media_refused_then_funded<P: PluginApp>(app: &mut P, port: 
             return Ok(consumed)
         }
         donated = artifact.as_ref().map_or(true, |source| source.data.len() != original);
+        if turn == 0 {
+            app.history_snapshot().await?;
+            ensure_fixture_cancellation_issuer(app, cx)?;
+        }
+        app.maintenance_step(cx, fixture_mounted_policy().maintenance).map_err(semio_framework_job::OriginalTurnFailure::from)?;
     }
-    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media consumption was not funded to settle").into())
+    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, format!("fixture media consumption on {port} exceeded its authored turn bound: {}", app.typed_operation_diagnostic())).into())
 }
 
 /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).

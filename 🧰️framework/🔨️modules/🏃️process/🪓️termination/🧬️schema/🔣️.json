@@ -2,13 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:process:termination:v1",
   "title": "How an owned process tree is stopped: ask first, kill after a declared grace, and say who did it",
-  "description": "An owned command that is cancelled, times out or exceeds a ceiling gets SIGTERM for its whole owned tree (POSIX groups and descendants, found before ancestry is lost). A caller forwarding an interrupt can send SIGINT first. The tree gets `graceMilliseconds` to end by itself (looked at every `pollMilliseconds`), and only what is still alive afterwards gets SIGKILL. Windows has no signal to ask with and keeps `taskkill /T /F`. Every recorded signal names the victim, the signal, the killing process, the command and the reason in English and German.",
+  "description": "An owned command that is cancelled, times out or exceeds a ceiling gets SIGTERM for its whole owned tree (POSIX groups and descendants, found before ancestry is lost). A caller forwarding an interrupt can send SIGINT first. The tree gets `graceMilliseconds` to end by itself (looked at every `pollMilliseconds`), and only what is still alive afterwards gets SIGKILL. Windows has no signal to ask with and keeps `taskkill /T /F`. Every recorded signal names the victim, the signal, the killing process, the command and the reason in English and German, and the creation time of victim and sender. A signal goes only to a process whose creation time still matches the snapshot it was found in (a reused pid is never signalled), and a process group is signalled as a group only while every process in it belongs to the owned tree; an orphan that kept the group of a dead root is part of the tree.",
   "definitions": {
-    "Policy": {"const": {"version": 1, "graceMilliseconds": 5000, "pollMilliseconds": 100}},
+    "Policy": {"const": {"version": 1, "graceMilliseconds": 5000, "pollMilliseconds": 100, "ledgerEnvironment": "SEMIO_KILL_LEDGER"}},
     "Texts": {
       "const": {
-        "en": {"kill-record": "Process {pid} received {signal} from owned execution {label} (killing process {killer}): {reason}"},
-        "de": {"kill-record": "Prozess {pid} erhielt {signal} von der eigenen Ausführung {label} (beendender Prozess {killer}): {reason}"}
+        "en": {"kill-record": "Process {pid} received {signal} from owned execution {label} (killing process {killer}): {reason}",
+        "kill-identity": "Victim created at {startMs}, sender created at {killerStartMs} (ms since the epoch)."},
+        "de": {"kill-record": "Prozess {pid} erhielt {signal} von der eigenen Ausführung {label} (beendender Prozess {killer}): {reason}",
+        "kill-identity": "Opfer erzeugt um {startMs}, Absender erzeugt um {killerStartMs} (ms seit der Epoche)."}
       }
     }
   },

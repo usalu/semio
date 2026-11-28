@@ -1,0 +1,6 @@
+import sys,os;sys.path.insert(0,os.path.dirname(__file__))
+from lib import edit
+edit("🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/💾️volume/🟦️.ts",[
+('(!stray||stray.kind===\"compiler-state\"&&stray.phase===\"committed\"&&!!stray.child&&stray.child.directory===paths.directory&&stray.child.policySha256===policyDigest&&stray.child.parentIdentity===metadata.backing.identity);if(!orphan)throw new Error(\"Producer charge record missing for a \"+entry!.state+\" slot: \"+paths.charge,{cause:missing.absent});',
+ '(!stray||stray.kind===\"compiler-state\"&&(!stray.child||stray.child.directory===paths.directory&&stray.child.policySha256===policyDigest&&stray.child.parentIdentity===metadata.backing.identity));if(!orphan)throw new Error(\"Producer charge record missing for a \"+entry!.state+\" slot: \"+paths.charge+\" (retirement \"+JSON.stringify(entry!.retirement)+\", intent \"+existsSync(paths.intent)+\", allocations \"+owned.length+(stray?\", kind \"+stray.kind+\", phase \"+stray.phase+\", child \"+JSON.stringify(stray.child&&{directory:stray.child.directory===paths.directory,policy:stray.child.policySha256===policyDigest,parent:stray.child.parentIdentity===metadata.backing.identity})):\"\")+\")\",{cause:missing.absent});'),
+])

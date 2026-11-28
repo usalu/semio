@@ -1,6 +1,9 @@
 {
   "version": 1,
   "tickMilliseconds": 1000,
+  "inheritance": {
+    "environment": "SEMIO_TEST_BUDGET_STRETCH_BASIS_POINTS"
+  },
   "stretch": {
     "minimumBasisPoints": 10000,
     "maximumBasisPoints": 80000

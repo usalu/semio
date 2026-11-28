@@ -223,3 +223,17 @@ Goal of the dev: "Get staffage running end to end. Many assets were interrupted 
 - Brief: `📋️closing-2-brief.md`. Lanes: CX-ID (Sonnet, model JSON node ids > 64 chars), CX-FBX (Sonnet, assimp re-import), CX-GLB (Sonnet, GLB 8 MB per pose budget, writer first), CL-T1 (Fable, plant and human triangle budgets), CL-T2 (Fable, object triangle budgets, self-intersections, watertight boxes), CL-CH (Sonnet, the matrix cell), KH (Haiku, `K/📦️handoff.md` closing draft).
 - 00:40: shard 13 (odd chain) held 11.3 GB against its 3600 MB grant for 5.4 h and starved nine lane requests; stopped by pid, its JSON removed: shard 13 is to be rerun in the final model-catalog pass.
 - 01:05: baseline even shard chain stopped to give the fix lanes the queue (fleet offloads compile units only; test runs fall back locally). Shards 04, 06, 08, 10, 12, 13, 14 run in the final model-catalog pass after the lanes.
+- 05:00: final model-catalog pass started for animals, furniture, appliances, objects, vehicles, machinery, components (`🧰️closing/final.sh`, results `🗑️generated/closing/final/`); vegetation and humans follow when CL-T1 and CX-Q are FINAL.
+
+## 2026-11-27 08:24 coordinator
+
+- CL-T1 FINAL: 29 assets proven, 10 trees still over 8 MB GLB (thermal air-flow geometry plus JSON 4.6–7.7 MiB), european-beech untouched (thermal 525,508 triangles, budget 400,000). Lane CX-FLOW (shared flow/GLB code) started; report `closing-CX-FLOW.md`.
+- CX-Q FINAL. Its eight unrun suites go to lane CX-SU (`closing-CX-SU.md`).
+- Humans final pass started in parallel: `🧰️closing/final-lane.sh humans 12 humans`, results `🗑️generated/closing/final-humans/`. Vegetation follows after CX-FLOW: `final-lane.sh vegetation 12 vegetation`.
+
+## 2026-11-27 13:43 coordinator
+
+- CL-B FINAL: blind `repeat` kernel bug (tessellateSolid matrix order) and bounds oracle leaving out role `ground` solids; the 4 affected assets are green.
+- CX-PM FINAL: `Math.hypot` replaced by `portable.hypot` in the polyhedron validation/bounds; framework `🎞️scenes` green; no digest shift.
+- CL-P FINAL: `pregnant-person` uterine-wall ring loft uncapped; the oracle now expects uncapped ring lofts (`loopLoft`) to be watertight (the check is widened).
+- Pending: CX-FLOW (GLB size: 10 trees, parent-with-child-on-shoulders, person-with-guide-dog), CX-SU (8 suites). After CX-FLOW: vegetation shards, then one rerun of all model-catalog shards, because the GLB writer and oracle changes touch every asset.

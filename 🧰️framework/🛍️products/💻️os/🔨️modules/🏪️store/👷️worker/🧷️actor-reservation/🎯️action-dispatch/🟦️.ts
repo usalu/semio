@@ -103,6 +103,7 @@ export class ReservationActionDispatch {
         if (publication.frames !== 1) throw new Error("action-publication-mismatch");
         await this.hub.surfaces.refreshDocumentSurfaces(child, () => this.hub.backbone.assertDocumentOwnerCurrent(), command !== null || mutationCount > 0);
         this.session.artifact.actorRecovery = documentActorRecoveryStepV1(this.session.artifact.actorRecovery, { kind: "applied", atMs: Date.now() }).memory;
+        console.log("[DEBUG] claude-clear dispatch", mutationCount, JSON.stringify(publication.commit), intent !== null);
         return browserActorActionDisposition(request, "guest-applied", mutationCount, publication.commit, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
       });
     } catch (error) {

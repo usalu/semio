@@ -22,6 +22,7 @@ semio_ui_locale::app_labels! {
         failed: native_en "Failed", native_de "Fehlgeschlagen", reuse_en "Failed", reuse_de "Fehlgeschlagen";
         residual: native_en "Residual", native_de "Restkraft", reuse_en "Residual", reuse_de "Restkraft";
         previous_results: native_en "Previous Results", native_de "Vorherige Ergebnisse", reuse_en "Previous Results", reuse_de "Vorherige Ergebnisse";
+        updating_results: native_en "Updating results…", native_de "Ergebnisse werden aktualisiert…", reuse_en "Updating results…", reuse_de "Ergebnisse werden aktualisiert…";
         selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
         add_term: native_en "Add Term", native_de "Term hinzufügen", reuse_en "Add Term", reuse_de "Term hinzufügen";
 

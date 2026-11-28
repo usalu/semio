@@ -1,0 +1,1440 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json
+@@ -6,6 +6,7 @@
+       "const": {
+         "minimumAgeMilliseconds": 1800000,
+         "heldGraceMilliseconds": 10800000,
++        "activeBuildMilliseconds": 21600000,
+         "idleMilliseconds": 86400000,
+         "keepNewestPerCrate": 2,
+         "bases": [
+@@ -175,8 +176,8 @@
+           "de": "[repo cache] Build-Einheit {path} behalten: ein laufender Compiler hält ihre Sperre"
+         },
+         "busyProfile": {
+-          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: none of its units goes",
+-          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: keine seiner Einheiten geht"
++          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: only the units they use stay",
++          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur die Einheiten, die sie verwenden, bleiben"
+         },
+         "summaryPlan": {
+           "en": "[repo cache] build units: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
+@@ -193,6 +194,99 @@
+         "reason.pressure": {
+           "en": "image below its free-space floor",
+           "de": "Image unter der Freiraum-Untergrenze"
++        }
++      }
++    },
++    "Cover": {
++      "description": "Which units of a profile that compilers hold (its build lease is busy) stay: a build touches the fingerprint of every unit it plans, fresh ones included (Cargo `-Z mtime-on-use`, set in the repository's Cargo config), so a unit used within `activeBuildMilliseconds` or among the newest `keepNewestPerCrate` variants of its crate belongs to an active build and stays; every other unit of the profile may go like in a profile nobody holds.",
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["name", "nowMs", "units", "covered"],
++      "properties": {
++        "name": {"type": "string", "minLength": 1},
++        "nowMs": {"type": "integer", "minimum": 0},
++        "units": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": ["path", "lastUsedMs"],
++            "properties": {
++              "path": {"type": "string", "minLength": 1},
++              "lastUsedMs": {"type": "integer", "minimum": 0}
++            }
++          }
++        },
++        "covered": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
++      }
++    },
++    "ImagePlan": {
++      "description": "The units of a split partition planned image by image: `mounts` name the image of a unit by the longest leading path (`home` when none leads it), `needs` and `budgets` are what each image must free and the most its units may hold; the removals equal the plan of the units of every image alone, oldest first.",
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "name",
++        "nowMs",
++        "units",
++        "mounts",
++        "needs",
++        "remove"
++      ],
++      "properties": {
++        "name": {
++          "type": "string",
++          "minLength": 1
++        },
++        "nowMs": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "units": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Unit"
++          }
++        },
++        "mounts": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "prefix",
++              "id"
++            ],
++            "properties": {
++              "prefix": {
++                "type": "string",
++                "minLength": 1
++              },
++              "id": {
++                "type": "string",
++                "minLength": 1
++              }
++            }
++          }
++        },
++        "needs": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "integer",
++            "minimum": 0
++          }
++        },
++        "budgets": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "integer",
++            "minimum": 0
++          }
++        },
++        "remove": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Removal"
++          }
+         }
+       }
+     },
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts
+@@ -24,12 +24,19 @@
+ /** 🔌️ Probes the exclusive build lease of a profile without waiting: `busy` while compilers hold it, else a lease this process holds until released. */
+ export type ProfileLeasePortV1=(profile:UnitProfileV1)=>Promise<"busy"|Readonly<{release():void}>>;
+ 
+-const order=(left:string,right:string)=>left<right?-1:left>right?1:0,byAge=(left:BuildUnitV1,right:BuildUnitV1)=>left.lastUsedMs-right.lastUsedMs||order(left.path,right.path),newestFirst=(left:BuildUnitV1,right:BuildUnitV1)=>right.lastUsedMs-left.lastUsedMs||order(left.path,right.path);
++const order=(left:string,right:string)=>left<right?-1:left>right?1:0,byAge=(left:BuildUnitV1,right:BuildUnitV1)=>left.lastUsedMs-right.lastUsedMs||order(left.path,right.path);
+ 
++/** 🎯️ The units of a profile that compilers hold which belong to an active build and so stay: the newest `keepNewestPerCrate` variants of every crate and every unit used within `activeBuildMilliseconds` (a build touches the fingerprint of every unit it plans, fresh ones included, see `usedAtMs`); any other unit of the profile is not planned by a build that is running and goes like in a profile nobody holds. Pure and language-agnostic.
++ * @see ./🧬️schema/🔣️.json */
++export function unitsCoveredV1(units:readonly Pick<BuildUnitV1,"path"|"lastUsedMs">[],nowMs:number,rules:Pick<typeof policy,"keepNewestPerCrate"|"activeBuildMilliseconds">=policy):ReadonlySet<string>{
++ const newest=newestUnitsV1(units,rules);
++ return new Set(units.filter(unit=>newest.has(unit.path)||nowMs-unit.lastUsedMs<rules.activeBuildMilliseconds).map(unit=>unit.path));
++}
++
+ /** 🥇️ The newest `keepNewestPerCrate` units of every crate in every profile: the variants a build uses now. */
+-export function newestUnitsV1(units:readonly BuildUnitV1[],rules:Pick<typeof policy,"keepNewestPerCrate">=policy):ReadonlySet<string>{
+- const groups=new Map<string,BuildUnitV1[]>();for(const unit of units){const key=dirname(unit.path);groups.set(key,[...(groups.get(key)??[]),unit]);}
+- return new Set([...groups.values()].flatMap(group=>group.sort(newestFirst).slice(0,rules.keepNewestPerCrate).map(unit=>unit.path)));
++export function newestUnitsV1<T extends Pick<BuildUnitV1,"path"|"lastUsedMs">>(units:readonly T[],rules:Pick<typeof policy,"keepNewestPerCrate">=policy):ReadonlySet<string>{
++ const groups=new Map<string,T[]>();for(const unit of units){const key=dirname(unit.path);groups.set(key,[...(groups.get(key)??[]),unit]);}
++ return new Set([...groups.values()].flatMap(group=>group.sort((left,right)=>right.lastUsedMs-left.lastUsedMs||order(left.path,right.path)).slice(0,rules.keepNewestPerCrate).map(unit=>unit.path)));
+ }
+ 
+ /** 🛡️ Whether a unit may go: never one with a live holder (a unit of a profile that compilers hold is held, however idle), any other unit once it is older than the minimum age. */
+@@ -48,9 +55,20 @@
+  return ordered.filter(unit=>removed.has(unit.path)).map(unit=>removed.get(unit.path)!);
+ }
+ 
++/** 🧩️ What a collection knows of the images the units live in when the partition is split (see `🧩️shard`): which image holds a unit path, the bytes each image must free to reach its free-space target (`0` below its high-water mark), the most its units may hold and whether it reached its target. Every image is kept below its own water marks, not only the sum of them. */
++export type UnitImagesV1=Readonly<{of:(path:string)=>string;needBytes:(id:string)=>number;budgetBytes?:(id:string)=>number|undefined;satisfied:(id:string)=>boolean}>;
++
++/** 🧮️ Plans the removals of a split partition: the units of every image are planned on the need and the budget of that image alone (so a full image sheds its own least recently used units and an image with room loses nothing for it), the removals of all images oldest first. With one image it is `planUnitsV1`. Pure and deterministic. */
++export function planUnitsByImageV1(input:Readonly<{nowMs:number;units:readonly BuildUnitV1[];images:UnitImagesV1}>,override:Partial<typeof policy>={}):UnitRemovalV1[]{
++ const groups=new Map<string,BuildUnitV1[]>();for(const unit of input.units){const id=input.images.of(unit.path);groups.set(id,[...(groups.get(id)??[]),unit]);}
++ const rows=[...groups].sort((left,right)=>order(left[0],right[0])).flatMap(([id,units])=>planUnitsV1({needBytes:input.images.needBytes(id),budgetBytes:input.images.budgetBytes?.(id),nowMs:input.nowMs,units},override)),age=new Map(input.units.map(unit=>[unit.path,unit]));
++ return rows.sort((left,right)=>age.get(left.path)!.lastUsedMs-age.get(right.path)!.lastUsedMs||order(left.path,right.path));
++}
++
+ const directoriesOf=(path:string):string[]=>{try{return readdirSync(path,{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>join(path,entry.name));}catch{return [];}};
+ const isDirectory=(path:string):boolean=>{try{return lstatSync(path).isDirectory();}catch{return false;}};
+ const modified=(path:string):number=>{try{return lstatSync(path).mtimeMs;}catch{return 0;}};
++const usedAtMs=(directory:string):number=>{let latest=modified(directory);try{for(const name of readdirSync(directory))latest=Math.max(latest,modified(join(directory,name)));}catch{}return latest;};
+ 
+ /** 🗺️ Every profile directory of the compiler image that holds a `build` directory, with the build directory its lease is named by: the declared bases, at most `maximumProfileDepth` levels of profile and target-triple directories below each. Bounded directory reads only. */
+ export function unitProfilesV1(store:string):UnitProfileV1[]{
+@@ -87,14 +105,17 @@
+   const busy=options.busy(profile),live=options.live?.(profile)??false;
+   for(const crate of directoriesOf(join(profile.profileDirectory,policy.directory))){
+    options.signal?.throwIfAborted();
++   const pending:Array<Omit<BuildUnitV1,"held">&Readonly<{lock:"held"|"free"|"missing"|"unsupported"}>>=[];
+    for(const path of directoriesOf(crate)){
+     if(!isDirectory(join(path,policy.marker)))continue;
+-    const used=Math.floor(Math.max(modified(path),modified(join(path,policy.marker,policy.usedMarker)),modified(join(path,policy.outputDirectory)),modified(join(path,policy.lockName)))),probe=lock(join(path,policy.lockName));
++    const used=Math.floor(Math.max(modified(path),usedAtMs(join(path,policy.marker)),modified(join(path,policy.outputDirectory)),modified(join(path,policy.lockName)))),probe=lock(join(path,policy.lockName));
+     if(typeof probe==="object")probe.release();
+     const bytes=await allocatedCargoBytesV1(path,policy.maximumEntriesPerUnit,options);
+-    rows.push({path,crate:basename(crate),profile:profile.profile,bytes,lastUsedMs:used,held:buildHolderLiveV1({lane:live,lease:busy,lock:typeof probe==="object"?"free":probe,idleMilliseconds:options.nowMs-used},policy.heldGraceMilliseconds)});
++    pending.push({path,crate:basename(crate),profile:profile.profile,bytes,lastUsedMs:used,lock:typeof probe==="object"?"free":probe});
+     if(++done%policy.yieldEvery===0)await turn();
+    }
++   const covered=busy?unitsCoveredV1(pending,options.nowMs):new Set<string>();
++   for(const{lock:state,...unit}of pending)rows.push({...unit,held:buildHolderLiveV1({lane:live,lease:busy&&covered.has(unit.path),lock:state,idleMilliseconds:options.nowMs-unit.lastUsedMs},policy.heldGraceMilliseconds)});
+   }
+   await options.progress?.(index+1,profiles.length,"scan",profile.profileDirectory);
+  }
+@@ -128,13 +149,13 @@
+ }
+ const size=(bytes:number)=>bytes>=1073741824?(bytes/1073741824).toFixed(1)+" GiB":(bytes/1048576).toFixed(0)+" MiB";
+ 
+-/** 🧹️ Measures, plans and (unless `dryRun`) removes stale build units. A unit with a live holder is never touched, whatever its age or the budget: not a unit of a lane with a live holder, not any unit of a profile whose build lease compilers hold (Cargo reuses a unit without locking it, so a lock alone does not cover the units a running build has planned), not a unit whose compiler lock is held. Profiles are probed first: a profile whose build lease is free is held exclusively while its units go (compilers that start meanwhile queue); every removal re-takes the unit's own lock and holds it while the unit goes. Pressure removals stop once `satisfied()` says the image reached its free-space target. */
+-export async function collectUnitsV1(store:string,options:CargoGcControlV1&Readonly<{dryRun:boolean;needBytes:()=>number;budgetBytes?:number;satisfied?:()=>boolean;nowMs?:number;lock?:IncrementalLockPortV1;leases?:ProfileLeasePortV1;live?:ProfileLivePortV1;report?:Readonly<{language:"en"|"de";write:(line:string)=>void}>}>):Promise<UnitResultV1>{
++/** 🧹️ Measures, plans and (unless `dryRun`) removes stale build units. A unit with a live holder is never touched, whatever its age or the budget: not a unit of a lane with a live holder, not a unit a running build uses of a profile whose build lease compilers hold (Cargo reuses a unit without locking it, so a lock alone does not cover the units a running build has planned; it touches the fingerprint of every unit it plans, so use shows in `lastUsedMs`), not a unit whose compiler lock is held. Profiles are probed first: a profile whose build lease is free is held exclusively while its units go (compilers that start meanwhile queue); a profile compilers hold keeps only the units its builds use (`unitsCoveredV1`: newest variants and units used within the active build window) and loses the others, each under its own lock; every removal re-takes the unit's own lock and holds it while the unit goes, and a unit a build touched since it was measured stays. Pressure removals stop once `satisfied()` says the image reached its free-space target. */
++export async function collectUnitsV1(store:string,options:CargoGcControlV1&Readonly<{dryRun:boolean;needBytes:()=>number;budgetBytes?:number;satisfied?:()=>boolean;images?:UnitImagesV1;nowMs?:number;lock?:IncrementalLockPortV1;leases?:ProfileLeasePortV1;live?:ProfileLivePortV1;report?:Readonly<{language:"en"|"de";write:(line:string)=>void}>}>):Promise<UnitResultV1>{
+  const nowMs=options.nowMs??Date.now(),lock=options.lock??tryLockSessionV1,leases=options.leases??profileLeasePortV1(store,options.signal),live=options.live??profileLivePortV1(store,nowMs),report=options.report,say=(key:keyof typeof messages,variables:Readonly<Record<string,string|number>>={}):void=>{if(report)report.write(unitTextV1(key,report.language,variables));};
+  say("scan",{root:store});
+  const profiles=unitProfilesV1(store),busy=new Set<string>();
+  for(const profile of profiles){const probe=await leases(profile);if(probe==="busy"){busy.add(profile.profileDirectory);say("busyProfile",{profile:profile.profile,directory:profile.buildDirectory});}else probe.release();}
+- const units=await measureUnitsV1(profiles,{nowMs,busy:profile=>busy.has(profile.profileDirectory),lock,live,signal:options.signal,progress:options.progress}),plan=planUnitsV1({needBytes:options.needBytes(),budgetBytes:options.budgetBytes,nowMs,units}),excess=options.budgetBytes===undefined?0:Math.max(0,units.reduce((sum,unit)=>sum+unit.bytes,0)-options.budgetBytes),removed:UnitRemovalV1[]=[],crates=new Set<string>(),profileByDirectory=new Map(profiles.map(profile=>[profile.profileDirectory,profile])),profileOf=(path:string):UnitProfileV1=>profileByDirectory.get(dirname(dirname(dirname(path))))??{buildDirectory:dirname(dirname(dirname(path))),profileDirectory:dirname(dirname(dirname(path))),profile:basename(dirname(dirname(dirname(path))))};
++ const units=await measureUnitsV1(profiles,{nowMs,busy:profile=>busy.has(profile.profileDirectory),lock,live,signal:options.signal,progress:options.progress}),usedBefore=new Map(units.map(unit=>[unit.path,unit.lastUsedMs])),images=options.images,imageOf=(path:string)=>images?.of(path)??"",plan=images?planUnitsByImageV1({nowMs,units,images}):planUnitsV1({needBytes:options.needBytes(),budgetBytes:options.budgetBytes,nowMs,units}),excessOf=(id:string)=>{const budget=images?images.budgetBytes?.(id):options.budgetBytes;return budget===undefined?0:Math.max(0,units.filter(unit=>imageOf(unit.path)===id).reduce((sum,unit)=>sum+unit.bytes,0)-budget);},removed:UnitRemovalV1[]=[],crates=new Set<string>(),profileByDirectory=new Map(profiles.map(profile=>[profile.profileDirectory,profile])),profileOf=(path:string):UnitProfileV1=>profileByDirectory.get(dirname(dirname(dirname(path))))??{buildDirectory:dirname(dirname(dirname(path))),profileDirectory:dirname(dirname(dirname(path))),profile:basename(dirname(dirname(dirname(path))))};
+  const reason=(row:UnitRemovalV1)=>report?unitTextV1(`reason.${row.reason}` as keyof typeof messages,report.language,{hours:Math.round(policy.idleMilliseconds/3600000)}):"";
+  let held=units.filter(unit=>unit.held).length;
+  if(options.dryRun){
+@@ -144,18 +165,20 @@
+   let done=0;
+   for(const[directory,rows]of groups){
+    const profile=profileOf(join(directory,policy.directory,"_","_"));if(live(profile))continue;
+-   const held_=await leases(profile);if(held_==="busy")continue;
++   const taken=await leases(profile),exclusive=taken==="busy"?undefined:taken;
+    try{
+     for(const row of rows){
+      options.signal?.throwIfAborted();
+-     if(row.reason==="pressure"&&options.satisfied?.()&&removed.reduce((sum,done)=>sum+done.bytes,0)>=excess)break;
+-     const taken=lock(join(row.path,policy.lockName));
+-     if(taken==="held"){held++;say("held",{path:row.path});continue;}
++     const image=imageOf(row.path);
++     if(row.reason==="pressure"&&(images?images.satisfied(image):options.satisfied?.())&&removed.filter(done=>imageOf(done.path)===image).reduce((sum,done)=>sum+done.bytes,0)>=excessOf(image))continue;
++     const unitLock=lock(join(row.path,policy.lockName));
++     if(unitLock==="held"){held++;say("held",{path:row.path});continue;}
++     if(Math.floor(usedAtMs(join(row.path,policy.marker)))>(usedBefore.get(row.path)??0)){if(typeof unitLock==="object")unitLock.release();held++;say("held",{path:row.path});continue;}
+      try{await removeCargoGcTreeV1(row.path,options);removed.push(row);crates.add(dirname(row.path));if(removed.length<=policy.reportedRemovals)say("removed",{path:row.path,bytes:size(row.bytes),reason:reason(row)});}
+-     finally{if(typeof taken==="object")taken.release();}
++     finally{if(typeof unitLock==="object")unitLock.release();}
+      await options.progress?.(++done,plan.length,"remove",row.path);if(done%policy.yieldEvery===0)await turn();
+     }
+-   }finally{held_.release();}
++   }finally{exclusive?.release();}
+   }
+   for(const crate of crates)try{if(!readdirSync(crate).length)rmdirSync(crate);}catch{}
+  }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts
+@@ -1,17 +1,17 @@
+ import {closeSync,openSync,readSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
+-import {basename,dirname,join} from "node:path";
++import {basename,dirname,join,sep} from "node:path";
+ import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+ import {pruneEntriesV1,recordEvictionV1} from "../💾️store/🟦️.ts";
+ import {listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
+ import {ensureBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
+ import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
+ import {collectTemporariesV1} from "./🗑️temporaries/🟦️.ts";
+-import {collectUnitsV1,measureUnitsV1,unitProfilesV1} from "./🧱️units/🟦️.ts";
++import {collectUnitsV1,measureUnitsV1,unitProfilesV1,type UnitImagesV1} from "./🧱️units/🟦️.ts";
+ import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
+ import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
+ import {retireLocalStaleUnitsV1} from "./🪢️supersession/🟦️.ts";
+ import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+-import {measureNativeImageShardRootV1,nativeImageShardVolumeFactsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
++import {measureNativeImageShardFreeV1,measureNativeImageShardRootV1,nativeImageShardFoldV1,nativeImageShardLayoutsV1,nativeImageShardPartitionOfV1,nativeImageShardVolumeFactsV1,readNativeImageShardLedgerV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+ 
+ const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
+ /** 🧮️ One measured lane. */
+@@ -77,13 +77,30 @@
+ }
+ 
+ /** 🔬️ The size and free bytes of the image a cache root lives in. */
+-export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasured?:true}>;
++export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasured?:true;imageNeedBytes?:number}>;
++/** 🧩️ The images of a split cache root (the home image and one per shard, see `🧩️shard`) as the unit collector plans on them: the image of a path is the longest mount point that leads it, each image has its own need (bytes above its low-water mark once it crossed its high-water mark), unit budget (the unit share of its size) and target. `undefined` for a root that is one image. Every image is held below its own water marks, never only the sum of them: one full shard stops its compiles whatever the others still have. */
++export function measureUnitImagesV1(root:string):UnitImagesV1|undefined{
++ const directory=nativeImageShardPartitionOfV1(root);if(directory===undefined)return undefined;
++ let layouts:ReturnType<typeof nativeImageShardLayoutsV1>;try{const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory));if(live.size===0)return undefined;layouts=nativeImageShardLayoutsV1(directory,live);}catch{return undefined;}
++ const read=(id:string)=>{const layout=layouts.find(row=>row.id===id),row=layout&&measureNativeImageShardFreeV1(layout);return row===undefined?undefined:{volumeBytes:row.capacityBytes,freeBytes:Math.max(0,Math.min(row.capacityBytes-row.usedBytes,row.hostFreeBytes))};};
++ return Object.freeze({
++  of:path=>layouts.filter(row=>row.id!=="home"&&(path===row.mountPoint||path.startsWith(row.mountPoint+sep))).sort((left,right)=>right.mountPoint.length-left.mountPoint.length)[0]?.id??"home",
++  needBytes:id=>{const facts=read(id);return facts===undefined?0:gcNeedBytesV1(facts.volumeBytes,facts.freeBytes);},
++  budgetBytes:id=>{const facts=read(id);return facts===undefined?undefined:Math.floor(facts.volumeBytes*policy.unitShare);},
++  satisfied:id=>{const facts=read(id);return facts===undefined||facts.volumeBytes-facts.freeBytes<=Math.floor(facts.volumeBytes*policy.lowWaterShare);}
++ });
++}
++/** 🌊️ The most any image of a split cache root must free (see `measureUnitImagesV1`), `0` for a root that is one image. */
++export function worstImageNeedBytesV1(root:string):number{
++ const directory=nativeImageShardPartitionOfV1(root),images=measureUnitImagesV1(root);if(directory===undefined||images===undefined)return 0;
++ try{return Math.max(0,...nativeImageShardLayoutsV1(directory,nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory))).map(layout=>images.needBytes(layout.id)));}catch{return 0;}
++}
+ /** 🔭️ The size of the image a cache root lives in and its free bytes. A root whose volume cannot be read is unknown: it is reported as `unmeasured:true` and, so that no collection starts on a guess, counts as empty and as large as its capacity. */
+ export function measureVolumeV1(root:string,capacityBytes:number):VolumeFactsV1{
+  const space=nativeFreeSpaceSyncV1(root);
+  if(space?.totalBytes===undefined)return{volumeBytes:capacityBytes,freeBytes:capacityBytes,unmeasured:true};
+  const shards=measureNativeImageShardRootV1(root);
+- if(shards!==undefined)return nativeImageShardVolumeFactsV1(shards,capacityBytes);
++ if(shards!==undefined)return{...nativeImageShardVolumeFactsV1(shards,capacityBytes),imageNeedBytes:worstImageNeedBytesV1(root)};
+  return{volumeBytes:Math.max(1,space.totalBytes),freeBytes:Math.min(space.totalBytes,space.availableBytes)};
+ }
+ 
+@@ -118,17 +135,17 @@
+ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void;nowMs?:number;report?:IncrementalReportV1;volume?:(root:string,capacityBytes:number)=>VolumeFactsV1;demandBytes?:number}>={}):Promise<{running:true}|{running:false;plan:GcPlanV1;applied:GcAppliedV1}>{
+  const measure=options.volume??measureVolumeV1,claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return{running:true};
+  try{
+-  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0,retired=0,temporaries=0;
++  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes),images=measureUnitImagesV1(root);let sessions=0,units=0,retired=0,temporaries=0;
+   if(basename(root)==="u")retired=await retireLocalStaleUnitsV1(root,nowMs,options.signal);
+   if(basename(root)==="u"){
+-   const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),demand);
++   const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),before.imageNeedBytes??0,demand);
+    if(need>0)temporaries=(await collectTemporariesV1(root,{dryRun:false,needBytes:()=>need,satisfied:()=>measure(root,capacityBytes).freeBytes-before.freeBytes>=need,signal:options.signal,progress:options.progress,report:options.report})).removedFiles;
+    const result=await collectIncrementalV1(dirname(root),{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>Math.max(0,need-Math.max(0,measure(root,capacityBytes).freeBytes-before.freeBytes)),satisfied:()=>need>0&&measure(root,capacityBytes).freeBytes-before.freeBytes>=need,nowMs,signal:options.signal,report:options.report});
+    sessions=result.removed.length;
+-   const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
++   const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),middle.imageNeedBytes??0,demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
+    if(remaining>0||nowMs-last>=policy.unitIntervalMilliseconds){
+     writeFileSync(stamp,String(nowMs));
+-    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,budgetBytes:unitBudgetBytesV1(capacityBytes),satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
++    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,budgetBytes:unitBudgetBytesV1(capacityBytes),satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,...images===undefined?{}:{images},nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
+     units=result.removed.length;recordFillSampleV1(root,{atMs:nowMs,freeBytes:after.freeBytes,volumeBytes:after.volumeBytes,profiles:result.profiles});
+    }
+   }
+@@ -152,7 +169,7 @@
+    options.signal?.throwIfAborted();rounds++;
+    const before=measure(root,capacityBytes),at=now(),sampling=at-sampled>=policy.watchPollMilliseconds,due=sampling&&at-scanned>=policy.watchScanMilliseconds,profiles=due?await scan().catch(()=>undefined):undefined;
+    if(sampling){sampled=at;if(due)scanned=at;recordFillSampleV1(root,{atMs:at,freeBytes:before.freeBytes,volumeBytes:before.volumeBytes,...profiles?{profiles}:{}});}
+-   const need=gcNeedBytesV1(before.volumeBytes,before.freeBytes),target=before.volumeBytes-Math.floor(before.volumeBytes*policy.lowWaterShare);
++   const need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),before.imageNeedBytes??0),target=before.volumeBytes-Math.floor(before.volumeBytes*policy.lowWaterShare);
+    if(need>0){
+     quietSince=null;
+     if(at>=retryAt){
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts
+@@ -12,6 +12,16 @@
+ export function imageCapBytesV1(platform:string=process.platform):number{return nativeImageShardCapBytesV1(platform)||Infinity;}
+ /** 🏋️ Whether a live image was born above the cap of its platform (it can never return freed blocks and is retired at the next quiescent moment once it is bloated). Pure and language-agnostic. */
+ export function imageOversizeV1(receiptBytes:number|null|"missing",platform:string=process.platform):boolean{return typeof receiptBytes==="number"&&receiptBytes>imageCapBytesV1(platform);}
++/** 📏️ The working set a worker's scan of a cache partition measured (`partitions.json` of the fleet store): the bytes its files hold without the backing file of the image itself, which the scan counts too. */
++export function workingSetBytesV1(scan:Readonly<{bytes:number;backingBytes:number}>):number{return Math.max(0,scan.bytes-scan.backingBytes);}
++/** 🧩️ How many images of at most `capBytes` hold a measured working set, and how large each is: as many as keep every image below the high-water mark (`highWaterBasisPoints`) of the cap, each sized so its share of the working set fills at most the high-water mark of it, aligned up, within the minimum and the aligned cap; refused when the host cannot hold the working set (sparse images cost only what is written) within its free bytes less the reserve. Pure and language-agnostic.
++ * @see ../🧬️schema/🔣️.json */
++export function imageShardPlanV1(input:Readonly<{workingSetBytes:number;capBytes:number;alignBytes:number;minimumBytes:number;highWaterBasisPoints:number;hostFreeBytes:number;hostFreeReservePercent:number}>):Readonly<{shards:number;perShardBytes:number;totalBytes:number}|{refused:"host-free"}>{
++ const cap=Math.floor(input.capBytes/input.alignBytes)*input.alignBytes,usable=Math.floor(cap*input.highWaterBasisPoints/10000),room=Math.floor(input.hostFreeBytes*input.hostFreeReservePercent/100);
++ if(input.workingSetBytes>room)return{refused:"host-free"};
++ const shards=Math.max(1,Math.ceil(input.workingSetBytes/usable)),share=Math.ceil(input.workingSetBytes/shards),want=Math.ceil(Math.ceil(share*10000/input.highWaterBasisPoints)/input.alignBytes)*input.alignBytes,perShardBytes=Math.min(cap,Math.max(input.minimumBytes,want));
++ return{shards,perShardBytes,totalBytes:shards*perShardBytes};
++}
+ /** 🖼️ Sizes a new image from its working set and the host: need times headroom, capped by the rule's maximum and by what the host volume may give (its free bytes minus the reserve), aligned down, never below the given minimum (the rule's `minimumBytes`, not the declared capacity: a host with less free space than the declared capacity still gets an image that fits). */
+ export function elasticCapacityV1(rule:ElasticRuleV1,minimumBytes:number,hostFreeBytes:number):number{
+  const wanted=Math.ceil(rule.needBytes*(100+rule.headroomPercent)/100),ceiling=Math.min(rule.maximumBytes,imageCapBytesV1(),Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100)),target=Math.min(wanted,Math.max(ceiling,minimumBytes));
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🧫️fixtures/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🧫️fixtures/🔣️.json
+@@ -523,5 +523,429 @@
+       "u/l/d1/t/prototype/build",
+       "u/l/d1/wasm32-unknown-unknown/prototype/build"
+     ]
+-  }
++  },
++  "covers": [
++    {
++      "name": "nothing to cover",
++      "nowMs": 3600000000,
++      "units": [],
++      "covered": []
++    },
++    {
++      "name": "the two newest variants of a crate stay however idle, older idle ones may go",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/b/p/prototype/build/pack/a",
++          "lastUsedMs": 2880000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/b",
++          "lastUsedMs": 2883600000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/c",
++          "lastUsedMs": 2887200000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/d",
++          "lastUsedMs": 2890800000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/e",
++          "lastUsedMs": 2894400000
++        }
++      ],
++      "covered": [
++        "/s/b/p/prototype/build/pack/d",
++        "/s/b/p/prototype/build/pack/e"
++      ]
++    },
++    {
++      "name": "a unit used within the active build window stays even among many variants",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/b/p/prototype/build/pack/a",
++          "lastUsedMs": 2880000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/b",
++          "lastUsedMs": 3578760000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/c",
++          "lastUsedMs": 3580200000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/d",
++          "lastUsedMs": 3596400000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/e",
++          "lastUsedMs": 3598200000
++        }
++      ],
++      "covered": [
++        "/s/b/p/prototype/build/pack/b",
++        "/s/b/p/prototype/build/pack/c",
++        "/s/b/p/prototype/build/pack/d",
++        "/s/b/p/prototype/build/pack/e"
++      ]
++    },
++    {
++      "name": "exactly at the window edge a unit is no longer in use",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/b/p/prototype/build/pack/a",
++          "lastUsedMs": 3492000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/b",
++          "lastUsedMs": 3578400000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/c",
++          "lastUsedMs": 3578436000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/d",
++          "lastUsedMs": 3596400000
++        },
++        {
++          "path": "/s/b/p/prototype/build/pack/e",
++          "lastUsedMs": 3598200000
++        }
++      ],
++      "covered": [
++        "/s/b/p/prototype/build/pack/c",
++        "/s/b/p/prototype/build/pack/d",
++        "/s/b/p/prototype/build/pack/e"
++      ]
++    },
++    {
++      "name": "crates are judged on their own and one variant is its own newest",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/b/p/prototype/build/serde/a",
++          "lastUsedMs": 3276000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/tokio/a",
++          "lastUsedMs": 3312000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/tokio/b",
++          "lastUsedMs": 3348000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/tokio/c",
++          "lastUsedMs": 3384000000
++        },
++        {
++          "path": "/s/b/p/prototype/build/tokio/d",
++          "lastUsedMs": 3420000000
++        }
++      ],
++      "covered": [
++        "/s/b/p/prototype/build/serde/a",
++        "/s/b/p/prototype/build/tokio/c",
++        "/s/b/p/prototype/build/tokio/d"
++      ]
++    }
++  ],
++  "images": [
++    {
++      "name": "one image is the plain plan",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/b/p/prototype/build/x/1",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3456000000,
++          "held": false
++        },
++        {
++          "path": "/s/b/p/prototype/build/x/2",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3564000000,
++          "held": false
++        },
++        {
++          "path": "/s/b/p/prototype/build/x/3",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3582000000,
++          "held": false
++        },
++        {
++          "path": "/s/b/p/prototype/build/x/4",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3596400000,
++          "held": false
++        }
++      ],
++      "mounts": [],
++      "needs": {
++        "home": 157286400
++      },
++      "remove": [
++        {
++          "path": "/s/b/p/prototype/build/x/1",
++          "bytes": 104857600,
++          "reason": "superseded"
++        },
++        {
++          "path": "/s/b/p/prototype/build/x/2",
++          "bytes": 104857600,
++          "reason": "pressure"
++        }
++      ]
++    },
++    {
++      "name": "a full image sheds under pressure while an image with room loses only its superseded units",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/1",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3456000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3564000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/3",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3582000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/4",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3596400000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/x/1",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3456000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/x/2",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3564000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/x/3",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3582000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/x/4",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3596400000,
++          "held": false
++        }
++      ],
++      "mounts": [
++        {
++          "prefix": "/s/u/l/pa",
++          "id": "pa"
++        },
++        {
++          "prefix": "/s/u/l/pb",
++          "id": "pb"
++        }
++      ],
++      "needs": {
++        "pa": 157286400,
++        "pb": 0
++      },
++      "remove": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/1",
++          "bytes": 104857600,
++          "reason": "superseded"
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/x/1",
++          "bytes": 104857600,
++          "reason": "superseded"
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "bytes": 104857600,
++          "reason": "pressure"
++        }
++      ]
++    },
++    {
++      "name": "a held unit of a full image stays and the next oldest goes",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/1",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3456000000,
++          "held": true
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3564000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/3",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3582000000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/4",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3596400000,
++          "held": false
++        }
++      ],
++      "mounts": [
++        {
++          "prefix": "/s/u/l/pa",
++          "id": "pa"
++        }
++      ],
++      "needs": {
++        "pa": 52428800
++      },
++      "remove": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "bytes": 104857600,
++          "reason": "pressure"
++        }
++      ]
++    },
++    {
++      "name": "a budget applies to its image alone",
++      "nowMs": 3600000000,
++      "units": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/1",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3571200000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3574800000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/3",
++          "crate": "x",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3578400000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/y/1",
++          "crate": "y",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3571200000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/y/2",
++          "crate": "y",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3574800000,
++          "held": false
++        },
++        {
++          "path": "/s/u/l/pb/prototype/build/y/3",
++          "crate": "y",
++          "profile": "prototype",
++          "bytes": 104857600,
++          "lastUsedMs": 3578400000,
++          "held": false
++        }
++      ],
++      "mounts": [
++        {
++          "prefix": "/s/u/l/pa",
++          "id": "pa"
++        },
++        {
++          "prefix": "/s/u/l/pb",
++          "id": "pb"
++        }
++      ],
++      "needs": {},
++      "budgets": {
++        "pa": 157286400,
++        "pb": 419430400
++      },
++      "remove": [
++        {
++          "path": "/s/u/l/pa/prototype/build/x/1",
++          "bytes": 104857600,
++          "reason": "pressure"
++        },
++        {
++          "path": "/s/u/l/pa/prototype/build/x/2",
++          "bytes": 104857600,
++          "reason": "pressure"
++        }
++      ]
++    }
++  ]
+ }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🐍️.py
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🐍️.py
+@@ -1,4 +1,4 @@
+-"""🐍️ Independent oracle of the stale build unit plan: reads the policy path as argv[1] and a list of states from stdin, prints the removals of every state. It shares no code with the TypeScript planner."""
++"""🐍️ Independent oracle of the stale build unit plan and of the units a running build covers: reads the policy path as argv[1], the mode (`plan`, default, `cover` or `images`) as argv[2] and a list of states from stdin, prints the removals (or the covered paths) of every state. It shares no code with the TypeScript planner."""
+ import json
+ import sys
+ 
+@@ -7,6 +7,8 @@
+ 
+ def plan(state):
+     now, need = state["nowMs"], state["needBytes"]
++    if state.get("budgetBytes") is not None:
++        need = max(need, sum(unit["bytes"] for unit in state["units"]) - state["budgetBytes"])
+     units = sorted(state["units"], key=lambda unit: (unit["lastUsedMs"], unit["path"]))
+     groups = {}
+     for unit in units:
+@@ -36,4 +38,30 @@
+     return [{"path": unit["path"], "bytes": unit["bytes"], "reason": removed[unit["path"]]} for unit in units if unit["path"] in removed]
+ 
+ 
+-print(json.dumps([plan(state) for state in json.load(sys.stdin)]))
++def covered(state):
++    now = state["nowMs"]
++    groups = {}
++    for unit in state["units"]:
++        groups.setdefault(unit["path"].rsplit("/", 1)[0], []).append(unit)
++    keep = set()
++    for group in groups.values():
++        for unit in sorted(group, key=lambda unit: (-unit["lastUsedMs"], unit["path"]))[: policy["keepNewestPerCrate"]]:
++            keep.add(unit["path"])
++    return sorted(unit["path"] for unit in state["units"] if unit["path"] in keep or now - unit["lastUsedMs"] < policy["activeBuildMilliseconds"])
++
++
++def by_image(state):
++    groups = {}
++    for unit in state["units"]:
++        leading = [mount for mount in state["mounts"] if unit["path"].startswith(mount["prefix"] + "/")]
++        image = max(leading, key=lambda mount: len(mount["prefix"]))["id"] if leading else "home"
++        groups.setdefault(image, []).append(unit)
++    removed = []
++    for image in sorted(groups):
++        removed += plan({"nowMs": state["nowMs"], "needBytes": state["needs"].get(image, 0), "budgetBytes": state.get("budgets", {}).get(image), "units": groups[image]})
++    ages = {unit["path"]: unit["lastUsedMs"] for unit in state["units"]}
++    return sorted(removed, key=lambda row: (ages[row["path"]], row["path"]))
++
++
++mode = sys.argv[2] if len(sys.argv) > 2 else "plan"
++print(json.dumps([{"cover": covered, "images": by_image}.get(mode, plan)(state) for state in json.load(sys.stdin)]))
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts
+@@ -1,13 +1,13 @@
+ import {expect,test} from "bun:test";
+ import Ajv from "ajv";
+-import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+ import {tmpdir} from "node:os";
+ import {join,relative,resolve,sep} from "node:path";
+ import {acquireResourceLease} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+ import {collectGarbageSingleFlightV1,reclaimUnitStorageV1,unitBudgetBytesV1} from "../../🟦️.ts";
+ import fixture from "./🧫️fixtures/🔣️.json";
+ import componentSchema from "../🧬️schema/🔣️.json";
+-import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
++import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,unitsCoveredV1,planUnitsByImageV1,type UnitImagesV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
+ import {ownProcessIdentityV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+ 
+ const checkout=resolve(import.meta.dir).split(sep+"🧰️framework")[0]!;
+@@ -23,7 +23,7 @@
+  throw Error(`No temporary directory outside the checkout ${checkout} exists for a private test workspace`);
+ };
+ const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(componentSchema,"units.json");
+-const policyUnitStamp="units.stamp",hour=3600000,python=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json")],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
++const policyUnitStamp="units.stamp",hour=3600000,python=(rows:readonly unknown[],mode:"plan"|"cover"="plan"):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json"),mode],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
+ 
+ test("the fixture is closed and the planner equals the independent Python oracle on every vector and on 400 seeded random states",()=>{
+  const validate=ajv.compile({$ref:"units.json#/definitions/Vector"});for(const vector of fixture.vectors)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
+@@ -45,6 +45,16 @@
+  expect(planUnitsV1({needBytes:1e12,nowMs:now,units:units.map(unit=>({...unit,held:true}))})).toEqual([]);
+ });
+ 
++test("the units a running build covers are the newest variants and the units used in the active window, equal to the Python oracle on every vector and on 300 seeded random profiles",()=>{
++ const validate=ajv.compile({$ref:"units.json#/definitions/Cover"});for(const vector of fixture.covers)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
++ for(const vector of fixture.covers)expect([...unitsCoveredV1(vector.units,vector.nowMs)].sort(),vector.name).toEqual(vector.covered);
++ expect(python(fixture.covers,"cover")).toEqual(fixture.covers.map(vector=>vector.covered));
++ let seed=20261127;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},now=2000*hour,states:{nowMs:number;units:{path:string;lastUsedMs:number}[]}[]=[];
++ for(let index=0;index<300;index++){const units:{path:string;lastUsedMs:number}[]=[];for(const crate of["a","b","c"].filter(()=>next(4)>0))for(let variant=0;variant<next(8);variant++)units.push({path:`/s/b/p/prototype/build/${crate}/${variant.toString(16).padStart(16,"0")}`,lastUsedMs:now-next(80*60)*60000});states.push({nowMs:now,units});}
++ const expected=python(states,"cover");states.forEach((state,at)=>expect([...unitsCoveredV1(state.units,state.nowMs)].sort(),JSON.stringify(state).slice(0,200)).toEqual(expected[at]));
++ expect(policy.activeBuildMilliseconds).toBeGreaterThan(policy.heldGraceMilliseconds);expect(policy.activeBuildMilliseconds).toBeLessThan(policy.idleMilliseconds);
++});
++
+ function unit(store:string,profile:string,crate:string,hash:string,bytes:number,ageHours:number){
+  const path=join(store,profile,"build",crate,hash);mkdirSync(join(path,"fingerprint"),{recursive:true});mkdirSync(join(path,"out"),{recursive:true});
+  writeFileSync(join(path,"fingerprint","invoked.timestamp"),"x");writeFileSync(join(path,".lock"),"");writeFileSync(join(path,"out","lib.rlib"),Buffer.alloc(bytes,1));
+@@ -52,6 +62,53 @@
+  return path;
+ }
+ 
++const imagesOf=(vector:{mounts:readonly{prefix:string;id:string}[];needs:Readonly<Record<string,number>>;budgets?:Readonly<Record<string,number>>}):UnitImagesV1=>({of:path=>vector.mounts.filter(mount=>path.startsWith(mount.prefix+"/")).sort((left,right)=>right.prefix.length-left.prefix.length)[0]?.id??"home",needBytes:id=>vector.needs[id]??0,budgetBytes:id=>vector.budgets?.[id],satisfied:()=>false});
++
++test("a split partition is planned image by image: the plan equals the independent Python oracle on every vector and on 300 seeded random partitions, and one image is the plain plan",()=>{
++ const validate=ajv.compile({$ref:"units.json#/definitions/ImagePlan"});for(const vector of fixture.images)expect(validate(vector),vector.name+JSON.stringify(validate.errors)).toBe(true);
++ for(const vector of fixture.images)expect(planUnitsByImageV1({nowMs:vector.nowMs,units:vector.units,images:imagesOf(vector)}) as unknown,vector.name).toEqual(vector.remove);
++ expect(python(fixture.images,"images")).toEqual(fixture.images.map(vector=>vector.remove));
++ let seed=20261128;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},now=2000*hour,states:{nowMs:number;units:BuildUnitV1[];mounts:{prefix:string;id:string}[];needs:Record<string,number>;budgets:Record<string,number>}[]=[];
++ for(let index=0;index<300;index++){
++  const mounts=["a","b","c"].filter(()=>next(3)>0).map(id=>({prefix:"/s/u/l/"+id,id})),units:BuildUnitV1[]=[],needs:Record<string,number>={},budgets:Record<string,number>={};
++  for(const image of["a","b","c","home"]){
++   const base=image==="home"?"/s/b/p":"/s/u/l/"+image;for(const crate of["x","y"].filter(()=>next(3)>0))for(let variant=0;variant<next(6);variant++)units.push({path:`${base}/prototype/build/${crate}/${variant.toString(16).padStart(16,"0")}`,crate,profile:"prototype",bytes:next(300)*1048576,lastUsedMs:now-next(70*60)*60000,held:next(8)===0});
++   if(next(2))needs[image]=next(1500)*1048576;if(next(4)===0)budgets[image]=next(900)*1048576;
++  }
++  states.push({nowMs:now,units,mounts,needs,budgets});
++ }
++ const expected=python(states,"images");states.forEach((state,at)=>expect(planUnitsByImageV1({nowMs:state.nowMs,units:state.units,images:imagesOf(state)}) as unknown,JSON.stringify(state).slice(0,200)).toEqual(expected[at]));
++ for(const state of states){const single={mounts:[],needs:{home:state.needs.home??0},budgets:state.budgets.home===undefined?{}:{home:state.budgets.home}};expect(planUnitsByImageV1({nowMs:state.nowMs,units:state.units,images:imagesOf(single)}) as unknown).toEqual(planUnitsV1({needBytes:single.needs.home,...state.budgets.home===undefined?{}:{budgetBytes:state.budgets.home},nowMs:state.nowMs,units:state.units}));}
++});
++
++test("every Cargo compile launch of the repository asks Cargo to touch the fingerprint of each unit it plans, the evidence by which the collector tells the units a held profile's builds use",()=>{
++ for(const site of["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts","🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts"]){
++  const text=readFileSync(join(checkout,site),"utf8");expect(text.includes('CARGO_UNSTABLE_MTIME_ON_USE:'),site).toBe(true);expect(/CARGO_UNSTABLE_MTIME_ON_USE: ?"true"/u.test(text),site).toBe(true);
++ }
++});
++
++test("a unit a build only reuses is used when its fingerprint file is touched (Cargo -Z mtime-on-use), though nothing else in it changed, and a unit of a held profile stays then however old it was built",async()=>{
++ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-touch-")),store=join(root,"m"),leased={leases:async()=>"busy" as const,lock:()=>({release:()=>undefined})};
++ try{
++  const reused=unit(store,"b/p/prototype","serde","r1",4096,100),idle=unit(store,"b/p/prototype","serde","r2",4096,101),third=unit(store,"b/p/prototype","serde","r3",4096,102),fourth=unit(store,"b/p/prototype","serde","r4",4096,103),touched=new Date();
++  writeFileSync(join(reused,"fingerprint","lib-serde"),"");utimesSync(join(reused,"fingerprint"),new Date(Date.now()-100*hour),new Date(Date.now()-100*hour));utimesSync(join(reused,"fingerprint","lib-serde"),touched,touched);
++  const rows=await measureUnitsV1(unitProfilesV1(store),{nowMs:Date.now(),busy:()=>true,lock:()=>"missing"});
++  expect(Date.now()-rows.find(row=>row.path===reused)!.lastUsedMs).toBeLessThan(60000);expect(rows.filter(row=>row.held).map(row=>row.path).sort()).toEqual([reused,idle].sort());
++  const result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,...leased});expect(result.removed.map(row=>row.path).sort()).toEqual([third,fourth].sort());expect(existsSync(reused)&&existsSync(idle)).toBe(true);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++test("a unit a build touches between measuring and removing stays, however old it was",async()=>{
++ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-race-")),store=join(root,"m");
++ try{
++  const victim=unit(store,"b/p/prototype","serde","v1",4096,103),gone=unit(store,"b/p/prototype","serde","v2",4096,102),newest=[unit(store,"b/p/prototype","serde","v3",4096,101),unit(store,"b/p/prototype","serde","v4",4096,100)],old=new Date(Date.now()-103*hour);
++  writeFileSync(join(victim,"fingerprint","lib-serde"),"");for(const target of[join(victim,"fingerprint","lib-serde"),join(victim,"fingerprint")])utimesSync(target,old,old);
++  let probes=0;const lock=(path:string)=>{if(path===join(victim,".lock")&&++probes===2){const now=new Date();utimesSync(join(victim,"fingerprint","lib-serde"),now,now);}return {release:()=>undefined};};
++  const result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>0,leases:async()=>({release:()=>undefined}),lock});
++  expect(probes).toBe(2);expect(existsSync(victim),"touched meanwhile").toBe(true);expect(existsSync(gone),"untouched variant beside it").toBe(false);expect(newest.every(existsSync)).toBe(true);expect(result.removed.map(row=>row.path)).toEqual([gone]);expect(result.held).toBe(1);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
+ test("profiles are found below the declared bases at two levels, units need a fingerprint, and measuring reads sizes and last change from the files",async()=>{
+  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
+  try{
+@@ -64,7 +121,7 @@
+   expect(byPath.get(first)!.bytes).toBeGreaterThanOrEqual(65536);expect(Math.abs(now-byPath.get(first)!.lastUsedMs-5*hour)).toBeLessThan(120000);expect(Math.abs(now-byPath.get(second)!.lastUsedMs-30*hour)).toBeLessThan(120000);
+   expect(rows.every(row=>!row.held)).toBe(true);
+   const unsupported=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>false,lock:()=>"unsupported"});expect(unsupported.map(row=>row.held)).toEqual([false,false,true]);
+-  const leased=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"missing"});expect(leased.every(row=>row.held),"a profile compilers hold holds every unit of it").toBe(true);
++  const leased=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"missing"});expect(leased.every(row=>row.held),"a profile compilers hold keeps the units its builds use (one variant each is the newest)").toBe(true);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
+ 
+@@ -83,12 +140,12 @@
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
+ 
+-test("a profile that compilers hold loses no unit however idle or superseded, and pressure stops once the image has its free space",async()=>{
++test("a profile that compilers hold loses only the units no running build uses, and pressure stops once the image has its free space",async()=>{
+  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
+  try{
+   const old=unit(store,"b/p/prototype","a","1",65536,40),mid=unit(store,"b/p/prototype","a","2",65536,10),fresh=unit(store,"b/p/prototype","a","3",65536,4),newest=unit(store,"b/p/prototype","a","4",65536,1);
+   const busy=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,leases:async()=>"busy",lock:()=>({release:()=>undefined}),report:{language:"en",write:()=>undefined}});
+-  expect(busy.busyProfiles).toBe(1);expect(busy.removed).toEqual([]);expect([old,mid,fresh,newest].every(existsSync)).toBe(true);expect(busy.held).toBe(4);
++  expect(busy.busyProfiles).toBe(1);expect(busy.removed.map(row=>row.path)).toEqual([old,mid]);expect([old,mid].some(existsSync),"the variants no build uses go").toBe(false);expect([fresh,newest].every(existsSync),"the units the build uses stay").toBe(true);expect(busy.held).toBe(2);
+   const again=unit(store,"b/p/prototype","b","1",65536,20),second=unit(store,"b/p/prototype","b","2",65536,15),third=unit(store,"b/p/prototype","b","3",65536,10),fourth=unit(store,"b/p/prototype","b","4",65536,5);let calls=0;
+   const idle=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,satisfied:()=>++calls>1,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})});
+   expect(idle.removed.length).toBeLessThan(6);expect(existsSync(again)).toBe(false);expect(fourth&&second&&third).toBeTruthy();
+@@ -96,7 +153,7 @@
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
+ 
+-test("a collector that runs while a compiler holds the build lease of the profile leaves every unit of it, idle, superseded, unlocked, over budget and under pressure alike, and takes them once the compiler is gone",async()=>{
++test("a collector that runs while a compiler holds the build lease of the profile leaves the units a build uses, idle, unlocked, over budget and under pressure alike, takes the variants no build uses, and takes the rest once the compiler is gone",async()=>{
+  if(!["darwin","linux"].includes(process.platform))return;
+  const {root,store,leases}=privateWorkspace("units-holder-");
+  try{
+@@ -104,12 +161,12 @@
+   const paths=["a","b","c","d","e"].map((hash,index)=>unit(store,"b/p/prototype","pack-http",hash,65536,200-index)),profile=unitProfilesV1(store)[0]!;
+   const compiler=await acquireResourceLease({directory:leases,resource:profileLeaseResourceV1(profile),mode:"shared",signal:new AbortController().signal,timeoutMs:0});
+   try{
+-   const dry=await collectUnitsV1(store,{dryRun:true,needBytes:()=>10**12,budgetBytes:0});expect(dry.removed).toEqual([]);expect(dry.held).toBe(paths.length);expect(dry.busyProfiles).toBe(1);
+-   const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(applied.removed).toEqual([]);expect(paths.every(existsSync)).toBe(true);
+-   await reclaimUnitStorageV1(store,10**12,{capacityBytes:1});expect(paths.every(existsSync),"the reclaim before a build leaves them too").toBe(true);
+-   const swept=await collectGarbageSingleFlightV1(join(store,"u"),1,{nowMs:Date.now()+365*24*hour,volume:()=>({volumeBytes:2**40,freeBytes:1})});if(!swept.running)expect(swept.applied.units).toBe(0);expect(paths.every(existsSync),"the pressure sweep leaves them too").toBe(true);
++   const dry=await collectUnitsV1(store,{dryRun:true,needBytes:()=>10**12,budgetBytes:0});expect(dry.removed.map(row=>row.path).sort()).toEqual(paths.slice(0,3).sort());expect(dry.held).toBe(2);expect(dry.busyProfiles).toBe(1);
++   const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(applied.removed.map(row=>row.path).sort()).toEqual(paths.slice(0,3).sort());expect(paths.slice(0,3).some(existsSync)).toBe(false);expect(paths.slice(3).every(existsSync),"the two newest variants stay").toBe(true);
++   await reclaimUnitStorageV1(store,10**12,{capacityBytes:1});expect(paths.slice(3).every(existsSync),"the reclaim before a build leaves them too").toBe(true);
++   const swept=await collectGarbageSingleFlightV1(join(store,"u"),1,{nowMs:Date.now()+365*24*hour,volume:()=>({volumeBytes:2**40,freeBytes:1})});if(!swept.running)expect(swept.applied.units).toBe(0);expect(paths.slice(3).every(existsSync),"the pressure sweep leaves them too").toBe(true);
+   }finally{compiler.release();}
+-  const gone=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(gone.removed.length).toBe(paths.length);expect(paths.some(existsSync)).toBe(false);
++  const gone=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(gone.removed.length).toBe(2);expect(paths.some(existsSync)).toBe(false);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ },60000);
+ 
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts
+@@ -10,7 +10,7 @@
+ import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
+ import {relieveUnitCachePressureV1,retryWhenFullV1,startUnitCacheCollectorV1} from "../../🚪️launch/🟦️.ts";
+ import {tryClaimV1} from "../../🔒️lock/🟦️.ts";
+-import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1,type GcPressureV1} from "../🟦️.ts";
++import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,measureUnitImagesV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1,worstImageNeedBytesV1,type GcPressureV1} from "../🟦️.ts";
+ import {readFillSamplesV1} from "../📈️fill/🟦️.ts";
+ import {retryAfterOutOfSpaceV1,withUnitPressureRecheckV1} from "../../🚪️launch/🟦️.ts";
+ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+@@ -229,3 +229,17 @@
+   expect(gcNeedBytesV1(4096,4096)).toBe(0);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
++
++test("a split cache root is measured image by image: a path belongs to the longest mount point that leads it, a plain root is one image, and a full image alone makes the volume needy",()=>{
++ const directory=scratch();
++ try{
++  const root=join(directory,"m","u");mkdirSync(join(root,"l/pa/prototype"),{recursive:true});mkdirSync(join(directory,"m/b/p"),{recursive:true});
++  expect(measureUnitImagesV1(root),"no ledger, no split").toBeUndefined();expect(worstImageNeedBytesV1(root)).toBe(0);
++  mkdirSync(join(directory,"s/pa"),{recursive:true});writeFileSync(join(directory,"s/pa/fixed.dmg"),"x");writeFileSync(join(directory,"fixed.dmg"),"x");
++  writeFileSync(join(directory,"shards.jsonl"),JSON.stringify({type:"born",id:"pa",key:"pa",root:0,path:"u/l/pa",capacityBytes:2*GIB,atMs:1})+"\n");
++  const images=measureUnitImagesV1(root)!;expect(images).toBeDefined();
++  expect(images.of(join(root,"l/pa/prototype/build/serde/x"))).toBe("pa");expect(images.of(join(root,"l/pa"))).toBe("pa");expect(images.of(join(root,"l/pab/build"))).toBe("home");expect(images.of(join(directory,"m/b/p/prototype"))).toBe("home");
++  expect(images.needBytes("pa")).toBeGreaterThanOrEqual(0);expect(images.budgetBytes!("pa")).toBeGreaterThan(0);expect(typeof images.satisfied("pa")).toBe("boolean");expect(images.needBytes("gone")).toBe(0);
++  expect(measureVolumeV1(root,GIB).imageNeedBytes).toBe(worstImageNeedBytesV1(root));
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json
+@@ -268,6 +268,372 @@
+       "mounted": false
+     }
+   ],
+-  "imageCap": [{"id": "darwin-cap", "platform": "darwin", "receipt": null, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-at-cap", "platform": "darwin", "receipt": 34359738368, "capBytes": 34359738368, "oversize": false}, {"id": "darwin-one-unit-above", "platform": "darwin", "receipt": 34360786944, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-live-rust", "platform": "darwin", "receipt": 57982058496, "capBytes": 34359738368, "oversize": true}, {"id": "darwin-missing", "platform": "darwin", "receipt": "missing", "capBytes": 34359738368, "oversize": false}, {"id": "darwin-unreadable", "platform": "darwin", "receipt": "unreadable", "capBytes": 34359738368, "oversize": false}, {"id": "linux-live-rust", "platform": "linux", "receipt": 57982058496, "capBytes": 137438953472, "oversize": false}, {"id": "linux-above", "platform": "linux", "receipt": 138512695296, "capBytes": 137438953472, "oversize": true}, {"id": "windows-above", "platform": "win32", "receipt": 69793218560, "capBytes": 68719476736, "oversize": true}, {"id": "without-images", "platform": "freebsd", "receipt": 106300440576, "capBytes": null, "oversize": false}],
+-  "imageCapGrowth": [{"id": "ample-host", "capacityBytes": 17179869184, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 25769803776}, {"id": "clamped-at-cap", "capacityBytes": 25769803776, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "at-cap-stays", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 34359738368}, {"id": "linux-grows-on", "capacityBytes": 34359738368, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "linux", "growthBytes": 34359738368}, {"id": "oversize-live-never-shrinks", "capacityBytes": 57982058496, "hostFreeBytes": 536870912000, "allocatedBytes": 0, "maximumBytes": 34359738368, "platform": "darwin", "growthBytes": 57982058496}]
++  "imageCap": [
++    {
++      "id": "darwin-cap",
++      "platform": "darwin",
++      "receipt": null,
++      "capBytes": 34359738368,
++      "oversize": false
++    },
++    {
++      "id": "darwin-at-cap",
++      "platform": "darwin",
++      "receipt": 34359738368,
++      "capBytes": 34359738368,
++      "oversize": false
++    },
++    {
++      "id": "darwin-one-unit-above",
++      "platform": "darwin",
++      "receipt": 34360786944,
++      "capBytes": 34359738368,
++      "oversize": true
++    },
++    {
++      "id": "darwin-live-rust",
++      "platform": "darwin",
++      "receipt": 57982058496,
++      "capBytes": 34359738368,
++      "oversize": true
++    },
++    {
++      "id": "darwin-missing",
++      "platform": "darwin",
++      "receipt": "missing",
++      "capBytes": 34359738368,
++      "oversize": false
++    },
++    {
++      "id": "darwin-unreadable",
++      "platform": "darwin",
++      "receipt": "unreadable",
++      "capBytes": 34359738368,
++      "oversize": false
++    },
++    {
++      "id": "linux-live-rust",
++      "platform": "linux",
++      "receipt": 57982058496,
++      "capBytes": 137438953472,
++      "oversize": false
++    },
++    {
++      "id": "linux-above",
++      "platform": "linux",
++      "receipt": 138512695296,
++      "capBytes": 137438953472,
++      "oversize": true
++    },
++    {
++      "id": "windows-above",
++      "platform": "win32",
++      "receipt": 69793218560,
++      "capBytes": 68719476736,
++      "oversize": true
++    },
++    {
++      "id": "without-images",
++      "platform": "freebsd",
++      "receipt": 106300440576,
++      "capBytes": null,
++      "oversize": false
++    }
++  ],
++  "imageCapGrowth": [
++    {
++      "id": "ample-host",
++      "capacityBytes": 17179869184,
++      "hostFreeBytes": 536870912000,
++      "allocatedBytes": 0,
++      "maximumBytes": 34359738368,
++      "platform": "darwin",
++      "growthBytes": 25769803776
++    },
++    {
++      "id": "clamped-at-cap",
++      "capacityBytes": 25769803776,
++      "hostFreeBytes": 536870912000,
++      "allocatedBytes": 0,
++      "maximumBytes": 34359738368,
++      "platform": "darwin",
++      "growthBytes": 34359738368
++    },
++    {
++      "id": "at-cap-stays",
++      "capacityBytes": 34359738368,
++      "hostFreeBytes": 536870912000,
++      "allocatedBytes": 0,
++      "maximumBytes": 34359738368,
++      "platform": "darwin",
++      "growthBytes": 34359738368
++    },
++    {
++      "id": "linux-grows-on",
++      "capacityBytes": 34359738368,
++      "hostFreeBytes": 536870912000,
++      "allocatedBytes": 0,
++      "maximumBytes": 34359738368,
++      "platform": "linux",
++      "growthBytes": 34359738368
++    },
++    {
++      "id": "oversize-live-never-shrinks",
++      "capacityBytes": 57982058496,
++      "hostFreeBytes": 536870912000,
++      "allocatedBytes": 0,
++      "maximumBytes": 34359738368,
++      "platform": "darwin",
++      "growthBytes": 57982058496
++    }
++  ],
++  "imageShardPlan": {
++    "capBytes": 34359738368,
++    "alignBytes": 1073741824,
++    "minimumBytes": 6442450944,
++    "highWaterBasisPoints": 8750,
++    "hostFreeReservePercent": 66,
++    "cases": [
++      {
++        "origin": "g1-m01",
++        "bytes": 129092508994,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m01",
++        "bytes": 129092508994,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m01",
++        "bytes": 129092508994,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m02",
++        "bytes": 107748695996,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m02",
++        "bytes": 107748695996,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m02",
++        "bytes": 107748695996,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m03",
++        "bytes": 95302458988,
++        "backingBytes": 57981050880,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m03",
++        "bytes": 95302458988,
++        "backingBytes": 57981050880,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m03",
++        "bytes": 95302458988,
++        "backingBytes": 57981050880,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m06",
++        "bytes": 88127073876,
++        "backingBytes": 71939694592,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m06",
++        "bytes": 88127073876,
++        "backingBytes": 71939694592,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m06",
++        "bytes": 88127073876,
++        "backingBytes": 71939694592,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m07",
++        "bytes": 110491767443,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m07",
++        "bytes": 110491767443,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m07",
++        "bytes": 110491767443,
++        "backingBytes": 103079256064,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m08",
++        "bytes": 91403860551,
++        "backingBytes": 59054792704,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m08",
++        "bytes": 91403860551,
++        "backingBytes": 59054792704,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m08",
++        "bytes": 91403860551,
++        "backingBytes": 59054792704,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m10",
++        "bytes": 32785193063,
++        "backingBytes": 27916279808,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m10",
++        "bytes": 32785193063,
++        "backingBytes": 27916279808,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m10",
++        "bytes": 32785193063,
++        "backingBytes": 27916279808,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m11",
++        "bytes": 55357578386,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m11",
++        "bytes": 55357578386,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m11",
++        "bytes": 55357578386,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m12",
++        "bytes": 65795197109,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m12",
++        "bytes": 65795197109,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m12",
++        "bytes": 65795197109,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m13",
++        "bytes": 60567212462,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m13",
++        "bytes": 60567212462,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m13",
++        "bytes": 60567212462,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m14",
++        "bytes": 51650388870,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m14",
++        "bytes": 51650388870,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m14",
++        "bytes": 51650388870,
++        "backingBytes": 42948665344,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "g1-m15",
++        "bytes": 46053460031,
++        "backingBytes": 34358730752,
++        "hostFreeBytes": 25769803776
++      },
++      {
++        "origin": "g1-m15",
++        "bytes": 46053460031,
++        "backingBytes": 34358730752,
++        "hostFreeBytes": 68719476736
++      },
++      {
++        "origin": "g1-m15",
++        "bytes": 46053460031,
++        "backingBytes": 34358730752,
++        "hostFreeBytes": 214748364800
++      },
++      {
++        "origin": "synthetic 70 GiB working set",
++        "bytes": 75161927680,
++        "backingBytes": 0,
++        "hostFreeBytes": 429496729600
++      },
++      {
++        "origin": "synthetic empty",
++        "bytes": 5,
++        "backingBytes": 9,
++        "hostFreeBytes": 429496729600
++      },
++      {
++        "origin": "synthetic exactly the usable part of one image",
++        "bytes": 30064771072,
++        "backingBytes": 0,
++        "hostFreeBytes": 429496729600
++      },
++      {
++        "origin": "synthetic one byte above it",
++        "bytes": 30064771073,
++        "backingBytes": 0,
++        "hostFreeBytes": 429496729600
++      }
++    ]
++  }
+ }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧩️shards/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧩️shards/🟦️.ts
+@@ -6,6 +6,8 @@
+ import budgetSchema from"../../🧬️schema/🔣️.json"with{type:"json"};
+ import policy from"../../🔣️policy.json"with{type:"json"};
+ import{readRepositoryCacheBudgetV1}from"../../🟦️.ts";
++import{imageShardPlanV1,workingSetBytesV1}from"../../📐️elastic/🟦️.ts";
++import fixture from"../🧫️fixtures/🔣️.json"with{type:"json"};
+ const GiB=1073741824;
+ const declared=Object.entries(policy.partitions).flatMap(([id,row])=>"imageShards"in row?[[id,(row as{imageShards:unknown}).imageShards]as const]:[]);
+ test("the oversized partitions declare their shards, closed and equal to the shard schema, and the split of the Rust partition is enabled",()=>{
+@@ -37,3 +39,31 @@
+   expect(nativeImageShardPathBudgetV1(directory,"x1bd8fd47297","posix").fits).toBe(true);expect(row.directory.length).toBeLessThanOrEqual(NATIVE_IMAGE_SHARD_V1.pathBudgetCharacters-40);
+  }
+ });
++
++test("the images of a measured working set equal the independent Python model on every measured worker, keep every image below its high-water mark within the cap and refuse a host that cannot hold the working set",()=>{
++ const plan=fixture.imageShardPlan,input=(row:(typeof plan.cases)[number])=>({workingSetBytes:workingSetBytesV1(row),capBytes:plan.capBytes,alignBytes:plan.alignBytes,minimumBytes:plan.minimumBytes,highWaterBasisPoints:plan.highWaterBasisPoints,hostFreeBytes:row.hostFreeBytes,hostFreeReservePercent:plan.hostFreeReservePercent});
++ const model=`import json,sys
++plan=json.loads(sys.argv[1])
++out=[]
++for row in plan["cases"]:
++    ws=max(0,row["bytes"]-row["backingBytes"])
++    cap=plan["capBytes"]//plan["alignBytes"]*plan["alignBytes"]
++    usable=cap*plan["highWaterBasisPoints"]//10000
++    room=row["hostFreeBytes"]*plan["hostFreeReservePercent"]//100
++    if ws>room:
++        out.append({"refused":"host-free"}); continue
++    shards=max(1,-(-ws//usable))
++    share=-(-ws//shards)
++    want=-(-(-(-share*10000//plan["highWaterBasisPoints"]))//plan["alignBytes"])*plan["alignBytes"]
++    per=min(cap,max(plan["minimumBytes"],want))
++    out.append({"shards":shards,"perShardBytes":per,"totalBytes":shards*per})
++print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(plan)]);
++ expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);
++ const expected=JSON.parse(new TextDecoder().decode(run.stdout)) as unknown[];
++ expect(plan.cases.map(row=>imageShardPlanV1(input(row)) as unknown)).toEqual(expected);
++ for(const row of plan.cases){const made=imageShardPlanV1(input(row));if("refused"in made)continue;const share=Math.ceil(workingSetBytesV1(row)/made.shards);expect(made.perShardBytes).toBeLessThanOrEqual(Math.floor(plan.capBytes/plan.alignBytes)*plan.alignBytes);expect(made.perShardBytes%plan.alignBytes).toBe(0);expect(share).toBeLessThanOrEqual(Math.floor(made.perShardBytes*plan.highWaterBasisPoints/10000)+1);}
++ const measured=plan.cases.filter(row=>row.origin.startsWith("g1-"));expect(measured.length).toBeGreaterThan(30);
++ expect(plan.cases.find(row=>row.origin==="synthetic one byte above it")&&imageShardPlanV1(input(plan.cases.find(row=>row.origin==="synthetic one byte above it")!))).toMatchObject({shards:2});
++ expect(imageShardPlanV1(input(plan.cases.find(row=>row.origin==="synthetic exactly the usable part of one image")!))).toMatchObject({shards:1,perShardBytes:plan.capBytes});
++ expect(imageShardPlanV1(input(plan.cases.find(row=>row.origin==="synthetic empty")!))).toMatchObject({shards:1,perShardBytes:plan.minimumBytes});
++});
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts
+@@ -86,7 +86,7 @@
+   if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
+   {
+   checkResourceLeaseControl(control);
+-  const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
++  const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_UNSTABLE_MTIME_ON_USE:"true",CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+   const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
+   child.stdout!.pipe(process.stdout, { end: false });
+   child.stderr!.pipe(process.stderr, { end: false });
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts
+@@ -941,7 +941,7 @@
+   const selection=schedulerCargoSelectionV1(options.examples),manifest=selection.manifest,args=options.arguments??selection.args;
+   const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
+   const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args,environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
+-  const child = spawn(registeredToolExecutableV1("cargo"), [...args,"--message-format=json-render-diagnostics"], {windowsHide:true, cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
++  const child = spawn(registeredToolExecutableV1("cargo"), [...args,"--message-format=json-render-diagnostics"], {windowsHide:true, cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_UNSTABLE_MTIME_ON_USE: "true", CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+   const cancel = (): void => terminateOwnedChildTree(child);
+   const stopDeadline = watchResourceLeaseControlDeadlineV1(options.control, () => cancel());
+   signal.addEventListener("abort", cancel, { once: true });

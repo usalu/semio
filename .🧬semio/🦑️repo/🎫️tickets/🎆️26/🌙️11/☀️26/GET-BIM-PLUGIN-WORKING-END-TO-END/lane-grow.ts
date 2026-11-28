@@ -1,0 +1,12 @@
+import {compilerLaneStoreBytesV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
+import {ensureLaneImageV1,laneImagePortsV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧩️image/🟦️.ts";
+import {nativeImageShardFoldV1,readNativeImageShardLedgerV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+import {crateKeyV1,readLaneV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
+const workspace="/Users/ueli/Documents/semio",root=workspace+"/.cache/b/r/m/u",id=process.argv[2]!,G=1073741824;
+const commitment=await compilerLaneStoreBytesV1(workspace,process.env as Record<string,string|undefined>);
+const ports=await laneImagePortsV1(root,undefined,commitment??undefined,readLaneV1(root,id)?.crateKey??crateKeyV1([]));
+if(ports===undefined)throw Error("no lane image ports");
+const before=nativeImageShardFoldV1(readNativeImageShardLedgerV1(ports.directory)).get(id)?.capacityBytes;
+const outcome=await ensureLaneImageV1(root,id,ports);
+const after=nativeImageShardFoldV1(readNativeImageShardLedgerV1(ports.directory)).get(id)?.capacityBytes;
+console.log(JSON.stringify({outcome,beforeGiB:before!/G,afterGiB:after!/G}));

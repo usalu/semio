@@ -7,7 +7,7 @@ import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {leaseFileBusyV1} from "../../../../🔒️leases/🪟️windows/🟦️.ts";
 import {requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
-import {agedHostSampleV1,evaluateHostCapacityV1,hostBootAnchorV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostBootAnchorV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../📏️decision/🟦️.ts";
+import {agedHostSampleV1,evaluateHostCapacityV1,foreignHostGrantV1,hostBootAnchorV1,hostGrantFormatV1,hostCapacityErrorV1,isCurrentFormatHostGrantV1,isCurrentHostGrantV1,isHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostBootAnchorV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../📏️decision/🟦️.ts";
 import {currentHostProbeV1,readHostSampleV1,type HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
 import {hostDeclarationKeyV1} from "../../🪞️profile/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
@@ -52,7 +52,13 @@ export const modified=(path:string):number=>{try{return statSync(path).mtimeMs;}
 /** 🧹️ Reclaims a still-stale ledger record. A busy record stays eligible for the next admission pass. */
 function reclaimStale(path:string,observedAt:number):void{
  if(observedAt===0||modified(path)!==observedAt)return;
- try{remove(path);}catch(error){if(!leaseFileBusyV1(error))throw error;}
+ try{remove(path);if(path.endsWith(".json")){remove(`${path.slice(0,-5)}.stats`);remove(`${path.slice(0,-5)}${protocol.formatSuffix}`);}}catch(error){if(!leaseFileBusyV1(error))throw error;}
+}
+
+/** 📈️ The measurements a grant wrote about itself beside its row (`<id>.stats`, schema `GrantStats`), merged into the row the decision reads; a missing or malformed sidecar leaves the row as it is, which charges its whole reservation. */
+function withGrantStatsV1(directory:string,grant:HostGrantV1):HostGrantV1{
+ const stats=readJson(join(directory,"grants",`${grant.id}.stats`));
+ return isHostCapacityV1("GrantStats",stats)?{...grant,...stats as Pick<HostGrantV1,"peakMegabytes"|"observations"|"deviationMegabytes">}:grant;
 }
 type HostRosterScanPortsV1=Readonly<{platform?:string;list?:(path:string)=>string[];retry?:Pick<ChurnOptionsV1,"signal"|"onRetry"|"sleepSync">}>;
 export function names(directory:string,child:string,ports:HostRosterScanPortsV1={}):string[]{
@@ -99,15 +105,16 @@ export function readGrants(directory:string,now:number,policy:HostCapacityPolicy
   if(modifiedAtMs===0)continue;
   type Owner=Pick<HostGrantV1,"pid"|"startMs"|"admittedAtMs"|"bootAtMs">;
   const currentOwner=(grant:Owner):boolean=>alive(grant.pid,grant.startMs)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
-  if(!isHostCapacityV1("Grant",value)){
+  const format=hostGrantFormatV1(readJson(join(directory,"grants",`${id}${protocol.formatSuffix}`)));
+  if(!isCurrentFormatHostGrantV1(value,format)){
    const owner=isHostCapacityV1("GrantOwner",value)?value as Owner:undefined;
    const live=owner===undefined?heartbeatAgeMs<=policy.wait.staleMilliseconds:Math.abs(owner.bootAtMs-boot)<=protocol.bootToleranceMilliseconds&&currentOwner(owner);
-   if(live)throw hostCapacityErrorV1("unrecognizedGrant",{id});
-   if(reclaim)reclaimStale(path,modifiedAtMs);
+   if(live)rows.push(foreignHostGrantV1({id,value,format,modifiedAtMs}));
+   else if(reclaim)reclaimStale(path,modifiedAtMs);
    continue;
   }
   const grant=value as HostGrantV1;
-  if(isCurrentHostGrantV1({grant,expectedId:id,pidAlive:currentOwner(grant),nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(grant);
+  if(isCurrentHostGrantV1({grant,expectedId:id,pidAlive:currentOwner(grant),nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(withGrantStatsV1(directory,grant));
   else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
  return rows;
@@ -139,5 +146,6 @@ export async function currentSample(directory:string,policy:HostCapacityPolicyV1
 /** 🚥️ Reads the gate without joining its queue: the sample, the live grants, the waiters and what the next request would get. */
 export async function readHostCapacityStatusV1(options:HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>}>):Promise<HostCapacityStatusV1>{
  const now=options.now??Date.now,directory=prepare(options.directory),host=await currentSample(directory,options.policy,options.control,options,options.environment),grants=readGrants(directory,now(),options.policy,undefined,options.control.signal,false),waiters=readWaiters(directory,now(),options.policy,options.control.signal,false);
- return Object.freeze({host,grants,waiters,evaluation:evaluateHostCapacityV1(options.policy,withUnmanagedHostV1(host,grants),grants,waiters,now())});
+ const foreign=(await import("../../🛡️warden/🔁️loop/🟦️.ts").catch(()=>undefined))?.foreignHostMegabytesV1(directory,now())??0;
+ return Object.freeze({host,grants,waiters,evaluation:evaluateHostCapacityV1(options.policy,withUnmanagedHostV1(host,grants,foreign),grants,waiters,now())});
 }

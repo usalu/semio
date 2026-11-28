@@ -1,6 +1,5 @@
 {
   "zeroProgressLimit": 256,
-  "stallCreditUs": 8000,
   "cases": [
     { "step": "empty", "starved": false, "reading": "fruitless" },
     { "step": "empty", "starved": true, "reading": "starved" },
@@ -17,6 +16,8 @@
     { "name": "blocked behind another owner for a whole archive load", "step": "blocked", "starved": false, "count": 2048, "spanUs": 500000, "faults": false },
     { "name": "unfunded repeat pumps and stock below the archive reserve", "step": "empty", "starved": true, "count": 2048, "spanUs": 500000, "faults": false },
     { "name": "funded runnable step that moves nothing", "step": "empty", "starved": false, "count": 2048, "spanUs": 500000, "faults": true },
-    { "name": "fruitless count reached inside one frame", "step": "empty", "starved": false, "count": 2048, "spanUs": 1000, "faults": false }
+    { "name": "funded fruitless turns are judged by their count inside one frame", "step": "empty", "starved": false, "count": 2048, "spanUs": 1000, "faults": true },
+    { "name": "funded fruitless turns are judged by their count on a frozen clock", "step": "empty", "starved": false, "count": 2048, "spanUs": 0, "faults": true },
+    { "name": "below the limit nothing faults however long the wall time", "step": "empty", "starved": false, "count": 255, "spanUs": 500000000, "faults": false }
   ]
 }

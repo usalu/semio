@@ -1,0 +1,396 @@
+{
+ "version": 1,
+ "volatile": [
+  "unit.json"
+ ],
+ "cases": [
+  {
+   "name": "unit with manifest",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "same unit, other timestamps",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "29c1b289e7522195b362e44f54e05470b69ad20540ab60a18a05e5bf6951f13d"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "same unit, other order",
+   "outputs": [
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    },
+    {
+     "path": "unit.json",
+     "hash": "153812ae5fea0b73a011bf28bd7cea93644437c3fe3260b7b2d7e1e2f9f46bde"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "5e98457726bed4aae7c323ba59bdff9fa5569f53d57039a1bbb99959124bc9a2"
+    }
+   ],
+   "fingerprint": "c1292677b8a213df92c9c42458bfa5de349b2336cbb75498c27f63e689a83ecb",
+   "manifest": true
+  },
+  {
+   "name": "unit with other bytes",
+   "outputs": [
+    {
+     "path": "unit.json",
+     "hash": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+    },
+    {
+     "path": "out/libx.rlib",
+     "hash": "45aa0ff87e207d656844ef7d3fd3c6a5db7c94ab50c2b26d16a1ad6160bf2b92"
+    },
+    {
+     "path": "out/libx.rmeta",
+     "hash": "044ada5768c6bda34719e564a4ef46373c3364b0c1fcfbeaab6a9eebc5e24480"
+    }
+   ],
+   "fingerprint": "d592714f0149d451fc07cfbfcea7386f50d1459fcd2b0ea8cb0d4cde44f5402c",
+   "manifest": true
+  },
+  {
+   "name": "record without manifest",
+   "outputs": [
+    {
+     "path": "record.br",
+     "hash": "70ce871f8a3d3fb449bc3c3ace6547cef02dfc74ffe48d912532a724bfdbe5b9"
+    }
+   ],
+   "fingerprint": "27e28f01a4b428d3e3b96180b929bab4f23d44ec9930f899a4e2ee55cbb10a1d",
+   "manifest": false
+  },
+  {
+   "name": "duplicate digests count once",
+   "outputs": [
+    {
+     "path": "a",
+     "hash": "0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5"
+    },
+    {
+     "path": "b",
+     "hash": "0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5"
+    },
+    {
+     "path": "unit.json",
+     "hash": "2396a1256ac4b1c6849c931ddb8018bdd984bb2383be21bb819a33b95d8d603f"
+    }
+   ],
+   "fingerprint": "310ca4f5383d9d870ee6c7312b244364d63aa31fd123f09e7eba69aea9b15229",
+   "manifest": true
+  }
+ ],
+ "advisory": {
+  "failure.br": "failure-note",
+  "costs.br": "costs"
+ },
+ "classes": [
+  {
+   "name": "unit manifest",
+   "paths": [
+    "unit.json",
+    "out/libx.rlib"
+   ],
+   "manifest": true,
+   "sort": "unit",
+   "advisory": false
+  },
+  {
+   "name": "graph owner record",
+   "paths": [
+    "record.br",
+    "leaf/l/a.json"
+   ],
+   "manifest": false,
+   "sort": "project-inference",
+   "advisory": false
+  },
+  {
+   "name": "closure bundle",
+   "paths": [
+    "closure-1.br"
+   ],
+   "manifest": false,
+   "sort": "closure",
+   "advisory": false
+  },
+  {
+   "name": "failure note",
+   "paths": [
+    "failure.br"
+   ],
+   "manifest": false,
+   "sort": "failure-note",
+   "advisory": true
+  },
+  {
+   "name": "owner pool wave",
+   "paths": [
+    "head.br",
+    "session.br",
+    "units.br"
+   ],
+   "manifest": false,
+   "sort": "owner-pool",
+   "advisory": false
+  },
+  {
+   "name": "cost sheet beats record",
+   "paths": [
+    "record.br",
+    "costs.br"
+   ],
+   "manifest": false,
+   "sort": "costs",
+   "advisory": true
+  },
+  {
+   "name": "anything else",
+   "paths": [
+    "out/o0"
+   ],
+   "manifest": false,
+   "sort": "other",
+   "advisory": false
+  }
+ ],
+ "differing": [
+  {
+   "name": "one output differs",
+   "kept": [
+    {
+     "path": "out/a.rmeta",
+     "hash": "1"
+    },
+    {
+     "path": "out/a.rlib",
+     "hash": "2"
+    }
+   ],
+   "refused": [
+    {
+     "path": "out/a.rmeta",
+     "hash": "1"
+    },
+    {
+     "path": "out/a.rlib",
+     "hash": "3"
+    }
+   ],
+   "differing": [
+    "out/a.rlib"
+   ]
+  },
+  {
+   "name": "a path only one side names",
+   "kept": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "refused": [
+    {
+     "path": "x",
+     "hash": "1"
+    },
+    {
+     "path": "y",
+     "hash": "2"
+    }
+   ],
+   "differing": [
+    "y"
+   ]
+  },
+  {
+   "name": "identical",
+   "kept": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "refused": [
+    {
+     "path": "x",
+     "hash": "1"
+    }
+   ],
+   "differing": []
+  },
+  {
+   "name": "cut at sixteen sorted",
+   "kept": [],
+   "refused": [
+    {
+     "path": "p00",
+     "hash": "1"
+    },
+    {
+     "path": "p01",
+     "hash": "1"
+    },
+    {
+     "path": "p02",
+     "hash": "1"
+    },
+    {
+     "path": "p03",
+     "hash": "1"
+    },
+    {
+     "path": "p04",
+     "hash": "1"
+    },
+    {
+     "path": "p05",
+     "hash": "1"
+    },
+    {
+     "path": "p06",
+     "hash": "1"
+    },
+    {
+     "path": "p07",
+     "hash": "1"
+    },
+    {
+     "path": "p08",
+     "hash": "1"
+    },
+    {
+     "path": "p09",
+     "hash": "1"
+    },
+    {
+     "path": "p10",
+     "hash": "1"
+    },
+    {
+     "path": "p11",
+     "hash": "1"
+    },
+    {
+     "path": "p12",
+     "hash": "1"
+    },
+    {
+     "path": "p13",
+     "hash": "1"
+    },
+    {
+     "path": "p14",
+     "hash": "1"
+    },
+    {
+     "path": "p15",
+     "hash": "1"
+    },
+    {
+     "path": "p16",
+     "hash": "1"
+    },
+    {
+     "path": "p17",
+     "hash": "1"
+    },
+    {
+     "path": "p18",
+     "hash": "1"
+    },
+    {
+     "path": "p19",
+     "hash": "1"
+    }
+   ],
+   "differing": [
+    "p00",
+    "p01",
+    "p02",
+    "p03",
+    "p04",
+    "p05",
+    "p06",
+    "p07",
+    "p08",
+    "p09",
+    "p10",
+    "p11",
+    "p12",
+    "p13",
+    "p14",
+    "p15"
+   ]
+  }
+ ],
+ "streams": [
+  {
+   "name": "short-vs-human-rendering-trace",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_trace@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused doc comment\",\"code\":{\"code\":\"unused_doc_comments\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6711,\"byte_end\":6794,\"line_start\":98,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":false,\"text\":[{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":\"rustdoc does not generate documentation for macro invocations\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6401,\"byte_end\":6794,\"line_start\":95,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":true,\"text\":[{\"text\":\"/// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\",\"highlight_start\":1,\"highlight_end\":100},{\"text\":\"/// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\",\"highlight_start\":1,\"highlight_end\":102},{\"text\":\"/// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\",\"highlight_start\":1,\"highlight_end\":101},{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"to document an item produced by a macro, the macro must produce the documentation as part of its expansion\",\"code\":null,\"level\":\"help\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"`#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: unused doc comment\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs:95:1\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m95\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m/\\u001b[0m /// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\\n\\u001b[1m\\u001b[94m96\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\\n\\u001b[1m\\u001b[94m97\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\\n\\u001b[1m\\u001b[94m98\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// reading it inside the allocator neither allocates nor runs lazy initialisation.\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|_\\u001b[0m\\u001b[1m\\u001b[94m----------------------------------------------------------------------------------\\u001b[0m\\u001b[1m\\u001b[33m^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94mrustdoc does not generate documentation for macro invocations\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mhelp\\u001b[0m: to document an item produced by a macro, the macro must produce the documentation as part of its expansion\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"method `total` is never used\",\"code\":{\"code\":\"dead_code\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":646,\"byte_end\":693,\"line_start\":16,\"line_end\":16,\"column_start\":1,\"column_end\":48,\"is_primary\":false,\"text\":[{\"text\":\"impl<T: Copy, const N: usize> BoundedRing<T, N> {\",\"highlight_start\":1,\"highlight_end\":48}],\"label\":\"method in this implementation\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":1622,\"byte_end\":1627,\"line_start\":41,\"line_end\":41,\"column_start\":19,\"column_end\":24,\"is_primary\":true,\"text\":[{\"text\":\"    pub(super) fn total(&self) -> u64 {\",\"highlight_start\":19,\"highlight_end\":24}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: method `total` is never used\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs:41:19\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m16\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m impl<T: Copy, const N: usize> BoundedRing<T, N> {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[94m-----------------------------------------------\\u001b[0m \\u001b[1m\\u001b[94mmethod in this implementation\\u001b[0m\\n\\u001b[1m\\u001b[94m...\\u001b[0m\\n\\u001b[1m\\u001b[94m41\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m     pub(super) fn total(&self) -> u64 {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m                   \\u001b[1m\\u001b[33m^^^^^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: 2 warnings emitted\\u001b[0m\\n\\n\"}\n",
+   "refused": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_trace@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused doc comment\",\"code\":{\"code\":\"unused_doc_comments\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6711,\"byte_end\":6794,\"line_start\":98,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":false,\"text\":[{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":\"rustdoc does not generate documentation for macro invocations\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6401,\"byte_end\":6794,\"line_start\":95,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":true,\"text\":[{\"text\":\"/// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\",\"highlight_start\":1,\"highlight_end\":100},{\"text\":\"/// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\",\"highlight_start\":1,\"highlight_end\":102},{\"text\":\"/// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\",\"highlight_start\":1,\"highlight_end\":101},{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"to document an item produced by a macro, the macro must produce the documentation as part of its expansion\",\"code\":null,\"level\":\"help\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"`#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs:95:1: \\u001b[1m\\u001b[33mwarning\\u001b[0m: unused doc comment\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"method `total` is never used\",\"code\":{\"code\":\"dead_code\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":646,\"byte_end\":693,\"line_start\":16,\"line_end\":16,\"column_start\":1,\"column_end\":48,\"is_primary\":false,\"text\":[{\"text\":\"impl<T: Copy, const N: usize> BoundedRing<T, N> {\",\"highlight_start\":1,\"highlight_end\":48}],\"label\":\"method in this implementation\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":1622,\"byte_end\":1627,\"line_start\":41,\"line_end\":41,\"column_start\":19,\"column_end\":24,\"is_primary\":true,\"text\":[{\"text\":\"    pub(super) fn total(&self) -> u64 {\",\"highlight_start\":19,\"highlight_end\":24}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs:41:19: \\u001b[1m\\u001b[33mwarning\\u001b[0m: method `total` is never used\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n",
+   "equal": true
+  },
+  {
+   "name": "ansi-vs-short-value-source-turn",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n",
+   "refused": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m17\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m  pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|v\\u001b[1m\\u001b[94m...\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m                                                                            \\u001b[1m\\u001b[33m^^^^^^^^^^^^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(deprecated)]` on by default\\n\\u001b[1m\\u001b[96mhelp\\u001b[0m: replace the use of the deprecated method\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m17\\u001b[0m \\u001b[91m- \\u001b[0m pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.\\u001b[91mfetch_update\\u001b[0m(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\\n\\u001b[1m\\u001b[94m17\\u001b[0m \\u001b[92m+ \\u001b[0m pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.\\u001b[92mtry_update\\u001b[0m(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m19\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m  pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Order\\u001b[1m\\u001b[94m...\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m                                                                                                 \\u001b[1m\\u001b[33m^^^^^^^^^^^^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[96mhelp\\u001b[0m: replace the use of the deprecated method\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m19\\u001b[0m \\u001b[91m- \\u001b[0m pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.\\u001b[91mfetch_update\\u001b[0m(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\\n\\u001b[1m\\u001b[94m19\\u001b[0m \\u001b[92m+ \\u001b[0m pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.\\u001b[92mtry_update\\u001b[0m(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: 2 warnings emitted\\u001b[0m\\n\\n\"}\n",
+   "equal": true
+  },
+  {
+   "name": "short-vs-ansi-pack-json-float",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_pack_json_float@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused import: `std::cmp::Ordering`\",\"code\":{\"code\":\"unused_imports\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-pack-json-float-0.1.0/../../🦀️.rs\",\"byte_start\":136,\"byte_end\":154,\"line_start\":3,\"line_end\":3,\"column_start\":5,\"column_end\":23,\"is_primary\":true,\"text\":[{\"text\":\"use std::cmp::Ordering;\",\"highlight_start\":5,\"highlight_end\":23}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"remove the whole `use` item\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-pack-json-float-0.1.0/../../🦀️.rs\",\"byte_start\":132,\"byte_end\":156,\"line_start\":3,\"line_end\":4,\"column_start\":1,\"column_end\":1,\"is_primary\":true,\"text\":[{\"text\":\"use std::cmp::Ordering;\",\"highlight_start\":1,\"highlight_end\":24},{\"text\":\"use std::fmt;\",\"highlight_start\":1,\"highlight_end\":1}],\"label\":null,\"suggested_replacement\":\"\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-pack-json-float-0.1.0/../../🦀️.rs:3:5: \\u001b[1m\\u001b[33mwarning\\u001b[0m: unused import: `std::cmp::Ordering`\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_pack_json_float@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_pack_json_float@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"1 warning emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 1 warning emitted\\n\"}\n",
+   "refused": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_pack_json_float@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused import: `std::cmp::Ordering`\",\"code\":{\"code\":\"unused_imports\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-pack-json-float-0.1.0/../../🦀️.rs\",\"byte_start\":136,\"byte_end\":154,\"line_start\":3,\"line_end\":3,\"column_start\":5,\"column_end\":23,\"is_primary\":true,\"text\":[{\"text\":\"use std::cmp::Ordering;\",\"highlight_start\":5,\"highlight_end\":23}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"remove the whole `use` item\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-pack-json-float-0.1.0/../../🦀️.rs\",\"byte_start\":132,\"byte_end\":156,\"line_start\":3,\"line_end\":4,\"column_start\":1,\"column_end\":1,\"is_primary\":true,\"text\":[{\"text\":\"use std::cmp::Ordering;\",\"highlight_start\":1,\"highlight_end\":24},{\"text\":\"use std::fmt;\",\"highlight_start\":1,\"highlight_end\":1}],\"label\":null,\"suggested_replacement\":\"\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: unused import: `std::cmp::Ordering`\\u001b[0m\\n \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-pack-json-float-0.1.0/../../🦀️.rs:3:5\\n  \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m3\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m use std::cmp::Ordering;\\n  \\u001b[1m\\u001b[94m|\\u001b[0m     \\u001b[1m\\u001b[33m^^^^^^^^^^^^^^^^^^\\u001b[0m\\n  \\u001b[1m\\u001b[94m|\\u001b[0m\\n  \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_pack_json_float@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_pack_json_float@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"1 warning emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: 1 warning emitted\\u001b[0m\\n\\n\"}\n",
+   "equal": true
+  },
+  {
+   "name": "another-message-differs",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_trace@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused doc comment\",\"code\":{\"code\":\"unused_doc_comments\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6711,\"byte_end\":6794,\"line_start\":98,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":false,\"text\":[{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":\"rustdoc does not generate documentation for macro invocations\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6401,\"byte_end\":6794,\"line_start\":95,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":true,\"text\":[{\"text\":\"/// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\",\"highlight_start\":1,\"highlight_end\":100},{\"text\":\"/// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\",\"highlight_start\":1,\"highlight_end\":102},{\"text\":\"/// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\",\"highlight_start\":1,\"highlight_end\":101},{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"to document an item produced by a macro, the macro must produce the documentation as part of its expansion\",\"code\":null,\"level\":\"help\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"`#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: unused doc comment\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs:95:1\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m95\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m/\\u001b[0m /// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\\n\\u001b[1m\\u001b[94m96\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\\n\\u001b[1m\\u001b[94m97\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\\n\\u001b[1m\\u001b[94m98\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// reading it inside the allocator neither allocates nor runs lazy initialisation.\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|_\\u001b[0m\\u001b[1m\\u001b[94m----------------------------------------------------------------------------------\\u001b[0m\\u001b[1m\\u001b[33m^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94mrustdoc does not generate documentation for macro invocations\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mhelp\\u001b[0m: to document an item produced by a macro, the macro must produce the documentation as part of its expansion\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"method `total` is never used\",\"code\":{\"code\":\"dead_code\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":646,\"byte_end\":693,\"line_start\":16,\"line_end\":16,\"column_start\":1,\"column_end\":48,\"is_primary\":false,\"text\":[{\"text\":\"impl<T: Copy, const N: usize> BoundedRing<T, N> {\",\"highlight_start\":1,\"highlight_end\":48}],\"label\":\"method in this implementation\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":1622,\"byte_end\":1627,\"line_start\":41,\"line_end\":41,\"column_start\":19,\"column_end\":24,\"is_primary\":true,\"text\":[{\"text\":\"    pub(super) fn total(&self) -> u64 {\",\"highlight_start\":19,\"highlight_end\":24}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: method `total` is never used\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs:41:19\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m16\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m impl<T: Copy, const N: usize> BoundedRing<T, N> {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[94m-----------------------------------------------\\u001b[0m \\u001b[1m\\u001b[94mmethod in this implementation\\u001b[0m\\n\\u001b[1m\\u001b[94m...\\u001b[0m\\n\\u001b[1m\\u001b[94m41\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m     pub(super) fn total(&self) -> u64 {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m                   \\u001b[1m\\u001b[33m^^^^^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: 2 warnings emitted\\u001b[0m\\n\\n\"}\n",
+   "refused": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_trace@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"unused doc comment\",\"code\":{\"code\":\"unused_doc_comments\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6711,\"byte_end\":6794,\"line_start\":98,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":false,\"text\":[{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":\"rustdoc does not generate documentation for macro invocations\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs\",\"byte_start\":6401,\"byte_end\":6794,\"line_start\":95,\"line_end\":98,\"column_start\":1,\"column_end\":84,\"is_primary\":true,\"text\":[{\"text\":\"/// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\",\"highlight_start\":1,\"highlight_end\":100},{\"text\":\"/// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\",\"highlight_start\":1,\"highlight_end\":102},{\"text\":\"/// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\",\"highlight_start\":1,\"highlight_end\":101},{\"text\":\"/// reading it inside the allocator neither allocates nor runs lazy initialisation.\",\"highlight_start\":1,\"highlight_end\":84}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"to document an item produced by a macro, the macro must produce the documentation as part of its expansion\",\"code\":null,\"level\":\"help\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"`#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: unused doc comment\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../🧮️memory/🦀️.rs:95:1\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m95\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m/\\u001b[0m /// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement\\n\\u001b[1m\\u001b[94m96\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on\\n\\u001b[1m\\u001b[94m97\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so\\n\\u001b[1m\\u001b[94m98\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|\\u001b[0m /// reading it inside the allocator neither allocates nor runs lazy initialisation.\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[33m|_\\u001b[0m\\u001b[1m\\u001b[94m----------------------------------------------------------------------------------\\u001b[0m\\u001b[1m\\u001b[33m^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m   \\u001b[1m\\u001b[94mrustdoc does not generate documentation for macro invocations\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mhelp\\u001b[0m: to document an item produced by a macro, the macro must produce the documentation as part of its expansion\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"method `other` is never used\",\"code\":{\"code\":\"dead_code\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":646,\"byte_end\":693,\"line_start\":16,\"line_end\":16,\"column_start\":1,\"column_end\":48,\"is_primary\":false,\"text\":[{\"text\":\"impl<T: Copy, const N: usize> BoundedRing<T, N> {\",\"highlight_start\":1,\"highlight_end\":48}],\"label\":\"method in this implementation\",\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null},{\"file_name\":\"semio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs\",\"byte_start\":1622,\"byte_end\":1627,\"line_start\":41,\"line_end\":41,\"column_start\":19,\"column_end\":24,\"is_primary\":true,\"text\":[{\"text\":\"    pub(super) fn total(&self) -> u64 {\",\"highlight_start\":19,\"highlight_end\":24}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null}],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: method `other` is never used\\u001b[0m\\n  \\u001b[1m\\u001b[94m--> \\u001b[0msemio-framework-trace-0.1.0/../../📊️sample-rings-and-sites/🦀️.rs:41:19\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n\\u001b[1m\\u001b[94m16\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m impl<T: Copy, const N: usize> BoundedRing<T, N> {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m \\u001b[1m\\u001b[94m-----------------------------------------------\\u001b[0m \\u001b[1m\\u001b[94mmethod in this implementation\\u001b[0m\\n\\u001b[1m\\u001b[94m...\\u001b[0m\\n\\u001b[1m\\u001b[94m41\\u001b[0m \\u001b[1m\\u001b[94m|\\u001b[0m     pub(super) fn total(&self) -> u64 {\\n   \\u001b[1m\\u001b[94m|\\u001b[0m                   \\u001b[1m\\u001b[33m^^^^^\\u001b[0m\\n   \\u001b[1m\\u001b[94m|\\u001b[0m\\n   \\u001b[1m\\u001b[94m= \\u001b[0m\\u001b[1mnote\\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\\n\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_trace@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m\\u001b[1m: 2 warnings emitted\\u001b[0m\\n\\n\"}\n",
+   "equal": false
+  },
+  {
+   "name": "order-differs",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n",
+   "refused": "{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n",
+   "equal": true
+  },
+  {
+   "name": "extra-diagnostic",
+   "kept": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n",
+   "refused": "{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/semio_framework_value_source_turn@@semio-extra@@.d\",\"emit\":\"dep-info\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1419,\"byte_end\":1431,\"line_start\":19,\"line_end\":19,\"column_start\":97,\"column_end\":109,\"is_primary\":true,\"text\":[{\"text\":\" pub fn issue(&self)->Result<OriginalSourceTurn,OriginalSourceTurnError>{let dispatch=self.next.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|OriginalSourceTurnError::DispatchExhausted)?;Ok(OriginalSourceTurn{identity:OriginalSourceTurnIdentity{issuer:self.identity,dispatch}})}\",\"highlight_start\":97,\"highlight_end\":109}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:19:97: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"@@semio-out@@/libsemio_framework_value_source_turn@@semio-extra@@.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"2 warnings emitted\",\"code\":null,\"level\":\"warning\",\"spans\":[],\"children\":[],\"rendered\":\"\\u001b[1m\\u001b[33mwarning\\u001b[0m: 2 warnings emitted\\n\"}\n{\"$message_type\":\"diagnostic\",\"message\":\"use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\",\"code\":{\"code\":\"deprecated\",\"explanation\":null},\"level\":\"warning\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"expansion\":null}],\"children\":[{\"message\":\"`#[warn(deprecated)]` on by default\",\"code\":null,\"level\":\"note\",\"spans\":[],\"children\":[],\"rendered\":null},{\"message\":\"replace the use of the deprecated method\",\"code\":null,\"level\":\"help\",\"spans\":[{\"file_name\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs\",\"byte_start\":1076,\"byte_end\":1088,\"line_start\":17,\"line_end\":17,\"column_start\":76,\"column_end\":88,\"is_primary\":true,\"text\":[{\"text\":\" pub fn new()->Self{Self{identity:OriginalSourceTurnIssuerIdentity(ISSUERS.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect(\\\"original Source issuer identity exhausted\\\")),next:AtomicU64::new(1)}}\",\"highlight_start\":76,\"highlight_end\":88}],\"label\":null,\"suggested_replacement\":\"try_update\",\"suggestion_applicability\":\"MachineApplicable\",\"expansion\":null}],\"children\":[],\"rendered\":null}],\"rendered\":\"semio-framework-value-source-turn-0.1.0/../../🦀️.rs:17:76: \\u001b[1m\\u001b[33mwarning\\u001b[0m: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency\\n\"}\n",
+   "equal": false
+  }
+ ]
+}

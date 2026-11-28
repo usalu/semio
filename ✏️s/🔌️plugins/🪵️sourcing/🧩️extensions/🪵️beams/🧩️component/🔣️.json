@@ -1,17 +1,7 @@
 {
-  "descriptorVersion": 1,
-  "packageId": "semio:sourcing-module-beams",
-  "role": "extension",
-  "manifest": {
-    "pluginId": "sourcing-module-beams",
-    "label": "Sourcing Module Beams",
-    "version": "0.1.0",
-    "apps": [],
-    "examples": [],
-    "capabilities": [],
+  "contributions": {
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "beam",
@@ -19,27 +9,41 @@
           "label": "Beams",
           "moduleId": "beams",
           "typologyJson": "{\"id\":\"beams\",\"label\":\"Beams\",\"children\":[{\"id\":\"solid-timber\",\"label\":\"Solid Timber\",\"children\":[{\"id\":\"glulam\",\"label\":\"Glulam\"},{\"id\":\"kvh\",\"label\":\"KVH\"}]},{\"id\":\"steel\",\"label\":\"Steel\",\"children\":[{\"id\":\"ipe\",\"label\":\"IPE\"},{\"id\":\"hea\",\"label\":\"HEA\"}]}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ],
-    "commands": [],
+    ]
+  },
+  "descriptorVersion": 1,
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 25
+  },
+  "manifest": {
+    "apps": [],
     "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
     "dependencies": [
       {
         "pluginId": "sourcing",
         "version": "=0.1.0"
       }
-    ]
-  },
-  "execution": "declarative",
-  "executionProtocol": {
-    "appChannelVersion": 25
-  },
-  "quotas": {},
-  "contributions": {
+    ],
+    "examples": [],
+    "label": {
+      "native": {
+        "de": "Beschaffungsmodul Träger",
+        "en": "Sourcing Module Beams"
+      },
+      "reuse": {
+        "de": "Beschaffungsmodul Träger",
+        "en": "Sourcing Module Beams"
+      }
+    },
+    "pluginId": "sourcing-module-beams",
     "topicContributions": [
       {
-        "topic": "sourcing.module",
         "payload": {
           "appId": "sourcing-curation",
           "iconId": "beam",
@@ -47,8 +51,13 @@
           "label": "Beams",
           "moduleId": "beams",
           "typologyJson": "{\"id\":\"beams\",\"label\":\"Beams\",\"children\":[{\"id\":\"solid-timber\",\"label\":\"Solid Timber\",\"children\":[{\"id\":\"glulam\",\"label\":\"Glulam\"},{\"id\":\"kvh\",\"label\":\"KVH\"}]},{\"id\":\"steel\",\"label\":\"Steel\",\"children\":[{\"id\":\"ipe\",\"label\":\"IPE\"},{\"id\":\"hea\",\"label\":\"HEA\"}]}]}"
-        }
+        },
+        "topic": "sourcing.module"
       }
-    ]
-  }
+    ],
+    "version": "0.1.0"
+  },
+  "packageId": "semio:sourcing-module-beams",
+  "quotas": {},
+  "role": "extension"
 }

@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "description": "Language-neutral vectors of the checkout test offload: whether a replica cut holds the cut of a requester (`cover`: per origin the segment and the byte offset, an origin the replica has never seen is behind), which checkout-relative paths name a file inside the checkout (`path`) and whether a test file leaves the machine (`gate`: mode, the host-capacity verdict, the scheduler's idle count, `asked` lists the signals a correct gate reads, in order).",
+  "cover": [
+    {"name": "equal cuts are covered", "need": {"g1-m01": {"segment": 3, "bytes": 100}}, "have": {"g1-m01": {"segment": 3, "bytes": 100}}, "covered": true, "behind": []},
+    {"name": "a later byte in the same segment is covered", "need": {"g1-m01": {"segment": 3, "bytes": 100}}, "have": {"g1-m01": {"segment": 3, "bytes": 101}}, "covered": true, "behind": []},
+    {"name": "a later segment with fewer bytes is covered", "need": {"g1-m01": {"segment": 3, "bytes": 900}}, "have": {"g1-m01": {"segment": 4, "bytes": 0}}, "covered": true, "behind": []},
+    {"name": "an earlier byte is behind", "need": {"g1-m01": {"segment": 3, "bytes": 100}}, "have": {"g1-m01": {"segment": 3, "bytes": 99}}, "covered": false, "behind": ["g1-m01"]},
+    {"name": "an earlier segment with more bytes is behind", "need": {"g1-m01": {"segment": 3, "bytes": 0}}, "have": {"g1-m01": {"segment": 2, "bytes": 9999}}, "covered": false, "behind": ["g1-m01"]},
+    {"name": "an origin the replica never saw is behind", "need": {"g1-m01": {"segment": 1, "bytes": 1}, "g1-m02": {"segment": 0, "bytes": 0}}, "have": {"g1-m01": {"segment": 1, "bytes": 1}}, "covered": false, "behind": ["g1-m02"]},
+    {"name": "extra origins in the replica do not matter", "need": {"g1-m01": {"segment": 1, "bytes": 1}}, "have": {"g1-m01": {"segment": 2, "bytes": 0}, "g1-m09": {"segment": 7, "bytes": 7}}, "covered": true, "behind": []},
+    {"name": "an empty need is covered by anything", "need": {}, "have": {}, "covered": true, "behind": []},
+    {"name": "behind origins are sorted", "need": {"g1-m03": {"segment": 5, "bytes": 5}, "g1-m01": {"segment": 5, "bytes": 5}}, "have": {"g1-m03": {"segment": 4, "bytes": 5}, "g1-m01": {"segment": 5, "bytes": 4}}, "covered": false, "behind": ["g1-m01", "g1-m03"]}
+  ],
+  "path": [
+    {"path": "a/b/c.ts", "valid": true},
+    {"path": "🧰️framework/🛍️products/x/🧪️tests/🟦️.ts", "valid": true},
+    {"path": "", "valid": false},
+    {"path": "/etc/passwd", "valid": false},
+    {"path": "../x.ts", "valid": false},
+    {"path": "a/../x.ts", "valid": false},
+    {"path": "a//x.ts", "valid": false},
+    {"path": "./x.ts", "valid": false},
+    {"path": "a\\x.ts", "valid": false},
+    {"path": "C:/x.ts", "valid": false},
+    {"path": "a/x\u0000.ts", "valid": false},
+    {"path": "a/x\n.ts", "valid": false}
+  ],
+  "policy": {"perCoreMeasured": 0.5, "remoteWorthRatio": 0.8, "maximumAgeSeconds": 3600, "maximumFiles": 256, "file": "offload-test-measure.json"},
+  "load": [
+    {"name": "at a high load a file without any measure leaves to learn its remote duration", "loadPerCore": 1.5, "local": null, "remote": null, "verdict": "offload"},
+    {"name": "far above the measured threshold a file measured as worthless remotely stays", "loadPerCore": 4.2, "local": {"seconds": 10, "ageSeconds": 10}, "remote": {"seconds": 30, "ageSeconds": 10}, "verdict": "keep"},
+    {"name": "below the measured threshold the file stays", "loadPerCore": 0.4, "local": {"seconds": 100, "ageSeconds": 10}, "remote": {"seconds": 1, "ageSeconds": 10}, "verdict": "keep"},
+    {"name": "between the thresholds an unmeasured file leaves to learn its remote duration", "loadPerCore": 1.0, "local": null, "remote": null, "verdict": "offload"},
+    {"name": "between the thresholds a file measured much faster remotely leaves", "loadPerCore": 1.0, "local": {"seconds": 100, "ageSeconds": 60}, "remote": {"seconds": 14, "ageSeconds": 60}, "verdict": "offload"},
+    {"name": "between the thresholds a file measured as fast remotely as here stays", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 9, "ageSeconds": 60}, "verdict": "keep"},
+    {"name": "the remote run must be shorter than the worth ratio of the local one", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 7.9, "ageSeconds": 60}, "verdict": "offload"},
+    {"name": "a remote duration exactly at the worth ratio does not pay", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 8, "ageSeconds": 60}, "verdict": "keep"},
+    {"name": "a stale measure is ignored", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 30, "ageSeconds": 4000}, "verdict": "offload"},
+    {"name": "only a local duration is no proof that the remote run is worthless", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": null, "verdict": "offload"},
+    {"name": "exactly at the measured threshold the measures decide", "loadPerCore": 0.75, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 20, "ageSeconds": 60}, "verdict": "keep"}
+  ],
+  "gateLoad": [
+    {"name": "a saturated host that admits offers the file when a machine is idle", "mode": "auto", "host": "admit", "load": "offload", "idle": 3, "offload": true, "reason": "host-load", "asked": ["host", "load", "idle"]},
+    {"name": "a host that admits and is not saturated keeps the file", "mode": "auto", "host": "admit", "load": "keep", "idle": 3, "offload": false, "reason": "local-slot", "asked": ["host", "load"]},
+    {"name": "a host that says wait never asks the load", "mode": "auto", "host": "wait", "load": "keep", "idle": 3, "offload": true, "reason": "host-wait", "asked": ["host", "idle"]},
+    {"name": "a saturated host with no idle machine keeps the file", "mode": "auto", "host": "admit", "load": "offload", "idle": 0, "offload": false, "reason": "no-idle-machine", "asked": ["host", "load", "idle"]},
+    {"name": "always never asks the load", "mode": "always", "host": "admit", "load": "keep", "idle": 1, "offload": true, "reason": "always", "asked": ["idle"]},
+    {"name": "never asks nothing", "mode": "never", "host": "wait", "load": "offload", "idle": 5, "offload": false, "reason": "never", "asked": []}
+  ],
+  "gate": [
+    {"name": "never keeps the file and asks nothing", "mode": "never", "host": "wait", "idle": 5, "offload": false, "reason": "never", "asked": []},
+    {"name": "auto keeps the file while the host admits", "mode": "auto", "host": "admit", "idle": 5, "offload": false, "reason": "local-slot", "asked": ["host"]},
+    {"name": "auto offers the file when the host says wait and a machine is idle", "mode": "auto", "host": "wait", "idle": 3, "offload": true, "reason": "host-wait", "asked": ["host", "idle"]},
+    {"name": "auto keeps the file when the host says wait and no machine is idle", "mode": "auto", "host": "wait", "idle": 0, "offload": false, "reason": "no-idle-machine", "asked": ["host", "idle"]},
+    {"name": "auto keeps the file when no scheduler answers", "mode": "auto", "host": "wait", "idle": null, "offload": false, "reason": "no-idle-machine", "asked": ["host", "idle"]},
+    {"name": "always offers the file to an idle machine without asking the host", "mode": "always", "host": "admit", "idle": 1, "offload": true, "reason": "always", "asked": ["idle"]},
+    {"name": "always keeps the file when no machine is idle", "mode": "always", "host": "admit", "idle": 0, "offload": false, "reason": "no-idle-machine", "asked": ["idle"]}
+  ]
+}

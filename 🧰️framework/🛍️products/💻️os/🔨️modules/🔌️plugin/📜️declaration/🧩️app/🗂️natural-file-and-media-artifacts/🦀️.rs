@@ -14,6 +14,7 @@ use semio_plugin_decl_media::media_intrinsic::media_projection_error;
 use semio_plugin_decl_media::media_operation_refusal;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_ui_locale::LocalizedLabel;
+use std::mem::size_of;
 
 /// 📄️ One editor-owned natural-file codec, matched exactly to its declared representation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -89,6 +90,100 @@ const NATURAL_CLOSE_CHAIN_ACTIONS: usize = 1 << 14;
 pub enum NaturalFileDecodeOwner<T> {
     Controlled(Box<dyn NaturalFileDecodeCursor<T>>),
     Synchronous(Vec<u8>),
+}
+
+/// 🧺️ Controlled decoder of a format whose parser needs its whole input: it charges the input as bounded work slices, then runs the format's one-shot decode on the last slice.
+/// @see [`admit_buffered_natural_decode`]
+struct BufferedNaturalDecodeCursor<T> {
+    bytes: Option<Vec<u8>>,
+    decode: fn(&[u8]) -> Result<T, MediaError>,
+    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    maximum_work_units_per_step: usize,
+    offset: usize,
+    complete: bool,
+    closing: bool,
+}
+
+impl<T> BufferedNaturalDecodeCursor<T> {
+    fn progress(&self, length: usize) -> NaturalFileDecodeProgress {
+        NaturalFileDecodeProgress { consumed_input_bytes: self.offset, decoded_items: usize::from(self.complete), owned_output_bytes: if self.complete { length } else { 0 }, completed_work_units: self.offset as u64 }
+    }
+}
+
+impl<T: Send + 'static> NaturalFileDecodeCursor<T> for BufferedNaturalDecodeCursor<T> {
+    fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<NaturalFileDecodeStep<T>, MediaError> {
+        let refusal = |reason: &str| MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into());
+        if self.closing || self.complete { return Err(refusal("buffered natural decoder is no longer advanceable")); }
+        let length = self.bytes.as_ref().ok_or_else(|| refusal("buffered natural decoder lost its source"))?.len();
+        let units = (length - self.offset).min(self.maximum_work_units_per_step).min(usize::try_from(context.fuel_remaining()).unwrap_or(usize::MAX));
+        if units == 0 && self.offset < length { return Ok(NaturalFileDecodeStep::Yield); }
+        context.consume_fuel(units as u64);
+        self.offset += units;
+        if self.offset < length { return Ok(NaturalFileDecodeStep::Progress(self.progress(length))); }
+        let bytes = self.bytes.as_deref().ok_or_else(|| refusal("buffered natural decoder lost its source"))?;
+        let snapshot = (self.decode)(bytes)?;
+        self.complete = true;
+        Ok(NaturalFileDecodeStep::Complete { snapshot, progress: self.progress(length) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
+        if self.retirement.is_some() {
+            let body = effect.grant().maximum_copy_bytes;
+            let step = store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, body, effect))?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
+        }
+        if self.bytes.is_some() {
+            let progress = match semio_framework_value::retirement::admit_owned_retirement(&mut self.bytes, effect).result? {
+                Some((owner, progress)) => { self.retirement = Some(owner); progress }
+                None => Default::default(),
+            };
+            return Ok(PluginLifecycleStep::Progress(progress));
+        }
+        Ok(PluginLifecycleStep::Complete(Default::default()))
+    }
+
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(owner) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body); }
+        let held = self.bytes.is_some();
+        Ok(RetirementDemand { capacity_bytes: if held { semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>() } else { 0 }, depth: usize::from(held), ..Default::default() })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.bytes.is_none() && self.retirement.is_none()
+    }
+}
+
+/// 🧺️ Builds the buffered controlled owner for explicit cold tool construction.
+pub fn build_buffered_natural_decode<T: Send + 'static>(bytes: Vec<u8>, contract: semio_framework::ToolExecutionContract, decode: fn(&[u8]) -> Result<T, MediaError>) -> NaturalFileDecodeOwner<T> {
+    NaturalFileDecodeOwner::Controlled(Box::new(BufferedNaturalDecodeCursor { bytes: Some(bytes), decode, retirement: None, maximum_work_units_per_step: contract.max_work_units_per_step as usize, offset: 0, complete: false, closing: false }))
+}
+
+/// 🧺️ Moves the original bytes into a buffered controlled decoder once the scheduler funds its frame.
+pub fn admit_buffered_natural_decode<T: Send + 'static>(
+    bytes: &mut Option<Vec<u8>>, contract: semio_framework::ToolExecutionContract, decode: fn(&[u8]) -> Result<T, MediaError>,
+    receiving: &mut Option<NaturalFileDecodeOwner<T>>, context: &mut semio_framework_job::StepContext<'_>,
+) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    use semio_framework_value::ValueRefusalKind;
+    if receiving.is_some() {
+        if bytes.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "natural-file source and decoder both occupied").into()); }
+        return Ok(true);
+    }
+    if bytes.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "missing original natural-file bytes").into()); }
+    let capacity = size_of::<BufferedNaturalDecodeCursor<T>>();
+    let copy = capacity + size_of::<NaturalFileDecodeOwner<T>>();
+    let grant = context.retained_grant();
+    if context.should_yield() || context.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 || copy > grant.maximum_copy_bytes || capacity > grant.maximum_capacity_bytes {
+        return Ok(false);
+    }
+    let original = bytes.take().expect("original natural-file source is present");
+    *receiving = Some(build_buffered_natural_decode(original, contract, decode));
+    context.consume_fuel(1);
+    context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, retained_capacity_bytes: capacity, ..Default::default() })?;
+    Ok(true)
 }
 
 /// 📄️ The ABI port reserved for an editor's mounted natural-file codec.

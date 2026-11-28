@@ -1,13 +1,16 @@
-"""🧯️ Independent Python oracle for host admission. Warden guard, warden danger and swap-out above the policy rate block a start. Under permitted host conditions, unknown memory allows a start. A unit that cannot fit its forecast waits until it fits or the idle wait bound expires."""
+"""🧯️ Independent Python oracle for host admission. Warden guard, warden danger and swap-out above the policy rate block a start. Under permitted host conditions, unknown memory allows a start. A unit that fits the parent grant while nothing runs starts whatever the host spare and the warden level are (only swap holds it). A unit that cannot fit its forecast waits until it fits or the idle wait bound expires."""
 import json, sys
 
 
 def decide(policy, case):
     available = case["availableBytes"]
-    if case["wardenLevel"] in ("guard", "danger"):
+    granted = case.get("granted", False) and case["runningUnits"] == 0
+    if not granted and case["wardenLevel"] in ("guard", "danger"):
         return {"admit": False, "reason": "warden"}
     if case.get("swapOutBytesPerSecond", 0) > policy["swapOutBytesPerSecond"]:
         return {"admit": False, "reason": "swap"}
+    if granted:
+        return {"admit": True, "reason": "granted"}
     if available is None:
         return {"admit": True, "reason": "unknown"}
     margin = case["totalBytes"] * policy["available"]["marginBasisPoints"] // 10000

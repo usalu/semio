@@ -261,7 +261,7 @@ test("component build retry drops an incompatible held graph before admitting a 
       onRetry: event => events.push(`retry:${event.attempt}`),
       sleep: async (_milliseconds, signal) => { expect(signal).toBe(cancellation.signal); },
     });
-    expect(graph).toEqual(expected);
+    expect<unknown>(graph).toEqual(expected);
     expect(events).toEqual(["acquire:1", "admit:1", "release:1", "retry:2", "acquire:2", "admit:2", "release:2"]);
   } finally { database.close(); }
 });

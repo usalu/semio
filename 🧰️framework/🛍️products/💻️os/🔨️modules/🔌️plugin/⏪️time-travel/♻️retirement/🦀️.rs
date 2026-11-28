@@ -120,7 +120,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semi
   if self.preview_cancelled&&self.preview_base.is_some(){return Ok(store::os_store::snapshot_read::original_snapshot_alias_retirement_demand::<P>());}
   if let Some(owner)=self.snapshot_close.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
   if self.snapshot_aliases.iter().any(Option::is_some){self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("derived snapshot retains its original missing issuers"))?;return {let mut d=store::os_store::snapshot_read::original_snapshot_alias_retirement_demand::<P>();d.depth+=1;Ok(d)};}
-  if self.snapshot_issuers.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+  if self.snapshot_issuers.is_some()&&self.preview_base.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.snapshot_issuer_close.iter().flatten().next(){return nested(owner.demands(body)?);}
   if let Some(owner)=self.retirements.back(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{nested(factory_ticket_demands(owner,body)?)};}
   if self.retirements.capacity()!=0&&!self.original_sources_close_pending(){return Ok(RetirementDemand{release_bytes:self.retirements.capacity().checked_mul(size_of::<Box<dyn store::ErasedSnapshotRetirement>>()).ok_or_else(||original_refusal("actor original queue capacity overflow"))?,depth:1,..Default::default()});}
@@ -152,7 +152,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semi
    let Some((owner,receipt))=store::os_store::snapshot_read::admit_original_snapshot_alias(slot,snapshots,child)?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};
    *self.snapshot_close=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)));
   }
-  if let Some((snapshots,mutations))=self.snapshot_issuers.take(){self.snapshot_issuer_close=[Some(FactoryAuthority::new(snapshots)),Some(FactoryAuthority::new(mutations))];return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})));}
+  if self.preview_base.is_none(){if let Some((snapshots,mutations))=self.snapshot_issuers.take(){self.snapshot_issuer_close=[Some(FactoryAuthority::new(snapshots)),Some(FactoryAuthority::new(mutations))];return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})));}}
   if let Some(index)=self.snapshot_issuer_close.iter().position(Option::is_some){let owner=self.snapshot_issuer_close[index].as_mut().unwrap();let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=store::os_store::snapshot_read::settle_close_poll(owner.step(body,&mut effect.nested(child)))?;if !step.progress().fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot issuer receipt exceeds original caller"))}if owner.terminal_is_empty(){drop(self.snapshot_issuer_close[index].take())}return Ok(Some(progress(step)));}
   if let Some(owner)=self.retirements.back_mut(){
    if owner.terminal_is_empty(){drop(self.retirements.pop_back());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})));}

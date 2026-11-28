@@ -33,7 +33,7 @@ test("the protected input journal tolerates bounded catalog contention and never
      expect(raw).toBeInstanceOf(Error);
      expect(Reflect.get(raw as Error,"resourceLeaseAdmission")?.operation).toBe("open");
     }else if(sample.lock==="journal"){
-     holder=await acquireResourceLease({...options,owner:"fixture-journal-writer",timeoutMs:0});
+     holder=await acquireResourceLease({...options,timeoutMs:0});
     }
     const scope={options:{},read:{port:{check:()=>checkResourceLeaseControl(control),recheck:async()=>{checkResourceLeaseControl(control);}}}};
     const held={scope,expected:{policy:{leaseDirectory:directory},backing:{identity}}};

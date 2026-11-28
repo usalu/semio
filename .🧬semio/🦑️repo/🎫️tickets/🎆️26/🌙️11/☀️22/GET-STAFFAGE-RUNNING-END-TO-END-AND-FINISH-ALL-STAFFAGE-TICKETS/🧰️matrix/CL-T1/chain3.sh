@@ -1,0 +1,3 @@
+#!/bin/zsh
+# ⛓️ `chain2.sh` for a tree whose GLB stays above 8 MiB although its authored solids are reduced as far as the silhouette allows: the size is measured and recorded in the light proof and does not keep the triangle cure from being written (`GLB_GATE=0`). chain3.sh <id>…
+GLB_GATE=0 zsh "${0:A:h}/chain2.sh" "$@"

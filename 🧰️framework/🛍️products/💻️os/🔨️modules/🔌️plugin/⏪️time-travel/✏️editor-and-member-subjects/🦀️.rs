@@ -25,7 +25,7 @@ pub struct TimeTravelEditor {
 
 impl TimeTravelEditor {
     /// 🧯️ Stands in for a payload schema that compiles no validator, for the fail-closed law.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn refuse_validator(&mut self, reason: &str) {
         self.validator = Err(reason.to_string());
     }

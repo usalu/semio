@@ -27,7 +27,7 @@ test("Cold request sizes are clamped to a share of the room above the floor and 
 });
 
 test("Swap stops equal the Python oracle on every host size and never fire on swap that is merely occupied",()=>{
- for(const row of fixture.swaps)expect(hostSwapStopV1(policy,row.host as Pick<HostSampleV1,"totalMegabytes"|"availableMegabytes"|"swapUsedMegabytes"|"swapOutMegabytesPerSecond">)??null,row.name).toBe(row.expect);
+ for(const row of fixture.swaps)expect<unknown>(hostSwapStopV1(policy,row.host as Pick<HostSampleV1,"totalMegabytes"|"availableMegabytes"|"swapUsedMegabytes"|"swapOutMegabytesPerSecond">)??null,row.name).toBe(row.expect);
  const reached=new Set(fixture.swaps.map(row=>row.expect));expect(reached.has("swap")&&reached.has("swap-activity")&&reached.has(null),"vectors reach every verdict").toBe(true);
  expect(fixture.swaps.filter(row=>row.name.includes("idle with old swap")).every(row=>row.expect===null)).toBe(true);
 });
@@ -37,6 +37,7 @@ test("A coordinator that always carries 20 GB of swap admits while its memory is
  const verdict=(over:Partial<HostSampleV1>)=>evaluateHostCapacityV1(policy,sample({swapUsedMegabytes:20352,...over}),[],waiter,1_800_000_000_000).decisions[0]!;
  expect(verdict({availableMegabytes:15227,swapOutMegabytesPerSecond:30})).toMatchObject({verdict:"admit"});
  expect(verdict({availableMegabytes:15227,swapOutMegabytesPerSecond:0})).toMatchObject({verdict:"admit"});
- expect(verdict({availableMegabytes:4000,swapOutMegabytesPerSecond:30})).toMatchObject({verdict:"wait",reason:"swap"});
+ expect(verdict({availableMegabytes:4000,swapOutMegabytesPerSecond:30}),"paging of a few MB/s per GB is not worked swap").not.toMatchObject({reason:"swap"});
+ expect(verdict({availableMegabytes:4000,swapOutMegabytesPerSecond:60})).toMatchObject({verdict:"wait",reason:"swap"});
  expect(verdict({availableMegabytes:15227,swapOutMegabytesPerSecond:400})).toMatchObject({verdict:"wait",reason:"swap-activity"});
 });

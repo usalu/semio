@@ -37,7 +37,7 @@ test("a lockfile-only cargo invocation asks for no capacity, every other cargo o
 
 test("a lockfile-only cargo invocation passes the capacity door untouched: no grant, no cargo-orchestration reservation, no disk admission, the body runs with the original arguments",async()=>{
  for(const args of [vectors[0]!,vectors[1]!]){
-  const written:string[]=[],granted=await withBuildCapacityV1(args,{},async value=>value,{write:line=>written.push(line),disk:{partition:()=>{throw new Error("[DEBUG] disk admission must not run");}}});
+  const written:string[]=[],granted=await withBuildCapacityV1(args,{},async value=>value,{write:line=>written.push(line),disk:{partition:()=>{throw new Error("disk admission must not run");}}});
   expect(granted.handle).toBeUndefined();
   expect(granted.args).toEqual(args);
   expect(written).toEqual([]);

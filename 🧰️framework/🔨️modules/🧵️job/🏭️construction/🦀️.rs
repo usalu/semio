@@ -181,6 +181,11 @@ pub fn original_construction_reserve<O>(demand:OriginalConstructionDemand,work:u
  let work=work.checked_add(4).ok_or_else(||ValueError::invariant("construction work quote overflow"))?;
  Ok((OriginalConstructionDemand{items,copy_bytes:copy,..demand},work))
 }
+/// 🪙️ Quotes the smallest single-turn grant one construction of `demand` makes progress under: its same-turn reserve plus the control rows of the receiving scope that runs it (the Source outcome placement and two more). A turn whose grant is below it yields without spending, and a host whose largest grant is below it can never run the construction.
+pub fn original_construction_step_floor<O>(demand:OriginalConstructionDemand)->Result<RetainedCloneGrant,ValueError>{
+ let(reserve,_)=original_construction_reserve::<O>(demand,1)?;let items=super::OriginalNativeReceivingOutcome::<()>::placement().copied_items.checked_add(2).and_then(|n|reserve.items.checked_add(n)).ok_or_else(||ValueError::invariant("construction step floor overflow"))?;
+ Ok(RetainedCloneGrant{maximum_items:items,..construction_grant(reserve)})
+}
 /// 🎟️ The actual caller retains candidate, allocation frame, complete native child and Source outcome.
 pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut OriginalConstructionAdmission,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<OriginalConstructionStatus,OriginalTurnFailure>{
  admission.validate(context)?;

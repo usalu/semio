@@ -140,6 +140,18 @@ impl ArtifactEditor for SourcingCurationApp {
         crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
+    /// 🧺️ The curation JSON parser needs its whole input, so the controlled decoder charges the bytes as bounded slices before its one-shot decode.
+    fn build_natural_file_decode_owner(bytes: Vec<u8>, contract: semio_plugin::ToolExecutionContract) -> Result<semio_plugin::NaturalFileDecodeOwner<CurationSnapshot>, semio_plugin::MediaError> {
+        Ok(semio_plugin::build_buffered_natural_decode(bytes, contract, <Self as ArtifactEditor>::decode_natural_file))
+    }
+
+    fn admit_natural_file_decode_owner(
+        bytes: &mut Option<Vec<u8>>, contract: semio_plugin::ToolExecutionContract,
+        receiving: &mut Option<semio_plugin::NaturalFileDecodeOwner<CurationSnapshot>>, cx: &mut semio_plugin::StepContext<'_>,
+    ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        semio_plugin::admit_buffered_natural_decode(bytes, contract, <Self as ArtifactEditor>::decode_natural_file, receiving, cx)
+    }
+
     fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}

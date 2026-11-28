@@ -1,6 +1,6 @@
 # 📦️ Handoff: Staffage Multiview (Top, Front, Side)
 
-Status: CLOSING DRAFT 2026-11-27. Not closed. One FAIL cell is OPEN (section 3). Every number below is taken from the sources named in the section; nothing is claimed beyond them.
+Status: CLOSING DRAFT 2026-11-27. Not closed. The one FAIL cell of the full matrix is cured (section 3). Every number below is taken from the sources named in the section; nothing is claimed beyond them.
 
 Ticket (T): `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️02/STAFFAGE-MULTIVIEW-TOP-FRONT-SIDE-COVERAGE`.
 Library (L): `🎓️teaching/🏛️architecture/🧍️staffage`.
@@ -77,7 +77,7 @@ Viewpoints: elevation, front, plan.
 
 Modes (7): dark-line, dark-solid, light-line, light-solid, thermal, forces, moments.
 
-## 3. OPEN: the one failing cell
+## 3. CURED: the one failing cell
 
 | Field | Value |
 |---|---|
@@ -88,9 +88,9 @@ Modes (7): dark-line, dark-solid, light-line, light-solid, thermal, forces, mome
 | Check | `language-geometry`, count 1 |
 | Pose | `in-use` |
 | Message | "the de drawing has other shape geometry than the English one" |
-| Status | **OPEN** |
+| Status | **CURED** (CL-CH, 2026-11-27) |
 
-Owner: lane CL-CH. Its report `U/🗑️generated/closing/closing-CL-CH.md` does not exist yet. The sources do not state a cause or a re-run of this cell. The D53 rule (section labels must match across languages) is in place; whether it bears on this cell is not stated in the sources.
+Owner: lane CL-CH, report `U/closing-CL-CH.md` (FINAL), `U` = `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS`. The current file does not reproduce the cell, even with the old raw comparison. The demonstrated language-dependent mechanism is `Canvas.finish` translating all paths by the label extent; `shapeGeometry` in `🧪️tests/🔭️multiview-coverage/🧰️.ts` now compares model-space coordinates relative to `metadata.origin` (ids, order, ops and every coordinate still compared, tolerance 1e-9 m), with a regression test in `🧪️tests/🎨️view-synchrony`. Proof: matrix of the asset 252 ok, 0 fail in en and de. Caveat: the root cause of the single original record is not proven.
 
 ## 4. Proof sheets
 
@@ -229,12 +229,12 @@ Superseded lines, not counted: the first `sil-b` (exit 143, killed, no JSON, 09:
 
 Check CLI: the 12:31 run recorded `STEP check exit 1`. The per-category check runs (`check-<category>`, 16:05 and 17:27) are all exit 0.
 
-Outside the multiview scope, for the record: `🧊️model-catalog` is not green in the latest log (shards 00 to 11 exit 1, 5 to 11 failed each in the 19:16 chain). The earlier non-green lines of other suites have later rerun lines that are green.
+Outside the multiview scope, for the record: `🧊️model-catalog` was not green in the 19:16 chain (shards 00 to 11 exit 1); closing round 2 in ticket U cures it, final pass in `U/🗑️generated/closing/final/`. The earlier non-green lines of other suites have later rerun lines that are green.
 
 ## 8. Limits of this draft
 
 - The matrix duration in the log (33,958 s from 18:45:37) and the file times (18:58) are not reconciled by the sources.
-- The failing cell has no recorded cause and no re-run; it stays OPEN until CL-CH reports.
+- The failing cell was not reproduced; the cure is in the check (section 3).
 - The proof sheets were counted, not opened.
 - D31 and several landing statements in section 5 rest on the last source that mentions them; they are not checked here.
 - No test was run for this draft.

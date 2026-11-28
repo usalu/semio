@@ -4,7 +4,16 @@
   "role": "plugin",
   "manifest": {
     "pluginId": "cad",
-    "label": "CAD",
+    "label": {
+      "native": {
+        "en": "CAD",
+        "de": "CAD"
+      },
+      "reuse": {
+        "en": "CAD",
+        "de": "CAD"
+      }
+    },
     "version": "0.1.0",
     "apps": [
       {

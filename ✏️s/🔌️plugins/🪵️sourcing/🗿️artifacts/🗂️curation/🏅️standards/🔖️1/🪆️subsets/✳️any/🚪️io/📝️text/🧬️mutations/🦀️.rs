@@ -119,4 +119,8 @@ pub use mutations_codec::*;
 
 dsl::original_ordinal_operation_receiving!(SourcingMutationDsl);
 dsl::original_mirrored_operation_receiving!(SourcingMutation, SourcingMutationDsl, sourcing_mutation_from_dsl);
-dsl::artifact_persisted_binary_operation!(SourcingMutation);
+impl store::os_store::ArtifactPersistedOperation for SourcingMutation {
+    fn install_persisted_receiving(wire: store::os_store::ArtifactOperationWire<Self>) -> store::os_store::ArtifactOperationWire<Self> {
+        wire.with_original_ordinal_binary_receiving()
+    }
+}

@@ -6,7 +6,7 @@ import type { ShardCoreModuleSeed } from "../🧊️core-modules/🟦️.ts";
 
 export type OutboundMessage =
   | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly originalAdmission: OriginalOperationAdmission; readonly moduleUrl: string; readonly component: string | null; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[]; readonly coreModules: readonly ShardCoreModuleSeed[] }
-  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget; readonly postedAtEpochMs?: number }
+  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget; readonly batched?: boolean; readonly postedAtEpochMs?: number }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly budget: ShardJobBudget }
   | { readonly kind: "cancelJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint }

@@ -13,14 +13,14 @@ const MiB=1048576,env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}
 const own=(container:number)=>"<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/i</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk"+container+"</string></dict></array></dict></array></dict></plist>";
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr);return row.stdout;};
 const oracle=(...args:string[])=>{
- const python=testPythonV1();if(python===undefined)throw Error("Python required by the kick oracle");
+ const python=testPythonV1();if(python===null)throw Error("Python required by the kick oracle");
  const result=spawnSync(python,["-I",join(import.meta.dir,"🐍️.py"),...args],{encoding:"utf8"});
  if(result.status!==0)throw result.error??Error(result.stderr);return result.stdout.trim();
 };
 const scripted=(script:typeof fixture.scripts[number],log:string[])=>{
  const seen=new Map<string,number>();
  return async(program:string,args:readonly string[])=>{
-  const key=basename(program)+" "+args[0],values=(script.outputs as Record<string,string[]>)[key]??[""],index=seen.get(key)??0;seen.set(key,index+1);
+  const key=basename(program)+" "+args[0],values=Object.entries(script.outputs).find(([name])=>name===key)?.[1]??[""],index=seen.get(key)??0;seen.set(key,index+1);
   log.push(basename(program)+" "+args.join(" "));return values[Math.min(index,values.length-1)]!;
  };
 };

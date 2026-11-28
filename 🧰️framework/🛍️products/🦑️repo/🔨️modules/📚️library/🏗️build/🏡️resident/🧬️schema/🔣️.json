@@ -281,6 +281,11 @@
      "type": "string",
      "pattern": "^[A-Za-z0-9_-]{8,32}$",
      "description": "The machine-wide capacity grant the requesting command runs under (its `SEMIO_HOST_CAPACITY_GRANT`): the slice load the plan needs is charged to that grant and never queues behind it."
+    },
+    "owner": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9:._-]{1,128}$",
+     "description": "The lease owner token the requesting command runs under (its `SEMIO_LEASE_OWNER`, for example the token of one try of a readiness stage): the script processes the service starts for this request carry it, so whoever reaps by that token stops its own work and never the work of another client. The service itself never carries a token, and a request without one starts processes without one. Requests with different owners never share a load."
     }
    }
   },
@@ -975,6 +980,10 @@
     "total": {
      "type": "integer",
      "minimum": 0
+    },
+    "observed": {
+     "const": true,
+     "description": "Present only on a slice frame whose read observed original work since the previous frame; a client counts a hand-over as progress only when it saw such a frame."
     },
     "message": {
      "$ref": "#/definitions/Text"
@@ -1767,6 +1776,8 @@
     "workspaceIdleMilliseconds": 600000,
     "idleShutdownMilliseconds": 1800000,
     "supersededGraceMilliseconds": 60000,
+    "supersededIdleConnectionMilliseconds": 300000,
+    "predecessorWaitMilliseconds": 60000,
     "handoverFlushMilliseconds": 2000,
     "reload": {
      "checkMilliseconds": 30000,
@@ -1774,6 +1785,8 @@
      "maximumDeferralMilliseconds": 600000,
      "replacementMilliseconds": 300000,
      "drainStallMilliseconds": 1800000,
+    "maximumGenerations": 2,
+    "generationDeferralMilliseconds": 1800000,
      "retryMilliseconds": 300000
     },
     "startTimeoutMilliseconds": 60000,
@@ -1784,6 +1797,13 @@
     "reattachMaximum": 5,
     "requestKeepaliveMilliseconds": 10000,
     "planSilenceMilliseconds": 120000,
+    "capabilityLifetimeMilliseconds": 600000,
+    "capabilityRetryMaximum": 4,
+    "quietProbeMilliseconds": 5000,
+    "quietHoldMilliseconds": 1800000,
+    "workerQuietNoticeMilliseconds": 30000,
+    "generationFollowMaximum": 64,
+    "generationFollowMilliseconds": 2000,
     "startPollMilliseconds": 50,
     "takeoverMilliseconds": 15000,
     "maximumInlinePlanTasks": 4096,
@@ -1818,13 +1838,14 @@
     "sliceRestartSettleMilliseconds": 900000,
     "sliceRestartProgressMilliseconds": 60000,
     "sliceRestartTotalMaximum": 120,
-    "sliceGrantGrowth": {"minimumMegabytes": 256, "headroomBasisPoints": 12500, "triggerBasisPoints": 9000, "maximum": 6, "cutsBeforeReadmit": 2},
+    "sliceGrantGrowth": {"waitMilliseconds": 90000, "cooldownMilliseconds": 120000, "standingBasisPoints": 11500, "minimumMegabytes": 256, "headroomBasisPoints": 12500, "triggerBasisPoints": 9000, "maximum": 6, "cutsBeforeReadmit": 2},
+    "sliceCoalesce": {"gatherMilliseconds": 1500, "maximumTasks": 16},
     "sliceRestartSameCauseMaximum": 3,
     "sliceRestartQuietMilliseconds": 60000,
     "sliceRestartQuietMaximumMilliseconds": 600000,
     "sliceRestartQuietTotalMaximumMilliseconds": 600000,
     "sliceRestartQuietFloorMilliseconds": 3000,
-    "serviceRevisionFiles": ["🏡️resident/🔌️ports/🧭️plan/🟨️.mjs", "🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🔕️quiet/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/", "🌡️host-capacity/", "🧠️memory/🦶️footprint/🟨️.mjs"],
+    "serviceRevisionFiles": ["🏡️resident/🔌️ports/🧭️plan/🟨️.mjs", "🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🔕️quiet/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/", "🌡️host-capacity/", "🧠️memory/🦶️footprint/🟨️.mjs"],
     "sliceHostElasticity": {
      "maximumMegabytes": 8192,
      "hostShareBasisPoints": 7500,
@@ -1990,6 +2011,9 @@
       "host-alive-identify": "The graph service is identifying the workspace graph ({seconds} s).",
       "host-alive-scope": "The graph service is checking which inputs this plan uses ({seconds} s).",
       "host-alive": "The graph service holds this request and is working on it ({seconds} s).",
+      "host-slice-owners-worker-quiet": "Reading the project graph slice ({seconds} s): the slice worker has reported nothing for {limit} s (held by the host, waiting for host capacity or handing over); the graph service is alive and keeps this plan.",
+      "host-service-quiet": "The graph service process lives but answers nothing for {seconds} s (a host that swaps stalls it); it is not lost, so the client keeps waiting ({held} s of at most {limit} s).",
+      "host-service-handover-follow": "The graph service of this code was replaced; the client follows the successor and keeps what the read finished (follow {count} of {limit}).",
       "host-silent": "The graph service sent nothing for {seconds} s.",
       "host-silent-before-welcome": "The client was still waiting for the service welcome.",
       "host-silent-before-acceptance": "The service welcomed the connection. The client was still waiting for acknowledgment of this plan request.",
@@ -2026,6 +2050,9 @@
       "shutdown": "The resident service is stopping.",
       "busy": "The resident service is busy ({inFlight} running, {queued} queued).",
       "capability": "The capability token is missing, forged or expired.",
+      "capability-missing": "The service capability token of this plan request was missing (the client sent none); the client asks again with a fresh handshake.",
+      "capability-forged": "The service capability token of this plan request was signed with another key than service {tag} holds (a service of another generation, or its key file was replaced); the client reads the key of this service again and asks again.",
+      "capability-expired": "The service capability token of this plan request had expired when the service read it (the service was too busy to read it within its lifetime); the client asks again with a fresh token.",
       "revoked": "This agent session was revoked.",
       "issue-agent": "service issue needs --agent <id> (letters, digits and . _ : - only, at most 64): a token belongs to one agent session.",
       "issue-ttl": "service issue needs --ttl between 1 and {maximum} seconds (default 3600).",
@@ -2064,6 +2091,8 @@
       "host-slice-reservation-wait": "Reading the project graph slice ({seconds} s): waiting for host capacity ({reason}); {active} active grants, {queued} queued requests; the gate reports {spare} MB available to this request above the {floor} MB floor; {requested} MB requested, minimum {minimum} MB, queued for {waited} s.",
       "host-slice-reservation-granted": "Reading the project graph slice ({seconds} s): host capacity granted {granted} MB for this slice ({requested} MB requested).",
       "host-slice-owners-restarted": "Reading the project graph slice ({seconds} s): the code on this machine changed under the slice worker (it ended with exit code {kind}), so it is started again with the current code in {limit} s; the replica has not settled for {used} of {budget} s (the wait ends the plan only when no worker lasts that long).",
+      "host-slice-owners-predecessor": "Reading the project graph slice ({seconds} s): waiting for the previous service generation (pid {kind}) to finish its {limit} running slice read of this machine; only one generation reads the graph at a time, and this read then continues from what that one stored.",
+      "host-slice-owners-killed": "Reading the project graph slice ({seconds} s): the slice worker was ended from outside (most likely the memory guard of the host) while it held {kind} MB, within the {limit} MB granted to it, so it is not too large; the work is cut smaller (step {used} of {budget}: fewer projects at once and smaller waves) and continues from the owners already inferred and the owner checks already completed.",
       "host-slice-owners-cut": "Reading the project graph slice ({seconds} s): the slice worker grew to {kind} MB, more than the {limit} MB a plan may take on this machine, so the work is cut smaller (step {used} of {budget}: fewer projects at once and smaller waves) and continues; projects already inferred are kept and nothing is repeated.",
       "host-slice-owners-recycled": "Reading the project graph slice ({seconds} s): the live heap of the slice worker reached {kind} MB, above the {limit} MB threshold, so the read continues in a fresh worker at the boundary between two passes (handover {used} of {budget}); what the read finished is kept on disk and is taken again from there.",
       "host-slice-owners-round": "Reading the project graph slice ({seconds} s): a new pass over the owners starts (round {used}): {kind} path(s) changed under the read, {budget} owner(s) forgotten, live heap {limit} MB (0 when not measured).",
@@ -2122,6 +2151,9 @@
       "host-alive-identify": "Der Graphdienst ermittelt die Identität des Workspace-Graphen ({seconds} s).",
       "host-alive-scope": "Der Graphdienst prüft die Eingaben dieses Plans ({seconds} s).",
       "host-alive": "Der Graphdienst hält diese Anfrage und arbeitet daran ({seconds} s).",
+      "host-slice-owners-worker-quiet": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker hat {limit} s lang nichts gemeldet (vom Host angehalten, wartet auf Host-Kapazität oder wird übergeben); der Graphdienst lebt und behält diesen Plan.",
+      "host-service-quiet": "Der Graphdienst-Prozess lebt, antwortet aber {seconds} s lang nichts (ein auslagernder Host hält ihn an); er ist nicht verloren, der Client wartet daher weiter ({held} s von höchstens {limit} s).",
+      "host-service-handover-follow": "Der Graphdienst dieses Codes wurde ersetzt; der Client folgt dem Nachfolger und behält, was das Lesen fertigte (Folge {count} von {limit}).",
       "host-silent": "Der Graphdienst hat {seconds} s lang nichts gesendet.",
       "host-silent-before-welcome": "Der Client wartete noch auf die Begrüßung des Dienstes.",
       "host-silent-before-acceptance": "Der Dienst hat die Verbindung begrüßt. Der Client wartete noch auf die Bestätigung dieser Plananfrage.",
@@ -2158,6 +2190,9 @@
       "shutdown": "Der residente Dienst wird beendet.",
       "busy": "Der residente Dienst ist ausgelastet ({inFlight} laufen, {queued} wartend).",
       "capability": "Die Berechtigung fehlt, ist gefälscht oder abgelaufen.",
+      "capability-missing": "Das Dienst-Berechtigungstoken dieser Plananfrage fehlte (der Client sandte keines); der Client fragt mit einem neuen Handshake erneut.",
+      "capability-forged": "Das Dienst-Berechtigungstoken dieser Plananfrage war mit einem anderen Schlüssel signiert, als ihn Dienst {tag} hält (ein Dienst einer anderen Generation, oder seine Schlüsseldatei wurde ersetzt); der Client liest den Schlüssel dieses Dienstes neu und fragt erneut.",
+      "capability-expired": "Das Dienst-Berechtigungstoken dieser Plananfrage war abgelaufen, als der Dienst es las (der Dienst war zu beschäftigt, um es innerhalb seiner Lebensdauer zu lesen); der Client fragt mit einem neuen Token erneut.",
       "revoked": "Diese Agenten-Sitzung wurde widerrufen.",
       "issue-agent": "service issue braucht --agent <id> (nur Buchstaben, Ziffern und . _ : -, höchstens 64): eine Berechtigung gehört zu genau einer Agenten-Sitzung.",
       "issue-ttl": "service issue braucht --ttl zwischen 1 und {maximum} Sekunden (Standard 3600).",
@@ -2196,6 +2231,8 @@
       "host-slice-reservation-wait": "Lese den Projektgraph-Ausschnitt ({seconds} s): warte auf Rechnerkapazität ({reason}); {active} aktive Reservierungen, {queued} wartende Anfragen; laut Kapazitätsprüfung stehen für diese Anfrage {spare} MB über der Untergrenze von {floor} MB zur Verfügung; {requested} MB angefragt, mindestens {minimum} MB, seit {waited} s in der Warteschlange.",
       "host-slice-reservation-granted": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Rechner hat {granted} MB für diesen Ausschnitt reserviert ({requested} MB angefragt).",
       "host-slice-owners-restarted": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Code dieses Rechners hat sich unter dem Ausschnitt-Worker geändert (Exit-Code {kind}); er wird in {limit} s mit dem aktuellen Code neu gestartet; das Replikat ist seit {used} von {budget} s nicht zur Ruhe gekommen (das Warten beendet den Plan erst, wenn kein Worker so lange durchhält).",
+      "host-slice-owners-predecessor": "Lese den Projektgraph-Ausschnitt ({seconds} s): warte, bis die vorherige Dienstgeneration (pid {kind}) ihre {limit} laufenden Ausschnitt-Lesevorgänge dieses Rechners beendet hat; es liest immer nur eine Generation den Graphen, und dieses Lesen setzt danach mit dem fort, was jene gespeichert hat.",
+      "host-slice-owners-killed": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker wurde von außen beendet (vermutlich vom Speicherwächter des Rechners), als er {kind} MB hielt, innerhalb der ihm zugesagten {limit} MB, er ist also nicht zu groß; die Arbeit wird kleiner geschnitten (Stufe {used} von {budget}: weniger Projekte gleichzeitig und kleinere Wellen) und läuft mit den bereits abgeleiteten Projekten und den bereits abgeschlossenen Projektprüfungen weiter.",
       "host-slice-owners-cut": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker ist auf {kind} MB gewachsen, mehr als die {limit} MB, die ein Plan auf diesem Rechner nehmen darf; die Arbeit wird daher kleiner geschnitten (Stufe {used} von {budget}: weniger Projekte gleichzeitig und kleinere Wellen) und läuft weiter; bereits abgeleitete Projekte bleiben erhalten, nichts wird wiederholt.",
       "host-slice-owners-recycled": "Lese den Projektgraph-Ausschnitt ({seconds} s): der lebende Heap des Ausschnitt-Workers erreichte {kind} MB, über der Schwelle von {limit} MB; das Lesen läuft daher an der Grenze zwischen zwei Durchgängen in einem frischen Worker weiter (Übergabe {used} von {budget}); was das Lesen fertigte, bleibt auf der Platte und wird von dort wieder genommen.",
       "host-slice-owners-round": "Lese den Projektgraph-Ausschnitt ({seconds} s): ein neuer Durchgang über die Eigentümer beginnt (Runde {used}): {kind} Pfad(e) unter dem Lesen geändert, {budget} Eigentümer vergessen, lebender Heap {limit} MB (0, wenn nicht gemessen).",

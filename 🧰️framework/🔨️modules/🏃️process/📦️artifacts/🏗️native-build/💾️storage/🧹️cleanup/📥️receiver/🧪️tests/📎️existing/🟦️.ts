@@ -40,6 +40,7 @@ test.skipIf(process.platform!=="darwin")("existing Native maintenance keeps the 
    expect(readFileSync(join(root,"owned"),"utf8")).toBe(fixture.witness);
    const journal=readFileSync(join(root,"storage-events.jsonl"));
    const exact=await reopened.withExclusiveMaintenance({version:1,wait:false},async(port,custody)=>{
+    if(custody.kind!=="kernel-ex")throw Error("Actual kernel EX custody required");
     const charge=await recoverNativeStorageReservationV1({policy,control:custody.control,port,id:allocationId});
     expect(charge.allocation.id).toBe(allocationId);
     return captureNativePlatformRecomputableRetirementV1(reopened,custody,charge,custody.control);
@@ -64,7 +65,7 @@ if(process.platform==="darwin")for(const sample of fixture.negative)registerIsol
   const control=createIssuedResourceControlV1(original,"cache:existing-refusal",40000);
   const options={directory,leaseDirectory,filesystemBytes:fixture.filesystemBytes,maximumPhysicalBytes:fixture.maximumPhysicalBytes,control};
   let inode:number|undefined;
-  if(sample.kind==="busy")holder=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+directory,mode:"exclusive",owner:"fixture-exclusive-holder",control,signal:control.signal,timeoutMs:0});
+  if(sample.kind==="busy")holder=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+directory,mode:"exclusive",control,signal:control.signal,timeoutMs:0});
   if(sample.kind==="substituted"){
    const born=await openNativePlatformStorageV1(options);await born.close();
    expect(spawnSync("repo",["tools","exec","--light","hdiutil","--","detach",root],{encoding:"utf8"}).status).toBe(0);
@@ -74,7 +75,7 @@ if(process.platform==="darwin")for(const sample of fixture.negative)registerIsol
   try{
    const opened=await openExistingNativePlatformImageV1(options,"maintenance");await opened.close();
   }catch(error){
-   if(sample.kind==="substituted"){expect(lstatSync(file).ino).toBe(inode);expect(lstatSync(file).dev).toBe(lstatSync(root).dev);}
+   if(sample.kind==="substituted"){expect(lstatSync(file).ino).toBe(inode!);expect(lstatSync(file).dev).toBe(lstatSync(root).dev);}
    else expect(existsSync(directory)).toBe(false);
    checkpoint();throw error;
   }

@@ -24,7 +24,7 @@ test("registered Cargo tool pins resolve the same normative archive data",()=>{
 
 import{resolvePinV1,toolRowV1}from"../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts";
 test("tool setup reads the same pin and uses verified native provisioning",()=>{
- for(const row of fixture.tools){const entry=toolRowV1(row.id);expect(resolvePinV1(entry,{root:process.cwd(),read:path=>readFileSync(path,"utf8"),resolvePackage:()=>{throw Error("No external package pin");},environment:{SEMIO_LANGUAGE:"en"}})).toBe(row.version);expect(entry.pin).toEqual({format:"json",file:"🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",pointer:"/cargo/"+row.id+"/version"});expect(entry.setup).toEqual({kind:"native",tool:row.id});expect(entry.locate).toEqual([{kind:"provisioned",family:"native",tool:row.id,executable:row.id}]);}
+ for(const row of fixture.tools){const entry=toolRowV1(row.id);expect(resolvePinV1(entry,{root:process.cwd(),read:path=>readFileSync(path,"utf8"),resolvePackage:()=>{throw Error("No external package pin");},environment:{SEMIO_LANGUAGE:"en"}})).toBe(row.version);expect(entry.pin).toEqual({format:"json",file:"🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",pointer:"/cargo/"+row.id+"/version"});expect<unknown>(entry.setup).toEqual({kind:"native",tool:row.id});expect<unknown>(entry.locate).toEqual([{kind:"provisioned",family:"native",tool:row.id,executable:row.id}]);}
 });
 
 test("registered Cargo tools name actual owned adapter and installer Sources",async()=>{

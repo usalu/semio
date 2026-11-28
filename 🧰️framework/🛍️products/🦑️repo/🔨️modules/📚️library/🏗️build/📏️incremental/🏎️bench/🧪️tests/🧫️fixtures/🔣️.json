@@ -22168,7 +22168,7 @@
     },
     {
      "at": 2100,
-     "line": "[capacity] waiting 2s for run: an earlier request is still waiting"
+     "line": "[capacity] waiting 2s for run: an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first"
     },
     {
      "at": 3000,

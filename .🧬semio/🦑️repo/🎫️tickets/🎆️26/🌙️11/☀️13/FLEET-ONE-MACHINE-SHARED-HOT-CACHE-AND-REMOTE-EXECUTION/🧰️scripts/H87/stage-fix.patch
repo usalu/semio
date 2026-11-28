@@ -1,0 +1,36 @@
+--- ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 14:37:01
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H87/stage-fix/tree/./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 14:37:07
+@@ -30,9 +30,9 @@
+ /** 🎚️ Whether build script runs are shared: switched on by the launcher, and only where an executable text file can stand in for a binary. */
+ export function buildScriptsEnabledV1(environment:Environment,platform:NodeJS.Platform=process.platform):boolean{return environment.SEMIO_UNIT_CACHE_BUILD_SCRIPTS==="on"&&(policy.buildScript.platforms as readonly string[]).includes(platform);}
+ 
+-/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: a POSIX `sh` script, because it must look at the descriptors Cargo handed down BEFORE the runtime opens descriptors of its own ({@link jobserverProbeShellV1}), then it starts this module, which consults the cache and otherwise runs the real executable beside it with the pool of Cargo's job tokens handed on. */
++/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: a POSIX `sh` script, because it must look at the descriptors Cargo handed down BEFORE the runtime opens descriptors of its own ({@link jobserverProbeShellV1}), then it starts this module (the real executable directly when the module is gone: a retired sealed snapshot must never fail a cached build script), which consults the cache and otherwise runs the real executable beside it with the pool of Cargo's job tokens handed on. */
+ export function shimSourceV1(real:string,runtime:string=process.execPath):string{
+- return["#!/bin/sh",`# ${policy.buildScript.shimMarker}`,...jobserverProbeShellV1(),`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(module)} ${shellQuoteV1(real)} "$@"`,""].join("\n");
++ return["#!/bin/sh",`# ${policy.buildScript.shimMarker}`,...jobserverProbeShellV1(),`[ -f ${shellQuoteV1(module)} ] || exec ${shellQuoteV1(real)} "$@"`,`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(module)} ${shellQuoteV1(real)} "$@"`,""].join("\n");
+ }
+ 
+ /** 🔁️ Replaces the compiled build script `artifact` by its stand-in; the real executable moves to `<artifact>.real`. Idempotent. */
+--- /dev/null	2026-11-27 15:55:54
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H87/stage-fix/tree/./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪦️retired-module/🟦️.ts	2026-11-27 15:53:49
+@@ -0,0 +1,19 @@
++/** 🪦️ Contract: a cached build script stand-in whose sealed module was retired runs the real executable directly instead of failing with `Module not found` (m03, serde_core, 11/27). */
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {chmodSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {shimSourceV1} from "../../🏗️buildscript/🟦️.ts";
++
++test("a stand-in whose module is gone runs the real build script with the same arguments",()=>{
++ const directory=mkdtempSync(join(tmpdir(),"semio-retired-module-"));
++ try{
++  const real=join(directory,"build_script_build.real"),shim=join(directory,"build_script_build");
++  writeFileSync(real,'#!/bin/sh\necho "real:$1:$2"\n');chmodSync(real,0o755);
++  const text=shimSourceV1(real,process.execPath),guard=text.split("\n").find(line=>line.startsWith("[ -f "))!,module=/^\[ -f (\S+) \]/u.exec(guard)![1]!;writeFileSync(shim,text.replace(module,"'"+join(directory,"retired","🟦️.ts")+"'").replace(module,"'"+join(directory,"retired","🟦️.ts")+"'"));chmodSync(shim,0o755);
++  const run=spawnSync(shim,["a","b"],{encoding:"utf8"});
++  expect(run.status,run.stderr).toBe(0);expect(run.stdout.trim()).toBe("real:a:b");
++  expect(shimSourceV1(real,"/x").split("\n").some(line=>line.startsWith("[ -f "))).toBe(true);
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});

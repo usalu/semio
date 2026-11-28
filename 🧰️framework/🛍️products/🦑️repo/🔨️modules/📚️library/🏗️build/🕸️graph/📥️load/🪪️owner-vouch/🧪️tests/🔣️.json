@@ -1,0 +1,13 @@
+{
+  "owners": {
+    "a": [["file","pkg/a/one.json"],["file","pkg/a/two.json"],["readdir","pkg/a"],["env","HOME"]],
+    "b": [["file","pkg/b/one.json"],["stat","pkg/b/two.json"]],
+    "c": [["file","pkg/c/one.json"]]
+  },
+  "scenarios": [
+    {"name":"nothing changed","changes":[],"expected":{"a":[true,true,true,false],"b":[true,true],"c":[true]}},
+    {"name":"a modified file","changes":[["m",0,"pkg/a/two.json"]],"expected":{"a":[true,false,false,false],"b":[true,true],"c":[true]}},
+    {"name":"an added file in a directory touches its listing and the directory subtree rows","changes":[["a",0,"pkg/a/three.json"],["m",1,"pkg/a"]],"expected":{"a":[true,true,false,false],"b":[true,true],"c":[true]}},
+    {"name":"a removed directory above every row of an owner","changes":[["r",1,"pkg/b"]],"expected":{"a":[true,true,true,false],"b":[false,false],"c":[true]}}
+  ]
+}

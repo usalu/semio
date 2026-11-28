@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "id": "process",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "leases.yielding-requires-exclusive": {
+      "en": "Yielding lease tickets require exclusive access",
+      "de": "Nachgebende Lease-Tickets erfordern exklusiven Zugriff"
+    },
+    "routing.forwarded-request-invocation-required": {
+      "en": "The original forwarded request needs its script process invocation",
+      "de": "Die ursprüngliche weitergeleitete Anfrage braucht ihren Skriptprozess-Aufruf"
+    },
+    "routing.renewable-control-needs-nonrenewable-maximum": {
+      "en": "A renewable original control requires its nonrenewable maximum as the requested budget",
+      "de": "Eine erneuerbare ursprüngliche Steuerung verlangt ihr nicht erneuerbares Maximum als angefordertes Budget"
+    },
+    "routing.stalled-worker": {
+      "en": "Script work stalled for {minutes} minutes without progress and was cancelled; the service keeps running (retry: {retry})",
+      "de": "Skriptarbeit stand {minutes} Minuten ohne Fortschritt still und wurde abgebrochen; der Dienst läuft weiter (Wiederholung: {retry})"
+    },
+    "script.suite-sources-missing": {
+      "en": "Test suite sources are missing (bun test would silently skip them): {missing}",
+      "de": "Quellen der Testsuite fehlen (bun test würde sie stillschweigend überspringen): {missing}"
+    },
+    "script.suite-launcher-missing": {
+      "en": "Test suite launcher is not provided by the route: {launcher}",
+      "de": "Der Starter der Testsuite wird von der Route nicht bereitgestellt: {launcher}"
+    },
+    "script.suite-unknown": {
+      "en": "Unknown test suite {suite}; the route table declares: {known}",
+      "de": "Unbekannte Testsuite {suite}; die Routentabelle deklariert: {known}"
+    },
+    "script.suite-files-failed": {
+      "en": "Test suite {suite} failed in {count} test file(s): {files}",
+      "de": "Die Testsuite {suite} ist in {count} Testdatei(en) fehlgeschlagen: {files}"
+    },
+    "script.suite-platform-skipped": {
+      "en": "SKIPPED, not passed: test suite {suite} is declared for {platforms} and this host is {host}; none of its {count} test file(s) ran.",
+      "de": "ÜBERSPRUNGEN, nicht bestanden: Die Testsuite {suite} ist für {platforms} deklariert und dieser Rechner ist {host}; keine ihrer {count} Testdatei(en) wurde ausgeführt."
+    },
+    "testing.extracted-function-required": {
+      "en": "Extracted function required: {name}",
+      "de": "Extrahierte Funktion erforderlich: {name}"
+    },
+    "testing.product-function-required": {
+      "en": "Product function required: {name} in {module}",
+      "de": "Produktfunktion erforderlich: {name} in {module}"
+    },
+    "testing.product-import-required": {
+      "en": "Product import required: {imported} of {specifier} for {name} in {module}",
+      "de": "Produkt-Import erforderlich: {imported} aus {specifier} für {name} in {module}"
+    },
+    "leases.invalid-resource": {
+      "en": "Invalid lease resource",
+      "de": "Ungültige Lease-Ressource"
+    },
+    "leases.invalid-access-mode": {
+      "en": "Invalid resource access mode",
+      "de": "Ungültiger Zugriffsmodus der Ressource"
+    },
+    "leases.invalid-timeout": {
+      "en": "Invalid resource lease timeout",
+      "de": "Ungültiges Zeitlimit der Ressourcen-Lease"
+    },
+    "leases.admission-resource-reserved": {
+      "en": "Directory admission resource is reserved",
+      "de": "Die Ressource der Verzeichnis-Zulassung ist reserviert"
+    },
+    "leases.admission-timeout": {
+      "en": "The directory admission of {directory} stayed taken by another process for {seconds} s while waiting for {resource}; the directory holds {entries} entries ({claims} queue claims). Longest silent registered processes: {holders}. Nothing was changed; try again, the waiter reclaims abandoned tickets step by step.",
+      "de": "Die Verzeichniszulassung von {directory} blieb {seconds} s lang von einem anderen Prozess belegt, während auf {resource} gewartet wurde; das Verzeichnis enthält {entries} Einträge ({claims} Warteschlangen-Anmeldungen). Am längsten stille registrierte Prozesse: {holders}. Es wurde nichts verändert; versuche es erneut, der Wartende räumt verlassene Tickets schrittweise ab."
+    },
+    "leases.invalid-queue-owner": {
+      "en": "Invalid lease queue owner",
+      "de": "Ungültiger Eigentümer der Lease-Warteschlange"
+    },
+    "execution.renewable-command-needs-ceiling": {
+      "en": "A renewable repository command requires a positive ceiling",
+      "de": "Ein erneuerbarer Repository-Befehl verlangt eine positive Obergrenze"
+    },
+    "execution.child-failed": {
+      "en": "{label} failed with exit code {status}",
+      "de": "{label} ist mit Exitcode {status} fehlgeschlagen"
+    },
+    "execution.child-killed": {
+      "en": "{label} was killed by {signal}",
+      "de": "{label} wurde durch {signal} beendet"
+    },
+    "testing.route-table-invalid": {
+      "en": "The process test route table is invalid: it must satisfy its closed schema",
+      "de": "Die Routentabelle der Prozess-Tests ist ungültig: sie muss ihrem geschlossenen Schema genügen"
+    },
+    "testing.route-suite-duplicated": {
+      "en": "The process test route table repeats a suite identifier",
+      "de": "Die Routentabelle der Prozess-Tests wiederholt eine Suite-Kennung"
+    },
+    "testing.platform-policy-invalid": {
+      "en": "The platform evidence rules of the test suites are invalid: they must satisfy their closed schema and every pattern must be a regular expression",
+      "de": "Die Plattform-Nachweisregeln der Testsuites sind ungültig: sie müssen ihrem geschlossenen Schema genügen und jedes Muster muss ein regulärer Ausdruck sein"
+    },
+    "capacity.empty-process-table": {
+      "en": "The process table is empty",
+      "de": "Die Prozesstabelle ist leer"
+    },
+    "nativeBuild.metadata-incomplete": {
+      "en": "Resolved Cargo metadata with a workspace root and packages required",
+      "de": "Aufgelöste Cargo-Metadaten mit Workspace-Wurzel und Paketen sind erforderlich"
+    },
+    "nativeBuild.writer-custody-not-entered": {
+      "en": "Offered Cargo compiler writer custody was never entered",
+      "de": "Die angebotene Schreiber-Obhut des Cargo-Compilers wurde nie betreten"
+    },
+    "publication.lease-directory-required": {
+      "en": "Explicit absolute publication lease directory required",
+      "de": "Ein ausdrücklich angegebenes absolutes Lease-Verzeichnis für die Veröffentlichung ist erforderlich"
+    },
+    "typescript.check-cancelled": {
+      "en": "TypeScript check cancelled",
+      "de": "TypeScript-Prüfung abgebrochen"
+    },
+    "typescript.check-switches-not-admitted": {
+      "en": "TypeScript check switches not admitted by the engine: {switches}",
+      "de": "Die Engine lässt diese TypeScript-Prüfschalter nicht zu: {switches}"
+    },
+    "typescript.retained-programs-range": {
+      "en": "Retained TypeScript programs must be an integer from 1 to {maximum}",
+      "de": "Die Zahl der behaltenen TypeScript-Programme muss eine ganze Zahl von 1 bis {maximum} sein"
+    },
+    "cargoTiming.process-id-required": {
+      "en": "Actual process id required",
+      "de": "Eine tatsächliche Prozess-ID ist erforderlich"
+    },
+    "agentSessions.process-snapshot-empty": {
+      "en": "Empty process snapshot",
+      "de": "Leeres Prozessabbild"
+    },
+    "agentSessions.process-snapshot-refused": {
+      "en": "Process snapshot refused",
+      "de": "Prozessabbild abgelehnt"
+    },
+    "testing.birth-single": {
+      "en": "One test process receives one birth: {owner} declares another envelope than the one {declared} declared",
+      "de": "Ein Testprozess erhält genau eine Geburt: {owner} deklariert eine andere Hülle als die von {declared} deklarierte"
+    },
+    "testing.capabilities-differ": {
+      "en": "Inherited build test capabilities differ from the declared envelope of {owner}",
+      "de": "Die geerbten Fähigkeiten des Build-Tests weichen von der deklarierten Hülle von {owner} ab"
+    },
+    "testing.command-budget-invalid": {
+      "en": "Invalid test command budget",
+      "de": "Ungültiges Budget des Testbefehls"
+    },
+    "testing.contention-policy-required": {
+      "en": "Closed test budget contention policy required",
+      "de": "Eine geschlossene Konkurrenzrichtlinie des Testbudgets ist erforderlich"
+    },
+    "testing.envelope-late": {
+      "en": "Build test envelope declared after the first callback: {owner}",
+      "de": "Die Hülle des Build-Tests wurde nach dem ersten Rückruf deklariert: {owner}"
+    },
+    "testing.envelope-required": {
+      "en": "Finite closed build test envelope required",
+      "de": "Eine endliche, geschlossene Hülle des Build-Tests ist erforderlich"
+    },
+    "testing.grant-issuer-required": {
+      "en": "Registered build test grant issuer required: {kind} for {owner}",
+      "de": "Ein registrierter Aussteller der Build-Test-Berechtigung ist erforderlich: {kind} für {owner}"
+    },
+    "testing.stretch-invalid": {
+      "en": "Stretch of at least one required",
+      "de": "Eine Dehnung von mindestens eins ist erforderlich"
+    },
+    "nativeBuild.image-size-invalid": {
+      "en": "Native image size {bytes} must be a multiple of {unit} bytes and at least {minimum} bytes",
+      "de": "Die Größe {bytes} des Native-Images muss ein Vielfaches von {unit} Bytes und mindestens {minimum} Bytes sein"
+    },
+    "nativeBuild.image-host-free-insufficient": {
+      "en": "The disk of {directory} has {availableGiB} GiB free, but creating the fixed cache image needs {requiredGiB} GiB free (macOS refuses to size an image beyond the free space). Free at least {missingGiB} GiB and run the command again.",
+      "de": "Auf dem Datenträger von {directory} sind {availableGiB} GiB frei, das feste Cache-Image braucht aber {requiredGiB} GiB freien Platz (macOS verweigert eine Image-Größe über dem freien Platz). Geben Sie mindestens {missingGiB} GiB frei und führen Sie den Befehl erneut aus."
+    },
+    "nativeBuild.image-stranded": {
+      "en": "The image {image} is attached at {mountPoints} instead of its canonical mount point {canonical}, as a crashed or cancelled cycle leaves it, and it could not be detached because it is busy. Close whatever uses {mountPoints}, run `hdiutil detach {device}` and run the command again.",
+      "de": "Das Image {image} ist unter {mountPoints} statt an seinem kanonischen Einhängepunkt {canonical} eingehängt, wie ein abgestürzter oder abgebrochener Zyklus es zurücklässt, und konnte nicht ausgehängt werden, weil es belegt ist. Beenden Sie, was {mountPoints} verwendet, führen Sie `hdiutil detach {device}` aus und führen Sie den Befehl erneut aus."
+    },
+    "dependencies.installer-stalled": {
+      "en": "The dependency installer of {scope} changed nothing for {seconds} s and was terminated; the lease is released and the next sync resumes from the packages already extracted.",
+      "de": "Der Abhängigkeits-Installer von {scope} hat {seconds} s lang nichts verändert und wurde beendet; die Sperre ist freigegeben und die nächste Synchronisation setzt bei den bereits entpackten Paketen fort."
+    },
+    "dependencies.installer-stalled-http": {
+      "en": "The dependency installer of {scope} changed nothing for {seconds} s and was terminated; its last error was \"{error}\". If the address is a fleet mirror, set SEMIO_FLEET_MIRROR=off to use the registry directly; the lease is released and the next sync resumes from the packages already extracted.",
+      "de": "Der Abhängigkeits-Installer von {scope} hat {seconds} s lang nichts verändert und wurde beendet; sein letzter Fehler war \"{error}\". Ist die Adresse ein Flotten-Spiegel, nutze mit SEMIO_FLEET_MIRROR=off die Registry direkt; die Sperre ist freigegeben und die nächste Synchronisation setzt bei den bereits entpackten Paketen fort."
+    },
+    "nativeBuild.namespace-path-unowned": {
+      "en": "A Native namespace path nobody owns is still present: {path}",
+      "de": "Ein Native-Namensraumpfad ohne Eigentümer ist noch vorhanden: {path}"
+    },
+    "nativeHelpers.scheduler-absent": {
+      "en": "The build scheduler executable is missing after its build: {path}",
+      "de": "Das Programm des Build-Planers fehlt nach seinem Build: {path}"
+    },
+    "nativeHelpers.wrapper-absent": {
+      "en": "The unit cache compiler wrapper is missing after its build: {path}",
+      "de": "Der Compiler-Wrapper des Unit-Caches fehlt nach seinem Build: {path}"
+    },
+    "execution.cancelled": {
+      "en": "{label} was cancelled",
+      "de": "{label} wurde abgebrochen"
+    },
+    "execution.terminated": {
+      "en": "{label} was terminated by {signal}",
+      "de": "{label} wurde durch {signal} beendet"
+    },
+    "execution.timed-out": {
+      "en": "{label} exceeded its {milliseconds} ms time limit and was stopped",
+      "de": "{label} hat sein Zeitlimit von {milliseconds} ms überschritten und wurde angehalten"
+    },
+    "execution.progress-expired": {
+      "en": "{label} was stopped: {notice}",
+      "de": "{label} wurde angehalten: {notice}"
+    },
+    "execution.deadline-exhausted": {
+      "en": "{label} reached the deadline of its caller and was stopped",
+      "de": "{label} hat die Frist seines Aufrufers erreicht und wurde angehalten"
+    },
+    "execution.output-limit": {
+      "en": "{label} wrote more output than its limit allows and was stopped",
+      "de": "{label} hat mehr Ausgabe geschrieben, als sein Limit erlaubt, und wurde angehalten"
+    },
+    "source.escaped-workspace": {
+      "en": "Rust source {path} lies outside the declared workspace",
+      "de": "Rust-Quelle {path} liegt außerhalb des deklarierten Arbeitsbereichs"
+    },
+    "source.missing-input": {
+      "en": "Rust source input {file} is missing",
+      "de": "Rust-Quelleingabe {file} fehlt"
+    },
+    "source.changed-during-closure": {
+      "en": "Rust source {file} changed while its closure was read",
+      "de": "Rust-Quelle {file} hat sich beim Lesen ihrer Hülle geändert"
+    },
+    "source.generated-needs-compiler": {
+      "en": "Rust source {file} reads generated input, which only the compiler can attest",
+      "de": "Rust-Quelle {file} liest erzeugte Eingaben, die nur der Compiler bestätigen kann"
+    },
+    "source.inner-attribute-invalid": {
+      "en": "Rust source {file} has an inner attribute that is never closed",
+      "de": "Rust-Quelle {file} hat ein inneres Attribut, das nie geschlossen wird"
+    },
+    "source.ambiguous-mount": {
+      "en": "Rust source {file} mounts module {module} through an ambiguous path attribute",
+      "de": "Rust-Quelle {file} bindet Modul {module} über ein mehrdeutiges Pfadattribut ein"
+    },
+    "source.unresolved-generated-module": {
+      "en": "Rust source {file}: module {module} is generated output that does not exist yet; run {target} first",
+      "de": "Rust-Quelle {file}: Modul {module} ist erzeugte Ausgabe, die noch nicht existiert; zuerst {target} ausführen"
+    },
+    "source.unresolved-module": {
+      "en": "Rust source {file}: module {module} has no single matching file",
+      "de": "Rust-Quelle {file}: Modul {module} hat keine eindeutig passende Datei"
+    },
+    "source.cfg-unbalanced": {
+      "en": "A Rust cfg expression has unbalanced delimiters",
+      "de": "Ein Rust-cfg-Ausdruck hat unausgeglichene Klammern"
+    },
+    "source.cfg-identifier-required": {
+      "en": "A Rust cfg predicate must start with an identifier",
+      "de": "Ein Rust-cfg-Prädikat muss mit einem Bezeichner beginnen"
+    },
+    "source.cfg-predicate-invalid": {
+      "en": "A Rust cfg predicate is invalid: only all, any and not take arguments",
+      "de": "Ein Rust-cfg-Prädikat ist ungültig: nur all, any und not nehmen Argumente"
+    },
+    "source.cfg-not-arity": {
+      "en": "The Rust cfg predicate not takes exactly one predicate",
+      "de": "Das Rust-cfg-Prädikat not nimmt genau ein Prädikat"
+    },
+    "source.cfg-feature-value-required": {
+      "en": "The Rust cfg predicate feature requires a value",
+      "de": "Das Rust-cfg-Prädikat feature verlangt einen Wert"
+    },
+    "source.cfg-equality-invalid": {
+      "en": "A Rust cfg equality must compare a name with a string",
+      "de": "Eine Rust-cfg-Gleichheit muss einen Namen mit einer Zeichenkette vergleichen"
+    },
+    "source.conditional-attribute-invalid": {
+      "en": "Rust source {file} has an invalid cfg or cfg_attr attribute",
+      "de": "Rust-Quelle {file} hat ein ungültiges cfg- oder cfg_attr-Attribut"
+    },
+    "source.cfg-attr-incomplete": {
+      "en": "Rust source {file}: cfg_attr requires a predicate and at least one attribute",
+      "de": "Rust-Quelle {file}: cfg_attr verlangt ein Prädikat und mindestens ein Attribut"
+    },
+    "source.inner-cfg-scope": {
+      "en": "Rust source {file} has an inner cfg attribute outside a named module",
+      "de": "Rust-Quelle {file} hat ein inneres cfg-Attribut außerhalb eines benannten Moduls"
+    },
+    "source.cfg-owned-item": {
+      "en": "Rust source {file} has a cfg attribute that owns no supported item",
+      "de": "Rust-Quelle {file} hat ein cfg-Attribut, das kein unterstütztes Element besitzt"
+    },
+    "source.delimiter-unclosed": {
+      "en": "Rust source {file}:{line}:{column}: the delimiter {delimiter} is never closed",
+      "de": "Rust-Quelle {file}:{line}:{column}: das Trennzeichen {delimiter} wird nie geschlossen"
+    },
+    "source.delimiter-unexpected": {
+      "en": "Rust source {file}:{line}:{column}: the closing delimiter {delimiter} has no opening delimiter",
+      "de": "Rust-Quelle {file}:{line}:{column}: das schließende Trennzeichen {delimiter} hat kein öffnendes"
+    },
+    "source.delimiter-mismatched": {
+      "en": "Rust source {file}:{line}:{column}: the delimiter {delimiter} is closed by {closing} at {closingLine}:{closingColumn} instead",
+      "de": "Rust-Quelle {file}:{line}:{column}: das Trennzeichen {delimiter} wird stattdessen durch {closing} bei {closingLine}:{closingColumn} geschlossen"
+    },
+    "source.read-bytes-exceeded": {
+      "en": "Rust source {file} has {observedBytes} bytes but only {maximumBytes} bytes remain in its crate source boundary",
+      "de": "Rust-Quelle {file} hat {observedBytes} Bytes, aber in der Quellgrenze ihres Crates verbleiben nur {maximumBytes} Bytes"
+    },
+    "source.read-files-exhausted": {
+      "en": "Rust source {file} exceeds the file count of its crate source boundary ({remainingFiles} files remain)",
+      "de": "Rust-Quelle {file} überschreitet die Dateianzahl der Quellgrenze ihres Crates ({remainingFiles} Dateien verbleiben)"
+    },
+    "source.read-extent-mismatched": {
+      "en": "Rust source {file} has {observedBytes} bytes where {expectedBytes} bytes were admitted",
+      "de": "Rust-Quelle {file} hat {observedBytes} Bytes, zugelassen waren {expectedBytes} Bytes"
+    },
+    "source.crate-refused": {
+      "en": "Rust crate {crate} was refused before the compiler: {reason}",
+      "de": "Rust-Crate {crate} wurde vor dem Compiler abgelehnt: {reason}"
+    },
+    "source.boundary-policy-invalid": {
+      "en": "The Cargo source boundary policy is not the closed ordinary policy",
+      "de": "Die Cargo-Quellgrenzenrichtlinie ist nicht die geschlossene gewöhnliche Richtlinie"
+    },
+    "source.environment-source-missing": {
+      "en": "The original Rust compiler environment source {file} is missing",
+      "de": "Die ursprüngliche Rust-Compilerumgebungsquelle {file} fehlt"
+    },
+    "execution.loan-expired": {
+      "en": "The resource loan of {label} ran out without observable progress: {message}",
+      "de": "Die Ressourcenleihe von {label} lief ohne beobachtbaren Fortschritt ab: {message}"
+    },
+    "error.internal": {
+      "en": "Internal error: {message} (reference {reference})",
+      "de": "Interner Fehler: {message} (Referenz {reference})"
+    },
+    "disk.full": {
+      "en": "The disk is full: partition {partition} has {free} free. Nothing was lost, but the write could not finish. Free space with `{command}` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition {partition} hat noch {free} frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    "disk.full-unmeasured": {
+      "en": "The disk is full: partition {partition} cannot take the write (its free space cannot be read). Free space with `{command}` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition {partition} kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    "disk.admission-insufficient": {
+      "en": "Not enough disk space for this build: partition {partition} has {free} free, the build needs about {need} of new space ({plan} planned, {credit} of it assumed to reuse space the cache image already holds) plus a {reserve} reserve, so {missing} are missing. Nothing was started, so no hour of work is lost. Free at least {missing} with `{command}` (it works on a full disk) or wait for other builds to finish, then run the command again.",
+      "de": "Nicht genug Speicherplatz für diesen Build: Partition {partition} hat noch {free} frei, der Build braucht etwa {need} neuen Platz ({plan} geplant, davon {credit} als bereits im Cache-Image gehaltener Platz angenommen) plus {reserve} Reserve, es fehlen also {missing}. Nichts wurde gestartet, es geht also keine Arbeitsstunde verloren. Schaffe mindestens {missing} frei mit `{command}` (es arbeitet auch auf vollem Datenträger) oder warte, bis andere Builds enden, und führe den Befehl erneut aus."
+    },
+    "disk.collecting": {
+      "en": "Partition {partition} is {usedPercent}% used (limit {limitPercent}%): freeing the least recently used cache objects before the command starts.",
+      "de": "Partition {partition} ist zu {usedPercent} % belegt (Grenze {limitPercent} %): die am längsten ungenutzten Cache-Objekte werden freigegeben, bevor der Befehl startet."
+    },
+    "disk.low-space": {
+      "en": "Partition {partition} has only {free} free ({usedPercent}% used, limit {limitPercent}%), so no build or cache write starts before space is freed. Free space with `{command}`, then run the command again.",
+      "de": "Partition {partition} hat nur noch {free} frei ({usedPercent} % belegt, Grenze {limitPercent} %), daher startet kein Build und kein Cache-Schreiben, bevor Platz frei ist. Schaffe Platz mit `{command}` und führe den Befehl erneut aus."
+    },
+    "source.boundary-exceeded": {
+      "en": "Rust crate {crate} exceeds its source boundary before the compiler: {files} of {maxFiles} files, {bytes} of {maxBytes} bytes",
+      "de": "Rust-Crate {crate} überschreitet vor dem Compiler seine Quellgrenze: {files} von {maxFiles} Dateien, {bytes} von {maxBytes} Bytes"
+    }
+  }
+}

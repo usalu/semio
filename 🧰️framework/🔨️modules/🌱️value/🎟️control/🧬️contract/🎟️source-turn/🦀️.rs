@@ -7,6 +7,10 @@ pub struct OriginalSourceTurnIssuerIdentity(u64);
 /// 🔖️ Names one actual dispatch of one original Source issuer.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,Hash)]
 pub struct OriginalSourceTurnIdentity{issuer:OriginalSourceTurnIssuerIdentity,dispatch:u64}
+impl OriginalSourceTurnIdentity{
+ /// 🏠️ Names the actual Source this dispatch belongs to, the same across every dispatch it issues.
+ pub fn issuer(self)->OriginalSourceTurnIssuerIdentity{self.issuer}
+}
 /// 🚧️ Reports refusal without manufacturing a substitute turn.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OriginalSourceTurnError{DispatchExhausted,ForeignIssuer}

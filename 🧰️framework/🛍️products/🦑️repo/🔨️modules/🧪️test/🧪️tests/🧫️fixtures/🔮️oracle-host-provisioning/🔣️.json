@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "derivation": [
+    {
+      "name": "a python oracle declares its package and every nested package",
+      "owner": "plugin/artifact/subset/case",
+      "implementation": "python",
+      "contributions": [
+        {
+          "owner": "plugin/artifact/subset",
+          "oracleHostPackages": [],
+          "oracles": [
+            { "ecosystem": "python", "package": "scipy", "version": ">=1.18.0", "packages": [{ "package": "numpy", "version": ">=2.5.0" }] }
+          ]
+        }
+      ],
+      "expected": [
+        { "implementation": "python", "package": "scipy", "version": ">=1.18.0" },
+        { "implementation": "python", "package": "numpy", "version": ">=2.5.0" }
+      ]
+    },
+    {
+      "name": "lock markers, builtins, empty packages and other ecosystems are never provisioned",
+      "owner": "plugin",
+      "implementation": "python",
+      "contributions": [
+        {
+          "owner": "plugin",
+          "oracles": [
+            { "ecosystem": "python", "package": "sympy", "version": "1.14.0", "packages": [{ "package": "mpmath", "version": "locked" }, { "package": "star", "version": "*" }] },
+            { "ecosystem": "python", "package": "", "version": "" },
+            { "ecosystem": "rust", "package": "parry3d", "version": "0.17" },
+            { "ecosystem": "javascript", "package": "node:crypto", "version": "24" }
+          ]
+        }
+      ],
+      "expected": [
+        { "implementation": "python", "package": "sympy", "version": "1.14.0" },
+        { "implementation": "python", "package": "mpmath" },
+        { "implementation": "python", "package": "star" }
+      ]
+    },
+    {
+      "name": "a module name carries from the oracle to its host row",
+      "owner": "plugin/case",
+      "implementation": "python",
+      "contributions": [
+        { "owner": "plugin", "oracles": [{ "ecosystem": "python", "package": "PyNiteFEA", "version": "3.0.0", "module": "Pynite" }] }
+      ],
+      "expected": [{ "implementation": "python", "package": "PyNiteFEA", "version": "3.0.0", "module": "Pynite" }]
+    },
+    {
+      "name": "a javascript oracle is a typescript host package",
+      "owner": "plugin/case",
+      "implementation": "typescript",
+      "contributions": [
+        { "owner": "plugin", "oracles": [{ "ecosystem": "javascript", "package": "ajv", "version": "8.20.0" }, { "ecosystem": "python", "package": "numpy", "version": "2.5.0" }] }
+      ],
+      "expected": [{ "implementation": "typescript", "package": "ajv", "version": "8.20.0" }]
+    },
+    {
+      "name": "only ancestors contribute, an explicit local source is kept and a repeated package is one row",
+      "owner": "plugin/artifact/case",
+      "implementation": "python",
+      "contributions": [
+        { "owner": "plugin", "oracles": [{ "ecosystem": "python", "package": "numpy", "version": "2.5.0" }] },
+        { "owner": "plugin/artifact", "oracleHostPackages": [{ "implementation": "python", "package": "local-oracle", "path": "plugin/artifact/oracle" }], "oracles": [{ "ecosystem": "python", "package": "numpy", "version": "2.5.0" }] },
+        { "owner": "plugin/sibling", "oracles": [{ "ecosystem": "python", "package": "shapely", "version": "2.1.2" }] }
+      ],
+      "expected": [
+        { "implementation": "python", "package": "numpy", "version": "2.5.0" },
+        { "implementation": "python", "package": "local-oracle", "path": "plugin/artifact/oracle" }
+      ]
+    }
+  ],
+  "requirements": [
+    { "package": "numpy", "version": "2.5.0", "expected": "numpy==2.5.0" },
+    { "package": "scipy", "version": ">=1.18.0", "expected": "scipy>=1.18.0" },
+    { "package": "mpmath", "expected": "mpmath" }
+  ],
+  "satisfies": [
+    { "actual": "2.5.0", "pin": "2.5.0", "expected": true },
+    { "actual": "2.5.1", "pin": "2.5.0", "expected": false },
+    { "actual": "2.5.0", "pin": ">=2.5.0", "expected": true },
+    { "actual": "2.10.0", "pin": ">=2.5.0", "expected": true },
+    { "actual": "1.26.4", "pin": ">=2.5.0", "expected": false },
+    { "actual": "2.5.0", "pin": ">2.5.0", "expected": false },
+    { "actual": "2.5.0", "pin": "<=2.5.0", "expected": true },
+    { "actual": "2.5.0", "pin": "<2.5.0", "expected": false },
+    { "actual": "2.5.0", "pin": "==2.5.0", "expected": true },
+    { "actual": "2.5.0", "pin": "!=2.5.0", "expected": false },
+    { "actual": "2.5.3", "pin": "~=2.5.0", "expected": true },
+    { "actual": "2.6.0", "pin": "~=2.5.0", "expected": false },
+    { "actual": "9.9.9", "expected": true }
+  ]
+}

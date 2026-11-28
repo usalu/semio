@@ -106,8 +106,10 @@ pub fn render(doc: &Fem2dSnapshot, locale: semio_plugin::Locale) -> semio_plugin
             "color": MESH_EDGE_COLOR,
         }));
     }
+    layers.insert(0, semio_s_fem_app_surface::canvas_2d_viewer_meta_layer());
     let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Structure view", "Tragwerksansicht"))
+    let surface = semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Structure view", "Tragwerksansicht"))?;
+    semio_s_fem_app_surface::with_viewer_caption(surface, doc.load_cases.first().map(|case| case.id.as_str()), locale)
 }
 //#endregion 🔖️Render
 

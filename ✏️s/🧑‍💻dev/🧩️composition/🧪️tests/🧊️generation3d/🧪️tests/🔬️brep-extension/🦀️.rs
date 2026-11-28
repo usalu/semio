@@ -171,11 +171,11 @@ pub struct PreviewRunReceipt {
 pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_plugin::ViewModel, initial: &[semio_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>, cx: &mut semio_framework_job::StepContext<'_>) -> PreviewRunReceipt {
     use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     use semio_plugin::Effect;
-    let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(shell_view.clone())), ..meta("local") };
     let mut receipt = PreviewRunReceipt::default();
     let mut effects: Vec<Effect> = initial.to_vec();
     for _ in 0..100_000 {
-        effects.extend(app.pending_effects(Some(shell_view)).await);
+        effects.extend(semio_plugin::artifact_app_laws::fixture_pending_effects(app, Some(shell_view)).await.expect("the host pending-effects poll").unwrap_or_default());
         if app.has_pending_typed_operations() {
             effects.extend(settle_registered_typed_operation(app, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("the run's driver turns settle").effects);
         }
@@ -215,7 +215,7 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_plu
 
 /// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
 pub async fn owed_run_actions<P: PluginApp>(app: &mut P, shell_view: &semio_plugin::ViewModel) -> Vec<String> {
-    run_actions(&app.pending_effects(Some(shell_view)).await)
+    run_actions(&semio_plugin::artifact_app_laws::fixture_pending_effects(app, Some(shell_view)).await.expect("the host pending-effects poll").unwrap_or_default())
 }
 
 /// 🚦️ The framework run actions an effect list carries.

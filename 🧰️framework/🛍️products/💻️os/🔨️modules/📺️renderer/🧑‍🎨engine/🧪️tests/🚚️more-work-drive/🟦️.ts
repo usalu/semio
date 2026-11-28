@@ -147,6 +147,15 @@ describe("🚚️ the worker-owned MoreWork drive", () => {
     expect(driven.polled).toEqual([]);
   });
 
+  it("never pumps an empty answer whose batch has a next event crossing right behind it", async () => {
+    const polled: number[] = [];
+    const settled = await driveShardTurnMoreWorkV1({ first: silent(), poll: async () => (polled.push(1), silent()), now: () => 0, live: () => true, inputPending: () => false, batched: true, steps: 64, budgetMs: 1000 });
+    expect(settled).toMatchObject({ stopped: "batched", polls: 0 });
+    expect(polled).toEqual([]);
+    const carried = await driveShardTurnMoreWorkV1({ first: silent({ effects: [{ tag: "notify" }] }), poll: async () => silent(), now: () => 0, live: () => true, inputPending: () => false, batched: true, steps: 64, budgetMs: 1000 });
+    expect(carried.stopped, "a carrying answer is still reported as carried").toBe("carried");
+  });
+
   it("never polls a turn that already went idle", async () => {
     const driven = drive([silent({ status: { tag: "idle" } }), silent()]);
     const settled = await driven.run();
@@ -265,7 +274,7 @@ describe("🚚️ the generated shard worker", () => {
     expect(source).toContain("function shardTurnStatusTag(result)");
     expect(source).toContain("function shardTurnDriveSteps(grantWallMs, guestTurnCostMs)");
     expect(source).toContain("function shardTurnDriveBudgetMs(grantWallMs, guestTurnCostMs)");
-    for (const stop of ['driveStopped = "input"', 'driveStopped = "closed"', 'driveStopped = "steps"', 'driveStopped = "budget"', '"carried"', '"idle"']) {
+    for (const stop of ['driveStopped = "input"', 'driveStopped = "closed"', 'driveStopped = "steps"', 'driveStopped = "budget"', '"carried"', '"idle"', '"batched"', "msg.batched === true"]) {
       expect(source).toContain(stop);
     }
     expect(source).toContain("drivePolls + 1 >= driveSteps");

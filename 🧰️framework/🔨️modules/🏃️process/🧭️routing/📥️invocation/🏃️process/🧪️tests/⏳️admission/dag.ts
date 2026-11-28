@@ -2,10 +2,10 @@ import{test,expect}from"bun:test";import Ajv from"ajv";import graphlib from"grap
 import fixture from"./dag.json";import schema from"./dag.schema.json";
 import*as api from"../../🟦️.ts";
 test("shared-parent resource DAG checks each reachable restriction within a linear public clock bound",async()=>{
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const measured=[];
+ expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const measured:{depth:number;uniqueNodes:number;clockReads:number;maximum:number}[]=[];
  for(const depth of fixture.depths){
   const graph=new graphlib.Graph({directed:true,multigraph:true});for(let i=0;i<=depth;i++){graph.setNode(String(i));if(i){graph.setEdge(String(i),String(i-1),{},"parent");graph.setEdge(String(i),String(i-1),{},"following");}}
-  const reachable=graphlib.alg.preorder(graph,String(depth));expect(reachable.length).toBe(depth+1);
+  const reachable=graphlib.alg.preorder(graph,[String(depth)]);expect(reachable.length).toBe(depth+1);
   await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:fixture.owner,maximumElapsedMilliseconds:0},{fixture:"control-dag"},Date.now()),async original=>{
    const root=api.createIssuedResourceControlV1(original,fixture.owner,fixture.maximumMilliseconds);
    const visit=async(parent:ReturnType<typeof api.createIssuedResourceControlV1>,remaining:number):Promise<void>=>{if(remaining)return api.withRequestedIssuedResourceControlV1(parent,fixture.maximumMilliseconds,child=>visit(child,remaining-1),undefined,parent);

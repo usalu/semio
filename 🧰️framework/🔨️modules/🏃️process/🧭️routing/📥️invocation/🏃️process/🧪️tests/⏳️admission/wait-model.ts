@@ -10,8 +10,8 @@ import schema from"./wait-model.schema.json";
 test("neutral DAG bounds credit the union of open overlapping and ended intervals exactly once",()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const graph=new graphlib.Graph({directed:true,multigraph:true});
- for(const row of fixture.rows){graph.setNode(row.id);if("parent"in row)graph.setEdge(row.id,row.parent,{},"parent");if("follows"in row)graph.setEdge(row.id,row.follows,{},"follows");}
- const reachable=graphlib.alg.preorder(graph,fixture.target);expect(reachable.length).toBe(3);expect(reachable).not.toContain("unreachable");
+ for(const row of fixture.rows){graph.setNode(row.id);if(row.parent!==undefined)graph.setEdge(row.id,row.parent,{},"parent");if(row.follows!==undefined)graph.setEdge(row.id,row.follows,{},"follows");}
+ const reachable=graphlib.alg.preorder(graph,[fixture.target]);expect(reachable.length).toBe(3);expect(reachable).not.toContain("unreachable");
  const db=new Database(":memory:"),observed=new Map<string,number>();
  try{
   db.exec("CREATE TABLE waits(start REAL,stop REAL);CREATE TABLE bounds(id TEXT,started REAL,maximum REAL,epoch REAL,waited REAL)");

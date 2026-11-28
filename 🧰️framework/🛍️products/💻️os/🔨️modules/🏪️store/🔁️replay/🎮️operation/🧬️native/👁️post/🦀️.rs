@@ -48,7 +48,7 @@ fn dispatch<'r,P:RetireOwned+Sync+'static>(c:&mut PostCall<'_,P>,effect:&mut Ret
 }
 impl<P:RetireOwned+Sync+'static> OriginalEffectProducer for PostProducer<P>{
  type Output=RetainedCloneStep;type Failure=Failure;type Context<'a,'b>=PostCall<'a,P> where 'b:'a;
- fn validate_context<'a,'b>(&self,c:&Self::Context<'a,'b>)->Result<(),ValueError>where 'b:'a{if c.turn!=self.turn{return Err(fault("post custody changed its original Source"))}Ok(())}
+ fn validate_context<'a,'b>(&self,c:&Self::Context<'a,'b>)->Result<(),ValueError>where 'b:'a{if c.turn.issuer()!=self.turn.issuer(){return Err(fault("post custody changed its original Source"))}Ok(())}
  fn source_turn<'a,'b>(&self,c:&Self::Context<'a,'b>)->Option<OriginalSourceTurnIdentity>where 'b:'a{Some(c.turn)}
  fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{dispatch(c,e,r,false)}
  fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{dispatch(c,e,r,true)}

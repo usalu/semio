@@ -5,9 +5,11 @@ const out = join(import.meta.dir, "🗑️generated/e2e/sheets2");
 const s = await session("en", "http://127.0.0.1:6072/", out);
 const keys = () => s.page.evaluate(() => [...document.querySelectorAll("[data-ui-node-key$=-grid]")].map(e => e.getAttribute("data-ui-node-key")).join(","));
 try {
+  s.page.on('console', (m) => { if (m.text().includes('[DEBUG] spawned') || m.text().includes('os-shell')) console.log('console', m.type(), m.text().slice(0, 400)); });
+  s.page.on('pageerror', (e) => console.log('pageerror', String(e).slice(0, 400)));
   await s.boot();
   await s.openViaPicker(budgetWorkbook(), "Budget.xlsx");
-  await s.page.waitForTimeout(4000);
+  await s.page.waitForSelector("[data-ui-node-key=xlsx-sheet-0-grid]", {timeout: 40000}).catch(() => console.log("no grid"));
   console.log("start", await keys());
   await s.page.locator('[role="treeitem"][id$="xlsx-sheet-0"]').first().click();
   await s.page.waitForTimeout(3000);

@@ -32,6 +32,17 @@ test("the lane of the same crate set is taken again, another crate set gets a la
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
+test("a fresh acquisition is a lane of its own even while a free lane of the same crate set is warm: the cold Cargo target a probe asks for",async()=>{
+ const root=scratch();
+ try{
+  const first=await acquirePooledLaneV1(root,{crates:["a"],quotaBytes:big});const id=first.paths.id;first.release();
+  const fresh=await acquirePooledLaneV1(root,{crates:["a"],quotaBytes:big,fresh:true});
+  expect(fresh.choice).toBe("new");expect(fresh.paths.id).not.toBe(id);fresh.release();
+  const warm=await acquirePooledLaneV1(root,{crates:["a"],quotaBytes:big});
+  expect(warm.choice,"an ordinary acquisition still takes a warm lane").toBe("warm");warm.release();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
 test("the reserved default lane is no part of the pool and is never handed out or trimmed",async()=>{
  const root=scratch();
  try{

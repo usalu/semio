@@ -1,0 +1,502 @@
+{
+ "_comment": "Hand-authored rows of the host warden under healthy macOS paging versus a real shortage. `swaps` is the swap traffic per sample (MB/s) at `intervalMilliseconds` spacing; `expect` is the level and trigger of the last sample, whether any sample cancelled, and whether a 256 MB cargo unit is admitted at the last sample. Measured on a 16 GB macOS host (ticket warden-guard-level.md): paging median 2.4 MB/s, p90 7.5 MB/s, compressed memory 3.4 to 7.9 GB, kernel pressure normal. The independent Python oracle (`python3 🐍️.py --paging`) computes the same results.",
+ "unitMegabytes": 256,
+ "cases": [
+  {
+   "name": "live healthy sample: 4159 MB available, 2.5 MB/s paging, 7761 MB compressed, kernel normal",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 4159,
+    "swapUsedMegabytes": 2500,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    2.5,
+    1.75,
+    2.5
+   ],
+   "subjects": [
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "calm",
+    "trigger": null,
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "one burst of 285 MB/s while 2764 MB are available is not sustained",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2764,
+    "swapUsedMegabytes": 2900,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    2,
+    285,
+    2,
+    2
+   ],
+   "subjects": [
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "calm",
+    "trigger": null,
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "paging at 120 MB/s for 20 s with 3500 MB available and the kernel normal is healthy",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3500,
+    "swapUsedMegabytes": 2940,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "calm",
+    "trigger": null,
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "paging at 400 MB/s for 20 s with the kernel at warn and 3200 MB available holds only and a 256 MB unit passes",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3200,
+    "swapUsedMegabytes": 2940,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "warn",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "guard",
+    "trigger": "pressure",
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "compressed memory of 9000 MB (just below its guard line) alone is reclaimable",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 4000,
+    "swapUsedMegabytes": 2940,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    3,
+    3,
+    3
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "calm",
+    "trigger": null,
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "real thrash: 400 MB/s for 14 s with the kernel at warn and 2200 MB available cancels and holds",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2200,
+    "swapUsedMegabytes": 6000,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "warn",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "danger",
+    "trigger": "swapping",
+    "cancel": true,
+    "admitted": false
+   }
+  },
+  {
+   "name": "the same thrash for 6 s is not yet sustained: guard, nothing cancelled, a 256 MB unit still passes with 2200 MB available",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2200,
+    "swapUsedMegabytes": 6000,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "warn",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "guard",
+    "trigger": "pressure",
+    "cancel": false,
+    "admitted": true
+   }
+  },
+  {
+   "name": "the kernel at critical is danger whatever the available memory: every admission is held and the units are paused (cancelled only on a severe shortage)",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 6000,
+    "swapUsedMegabytes": 2940,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "critical",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    2
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "danger",
+    "trigger": "pressure",
+    "cancel": false,
+    "admitted": false
+   }
+  },
+  {
+   "name": "available memory below the danger line is a real shortage: danger and the paused unit is cancelled",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 700,
+    "swapUsedMegabytes": 2940,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 4800,
+    "pressure": "warn",
+    "swapFreeMegabytes": 1155,
+    "swapVolumeFreeMegabytes": 36000
+   },
+   "intervalMilliseconds": 1000,
+   "swaps": [
+    2
+   ],
+   "subjects": [
+    {
+     "id": "paused",
+     "pid": 11,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": true,
+     "suspendedSeconds": 30,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    },
+    {
+     "id": "running",
+     "pid": 12,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 256,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capCritical": true
+    }
+   ],
+   "expect": {
+    "level": "danger",
+    "trigger": "available",
+    "cancel": true,
+    "admitted": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "version": 1,
+ "lines": [
+  {"line": "[capacity] waiting 3589s for run: not enough free memory (need 6932 MB)", "wait": true},
+  {"line": "[Kapazität] wartet 120s für run-many: eine frühere Anfrage wartet noch (benötigt 512 MB)", "wait": true},
+  {"line": "Reading the project graph slice (412 s): waiting for a host capacity decision on the 1018 MB request.", "wait": true},
+  {"line": "Reading the project graph slice (412 s): waiting for host capacity (session-cap); 3 active grants, 2 queued requests; the gate reports 105 MB available to this request above the 2048 MB floor; 2575 MB requested, minimum 256 MB, queued for 90 s.", "wait": true},
+  {"line": "Lese den Projektgraph-Ausschnitt (412 s): warte auf die Kapazitätsentscheidung des Rechners für die Anfrage über 1018 MB.", "wait": true},
+  {"line": "Lese den Projektgraph-Ausschnitt (412 s): warte auf Rechnerkapazität (session-cap); 3 aktive Reservierungen.", "wait": true},
+  {"line": "Reading the project graph slice (88 s): taken 12 of 40; running (name, kind, seconds, rows): a, b, 3, 100; waiting for memory headroom (6144 of 6144 MB reserved).", "wait": true},
+  {"line": "Reading the project graph slice (88 s): waiting for the previous service generation (pid 4711) to finish its 1 running slice read of this machine.", "wait": true},
+  {"line": "Lese den Projektgraph-Ausschnitt (88 s): warte, bis die vorherige Dienstgeneration (pid 4711) ihre 1 laufenden Ausschnitt-Lesevorgänge dieses Rechners beendet hat.", "wait": true},
+  {"line": "[capacity] admitted run-many: 1 job(s), 512 MB reserved", "wait": false},
+  {"line": "Reading the project graph slice (88 s): taken 12 of 40; running (name, kind, seconds, rows): a, b, 3, 100.", "wait": false},
+  {"line": "Reading the project graph slice (88 s): host capacity granted 2575 MB for this slice (2575 MB requested).", "wait": false},
+  {"line": "built unit 3 of 99", "wait": false},
+  {"line": "", "wait": false}
+ ],
+ "liveness": [
+  {"id": "a current wait with a fresh log is live", "since": 0, "written": 1000, "now": 2000, "fresh": 5000, "maximum": 100000, "live": true},
+  {"id": "no wait is never live", "since": null, "written": 1000, "now": 2000, "fresh": 5000, "maximum": 100000, "live": false},
+  {"id": "a wait whose log went silent is a wedge", "since": 0, "written": 1000, "now": 7000, "fresh": 5000, "maximum": 100000, "live": false},
+  {"id": "a wait past the maximum ends in the stall stop", "since": 0, "written": 99000, "now": 100000, "fresh": 5000, "maximum": 100000, "live": false},
+  {"id": "a wait just below the maximum is live", "since": 0, "written": 99000, "now": 99999, "fresh": 5000, "maximum": 100000, "live": true},
+  {"id": "a log nobody can read is not live", "since": 0, "written": null, "now": 2000, "fresh": 5000, "maximum": 100000, "live": false}
+ ],
+ "stages": [
+  {"id": "a stage that waits in the capacity queue and says so again every look is not stopped as quiet", "line": "Reading the project graph slice (${i} s): waiting for host capacity (session-cap); 3 active grants, 2 queued requests; the gate reports ${i} MB available to this request above the 2048 MB floor; 2575 MB requested, minimum 256 MB, queued for ${i} s.", "iterations": 40, "policy": {"stallStopMilliseconds": 4000}, "stalled": false, "exit": 0},
+  {"id": "a stage that waits for the command gate is not stopped as quiet", "line": "[capacity] waiting ${i}s for run-many: not enough free memory (need 6932 MB; ${i} MB spare)", "iterations": 40, "policy": {"stallStopMilliseconds": 4000}, "stalled": false, "exit": 0},
+  {"id": "control: a stage that repeats a line that is no wait is stopped as quiet", "line": "Reading the project graph slice (${i} s): thinking about it", "iterations": 4000, "policy": {"stallStopMilliseconds": 4000}, "stalled": true},
+  {"id": "a wait that lasts longer than the maximum is stopped as quiet", "line": "[capacity] waiting ${i}s for run-many: not enough free memory (need 6932 MB)", "iterations": 4000, "policy": {"stallStopMilliseconds": 4000, "capacityWaitMaximumMilliseconds": 6000}, "stalled": true},
+  {"id": "a wait line followed by silence is a wedge and is stopped as quiet", "line": "[capacity] waiting ${i}s for run-many: not enough free memory (need 6932 MB)", "iterations": 1, "silenceAfter": true, "policy": {"stallStopMilliseconds": 4000, "capacityWaitFreshMilliseconds": 1500}, "stalled": true}
+ ]
+}

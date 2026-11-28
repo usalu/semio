@@ -1,0 +1,16 @@
+{
+  "why": "One canonical name per bundled example, English first then German, no default language. The Artifact panel combobox rows (the host's No example row plus the registered examples) and the setActiveExample palette options are the same ordered list; the empty id is the empty document. Language-agnostic vector of the example-options law.",
+  "default": "demo",
+  "options": [
+    {
+      "id": "",
+      "en": "No example",
+      "de": "Kein Beispiel"
+    },
+    {
+      "id": "demo",
+      "en": "Demo",
+      "de": "Demo"
+    }
+  ]
+}

@@ -23,6 +23,6 @@ fn absorb_of_two_steps_equals_their_sequence() {
     let second = ::semio_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { id: base.walls[0].id.clone(), new_length_m: 9.5 }), &mid).diff().clone();
     let after = apply_diff_cold(&second, &mid).expect("second applies");
     let mut sum = first;
-    protocol::MutationDiff::absorb(&mut sum, second);
+    <En1996Diff as protocol::MutationDiff>::absorb(&mut sum, second);
     assert_eq!(apply_diff_cold(&sum, &base).expect("sum applies"), after);
 }

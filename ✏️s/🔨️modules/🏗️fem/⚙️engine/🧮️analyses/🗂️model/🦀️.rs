@@ -37,7 +37,8 @@ pub fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> boo
 }
 
 pub fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
-    if owner.pop().is_some() {
+    if !owner.is_empty() {
+        if std::mem::needs_drop::<T>() { owner.pop(); } else { owner.clear(); }
         return Ok(Some((1, 0)));
     }
     let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(())?;
@@ -51,8 +52,16 @@ pub fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Resu
     Ok(Some((1, bytes)))
 }
 
+/// 🧹️ Most trivially droppable scalars one close turn pops back to back: a turn retires a whole run instead of one scalar, so closing a 2-million-entry matrix owner takes thousands of turns, not millions.
+pub const CLOSE_SCALAR_RUN: usize = 4096;
+
 pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
+        if !std::mem::needs_drop::<T>() {
+            for _ in 1..CLOSE_SCALAR_RUN {
+                if owner.pop().is_none() { break; }
+            }
+        }
         return Ok(Some((1, 0)));
     }
     if owner.terminal_is_empty() {

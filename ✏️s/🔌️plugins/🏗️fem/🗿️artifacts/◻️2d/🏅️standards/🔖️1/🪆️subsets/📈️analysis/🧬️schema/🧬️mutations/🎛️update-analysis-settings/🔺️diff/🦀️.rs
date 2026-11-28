@@ -5,9 +5,9 @@
 //! `mutation.no-op` when the settings are already what the payload asks for. The bounds run FIRST
 //! so a document already holding out-of-range settings cannot launder them through as a no-op.
 use super::UpdateAnalysisSettings;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dAnalysisPatch;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dAnalysisPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff

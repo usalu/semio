@@ -20,6 +20,7 @@ oracle-wiring = ["dep:serde_json", "semio-s-plugin-norm-compliance/compliance-te
 
 [dependencies]
 semio-s-artifact-norm-en1994-checks-catalogue = { workspace = true }
+semio-s-artifact-norm-en1994-checks-catalogue-fatigue = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }

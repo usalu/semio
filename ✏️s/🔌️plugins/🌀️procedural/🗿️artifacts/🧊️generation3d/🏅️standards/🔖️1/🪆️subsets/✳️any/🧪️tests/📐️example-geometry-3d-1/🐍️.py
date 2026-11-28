@@ -3,7 +3,7 @@
 Re-derives every committed expected number in the eight bundled generation3d examples'
 `📚️examples/<example>/🧫️fixtures/🧩️example/🔣️.json` fixtures from two committed, language-neutral
 inputs only — the example's own `🗣️.dsl.semio` graph and the packaged brep extension descriptor
-`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🔣️.json` (for the channel defaults an unwired port
+`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json` (for the channel defaults an unwired port
 falls back to) — using `numpy`/`scipy` for the two solids whose volume has no closed form.
 
 **Why this is an oracle and not a transliteration.** It reads no Rust. It does not evaluate the
@@ -44,15 +44,17 @@ from scipy import integrate
 # region 🔖️Paths
 SUBSET = Path(__file__).resolve().parents[2]
 EXAMPLES = SUBSET / "📚️examples"
-BREP_DESCRIPTOR = SUBSET.parents[6] / "🌊️flow" / "🧩️extensions" / "📐️brep" / "🔣️.json"
+BREP_DESCRIPTOR = SUBSET.parents[6] / "🌊️flow" / "🧩️extensions" / "📐️brep" / "🧩️component" / "🔣️.json"
 FIXTURE_SCHEMA = "s.procedural.generation3d.example-geometry/v1"
+ANALYSIS_ONLY_KINDS = frozenset({"brep.mesh.analyze", "brep.mesh.toBrep"})
+EXAMPLE_COUNT = 9
 # endregion 🔖️Paths
 
 
 # region 🔖️Readers
 def example_directories() -> list[Path]:
     """📚️ Every bundled example that ships an expected-geometry fixture, in name order."""
-    return sorted(path.parent.parent.parent for path in EXAMPLES.glob("*/🧫️fixtures/🧩️example/🔣️.json"))
+    return sorted(path.parents[3] for path in EXAMPLES.glob("*/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"))
 
 
 def read_dsl(example_dir: Path) -> str:
@@ -65,7 +67,7 @@ def read_dsl(example_dir: Path) -> str:
 
 def read_fixture(example_dir: Path) -> dict:
     """📇️ The committed expected-geometry statement both lanes read."""
-    return json.loads((example_dir / "🧫️fixtures" / "🧩️example" / "🔣️.json").read_text(encoding="utf-8"))
+    return json.loads((example_dir / "🧪️tests" / "🧫️fixtures" / "🧩️example" / "🔣️.json").read_text(encoding="utf-8"))
 
 
 def sliders(dsl: str) -> dict[str, float]:
@@ -81,7 +83,7 @@ def neuron_kinds(dsl: str) -> list[str]:
 def channel_defaults() -> dict[tuple[str, str], dict]:
     """🔌️ Declared per-operator channel defaults, read from the packaged brep extension descriptor."""
     descriptor = json.loads(BREP_DESCRIPTOR.read_text(encoding="utf-8"))
-    manifest = json.loads(descriptor["contributions"]["topicContributions"][0]["payload"]["manifestJson"])
+    manifest = json.loads(descriptor["manifest"]["topicContributions"][0]["payload"]["manifestJson"])
     return {(operator["id"], channel["name"]): channel.get("default") for operator in manifest["contributes"]["operators"] for channel in operator["inputs"]}
 # endregion 🔖️Readers
 
@@ -149,6 +151,9 @@ def expected(example: str, knob: dict[str, float], defaults: dict[tuple[str, str
     if example == "hexagonal-mushroom-column":
         area = regular_polygon_area(knob["radius"], int(round(knob["sides"])))
         return {"volume": area * knob["height"], "perimeter": None, "closed": True, "extent": None}
+    if example == "mesh-workbench":
+        inner = 1.0 - 2.0 * knob["amount"]
+        return {"volume": 1.0 + inner**2 * knob["distance"], "perimeter": None, "closed": True, "extent": (1.0, 1.0, 1.0 + knob["distance"])}
     if example == "box-shell-preview":
         return {"volume": knob["size"] ** 3 - (knob["size"] - 2.0 * knob["thickness"]) ** 3, "perimeter": None, "closed": True, "extent": (knob["size"], knob["size"], knob["size"])}
     if example == "box-fillet-preview":
@@ -175,7 +180,7 @@ def check(example_dir: Path, defaults: dict[tuple[str, str], dict], failures: li
     if fixture["schema"] != FIXTURE_SCHEMA:
         failures.append(f"{example}: fixture schema {fixture['schema']!r}")
     for kind in neuron_kinds(dsl):
-        if kind not in fixture["opChain"]:
+        if kind not in fixture["opChain"] and kind not in ANALYSIS_ONLY_KINDS:
             failures.append(f"{example}: dsl declares {kind!r}, absent from the fixture op chain")
     for kind in fixture["opChain"]:
         if kind not in dsl:
@@ -208,8 +213,8 @@ def main() -> int:
     """🚦 Runs every example and reports one line per disagreement."""
     defaults = channel_defaults()
     directories = example_directories()
-    if len(directories) != 8:
-        print(f"FAIL: expected 8 bundled examples with expected-geometry fixtures, found {len(directories)}", file=sys.stderr)
+    if len(directories) != EXAMPLE_COUNT:
+        print(f"FAIL: expected {EXAMPLE_COUNT} bundled examples with expected-geometry fixtures, found {len(directories)}", file=sys.stderr)
         return 1
     failures: list[str] = []
     checked = sum(check(directory, defaults, failures) for directory in directories)

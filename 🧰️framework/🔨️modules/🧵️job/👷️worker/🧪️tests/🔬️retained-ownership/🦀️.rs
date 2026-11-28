@@ -84,7 +84,7 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
             WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes,..}} => {
                 assert!(released_items <= 1, "a one-item grant releases at most one owner: {released_items}");
                 assert!(released_bytes <= release_grant, "a close turn never spends more than its explicit physical release grant: {released_bytes}");
-                if matches!(phase,WorkerJobClosePhase::Payload|WorkerJobClosePhase::Job){charged += released_bytes;}
+                if (phase==WorkerJobClosePhase::Payload&&released_bytes==JOB_PAYLOAD_PAGE_BYTES)||phase==WorkerJobClosePhase::Job{charged += released_bytes;}
             }
             WorkerJobCloseStep::Complete {progress} => {}
             WorkerJobCloseStep::Blocked => panic!("a mounted close on a positive grant is never blocked"),
@@ -254,6 +254,7 @@ fn worker_terminal_step_raises_one_durable_wake_intent_after_its_terminal() {
     let (first,poll) = issuer.turn(source,|cx|session.try_step_on_original_caller(cx)).unwrap().expect("first opportunity");
     assert_eq!(poll,WorkerJobPoll::Outcome);
     let mut owner = session.take_outcome(first).expect("first exact outcome");
+    let original_receipt=owner.take_retained_step_receipt().expect("original first-step physical receipt");assert!(original_receipt.1.fits(original_receipt.0));
     acknowledge_yield(&mut issuer,|cx|owner.acknowledge_outcome(cx));
     owner.resume().unwrap_or_else(|_| panic!("yield owner resumes exact generation"));
     let _ = session.take_wake();
@@ -324,13 +325,13 @@ fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
     assert!(batch.checkout_outcome());
     assert_eq!(issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap(), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}});
     let receipt=batch.session.take_retained_step_receipt().unwrap().expect("original checked out receipt follows same-owner close handback");assert!(receipt.1.fits(receipt.0));assert!(batch.session.take_retained_step_receipt().unwrap().is_none());
-    let header=issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap();
-    assert_eq!(header,WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}});
-    assert_eq!(batch.close_phase(),WorkerJobClosePhase::Outcome);
-    let presence=issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap();
-    assert_eq!(presence,WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}});
     assert_eq!(batch.close_phase(),WorkerJobClosePhase::BeginClose);
-    assert_eq!(issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap(), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let begin=issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap();
+    assert_eq!(begin,WorkerJobCloseStep::Pending{progress:RetainedCloneProgress::default()});
+    assert_eq!(batch.close_phase(),WorkerJobClosePhase::Payload);
+    let acknowledgement=issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap();
+    assert_eq!(acknowledgement,WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}});
+    assert_eq!(batch.close_phase(),WorkerJobClosePhase::Payload);
     let close_started=Instant::now();let mut close_attempts=0;
     while !batch.terminal_is_empty() {
         close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
@@ -362,10 +363,10 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     let mut rejected_output=None;
     for _ in 0..crate::component::worker_fixture_admission_turns(){
         if rejected_admission.phase()=="slot"{break}
-        assert!(!rejected_caller.turn(source,|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap());
+        assert!(!rejected_caller.turn(rejected_caller.remaining_grant(),|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap());
     }
     assert_eq!(rejected_admission.phase(),"slot","every retirement slot is owned, so the extra birth waits for a returned slot");
-    for _ in 0..8{assert!(!rejected_caller.turn(source,|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap());assert_eq!(rejected_admission.phase(),"slot");}
+    for _ in 0..8{assert!(!rejected_caller.turn(rejected_caller.remaining_grant(),|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap());assert_eq!(rejected_admission.phase(),"slot");}
     assert!(rejected_output.is_none());
     let (dropped,mut dropped_caller) = sessions.pop().expect("last fixed session");
     drop(dropped);
@@ -381,7 +382,7 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     }
     dropped_caller.retire(source);
     let mut admitted=false;
-    for _ in 0..WORKER_JOB_SESSION_SLOTS*64{if rejected_caller.turn(source,|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap(){admitted=true;break}}
+    for _ in 0..WORKER_JOB_SESSION_SLOTS*64{if rejected_caller.turn(rejected_caller.remaining_grant(),|cx|rejected_admission.advance(&mut rejected_job,&mut rejected_params,&mut rejected_output,cx)).unwrap(){admitted=true;break}}
     assert!(admitted,"the same original rejected owners enter the returned slot");
     let replacement=rejected_output.take().expect("returned slot admits the waiting birth");
     assert!(rejected_job.is_none()&&rejected_params.is_none()&&rejected_admission.terminal_is_empty());

@@ -227,9 +227,7 @@ fn progress_stage_labels_are_monolingual_per_locale() {
 /// 🔁️ Drives the mounted results jobs the way the host does: spawns, cancels and steps each registry job between renders.
 async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>, rounds: usize) -> String {
     use semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver;
-    let started = std::time::Instant::now();
-    for round in 0..rounds {
-        if round % 25 == 0 { let caption = render_body(app, FEM3D_BODY_RESULTS); eprintln!("[DEBUG] pump round {round} at {:?} caption {}", started.elapsed(), caption.split("\"type\":\"text\",\"value\":\"").nth(1).and_then(|rest| rest.split('"').next()).unwrap_or_default()); }
+    for _ in 0..rounds {
         let _ = render_body(app, FEM3D_BODY_RESULTS);
         let view = crate::context::view(FEM3D_WINDOW_RESULTS);
         let grant = app.1.cx().retained_grant();
@@ -285,6 +283,60 @@ async fn burst_of_edits_with_undo_redo_settles_3d() {
     let json = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle after the burst: {json}");
     assert!(drivers.is_empty(), "no superseded job stays running: {}", drivers.len());
+}
+
+/// 🧠️ LAW (F3): a sequence of edits, undo, redo and an added solid, each superseding the solve in flight, leaves the results settled on the last revision within the round bound and no job running.
+#[semio_framework_async_macros::async_test]
+async fn edit_undo_redo_add_solid_sequence_settles_3d() {
+    let mut app = app_with_example().await;
+    let mut drivers = HashMap::new();
+    let _ = pump_results(&mut app, &mut drivers, 40).await;
+    for step in 0..8u32 {
+        dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: step as f64, y: 1.0, z: 2.0 })).await;
+        let _ = pump_results(&mut app, &mut drivers, 2).await;
+    }
+    for verb in ["undo", "undo", "redo", "undo", "redo", "redo"] {
+        crate::context::history_verb(&mut app, verb).await;
+        let _ = pump_results(&mut app, &mut drivers, 1).await;
+    }
+    let material = app.snapshot().expect("snapshot").materials[0].id.as_str().to_owned();
+    let solid = semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid::AddSolid { x: 20.0, y: 0.0, width: 3.0, depth: 3.0, height: 0.3, material_id: material, base_z: None, layers: None, mesh_size: None, axis: None };
+    dispatch(&mut app, Fem3dCommand::AddSolid(solid)).await;
+    let _ = pump_results(&mut app, &mut drivers, 3).await;
+    crate::context::history_verb(&mut app, "undo").await;
+    crate::context::history_verb(&mut app, "redo").await;
+    let json = pump_results(&mut app, &mut drivers, 900).await;
+    let ok = !json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling") && drivers.is_empty();
+    let left = drivers.len();
+    drain_results(&mut drivers);
+    assert!(ok, "the edit, undo, redo and add solid sequence settles within 900 rounds (jobs left {left}): {json}");
+}
+
+/// 🎟️ LAW: a long session of edits, undos, redos and example switches, each superseding the solve in flight, never fills the document Store's snapshot read issuer — held reads stay bounded by the live jobs and a fresh read is still admitted at the end.
+#[semio_framework_async_macros::async_test]
+async fn a_long_supersede_session_never_exhausts_the_snapshot_read_issuer_3d() {
+    let mut app = fem3d_app();
+    let mut drivers = HashMap::new();
+    let held = |app: &Fem3dApp| [
+        app.stores.store.returned_snapshot_read_count() + app.stores.store.outstanding_snapshot_read_count(),
+        app.stores.config_store.returned_snapshot_read_count() + app.stores.config_store.outstanding_snapshot_read_count(),
+        app.stores.draft_store.returned_snapshot_read_count() + app.stores.draft_store.outstanding_snapshot_read_count(),
+        app.stores.interaction_store.returned_snapshot_read_count() + app.stores.interaction_store.outstanding_snapshot_read_count(),
+    ];
+    let _ = pump_results(&mut app, &mut drivers, 40).await;
+    let mut peak = 0usize;
+    for round in 0..16u32 {
+        dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: round as f64, y: 1.0, z: 2.0 })).await;
+        let _ = pump_results(&mut app, &mut drivers, 2).await;
+        if round % 3 == 2 { crate::context::history_verb(&mut app, "undo").await; let _ = pump_results(&mut app, &mut drivers, 1).await; }
+        peak = peak.max(held(&app).into_iter().max().unwrap_or(0));
+    }
+    let _ = pump_results(&mut app, &mut drivers, 300).await;
+    let settled = held(&app).into_iter().max().unwrap_or(0);
+    drain_results(&mut drivers);
+    assert!(peak < store::os_store::snapshot_read::SNAPSHOT_READ_RETURN_PRESSURE, "held snapshot reads reached {peak} while solves were superseded");
+    assert!(settled <= 2, "a settled session holds {settled} reads");
+    assert!(app.stores.store.snapshot_read().is_ok(), "the issuer still admits a fresh read after the long session");
 }
 
 /// 🧠️ LAW: switching the active example while a solve is in flight cancels it and settles the results on the new example.

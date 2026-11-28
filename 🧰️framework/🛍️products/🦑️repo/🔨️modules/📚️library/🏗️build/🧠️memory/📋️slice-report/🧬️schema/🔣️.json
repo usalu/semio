@@ -26,7 +26,7 @@
           "worker-boot": { "boundMilliseconds": 300000, "en": "starting the slice worker and loading its modules", "de": "Starte den Slice-Worker und lade seine Module" },
           "slice-prepare": { "boundMilliseconds": 300000, "en": "preparing the slice read (backend, compiler runtime, native recheck)", "de": "Bereite das Lesen des Ausschnitts vor (Backend, Compiler-Laufzeit, native Prüfung)" },
           "registry-read": { "boundMilliseconds": 120000, "en": "loading the graph modules and reading the owner registry", "de": "Lade die Graphmodule und lese das Projektregister" },
-          "graph-state": { "boundMilliseconds": 600000, "en": "waiting for the graph state lease and checking the graph store", "de": "Warte auf die Graphstatus-Leihe und prüfe den Graphspeicher" },
+          "graph-state": { "boundMilliseconds": 600000, "en": "opening the graph store and its quota ledger and taking the graph state lease", "de": "Öffne den Graphspeicher samt Kontingentbuch und nehme die Graphstatus-Leihe" },
           "module-load": { "boundMilliseconds": 120000, "en": "loading the graph inference modules", "de": "Lade die Graph-Ableitungsmodule" },
           "inventory": { "boundMilliseconds": 600000, "en": "checking the file inventory of the tree (attempt {round})", "de": "Prüfe das Dateiverzeichnis des Baums (Versuch {round})" },
           "owners-round": { "boundMilliseconds": 3600000, "en": "reading the owners (round {round})", "de": "Lese die Projekte (Runde {round})" },

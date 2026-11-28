@@ -5,7 +5,7 @@ import {createConnection} from "node:net";
 import {fileURLToPath} from "node:url";
 import {expect,test} from "bun:test";
 import {requireTestToolV1} from "../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import {formatWaitV1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type GrantGrowthPortV1,type GrowthHostV1,type UnitObservationV1,type UnitWaitV1} from "../../🟦️.ts";
+import {ADMISSION_POLICY_V1,formatWaitV1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type GrantGrowthPortV1,type GrowthHostV1,type UnitObservationV1,type UnitWaitV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import requests from "../🧫️fixtures/🔣️.json" with {type:"json"};
 import corpus from "./🔣️.json";
@@ -88,15 +88,14 @@ test("the driver's own memory above the grant is grown by the difference, not wa
 
 test("a unit that stalls because the driver grew after it arrived is rescued by a further growth, never left idle",async()=>{
  const asks:number[]=[],host:GrowthHostV1={origin:"g1-server",totalMegabytes:32768,availableMegabytes:20000,floorMegabytes:2048,interactiveReserveMegabytes:4096,budgetBasisPoints:9000};
- let level:"guard"|"calm"="guard";
  const port:GrantGrowthPortV1={local:()=>host,fleet:()=>[],acquire:async ask=>{asks.push(ask.extraMegabytes);return{granted:true,release:()=>undefined};}};
- const broker=await startAdmissionBrokerV1({physicalBytes:16*1024*MiB,history:history({first:1500}),parentMemoryAllowanceBytes:2000*MiB,growth:port,available:()=>undefined,warden:()=>level,cancels:()=>[],waits:{publishMilliseconds:20,progressMilliseconds:40}});
+ const broker=await startAdmissionBrokerV1({physicalBytes:16*1024*MiB,history:history({first:1500}),parentMemoryAllowanceBytes:2000*MiB,growth:port,available:()=>undefined,warden:()=>"calm",cancels:()=>[],waits:{publishMilliseconds:20,progressMilliseconds:40}});
  broker.registerPass(pass);
+ broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:ADMISSION_POLICY_V1.swapOutBytesPerSecond+1});
  const first=connect(broker.endpoint,unit("first"));
  try{
   expect(await first.next()).toMatchObject({op:"verdict",admitted:false});
   broker.observe({nonRustcBytes:1000*MiB,swapOutBytesPerSecond:null});
-  level="calm";
   expect(await first.next()).toMatchObject({op:"verdict",admitted:true});
   expect(asks).toHaveLength(1);
   expect(asks[0]).toBe(Math.ceil((Math.ceil(1.15*1500*MiB)+1000*MiB-2000*MiB)/MiB));

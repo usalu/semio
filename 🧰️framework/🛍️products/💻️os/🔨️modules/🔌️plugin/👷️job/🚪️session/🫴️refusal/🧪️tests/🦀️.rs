@@ -85,3 +85,26 @@ fn original_reserved_pending_worker_erased_box_is_physically_retired_on_same_fun
  }
  assert!(owner.terminal_is_empty());assert!(owner.retained_job().is_none());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(RetainedCloneGrant{maximum_items:0,..turn},|same|owner.close_step(same)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,freed);
 }
+
+/// 🔂️ Two consecutive worker admissions on one resident Source (the second store replacement) both reach their session, whether the first session is still live or already closed.
+#[test]
+fn a_second_pending_worker_is_admitted_on_the_same_source_while_the_first_is_live_or_closed(){
+ let source=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:4194304,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:128};
+ let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:source,site:"original-reserved-pending",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:1000000,step_budget_us:600000000};
+ for first_closed in [false,true]{
+  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),source,||Some(1),600000000,1000000);
+  let mut sessions=Vec::new();
+  for round in 0..2{
+   let mut pending=RefusedWorkerSource::pending(Probe{bytes:vec![7;128],closing:false},(OperationId(17),Generation(9)));let mut session=None;
+   let mut admitted=false;for _ in 0..2000{if caller.turn(source,|cx|pending.admit_pending(config,&mut session,cx)).unwrap(){admitted=true;break}}
+   assert!(admitted,"worker admission {round} (first_closed={first_closed}) stalled with phases {:?}",pending.admission_phases());
+   assert!(session.is_some()&&pending.terminal_is_empty());drop(pending);
+   let mut session=session.unwrap();
+   if round==0&&first_closed{session.begin_close();for _ in 0..2000{if session.terminal_is_empty(){break}caller.turn(source,|cx|session.close_step(cx)).unwrap();}assert!(session.terminal_is_empty());}
+   sessions.push(session);
+  }
+  caller.cancel().cancel_now();
+  for mut session in sessions{session.begin_close();for _ in 0..2000{if session.terminal_is_empty(){break}caller.turn(source,|cx|session.close_step(cx)).unwrap();}assert!(session.terminal_is_empty());}
+  caller.retire(source);
+ }
+}

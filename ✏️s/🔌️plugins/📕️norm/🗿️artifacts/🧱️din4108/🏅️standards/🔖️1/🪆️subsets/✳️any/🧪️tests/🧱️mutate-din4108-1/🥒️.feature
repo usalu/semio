@@ -122,6 +122,13 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | change-zone-window-inclination-deg     | 📐change-zone-window-inclination-deg | ✅apply  |
       | change-layer-application-type          | 🏷️change-layer-application-type     | ✅apply  |
       | change-layer-compressive-class         | 🏷️change-layer-compressive-class    | ✅apply  |
+      | insert-case                            | ➕️insert-case                       | ✅apply  |
+      | remove-case                            | ➖️remove-case                       | ✅apply  |
+      | change-case-number                     | 🔢️change-case-number                | ✅apply  |
+      | change-case-text                       | 🔤️change-case-text                  | ✅apply  |
+      | change-case-label-en                   | 🏷️change-case-label-en              | ✅apply  |
+      | change-case-label-de                   | 🏷️change-case-label-de              | ✅apply  |
+      | change-case-entry-id                   | 📇️change-case-entry-id              | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -178,6 +185,13 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | change-zone-window-inclination-deg | 📐change-zone-window-inclination-deg | ✅apply  |
       | change-layer-application-type      | 🏷️change-layer-application-type     | ✅apply  |
       | change-layer-compressive-class     | 🏷️change-layer-compressive-class    | ✅apply  |
+      | insert-case                        | ➕️insert-case                       | ✅apply  |
+      | remove-case                        | ➖️remove-case                       | ✅apply  |
+      | change-case-number                 | 🔢️change-case-number                | ✅apply  |
+      | change-case-text                   | 🔤️change-case-text                  | ✅apply  |
+      | change-case-label-en               | 🏷️change-case-label-en              | ✅apply  |
+      | change-case-label-de               | 🏷️change-case-label-de              | ✅apply  |
+      | change-case-entry-id               | 📇️change-case-entry-id              | ✅apply  |
 
   @id-identity-round-trip
   @level-long

@@ -327,6 +327,11 @@ where
         !self.snapshot_read_leases.terminal_is_empty() && !self.snapshot_read_leases.has_returned()
     }
 
+    /// 🌡️ True once enough returned reads wait for the pump that maintenance drains them ahead of its fair rotation.
+    pub fn returned_snapshot_reads_under_pressure(&self) -> bool {
+        self.snapshot_read_leases.returned_under_pressure()
+    }
+
     /// 🧾️ Leases returned to the registry whose roots it still holds until a returned-read pump reclaims them —
     /// every one of them keeps a whole document root alive.
     pub fn returned_snapshot_read_count(&self) -> usize {

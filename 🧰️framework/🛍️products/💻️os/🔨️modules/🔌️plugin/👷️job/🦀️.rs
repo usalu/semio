@@ -254,6 +254,10 @@ pub const TYPED_OPERATION_STALL_WITNESS_FLOOR: u64 = 64;
 #[doc(hidden)]
 pub const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
 
+/// 🏗️ Consecutive non-yielding `Worker` turns in which an operation's producer build spends nothing before it is terminated with `interactive-job.producer-unfunded`: a preparation grant below the construction floor can never fund the build, and an unbuilt producer is not a running job that may legitimately stay silent.
+#[doc(hidden)]
+pub const WORKER_PRODUCER_UNFUNDED_CEILING: u64 = 256;
+
 #[doc(hidden)]
 pub const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
 

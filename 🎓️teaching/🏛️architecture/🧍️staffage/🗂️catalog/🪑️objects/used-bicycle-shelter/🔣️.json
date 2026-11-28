@@ -32951,8 +32951,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0,
-       0,
+       -0.286179,
+       -0.058011,
        0
       ],
       "p1": [
@@ -32964,7 +32964,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 8,
+       "count": 4,
        "rotationAxis": [
         0,
         0,
@@ -33102,8 +33102,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       1.1,
-       0,
+       0.813821,
+       -0.058011,
        0
       ],
       "p1": [
@@ -33115,7 +33115,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 8,
+       "count": 4,
        "rotationAxis": [
         0,
         0,
@@ -35467,8 +35467,8 @@
     ],
     "decisions": [
      {
-      "en": "Body for 15 mm: nuts and the cable lock left out; tyre and rim merged into one ring, the spokes into a thin texture disc that ties hub and ring; clamps and rack tubes drawn 15 mm, stand bends in two segments; everything else as at 1:50.",
-      "de": "Körper für 15 mm: Muttern und Kabelschloss entfallen; Reifen und Felge zu einem Ring zusammengefasst, die Speichen zu einer dünnen Texturscheibe, die Nabe und Ring verbindet; Schellen und Gepäckträgerrohre 15 mm, Bügelbögen zweiteilig; alles andere wie in 1:50."
+      "en": "Body for 15 mm: nuts and the cable lock left out; tyre and rim merged into one ring, the spokes into a thin texture disc that ties hub and ring; clamps and rack tubes drawn 15 mm, stand bends in two segments; everything else as at 1:50. The eight spokes of a wheel are four rods through the axle.",
+      "de": "Körper für 15 mm: Muttern und Kabelschloss entfallen; Reifen und Felge zu einem Ring zusammengefasst, die Speichen zu einer dünnen Texturscheibe, die Nabe und Ring verbindet; Schellen und Gepäckträgerrohre 15 mm, Bügelbögen zweiteilig; alles andere wie in 1:50. Die acht Speichen eines Laufrads sind vier Stäbe durch die Achse."
      },
      {
       "en": "Thermal and structure follow the body; the spoke disc stands in for the spokes in the load path of the wheels.",
@@ -37138,8 +37138,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0,
-       0,
+       -0.286179,
+       -0.058011,
        0
       ],
       "p1": [
@@ -37151,7 +37151,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 4,
+       "count": 2,
        "rotationAxis": [
         0,
         0,
@@ -37213,8 +37213,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       1.1,
-       0,
+       0.813821,
+       -0.058011,
        0
       ],
       "p1": [
@@ -37226,7 +37226,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 4,
+       "count": 2,
        "rotationAxis": [
         0,
         0,
@@ -39159,8 +39159,8 @@
       "de": "Körper für 30 mm: Fußplatten 30 mm dick, Sprossen als 60 x 30 mm Kästen, Schellen 30 mm; das Rad ohne Naben, Griffe, Kurbeln und Pedale, seine Rohre mindestens 30 mm, der Gepäckträger als eine Platte mit einer Strebe; die Bügel behalten ihr wahres 48-mm-Rohr und verlieren die Delle."
      },
      {
-      "en": "Thermal and structure follow the body; the bike's load path is frame, spoke discs and wheel rings.",
-      "de": "Thermik und Tragwerk folgen dem Körper; der Lastweg des Rads sind Rahmen, Speichenscheiben und Laufradringe."
+      "en": "Thermal and structure follow the body; the bike's load path is frame, spoke discs and wheel rings. The four spokes of a wheel are two rods through the axle.",
+      "de": "Thermik und Tragwerk folgen dem Körper; der Lastweg des Rads sind Rahmen, Speichenscheiben und Laufradringe. Die vier Speichen eines Laufrads sind zwei Stäbe durch die Achse."
      }
     ]
    },
@@ -40640,8 +40640,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0,
-       0,
+       -0.272459,
+       -0.05523,
        0
       ],
       "p1": [
@@ -40653,7 +40653,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 4,
+       "count": 2,
        "rotationAxis": [
         0,
         0,
@@ -40715,8 +40715,8 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       1.1,
-       0,
+       0.827541,
+       -0.05523,
        0
       ],
       "p1": [
@@ -40728,7 +40728,7 @@
       "r1": 0.002,
       "texture": true,
       "repeat": {
-       "count": 4,
+       "count": 2,
        "rotationAxis": [
         0,
         0,
@@ -42121,8 +42121,8 @@
     ],
     "decisions": [
      {
-      "en": "Body for 75 mm: base plates 100 mm thick, beams 120 mm wide and 180 mm deep (taking in the purlin depth), purlins 100 x 75 mm, braces and stand tubes 75 mm, the sheets without overhang and closed joints, the gutter a 170 x 120 mm block, glazing bars as texture caps, one 75 mm clamp ties the downpipe to post C, the downpipe kept as a declared slender tube down to the gully; the bike as two 75 mm wheel rings with four texture spokes each, one 75 mm frame plate from axle to axle, saddle, bars and the side stand as a 75 mm tube, because the bike rests on it (rack and chainring left out).",
-      "de": "Körper für 75 mm: Fußplatten 100 mm dick, Träger 120 mm breit und 180 mm hoch (mit der Pfettenhöhe), Pfetten 100 x 75 mm, Kopfbänder und Bügelrohre 75 mm, die Platten ohne Überstand mit geschlossenen Fugen, die Rinne ein Block 170 x 120 mm, Sprossen als Texturleisten, eine 75-mm-Schelle bindet das Fallrohr an Stütze C, das Fallrohr bleibt als erklärtes schlankes Rohr bis zum Ablauf; das Rad als zwei 75-mm-Laufradringe mit je vier Textur-Speichen, eine 75-mm-Rahmenplatte von Achse zu Achse, Sattel, Lenker und der Seitenständer als 75-mm-Rohr, weil das Rad darauf steht (Gepäckträger und Kettenblatt entfallen)."
+      "en": "Body for 75 mm: base plates 100 mm thick, beams 120 mm wide and 180 mm deep (taking in the purlin depth), purlins 100 x 75 mm, braces and stand tubes 75 mm, the sheets without overhang and closed joints, the gutter a 170 x 120 mm block, glazing bars as texture caps, one 75 mm clamp ties the downpipe to post C, the downpipe kept as a declared slender tube down to the gully; the bike as two 75 mm wheel rings with four texture spokes each as two rods through the axle, one 75 mm frame plate from axle to axle, saddle, bars and the side stand as a 75 mm tube, because the bike rests on it (rack and chainring left out).",
+      "de": "Körper für 75 mm: Fußplatten 100 mm dick, Träger 120 mm breit und 180 mm hoch (mit der Pfettenhöhe), Pfetten 100 x 75 mm, Kopfbänder und Bügelrohre 75 mm, die Platten ohne Überstand mit geschlossenen Fugen, die Rinne ein Block 170 x 120 mm, Sprossen als Texturleisten, eine 75-mm-Schelle bindet das Fallrohr an Stütze C, das Fallrohr bleibt als erklärtes schlankes Rohr bis zum Ablauf; das Rad als zwei 75-mm-Laufradringe mit je vier Textur-Speichen als zwei Stäbe durch die Achse, eine 75-mm-Rahmenplatte von Achse zu Achse, Sattel, Lenker und der Seitenständer als 75-mm-Rohr, weil das Rad darauf steht (Gepäckträger und Kettenblatt entfallen)."
      },
      {
       "en": "Thermal and structure follow the body; mass markers 75 mm.",

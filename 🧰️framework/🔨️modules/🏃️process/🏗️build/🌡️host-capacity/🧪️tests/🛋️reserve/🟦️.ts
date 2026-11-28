@@ -21,7 +21,7 @@ test("every verdict, reserve and session cap equals the independent Python oracl
   const evaluation=evaluateHostCapacityV1(policy,host,ledger,queue,1000000);
   expect(hostInteractiveReserveMegabytesV1(policy,host),row.name).toBe(expected[index]!.reserve);
   expect(hostSessionCapMegabytesV1(policy,host),row.name).toBe(expected[index]!.sessionCap??undefined);
-  expect(queue.map(waiter=>evaluation.decisions.find(decision=>decision.id===waiter.request.id)!).map(decision=>({verdict:decision.verdict==="admit"?"admit":"wait",reason:decision.reason})),row.name).toEqual(expected[index]!.decisions);
+  expect<unknown>(queue.map(waiter=>evaluation.decisions.find(decision=>decision.id===waiter.request.id)!).map(decision=>({verdict:decision.verdict==="admit"?"admit":"wait",reason:decision.reason})),row.name).toEqual(expected[index]!.decisions);
  });
 });
 

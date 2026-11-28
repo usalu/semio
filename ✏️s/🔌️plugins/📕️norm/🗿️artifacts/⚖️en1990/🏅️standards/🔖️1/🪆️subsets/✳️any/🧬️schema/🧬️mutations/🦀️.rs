@@ -429,6 +429,10 @@ pub const KINDS: &[&str] = &[
     "remove-traffic-group",
 ];
 
+#[path = "🧊️cold-bounds/🦀️.rs"]
+mod cold_bounds;
+pub use cold_bounds::{en1990_cold_replay_bounds, en1990_mutation_bytes, en1990_snapshot_bytes};
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

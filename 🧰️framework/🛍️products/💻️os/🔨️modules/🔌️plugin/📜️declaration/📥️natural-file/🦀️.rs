@@ -456,7 +456,7 @@ const PUBLICATION_STEPS_PER_CHECKPOINT: u64 = 16;
 const PACK_EXPORT_ACTIONS_PER_STEP: usize = 4_096;
 
 /// 📶 Coalesces byte-level Pack work by the existing contract quantum and publishes stage boundaries immediately.
-pub(crate) fn publication_checkpoint_due(previous: u64, current: u64, quantum: u64, changed_stage: bool) -> bool {
+pub fn publication_checkpoint_due(previous: u64, current: u64, quantum: u64, changed_stage: bool) -> bool {
     let quantum = quantum.max(1);
     changed_stage || current / quantum != previous / quantum
 }

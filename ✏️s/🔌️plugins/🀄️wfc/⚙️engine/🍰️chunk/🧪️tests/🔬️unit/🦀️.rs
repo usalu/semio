@@ -1,4 +1,5 @@
 use super::*;
+use crate::outcome::SolveOutcome;
 use crate::model::ModelBuilder;
 use crate::oracle;
 use crate::topology::GraphTopologyBuilder;
@@ -31,12 +32,14 @@ fn chunk_seed_is_deterministic_and_varies_by_coordinate_and_model() {
     assert_ne!(chunk_seed(1, -3, 4, 99), chunk_seed(1, 3, 4, 99));
 }
 
+fn settled<T:Topology+Clone+Send+'static>(result:SearchResult<T>)->SolveOutcome{match result{Ok(outcome)=>outcome,Err(_)=>panic!("the chunk search failed to retire its producer")}}
+
 #[test]
 fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
     let (model, topo, arcs) = checkerboard(10);
     let config = SearchConfig::default();
-    let a = solve_chunk(&model, &topo, &config, 42, 2, -1, None, &[]);
-    let b = solve_chunk(&model, &topo, &config, 42, 2, -1, None, &[]);
+    let a = settled(solve_chunk(&model, &topo, &config, 42, 2, -1, None, &[]));
+    let b = settled(solve_chunk(&model, &topo, &config, 42, 2, -1, None, &[]));
     match (a, b) {
         (SolveOutcome::Solved(sa), SolveOutcome::Solved(sb)) => {
             assert_eq!(sa.assignment, sb.assignment);
@@ -50,7 +53,7 @@ fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
 fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
     let (model, topo, _arcs) = checkerboard(6);
     let config = SearchConfig::default();
-    let outcome = solve_chunk(&model, &topo, &config, 7, 0, 0, None, &[(NodeId(0), PatternId(1))]);
+    let outcome = settled(solve_chunk(&model, &topo, &config, 7, 0, 0, None, &[(NodeId(0), PatternId(1))]));
     match outcome {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(1)),
         other => panic!("expected Solved, got {other:?}"),
@@ -66,8 +69,8 @@ fn different_chunk_coordinates_can_yield_different_content_for_an_underconstrain
     let model = b.compile().unwrap();
     let topo = GraphTopologyBuilder::new(1).build().unwrap();
     let config = SearchConfig::default();
-    let at_origin = solve_chunk(&model, &topo, &config, 123, 0, 0, None, &[]);
-    let elsewhere = solve_chunk(&model, &topo, &config, 123, 500, -500, None, &[]);
+    let at_origin = settled(solve_chunk(&model, &topo, &config, 123, 0, 0, None, &[]));
+    let elsewhere = settled(solve_chunk(&model, &topo, &config, 123, 500, -500, None, &[]));
     assert!(matches!(at_origin, SolveOutcome::Solved(_)));
     assert!(matches!(elsewhere, SolveOutcome::Solved(_)));
 }

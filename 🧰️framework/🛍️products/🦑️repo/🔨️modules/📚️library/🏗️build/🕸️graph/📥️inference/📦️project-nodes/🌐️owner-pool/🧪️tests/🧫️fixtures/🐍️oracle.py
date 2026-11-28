@@ -32,9 +32,10 @@ def sizing(case, p):
         return {"children": 0, "reason": "waiting", "limit": limit("waiting", 0)}
     waited = fg.get("oldestWaitMilliseconds", 0)
     idle = h.get("idleCores")
-    cores_held = idle is None or (idle < 1 and idle + case["children"] >= 1)
+    cores_held = (idle is None or (idle < 1 and idle + case["children"] >= 1)) and (waiting is None or waiting <= room_now)
     memory_held = waiting is None or blocked(waiting)
-    if fg["waiters"] > 0 and waited >= p["yieldAfterMilliseconds"] and (memory_held or cores_held):
+    feeds = fg.get("retainedUnrealizedMegabytes", 0) > 0
+    if fg["waiters"] > 0 and waited >= p["yieldAfterMilliseconds"] and not feeds and (memory_held or cores_held):
         return {"children": 0, "reason": "waiting", "limit": limit("waiting", 0)}
     reserved = math.ceil(h["cores"] * p["foregroundCoreShareBasisPoints"] / 10000) if fg["waiters"] > 0 else 0
     minimum = max(1, math.ceil(h["cores"] * p["minimumShareBasisPoints"] / 10000))

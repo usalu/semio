@@ -31,3 +31,19 @@ Update: after ~25 min the cargo run was at crate 67 of the closure (compiling, l
 ## Not done / unverified
 - No code change, no landing, no landings.md entry (nothing to reclaim; policy fix needs a cache-role landing).
 - Next lane: (1) blob bound = min(share, free - reserve - margin); (2) guard tick must remeasure (usage hint) before the collection scan of 100k objects, not after; (3) 507 rate from the new refusal log only after the next hand-over (session counter: 116 rejected of 23,690 puts = 0.5 %, down from 1.13 M).
+
+# Round 2 (01:15-01:50)
+
+## (1) Blob bound tracks free space
+Already structurally true: `remoteCacheBlobBoundV1` = share of the cap in force, and the cap in force = min(proportional, store + free - reserve), re-read on every call. What was wrong is the store figure: it came from `usage.json`, 54 min stale, so the bound (and `cas status`) ignored 35 GiB. Fixed through (2). New test (`🌐️remote-cache/📐️blob-bound/🧪️tests`): the bound with the free space near the reserve is below the bound with 20 GiB more room, never above (store + free) / 2, and a fresh measurement replaces a stale hint (5 pass). Added an optional partition port to `remoteCacheBlobBoundV1` as the test seam.
+
+## (2) Fresh usage, measured first
+Schema-first: `UsageHint` gained optional `measuredBytes`/`measuredAtMs` (bilingual comment). `recordCasMeasurementV1` writes a plain walk next to the collection stamp; `readCasUsageHintV1` returns the newer one (without the collection credit, so the cooldown rule is unchanged), so guard, blob bound, `cas status` and fleet status all read it. `guard.remeasure` records every walk; `casEnforceTickV1` now remeasures a stale hint (older than 2 sweep periods) BEFORE the volume relief and the sweep, and not again afterwards. The earlier flaw: the walk's result lived only in process memory, so the file stayed stale and every reader judged on it.
+Tests: volume-relief 5 pass (new: order measure -> relieve, hint file holds the walk), cas 72 pass, remote-cache server 10 pass, blob-bound 5 pass; `repo typecheck` of the 5 touched files: passed, 0 errors (473 s); dangling imports: exit 0. Landing: `landings.md` entry written; locks cas + remote-cache released. Landed at about 01:20-01:35, outside the :00-:10 slot (the addendum reached me at about 01:37); the sidecar picks it up at its next hand-over (3 h policy).
+Not done: incremental put/delete deltas (the guard already adds put bytes via `account`; deletes by the server's collector are not subtracted, so the in-process base only drifts up between walks, never down).
+
+## (3) Duplicate blobs between the two holders and the CAS
+None. The unit caches keep only indexes in their images (main `.cache/b/r/m/u`: 1.1 GiB total, `e`/`r` entries reference `outputs.*.sha256`); the blobs are CAS objects that the holder keeps by hard link in the CAS (`o/xx/...` link count 2, `k/<holder>`). Census: holder A 32,906 objects, holder B 15,485 objects, sum 48,391 = the held class exactly, so one physical copy per object and the 28 + 28 GiB are not two copies of one blob. Hard links cannot cross to the unit-cache image volumes, and nothing needs to: no blob lives there. The big `u/l` (90 GiB) in the Play image is its cargo target dir, not unit blobs. Clone/hard-link dedupe would save nothing.
+
+## R11 Rust test
+Run 1 (`repo cargo --store=shared --configuration=prototype -- test -p semio-plugin-host-engine --lib cache_retirement`) was cancelled with SIGTERM from an owned execution at about 62 crates compiled (not a test failure). Run 2 restarted and, at report time, was still in shared source admission behind the bun tool (500 s, load 55); no compile result. R11 Rust tests: STILL UNVERIFIED. Log: `scratchpad/h17-cargo2.txt`.

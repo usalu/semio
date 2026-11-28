@@ -1,0 +1,26 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__h&&window.__h.ready()))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "loaded",
+  "js": "(async()=>{const h=window.__h;await h.actions();const s=await h.stepsNow(s=>s.n===4,150000,'demo');return h.json(s)})()",
+  "settleMs": 300,
+  "timeoutMs": 170000
+ },
+ {
+  "name": "canvas click",
+  "js": "(async()=>{const h=window.__h;return 'c'})()",
+  "settleMs": 4000,
+  "pointer": "(async()=>{const c=document.querySelector('canvas');const r=c.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "after",
+  "js": "(async()=>{const h=window.__h;return h.json(h.steps())})()",
+  "settleMs": 300
+ }
+]

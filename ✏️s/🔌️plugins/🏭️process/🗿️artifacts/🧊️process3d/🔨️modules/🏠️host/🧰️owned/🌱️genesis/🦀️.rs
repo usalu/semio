@@ -27,7 +27,7 @@ impl DocumentStoreOwnerProducer<Process3dSnapshot, Process3dMutation> for Proces
 
     fn admit_sources(grant: RetainedCloneGrant) -> Result<(Owners, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Process3dSnapshot, Process3dMutation>> {
         Owners::admit_source_constructor_with_shared_semantic_preparation(grant, NO_CHILDREN, 0, || (SnapshotRetirement::new(), SnapshotRetirement::new(), MutationRetirement::new(), Disposer::new(), process3d_document_preparation_factory())).map(|(mut owners, progress)| {
-            owners.operation_wire = semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(store::whole_document_target));
+            owners.operation_wire = semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::semantic::<Process3dSnapshot>().with_batch_digest().with_original_pack_value_receiving().with_original_target(store::whole_document_target::<Process3dMutation>));
             (owners.with_batch_digest(), progress)
         })
     }

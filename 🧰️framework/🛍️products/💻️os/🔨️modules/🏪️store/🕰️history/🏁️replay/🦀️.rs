@@ -54,6 +54,29 @@ pub fn receive<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_v
 pub fn settle_receiving(cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>)->Result<(),OriginalTurnFailure>{semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}).map(|_|())}
 /// ♻️ Runs one effect-shaped close that also needs the original retirement control; `false` means the turn could not fund it.
 pub fn retire_controlled(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>,&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll)->Result<bool,OriginalTurnFailure>{
+ if born::<dyn semio_framework_value::ErasedSnapshotRetirement>(cx,&mut None)?{return Ok(true)}
+ retire_born(cx,run)
+}
+/// 👶️ Closes one original ticket after its selected failure-spare or child birth ran on its own turn through the unchanged decoder loan.
+pub fn retire_ticket_controlled<T:semio_framework_value::ErasedSnapshotRetirement+?Sized>(cx:&mut StepContext<'_>,ticket:&mut Option<Box<T>>)->Result<bool,OriginalTurnFailure>{
+ if born(cx,ticket)?{return Ok(true)}
+ retire_born(cx,|effect,control|semio_framework_value::close_factory_ticket_controlled(ticket,effect.grant().maximum_copy_bytes,effect,control))
+}
+/// 🍼️ Runs the selected original birth of `owner` (or only the failure spare when absent) outside any general effect and settles its receipt; `false` when no birth was selected.
+fn born<T:semio_framework_value::ErasedSnapshotRetirement+?Sized>(cx:&mut StepContext<'_>,owner:&mut Option<Box<T>>)->Result<bool,OriginalTurnFailure>{
+ cx.with_original_retirement(|cx|{
+  let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+  let body=grant.maximum_copy_bytes;
+  let step=cx.with_native_retirement(|control|control.with_original_close(|original|->Result<Option<RetainedCloneStep>,ValueError>{
+   if owner.is_none(){if original.failure_storage_birth().terminal_is_empty()&&!original.failure_storage_pool().is_empty(){return Ok(None)}}
+   else if semio_framework_value::retirement_birth(owner.as_deref(),body,original)?.is_none(){return Ok(None)}
+   let poll=if owner.is_none(){semio_framework_value::refill_original_failure_storage(original,grant)}else{semio_framework_value::close_retirement_birth(owner.as_deref_mut(),body,original,grant)};
+   match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(Some).map_err(|failure|failure.into_value_error()),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(Some(RetainedCloneStep::Progress(Default::default())))}
+  }))?;
+  match step{Some(step)=>{cx.consume_retained(step.progress())?;Ok(true)},None=>Ok(false)}
+ })
+}
+fn retire_born(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>,&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll)->Result<bool,OriginalTurnFailure>{
  cx.with_original_retirement(|cx|{
   let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   let Some((poll,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|control|Ok::<_,ValueError>(run(effect,control))))? else{return Ok(false)};
@@ -98,6 +121,9 @@ use publication::OriginalReplayStage;
 pub mod repin;
 #[path="abort.rs"]
 pub mod abort;
+#[cfg(test)]
+#[path="retire-tests.rs"]
+mod retire_tests;
 /// 🧾️ The published frontier is fixed metadata; original event bytes remain in the exact native outbox.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalReplayPublicationReceipt{pub generation_before:u64,pub generation_after:u64,pub revision:[u8;32],pub applies_to_head:bool}

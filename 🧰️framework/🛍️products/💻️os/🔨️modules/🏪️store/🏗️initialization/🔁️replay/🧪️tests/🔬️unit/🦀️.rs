@@ -1,10 +1,10 @@
-//! 🧪️ The replay initializer loads a document exactly as a whole load does, one bounded operation per turn, under any wallet, and closes by exact retirement.
+//! 🧪️ The replay initializer loads a document exactly as a whole load does, one bounded operation per turn, under any wallet at or above its step floor, and closes by exact retirement. Below that floor it yields without advancing, and the floor itself is pinned.
 
 use semio_os_spr::{ActorId, MutationId};
 use semio_os_store_space_schema::ArtifactEnvelope;
 use semio_os_store_engine::lifted_store::ArtifactStore;
 use semio_os_store_initialization_replay::initialization_authority::ArtifactStoreInitializationAuthority;
-use semio_os_store_initialization_replay::{ArtifactStoreReplayInitializer, Phase, permits};
+use semio_os_store_initialization_replay::{ArtifactStoreReplayInitializer, Phase, permits, artifact_store_replay_step_items_floor, ARTIFACT_STORE_REPLAY_STEP_FLOOR_REFUSAL};
 use semio_framework_job::{Generation, JobOutcomeBorrow, OperationId, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_os_store_testing_fixtures::demo::AddN; use semio_os_store_testing_fixtures::demo::DemoMutation; use semio_os_store_testing_fixtures::demo::SetN;
@@ -19,7 +19,6 @@ use semio_os_store_space_schema::{ArtifactCommand, SupersedeInput};
 
 const SCHEMA: &str = "demo/v1";
 const ACTOR: &str = "actor:replay";
-const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
 
 type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, semio_os_store_testing_doubles::DemoDocumentStoreOwnerProducer>;
@@ -40,13 +39,7 @@ async fn open(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Store {
 }
 
 async fn author(store: &mut Store, command: ArtifactCommand<DemoMutation>) {
-    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
-        assert!(progress.owned_bytes <= IDENTITY_CEILING);
-        true
-    };
-    let mut identity: semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
-    store.dispatch(command, &mut identity).await.expect("a clean command authors");
-    drop(identity.pause().expect("fixture identity receipt"));
+    semio_os_store_test_support::dispatch_test_command(store, command).await.expect("a clean command authors");
 }
 
 struct Source {
@@ -105,6 +98,13 @@ struct Drive {
     spent: RetainedCloneProgress,
 }
 
+/// 🔭️ The turns one probe grants a wallet to complete a replay; every funded wallet completes within a few hundred.
+fn step_items_floor() -> usize {
+    artifact_store_replay_step_items_floor()
+}
+
+const PROBE_TURNS: usize = 4096;
+
 fn grant_with_items(items: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: items, ..WIDE }
 }
@@ -117,7 +117,9 @@ fn accounted_turn(init: &Initializer) -> bool {
 struct ReplayOriginal{caller:Option<semio_framework_job::OriginalJobFixtureCaller>,decoder:semio_framework_job::OriginalJobDecodeOwner}
 impl ReplayOriginal{
  fn new()->Self{Self::with_identity(OperationId(7),Generation(3))}
- fn with_identity(operation:OperationId,generation:Generation)->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
+ fn with_stock_items(items:usize)->Self{Self::with_stock(OperationId(7),Generation(3),items)}
+ fn with_identity(operation:OperationId,generation:Generation)->Self{Self::with_stock(operation,generation,1<<24)}
+ fn with_stock(operation:OperationId,generation:Generation,items:usize)->Self{let stock=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
  fn turn<T>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->Result<T,semio_framework_job::OriginalTurnFailure>{self.caller.as_mut().expect("replay retains its initiating source until close").turn_with_decoder(grant,&mut self.decoder,advance)}
  fn receipt(&self)->RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
  fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{self.decoder.close_on_source(cx)?;Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
@@ -139,7 +141,9 @@ fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGr
         }
     }))).expect("same original replay admission");
     let ownership=original.receipt();
-    assert!(ownership.fits(grant), "a turn never spends more than its wallet: {ownership:?} of {grant:?}");
+    let (served_items, served_copy_bytes, _) = semio_framework_job::original_receiving_service_scope_headroom();
+    let served = RetainedCloneGrant { maximum_items: grant.maximum_items + served_items * usize::from(grant.maximum_items != 0), maximum_copy_bytes: grant.maximum_copy_bytes + served_copy_bytes * usize::from(grant.maximum_items != 0), ..grant };
+    assert!(ownership.fits(served), "a turn never spends more than its wallet and the receiving service the caller funds beside it: {ownership:?} of {grant:?} in {before:?} -> {:?}", init.phase);
     if accounted {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (ownership.retained_capacity_bytes, ownership.released_bytes), "funded turn allocations match the receipt: {before:?} quote {quote:?} -> {:?} receipt {ownership:?}", init.phase);
     }
@@ -196,12 +200,12 @@ async fn load_whole(source: &Source) -> Store {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replay_equals_direct_application_under_every_grant() {
+async fn replay_equals_direct_application_under_every_funded_grant() {
     let source = source("replay-law", 6, &[(0, Some(10)), (2, None), (5, Some(4))]).await;
     let whole = load_whole(&source).await;
     assert_eq!(whole.snapshot_ref().n, Some(source.expected));
     let mut turns_by_grant = Vec::new();
-    for items in [1usize, 7, 1 << 20] {
+    for items in [step_items_floor(), 2 * step_items_floor(), 1 << 20] {
         let mut init = initializer(envelope(&source).await);
     let mut original=ReplayOriginal::new();
         let (drive, outcome) = run_until(&mut init,&mut original, grant_with_items(items), 100_000, |_, _| false, Outcome::Complete);
@@ -279,17 +283,105 @@ async fn cancellation_at_every_turn_boundary_closes_with_exact_retirement() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cancellation_under_a_single_item_wallet_makes_progress_and_closes() {
-    let source = source("replay-cancel-tight", 3, &[]).await;
+async fn cancellation_at_the_step_floor_wallet_makes_progress_and_closes() {
+    let source = source("replay-cancel-floor", 3, &[]).await;
     let mut init = initializer(envelope(&source).await);
     let mut original=ReplayOriginal::new();
-    let (_, reached) = run_until(&mut init,&mut original, grant_with_items(1), 100_000, |init, _| matches!(init.phase, Phase::Fold { mutation: 1, .. }), Outcome::Complete);
+    let (_, reached) = run_until(&mut init,&mut original, grant_with_items(step_items_floor()), 100_000, |init, _| matches!(init.phase, Phase::Fold { mutation: 1, .. }), Outcome::Complete);
     assert_eq!(reached, Outcome::Yield);
     ArtifactStoreInitializationAuthority::request_cancel(&mut init);
-    let (_, outcome) = run_until(&mut init,&mut original, grant_with_items(1), 100_000, |_, _| false, Outcome::Cancelled);
+    let (_, outcome) = run_until(&mut init,&mut original, grant_with_items(step_items_floor()), 100_000, |_, _| false, Outcome::Cancelled);
     assert_eq!(outcome, Outcome::Cancelled);
     assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
     close_initializer(&mut init,&mut original);
+}
+
+/// 🔭️ Whether a replay completes under a wallet of `items` within the probe; every probe ends cancelled or retired and closed exactly.
+async fn completes_under(source: &Source, items: usize) -> bool {
+    let mut init = initializer(envelope(source).await);
+    let mut original = ReplayOriginal::new();
+    let mut complete = false;
+    for _ in 0..PROBE_TURNS {
+        let (outcome, _, _) = turn(&mut init, &mut original, grant_with_items(items));
+        if outcome == Outcome::Complete {
+            complete = true;
+            break;
+        }
+        assert!(matches!(outcome, Outcome::Yield | Outcome::Unaffordable), "unexpected {outcome:?} under {items} items");
+    }
+    if complete {
+        let mut candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut init).expect("the replay yields its store");
+        retire_store(&mut candidate);
+        drop(candidate);
+    } else {
+        ArtifactStoreInitializationAuthority::request_cancel(&mut init);
+        let (_, outcome) = run_until(&mut init, &mut original, WIDE, 100_000, |_, _| false, Outcome::Cancelled);
+        assert_eq!(outcome, Outcome::Cancelled);
+    }
+    close_initializer(&mut init, &mut original);
+    complete
+}
+
+/// 🧱️ One indivisible replay step funds its settled construction in one turn, so a one-item wallet never advances past its first edit: the framework promises progress at the quoted floor, not under a single item.
+#[semio_framework_async_macros::async_test]
+async fn a_wallet_below_the_step_floor_yields_without_advancing_and_still_closes() {
+    let source = source("replay-starved", 3, &[]).await;
+    let mut init = initializer(envelope(&source).await);
+    let mut original = ReplayOriginal::new();
+    for _ in 0..256 {
+        let (outcome, _, _) = turn(&mut init, &mut original, grant_with_items(1));
+        assert!(matches!(outcome, Outcome::Yield | Outcome::Unaffordable), "a starved wallet only yields: {outcome:?}");
+        assert!(matches!(init.phase, Phase::AwaitEnvelope | Phase::ValidateEnvelope | Phase::ValidateEdit { index: 0 }), "a starved wallet never advances past its first edit: {:?}", init.phase);
+    }
+    assert_eq!(ArtifactStoreInitializationAuthority::progress(&init).0, 0, "a starved wallet folds nothing");
+    ArtifactStoreInitializationAuthority::request_cancel(&mut init);
+    let (_, outcome) = run_until(&mut init, &mut original, grant_with_items(step_items_floor()), 100_000, |_, _| false, Outcome::Cancelled);
+    assert_eq!(outcome, Outcome::Cancelled);
+    close_initializer(&mut init, &mut original);
+}
+
+/// 📌️ The documented step floor is exactly the smallest wallet that replays a document to completion: one item fewer never completes, and neither does a single item.
+#[semio_framework_async_macros::async_test]
+async fn the_step_items_floor_is_exactly_the_minimum_wallet_that_completes() {
+    let source = source("replay-floor", 3, &[(1, Some(9))]).await;
+    for items in step_items_floor()..step_items_floor() + 4 {
+        assert!(completes_under(&source, items).await, "{items} items fund the replay");
+    }
+    assert!(!completes_under(&source, step_items_floor() - 1).await, "one item below the documented floor never completes: the floor is stale");
+    assert!(!completes_under(&source, 1).await, "a single-item wallet never funds a construction");
+}
+
+/// 🚧️ A host whose largest grant is below the step floor is refused at admission with a coded refusal that quotes the floor and the ceiling, instead of yielding forever; a ceiling at the floor is not refused.
+#[semio_framework_async_macros::async_test]
+async fn a_ceiling_below_the_step_floor_is_refused_at_admission_with_the_floor_quoted() {
+    let floor = step_items_floor();
+    let source = source("replay-ceiling", 3, &[]).await;
+    let mut init = initializer(envelope(&source).await);
+    let mut original = ReplayOriginal::with_stock_items(floor - 1);
+    let mut refusal = None;
+    for _ in 0..PROBE_TURNS {
+        if let Err(error) = original.turn(grant_with_items(floor - 1), |cx| ArtifactStoreInitializationAuthority::step(&mut init, cx).map(|_| ())) {
+            refusal = Some(format!("{error:?}"));
+            break;
+        }
+    }
+    let refusal = refusal.expect("a ceiling below the floor is refused, not yielded forever");
+    assert!(refusal.contains(ARTIFACT_STORE_REPLAY_STEP_FLOOR_REFUSAL), "coded: {refusal}");
+    assert!(refusal.contains(&format!("maximumItems floor {floor} above ceiling {}", floor - 1)), "the floor and the ceiling are quoted: {refusal}");
+    std::mem::forget(original);
+    std::mem::forget(init);
+    let mut quoted = initializer(envelope(&source).await);
+    let mut wide = ReplayOriginal::new();
+    let (_, reached) = run_until(&mut quoted, &mut wide, WIDE, 100_000, |init, _| matches!(init.phase, Phase::ValidateEdit { index: 0 }), Outcome::Complete);
+    assert_eq!(reached, Outcome::Yield);
+    let quote = ArtifactStoreInitializationAuthority::next_step_floor(&quoted).expect("the first edit quotes its floor");
+    assert_eq!(quote.maximum_items, floor, "the quote names the same floor");
+    let physical = ArtifactStoreInitializationAuthority::next_step_demands(&quoted).expect("the first edit quotes its demand");
+    assert_eq!((physical.copy_bytes, physical.capacity_bytes, physical.release_bytes, physical.depth), (quote.maximum_copy_bytes, quote.maximum_capacity_bytes, quote.maximum_release_bytes, quote.maximum_depth), "the physical quote is the floor's");
+    ArtifactStoreInitializationAuthority::request_cancel(&mut quoted);
+    let (_, outcome) = run_until(&mut quoted, &mut wide, WIDE, 100_000, |_, _| false, Outcome::Cancelled);
+    assert_eq!(outcome, Outcome::Cancelled);
+    close_initializer(&mut quoted, &mut wide);
 }
 
 /// 🪪️ Stepping on an original caller whose identity differs from the replacement's own identity is not stale.

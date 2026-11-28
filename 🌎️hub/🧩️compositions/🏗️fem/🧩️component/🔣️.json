@@ -4,7 +4,16 @@
   "role": "plugin",
   "manifest": {
     "pluginId": "fem",
-    "label": "FEM",
+    "label": {
+      "native": {
+        "en": "FEM",
+        "de": "FEM"
+      },
+      "reuse": {
+        "en": "FEM",
+        "de": "FEM"
+      }
+    },
     "version": "0.1.0",
     "apps": [
       {
@@ -1600,6 +1609,33 @@
                   "kind": "string"
                 },
                 "required": true
+              },
+              {
+                "id": "terms",
+                "label": {
+                  "native": {
+                    "en": "Terms",
+                    "de": "Terme"
+                  },
+                  "reuse": {
+                    "en": "Terms",
+                    "de": "Terme"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "Load case ids with factors, for example dead:1.35, live:1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]]",
+                    "de": "Lastfall-Kennungen mit Faktoren, zum Beispiel dead:1.35, live:1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]"
+                  },
+                  "reuse": {
+                    "en": "Load case ids with factors, for example dead:1.35, live:1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]]",
+                    "de": "Lastfall-Kennungen mit Faktoren, zum Beispiel dead:1.35, live:1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]"
+                  }
+                }
               }
             ],
             "inPalette": true,
@@ -7811,6 +7847,916 @@
                 "de": "Diese Zeichenflächenaktion ist in diesem Fenster nicht verfügbar."
               }
             }
+          },
+          {
+            "code": "fem.result-animation.window-context-required",
+            "label": {
+              "native": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem.result-animation-tick.window-context-required",
+            "label": {
+              "native": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem.result-animation-tick.retained-route-required",
+            "label": {
+              "native": {
+                "en": "The result animation tick needs the running editor.",
+                "de": "Der Animationstakt braucht den laufenden Editor."
+              },
+              "reuse": {
+                "en": "The result animation tick needs the running editor.",
+                "de": "Der Animationstakt braucht den laufenden Editor."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.node-missing",
+            "label": {
+              "native": {
+                "en": "No node with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Knoten mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No node with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Knoten mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.node-field",
+            "label": {
+              "native": {
+                "en": "A node has no field of this name.",
+                "de": "Dieses Objekt (Knoten) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A node has no field of this name.",
+                "de": "Dieses Objekt (Knoten) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.node-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the node.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Knoten)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the node.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Knoten)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.node-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no node with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Knoten) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no node with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Knoten) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.element-missing",
+            "label": {
+              "native": {
+                "en": "No element with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Element mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No element with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Element mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.element-field",
+            "label": {
+              "native": {
+                "en": "A element has no field of this name.",
+                "de": "Dieses Objekt (Element) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A element has no field of this name.",
+                "de": "Dieses Objekt (Element) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.element-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the element.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Element)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the element.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Element)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.element-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no element with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Element) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no element with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Element) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.material-missing",
+            "label": {
+              "native": {
+                "en": "No material with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Material mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No material with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Material mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.material-field",
+            "label": {
+              "native": {
+                "en": "A material has no field of this name.",
+                "de": "Dieses Objekt (Material) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A material has no field of this name.",
+                "de": "Dieses Objekt (Material) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.material-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the material.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Material)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the material.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Material)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.material-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no material with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Material) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no material with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Material) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.section-missing",
+            "label": {
+              "native": {
+                "en": "No section with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Querschnitt mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No section with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Querschnitt mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.section-field",
+            "label": {
+              "native": {
+                "en": "A section has no field of this name.",
+                "de": "Dieses Objekt (Querschnitt) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A section has no field of this name.",
+                "de": "Dieses Objekt (Querschnitt) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.section-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the section.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Querschnitt)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the section.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Querschnitt)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.section-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no section with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Querschnitt) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no section with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Querschnitt) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.support-missing",
+            "label": {
+              "native": {
+                "en": "No support with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lager mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No support with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lager mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.support-field",
+            "label": {
+              "native": {
+                "en": "A support has no field of this name.",
+                "de": "Dieses Objekt (Lager) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A support has no field of this name.",
+                "de": "Dieses Objekt (Lager) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.support-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the support.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lager)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the support.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lager)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.support-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no support with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lager) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no support with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lager) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.region-missing",
+            "label": {
+              "native": {
+                "en": "No region with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Bereich mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No region with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Bereich mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.region-field",
+            "label": {
+              "native": {
+                "en": "A region has no field of this name.",
+                "de": "Dieses Objekt (Bereich) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A region has no field of this name.",
+                "de": "Dieses Objekt (Bereich) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.region-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the region.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Bereich)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the region.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Bereich)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.region-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no region with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Bereich) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no region with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Bereich) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-missing",
+            "label": {
+              "native": {
+                "en": "No load with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Last mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No load with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Last mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-field",
+            "label": {
+              "native": {
+                "en": "A load has no field of this name.",
+                "de": "Dieses Objekt (Last) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A load has no field of this name.",
+                "de": "Dieses Objekt (Last) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the load.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Last)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the load.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Last)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.load-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no load with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Last) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no load with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Last) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-case-missing",
+            "label": {
+              "native": {
+                "en": "No load case with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lastfall mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No load case with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lastfall mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-case-field",
+            "label": {
+              "native": {
+                "en": "A load case has no field of this name.",
+                "de": "Dieses Objekt (Lastfall) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A load case has no field of this name.",
+                "de": "Dieses Objekt (Lastfall) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.load-case-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the load case.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lastfall)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the load case.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lastfall)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.load-case-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no load case with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lastfall) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no load case with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lastfall) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.combination-missing",
+            "label": {
+              "native": {
+                "en": "No combination with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Kombination mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No combination with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Kombination mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.combination-field",
+            "label": {
+              "native": {
+                "en": "A combination has no field of this name.",
+                "de": "Dieses Objekt (Kombination) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A combination has no field of this name.",
+                "de": "Dieses Objekt (Kombination) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.patch.combination-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the combination.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Kombination)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the combination.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Kombination)."
+              }
+            }
+          },
+          {
+            "code": "fem2d.reference.combination-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no combination with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Kombination) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no combination with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Kombination) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.focus-entity.window-required",
+            "label": {
+              "native": {
+                "en": "Focus works in a Model or Results window; click one first.",
+                "de": "Fokussieren wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "Focus works in a Model or Results window; click one first.",
+                "de": "Fokussieren wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem2d.focus-entity.window-stale",
+            "label": {
+              "native": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem2d.focus-entity.window-kind",
+            "label": {
+              "native": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem2d.focus-entity.window-context-required",
+            "label": {
+              "native": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              },
+              "reuse": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              }
+            }
+          },
+          {
+            "code": "fem2d.camera.window-required",
+            "label": {
+              "native": {
+                "en": "The camera works in a Model or Results window; click one first.",
+                "de": "Die Kamera wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The camera works in a Model or Results window; click one first.",
+                "de": "Die Kamera wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem2d.camera.window-stale",
+            "label": {
+              "native": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem2d.camera.window-kind",
+            "label": {
+              "native": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem2d.camera.window-context-required",
+            "label": {
+              "native": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              },
+              "reuse": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              }
+            }
+          },
+          {
+            "code": "fem2d.focus-entity.unknown-entity",
+            "label": {
+              "native": {
+                "en": "Nothing in the document has this id, so there is nothing to focus.",
+                "de": "Nichts im Dokument hat diese Kennung, daher gibt es nichts zu fokussieren."
+              },
+              "reuse": {
+                "en": "Nothing in the document has this id, so there is nothing to focus.",
+                "de": "Nichts im Dokument hat diese Kennung, daher gibt es nichts zu fokussieren."
+              }
+            }
+          },
+          {
+            "code": "fem2d.member.degenerate",
+            "label": {
+              "native": {
+                "en": "A member needs two different nodes.",
+                "de": "Ein Stab braucht zwei verschiedene Knoten."
+              },
+              "reuse": {
+                "en": "A member needs two different nodes.",
+                "de": "Ein Stab braucht zwei verschiedene Knoten."
+              }
+            }
+          },
+          {
+            "code": "fem2d.results.window-context-required",
+            "label": {
+              "native": {
+                "en": "Choose the result display from a Results window.",
+                "de": "Wähle die Ergebnisanzeige in einem Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Choose the result display from a Results window.",
+                "de": "Wähle die Ergebnisanzeige in einem Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem2d.combination.terms-unreadable",
+            "label": {
+              "native": {
+                "en": "The terms '{terms}' could not be read. Write load case ids with factors, for example dead:1.35, live:1.5 or dead=1.35, live=1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]].",
+                "de": "Die Terme '{terms}' konnten nicht gelesen werden. Gib Lastfall-Kennungen mit Faktoren an, zum Beispiel dead:1.35, live:1.5 oder dead=1.35, live=1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]."
+              },
+              "reuse": {
+                "en": "The terms '{terms}' could not be read. Write load case ids with factors, for example dead:1.35, live:1.5 or dead=1.35, live=1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]].",
+                "de": "Die Terme '{terms}' konnten nicht gelesen werden. Gib Lastfall-Kennungen mit Faktoren an, zum Beispiel dead:1.35, live:1.5 oder dead=1.35, live=1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]."
+              }
+            }
+          },
+          {
+            "code": "fem2d.combination.terms-empty",
+            "label": {
+              "native": {
+                "en": "A combination needs at least one term, for example dead:1.35.",
+                "de": "Eine Kombination braucht mindestens einen Term, zum Beispiel dead:1.35."
+              },
+              "reuse": {
+                "en": "A combination needs at least one term, for example dead:1.35.",
+                "de": "Eine Kombination braucht mindestens einen Term, zum Beispiel dead:1.35."
+              }
+            }
+          },
+          {
+            "code": "fem2d.combination.terms-case-unknown",
+            "label": {
+              "native": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              },
+              "reuse": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              }
+            }
+          },
+          {
+            "code": "fem2d.combination.terms-case-repeated",
+            "label": {
+              "native": {
+                "en": "The load case '{case}' appears more than once.",
+                "de": "Der Lastfall '{case}' kommt mehrfach vor."
+              },
+              "reuse": {
+                "en": "The load case '{case}' appears more than once.",
+                "de": "Der Lastfall '{case}' kommt mehrfach vor."
+              }
+            }
+          },
+          {
+            "code": "fem2d.combination.terms-factor-invalid",
+            "label": {
+              "native": {
+                "en": "The factor of '{case}' is not a finite number.",
+                "de": "Der Faktor von '{case}' ist keine endliche Zahl."
+              },
+              "reuse": {
+                "en": "The factor of '{case}' is not a finite number.",
+                "de": "Der Faktor von '{case}' ist keine endliche Zahl."
+              }
+            }
+          },
+          {
+            "code": "fem2d.region.material-unknown",
+            "label": {
+              "native": {
+                "en": "'{material}' is not a material of this document. Add a material first or use the id of an existing one.",
+                "de": "'{material}' ist kein Material dieses Dokuments. Füge zuerst ein Material hinzu oder nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "'{material}' is not a material of this document. Add a material first or use the id of an existing one.",
+                "de": "'{material}' ist kein Material dieses Dokuments. Füge zuerst ein Material hinzu oder nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem2d.region.extent",
+            "label": {
+              "native": {
+                "en": "A region needs a positive width and height.",
+                "de": "Ein Bereich braucht positive Breite und Höhe."
+              },
+              "reuse": {
+                "en": "A region needs a positive width and height.",
+                "de": "Ein Bereich braucht positive Breite und Höhe."
+              }
+            }
+          },
+          {
+            "code": "fem2d.interaction.identity",
+            "label": {
+              "native": {
+                "en": "The selection no longer matches the document. Select again.",
+                "de": "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              },
+              "reuse": {
+                "en": "The selection no longer matches the document. Select again.",
+                "de": "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              }
+            }
+          },
+          {
+            "code": "fem2d.remove-selection.combination-cycle",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: a combination would refer to itself.",
+                "de": "Nichts wurde entfernt: Eine Kombination würde auf sich selbst verweisen."
+              },
+              "reuse": {
+                "en": "Nothing was removed: a combination would refer to itself.",
+                "de": "Nichts wurde entfernt: Eine Kombination würde auf sich selbst verweisen."
+              }
+            }
+          },
+          {
+            "code": "clipboard.copy.empty-selection",
+            "label": {
+              "native": {
+                "en": "Nothing is selected to copy or cut. Select something in the model first.",
+                "de": "Es ist nichts zum Kopieren oder Ausschneiden ausgewählt. Wähle zuerst etwas im Modell aus."
+              },
+              "reuse": {
+                "en": "Nothing is selected to copy or cut. Select something in the model first.",
+                "de": "Es ist nichts zum Kopieren oder Ausschneiden ausgewählt. Wähle zuerst etwas im Modell aus."
+              }
+            }
+          },
+          {
+            "code": "clipboard.paste.empty",
+            "label": {
+              "native": {
+                "en": "The clipboard holds nothing this editor can paste. Copy something here first.",
+                "de": "Die Zwischenablage enthält nichts, das dieser Editor einfügen kann. Kopiere zuerst etwas."
+              },
+              "reuse": {
+                "en": "The clipboard holds nothing this editor can paste. Copy something here first.",
+                "de": "Die Zwischenablage enthält nichts, das dieser Editor einfügen kann. Kopiere zuerst etwas."
+              }
+            }
+          },
+          {
+            "code": "fem2d.self-weight.case-unknown",
+            "label": {
+              "native": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              },
+              "reuse": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              }
+            }
+          },
+          {
+            "code": "fem2d.analysis.nothing",
+            "label": {
+              "native": {
+                "en": "Give at least one analysis setting to change: modal count, buckling count or deformation scale.",
+                "de": "Gib mindestens eine zu ändernde Analyseeinstellung an: Anzahl Moden, Anzahl Beulmoden oder Verformungsmaßstab."
+              },
+              "reuse": {
+                "en": "Give at least one analysis setting to change: modal count, buckling count or deformation scale.",
+                "de": "Gib mindestens eine zu ändernde Analyseeinstellung an: Anzahl Moden, Anzahl Beulmoden oder Verformungsmaßstab."
+              }
+            }
+          },
+          {
+            "code": "fem2d.analysis.value",
+            "label": {
+              "native": {
+                "en": "'{value}' is not a number.",
+                "de": "'{value}' ist keine Zahl."
+              },
+              "reuse": {
+                "en": "'{value}' is not a number.",
+                "de": "'{value}' ist keine Zahl."
+              }
+            }
+          },
+          {
+            "code": "fem2d.analysis.field",
+            "label": {
+              "native": {
+                "en": "'{field}' is not an analysis setting.",
+                "de": "'{field}' ist keine Analyseeinstellung."
+              },
+              "reuse": {
+                "en": "'{field}' is not an analysis setting.",
+                "de": "'{field}' ist keine Analyseeinstellung."
+              }
+            }
+          },
+          {
+            "code": "fem2d.remove-selection.material-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the material '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Das Material '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the material '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Das Material '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem2d.remove-selection.section-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the section '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Querschnitt '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the section '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Querschnitt '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem2d.remove-selection.load-case-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the load case '{id}' is still used by the combinations {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Lastfall '{id}' wird noch von den Kombinationen {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the load case '{id}' is still used by the combinations {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Lastfall '{id}' wird noch von den Kombinationen {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem2d.remove-selection.empty",
+            "label": {
+              "native": {
+                "en": "Nothing is selected to remove. Select something in the model first.",
+                "de": "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus."
+              },
+              "reuse": {
+                "en": "Nothing is selected to remove. Select something in the model first.",
+                "de": "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus."
+              }
+            }
+          },
+          {
+            "code": "fem2d.camera.invalid",
+            "label": {
+              "native": {
+                "en": "This camera is not valid.",
+                "de": "Diese Kamera ist nicht gültig."
+              },
+              "reuse": {
+                "en": "This camera is not valid.",
+                "de": "Diese Kamera ist nicht gültig."
+              }
+            }
           }
         ]
       },
@@ -10405,10 +11351,7 @@
                   }
                 },
                 "schema": {
-                  "kind": "string",
-                  "format": {
-                    "kind": "json"
-                  }
+                  "kind": "string"
                 },
                 "required": true,
                 "description": {
@@ -16575,6 +17518,45 @@
             }
           },
           {
+            "code": "fem.result-animation.window-context-required",
+            "label": {
+              "native": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem.result-animation-tick.window-context-required",
+            "label": {
+              "native": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The result animation belongs to a Results window; click one first.",
+                "de": "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem.result-animation-tick.retained-route-required",
+            "label": {
+              "native": {
+                "en": "The result animation tick needs the running editor.",
+                "de": "Der Animationstakt braucht den laufenden Editor."
+              },
+              "reuse": {
+                "en": "The result animation tick needs the running editor.",
+                "de": "Der Animationstakt braucht den laufenden Editor."
+              }
+            }
+          },
+          {
             "code": "fem3d.combination.terms-unreadable",
             "label": {
               "native": {
@@ -16662,6 +17644,812 @@
               "reuse": {
                 "en": "A solid needs a positive width, depth and height.",
                 "de": "Ein Volumenkörper braucht positive Breite, Tiefe und Höhe."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.node-missing",
+            "label": {
+              "native": {
+                "en": "No node with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Knoten mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No node with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Knoten mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.node-field",
+            "label": {
+              "native": {
+                "en": "A node has no field of this name.",
+                "de": "Dieses Objekt (Knoten) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A node has no field of this name.",
+                "de": "Dieses Objekt (Knoten) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.node-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the node.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Knoten)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the node.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Knoten)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.node-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no node with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Knoten) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no node with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Knoten) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.element-missing",
+            "label": {
+              "native": {
+                "en": "No element with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Element mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No element with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Element mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.element-field",
+            "label": {
+              "native": {
+                "en": "A element has no field of this name.",
+                "de": "Dieses Objekt (Element) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A element has no field of this name.",
+                "de": "Dieses Objekt (Element) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.element-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the element.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Element)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the element.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Element)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.element-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no element with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Element) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no element with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Element) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.material-missing",
+            "label": {
+              "native": {
+                "en": "No material with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Material mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No material with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Material mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.material-field",
+            "label": {
+              "native": {
+                "en": "A material has no field of this name.",
+                "de": "Dieses Objekt (Material) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A material has no field of this name.",
+                "de": "Dieses Objekt (Material) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.material-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the material.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Material)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the material.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Material)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.material-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no material with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Material) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no material with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Material) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.section-missing",
+            "label": {
+              "native": {
+                "en": "No section with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Querschnitt mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No section with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Querschnitt mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.section-field",
+            "label": {
+              "native": {
+                "en": "A section has no field of this name.",
+                "de": "Dieses Objekt (Querschnitt) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A section has no field of this name.",
+                "de": "Dieses Objekt (Querschnitt) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.section-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the section.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Querschnitt)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the section.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Querschnitt)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.section-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no section with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Querschnitt) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no section with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Querschnitt) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.support-missing",
+            "label": {
+              "native": {
+                "en": "No support with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lager mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No support with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lager mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.support-field",
+            "label": {
+              "native": {
+                "en": "A support has no field of this name.",
+                "de": "Dieses Objekt (Lager) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A support has no field of this name.",
+                "de": "Dieses Objekt (Lager) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.support-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the support.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lager)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the support.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lager)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.support-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no support with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lager) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no support with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lager) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.solid-missing",
+            "label": {
+              "native": {
+                "en": "No solid with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Volumenkörper mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No solid with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Volumenkörper mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.solid-field",
+            "label": {
+              "native": {
+                "en": "A solid has no field of this name.",
+                "de": "Dieses Objekt (Volumenkörper) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A solid has no field of this name.",
+                "de": "Dieses Objekt (Volumenkörper) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.solid-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the solid.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Volumenkörper)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the solid.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Volumenkörper)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.solid-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no solid with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Volumenkörper) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no solid with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Volumenkörper) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-missing",
+            "label": {
+              "native": {
+                "en": "No load with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Last mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No load with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Last mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-field",
+            "label": {
+              "native": {
+                "en": "A load has no field of this name.",
+                "de": "Dieses Objekt (Last) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A load has no field of this name.",
+                "de": "Dieses Objekt (Last) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the load.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Last)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the load.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Last)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.load-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no load with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Last) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no load with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Last) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-case-missing",
+            "label": {
+              "native": {
+                "en": "No load case with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lastfall mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No load case with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Lastfall mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-case-field",
+            "label": {
+              "native": {
+                "en": "A load case has no field of this name.",
+                "de": "Dieses Objekt (Lastfall) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A load case has no field of this name.",
+                "de": "Dieses Objekt (Lastfall) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.load-case-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the load case.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lastfall)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the load case.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Lastfall)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.load-case-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no load case with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lastfall) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no load case with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Lastfall) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.combination-missing",
+            "label": {
+              "native": {
+                "en": "No combination with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Kombination mit dieser Kennung."
+              },
+              "reuse": {
+                "en": "No combination with this id exists in the document.",
+                "de": "Im Dokument gibt es kein Kombination mit dieser Kennung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.combination-field",
+            "label": {
+              "native": {
+                "en": "A combination has no field of this name.",
+                "de": "Dieses Objekt (Kombination) hat kein Feld mit diesem Namen."
+              },
+              "reuse": {
+                "en": "A combination has no field of this name.",
+                "de": "Dieses Objekt (Kombination) hat kein Feld mit diesem Namen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.patch.combination-value",
+            "label": {
+              "native": {
+                "en": "This value is not valid for that field of the combination.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Kombination)."
+              },
+              "reuse": {
+                "en": "This value is not valid for that field of the combination.",
+                "de": "Dieser Wert ist für dieses Feld nicht gültig (Kombination)."
+              }
+            }
+          },
+          {
+            "code": "fem3d.reference.combination-unknown",
+            "label": {
+              "native": {
+                "en": "This document has no combination with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Kombination) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              },
+              "reuse": {
+                "en": "This document has no combination with the id '{id}'. Use the id of an existing one.",
+                "de": "Dieses Dokument hat kein Objekt (Kombination) mit der Kennung '{id}'. Nutze die Kennung eines vorhandenen."
+              }
+            }
+          },
+          {
+            "code": "fem3d.focus-entity.window-required",
+            "label": {
+              "native": {
+                "en": "Focus works in a Model or Results window; click one first.",
+                "de": "Fokussieren wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "Focus works in a Model or Results window; click one first.",
+                "de": "Fokussieren wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem3d.focus-entity.window-stale",
+            "label": {
+              "native": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem3d.focus-entity.window-kind",
+            "label": {
+              "native": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem3d.focus-entity.window-context-required",
+            "label": {
+              "native": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              },
+              "reuse": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.window-required",
+            "label": {
+              "native": {
+                "en": "The camera works in a Model or Results window; click one first.",
+                "de": "Die Kamera wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              },
+              "reuse": {
+                "en": "The camera works in a Model or Results window; click one first.",
+                "de": "Die Kamera wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.window-stale",
+            "label": {
+              "native": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "That window is closed; pick an open Model or Results window.",
+                "de": "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.window-kind",
+            "label": {
+              "native": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Only a Model or Results window can do this.",
+                "de": "Das kann nur ein Modell- oder Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.window-context-required",
+            "label": {
+              "native": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              },
+              "reuse": {
+                "en": "This needs the window it is run from.",
+                "de": "Das braucht das Fenster, aus dem es gestartet wird."
+              }
+            }
+          },
+          {
+            "code": "fem3d.focus-entity.unknown-entity",
+            "label": {
+              "native": {
+                "en": "Nothing in the document has this id, so there is nothing to focus.",
+                "de": "Nichts im Dokument hat diese Kennung, daher gibt es nichts zu fokussieren."
+              },
+              "reuse": {
+                "en": "Nothing in the document has this id, so there is nothing to focus.",
+                "de": "Nichts im Dokument hat diese Kennung, daher gibt es nichts zu fokussieren."
+              }
+            }
+          },
+          {
+            "code": "fem3d.member.degenerate",
+            "label": {
+              "native": {
+                "en": "A member needs two different nodes.",
+                "de": "Ein Stab braucht zwei verschiedene Knoten."
+              },
+              "reuse": {
+                "en": "A member needs two different nodes.",
+                "de": "Ein Stab braucht zwei verschiedene Knoten."
+              }
+            }
+          },
+          {
+            "code": "fem3d.results.window-context-required",
+            "label": {
+              "native": {
+                "en": "Choose the result display from a Results window.",
+                "de": "Wähle die Ergebnisanzeige in einem Ergebnisfenster."
+              },
+              "reuse": {
+                "en": "Choose the result display from a Results window.",
+                "de": "Wähle die Ergebnisanzeige in einem Ergebnisfenster."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.orbit-required",
+            "label": {
+              "native": {
+                "en": "Set Camera needs a camera: a position, a target and a zoom.",
+                "de": "Kamera festlegen braucht eine Kamera: Position, Ziel und Zoom."
+              },
+              "reuse": {
+                "en": "Set Camera needs a camera: a position, a target and a zoom.",
+                "de": "Kamera festlegen braucht eine Kamera: Position, Ziel und Zoom."
+              }
+            }
+          },
+          {
+            "code": "fem3d.camera.orbit-invalid",
+            "label": {
+              "native": {
+                "en": "This camera is not valid: {reason}.",
+                "de": "Diese Kamera ist nicht gültig: {reason}."
+              },
+              "reuse": {
+                "en": "This camera is not valid: {reason}.",
+                "de": "Diese Kamera ist nicht gültig: {reason}."
+              }
+            }
+          },
+          {
+            "code": "clipboard.copy.empty-selection",
+            "label": {
+              "native": {
+                "en": "Nothing is selected to copy or cut. Select something in the model first.",
+                "de": "Es ist nichts zum Kopieren oder Ausschneiden ausgewählt. Wähle zuerst etwas im Modell aus."
+              },
+              "reuse": {
+                "en": "Nothing is selected to copy or cut. Select something in the model first.",
+                "de": "Es ist nichts zum Kopieren oder Ausschneiden ausgewählt. Wähle zuerst etwas im Modell aus."
+              }
+            }
+          },
+          {
+            "code": "clipboard.paste.empty",
+            "label": {
+              "native": {
+                "en": "The clipboard holds nothing this editor can paste. Copy something here first.",
+                "de": "Die Zwischenablage enthält nichts, das dieser Editor einfügen kann. Kopiere zuerst etwas."
+              },
+              "reuse": {
+                "en": "The clipboard holds nothing this editor can paste. Copy something here first.",
+                "de": "Die Zwischenablage enthält nichts, das dieser Editor einfügen kann. Kopiere zuerst etwas."
+              }
+            }
+          },
+          {
+            "code": "fem3d.self-weight.case-unknown",
+            "label": {
+              "native": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              },
+              "reuse": {
+                "en": "'{case}' is not a load case of this document.",
+                "de": "'{case}' ist kein Lastfall dieses Dokuments."
+              }
+            }
+          },
+          {
+            "code": "fem3d.analysis.nothing",
+            "label": {
+              "native": {
+                "en": "Give at least one analysis setting to change: modal count, buckling count or deformation scale.",
+                "de": "Gib mindestens eine zu ändernde Analyseeinstellung an: Anzahl Moden, Anzahl Beulmoden oder Verformungsmaßstab."
+              },
+              "reuse": {
+                "en": "Give at least one analysis setting to change: modal count, buckling count or deformation scale.",
+                "de": "Gib mindestens eine zu ändernde Analyseeinstellung an: Anzahl Moden, Anzahl Beulmoden oder Verformungsmaßstab."
+              }
+            }
+          },
+          {
+            "code": "fem3d.analysis.value",
+            "label": {
+              "native": {
+                "en": "'{value}' is not a number.",
+                "de": "'{value}' ist keine Zahl."
+              },
+              "reuse": {
+                "en": "'{value}' is not a number.",
+                "de": "'{value}' ist keine Zahl."
+              }
+            }
+          },
+          {
+            "code": "fem3d.analysis.field",
+            "label": {
+              "native": {
+                "en": "'{field}' is not an analysis setting.",
+                "de": "'{field}' ist keine Analyseeinstellung."
+              },
+              "reuse": {
+                "en": "'{field}' is not an analysis setting.",
+                "de": "'{field}' ist keine Analyseeinstellung."
+              }
+            }
+          },
+          {
+            "code": "fem3d.remove-selection.empty",
+            "label": {
+              "native": {
+                "en": "Nothing is selected to remove. Select something in the model first.",
+                "de": "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus."
+              },
+              "reuse": {
+                "en": "Nothing is selected to remove. Select something in the model first.",
+                "de": "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus."
+              }
+            }
+          },
+          {
+            "code": "fem3d.remove-selection.material-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the material '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Das Material '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the material '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Das Material '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem3d.remove-selection.section-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the section '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Querschnitt '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the section '{id}' is still used by {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Querschnitt '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem3d.remove-selection.load-case-referenced",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the load case '{id}' is still used by the combinations {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Lastfall '{id}' wird noch von den Kombinationen {referrers} verwendet. Entferne oder ändere diese zuerst."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the load case '{id}' is still used by the combinations {referrers}. Remove or change those first.",
+                "de": "Nichts wurde entfernt: Der Lastfall '{id}' wird noch von den Kombinationen {referrers} verwendet. Entferne oder ändere diese zuerst."
+              }
+            }
+          },
+          {
+            "code": "fem3d.remove-selection.identity-refused",
+            "label": {
+              "native": {
+                "en": "Nothing was removed: the selection no longer matches the document. Select again.",
+                "de": "Nichts wurde entfernt: Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              },
+              "reuse": {
+                "en": "Nothing was removed: the selection no longer matches the document. Select again.",
+                "de": "Nichts wurde entfernt: Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              }
+            }
+          },
+          {
+            "code": "fem3d.interaction.identity-refused",
+            "label": {
+              "native": {
+                "en": "The selection no longer matches the document. Select again.",
+                "de": "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              },
+              "reuse": {
+                "en": "The selection no longer matches the document. Select again.",
+                "de": "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut."
+              }
+            }
+          },
+          {
+            "code": "fem3d.gumball.identity-refused",
+            "label": {
+              "native": {
+                "en": "The gumball no longer matches the document. Select again.",
+                "de": "Der Transformationsgriff passt nicht mehr zum Dokument. Wähle erneut."
+              },
+              "reuse": {
+                "en": "The gumball no longer matches the document. Select again.",
+                "de": "Der Transformationsgriff passt nicht mehr zum Dokument. Wähle erneut."
               }
             }
           }

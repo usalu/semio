@@ -1,0 +1,62 @@
+--- sidecar.orig.ts	2026-11-27 18:51:00
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H94/farm/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🟦️.ts	2026-11-27 18:59:32
+@@ -1,5 +1,8 @@
+-import {readFileSync,rmSync} from "node:fs";
+-import {join} from "node:path";
++import {readFileSync,realpathSync,rmSync} from "node:fs";
++import {join,relative} from "node:path";
++import {toolModeV1,toolPolicyV1,toolScanImportRowsV1,toolStoreOfV1} from "../../🏛️sealed/🧰️tool-snapshot/🟦️.ts";
++import {readToolPointerV1,reportToolFaultV1} from "../../🏛️sealed/🧰️tool-snapshot/🔁️promotion/🟦️.ts";
++import {createToolRoleWatchV1,toolStartOfV1,type ToolRunV1} from "../../🏛️sealed/🧰️tool-snapshot/👁️watch/🟦️.ts";
+ import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1,type SidecarClosureMemoryV1,type SidecarRestartPolicyV1} from "./🧮️closure/🟦️.ts";
+ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+ import {applyServicePriorityV1,servicePriorityTextV1} from "./🪜️priority/🟦️.ts";
+@@ -98,10 +101,21 @@
+  return {entries:[self,join(import.meta.dir,ROLE_MODULES[role],"🟦️.ts")],staticOnly:[self]};
+ }
+ 
+-/** 🧬️ A watch that says when the code this role runs changed (closure digest over file contents), not when some file of the two modules was touched. */
++/** 🧰️ The watch of a role under sealed tool snapshots: the snapshot the role runs from (`SEMIO_TOOL_SNAPSHOT`, its folder `SEMIO_TOOL_RUN`) against the newest promoted one, so the role restarts only when the files of its own closure differ between the two, never for a peer's edit of the live tree (which no snapshot holds until its gate passed). Outside a role child (`repo fleet status`) the baseline is the closure of the promoted snapshot itself. Nothing when the mode is `live` or no snapshot was promoted: the live closure watch below applies.
++ * @see ../../🏛️sealed/🧰️tool-snapshot/👁️watch/🟦️.ts */
++function sealedSidecarWatchV1(entries:readonly string[],staticOnly:readonly string[]):ReturnType<typeof createSidecarClosureWatchV1>|undefined{
++ const environment=process.env,names=toolPolicyV1.environment;
++ if(toolModeV1(environment)!=="sealed")return undefined;
++ const root=environment[names.root]??process.cwd(),store=toolStoreOfV1(root,environment),run=environment[names.run],running=environment[names.snapshot]??readToolPointerV1(store)?.id;
++ if(running===undefined)return undefined;
++ const base=realpathSync(run??root),relativeOf=(path:string):string=>relative(base,path).split("\\").join("/");
++ return createToolRoleWatchV1({store,runningId:running,entries:entries.map(relativeOf),staticOnly:staticOnly.map(relativeOf),scan:(text,path)=>toolScanImportRowsV1(text,path)??[]}) as unknown as ReturnType<typeof createSidecarClosureWatchV1>;
++}
++
++/** 🧬️ A watch that says when the code this role runs changed (closure digest over file contents), not when some file of the two modules was touched. Under sealed tool snapshots it follows the promoted snapshot instead of the live tree. */
+ export function remoteExecutionSidecarWatchV1(role:RemoteExecutionSidecarRoleV1,memory?:SidecarClosureMemoryV1):ReturnType<typeof createSidecarClosureWatchV1>{
+- const {entries,staticOnly}=remoteExecutionSidecarEntriesV1(role);
+- return createSidecarClosureWatchV1(entries,staticOnly,join(import.meta.dir,"..","..",".."),memory);
++ const {entries,staticOnly}=remoteExecutionSidecarEntriesV1(role),sealed=sealedSidecarWatchV1(entries,staticOnly);
++ return sealed??createSidecarClosureWatchV1(entries,staticOnly,join(import.meta.dir,"..","..",".."),memory);
+ }
+ 
+ /** ⏱️ How long the launcher waits before it starts a crashed child again: it doubles from `initialMilliseconds` to `maximumMilliseconds` and starts again from the beginning once a child ran for `stableMilliseconds`. */
+@@ -111,11 +125,13 @@
+ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSidecarRoleV1,entry:string,environment:Readonly<Record<string,string|undefined>>,restart:typeof REMOTE_EXECUTION_SIDECAR_RESTART_V1=REMOTE_EXECUTION_SIDECAR_RESTART_V1):Promise<never>{
+  const base=environment.SEMIO_FLEET_SIDECAR_LEASE,record=environment.SEMIO_FLEET_SIDECAR_RECORD,protocol=await import("../../../../🤝️shared-worktree/🔁️replica/🧷️sidecars/🟦️.ts"),startedMs=Date.now(),lease=base===undefined||base===""?undefined:protocol.sidecarLeaseOfV1(base,process.pid);
+  type Child=ReturnType<typeof Bun.spawn>;
+- let stopping=false,alive=false,child:Child|undefined,successor:Child|undefined,launchedMs=Date.now();
++ let stopping=false,alive=false,child:Child|undefined,successor:Child|undefined,launchedMs=Date.now(),lastRun:ToolRunV1|undefined;
+  const stop=():void=>{stopping=true;if(!alive)process.exit(0);try{successor?.kill("SIGTERM");}catch{}try{child?.kill("SIGTERM");}catch{}};
+  const launch=(extra:Readonly<Record<string,string>>={}):Child=>{
+   launchedMs=Date.now();
+-  const created:Child=Bun.spawn([process.execPath,entry,role],{windowsHide:true,stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...environment,SEMIO_SIDECAR_CHILD:"1",...extra},ipc:(message:unknown)=>{hear(created,message);}});
++  const start=toolStartOfV1(entry,environment[toolPolicyV1.environment.root]??process.cwd(),environment);
++  lastRun=start.run;
++  const created:Child=Bun.spawn([process.execPath,start.entry,role],{windowsHide:true,stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...start.environment,SEMIO_SIDECAR_CHILD:"1",...extra},ipc:(message:unknown)=>{hear(created,message);}});
+   return created;
+  };
+  const say=(line:string):void=>{process.stderr.write(`${new Date().toISOString()} ${role} handover: ${line}\n`);};
+@@ -162,6 +178,7 @@
+   let code=1;
+   try{child=launch();alive=true;for(;;){const waiting:Child|undefined=child;if(waiting===undefined)break;code=await waiting.exited;if(waiting===child)break;}}catch{}
+   alive=false;
++  if(lastRun?.mode==="sealed"&&code!==0&&code!==75&&!stopping&&Date.now()-started<restart.stableMilliseconds)try{process.stderr.write(`${new Date().toISOString()} ${reportToolFaultV1(toolStoreOfV1(environment[toolPolicyV1.environment.root]??process.cwd(),environment),lastRun.id!,`${role} ended with status ${code} within ${Math.round((Date.now()-started)/1000)} s`,{environment}).text}\n`);}catch{}
+   if(stopping)process.exit(code===75?0:code);
+   if(code===75){delay=restart.initialMilliseconds;await Bun.sleep(500);continue;}
+   if(Date.now()-started>=restart.stableMilliseconds)delay=restart.initialMilliseconds;

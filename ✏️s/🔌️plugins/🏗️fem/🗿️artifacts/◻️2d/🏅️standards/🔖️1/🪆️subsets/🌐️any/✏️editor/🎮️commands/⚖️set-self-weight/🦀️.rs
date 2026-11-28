@@ -43,6 +43,6 @@ pub fn handle(payload: &SetSelfWeight, doc: &ArtifactView<'_, Fem2dSnapshot>, _c
     let snapshot = doc.snapshot;
     match snapshot.load_cases.iter().any(|lc| lc.id == payload.case_id) {
         true => Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: payload.case_id.clone(), new_self_weight: payload.enabled })])),
-        false => Ok(Emit::default()),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem2d.self-weight.case-unknown"), format!("'{}' is not a load case", payload.case_id)).with_param("case", payload.case_id.as_str())),
     }
 }

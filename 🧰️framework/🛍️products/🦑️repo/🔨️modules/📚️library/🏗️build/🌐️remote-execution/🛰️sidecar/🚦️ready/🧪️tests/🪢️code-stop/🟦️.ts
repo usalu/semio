@@ -17,7 +17,7 @@ const stageOf=(name:string,timeoutMilliseconds:number)=>({...STAGES.find(stage=>
 const moving=(steps:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${steps} ]; do i=$((i+1)); echo "Reading the project graph slice ($i s): taken $i of 4455."; sleep 0.3; done\nexit 0\n`;
 const standing=`#!/bin/sh\necho "Reading the project graph slice (1 s): taken 1 of 4455."\nsleep 40\n`;
 const policy={...TREE,staleStageMilliseconds:1500,codeQuietMilliseconds:900,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],holderWaitRestartMilliseconds:600000,stallStopMilliseconds:600000};
-const declare=(root:string,revision:number)=>{mkdirSync(join(root,"code"),{recursive:true});writeFileSync(join(root,"code","semantics.json"),JSON.stringify({revision}));};
+const declareSemantics=(root:string,revision:number)=>{mkdirSync(join(root,"code"),{recursive:true});writeFileSync(join(root,"code","semantics.json"),JSON.stringify({revision}));};
 const start=(home:string,root:string,signal:AbortSignal,onStage?:(stage:string,adopted:boolean)=>void)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal,jobs:1,onLine:()=>undefined,tree:policy,...onStage===undefined?{}:{onStage}});
 
 test("the new code stops a stage only for a holder wait or a quiet read, and equals an independent Python implementation on a grid",()=>{
@@ -32,31 +32,31 @@ test("the new code stops a stage only for a holder wait or a quiet read, and equ
 });
 
 posix("law: a read that keeps moving is not stopped when the code changes after the stale age, it finishes and the new code applies to the next attempt",async()=>{
- const root=temp("moving"),home=fakeHome(moving(22));declare(root,1);
+ const root=temp("moving"),home=fakeHome(moving(22));declareSemantics(root,1);
  const pending=start(home,root,new AbortController().signal);
- setTimeout(()=>declare(root,2),700);
+ setTimeout(()=>declareSemantics(root,2),700);
  const result=await pending;
  expect(result.exit).toBe(0);expect(result.stalled).toBe(false);expect(result.codeChanged).toBeUndefined();expect(result.codeStale).toBeUndefined();
 },60000);
 
 posix("a read that went quiet is stopped as stale when the code changed, and not before it was quiet for the window",async()=>{
- const root=temp("quiet"),home=fakeHome(standing);declare(root,1);
+ const root=temp("quiet"),home=fakeHome(standing);declareSemantics(root,1);
  const began=Date.now(),pending=start(home,root,new AbortController().signal);
- setTimeout(()=>declare(root,2),400);
+ setTimeout(()=>declareSemantics(root,2),400);
  const result=await pending;
  expect(result.stalled).toBe(true);expect(result.codeStale).toBe(true);expect(result.codeChanged).toBe("code/semantics.json");
  expect(Date.now()-began).toBeGreaterThanOrEqual(policy.codeQuietMilliseconds);expect(Date.now()-began).toBeLessThan(25000);
 },60000);
 
 posix("law: a supervisor restart in the middle of a read that then sees new code adopts the same stage process, which finishes the attempt",async()=>{
- const root=temp("restart"),home=fakeHome(moving(30));declare(root,1);
+ const root=temp("restart"),home=fakeHome(moving(30));declareSemantics(root,1);
  const first=new AbortController(),running=start(home,root,first.signal),file=join(root,...P.directory,P.inflightName);
  for(let waited=0;!existsSync(file)&&waited<5000;waited+=25)await new Promise<void>(done=>setTimeout(done,25));
  const before=JSON.parse(readFileSync(file,"utf8")) as {pid:number;startedMs:number};
  await new Promise<void>(done=>setTimeout(done,500));
  first.abort();
  expect((await running).detached).toBe(true);
- declare(root,2);
+ declareSemantics(root,2);
  const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}};
  expect(alive(before.pid),"the stage survives the supervisor").toBe(true);
  const transitions:[string,boolean][]=[];

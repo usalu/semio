@@ -3,15 +3,15 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::section_plausibility` positivity bounds (`mutation.invariant`, Fatal).
 use super::CreateSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionInsertion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionInsertion;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSection, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
-    if let Some(rejection) = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards::scoped_identity(&["section", &payload.section.id]) { return rejection; }
+    if let Some(rejection) = semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards::scoped_identity(&["section", &payload.section.id]) { return rejection; }
     if base.sections.iter().any(|section| section.id == payload.section.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A section with id \"{}\" already exists.", payload.section.id), [payload.section.id.clone()]);
     }

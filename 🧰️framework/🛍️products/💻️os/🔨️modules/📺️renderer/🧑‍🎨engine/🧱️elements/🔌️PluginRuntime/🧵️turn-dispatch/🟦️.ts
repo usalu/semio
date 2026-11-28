@@ -118,6 +118,11 @@ export function serializeCommandIngressForActor<T>(actorId: string, run: () => P
   return serializePerActor(`command-ingress:${actorId}`, run, lane, order);
 }
 
+/** 🚏️ How many calls wait behind the one running on an actor's command-ingress lane. A long draining settle reads it to hand the lane back. */
+export function commandIngressQueuedV1(actorId: string): number {
+  return getThunkScheduler().pendingCount(`command-ingress:${actorId}`);
+}
+
 /** ⏱️ The one stall watch over every program's command lane (`⏱️command-stall`): a command turn that holds its lane past the
  * contract's bound is reported to the shell, which lets the person cancel it and so release the lane. */
 export const commandStallWatch: CommandStallWatchV1 = createCommandStallWatchV1({

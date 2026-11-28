@@ -1,6 +1,6 @@
 //! 🤝️ Shared wire fixture for transform undo, collaborator preservation and semantic/diff inverse parity.
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::{ColdDiffAlgebra, DiffAlgebra};

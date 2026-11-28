@@ -31,6 +31,7 @@ semio-framework-schema-registry = { workspace = true }
 semio-s-artifact-fem-2d-editor = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-diff = { workspace = true }
 semio-s-artifact-fem-2d-viewer = { workspace = true }
 
 [dev-dependencies]

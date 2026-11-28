@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🔗️ Contract of the split link: a cached framework image core module plus a thin statically linked plugin module become one plugin component. Implemented by `semio-native-transpile link|merge|image-exports` (`../🦀️.rs`).",
+  "definitions": {
+    "FrameworkImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "key",
+        "path",
+        "exports",
+        "reserveEnd"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{24,64}$",
+          "description": "Fingerprint of the image inputs: toolchain and every framework rlib (path, size, mtime)."
+        },
+        "path": {
+          "type": "string",
+          "description": "Static core module linked with --export-table --growable-table --global-base=<reserveEnd> --skip-wit-component."
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Symbols the image exports for plugin modules; only grows for one key."
+        },
+        "reserveEnd": {
+          "type": "integer",
+          "minimum": 1024,
+          "description": "Plugin data must lie in [1024, reserveEnd), below the image data."
+        }
+      }
+    },
+    "PluginModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "imports"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Static wasm-ld link of the plugin crates' objects: --no-entry --import-memory --import-table --allow-undefined --emit-relocs --gc-sections --global-base=1024 --table-base=<image table size>."
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "env functions and the symbols of unresolved GOT.data.internal globals."
+        }
+      }
+    },
+    "ReuseVerdict": {
+      "description": "Reuse the image when every plugin import is an image export and the plugin data fits the reservation; otherwise relink it with the union of exports.",
+      "enum": [
+        "reused",
+        "relinked",
+        "linked"
+      ]
+    },
+    "SplitLinkReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "framework",
+        "plugin",
+        "layout",
+        "component",
+        "durationsMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "framework": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "bytes"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "plugin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "bytes",
+            "functions",
+            "boundFunctions"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "integer"
+            },
+            "functions": {
+              "type": "integer"
+            },
+            "boundFunctions": {
+              "type": "integer"
+            }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dataStart",
+            "dataEnd",
+            "reserveEnd",
+            "tableBase",
+            "tableEnd",
+            "gotData"
+          ],
+          "properties": {
+            "dataStart": {
+              "type": "integer"
+            },
+            "dataEnd": {
+              "type": "integer"
+            },
+            "reserveEnd": {
+              "type": "integer"
+            },
+            "tableBase": {
+              "type": "integer"
+            },
+            "tableEnd": {
+              "type": "integer"
+            },
+            "gotData": {
+              "type": "integer"
+            }
+          }
+        },
+        "component": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "bytes",
+            "coreBytes"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "integer"
+            },
+            "coreBytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "durationsMs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "merge",
+            "componentize"
+          ],
+          "properties": {
+            "merge": {
+              "type": "integer"
+            },
+            "componentize": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/SplitLinkReceipt"
+}

@@ -141,9 +141,7 @@ async fn mint_child_id_converges_across_two_replicas_and_varies_by_ordinal_and_s
 /// default, since neither member's policy is configured here) rejects Fatal.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -159,7 +157,7 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: &[bad_op], op_schema: &SchemaId("demo/v1".into()), labels: &[semio_ui_locale::LocalizedLabel::data("bad")] };
     let mut children = [(&mut child_store, child_dispatch)];
 
-    let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default(), &mut identity);
+    let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default(), &mut *identity);
     match result.await {
         Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
         Err(VcsError::Rejected { policy, messages }) => {
@@ -170,8 +168,7 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     }
     assert!(parent_store.envelope().vcs.edits.is_empty(), "parent must have zero edits after a failed group dispatch");
     assert!(child_store.envelope().vcs.edits.is_empty(), "child must have zero edits after a failed group dispatch");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ TASK 2's ownership-check law: `dispatch_group` refuses to touch a `ChildDispatch`
@@ -182,9 +179,7 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
 /// record that `parent_ref` owns `child_ref`.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -197,15 +192,14 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
     let mut children = [(&mut child_store, child_dispatch)];
 
     let mut coordinator = coordinator.await;
-    let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default(), &mut identity);
+    let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, Vec::new(), Vec::new(), GroupMeta::default(), &mut *identity);
     match result.await {
         Ok(_) => panic!("expected an OwnershipViolation, but the dispatch succeeded"),
         Err(VcsError::OwnershipViolation(_)) => {}
         Err(other) => panic!("expected OwnershipViolation, got a different VcsError: {other}"),
     }
     assert!(child_store.envelope().vcs.edits.is_empty());
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ Directly exercises `CompositionCoordinator::compensate` (private, visible to this
@@ -214,23 +208,21 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
 /// that a clean rollback restores every member's pre-group snapshot.
 #[semio_framework_async_macros::async_test]
 async fn compensate_undoes_applied_members_in_reverse_order() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-comp-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let child_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
+    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply parent");
     let parent_edit_id = parent_store.envelope().vcs.edits.last().expect("parent edit").id.clone();
 
     let mut child_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    child_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply a");
+    child_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply a");
     let child_a_edit_id = child_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
     let mut child_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    child_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply b");
+    child_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut *identity).await.expect("apply b");
     let child_b_edit_id = child_b.envelope().vcs.edits.last().expect("b edit").id.clone();
 
     let dispatch_a = ChildDispatch { child: child_a_ref.clone(), ops: &[], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
@@ -238,7 +230,7 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
     let mut children = [(&mut child_a, dispatch_a), (&mut child_b, dispatch_b)];
     let applied_children = vec![(0usize, child_a_edit_id), (1usize, child_b_edit_id)];
 
-    let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some(&parent_edit_id), &mut identity).await;
+    let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some(&parent_edit_id), &mut *identity).await;
 
     assert!(report.skipped.is_empty(), "every member should have undone cleanly");
     assert_eq!(report.undone.len(), 3);
@@ -249,8 +241,7 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
     assert_eq!(parent_store.snapshot().expect("parent snapshot").n, Some(0), "parent's edit was undone");
     assert_eq!(child_a.snapshot().expect("a snapshot").n, Some(0), "child a's edit was undone");
     assert_eq!(child_b.snapshot().expect("b snapshot").n, Some(0), "child b's edit was undone");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ TASK 2's "if compensation itself fails" law: a member whose own rollback errors is
@@ -262,22 +253,20 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
 /// `NothingToUndo` — simulating a member whose own rollback errors mid-compensation.
 #[semio_framework_async_macros::async_test]
 async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }, &mut identity).await.expect("apply child");
+    child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }, &mut *identity).await.expect("apply child");
     let child_edit_id = child_store.envelope().vcs.edits.last().expect("child edit").id.clone();
 
     let dispatch = ChildDispatch { child: child_ref.clone(), ops: &[], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     let mut children = [(&mut child_store, dispatch)];
     let applied_children = vec![(0usize, child_edit_id)];
 
-    let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some("bogus-parent-edit-id"), &mut identity).await;
+    let report = CompositionCoordinator::compensate(&parent_ref, &mut parent_store, &mut children, &applied_children, Some("bogus-parent-edit-id"), &mut *identity).await;
 
     assert_eq!(report.skipped.len(), 1, "the parent's own failed undo must be recorded, not panic");
     assert_eq!(report.skipped[0].0.artifact_id, parent_ref.artifact_id);
@@ -287,8 +276,7 @@ async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_c
 
     let folded = fold_compensation_error(VcsError::ValidationFailed("late failure".into()), report).await;
     assert!(matches!(folded, VcsError::CompensationFailed(_)), "a non-empty skipped list must fold into CompensationFailed, got {folded}");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ TASK 2's "deterministic child id minting across two simulated replicas" law,
@@ -301,9 +289,7 @@ async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_c
 /// explicit element type — the same local test wrapper `parent_1` uses.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: demo_child_dialect(), initial_pack: DemoSnapshot { n: Some(0) }.encode_pack() }];
     let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode")];
@@ -311,12 +297,12 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
     let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator_1 = CompositionCoordinator::new().await;
     let mut children_1: [(&mut ArtifactStore<DemoSnapshot, DemoMutation>, ChildDispatch); 0] = [];
-    let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default(), &mut identity).await.expect("replica 1 dispatch");
+    let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default(), &mut *identity).await.expect("replica 1 dispatch");
 
     let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let coordinator_2 = CompositionCoordinator::new();
     let mut children_2: [(&mut ArtifactStore<DemoSnapshot, DemoMutation>, ChildDispatch); 0] = [];
-    let receipt_2 = coordinator_2.await.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default(), &mut identity).await.expect("replica 2 dispatch");
+    let receipt_2 = coordinator_2.await.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default(), &mut *identity).await.expect("replica 2 dispatch");
 
     assert_eq!(receipt_1.created_children.len(), 1);
     assert_eq!(receipt_2.created_children.len(), 1);
@@ -327,37 +313,34 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
     assert_eq!(coordinator_1.graph().await.owner_of(&receipt_1.created_children[0].0.artifact_id).await, Some(parent_ref.artifact_id.as_str()));
     assert_eq!(receipt_1.member_edits.len(), 1, "only the parent got a real edit here — no existing children were dispatched");
     assert_eq!(receipt_1.member_edits[0].0.artifact_id, parent_ref.artifact_id);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ TASK 2's group-undo law: a member whose tail belongs to a DIFFERENT (foreign)
 /// group is skipped, never aborting the rest of the group's undo.
 #[semio_framework_async_macros::async_test]
 async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let group_id = "group-xyz";
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
+    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply parent");
     parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
 
     let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply child");
+    child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply child");
     child_store.stamp_tail_group_id(group_id).await.expect("stamp child");
 
     let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply foreign");
+    foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut *identity).await.expect("apply foreign");
     foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
 
     let mut children = [(&child_ref, &mut child_store), (&foreign_ref, &mut foreign_store)];
 
-    let report = CompositionCoordinator::undo_group(&parent_ref, &mut parent_store, &mut children, group_id, &mut identity).await;
+    let report = CompositionCoordinator::undo_group(&parent_ref, &mut parent_store, &mut children, group_id, &mut *identity).await;
 
     assert_eq!(report.undone.len(), 2, "parent + child both belong to the group and must be undone");
     assert_eq!(report.skipped.len(), 1, "the foreign member must be skipped, not abort the group");
@@ -367,33 +350,30 @@ async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
     assert_eq!(parent_store.snapshot().expect("parent snapshot").n, Some(0), "parent's group edit was undone");
     assert_eq!(child_store.snapshot().expect("child snapshot").n, Some(0), "child's group edit was undone");
     assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, Some(3), "the foreign member's own edit must be left untouched");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ `redo_group`'s mirror of the same law: a foreign-group member's redo stack is left
 /// untouched while a matching member is reapplied.
 #[semio_framework_async_macros::async_test]
 async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let group_id = "group-redo-1";
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
+    parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply parent");
     parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
-    parent_store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo parent, seeding its redo stack");
+    parent_store.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo parent, seeding its redo stack");
 
     let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply foreign");
+    foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut *identity).await.expect("apply foreign");
     foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
-    foreign_store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo foreign, seeding its redo stack");
+    foreign_store.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo foreign, seeding its redo stack");
 
     let mut children = [(&foreign_ref, &mut foreign_store)];
-    let report = CompositionCoordinator::redo_group(&parent_ref, &mut parent_store, &mut children, group_id, &mut identity).await;
+    let report = CompositionCoordinator::redo_group(&parent_ref, &mut parent_store, &mut children, group_id, &mut *identity).await;
 
     assert_eq!(report.undone.len(), 1, "only the matching-group member is redone");
     assert_eq!(report.undone[0].0.artifact_id, parent_ref.artifact_id);
@@ -402,8 +382,7 @@ async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
 
     assert_eq!(parent_store.snapshot().expect("parent snapshot").n, Some(1), "parent's edit was reapplied");
     assert_eq!(foreign_store.snapshot().expect("foreign snapshot").n, Some(0), "the foreign member's redo stack was left untouched");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 //#region 🔖️TransactionPeerTests
@@ -416,9 +395,7 @@ async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
 /// consults `owner_of` at all.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -431,7 +408,7 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
     let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: &[peer_op], op_schema: &SchemaId("demo/v1".into()), labels: &[semio_ui_locale::LocalizedLabel::data("peer")] };
     let mut peers = [(&mut peer_store, peer_dispatch)];
 
-    let receipt = coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default(), &mut identity).await.expect("peer transaction dispatch");
+    let receipt = coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default(), &mut *identity).await.expect("peer transaction dispatch");
 
     assert_eq!(receipt.member_edits.len(), 2, "both the initiator and the one peer got a real edit");
     assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, Some(1));
@@ -450,8 +427,7 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
         semio_os_spr::MutationOrigin::Transaction { initiator } => assert_eq!(initiator.artifact_id, initiator_ref.artifact_id, "the peer's origin names the real initiator"),
         other => panic!("expected MutationOrigin::Transaction on the peer's tail edit, got {other:?}"),
     }
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ W1-C's compensation law for `Peer`: `compensate` is relation-agnostic (see its own
@@ -464,19 +440,17 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
 /// A) as `applied_children`/`parent_applied`.
 #[semio_framework_async_macros::async_test]
 async fn compensate_undoes_applied_peer_members_in_reverse_order() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-initiator".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let peer_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let peer_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
     let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply initiator");
+    initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut *identity).await.expect("apply initiator");
     let initiator_edit_id = initiator_store.envelope().vcs.edits.last().expect("initiator edit").id.clone();
 
     let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply peer a — the member the transaction already reached");
+    peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply peer a — the member the transaction already reached");
     let peer_a_edit_id = peer_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
     let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
@@ -486,7 +460,7 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
     let mut peers = [(&mut peer_a, dispatch_a), (&mut peer_b, dispatch_b)];
     let applied_so_far = vec![(0usize, peer_a_edit_id)];
 
-    let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store, &mut peers, &applied_so_far, Some(&initiator_edit_id), &mut identity).await;
+    let report = TransactionCoordinator::compensate(&initiator_ref, &mut initiator_store, &mut peers, &applied_so_far, Some(&initiator_edit_id), &mut *identity).await;
 
     assert!(report.skipped.is_empty(), "every already-applied member should have undone cleanly");
     assert_eq!(report.undone.len(), 2, "the initiator and peer A (the only two that were actually applied) are both rolled back");
@@ -495,8 +469,7 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
 
     assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, Some(0), "initiator's edit was compensated");
     assert_eq!(peer_a.snapshot().expect("a snapshot").n, Some(0), "peer A's edit was compensated");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ Task 2's group-undo law, exercised through a REAL `Peer` transaction end-to-end:
@@ -505,9 +478,7 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
 /// minted, with no code path specific to `Peer` needed.
 #[semio_framework_async_macros::async_test]
 async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -520,20 +491,19 @@ async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
     let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: &[peer_op], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     let receipt = {
         let mut peers = [(&mut peer_store, peer_dispatch)];
-        coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default(), &mut identity).await.expect("peer transaction dispatch")
+        coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default(), &mut *identity).await.expect("peer transaction dispatch")
     };
     assert_eq!(initiator_store.snapshot().expect("initiator snapshot").n, Some(5));
     assert_eq!(peer_store.snapshot().expect("peer snapshot").n, Some(7));
 
     let mut children = [(&peer_ref, &mut peer_store)];
-    let report = TransactionCoordinator::undo_group(&initiator_ref, &mut initiator_store, &mut children, &receipt.invocation_id, &mut identity).await;
+    let report = TransactionCoordinator::undo_group(&initiator_ref, &mut initiator_store, &mut children, &receipt.invocation_id, &mut *identity).await;
 
     assert!(report.skipped.is_empty(), "both real transaction members must belong to the group");
     assert_eq!(report.undone.len(), 2);
     assert_eq!(initiator_store.snapshot().expect("initiator snapshot after undo").n, Some(0));
     assert_eq!(peer_store.snapshot().expect("peer snapshot after undo").n, Some(0));
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ `Peer`'s cycle guard law (`MemberRelation::Peer`'s doc comment): a SECOND, separate
@@ -544,9 +514,7 @@ async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
 /// would close A -> B -> A and is rejected with zero side effects.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let artifact_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let artifact_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -558,22 +526,21 @@ async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_
     let dispatch_ab = ChildDispatch { child: artifact_b_ref.clone(), ops: &[op_ab], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     {
         let mut peers = [(&mut store_b, dispatch_ab)];
-        coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a, &mut peers, Vec::new(), GroupMeta::default(), &mut identity).await.expect("first transaction A -> B");
+        coordinator.dispatch_peer_group(&artifact_a_ref, &mut store_a, &mut peers, Vec::new(), GroupMeta::default(), &mut *identity).await.expect("first transaction A -> B");
     }
     assert_eq!(store_b.snapshot().expect("b snapshot").n, Some(1));
 
     let op_ba = DemoMutation::SetN(SetN { n: 9 }).encode_op().expect("encode b->a op");
     let dispatch_ba = ChildDispatch { child: artifact_a_ref.clone(), ops: &[op_ba], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     let mut peers = [(&mut store_a, dispatch_ba)];
-    let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b, &mut peers, Vec::new(), GroupMeta::default(), &mut identity);
+    let result = coordinator.dispatch_peer_group(&artifact_b_ref, &mut store_b, &mut peers, Vec::new(), GroupMeta::default(), &mut *identity);
     match result.await {
         Ok(_) => panic!("expected a CompositionCycle rejection, but the dispatch succeeded"),
         Err(VcsError::CompositionCycle(_)) => {}
         Err(other) => panic!("expected CompositionCycle, got a different VcsError: {other}"),
     }
     assert_eq!(store_a.snapshot().expect("a snapshot").n, Some(0), "A must have zero new edits after a rejected cycle");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🧪️ W1-C's "Owned reproduces today's behaviour EXACTLY" law: `CompositionCoordinator`
@@ -586,9 +553,7 @@ async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_
 /// compensation order) is untouched, unmodified, still green.
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
@@ -603,15 +568,14 @@ async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
     let dispatch = ChildDispatch { child: child_ref.clone(), ops: &[child_op], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     let mut children = [(&mut child_store, dispatch)];
 
-    let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default(), &mut identity).await.expect("owned dispatch");
+    let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default(), &mut *identity).await.expect("owned dispatch");
 
     assert_eq!(receipt.member_edits.len(), 2);
     let parent_origin = parent_store.envelope().vcs.edits.last().expect("parent edit").mutation_meta.last().expect("parent meta").origin.clone();
     let child_origin = child_store.envelope().vcs.edits.last().expect("child edit").mutation_meta.last().expect("child meta").origin.clone();
     assert_eq!(parent_origin, semio_os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on the parent");
     assert_eq!(child_origin, semio_os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on an owned child either");
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 //#endregion 🔖️TransactionPeerTests
 //#endregion 🔖️PackValueFixtures

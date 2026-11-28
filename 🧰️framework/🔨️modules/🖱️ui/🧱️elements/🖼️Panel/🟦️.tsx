@@ -23,7 +23,7 @@ import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { WindowChrome } from "../🗂️WindowChrome/🟦️.tsx";
 import { useNativeDragArm, useUiDriverDragSurface } from "../🚗️UiDriver/🟦️.tsx";
 import { type UiStatus } from "@semio-tech/ui-styling";
-import { chromeHostedPanelCapRowStyle, publishShellChromePanelBox, safeAreaBoxFromRect, useShellNavbarTrailingEndWidthPx } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { chromeHostedPanelCapRowStyle, chromeHostedPanelTrailingClearStyle, publishShellChromePanelBox, safeAreaBoxFromRect, useShellNavbarTrailingEndWidthPx } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelDockContext, usePanelTreeUnitDragActive } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
 import { type Anchor, anchorHorizontal, anchorPositionStyle, chromeHostedOpenPanelPositionStyle, flowFromAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
@@ -459,6 +459,7 @@ const Panel: React.FC<PanelProps> = ({
   };
   const panelZClass = getLevelZClass("panel");
   const chromeHostedCapRowStyle = isChromeHosted && visible ? chromeHostedPanelCapRowStyle(anchor, trailingEndWidthPx) : undefined;
+  const trailingClearStyle = isChromeHosted && visible ? chromeHostedPanelTrailingClearStyle(anchor, trailingEndWidthPx) : undefined;
 
   if (tabs.length === 0) {
     if (isChromeHosted || !dock?.dragTabId) return null;
@@ -497,7 +498,7 @@ const Panel: React.FC<PanelProps> = ({
         id={visible && activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground", panelZClass, isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
-        style={positionStyle}
+        style={trailingClearStyle ? { ...positionStyle, ...trailingClearStyle } : positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
           {visible ? (

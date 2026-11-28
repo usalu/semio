@@ -30,7 +30,7 @@ import{readNativeStorageFundedArtifactUsageV1,readNativeStorageObservedArtifactU
 test("Native usage inspection exposes measured excess without admitting it",()=>{
  for(const row of corpus.usage){
   const data={version:1,purpose:"current-artifact-funding-usage",allocation:"1".repeat(32),bytes:row.bytes,maximumBytes:row.maximumBytes,authority:false};
-  expect(readNativeStorageObservedArtifactUsageV1(data),row.id).toEqual(data);
+  expect<unknown>(readNativeStorageObservedArtifactUsageV1(data),row.id).toEqual(data);
   if(!row.accept)expect(()=>readNativeStorageFundedArtifactUsageV1(data),row.id).toThrow("Actual whole artifact exceeds its retained Native funding");
  }
 });

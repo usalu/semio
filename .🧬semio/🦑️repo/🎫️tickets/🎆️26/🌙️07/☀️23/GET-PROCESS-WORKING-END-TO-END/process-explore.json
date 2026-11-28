@@ -1,0 +1,113 @@
+[
+ {
+  "name": "wait",
+  "js": "(async()=>{const h=window.__h;return 'w'})()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "dump Artifact",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.wait(2500);return document.body.innerText.replace(/\\n/g,'|').slice(0,1800)})()",
+  "settleMs": 500
+ },
+ {
+  "name": "html Artifact",
+  "js": "(async()=>{const h=window.__h;const els=[...document.querySelectorAll('[data-slot]')].map(e=>e.getAttribute('data-slot')).filter((v,i,a)=>a.indexOf(v)===i);return els.join(',')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Artifact",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.wait(800);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Catalogue",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.wait(2500);return document.body.innerText.replace(/\\n/g,'|').slice(0,1800)})()",
+  "settleMs": 500
+ },
+ {
+  "name": "html Catalogue",
+  "js": "(async()=>{const h=window.__h;const els=[...document.querySelectorAll('[data-slot]')].map(e=>e.getAttribute('data-slot')).filter((v,i,a)=>a.indexOf(v)===i);return els.join(',')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Catalogue",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.wait(800);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Workshop",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.wait(2500);return document.body.innerText.replace(/\\n/g,'|').slice(0,1800)})()",
+  "settleMs": 500
+ },
+ {
+  "name": "html Workshop",
+  "js": "(async()=>{const h=window.__h;const els=[...document.querySelectorAll('[data-slot]')].map(e=>e.getAttribute('data-slot')).filter((v,i,a)=>a.indexOf(v)===i);return els.join(',')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Workshop",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.wait(800);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Inspection",
+  "js": "(async()=>{const h=window.__h;h.click('Inspection');await h.wait(2500);return document.body.innerText.replace(/\\n/g,'|').slice(0,1800)})()",
+  "settleMs": 500
+ },
+ {
+  "name": "html Inspection",
+  "js": "(async()=>{const h=window.__h;const els=[...document.querySelectorAll('[data-slot]')].map(e=>e.getAttribute('data-slot')).filter((v,i,a)=>a.indexOf(v)===i);return els.join(',')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Inspection",
+  "js": "(async()=>{const h=window.__h;h.click('Inspection');await h.wait(800);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "open Actions",
+  "js": "(async()=>{const h=window.__h;h.click('Actions');await h.wait(1500);return 'a'})()"
+ },
+ {
+  "name": "set stock",
+  "js": "(async()=>{const h=window.__h;h.click('Set Stock…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "set example",
+  "js": "(async()=>{const h=window.__h;h.click('Set Active Example…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "export model",
+  "js": "(async()=>{const h=window.__h;h.click('Export Model…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "sel mode",
+  "js": "(async()=>{const h=window.__h;h.click('Set Selection Mode…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "granularity",
+  "js": "(async()=>{const h=window.__h;h.click('Set Granularity…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "paste",
+  "js": "(async()=>{const h=window.__h;h.click('Paste…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "switch alt",
+  "js": "(async()=>{const h=window.__h;h.click('Switch Alternative…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)})()"
+ },
+ {
+  "name": "import doc",
+  "js": "(async()=>{const h=window.__h;h.click('Import Document…');await h.wait(1500);return document.body.innerText.replace(/\\n/g,'|').slice(-500)+JSON.stringify(window.__fileReq)})()"
+ },
+ {
+  "name": "export doc",
+  "js": "(async()=>{const h=window.__h;h.click('Export Document');await h.wait(2500);return JSON.stringify(window.__dl.map(d=>[d.name,d.size,d.type,d.head]))})()"
+ },
+ {
+  "name": "load model",
+  "js": "(async()=>{const h=window.__h;h.click('Load Model…');await h.wait(1500);return JSON.stringify(window.__fileReq)})()"
+ }
+]

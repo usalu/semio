@@ -165,3 +165,38 @@ test("nothing below a symbolic-link directory is vouched for; probed directories
     expect(await touched.among(["plain/y"])).toEqual(["plain"]);
   }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("a vouched module resolution row still equals a fresh resolution after random file edits (ground truth is a fresh process), and an edit beside a target un-vouches exactly its rows",async()=>{
+  const {realpathSync,unlinkSync,mkdirSync:mkdir}=await import("node:fs"),{dirname}=await import("node:path");
+  const root=realpathSync(mkdtempSync(join(tmpdir(),"journal-resolve-")));
+  try{
+    const files=["a/x.js","a/y.js","b/z.js","b/dir/index.js","b/dir/package.json","c/w.js","a/f.js","b/f.js","c/f.js"];
+    for(const name of files){mkdir(join(root,dirname(name)),{recursive:true});writeFileSync(join(root,name),name==="b/dir/package.json"?"{}":"module.exports=1;");}
+    const asks:[string,string][]=[["a/f.js","./x"],["a/f.js","./y.js"],["a/f.js","./gone"],["a/f.js","../b/z"],["b/f.js","./dir"],["b/f.js","./z"],["b/f.js","../c/w"],["c/f.js","./w"],["c/f.js","./later"],["c/f.js","../a/x"],["c/f.js","node:fs"],["a/f.js","left-pad"]];
+    const resolver=join(root,"resolve.cjs");
+    const resolveAll=()=>{
+      writeFileSync(resolver,`const {createRequire}=require("node:module");const root=${JSON.stringify(root)};const out={};for(const [from,request] of ${JSON.stringify(asks)}){const key=JSON.stringify([root+"/"+from,request]);try{const found=createRequire(root+"/"+from).resolve(request);out[key]=found.startsWith("/")?require("node:fs").realpathSync(found):found;}catch(error){out[key]="!"+(error.code??"EUNKNOWN");}}process.stdout.write(JSON.stringify(out));`);
+      const run=spawnSync(process.execPath,[resolver],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout) as Record<string,string>;
+    };
+    const recorded=resolveAll(),rows:JournalRowV1[]=Object.entries(recorded).map(([path,fact])=>({kind:"resolve",path,fact}));
+    let seed=5;const random=(n:number)=>(seed=(seed*1103515245+12345)%2147483648)%n;
+    const dirs=["a","b","b/dir","c"],edits:Array<()=>ChangeV1[]>=[
+      ()=>{const dir=dirs[random(dirs.length)],name=["gone","later","x","z","w"][random(5)]+".js";writeFileSync(join(root,dir,name),"1");return [["a",0,dir+"/"+name],["m",1,dir]];},
+      ()=>{const name=["a/x.js","a/y.js","b/z.js","c/w.js"][random(4)];try{unlinkSync(join(root,name));}catch{}return [["r",0,name],["m",1,dirname(name)]];},
+      ()=>{writeFileSync(join(root,"b/z.js"),"module.exports=2;");return [["m",0,"b/z.js"]];},
+      ()=>{writeFileSync(join(root,"a/unrelated.txt"),"u");return [["a",0,"a/unrelated.txt"],["m",1,"a"]];},
+    ];
+    let vouched=0,withdrawn=0;
+    for(let round=0;round<8;round++){
+      const changes:ChangeV1[]=[];for(let at=0;at<1+random(2);at++)changes.push(...edits[random(edits.length)]());
+      const store=memory({version:1,memo:"m",epoch:"e1",seq:3}),journal=await journalCleanRowsV1({feed:feedOf(changes),root,read:store.read,write:store.write,insensitive:false},"m",rows),fresh=resolveAll();
+      for(const row of rows)if(journal.clean(row)){vouched++;expect(fresh[row.path]===row.fact,row.path+" after "+JSON.stringify(changes)).toBe(true);}else if(fresh[row.path]!==row.fact)withdrawn++;
+      rows.splice(0,rows.length,...Object.entries(fresh).map(([path,fact])=>({kind:"resolve",path,fact})));
+    }
+    expect(vouched).toBeGreaterThan(20);expect(withdrawn).toBeGreaterThan(0);
+    const quiet=await journalCleanRowsV1({feed:feedOf([]),root,read:()=>({version:1,memo:"m",epoch:"e1",seq:3}),write:()=>undefined,insensitive:false},"m",rows);
+    const bare=rows.filter(row=>JSON.parse(row.path)[1]==="left-pad"||JSON.parse(row.path)[1]==="node:fs");
+    expect(bare.map(row=>quiet.clean(row))).toEqual(bare.map(row=>JSON.parse(row.path)[1]==="node:fs"));
+    expect(rows.filter(row=>!bare.includes(row)).every(row=>quiet.clean(row))).toBe(true);
+  }finally{rmSync(root,{recursive:true,force:true});}
+});

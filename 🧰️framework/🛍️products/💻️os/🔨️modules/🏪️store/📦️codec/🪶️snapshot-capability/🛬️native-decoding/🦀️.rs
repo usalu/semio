@@ -34,7 +34,7 @@ pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement:
  native_owner:&mut NativeSnapshotDecodeOwner<'_,'_>,
  output:&mut Option<SnapshotReceivingOutput<T>>,
 )->SnapshotReceivingOutcome{
- decode_sqlite_snapshot_record_receiving(payload,envelope_id,spec,&mut |record,retained,owner,_control|native_snapshot_turn(|work|work.measured(owner.native(),|native|construct(record,retained,native))),control,native_owner,output)
+ decode_framed(payload,Framing::Envelope(envelope_id),spec,&mut |record,retained,owner,_settlement|native_snapshot_turn(|work|work.measured(owner.native(),|native|construct(record,retained,native))),control,native_owner,output)
 }
 
 /// 🧮️ Reconstructs a record with a constructor that receives the original owner and the SQL control, preserving its work, ownership and every refusal.
@@ -47,7 +47,7 @@ pub fn decode_sqlite_snapshot_record_receiving<T:semio_framework_value::retireme
  native_owner:&mut NativeSnapshotDecodeOwner<'_,'_>,
  output:&mut Option<SnapshotReceivingOutput<T>>,
 )->SnapshotReceivingOutcome{
- decode_framed(payload,Framing::Envelope(envelope_id),spec,construct,control,native_owner,output)
+ decode_framed(payload,Framing::Envelope(envelope_id),spec,&mut |record,retained,owner,settlement|settlement.with_control(|control|construct(record,retained,owner,control)),control,native_owner,output)
 }
 
 /// 🏷️ Decodes a binary record behind an exact owner-declared discriminator instead of a semio envelope.
@@ -60,14 +60,14 @@ pub fn decode_sqlite_snapshot_prefixed_record_native<T:semio_framework_value::re
  native_owner:&mut NativeSnapshotDecodeOwner<'_,'_>,
  output:&mut Option<SnapshotReceivingOutput<T>>,
 )->SnapshotReceivingOutcome{
- decode_framed(payload,Framing::Prefix(prefix),spec,&mut |record,retained,owner,_control|native_snapshot_turn(|work|work.measured(owner.native(),|native|construct(record,retained,native))),control,native_owner,output)
+ decode_framed(payload,Framing::Prefix(prefix),spec,&mut |record,retained,owner,_settlement|native_snapshot_turn(|work|work.measured(owner.native(),|native|construct(record,retained,native))),control,native_owner,output)
 }
 
 fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
  payload:&semio_framework_io_schema::IoPayload,
  framing:Framing<'_>,
  spec:RecordSpecProducer,
- construct:&mut impl FnMut(&mut RecordValue,&mut Option<T>,&mut NativeSnapshotDecodeOwner<'_,'_>,&mut SqliteSnapshotControl<'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>,
+ construct:&mut impl FnMut(&mut RecordValue,&mut Option<T>,&mut NativeSnapshotDecodeOwner<'_,'_>,&semio_framework_io_sqlite_snapshot::artifact::receiving::ReceivingSettlement<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>,
  control:&mut SqliteSnapshotControl<'_>,
  native_owner:&mut NativeSnapshotDecodeOwner<'_,'_>,
  output:&mut Option<SnapshotReceivingOutput<T>>,
@@ -110,7 +110,7 @@ fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
    }))?);
    let(_,record,retained)=&mut *frame;
    let record=record.as_mut().map(|record|&mut record.0).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record is absent"))?;
-   work.take(settlement.with_control(|control|construct(record,retained,owner,control)))?;
+   work.take(construct(record,retained,owner,&settlement))?;
    if retained.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native constructor did not retain its actual output").into())}
    Ok::<(),NativeSnapshotFailure>(())
   })();

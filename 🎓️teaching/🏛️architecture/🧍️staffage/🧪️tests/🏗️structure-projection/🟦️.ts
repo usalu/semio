@@ -201,17 +201,16 @@ describe("the projection of vectors against numpy cameras", () => {
 });
 
 describe("supports split per physical contact", () => {
-  const assets = catalog();
   const select = { kind: "scale", scale: { denominator: 50 } } as const;
   const solved = (id: string, pose: string) => {
-    const asset = assets.find((a) => a.id === id)!;
+    const asset = catalog([id]).find((a) => a.id === id)!;
     const state = evaluate(asset, { kind: "pose", pose, timeS: 0 }, select);
     return { state, result: solveStructure(state) };
   };
   const SPLIT: readonly (readonly [string, string])[] = [["tram", ""], ["forklift", ""], ["excavator", ""], ["diesel-generator", ""], ["oil-pumpjack", ""], ["concrete-mixer-truck", ""], ["dining-table", ""], ["bar-stool", ""], ["cafe-chair", ""], ["operating-table", ""], ["city-car", ""], ["wheel-loader", ""]];
   for (const [id, wanted] of SPLIT)
     it(`${id}: the reactions of every physical contact sum to the weight and the load, in all six components`, () => {
-      const asset = assets.find((a) => a.id === id);
+      const asset = catalog([id]).find((a) => a.id === id);
       if (asset === undefined) return;
       const pose = wanted === "" ? asset.presentation.defaultPose : wanted;
       const { result } = solved(id, pose);
@@ -244,7 +243,6 @@ describe("supports split per physical contact", () => {
 });
 
 describe("member scalars are the same in every view", () => {
-  const assets = catalog();
   const select = { kind: "scale", scale: { denominator: 50 } } as const;
   const samples: readonly (readonly [string, string])[] = [["standing-adult", "stand"], ["tower-crane", "parked-weathervane"], ["tower-crane", "lifting-load"], ["cantilever-balcony", "point-load-tip"], ["tied-canopy", "snow-load"], ["leaning-person", "leaning-shoulder-wall"], ["jogger", "stand"]];
   const quantities = ["axial", "shear", "stress"] as const;
@@ -255,7 +253,7 @@ describe("member scalars are the same in every view", () => {
   };
   for (const [id, pose] of samples)
     it(`${id} (${pose}): N, V, σ and M of every bone are identical in side elevation, front elevation and plan`, () => {
-      const asset = assets.find((a) => a.id === id);
+      const asset = catalog([id]).find((a) => a.id === id);
       if (asset === undefined || !asset.poses.some((p) => p.id === pose)) return;
       const state = evaluate(asset, { kind: "pose", pose, timeS: 0 }, select);
       const result = solveStructure(state);
@@ -286,8 +284,7 @@ describe("member scalars are the same in every view", () => {
 });
 
 describe("one load case, three views", () => {
-  const assets = catalog();
-  const assetOf = (id: string): Asset => assets.find((a) => a.id === id)!;
+  const assetOf = (id: string): Asset => catalog([id]).find((a) => a.id === id)!;
   const select = { kind: "scale", scale: { denominator: 50 } } as const;
   const itemsOf = (scene: DrawingScene): DrawingItem[] => scene.layers.flatMap((l) => l.items);
   const lateral = (state: EvaluatedState): EvaluatedState => {

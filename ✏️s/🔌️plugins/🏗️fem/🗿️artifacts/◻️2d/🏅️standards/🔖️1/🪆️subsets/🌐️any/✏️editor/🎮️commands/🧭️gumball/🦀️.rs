@@ -6,7 +6,6 @@
 //! rail toggles.
 
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_tick;
-use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::set_gumball_flag;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballTool;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
@@ -174,19 +173,18 @@ pub mod set_transform_gumball_flag {
         Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-context-required"), "the gumball flag toggle needs a window context"))
     }
 
-    pub fn handle_window(payload: &SetTransformGumballFlag, view: &ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-        let window_id = view.window_id.clone().ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-required"), "the gumball flag toggle names no window"))?;
-        set_gumball_flag(&window_id, &payload.flag, payload.pressed);
+    /// 🎚️ Toggles one handle flag of the addressed MODEL window's gumball: window config, so the choice survives a refresh and a split layout keeps one gumball per pane.
+    pub fn handle_window(payload: &SetTransformGumballFlag, cfg: &ConfigView<'_, NoConfig>, view: &ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+        let window_id = view.window_id.as_deref().ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-required"), "the gumball flag toggle names no window"))?;
+        let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-stale"), "the gumball flag toggle names a closed window"))?;
+        if kind != model_window::WINDOW_KIND_ID {
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-kind"), "the transform gumball lives on the model window"));
+        }
+        let mut next = model_window::config::current(cfg);
+        next.gumball.set_flag(&payload.flag, payload.pressed)?;
         Ok(Emit {
-            ui_scope: UiDirtyScope::Partial {
-                window_bodies: vec![model_window::BODY_KEY.into(), results_window::BODY_KEY.into()],
-                panel_bodies: Vec::new(),
-                utilities: false,
-                tools: false,
-                engagements: false,
-                measures: true,
-                labels: false,
-            },
+            window_config_mutations: vec![model_window::config::addressed_to(window_id, next)],
+            ui_scope: UiDirtyScope::Partial { window_bodies: vec![model_window::BODY_KEY.into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false },
             ..Default::default()
         })
     }
@@ -195,19 +193,46 @@ pub mod set_transform_gumball_flag {
 
 /// 📣️ The en/de notices of the FEM editors' gumball and canvas refusal codes (design §20.12) — fem 2d and fem 3d declare the same table.
 pub fn fem_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
-    static NOTICES: std::sync::LazyLock<[(&str, semio_ui_locale::LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
-        [
-            ("fem.gumball.phase-unknown", semio_ui_locale::LocalizedLabel::native("The transform step is not known.", "Der Transformationsschritt ist unbekannt.")),
-            ("fem.gumball.transient-context-required", semio_ui_locale::LocalizedLabel::native("Dragging the gumball needs an open FEM window.", "Das Ziehen des Gumballs braucht ein geöffnetes FEM-Fenster.")),
-            ("fem.gumball-flag.window-context-required", semio_ui_locale::LocalizedLabel::native("Gumball handles can only be toggled in an open FEM window.", "Gumball-Griffe lassen sich nur in einem geöffneten FEM-Fenster umschalten.")),
-            ("fem.gumball-flag.window-required", semio_ui_locale::LocalizedLabel::native("Focus a model window to toggle gumball handles.", "Ein Modellfenster fokussieren, um Gumball-Griffe umzuschalten.")),
-            ("fem.gumball-flag.window-stale", semio_ui_locale::LocalizedLabel::native("The window of this gumball is no longer open.", "Das Fenster dieses Gumballs ist nicht mehr geöffnet.")),
-            ("fem.gumball-flag.window-kind", semio_ui_locale::LocalizedLabel::native("The transform gumball lives on the model window.", "Der Transformations-Gumball gehört zum Modellfenster.")),
-            ("fem.canvas.window-required", semio_ui_locale::LocalizedLabel::native("This canvas action needs a focused window.", "Diese Zeichenflächenaktion braucht ein fokussiertes Fenster.")),
-            ("fem.canvas.window-kind", semio_ui_locale::LocalizedLabel::native("This canvas action is not available in this window.", "Diese Zeichenflächenaktion ist in diesem Fenster nicht verfügbar.")),
+    static NOTICES: std::sync::LazyLock<Vec<(&str, semio_ui_locale::LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+        let notice = semio_ui_locale::LocalizedLabel::native;
+        vec![
+            ("fem.gumball.phase-unknown", notice("The transform step is not known.", "Der Transformationsschritt ist unbekannt.")),
+            ("fem.gumball.transient-context-required", notice("Dragging the gumball needs an open FEM window.", "Das Ziehen des Gumballs braucht ein geöffnetes FEM-Fenster.")),
+            ("fem.gumball-flag.window-context-required", notice("Gumball handles can only be toggled in an open FEM window.", "Gumball-Griffe lassen sich nur in einem geöffneten FEM-Fenster umschalten.")),
+            ("fem.gumball-flag.window-required", notice("Focus a model window to toggle gumball handles.", "Ein Modellfenster fokussieren, um Gumball-Griffe umzuschalten.")),
+            ("fem.gumball-flag.window-stale", notice("The window of this gumball is no longer open.", "Das Fenster dieses Gumballs ist nicht mehr geöffnet.")),
+            ("fem.gumball-flag.window-kind", notice("The transform gumball lives on the model window.", "Der Transformations-Gumball gehört zum Modellfenster.")),
+            ("fem.canvas.window-required", notice("This canvas action needs a focused window.", "Diese Zeichenflächenaktion braucht ein fokussiertes Fenster.")),
+            ("fem.canvas.window-kind", notice("This canvas action is not available in this window.", "Diese Zeichenflächenaktion ist in diesem Fenster nicht verfügbar.")),
+            ("fem.result-animation.window-context-required", notice("The result animation belongs to a Results window; click one first.", "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an.")),
+            ("fem.result-animation-tick.window-context-required", notice("The result animation belongs to a Results window; click one first.", "Die Ergebnisanimation gehört zu einem Ergebnisfenster; klicke zuerst eines an.")),
+            ("fem.result-animation-tick.retained-route-required", notice("The result animation tick needs the running editor.", "Der Animationstakt braucht den laufenden Editor.")),
         ]
     });
-    &*NOTICES
+    &NOTICES
+}
+
+/// 📣️ The en/de notices of the per-editor refusals every FEM editor raises under its own `prefix` (`fem2d`, `fem3d`): the `patch*` family for each of `kinds` (`(code kind, English noun, German noun)`), `focusEntity`, `setCamera` and the results window, so a refused action shows readable text in the shell instead of a bare code.
+pub fn fem_editor_fault_notices(prefix: &'static str, kinds: &[(&'static str, &'static str, &'static str)]) -> Vec<(&'static str, semio_ui_locale::LocalizedLabel)> {
+    let notice = semio_ui_locale::LocalizedLabel::native;
+    let code = |tail: String| -> &'static str { Box::leak(format!("{prefix}.{tail}").into_boxed_str()) };
+    let mut table = Vec::new();
+    for (kind, english, german) in kinds {
+        table.push((code(format!("patch.{kind}-missing")), notice(&format!("No {english} with this id exists in the document."), &format!("Im Dokument gibt es kein {german} mit dieser Kennung."))));
+        table.push((code(format!("patch.{kind}-field")), notice(&format!("A {english} has no field of this name."), &format!("Dieses Objekt ({german}) hat kein Feld mit diesem Namen."))));
+        table.push((code(format!("patch.{kind}-value")), notice(&format!("This value is not valid for that field of the {english}."), &format!("Dieser Wert ist für dieses Feld nicht gültig ({german})."))));
+        table.push((code(format!("reference.{kind}-unknown")), notice(&format!("This document has no {english} with the id '{{id}}'. Use the id of an existing one."), &format!("Dieses Dokument hat kein Objekt ({german}) mit der Kennung '{{id}}'. Nutze die Kennung eines vorhandenen."))));
+    }
+    for (window, english, german) in [("focus-entity", "Focus", "Fokussieren"), ("camera", "The camera", "Die Kamera")] {
+        table.push((code(format!("{window}.window-required")), notice(&format!("{english} works in a Model or Results window; click one first."), &format!("{german} wirkt in einem Modell- oder Ergebnisfenster; klicke zuerst eines an."))));
+        table.push((code(format!("{window}.window-stale")), notice("That window is closed; pick an open Model or Results window.", "Dieses Fenster ist geschlossen; wähle ein offenes Modell- oder Ergebnisfenster.")));
+        table.push((code(format!("{window}.window-kind")), notice("Only a Model or Results window can do this.", "Das kann nur ein Modell- oder Ergebnisfenster.")));
+        table.push((code(format!("{window}.window-context-required")), notice("This needs the window it is run from.", "Das braucht das Fenster, aus dem es gestartet wird.")));
+    }
+    table.push((code("focus-entity.unknown-entity".into()), notice("Nothing in the document has this id, so there is nothing to focus.", "Nichts im Dokument hat diese Kennung, daher gibt es nichts zu fokussieren.")));
+    table.push((code("member.degenerate".into()), notice("A member needs two different nodes.", "Ein Stab braucht zwei verschiedene Knoten.")));
+    table.push((code("results.window-context-required".into()), notice("Choose the result display from a Results window.", "Wähle die Ergebnisanzeige in einem Ergebnisfenster.")));
+    table
 }
 
 //#region 🧪️Tests

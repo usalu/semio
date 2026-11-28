@@ -34,7 +34,7 @@
     3,
     4
   ],
-  "allocatingTurns": [true,false,false,false,false,false,false,true,false,true,false,true,false,false,false,false,false,false,false,false,false],
+  "allocatingTurns": [true,false,false,false,false,false,true,false,true,false,true,false,false,false,false,false,false,false,false,false],
   "allocationMarker": {
     "allocated": "heapRequestedBytes",
     "failed": 0,

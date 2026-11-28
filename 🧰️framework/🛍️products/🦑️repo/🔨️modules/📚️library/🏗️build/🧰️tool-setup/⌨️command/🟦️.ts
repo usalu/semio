@@ -18,7 +18,8 @@ import {withRepositoryToolingStoreV1, type RepositoryToolingStoreV1} from "../..
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {runTool} from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
 import {preparedNativeToolV1, provisionInterpretersV1, provisionNativeToolsV1, withPinnedNativePathV1, type NativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
-import {ownedNativeToolPortV1, systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import {systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import {ownedNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🎟️owned/🟦️.ts";
 import {bunDistribution, prepareBun} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import {binaryenDirectory, prepareBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {bazelDistribution} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";

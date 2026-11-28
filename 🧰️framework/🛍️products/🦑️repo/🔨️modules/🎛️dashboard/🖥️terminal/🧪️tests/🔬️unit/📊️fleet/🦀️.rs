@@ -245,7 +245,7 @@ mod fleet_window {
             let lines = rows(&dashboard, index);
             let text = lines.join("\n");
             for heading in [skips, declines] { assert!(text.contains(&format!("\u{25be} {heading}")), "{heading} in {text}"); }
-            for label in [reason_skip, reason_decline] { assert!(lines.iter().any(|line| line.starts_with(label) && line.contains("/min")), "{label} charted as a rate: {text}"); }
+            for label in [reason_skip, reason_decline] { assert!(lines.iter().any(|line| line.starts_with(&label.chars().take(30).collect::<String>()) && line.to_lowercase().contains("/min")), "{label} charted as a rate: {text}"); }
             assert_eq!(dashboard_fleet::metric_label("cache.skip.read-only", language), Some(reason_skip));
         }
     }

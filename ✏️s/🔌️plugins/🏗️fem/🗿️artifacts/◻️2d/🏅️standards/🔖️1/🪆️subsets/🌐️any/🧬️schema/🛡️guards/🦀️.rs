@@ -1,8 +1,8 @@
 //! 🛡️ Shared cold semantic mutation validations.
 
-use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use crate::standards::v1::subsets::any::schema::structure::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemRegion, FemSection};
-use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemRegion, FemSection};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
 

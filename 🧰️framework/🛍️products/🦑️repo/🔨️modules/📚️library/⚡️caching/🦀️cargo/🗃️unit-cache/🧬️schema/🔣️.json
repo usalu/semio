@@ -28,7 +28,9 @@
       "compilerTemporaries": "z",
           "metadata": "lane.json",
           "size": "lane.size",
+          "peaks": "lane.peaks",
           "destination": "lane.ledger",
+          "volumeMetadata": [".fseventsd", ".Spotlight-V100", ".Trashes", ".TemporaryItems", ".DocumentRevisions-V100"],
           "targetIdentityVersion": 1
         },
         "lock": {
@@ -47,7 +49,8 @@
           "maximumWaitMilliseconds": 600000,
           "aloneMaximumWaitMilliseconds": 900000,
           "lightMaximumWaitMilliseconds": 600000,
-          "parkAfterMilliseconds": 3000
+          "parkAfterMilliseconds": 3000,
+          "recheckAfterMilliseconds": 10000
         },
         "key": {
           "outputRootScanVersion": "1",
@@ -58,7 +61,6 @@
             "CARGO_CRATE_NAME",
             "CARGO_BIN_NAME",
             "CARGO_MANIFEST_DIR",
-            "CARGO_ENCODED_RUSTFLAGS",
             "RUSTC_BOOTSTRAP",
             "SDKROOT",
             "MACOSX_DEPLOYMENT_TARGET",
@@ -92,7 +94,18 @@
           "laneToken": "@@semio-lane@@",
           "generatedToken": "@@semio-gen@@",
           "extraToken": "@@semio-extra@@",
-          "metadataCharacters": 16
+          "metadataCharacters": 16,
+          "outputDeterminism": {
+            "version": "2",
+            "rules": [
+              "front-end-threads=1",
+              "dep-info-canonical",
+              "streams-canonical",
+              "offload-front-end-threads=1",
+              "module-remap-or-unshared",
+              "cargo-identity-keyed"
+            ]
+          }
         },
         "seal": {
           "directory": "sealed",
@@ -105,7 +118,20 @@
           "retainMilliseconds": 86400000,
           "maximumFiles": 2000,
           "maximumBytes": 67108864,
-          "maximumBlockedRows": 5
+          "maximumBlockedRows": 5,
+          "leaseDirectory": ".leases",
+          "leaseMaximumMilliseconds": 172800000,
+          "leasesPerOwner": 16,
+          "retiredLog": "retired.txt",
+          "retiredLogBytes": 16384,
+          "retiredLine": {
+            "en": "{at} retired sealed snapshot {digest}: unused since {since}, outside the newest {keep}, no live lease ({leases} stale lease(s) dropped)",
+            "de": "{at} versiegelter Stand {digest} entfernt: ungenutzt seit {since}, nicht unter den neuesten {keep}, keine lebende Leihe ({leases} veraltete Leihe(n) verworfen)"
+          },
+          "leasedLine": {
+            "en": "{at} kept sealed snapshot {digest}: leased by {owners} running build(s)",
+            "de": "{at} versiegelter Stand {digest} behalten: von {owners} laufenden Build(s) geliehen"
+          }
         },
         "buildScript": {
           "platforms": [
@@ -206,6 +232,18 @@
           "unitStamp": "units.stamp",
           "unitIntervalMilliseconds": 21600000
         },
+        "spill": {
+          "description": "The bound of the spill folder (`w/spill`) that keeps the objects of a unit the host store refused until the fleet upload has read them. The folder lives on the image of the temporary directory, which the compilers and linkers need for their own scratch files, so it may hold at most `maximumBytes`, at most `sharePercent` of the volume, and never the last `keepFreePercent` of the volume; the least recently used entries beyond that go first. An entry younger than `protectMilliseconds`, or read within that time, belongs to a running build or upload and stays. A macOS image cannot be stretched while it is mounted and stays below 32 GiB, so the folder is bounded instead of grown.",
+          "maximumBytes": 4294967296,
+          "sharePercent": 15,
+          "keepFreePercent": 10,
+          "protectMilliseconds": 900000,
+          "temporaryMilliseconds": 3600000
+        },
+        "threads": {
+          "description": "The front-end thread count of one compile unit. The repository's rustflags give every unit the parallel front end (`-Z threads=0`, all cores), which multiplies the front end's memory; a unit gets `constrained` threads instead when its measured peak (learned peak or carving measurement) is above the library budget of the admission policy, or when the host warden reports a level other than calm or less available memory than its guard line. The flag is appended after the unit key is taken and the outputs are identical for any thread count.",
+          "constrained": 1
+        },
         "pool": {
           "maximumLanes": 16,
           "maximumLiveLanes": 32,
@@ -263,6 +301,14 @@
           "en": "[repo cargo] all {live} live lanes are claimed (maximum {maximum}); held by {holders}; waiting for a free lane",
           "de": "[repo cargo] Alle {live} aktiven Lanes sind beansprucht (Maximum {maximum}); gehalten von {holders}; warte auf eine freie Lane"
         },
+        "poolSameCrates": {
+          "en": "[repo cargo] lane {lane} already builds the same crates for you (held by {holders}); waiting for it instead of starting a second copy of the same build outputs",
+          "de": "[repo cargo] Lane {lane} baut bereits dieselben Crates für dich (gehalten von {holders}); warte darauf, statt eine zweite Kopie derselben Build-Ergebnisse zu beginnen"
+        },
+        "poolAdmitted": {
+          "en": "[repo cargo] retired {count} idle lane(s) ({lanes}) to admit a new lane: the host volume or the lane image budget had no room (host free now {freeGib} GiB)",
+          "de": "[repo cargo] {count} ruhende Lane(s) ({lanes}) zurückgegeben, um eine neue Lane zuzulassen: Hostvolume oder Lane-Image-Budget hatten keinen Platz (Host jetzt {freeGib} GiB frei)"
+        },
         "productLaneWaiting": {
           "en": "[repo cargo] waiting {seconds} s for the product lane {lane}, held by {holders}; this process holds leases while it waits (limit {bound} s)",
           "de": "[repo cargo] warte seit {seconds} s auf die Produkt-Lane {lane}, gehalten von {holders}; dieser Prozess hält während des Wartens Leases (Grenze {bound} s)"
@@ -311,6 +357,10 @@
           "en": "[unit-cache] {crate}: waiting for the compile slot, the fleet claim is given back so that an idle machine may compile the unit meanwhile",
           "de": "[unit-cache] {crate}: beim Warten auf den Compile-Slot wird der Flotten-Claim zurückgegeben, damit eine freie Maschine die Einheit inzwischen kompilieren kann"
         },
+        "recheckHit": {
+          "en": "[unit-cache] {crate}: another machine stored the unit while this one waited for local admission; installed from the fleet cache instead of compiling",
+          "de": "[unit-cache] {crate}: eine andere Maschine hat die Einheit gespeichert, während diese auf die lokale Zulassung wartete; aus dem Flotten-Cache installiert statt kompiliert"
+        },
         "claimLostAfterPark": {
           "en": "[unit-cache] {crate}: another machine took the fleet claim while this unit waited for the compile slot; compiling anyway, the first stored result wins",
           "de": "[unit-cache] {crate}: eine andere Maschine hat den Flotten-Claim übernommen, während diese Einheit auf den Compile-Slot wartete; es wird trotzdem kompiliert, das zuerst gespeicherte Ergebnis gilt"
@@ -331,9 +381,37 @@
           "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s) and {units} build unit(s) and retrying the command once",
           "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en) und {units} Build-Einheit(en) bereinigt, der Befehl wird einmal wiederholt"
         },
+        "laneFullGrows": {
+          "en": "[repo cargo] lane {lane} is full: its image holds {usedGib} GiB of {capacityGib} GiB and nothing in it was reclaimable; the observed peak is recorded and the image grows to {targetGib} GiB when no build holds it, so run the command again",
+          "de": "[repo cargo] Lane {lane} ist voll: ihr Image belegt {usedGib} GiB von {capacityGib} GiB und nichts darin war freigebbar; der beobachtete Höchststand ist vermerkt und das Image wächst auf {targetGib} GiB, sobald kein Build es hält, den Befehl daher erneut starten"
+        },
+        "laneFullCapped": {
+          "en": "[repo cargo] lane {lane} is full and cannot grow ({reason}): its image holds {usedGib} GiB of {capacityGib} GiB and nothing in it was reclaimable; the lane is kept with its compiled units, narrow the crate set or raise the rust share of the machine budget",
+          "de": "[repo cargo] Lane {lane} ist voll und kann nicht wachsen ({reason}): ihr Image belegt {usedGib} GiB von {capacityGib} GiB und nichts darin war freigebbar; die Lane bleibt mit ihren kompilierten Einheiten erhalten, die Crate-Menge verkleinern oder den Rust-Anteil des Maschinenbudgets erhöhen"
+        },
         "stillFull": {
           "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
           "de": "[repo cargo] Das Compiler-Image ist nach der Bereinigung weiterhin voll ({freeGib} GiB frei von {volumeGib} GiB): die laufenden Lanes anderer Befehle belegen den Platz; auf deren Ende warten oder die Rust-Partition in der Budget-Richtlinie vergrößern"
+        },
+        "seedProgress": {
+          "en": "[repo cargo] seeding the lane from the fleet cache: {done}/{total} units, {mebibytes} MiB, {seconds} s",
+          "de": "[repo cargo] Lane aus dem Flotten-Cache vorbefüllt: {done}/{total} Units, {mebibytes} MiB, {seconds} s"
+        },
+        "seedDone": {
+          "en": "[repo cargo] lane seeded before compiling: {fetched} of {total} units prefetched ({blobs} blobs, {mebibytes} MiB) in {seconds} s, {absent} not in the fleet cache{stopped}",
+          "de": "[repo cargo] Lane vor dem Kompilieren vorbefüllt: {fetched} von {total} Units vorgeholt ({blobs} Blobs, {mebibytes} MiB) in {seconds} s, {absent} nicht im Flotten-Cache{stopped}"
+        },
+        "seedNone": {
+          "en": "[repo cargo] no fleet closure record for this request yet ({reason}); units are looked up one by one and the record is published after this run",
+          "de": "[repo cargo] Für diese Anfrage gibt es noch keinen Flotten-Hüllenbericht ({reason}); Units werden einzeln nachgeschlagen und der Bericht nach diesem Lauf veröffentlicht"
+        },
+        "seedPublished": {
+          "en": "[repo cargo] fleet closure record published: {slots} unit slots ({added} new)",
+          "de": "[repo cargo] Flotten-Hüllenbericht veröffentlicht: {slots} Unit-Slots ({added} neu)"
+        },
+        "runReport": {
+          "en": "[repo cargo] units: {total} in total, {local} local hits, {fleet} fetched from the fleet ({prefetched} served from the lane seed), {compiled} compiled here, {offloaded} offloaded to other machines, {scripts} build scripts served",
+          "de": "[repo cargo] Units: {total} insgesamt, {local} lokale Treffer, {fleet} aus dem Flotten-Cache geholt ({prefetched} aus der Lane-Vorbefüllung), {compiled} hier kompiliert, {offloaded} auf andere Maschinen ausgelagert, {scripts} Build-Skripte bedient"
         },
         "retentionConflict": {
           "en": "[repo cargo] lane {lane} holds {count} provenance file(s) whose names already exist in the shared ledger with other bytes ({names}); they stay in the lane and were not published",
@@ -822,7 +900,7 @@
         "components": {
           "type": "object",
           "propertyNames": {
-            "pattern": "^(toolchain|source|platform|roots|extern:.+|env:.+|args\\.[a-z]+)$"
+            "pattern": "^(toolchain|source|determinism|cargo|platform|roots|extern:.+|env:.+|args\\.[a-z]+)$"
           },
           "additionalProperties": {
             "type": "string",

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.testing.mount.v1",
+  "description": "🏔️ A fail-fast mount plan: the ordered phases a test needs to mount exactly the part of an app it touches, each with its own deadline, and the receipt of one run (the first phase that refused or overran ends the run, every later phase is skipped).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumPhases": 16,
+        "minimumPhaseMs": 50,
+        "maximumPhaseMs": 60000,
+        "maximumTotalMs": 60000,
+        "detailCharacters": 400
+      }
+    },
+    "PhaseId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+    "Phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "budgetMs"],
+      "properties": {
+        "id": {"$ref": "#/definitions/PhaseId"},
+        "budgetMs": {"type": "integer", "minimum": 50, "maximum": 60000}
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "app", "phases"],
+      "properties": {
+        "version": {"const": 1},
+        "app": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{0,63}$"},
+        "phases": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"$ref": "#/definitions/Phase"}}
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "elapsedMs"],
+      "properties": {
+        "kind": {"enum": ["done", "refused", "deadline", "cancelled"]},
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "detail": {"type": "string"},
+        "detailDe": {"type": "string"}
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "elapsedMs", "budgetMs"],
+      "properties": {
+        "id": {"$ref": "#/definitions/PhaseId"},
+        "status": {"enum": ["passed", "failed", "skipped"]},
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "budgetMs": {"type": "integer", "minimum": 50}
+      }
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "code", "elapsedMs", "budgetMs", "detail", "en", "de"],
+      "properties": {
+        "phase": {"$ref": "#/definitions/PhaseId"},
+        "code": {"enum": ["refused", "deadline", "cancelled"]},
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "budgetMs": {"type": "integer", "minimum": 50},
+        "detail": {"type": "string", "maxLength": 400},
+        "en": {"type": "string", "minLength": 1},
+        "de": {"type": "string", "minLength": 1}
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "app", "passed", "elapsedMs", "phases"],
+      "properties": {
+        "version": {"const": 1},
+        "app": {"type": "string"},
+        "passed": {"type": "boolean"},
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "phases": {"type": "array", "items": {"$ref": "#/definitions/Row"}},
+        "failure": {"$ref": "#/definitions/Failure"}
+      }
+    }
+  }
+}

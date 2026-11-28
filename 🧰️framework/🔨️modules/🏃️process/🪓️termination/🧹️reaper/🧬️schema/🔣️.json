@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:reaper:v1",
+  "title": "A parent that dies leaves no orphan behind: its owned process groups are reaped by a sentinel outside its own tree",
+  "description": "Every owned task runs in its own process group (POSIX session leader via `detached`; a Windows process tree ended with `taskkill /T /F`). A POSIX parent killed by SIGKILL cannot clean up, and a child in its own group survives it and keeps holding what it locked (a cargo build holds the target-directory lock for as long as it lives). One sentinel process per parent is started on the first registration, in its own session so that the signals meant for the parent and its group never reach it. It reads lines from a pipe the parent keeps open: `add <pid> <spawnedMs>` registers an owned child (its creation time is pinned from the process table, a pid that is not found within the window is dropped), `remove <pid>` unregisters it when it ended by itself or by a stop. When the pipe closes, the parent has ended in any way (normal exit, crash, SIGKILL, power of the shell), and the sentinel stops every registered child by pid and creation time: SIGTERM for its tree, `graceMilliseconds` of grace, then SIGKILL for what is left, and ends. A line per signal is appended to `<tmp>/<directoryName>/<parent>.log` in English and German with the identity of victim and sender. Limits: a descendant that left the group of its owner by its own `setsid` after the owner died is not found; a parent that is stopped, not ended (SIGSTOP), is not reaped. Windows: the sentinel owns one job object per registered child (created with kill-on-job-close, the child assigned by pid and creation time check); the job handle lives in the sentinel, outside the child's tree, so the death of the parent (pipe end) or a `stop <pid>` line ends the whole tree including descendants whose parent links are gone, which `taskkill /T` cannot follow; `remove` disarms and closes the job of a child that ended. The job functions come from `bun:ffi` over kernel32 (a system library, no external dependency); where they are not available the sentinel falls back to the taskkill termination and says so in English and German.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "graceMilliseconds": 5000, "directoryName": "semio-reaper"}},
+    "JobObject": {"const": {"extendedLimitInformationClass": 9, "extendedLimitInformationBytes": 144, "limitFlagsOffset": 16, "killOnJobClose": 8192, "processSetQuota": 256, "processTerminate": 1, "terminateExitCode": 1}},
+    "Texts": {
+      "const": {
+        "en": {"reason": "the parent process {parent} ended; its owned child {pid} would be an orphan", "job-unavailable": "no job object for the owned child {pid} ({cause}); its tree ends by taskkill only", "job-stopped": "the job object of the owned child {pid} ended its whole tree"},
+        "de": {"reason": "der Elternprozess {parent} ist beendet; sein eigenes Kind {pid} wäre eine Waise", "job-unavailable": "kein Job-Objekt für das eigene Kind {pid} ({cause}); sein Baum endet nur durch taskkill", "job-stopped": "das Job-Objekt des eigenen Kindes {pid} hat seinen ganzen Baum beendet"}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

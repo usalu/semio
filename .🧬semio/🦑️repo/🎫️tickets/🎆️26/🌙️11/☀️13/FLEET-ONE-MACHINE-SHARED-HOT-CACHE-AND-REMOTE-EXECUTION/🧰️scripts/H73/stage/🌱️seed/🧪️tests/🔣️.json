@@ -1,0 +1,9 @@
+{
+  "description": "Language-agnostic vectors of the lane seed: the fingerprint of a Cargo request (SHA-256 of the JSON of the label and the sorted JSON rows of its units) and the closure id (SHA-256 of the namespace, a NUL byte and the fingerprint) are recomputed by Python; the rows leave out every path of a machine and every edit.",
+  "namespace": "semio.cargo.unit-cache.seed-closure/v1",
+  "workspaceRoot": "/work/semio",
+  "units": [
+    {"provenance": {"kind": "workspace", "identity": "path+file:///work/semio/crates/a#a@0.1.0"}, "manifest": "/work/semio/crates/a/Cargo.toml", "packageName": "a", "packageVersion": "0.1.0", "name": "a", "kind": "library", "operation": "check", "platform": null, "features": ["z", "y"], "profileDigest": "11", "compiler": {"digest": "c0"}},
+    {"provenance": {"kind": "registry", "identity": "registry+https://github.com/rust-lang/crates.io-index#serde@1.0.0"}, "manifest": "/home/u/.cargo/registry/src/x/serde-1.0.0/Cargo.toml", "packageName": "serde", "packageVersion": "1.0.0", "name": "serde", "kind": "library", "operation": "check", "platform": "aarch64-apple-darwin", "features": [], "profileDigest": "22", "compiler": {"digest": "c0"}}
+  ]
+}

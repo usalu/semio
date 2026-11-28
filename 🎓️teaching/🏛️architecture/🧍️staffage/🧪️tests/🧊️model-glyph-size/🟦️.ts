@@ -8,7 +8,7 @@ import { FLOW_STYLE } from "../../🔨️modules/🎨️depiction/🌊️flow-vi
 import { FLOW_MODEL, flowUnitOf } from "../../🔨️modules/🧊️volume/🌊️flow/🟦️.ts";
 import { ARROW_SHARE, MASS_SHARE, modelSizing, paperSizing } from "../../🔨️modules/🧊️volume/🪧️glyphs/🟦️.ts";
 import { authoredScales, modelOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
-import { sampleFigure, volumeAssets } from "../🧰️support/🧊️.ts";
+import { catalogAssetsWithVolume, sampleFigure } from "../🧰️support/🧊️.ts";
 import { scaledFigure } from "../🧰️support/🧊️volumes/🟦️.ts";
 
 const extentOf = (asset: Asset): number => Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM);
@@ -24,7 +24,7 @@ function arrows(document: ModelDocument): number[] {
 }
 const radii = (document: ModelDocument, id: string): number[] => document.solids.filter((s) => s.id.endsWith(id)).map((s) => (s as unknown as { radii: number[] }).radii[0]!);
 
-const withGlyphs = (): readonly Asset[] => [scaledFigure(), ...volumeAssets().filter((a) => ["cantilever-balcony", "tied-canopy", "electric-fan-heater"].includes(a.id))];
+const withGlyphs = (): readonly Asset[] => [scaledFigure(), ...catalogAssetsWithVolume(["cantilever-balcony", "tied-canopy", "electric-fan-heater"])];
 
 describe("🧊️ glyph sizes in the 3D model", () => {
   it("has the cap shares of the design", () => {

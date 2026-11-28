@@ -75,7 +75,7 @@ try{
      publishBuildBootstrapSourcesV1(workerData.root);
      return withRepositoryCompilerRuntimeEntriesV1(workerData.root,original,control,async()=>{
       const externalInputs=await backend.graphExternalInputs?.()??[];
-      return withResidentSliceNativeRecheckV1(original,control,()=>{leave();return loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),externalInputs);});
+      return withResidentSliceNativeRecheckV1(original,control,()=>{leave();return loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),externalInputs,workerData.selection);});
      });
     });
     reporter.stop();parentPort!.postMessage({type:"done",graph,generationPin:sealedGenerationPinV1(tool),...graph?.stats===undefined?{}:{stats:graph.stats}});

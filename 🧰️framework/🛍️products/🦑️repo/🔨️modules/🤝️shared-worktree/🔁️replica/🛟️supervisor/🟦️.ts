@@ -71,6 +71,8 @@ const parentLives=(pid:number,start:ProcessStartReadV1):boolean=>{
  const now=readProcessStartV1(pid);
  return now==="gone"?false:now==="unknown"||start==="unknown"?true:Math.abs(now-start)<=3000;
 };
+const processAlive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const identityCheckMilliseconds=30_000;
 const timed=<T>(work:Promise<T>,milliseconds:number):Promise<T>=>new Promise<T>((done,fail)=>{const timer=setTimeout(()=>{fail(Error(`store did not answer within ${milliseconds} ms`));},milliseconds);work.then(value=>{clearTimeout(timer);done(value);},error=>{clearTimeout(timer);fail(error);});});
 
 /** ⏱️ Reads the limits from the environment. */
@@ -158,10 +160,13 @@ function watchdogLoop(config:Watch):void{
    writeAtomic(config.health,JSON.stringify({...value,failures:[...failures.filter(item=>item.kind!=="loop-blocked"),{kind:"loop-blocked",count:(previous?.count??0)+1,lastMs:Date.now()}].slice(-8)}));
   }catch{}
  };
+ let identityAt=Date.now();
  const tick=():void=>{
   const now=Date.now(),lag=Math.max(0,now-shared[0]!),activity=activities[shared[2]!]??"idle";
   if(lag>longest){longest=lag;longestActivity=activity;}
-  if(!parentLives(config.parent,config.parentStart))process.kill(process.pid,"SIGKILL");
+  const present=processAlive(config.parent),verify=present&&now-identityAt>=identityCheckMilliseconds;
+  if(verify)identityAt=now;
+  if(!present||(verify&&!parentLives(config.parent,config.parentStart)))process.kill(process.pid,"SIGKILL");
   try{writeAtomic(config.beat,JSON.stringify({version:1,...ownProcessIdentityV1(),parent:config.parent,startedMs:config.startedMs,wallMs:now,phase:phases[shared[1]!]??"boot",base:config.base,source:config.source,lagMs:lag,activity,longestMs:Math.round(longest),longestActivity}));}catch{}
   if(lag>=config.blockMs&&!blocked){blocked=true;record();}
   else if(lag<2000)blocked=false;
@@ -177,9 +182,9 @@ type Dog=Readonly<{phase:(phase:"boot"|"open"|"run")=>void}>;
 function startWatchdog(root:string,base:string,source:string,limits:BootLimitsV1):Dog{
  const shared=new SharedArrayBuffer(24),view=new Float64Array(shared),record=Symbol.for("semio.fleet.blocked");
  view[0]=Date.now();
- const holder=globalThis as unknown as Record<symbol,unknown>,earlier=readJson(restartFile(root)) as {count?:unknown;wallMs?:unknown}|undefined;
+ const holder=globalThis as unknown as Record<symbol,unknown>,earlier=readJson(restartFile(root)) as {count?:unknown;wallMs?:unknown;activity?:unknown;longestActivity?:unknown}|undefined;
  holder[Symbol.for("semio.fleet.activity")]=(name:string):void=>{const index=activities.indexOf(name as never);if(index>=0)view[2]=index;};
- if(typeof earlier?.count==="number"&&typeof earlier.wallMs==="number")holder[Symbol.for("semio.fleet.blockedRestart")]={count:earlier.count,lastMs:earlier.wallMs};
+ if(typeof earlier?.count==="number"&&typeof earlier.wallMs==="number"){const where=earlier.longestActivity??earlier.activity;holder[Symbol.for("semio.fleet.blockedRestart")]={count:earlier.count,lastMs:earlier.wallMs,...typeof where==="string"&&/^[a-z]{1,12}$/u.test(where)?{activity:where}:{}};}
  const config:Watch={shared,beat:join(bootDirectory(root),"beat.json"),health:join(root,".cache","f","health.json"),parent:process.ppid,parentStart:readProcessStartV1(process.ppid),startedMs:Date.now(),base,source,blockMs:limits.blockMs,beatMs:limits.beatMs};
  try{const worker=new Worker(fileURLToPath(import.meta.url),{workerData:{semioBoot:config}});worker.unref();worker.on("error",()=>{});}catch{}
  let last=Date.now();
@@ -306,7 +311,9 @@ function candidate(args:readonly string[],root:string,environment:Readonly<Recor
  return new Promise<Outcome>(done=>{
   const startedAt=Date.now(),beatFile=join(bootDirectory(root),"beat.json"),readyFile=join(bootDirectory(root),"ready.json");
   let ready=false,waiting=false,stopping=false,finished=false,killed="",termTimer:ReturnType<typeof setTimeout>|undefined;
-  const proc=spawn(process.execPath,[fileURLToPath(import.meta.url),"--boot-child",...args],{env:{...environment,SEMIO_FLEET_BOOT_BASE:base,SEMIO_FLEET_BOOT_SOURCE:source,SEMIO_FLEET_BOOT_REASON:reason,SEMIO_FLEET_BOOT_FORCE:force?"1":""} as NodeJS.ProcessEnv,stdio:"inherit",windowsHide:true});
+  const proc=spawn(process.execPath,[fileURLToPath(import.meta.url),"--boot-child",...args],{env:{...environment,SEMIO_FLEET_BOOT_BASE:base,SEMIO_FLEET_BOOT_SOURCE:source,SEMIO_FLEET_BOOT_REASON:reason,SEMIO_FLEET_BOOT_FORCE:force?"1":""} as NodeJS.ProcessEnv,stdio:["inherit","inherit","pipe"],windowsHide:true});
+  let errorTail="";
+  proc.stderr?.on("data",(chunk:Buffer)=>{try{process.stderr.write(chunk);}catch{}errorTail=(errorTail+chunk.toString("utf8")).slice(-4000);});
   let recording=false,ownedBeat:Beat|undefined,ownedBeatAt=startedAt;
   const pid=proc.pid??0,kill=(why:string,beat?:Beat,reason?:"blocked"|"silent"):void=>{
    killed=killed||why;
@@ -344,7 +351,7 @@ function candidate(args:readonly string[],root:string,environment:Readonly<Recor
    const status=code??(name===null?1:128+({SIGTERM:15,SIGINT:2,SIGKILL:9,SIGHUP:1} as Record<string,number>)[name]!||1),uptime=Date.now()-startedAt;
    if(stopping)return end({kind:"exit",code:killed===""?code??0:status});
    if(code===0||code===75)return end({kind:"exit",code:code});
-   if(!ready||uptime<limits.earlyMs){notice(`The daemon of ${source==="worktree"?"the worktree":base} ended after ${Math.round(uptime/1000)} s with ${name??`exit code ${code}`}${killed===""?"":` (${killed})`} / Der Daemon von ${source==="worktree"?"dem Arbeitsverzeichnis":base} endete nach ${Math.round(uptime/1000)} s mit ${name??`Exit-Code ${code}`}`);return end({kind:"early",code:status,reason:killed===""?`exit ${status}`:killed});}
+   if(!ready||uptime<limits.earlyMs){notice(`The daemon of ${source==="worktree"?"the worktree":base} ended after ${Math.round(uptime/1000)} s with ${name??`exit code ${code}`}${killed===""?"":` (${killed})`} / Der Daemon von ${source==="worktree"?"dem Arbeitsverzeichnis":base} endete nach ${Math.round(uptime/1000)} s mit ${name??`Exit-Code ${code}`}`);const detail=errorTail.split(/\r?\n/u).map(line=>line.trim()).filter(line=>line!==""&&!line.includes("scheduling:")).slice(-2).join(" | ").slice(-300);return end({kind:"early",code:status,reason:killed===""?`exit ${status}${detail===""?"":`: ${detail}`}`:killed});}
    notice(`The daemon ended with ${name??`exit code ${code}`}${killed===""?"":` (${killed})`} / Der Daemon endete mit ${name??`Exit-Code ${code}`}`);
    return end({kind:"exit",code:status});
   });

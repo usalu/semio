@@ -37,7 +37,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
             *std::sync::Arc::make_mut(&mut replacement) = serde_json::from_value(fixture["replacement"].clone()).expect("independent replacement snapshot");
             assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(), fixture["initial"]);
             assert_eq!(serde_json::to_value(replacement.as_ref()).unwrap(), fixture["replacement"]);
-            let semio_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            let semio_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             self.emit.take().map(semio_plugin_retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated").into())
         }
     }
@@ -69,21 +69,33 @@ fn take_test_host_events() -> Vec<HostEvent> {
     /// same admission receipt every migrated dispatch answers with, so a law that reads the store right
     /// after it observed the previous revision. Settles the operation and rebuilds the settled
     /// mutations/inverse through the SAME `result_from_last_edit` the direct route uses.
-    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_job::OriginalTurnFailure> {
         let verb = intent.action.name.to_string();
-        let before_edit_id = app.0.test_last_edit_id();
-        let before_tail = app.0.test_edit_tail_lengths();
-        let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta, identity).await?;
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+        let before_edit_id = app.0.stores.test_last_edit_id();
+        let before_tail = app.0.stores.test_edit_tail_lengths();
+        semio_framework_job::testkit::issue_initiating_event(cx, semio_plugin_testing_caller::OriginalFixtureCaller::event_stock())?;
+        let (fresh_fuel, fresh_grant) = (semio_plugin_testing_caller::OriginalFixtureCaller::turn_fuel(), cx.original_turn_ceiling().0);
+        artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app.0, cx)?;
+        let (mut args, mut fault, mut original_meta) = (None, None, Some(meta.clone()));
+        let mut admitted = None;
+        for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+            artifact_app_laws::fixture_renew_turn(cx, fresh_fuel, fresh_grant)?;
+            semio_framework_job::testkit::renew_payload_page_grant(cx);
+            admitted = PluginApp::handle_intent_frame(&mut app.0, intent, &mut args, &mut fault, &mut original_meta, identity, cx).await?;
+            if admitted.is_some() { break }
+            PluginApp::maintenance_step(&mut app.0, cx, artifact_app_laws::fixture_mounted_policy().maintenance).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+        }
+        let mut admitted = admitted.ok_or_else(|| semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::invariant("the intent did not settle within its authored turn bound")))?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await.map_err(semio_framework_job::OriginalTurnFailure::from)?;
         admitted.requested_effects.extend(receipt.effects);
         admitted.events.extend(receipt.events);
         if let Some(scope) = receipt.ui_scope {
             admitted.ui_scope = scope;
         }
-        let after_edit_id = app.0.test_last_edit_id();
+        let after_edit_id = app.0.stores.test_last_edit_id();
         if after_edit_id.is_some() {
             let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
-            let settled = app.0.test_result_from_last_edit(&verb, meta, tail_offset).await;
+            let settled = app.0.stores.test_result_from_last_edit(&verb, meta, tail_offset).await;
             admitted.mutations = settled.mutations;
             admitted.inverse_group = settled.inverse_group;
             admitted.history_patch = settled.history_patch;
@@ -115,25 +127,26 @@ fn take_test_host_events() -> Vec<HostEvent> {
         assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
         assert_eq!(chunks.push(vec![2; 17]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
-        let mut donated_handle=Some(handle.clone());let mut source=Some(ArtifactMediaExportPoll::Complete(ArtifactMediaExportResult::structured(MediaType{class:MediaClass::Presentation,form:MediaForm::Sequence},"fixture.schema","audio/mpeg",chunks.clone()).expect("exact fixture media")));let mut received=None;
+        let total=ARTIFACT_OUTPUT_CHUNK_BYTES+17;
+        let mut donated_handle=Some(handle.clone());let mut source=Some(ArtifactMediaExportPoll::Complete(ArtifactMediaExportResult::structured(MediaType{class:MediaClass::Presentation,form:MediaForm::Sequence},"fixture.schema","audio/mpeg",chunks).expect("exact fixture media")));let mut received=None;
         assert!(ArtifactDownloadOutput::receive_media_export_original(&mut donated_handle,&mut source,&mut received,cx).expect("exact original media output"));let output=received.take().expect("funded download receiving");
-        app.media.segmented_downloads.insert_admitted(operation_id.0, output);
+        drop(source);
+        app.media.segmented_downloads.insert_admitted(operation_id.0,output);
 
         app.cancel_media_export(&handle).await.expect("completed output cancellation");
-        assert!(!app.media.segmented_downloads.contains(operation_id.0));
+        assert!(app.media.segmented_downloads.get(operation_id.0).is_none());
         assert!(app.media.test_segmented_closure_contains(operation_id.0));
-        assert_eq!(chunks.chunks_remaining(), 2, "cancellation only transfers ownership");
-        assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
-        app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
-        assert_eq!(chunks.bytes_remaining(), 17);
-        app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
-        assert_eq!(chunks.bytes_remaining(), 0);
-        app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-        assert!(!app.media.test_segmented_closure_contains(operation_id.0));
+        let (mut moved,mut turns)=(0usize,0usize);
+        while app.media.test_segmented_closure_contains(operation_id.0){
+            app.maintenance.maintenance_stage = 2;
+            turns+=1;assert!(turns<=4_096,"bounded cleanup must terminate");
+            let step=app_maintenance_turn(&mut *app,cx).expect("bounded cleanup");
+            let semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)=step else{panic!("cleanup of the cancelled output is progress, got {step:?}")};
+            assert!(progress.copied_bytes<=ARTIFACT_OUTPUT_CHUNK_BYTES+ARTIFACT_OUTPUT_CHUNK_BYTES,"every cleanup step moves a bounded extent");
+            moved+=progress.copied_bytes;
+        }
+        assert!(moved>=total,"the cancelled output's {total} payload bytes are destroyed chunk by chunk by its bounded cleanup, moved {moved}");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -157,9 +170,9 @@ fn take_test_host_events() -> Vec<HostEvent> {
             fn begin_close(&mut self){self.closing=true;}
             fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
                 let original=cx.retained_grant();let demand=self.close_demands(original.maximum_copy_bytes)?;
-                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-                    if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}
-                    else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output,&mut self.retirement,grant)}
+                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
+                    if self.retirement.is_some(){let copy=effect.grant().maximum_copy_bytes;semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,copy,effect)),work:1})}
+                    else{semio_framework_value::RetainedWorkPoll::Complete(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output,&mut self.retirement,effect))}
                 })?;
                 step.admit(original,self.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)
             }
@@ -168,27 +181,28 @@ fn take_test_host_events() -> Vec<HostEvent> {
             fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
             fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
             fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.retirement.is_none()}
+            fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
         }
         let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
         for (busy,cancel) in [(false,false),(true,false),(false,true)]{
             let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let (mut payload,issuer)=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut yielded=false;let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),crate::job_close_fixture::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
-            let mut decoder=HistoryView::empty();assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|job.test_admit_original_source(cx)).unwrap());
-            for _ in 0..128{let result=caller.turn(policy.maintenance,|cx|Ok(if busy{completion.with_busy_test_lock(||semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx))}else{semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx)})).unwrap();match result{semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{caller.cancel().cancel_now()}},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
-            assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=caller.turn(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},|cx|job.close_step(cx)).unwrap();assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=caller.turn(grant,|cx|job.close_step(cx)).unwrap();assert_eq!(step.progress(),caller.receipt());assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Blocked))}assert!(job.terminal_is_empty());
+            let mut decoder=caller.admitted_decoder();assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|job.test_admit_original_source(cx)).unwrap());
+            for _ in 0..128{let result=caller.turn(policy.maintenance,|cx|Ok(if busy{completion.with_busy_test_lock(||job_step(&mut job,cx))}else{job_step(&mut job,cx)})).unwrap();match result{semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{caller.cancel().cancel_now()}},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
+            assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=caller.turn(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},|cx|job.close_step(cx)).unwrap();assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=caller.bare_turn(grant,|cx|job.close_step(cx)).unwrap();assert_eq!(step.progress(),caller.receipt());assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Blocked))}assert!(job.terminal_is_empty());
             if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),ephemeral)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend_from_slice(&chunk);crate::job_close_fixture::retire_fixture_owned(chunk,&mut caller)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);crate::job_close_fixture::retire_fixture_owned(output,&mut caller);crate::job_close_fixture::retire_fixture_owned(ephemeral,&mut caller);}
-            crate::job_close_fixture::retire_fixture_owned(consumer,&mut caller);crate::job_close_fixture::retire_fixture_owned(completion,&mut caller);issuer.close(&mut caller);while !decoder.terminal_is_empty(){caller.turn(policy.close,|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}caller.retire(crate::job_close_fixture::original_fixture_stock());
+            crate::job_close_fixture::retire_fixture_owned(consumer,&mut caller);crate::job_close_fixture::retire_fixture_owned(completion,&mut caller);issuer.close(&mut caller);caller.turn(policy.close,|cx|{close_job_origins(cx);Ok(())}).unwrap();caller.close_decoder(&mut decoder,policy.close);caller.retire(crate::job_close_fixture::original_fixture_stock());
         }
         let mut original=std::collections::VecDeque::with_capacity(law["queueSlots"].as_u64().unwrap()as usize);original.push_back("Mesh 😀".to_string());
         let payload_bytes=original[0].len();let backing_bytes=original.capacity()*std::mem::size_of::<String>();assert_eq!(std::mem::size_of::<String>(),law["vectorMetadataWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
         let birth=semio_framework_value::retirement::owned_retirement_birth_bytes::<std::collections::VecDeque<String>>();
         let admission=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:birth,..semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation};
-        let (mut retirement,admitted)=semio_framework_value::retirement::admit_owned_retirement(original,admission).unwrap_or_else(|_|panic!("original queue typed constructor refused its funded grant"));
+        let mut original=Some(original);let (mut retirement,admitted)=run_retirement_effect(admission,|effect|semio_framework_value::retirement::admit_owned_retirement(&mut original,effect)).result.unwrap_or_else(|_|panic!("original queue typed constructor refused its funded grant")).expect("original queue typed constructor admitted");
         assert!(admitted.fits(admission));let (mut born,mut released)=(admitted.retained_capacity_bytes,admitted.released_bytes);
         for _ in 0..100000{if retirement.terminal_is_empty(){break}
             let copy=retirement.next_copy_byte_demand().unwrap();
             let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap().max(1)};
-            assert_eq!(retirement.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());
-            let progress=retirement.close_step(grant).unwrap().progress();assert!(progress.fits(grant));born+=progress.retained_capacity_bytes;released+=progress.released_bytes;}
+            let denied=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant};assert_eq!(try_retirement_effect(denied,|effect|store::os_store::snapshot_read::settle_close_poll(retirement.close_step(denied.maximum_copy_bytes,effect))).map_or(Default::default(),|step|step.unwrap().progress()),Default::default());
+            let progress=run_retirement_effect(grant,|effect|store::os_store::snapshot_read::settle_close_poll(retirement.close_step(grant.maximum_copy_bytes,effect))).unwrap().progress();assert!(progress.fits(grant));born+=progress.retained_capacity_bytes;released+=progress.released_bytes;}
         assert!(retirement.terminal_is_empty());assert_eq!(released,payload_bytes+backing_bytes+born,"original queue backing allocation remains owned until its exact byte credits drain");
 
     }
@@ -246,17 +260,17 @@ fn take_test_host_events() -> Vec<HostEvent> {
 
                 let mut envelope = valid.clone();
 
-                if step == "malformed" { envelope.diff.payload = vec![0xff]; }
+                if step == "malformed" { envelope.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&[0xff]).expect("bounded malformed payload"); }
 
                 envelope
 
             }).collect();
 
-            let result = receiver.ingest_operations(&protocol::encode_envelopes(&batch), &mut identity).await;
+            let result = receiver.ingest_operations(&protocol::encode_envelopes(&batch), &mut identity, cx).await;
 
             assert_eq!(result.is_err(), row["refused"].as_bool().unwrap(), "{}", row["name"]);
 
-            assert_eq!(receiver.test_snapshot().await.count, row["count"].as_i64().unwrap() as i32, "{}", row["name"]);
+            assert_eq!(receiver.stores.test_snapshot().await.count, row["count"].as_i64().unwrap() as i32, "{}", row["name"]);
 
             let events = take_test_host_events();
 

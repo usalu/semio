@@ -193,7 +193,7 @@ impl OriginalEffectProducer for Turn{
 }
 fn measure<T,E>(bank:&mut EffectBank,g:RetainedCloneGrant,units:u64,run:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<T,E>)->(RetainedWorkPoll<T,E>,(usize,usize)){let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(g,units,|effect|run(effect)).0);(poll,(heap.requested_bytes,heap.released_bytes))}
 fn demand_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-fn fresh()->EffectBank{let mut bank=EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:usize::MAX>>2,maximum_capacity_bytes:usize::MAX>>2,maximum_release_bytes:usize::MAX>>2,maximum_depth:1<<10},1<<50));let _=bank.run(RetainedCloneGrant::default(),0,|_|RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:0}));let _=bank.take_admitted();bank}
+fn fresh()->EffectBank{let mut bank=EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:usize::MAX>>2,maximum_capacity_bytes:usize::MAX>>2,maximum_release_bytes:usize::MAX>>2,maximum_depth:1<<12},1<<50));let _=bank.run(RetainedCloneGrant::default(),0,|_|RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:0}));let _=bank.take_admitted();bank}
 thread_local!{static BANK:RefCell<Option<EffectBank>>=const{RefCell::new(None)};}
 /// 🏦️ Lends the same thread-local Source and finite Work stock used by the reply and poll drivers.
 pub fn with_bank<R>(operation:impl FnOnce(&mut EffectBank)->R)->R{BANK.with(|bank|operation(bank.borrow_mut().get_or_insert_with(fresh)))}

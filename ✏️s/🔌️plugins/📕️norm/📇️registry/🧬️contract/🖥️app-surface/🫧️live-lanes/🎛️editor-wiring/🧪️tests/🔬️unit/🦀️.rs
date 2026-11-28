@@ -182,7 +182,7 @@ mod marker_cell {
 #[test]
 fn the_editor_wiring_paints_only_from_the_responsive_report() {
     let source = include_str!("../../🦀️.rs");
-    let synchronous: Vec<&str> = source.lines().filter(|line| line.contains("::live_report(") && !line.trim_start().starts_with("///")).collect();
+    let synchronous: Vec<&str> = source.lines().filter(|line| line.contains("::live_report(") && !line.trim_start().starts_with("///") && !line.contains("pub fn settled_report")).collect();
     assert!(synchronous.is_empty(), "paint paths must use paint_report, found {synchronous:?}");
     assert!(source.contains("responsive(PAINT_BUDGET).0"));
 }

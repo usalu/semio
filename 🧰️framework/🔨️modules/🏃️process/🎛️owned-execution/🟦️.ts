@@ -9,7 +9,8 @@ import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts
 import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
 export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
-import { ownedKillRecordLineV1, terminateOwnedChildTreeGracefullyV1 } from "../🪓️termination/🟦️.ts";
+import { ownedKillRecorderV1, terminateOwnedChildTreeGracefullyV1 } from "../🪓️termination/🟦️.ts";
+import { reapWithParentV1 } from "../🪓️termination/🧹️reaper/🟦️.ts";
 import { deathCauseV1, findCrashReportV1, ownedDeathNoteV1 } from "./🪦️death-note/🟦️.ts";
 import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
@@ -124,13 +125,15 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     : undefined;
   const nativeChild = bunChild ? undefined : spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", outputPipe ? "pipe" : "ignore", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
   const child = bunChild ?? nativeChild!;
+  const unreap = reapWithParentV1(child.pid);
   let stopped = "", stopRefusal: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1 | undefined, closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
+  let terminating = false;
   const terminate = (reason: string, refusal?: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1): void => {
     if (!stopped) { stopped = reason; stopRefusal = refusal; }
     interruptPublication();
     bunChild?.auxiliary?.destroy();
-    if (!closed) void terminateOwnedChildTreeGracefullyV1(child, { record: (row, signal) => { const line = ownedKillRecordLineV1({ pid: row.pid, signal, killer: process.pid, label, reason: stopped }); process.stderr.write(`${line}\n`); } }).catch(() => undefined);
+    if (!closed && !terminating) { terminating = true; void terminateOwnedChildTreeGracefullyV1(child, { record: ownedKillRecorderV1(label, () => stopped) }).catch(() => undefined); }
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
   const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message, refuseProcessV1("timeout", "execution.progress-expired", { label, notice: commandSignal.reason.message })) : commandSignal?.reason instanceof ResourceLoanDeadlineExhaustedV1 ? terminate(commandSignal.reason.message, commandSignal.reason) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
@@ -220,6 +223,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;
   } finally {
+    unreap();
     bunChild?.auxiliary?.destroy();
     if (release) release();
     for(const stream of deliveryStreams)stream.off("error",deliveryRefused);

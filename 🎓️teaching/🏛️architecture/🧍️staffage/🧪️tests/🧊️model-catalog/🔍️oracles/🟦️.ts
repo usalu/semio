@@ -2,7 +2,7 @@
  *
  * Every authored scale of an asset is checked: a GLB holds one glTF scene per scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, …) whose triangles, extents and bounding box are read back by three, a model JSON the same scenes, an FBX one scene per clip, scale and view, and the triangles of an FBX equal those of the matching GLB scene.
  *
- * THE REFERENCES (tests only, no runtime dependency): the Khronos `gltf-validator`, three's `GLTFLoader` and glTF-Transform for a GLB, three's `FBXLoader` and assimp (`assimpjs`) for an FBX, Ajv with the `semio.model/v1` JSON Schema for a model document, three's skinned extent against `dimensions`, and an independent weld-and-count of edges for watertightness.
+ * THE REFERENCES (tests only, no runtime dependency): the Khronos `gltf-validator`, three's `GLTFLoader` and glTF-Transform for a GLB, three's `FBXLoader` and assimp (`assimpjs`) for an FBX, Ajv with the `semio.model/v1` JSON Schema for a model document, three's skinned extent (without the contact surfaces of role `ground`, as in the 2D dimension rule) against `dimensions`, and an independent weld-and-count of edges for watertightness.
  *
  * Every check returns {@link Finding}s (check code, item, message) and facts; nothing here asserts, so a caller decides what is a failure and which finding is a stated limitation.
  *
@@ -16,9 +16,11 @@ import type { Asset } from "../../../🧬️schema/🟦️.ts";
 import { VIEWS, type View } from "../../../🔨️modules/🔗️contracts/🟦️.ts";
 import { qualityOf } from "../../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import { MODES, authoredScales, modeOf, modelOfAsset, sceneIdOf } from "../../../🔨️modules/🧊️volume/🟦️.ts";
+import { scopedId } from "../../../🔨️modules/🧊️volume/🪪️ids/🟦️.ts";
 import { resolveScenes } from "../../../🔨️modules/📤️export/🗿️model/🧩️scenes/🟦️.ts";
 import { type Extent, loadFbx, loadGlb, sceneExtent, validateGlb } from "../../🧰️support/🧊️.ts";
 import { NodeIO } from "@gltf-transform/core";
+import { KHRMeshQuantization } from "@gltf-transform/extensions";
 
 /** 🏷️ The checks a finding can belong to. */
 export type Check = "model" | "geometry" | "closed" | "bounds" | "glb" | "variants" | "fbx" | "json" | "budget" | "determinism" | "set";
@@ -102,8 +104,21 @@ export const extentToleranceAt = (length: number, scale: number): number => Math
 /** 🧊️ The facts and findings of one GLB: Khronos validation, three and glTF-Transform loads, seven variants, one glTF scene per authored scale and mode, extent per scene in the staffage axes. */
 export type GlbReport = { readonly facts: { readonly bytes: number; readonly triangles: number; readonly segments: number; readonly errors: number; readonly warnings: number; readonly extent: Extent; readonly scenes: Readonly<Record<string, SceneFacts & { readonly extent: Extent }>> }; readonly findings: Finding[] };
 
-/** 🛑️ Checks a GLB of one pose: 0 errors and 0 warnings from the validator, all seven variants, exactly the scenes `scenes` (default one implicit scene) in that order with triangles in each, scenes that three and glTF-Transform both read, finite extent per scene, no animation. */
-export async function checkGlb(bytes: Uint8Array, name: string, item: string, scenes?: readonly string[]): Promise<GlbReport> {
+/** 🧱️ The solids of an asset that are no part of its physical envelope, by the ids they carry in the scenes of a GLB: the contact surfaces a figure stands on or leans against (role `ground`). `dimensions` leave them out exactly as the 2D dimension rule does, which measures every drawn shape whose role is not `ground`.
+ *
+ * @see ../../../🔨️modules/🗂️catalog/🟦️.ts — the 2D extent against `dimensions`, without the shapes of role `ground`
+ */
+export function contactSurfaces(asset: Asset): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const scale of authoredScales(asset.volumes)) {
+    const volume = (asset.volumes as unknown as Readonly<Record<string, Readonly<Record<string, readonly { readonly id: string; readonly role?: string }[]>>>>)[`${scale}`]!;
+    for (const mode of MODES) for (const solid of volume[mode] ?? []) if (solid.role === "ground") out.add(scopedId(sceneIdOf(scale, mode), solid.id));
+  }
+  return out;
+}
+
+/** 🛑️ Checks a GLB of one pose: 0 errors and 0 warnings from the validator, all seven variants, exactly the scenes `scenes` (default one implicit scene) in that order with triangles in each, scenes that three and glTF-Transform both read, finite extent per scene (without the solids `outside`, see {@link contactSurfaces}), no animation. */
+export async function checkGlb(bytes: Uint8Array, name: string, item: string, scenes?: readonly string[], outside: ReadonlySet<string> = new Set()): Promise<GlbReport> {
   const findings: Finding[] = [];
   const report = await validateGlb(bytes, name);
   for (const message of report.messages) findings.push({ check: "glb", item, message: `${message.code} ${message.pointer ?? ""} ${message.message}` });
@@ -118,7 +133,7 @@ export async function checkGlb(bytes: Uint8Array, name: string, item: string, sc
     if (facts.json.scene !== 0) findings.push({ check: "glb", item, message: `default scene ${facts.json.scene}, expected 0` });
   }
   try {
-    const document = await new NodeIO().readBinary(bytes);
+    const document = await new NodeIO().registerExtensions([KHRMeshQuantization]).readBinary(bytes);
     const names = document.getRoot().listScenes().map((s) => s.getName());
     if (scenes !== undefined && names.join() !== scenes.join()) findings.push({ check: "glb", item, message: `glTF-Transform reads scenes ${names.join(",")}` });
   } catch (error) {
@@ -128,10 +143,10 @@ export async function checkGlb(bytes: Uint8Array, name: string, item: string, sc
   let extent: Extent = { min: [NaN, NaN, NaN], max: [NaN, NaN, NaN] };
   try {
     const loaded = await loadGlb(bytes);
-    extent = sceneExtent(loaded.scene);
+    extent = sceneExtent(loaded.scene, undefined, outside);
     for (const [index, scene] of loaded.scenes.entries()) {
       const key = facts.json.scenes[index]?.name ?? `scene-${index}`;
-      const own = sceneExtent(scene);
+      const own = sceneExtent(scene, undefined, outside);
       sceneFacts[key] = { ...(facts.scenes[key] ?? { triangles: 0, segments: 0 }), extent: own };
       if (![...own.min, ...own.max].every(Number.isFinite)) findings.push({ check: "glb", item, message: `scene ${key} has a non-finite extent` });
     }
@@ -156,6 +171,9 @@ export function boundsVerdict(asset: Asset, poses: readonly { readonly id: strin
   const best = scored.reduce((a, b) => (b.miss < a.miss ? b : a));
   return { pose: mine.id, error: mine.error, miss: mine.miss, best: best.id, bestMiss: best.miss, ok: mine.miss <= 1 };
 }
+
+/** 🧹️ Frees what a checked file held: the WebAssembly heap of its assimp instance and the three scene only leave the process when the collector runs, and a file at a time keeps the peak of an asset at the largest file instead of the sum of all. */
+const release = (): void => (globalThis as { Bun?: { gc(force: boolean): void } }).Bun?.gc(true);
 
 /** 🧩️ A fresh assimp instance per file: the WebAssembly heap of one instance only grows, so a long-lived instance aborts once many large FBX files have passed through it. */
 const assimpModule = async (): Promise<{ FileList: new () => { AddFile(n: string, c: Uint8Array): void; delete(): void }; ConvertFileList(l: unknown, f: "assjson"): { delete(): void; IsSuccess(): boolean; GetErrorCode(): string; GetFile(i: number): { GetContent(): Uint8Array } } }> => (await import(/* @vite-ignore */ "assimpjs" as string) as { default: () => Promise<any> }).default();
@@ -245,6 +263,7 @@ export async function checkFbx(bytes: Uint8Array, item: string, expect: FbxExpec
   } finally {
     for (const object of native) object.delete();
   }
+  release();
   return { facts: { bytes: bytes.length, triangles, bonesFound, threeBones, meshBones, tracks, durationS, assimpDurationS, assimpChannels }, findings };
 }
 
@@ -275,11 +294,18 @@ export type SolidReport = { readonly id: string; readonly kind: string; readonly
 const WELD = 1e-7;
 const DEGENERATE_AREA = 1e-12;
 
-/** 🔒️ Whether the kernel promises a closed solid for this kind and parameters: boxes, ellipsoids, capsules, extrusions, full revolves and lofts capped at both ends; a partial sweep or an uncapped loft is open by design. */
+/** ➰️ Whether an uncapped loft is a ring (a chain link, the wall around a cavity): its last section repeats the first one in place, radii, exponent and an explicit `rotation`, so the two end rings weld into one and the skin encloses a volume without caps; capped at both ends the same ring would carry two coincident caps back to back and is not watertight. */
+export function loopLoft(solid: Extract<Solid, { kind: "loft" }>): boolean {
+  const first = solid.sections[0]!, last = solid.sections[solid.sections.length - 1]!;
+  const same = (a: readonly number[] | undefined, b: readonly number[] | undefined): boolean => a !== undefined && b !== undefined && a.every((v, i) => v === b[i]);
+  return !solid.capStart && !solid.capEnd && solid.sections.length > 3 && same(first.at, last.at) && same(first.rotation, last.rotation) && first.rx === last.rx && first.ry === last.ry && (first.exponent ?? 2) === (last.exponent ?? 2);
+}
+
+/** 🔒️ Whether the kernel promises a closed solid for this kind and parameters: boxes, ellipsoids, capsules, extrusions, full revolves, lofts capped at both ends and uncapped lofts that return into themselves ({@link loopLoft}); a partial sweep or any other uncapped loft is open by design. */
 export function closedKind(solid: Solid): boolean {
   switch (solid.kind) {
     case "revolve": return solid.sweepRad === undefined || solid.sweepRad >= 2 * Math.PI - 1e-9;
-    case "loft": return solid.capStart && solid.capEnd;
+    case "loft": return (solid.capStart && solid.capEnd) || loopLoft(solid);
     default: return true;
   }
 }
@@ -432,13 +458,14 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
   if (missing.length > 0) findings.push({ check: "set", item: asset.id, message: `manifest lacks ${missing.join(", ")}` });
   if (extra.length > 0) findings.push({ check: "set", item: asset.id, message: `manifest lists unplanned ${extra.join(", ")}` });
   const scenes = expectedScenes(asset);
+  const outside = contactSurfaces(asset);
   const sceneTriangles = new Map<string, number>();
   const poses: { id: string; bytes: number; triangles: number; segments: number; extent: Extent }[] = [];
   const clips: FilesAudit["clips"][number][] = [];
   let models = 0;
   let zipBytes = 0;
   let total = 0;
-  const members = new Map<string, Uint8Array>();
+  const members = new Map<string, { readonly length: number; readonly sha256: string }>();
   for (const planned of plannedNames) {
     const entry = byName.get(planned.name);
     if (entry === undefined) continue;
@@ -455,9 +482,9 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
     const { createHash } = await import("node:crypto");
     if (createHash("sha256").update(bytes).digest("hex") !== entry.sha256) findings.push({ check: "set", item, message: `${entry.file} does not hash to the manifest` });
     if (entry.file.length + 1 > MAX_PATH) findings.push({ check: "set", item, message: `relative path of ${entry.file.length} characters` });
-    members.set(`${planned.kind === "zip" ? "" : planned.kind}/${planned.name}`, bytes);
+    members.set(`${planned.kind === "zip" ? "" : planned.kind}/${planned.name}`, { length: bytes.length, sha256: entry.sha256 });
     if (planned.kind === "glb") {
-      const report = await checkGlb(bytes, planned.name, item, scenes);
+      const report = await checkGlb(bytes, planned.name, item, scenes, outside);
       findings.push(...report.findings);
       const finest = authoredScales(asset.volumes)[0];
       const body = finest === undefined ? undefined : report.facts.scenes[sceneIdOf(finest, "body")];
@@ -500,11 +527,12 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
     if (new Set(names).size !== names.length) findings.push({ check: "set", item: "zip", message: `duplicate members: ${names.filter((n, i) => names.indexOf(n) !== i).join(", ")}` });
     if ([...names].sort().join("|") !== [...wanted].sort().join("|")) findings.push({ check: "set", item: "zip", message: `members differ: ${names.length} found, ${wanted.length} expected` });
     const { unzipSync } = await import("fflate");
-    const unzipped = unzipSync(read(zipFile.file));
+    const { createHash } = await import("node:crypto");
+    const zipData = read(zipFile.file);
     for (const name of wanted) {
       const inFile = members.get(name);
-      const inZip = unzipped[name];
-      if (inFile === undefined || inZip === undefined || inFile.length !== inZip.length || !inFile.every((v, i) => v === inZip[i])) findings.push({ check: "set", item: name, message: "zip member differs from its file" });
+      const inZip = unzipSync(zipData, { filter: (member) => member.name === name })[name];
+      if (inFile === undefined || inZip === undefined || inFile.length !== inZip.length || createHash("sha256").update(inZip).digest("hex") !== inFile.sha256) findings.push({ check: "set", item: name, message: "zip member differs from its file" });
     }
   }
   const bounds = boundsVerdict(asset, poses);

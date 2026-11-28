@@ -138,7 +138,7 @@ describe("🧊️ a member is drawn through the depiction in every view and scal
 
 describe("🧊️ a member on the head of the labrador is drawn in the front and the plan", () => {
   const labrador = ((): Asset => {
-    const asset = structuredClone(catalog().find((candidate) => candidate.id === "labrador-dog")!);
+    const asset = structuredClone(catalog(["labrador-dog"]).find((candidate) => candidate.id === "labrador-dog")!);
     const authored = asset.representations["50"] as AuthoredRepresentation;
     const part = (id: string, x0: number, x1: number, d: number) => ({ id, kind: "member", bone: "head", role: "body", z: 4, filled: true, tone: 0.72, region: "coat-head", from: { x: x0, y: 0.018, z: 0 }, to: { x: x1, y: 0.018, z: 0 }, section: { kind: "circle", d } }) as unknown as Shape;
     for (const view of ["front", "plan"] as const) {

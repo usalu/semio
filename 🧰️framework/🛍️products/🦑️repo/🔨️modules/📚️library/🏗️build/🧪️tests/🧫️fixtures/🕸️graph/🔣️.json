@@ -304,6 +304,14 @@
         "accepted": true
       },
       {
+        "id": "all-withheld",
+        "selection": {
+          "kind": "all"
+        },
+        "producer": "absent",
+        "accepted": true
+      },
+      {
         "id": "all-incomplete",
         "selection": {
           "kind": "all"

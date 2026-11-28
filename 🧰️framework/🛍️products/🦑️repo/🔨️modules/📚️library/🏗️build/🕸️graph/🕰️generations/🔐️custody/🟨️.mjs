@@ -224,7 +224,11 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
   return!(await active(signal)).some(claim=>claimsConflictV1(mine,claim));
  }
 
- return Object.freeze({hold,idle,list:live,resource});
+
+ /** 🔭️ Whether a live claim rebuilds the whole workspace (structural, held or queued): a narrow reader that would queue behind it refreshes its own owners privately instead (see `../🔌️load`). */
+ async function structuralBusy({signal}={}){return(await active(signal)).some(claim=>claim.structural);}
+
+ return Object.freeze({hold,idle,structuralBusy,list:live,resource});
 }
 
 const pause=(milliseconds,signal)=>new Promise((resolve,reject)=>{

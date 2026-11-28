@@ -40,13 +40,15 @@ use semio_framework_pack_json::Value;
 use semio_plugin::built_text_node;
 use semio_plugin::BuiltNode;
 use semio_plugin::Canvas2dScene;
+use semio_ui_contract::Buildable;
+use semio_ui_contract::HasChildren;
+use semio_ui_contract::HasStackLayout;
 use semio_ui_locale::Label;
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-results";
 pub const BODY_KEY: &str = "fem2d.play.results";
-const CAPTION_LINE: f64 = 16.0;
 const LEGEND_GAP: f64 = 24.0;
 //#endregion 🔖️Constants
 
@@ -56,15 +58,23 @@ pub fn model_scene_bounds(doc: &Fem2dSnapshot) -> (f64, f64, f64) {
     doc.nodes.iter().map(|node| screen_2d(node.x, node.y)).fold(None, |bounds: Option<(f64, f64, f64)>, (x, y)| Some(bounds.map_or((x, y, x), |(left, top, right)| (left.min(x), top.min(y), right.max(x))))).unwrap_or((ORIGIN_2D, ORIGIN_2D, ORIGIN_2D))
 }
 
-/// 🏷️ Scene position of caption `row`, counted upward from the line just above the model.
-pub fn caption_position(doc: &Fem2dSnapshot, row: usize) -> (f64, f64) {
-    let (left, top, _) = model_scene_bounds(doc);
-    (left, top - CAPTION_LINE * (row as f64 + 2.0))
+/// 🏷️ Places the solve caption lines above the canvas as DOM text, the one source screen readers and the matrix read, like the 3D results window; both siblings enter the column as BUILDERS so the column keys them positionally.
+pub fn with_captions(surface: BuiltNode, captions: Vec<String>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let admission = |detail: &'static str| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", detail);
+    let scene_stack = semio_ui_contract::column().grow(true).try_child(surface).map_err(|_| admission("fem2d caption scene child admission failed"))?;
+    let mut column = semio_ui_contract::column().grow(true);
+    for caption in captions {
+        let label = semio_ui_contract::Label::try_from(caption.as_str()).map_err(|_| admission("fem2d caption label admission failed"))?;
+        column = column.try_child(semio_ui_contract::text(label)).map_err(|_| admission("fem2d caption text admission failed"))?;
+    }
+    column.try_child(scene_stack).map_err(|_| admission("fem2d caption scene stack admission failed"))?.try_build().map_err(|_| admission("fem2d caption node admission failed"))
 }
 
-fn caption_layer(doc: &Fem2dSnapshot, id: &str, row: usize, content: &str, size: f64) -> Value {
-    let (x, y) = caption_position(doc, row);
-    fem2d_canvas_text_layer(id, x, y, content, size)
+/// 🖼️ The results canvas under its DOM captions.
+fn results_surface(layers: Vec<Value>, captions: Vec<String>, camera: &Viewport2d, window_instance_id: Option<&str>, active_utility: &str, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let layers_json = finish_results_layers(layers, window_instance_id, active_utility);
+    let surface = semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))?;
+    with_captions(surface, captions)
 }
 
 //#region 🔖️StressContourHelpers
@@ -346,8 +356,9 @@ fn render_mounted(
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
     locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
+    let (layers, captions) = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
+        let mut captions = Vec::new();
         use semio_s_fem_app_surface::ResultMode;
         let (family, index) = match display.mode {
             DisplayMode::Static => (ResultMode::Static, 0),
@@ -373,7 +384,7 @@ fn render_mounted(
                 } else {
                     format!("{} {number}: {eigenvalue:.3}", labels.buckling_mode.as_str())
                 };
-                layers.push(caption_layer(doc, "eigen-result", 2, &caption, 12.0));
+                captions.push(caption);
             }
             let status = if matches!(visual.state, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState::FaultedCancelled) { labels.failed.as_str() } else if visual.validated_final { labels.converged.as_str() } else { labels.pending.as_str() };
             let retained = if view.retained { labels.previous_results.as_str() } else { "" };
@@ -382,15 +393,19 @@ fn render_mounted(
             } else {
                 format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm)
             };
-            layers.push(caption_layer(doc, "analysis-progress", 0, caption.trim_end(), 11.0));
+            captions.push(stale_caption(caption.trim_end(), view.stale, labels));
         } else {
-            layers.push(caption_layer(doc, "analysis-progress", 0, labels.pending.as_str(), 11.0));
+            captions.push(labels.pending.as_str().to_owned());
         }
-        layers.extend(playback_caption_layer(doc, animation, labels));
-        layers
+        captions.extend(playback_caption(animation, labels));
+        (layers, captions)
     });
-    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
+    results_surface(layers, captions, camera, window_instance_id, active_utility, locale)
+}
+
+/// 🧊️ Marks a frame drawn from the previous revision's generation so the stale results never pass as current.
+pub fn stale_caption(caption: &str, stale: bool, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> String {
+    if stale { format!("{} · {caption}", labels.updating_results.as_str()) } else { caption.to_owned() }
 }
 
 /// 🎵️ The scale one mode-shape frame is drawn at: the unit-normalized shape lifted to
@@ -402,10 +417,8 @@ pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
 
 /// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
 /// still results window looks exactly as it always did.
-fn playback_caption_layer(doc: &Fem2dSnapshot, animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<Value> {
-    animation.playing.then(|| {
-        caption_layer(doc, "playback-caption", 1, &format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), 11.0)
-    })
+pub fn playback_caption(animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<String> {
+    animation.playing.then(|| format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed))
 }
 
 fn placeholder(label: Label) -> semio_plugin::UiAssemblyResult<BuiltNode> {
@@ -500,9 +513,8 @@ fn reaction_labels<'a>(doc: &Fem2dSnapshot, reactions: impl Iterator<Item = (&'a
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
-    let gumball_meta = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
-    semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta)
+fn finish_results_layers(layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
+    semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, None)
 }
 
 fn render_static(
@@ -526,15 +538,14 @@ fn render_static(
         let Some(result) = results.get(&case_id) else {
             return Err(format!("{}: {case_id}", labels.result_missing.as_str()));
         };
-        Ok(static_layers(doc, result, interaction, animation, amplitude, labels))
+        Ok(static_layers(doc, result, interaction, amplitude))
     });
-    let layers = match scene {
-        Ok(Ok(layers)) => layers,
+    let (layers, captions) = match scene {
+        Ok(Ok(layers)) => (layers, playback_caption(animation, labels).into_iter().collect::<Vec<_>>()),
         Ok(Err(message)) => return placeholder(Label::data(message)),
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.analysis_error.as_str()))),
     };
-    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
+    results_surface(layers, captions, camera, window_instance_id, active_utility, locale)
 }
 
 /// 📊️ Every layer one static frame paints. `amplitude` is the waveform read of the playback phase:
@@ -544,9 +555,7 @@ fn static_layers(
     doc: &Fem2dSnapshot,
     result: &semio_s_fem_model::StaticResult,
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    animation: &semio_s_fem_app_surface::FemResultsAnimation,
     amplitude: f64,
-    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> Vec<Value> {
     let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
     let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
@@ -554,7 +563,6 @@ fn static_layers(
         disp_map.insert(d.node_id.clone(), d.values);
     }
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale * amplitude));
-    layers.extend(playback_caption_layer(doc, animation, labels));
 
     layers.extend(reaction_labels(doc, result.reactions.iter().map(|value| (value.node_id.as_str(), value.dof, value.value)), amplitude));
 
@@ -644,16 +652,14 @@ fn render_modal(
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(caption_layer(doc, "modal-caption", 0, &format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), 12.0));
-        layers.extend(playback_caption_layer(doc, animation, labels));
-        layers
+        let captions = [Some(format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1)), playback_caption(animation, labels)].into_iter().flatten().collect::<Vec<_>>();
+        (layers, captions)
     });
-    let layers = match mode {
-        Ok(layers) => layers,
+    let (layers, captions) = match mode {
+        Ok(result) => result,
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.modal_error.as_str()))),
     };
-    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
+    results_surface(layers, captions, camera, window_instance_id, active_utility, locale)
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -686,16 +692,14 @@ fn render_buckling(
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(caption_layer(doc, "buckling-caption", 0, &format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), 12.0));
-        layers.extend(playback_caption_layer(doc, animation, labels));
-        layers
+        let captions = [Some(format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str())), playback_caption(animation, labels)].into_iter().flatten().collect::<Vec<_>>();
+        (layers, captions)
     });
-    let layers = match mode {
-        Ok(layers) => layers,
+    let (layers, captions) = match mode {
+        Ok(result) => result,
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.buckling_error.as_str()))),
     };
-    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
+    results_surface(layers, captions, camera, window_instance_id, active_utility, locale)
 }
 //#endregion 🔖️Render
 

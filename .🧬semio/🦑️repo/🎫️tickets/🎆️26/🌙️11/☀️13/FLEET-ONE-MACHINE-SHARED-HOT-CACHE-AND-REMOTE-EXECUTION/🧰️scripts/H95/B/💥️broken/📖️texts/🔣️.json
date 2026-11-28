@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "id": "broken",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "section.head": {
+      "en": "Broken crates: {broken} broken, {blocked} blocked by a broken dependency, {ok} ok, {unchecked} not yet checked ({origins} sweeping machines)",
+      "de": "Kaputte Crates: {broken} kaputt, {blocked} durch eine kaputte Abhängigkeit blockiert, {ok} in Ordnung, {unchecked} noch ungeprüft ({origins} prüfende Rechner)"
+    },
+    "section.none": {
+      "en": "Broken crates: no machine publishes a board yet (start the sweep: repo fleet broken sweep --watch)",
+      "de": "Kaputte Crates: noch kein Rechner veröffentlicht eine Tafel (Prüflauf starten: repo fleet broken sweep --watch)"
+    },
+    "section.origin": {
+      "en": "  board of {origin}: {crates} crates, {age} s old",
+      "de": "  Tafel von {origin}: {crates} Crates, {age} s alt"
+    },
+    "row.broken": {
+      "en": "  {crate}: {error} ({where}) broken for {age}, last editor {editor}",
+      "de": "  {crate}: {error} ({where}) kaputt seit {age}, letzter Bearbeiter {editor}"
+    },
+    "row.blocked": {
+      "en": "  {crate}: blocked by a broken dependency",
+      "de": "  {crate}: durch eine kaputte Abhängigkeit blockiert"
+    },
+    "editor.unknown": {
+      "en": "unknown",
+      "de": "unbekannt"
+    },
+    "editor.known": {
+      "en": "{origin} ({age} ago)",
+      "de": "{origin} (vor {age})"
+    },
+    "sweep.idle": {
+      "en": "Broken crates sweep: nothing changed in Rust code since the last sweep.",
+      "de": "Prüflauf kaputter Crates: seit dem letzten Lauf hat sich kein Rust-Code geändert."
+    },
+    "sweep.begin": {
+      "en": "Broken crates sweep: checking {count} crates ({mode}) on source snapshot {digest}.",
+      "de": "Prüflauf kaputter Crates: prüfe {count} Crates ({mode}) auf der Quelltext-Momentaufnahme {digest}."
+    },
+    "sweep.end": {
+      "en": "Broken crates sweep done in {seconds} s: {broken} broken, {blocked} blocked, {ok} ok.",
+      "de": "Prüflauf kaputter Crates beendet in {seconds} s: {broken} kaputt, {blocked} blockiert, {ok} in Ordnung."
+    },
+    "sweep.deferred": {
+      "en": "Broken crates sweep: {count} crates still being edited, checked after {seconds} s of quiet.",
+      "de": "Prüflauf kaputter Crates: {count} Crates werden noch bearbeitet, Prüfung nach {seconds} s Ruhe."
+    },
+    "sweep.failed": {
+      "en": "Broken crates sweep failed: {reason}",
+      "de": "Prüflauf kaputter Crates fehlgeschlagen: {reason}"
+    },
+    "usage": {
+      "en": "Expected: repo fleet broken sweep [--once|--watch]",
+      "de": "Erwartet: repo fleet broken sweep [--once|--watch]"
+    },
+    "machine.missing": {
+      "en": "This checkout has no fleet identity (.cache/f/machine.json) or no fleet store; the broken crates sweep has nowhere to publish.",
+      "de": "Dieser Checkout hat keine Flotten-Identität (.cache/f/machine.json) oder keinen Flotten-Speicher; der Prüflauf kaputter Crates kann nirgends veröffentlichen."
+    }
+  }
+}

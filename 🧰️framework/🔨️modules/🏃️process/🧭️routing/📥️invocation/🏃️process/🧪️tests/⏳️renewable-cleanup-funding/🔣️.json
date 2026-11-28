@@ -1,0 +1,7 @@
+{
+  "idleMilliseconds": 1000,
+  "maximumMilliseconds": 60000,
+  "reserveMilliseconds": 5000,
+  "bodyWindowMilliseconds": { "minimum": 50000, "maximum": 55000 },
+  "waitMilliseconds": 1500
+}

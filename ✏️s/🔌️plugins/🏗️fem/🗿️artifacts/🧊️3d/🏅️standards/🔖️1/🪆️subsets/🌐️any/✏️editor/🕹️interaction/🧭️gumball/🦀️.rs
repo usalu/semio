@@ -2,9 +2,10 @@
 //! 🧭️ Fem3d transform gumball — what the live selection resolves to geometrically (the nodes and solids a gesture
 //! with live dispatch, and the gumball TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s, driven by the
 //! `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one relative `move-selection` tick leaf; a
-//! one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture accumulates its ticks into the window's
-//! ONE open transaction (persisted in the FEM gumball transient, previewed by every window, never history) and
-//! commits the NET leaf once; an abort leaves zero trace
+//! one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture's ticks are CUMULATIVE from the grab (the
+//! host asks with `gumballCumulative`) and each replaces the window's ONE open leaf (persisted in the FEM gumball
+//! transient, previewed by every window, never history), so a tick dropped as stale costs nothing, and the commit
+//! publishes the NET leaf once; an abort leaves zero trace
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
@@ -116,7 +117,7 @@ pub fn fem3d_transform_pivot(doc: &Fem3dSnapshot, targets: &Fem3dTransformTarget
 /// 🪪️ The editor app id every gumball transaction's `tool` is scoped by: `<appId>#<verb>`.
 pub const FEM3D_EDITOR_APP_ID: &str = "s.fem.fem3d@1/*#editor";
 
-/// 🔑️ The transaction key of a gesture's leaf — every tick upserts it, so an open transaction holds ONE net leaf.
+/// 🔑️ The transaction key of a gesture's leaf — every tick REPLACES it: a streamed tick carries the whole offset from the grab, so an open transaction holds ONE net leaf and a tick the app dropped as stale costs nothing.
 pub const FEM3D_GUMBALL_LEAF_KEY: &str = "selection:0";
 
 /// 🎬️ How one gumball dispatch moves the selection — the parameters of the tick leaf it builds.
@@ -133,74 +134,29 @@ pub fn fem3d_gumball_tick(doc: &Fem3dSnapshot, selection_ids: &[String], motion:
     let targets = fem3d_transform_targets(doc, selection_ids);
     let [pivot_x, pivot_y, pivot_z] = fem3d_transform_pivot(doc, &targets)?;
     let identity = MoveSelection { node_ids: targets.node_ids, solid_ids: targets.solid_ids, pivot_x, pivot_y, pivot_z, dx: 0.0, dy: 0.0, dz: 0.0, axis_x: 0.0, axis_y: 0.0, axis_z: 1.0, angle: 0.0, sx: 1.0, sy: 1.0, sz: 1.0 };
-    Some(match motion {
-        Fem3dGumballMotion::Translate { dx, dy, dz } => MoveSelection { dx, dy, dz, ..identity },
-        Fem3dGumballMotion::Rotate { axis: [axis_x, axis_y, axis_z], angle } => MoveSelection { axis_x, axis_y, axis_z, angle, ..identity },
-        Fem3dGumballMotion::Scale { sx, sy, sz } => MoveSelection { sx, sy, sz, ..identity },
-    })
-}
-
-/// ➕️ `net` followed by `tick` as ONE net leaf: offsets add, angles about the same axis add, factors multiply — only
-/// for the same targets and pivot and the same kind of motion; an identity tick changes nothing; `None` otherwise.
-pub fn fem3d_gumball_then(net: &MoveSelection, tick: &MoveSelection) -> Option<MoveSelection> {
-    if (&net.node_ids, &net.solid_ids, [net.pivot_x, net.pivot_y, net.pivot_z]) != (&tick.node_ids, &tick.solid_ids, [tick.pivot_x, tick.pivot_y, tick.pivot_z]) {
-        return None;
-    }
-    let unmoved = [0.0; 3];
-    let unscaled = [1.0; 3];
-    let offset = |leaf: &MoveSelection| [leaf.dx, leaf.dy, leaf.dz];
-    let factors = |leaf: &MoveSelection| [leaf.sx, leaf.sy, leaf.sz];
-    let translation = |leaf: &MoveSelection| leaf.angle == 0.0 && factors(leaf) == unscaled;
-    let rotation = |leaf: &MoveSelection| offset(leaf) == unmoved && factors(leaf) == unscaled;
-    let scaling = |leaf: &MoveSelection| offset(leaf) == unmoved && leaf.angle == 0.0;
-    if tick.is_identity() {
-        Some(net.clone())
-    } else if translation(net) && translation(tick) {
-        Some(MoveSelection { dx: net.dx + tick.dx, dy: net.dy + tick.dy, dz: net.dz + tick.dz, ..net.clone() })
-    } else if rotation(net) && rotation(tick) {
-        fem3d_turn_then(net, tick)
-    } else if scaling(net) && scaling(tick) {
-        Some(MoveSelection { sx: net.sx * tick.sx, sy: net.sy * tick.sy, sz: net.sz * tick.sz, ..net.clone() })
-    } else {
-        None
-    }
-}
-
-/// 🌀️ Two rotations about the same pivot as ONE rotation (`tick` after `net`): the angle is a SIGNED sum while the axes
-/// are parallel or anti-parallel within `1e-6` (a drag that reverses flips the axis the host reports, and sensor noise
-/// never makes two ticks of one ring unequal), the quaternion product otherwise — a tick is never dropped.
-fn fem3d_turn_then(net: &MoveSelection, tick: &MoveSelection) -> Option<MoveSelection> {
-    let Some(tick_axis) = tick.unit_axis() else { return Some(net.clone()) };
-    let Some(net_axis) = net.unit_axis().filter(|_| net.angle != 0.0) else {
-        return Some(MoveSelection { axis_x: tick_axis[0], axis_y: tick_axis[1], axis_z: tick_axis[2], angle: tick.angle, ..net.clone() });
+    let tick = match motion {
+        Fem3dGumballMotion::Translate { dx, dy, dz } => MoveSelection { dx, dy, dz, ..identity.clone() },
+        Fem3dGumballMotion::Rotate { axis: [axis_x, axis_y, axis_z], angle } => MoveSelection { axis_x, axis_y, axis_z, angle, ..identity.clone() },
+        Fem3dGumballMotion::Scale { sx, sy, sz } => MoveSelection { sx, sy, sz, ..identity.clone() },
     };
-    let dot: f64 = net_axis.iter().zip(tick_axis).map(|(left, right)| left * right).sum();
-    if dot.abs() > 1.0 - 1e-6 {
-        let angle = net.angle + dot.signum() * tick.angle;
-        return Some(MoveSelection { axis_x: net_axis[0], axis_y: net_axis[1], axis_z: net_axis[2], angle, ..net.clone() });
-    }
-    let quaternion = |axis: [f64; 3], angle: f64| {
-        let (sin, cos) = (angle / 2.0).sin_cos();
-        [cos, axis[0] * sin, axis[1] * sin, axis[2] * sin]
-    };
-    let (a, b) = (quaternion(tick_axis, tick.angle), quaternion(net_axis, net.angle));
-    let product = [
-        a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
-        a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
-        a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
-        a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
-    ];
-    let sin = (product[1] * product[1] + product[2] * product[2] + product[3] * product[3]).sqrt();
-    let angle = 2.0 * sin.atan2(product[0]);
-    let axis = if sin > 1e-12 { [product[1] / sin, product[2] / sin, product[3] / sin] } else { net_axis };
-    Some(MoveSelection { axis_x: axis[0], axis_y: axis[1], axis_z: axis[2], angle, ..net.clone() })
+    Some(if fem3d_gumball_moves_geometry(doc, &tick) { tick } else { MoveSelection { axis_x: 0.0, axis_y: 0.0, axis_z: 1.0, ..identity } })
 }
 
-/// 🎚️ Whether a tick is one the leaf admits and that moves: finite numbers, positive factors, a rotation about a
-/// non-zero axis, not the identity.
-fn fem3d_gumball_moves(tick: &MoveSelection) -> bool {
+/// 🫥️ Whether `tick` carries any target of `doc` to another place: a rotation or uniform scale of a lone node about its own centroid, or a zero-length drag, moves nothing and so resolves to the identity, which commits no command.
+fn fem3d_gumball_moves_geometry(doc: &Fem3dSnapshot, tick: &MoveSelection) -> bool {
+    tick.node_ids.iter().filter_map(|id| doc.nodes.iter().find(|node| node.id.as_str() == id)).any(|node| tick.map([node.x, node.y, node.z]) != [node.x, node.y, node.z])
+        || tick.solid_ids.iter().filter_map(|id| doc.solids.iter().find(|solid| solid.id == *id)).any(|solid| tick.moved_solid(solid).is_some())
+}
+
+/// 🎚️ Whether a tick is one the leaf admits: finite numbers, positive factors, a rotation about a non-zero axis.
+fn fem3d_gumball_admits(tick: &MoveSelection) -> bool {
     let finite = [tick.dx, tick.dy, tick.dz, tick.axis_x, tick.axis_y, tick.axis_z, tick.angle, tick.sx, tick.sy, tick.sz].iter().all(|value| value.is_finite());
-    finite && tick.sx > 0.0 && tick.sy > 0.0 && tick.sz > 0.0 && (tick.angle == 0.0 || tick.unit_axis().is_some()) && !tick.is_identity()
+    finite && tick.sx > 0.0 && tick.sy > 0.0 && tick.sz > 0.0 && (tick.angle == 0.0 || tick.unit_axis().is_some())
+}
+
+/// 🎚️ Whether a tick is one the leaf admits and that moves: not the identity.
+fn fem3d_gumball_moves(tick: &MoveSelection) -> bool {
+    fem3d_gumball_admits(tick) && !tick.is_identity()
 }
 
 /// 📨️ One gumball event: the tick leaf this dispatch built (`None` when the selection moves no geometry).
@@ -237,14 +193,14 @@ fn begin_stream(context: &mut Fem3dGumballContext, event: Option<&gumball_tool::
 
 fn continue_stream(context: &mut Fem3dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Stream(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().filter(|tick| fem3d_gumball_moves(tick)).and_then(|tick| fem3d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem3d_gumball_admits(tick)).cloned().unwrap_or(stream);
     sink.push(Command::Effect(ToolYield::upsert(FEM3D_GUMBALL_LEAF_KEY, Fem3dMutation::MoveSelection(net.clone()))));
     context.stream = Some(net);
 }
 
 fn finish_stream(context: &mut Fem3dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Finish(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().filter(|tick| fem3d_gumball_moves(tick)).and_then(|tick| fem3d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem3d_gumball_admits(tick)).cloned().unwrap_or(stream);
     if net.is_identity() {
         sink.push(Command::Effect(ToolYield::retract(FEM3D_GUMBALL_LEAF_KEY)));
     } else {
@@ -393,6 +349,7 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
                 }),
             );
             object.insert("gumballLiveDispatch", semio_framework_pack_json::json!(true));
+            object.insert("gumballCumulative", semio_framework_pack_json::json!(true));
             if active {
                 if let Some(pivot) = targets.as_ref().and_then(|targets| fem3d_transform_pivot(doc, targets)) {
                     object.insert("gumballTarget", semio_framework_pack_json::json!(pivot));

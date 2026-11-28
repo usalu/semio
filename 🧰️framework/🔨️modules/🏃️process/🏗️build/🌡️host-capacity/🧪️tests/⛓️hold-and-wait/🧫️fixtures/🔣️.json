@@ -1,0 +1,304 @@
+{
+  "_comment": "Inputs hand-authored; the expected event timeline of every scenario is computed by the independent Python oracle (python3 🐍️oracle/🐍️.py), never by the TypeScript implementation. Scenario 1 restates the failure of 2026-11-27: four jobs hold 1536 MB grants, every one asks to grow by 2200 MB, 2048 MB are spare and a 6004 MB command waits at the head of the queue.",
+  "memory": {
+    "interactiveReserveBasisPoints": 2500,
+    "interactiveReserveMinimumMegabytes": 2048,
+    "interactiveReserveMaximumMegabytes": 8192
+  },
+  "scenarios": [
+    {
+      "name": "four-job-hold-and-wait",
+      "description": "Four running grants all wait for their growth while 2048 MB are spare and a 6004 MB command waits: after the deadlock time the youngest batch grant is preempted, the others grow and finish, the victim and the command follow.",
+      "horizonSeconds": 900,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 1500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 300000,
+        "deadlockMilliseconds": 120000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [
+        {
+          "id": "job-1-hold",
+          "priority": "batch",
+          "arriveSecond": 0,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-2-hold",
+          "priority": "batch",
+          "arriveSecond": 1,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-3-hold",
+          "priority": "batch",
+          "arriveSecond": 2,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-4-hold",
+          "priority": "interactive",
+          "arriveSecond": 3,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "id": "publication-1",
+          "priority": "batch",
+          "arriveSecond": 5,
+          "megabytes": 6004,
+          "workSeconds": 30
+        }
+      ],
+      "streams": []
+    },
+    {
+      "name": "four-job-without-resolution",
+      "description": "The same four jobs under a policy without a deadlock time: nothing ever frees, which is the failure as it was.",
+      "horizonSeconds": 900,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 1500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 300000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [
+        {
+          "id": "job-1-hold",
+          "priority": "batch",
+          "arriveSecond": 0,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-2-hold",
+          "priority": "batch",
+          "arriveSecond": 1,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-3-hold",
+          "priority": "batch",
+          "arriveSecond": 2,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-4-hold",
+          "priority": "interactive",
+          "arriveSecond": 3,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "id": "publication-1",
+          "priority": "batch",
+          "arriveSecond": 5,
+          "megabytes": 6004,
+          "workSeconds": 30
+        }
+      ],
+      "streams": []
+    },
+    {
+      "name": "four-job-reduced-growth",
+      "description": "The second job's unit can run under a lower memory budget (floor 1800 MB): its growth starts reduced from the spare memory after the reduced-start wait and no grant is preempted.",
+      "horizonSeconds": 900,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 1500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 300000,
+        "deadlockMilliseconds": 120000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [
+        {
+          "id": "job-1-hold",
+          "priority": "batch",
+          "arriveSecond": 0,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-2-hold",
+          "priority": "batch",
+          "arriveSecond": 1,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60,
+          "floorMegabytes": 1800
+        },
+        {
+          "id": "job-3-hold",
+          "priority": "batch",
+          "arriveSecond": 2,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        },
+        {
+          "id": "job-4-hold",
+          "priority": "interactive",
+          "arriveSecond": 3,
+          "grantMegabytes": 1536,
+          "askAfterSeconds": 10,
+          "growthMegabytes": 2200,
+          "workSeconds": 60
+        }
+      ],
+      "requests": [],
+      "streams": []
+    },
+    {
+      "name": "unsatisfiable-request",
+      "description": "Other applications hold 9500 MB of a 16384 MB host: a 6004 MB command can never get its memory, even with nothing of ours running, and is refused after the unreachable time instead of queueing for ever; smaller requests run one at a time beside it.",
+      "horizonSeconds": 400,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 9500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 300000,
+        "deadlockMilliseconds": 120000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [],
+      "requests": [
+        {
+          "id": "command-big-1",
+          "priority": "batch",
+          "arriveSecond": 0,
+          "megabytes": 6004,
+          "minimum": true,
+          "workSeconds": 30
+        },
+        {
+          "id": "request-small-2",
+          "priority": "batch",
+          "arriveSecond": 60,
+          "megabytes": 1000,
+          "workSeconds": 30
+        },
+        {
+          "id": "request-small-3",
+          "priority": "batch",
+          "arriveSecond": 70,
+          "megabytes": 600,
+          "workSeconds": 20
+        }
+      ],
+      "streams": []
+    },
+    {
+      "name": "large-request-aging",
+      "description": "A 6000 MB batch request waits beside a stream of 1000 MB interactive requests that keeps the room saturated: at the aging time it heads the line, the stream is drained behind it and it is admitted as soon as the room carries it; without aging the stream starves it for the whole horizon.",
+      "horizonSeconds": 900,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 1500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 300000,
+        "deadlockMilliseconds": 120000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [],
+      "requests": [
+        {
+          "id": "large-batch-1",
+          "priority": "batch",
+          "arriveSecond": 100,
+          "megabytes": 6000,
+          "workSeconds": 30
+        }
+      ],
+      "streams": [
+        {
+          "prefix": "small-interactive",
+          "priority": "interactive",
+          "megabytes": 1000,
+          "workSeconds": 60,
+          "firstSecond": 0,
+          "everySeconds": 10,
+          "count": 90
+        }
+      ]
+    },
+    {
+      "name": "large-request-without-aging",
+      "description": "The same stream under a policy whose aging time is beyond the horizon: the large request is starved.",
+      "horizonSeconds": 900,
+      "preemptLatencySeconds": 2,
+      "totalMegabytes": 16384,
+      "foreignMegabytes": 1500,
+      "wait": {
+        "bypassMilliseconds": 30000,
+        "maximumBypasses": 1000,
+        "agingMilliseconds": 86400000,
+        "deadlockMilliseconds": 120000,
+        "unreachableMilliseconds": 180000
+      },
+      "jobs": [],
+      "requests": [
+        {
+          "id": "large-batch-1",
+          "priority": "batch",
+          "arriveSecond": 100,
+          "megabytes": 6000,
+          "workSeconds": 30
+        }
+      ],
+      "streams": [
+        {
+          "prefix": "small-interactive",
+          "priority": "interactive",
+          "megabytes": 1000,
+          "workSeconds": 60,
+          "firstSecond": 0,
+          "everySeconds": 10,
+          "count": 90
+        }
+      ]
+    }
+  ]
+}

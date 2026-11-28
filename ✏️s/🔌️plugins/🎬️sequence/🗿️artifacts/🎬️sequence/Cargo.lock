@@ -5504,7 +5504,9 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-pack-json",
+ "semio-framework-value",
  "semio-os-semio",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -7928,6 +7930,7 @@ dependencies = [
  "semio-plugin-registration",
  "semio-plugin-store-lifecycle",
  "semio-plugin-window-kits",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8329,6 +8332,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
+ "semio-ui-locale",
  "serde",
  "serde_json",
 ]
@@ -9248,6 +9252,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-store-lifecycle",
  "semio-ui-contract",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10607,6 +10612,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-testing-admission",
  "semio-os-infinite",
  "semio-os-infinite-directed-presentation",
  "semio-os-kernel",

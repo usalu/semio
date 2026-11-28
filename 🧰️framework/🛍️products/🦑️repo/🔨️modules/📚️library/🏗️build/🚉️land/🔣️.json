@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "areas": [
+    {"prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching", "area": "derive", "prefixLabel": "caching-", "slot": true},
+    {"prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build", "area": "derive", "slot": true},
+    {"prefix": "🧰️framework/🔨️modules/🏃️process", "area": "process", "slot": true}
+  ],
+  "fallbackArea": "other",
+  "slot": {
+    "startMinute": 0,
+    "endMinute": 10,
+    "overrunMinutes": 15,
+    "exemptSegments": ["/🧪️tests/"],
+    "exemptExtensions": [".md"],
+    "boundBasenames": ["Cargo.toml", "package.json", "📋️project.json"]
+  },
+  "locks": {
+    "root": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION",
+    "directoryPrefix": "landing.lock.",
+    "ownerFile": "owner",
+    "generationPrefix": "landing.generation.",
+    "queuePrefix": "landing.queue.",
+    "slotQueueFile": "landing.slot-queue",
+    "waitMilliseconds": 180000,
+    "pollMilliseconds": 2000,
+    "staleMinutes": 20
+  },
+  "landings": {"file": "landings.md", "defaultWave": "Landing"},
+  "overlay": {
+    "roots": ["🧰️framework"],
+    "rustRoots": ["✏️s"],
+    "rootFiles": ["*"],
+    "manifestFiles": ["Cargo.toml", "Cargo.lock", "package.json", "bun.lock", "📋️project.json"],
+    "mirrors": {".cache": 3},
+    "heavyMembers": ["node_modules", "🔌️plugins"],
+    "links": ["node_modules", ".cache", "✏️s", ".🧬semio", ".storybook", ".cargo"],
+    "cacheDirectory": "land",
+    "variable": "SEMIO_LAND_CACHE"
+  },
+  "gates": {
+    "scriptExtensions": [".ts", ".tsx", ".mts", ".mjs", ".d.mts"],
+    "rustExtensions": [".rs", "Cargo.toml"],
+    "suiteLawTriggers": ["/🗂️suites/🔣️.json", "/📋️project.json"],
+    "suiteLawTests": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts"],
+    "maximumTests": 12,
+    "testBudgetMs": 600000,
+    "offloadEnvironment": {"SEMIO_TEST_FILE_OFFLOAD": "never"},
+    "workspaceBound": ["Exact Original workspace required", "exact managed workspace Source binding required", "Bounded physical current reset intent required", "Exact bounded recovery ancestry required", "must be a real directory, not a symbolic link", "Physical same-volume recovery capsule required"],
+    "debugMarker": "[DEBUG\u005d ",
+    "debugAllowPaths": [],
+    "benchCommand": ["bench", "latency", "--strict"]
+  },
+  "limits": {"maximumEntries": 512, "maximumBytes": 33554432, "maximumPathCharacters": 256, "diagnosticCharacters": 400, "maximumSlotWaitMinutes": 61},
+  "refusedSegments": [".git", "node_modules", ".cache", "target"]
+}

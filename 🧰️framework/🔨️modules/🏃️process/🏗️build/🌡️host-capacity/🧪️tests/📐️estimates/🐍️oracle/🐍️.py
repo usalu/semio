@@ -59,7 +59,8 @@ def estimate(policy, store, lineage, now):
             continue
         effective = total / 1e6
         peak = _round(weighted_quantile(samples, weight, "ratioBasisPoints", e["quantileBasisPoints"]) * (10000 + e["marginBasisPoints"]) / 10000)
-        trust = min(1.0, effective / e["minimumSamples"])
+        decayed = min(1.0, effective / e["minimumSamples"])
+        trust = max(decayed, min(1.0, len(samples) / e["minimumSamples"]) * e.get("staleTrustBasisPoints", 0) / 10000) if peak < min(10000, ratio) else decayed
         late = _round(weighted_quantile(samples, weight, "peakAtMilliseconds", e["quantileBasisPoints"]) * (10000 + e["marginBasisPoints"]) / 10000)
         ratio = _round(trust * peak + (1 - trust) * min(10000, ratio))
         ramp = _round(trust * late + (1 - trust) * min(e["defaultRampMilliseconds"], ramp))

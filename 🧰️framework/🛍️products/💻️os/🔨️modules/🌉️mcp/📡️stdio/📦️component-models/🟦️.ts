@@ -1,16 +1,18 @@
 import { lstat, readFile } from "node:fs/promises";
-import { isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { readNativeCallerAuthorityV1, withRepositoryArtifactGroupTaskV1, withRepositoryArtifactGroupV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { repositoryCachePartitionDirectoryV1, withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
-import { componentModelDirectoryKeyV1, componentModelRequestV1, readComponentModelIntentV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts";
+import { componentModelDirectoryKeyV1, readComponentModelIntentV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts";
+import { resolveComponentModelRequestV1 } from "../../../🔌️plugin/📦️model/🧭️head/🟦️.ts";
+import modelSchema from "../../../🔌️plugin/📦️model/🧬️schema/🔣️.json" with { type: "json" };
 import { readRetainedComponentModelV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/📦️model/👓️reading/🟦️.ts";
 import { readNativeCatalogV1 } from "../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import schema from "./🔣️.json" with { type: "json" };
 
-const policy = schema.definitions.Protocol.const;
+const policy = schema.definitions.Protocol.const, layoutPolicy = modelSchema.definitions.Layout.const;
 type Mode = "prototype" | "release";
 type ModelLocation = Readonly<{ pluginId: string; cratePath: string; root: string; preparedActor?: { imageSha256: string; imageBytes: number } }>;
 type ModelManifest = Readonly<{ version: 1; mode: Mode; models: readonly ModelLocation[] }>;
@@ -21,8 +23,8 @@ export function encodeMcpComponentModelManifestV1(value: unknown): string {
   const manifest = value as ModelManifest;
   const seen = new Set<string>();
   for (const row of manifest.models) {
-    const expected = join("browser", manifest.mode, "components", componentModelDirectoryKeyV1(row.cratePath));
-    if (seen.has(row.pluginId) || !isAbsolute(row.root) || resolve(row.root) !== row.root || !row.root.endsWith(join("/", expected))) throw Error("Exact MCP component model location required");
+    const expected = join("browser", manifest.mode, layoutPolicy.directory, componentModelDirectoryKeyV1(row.cratePath));
+    if (seen.has(row.pluginId) || !isAbsolute(row.root) || resolve(row.root) !== row.root || !dirname(row.root).endsWith(join("/", expected)) || !new RegExp(`^[a-f0-9]{${layoutPolicy.generationLength}}$`, "u").test(basename(row.root))) throw Error("Exact MCP component model location required");
     seen.add(row.pluginId);
   }
   const encoded = JSON.stringify(manifest);
@@ -50,12 +52,12 @@ export async function withMcpComponentEnvironmentV1<T>(workspace: string, invoca
     return body(childEnvironment, phase);
   }
   return withRepositoryCacheStoreV1(workspace, "products", invocation, phase, async (store, control) => {
-    const available: { intent: ReturnType<typeof readComponentModelIntentV1>; request: ReturnType<typeof componentModelRequestV1> }[] = [];
+    const available: { intent: ReturnType<typeof readComponentModelIntentV1>; request: Awaited<ReturnType<typeof resolveComponentModelRequestV1>> }[] = [];
     for (const row of catalog.plugins) {
       control.signal.throwIfAborted();
       const intent = readComponentModelIntentV1({ version: 1, mode, pluginId: row.pluginId, cratePath: row.cratePath });
-      const request = componentModelRequestV1(store.root, intent);
       try {
+        const request = await resolveComponentModelRequestV1(store.root, intent, control.signal);
         await lstat(request.path);
         available.push({ intent, request });
       } catch (error) {

@@ -1,0 +1,195 @@
+[
+ {
+  "remove": "joint-foot-l|joint-foot-r|dog-joint-head",
+  "list": "structure",
+  "scales": [
+   50
+  ]
+ },
+ {
+  "remove": "joint-foot-l|joint-foot-r",
+  "list": "structure",
+  "scales": [
+   100
+  ]
+ },
+ {
+  "remove": "mass-head",
+  "list": "structure",
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": "joint-torso|joint-neck|joint-head|joint-thigh-l|joint-shank-l|joint-toe-l|joint-arm-l|joint-forearm-l|joint-hand-l|joint-thigh-r|joint-shank-r|joint-toe-r|joint-arm-r|joint-forearm-r|mass-pelvis|mass-torso|mass-head|mass-thigh-l|mass-thigh-r|mass-shank-l|mass-shank-r|mass-arm-l|mass-arm-r|mass-forearm-l|mass-forearm-r|mass-foot-l|mass-foot-r|mass-hand-l|joint-clavicle-l|joint-clavicle-r|joint-ilium-l|joint-ilium-r|joint-hand-r|mass-hand-r|dog-joint-lumbar|dog-joint-thorax|dog-joint-neck|dog-joint-jaw|dog-joint-tail-1|dog-joint-tail-2|dog-joint-ear-n|dog-joint-thigh-hn|dog-joint-shank-hn|dog-joint-metatarsus-hn|dog-joint-paw-hn|dog-joint-scapula-fn|dog-joint-humerus-fn|dog-joint-forearm-fn|dog-joint-metacarpus-fn|dog-joint-paw-fn|dog-joint-ear-f|dog-joint-thigh-hf|dog-joint-shank-hf|dog-joint-metatarsus-hf|dog-joint-paw-hf|dog-joint-scapula-ff|dog-joint-humerus-ff|dog-joint-forearm-ff|dog-joint-metacarpus-ff|dog-joint-paw-ff|dog-mass-thorax|dog-mass-lumbar|dog-mass-pelvis|dog-joint-ilium-hn|dog-joint-ilium-hf",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "femur-trochanter-l|femur-condyles-l|patella-l|tibia-plateau-l|malleolus-l|humerus-head-l|humerus-condyles-l|femur-trochanter-r|femur-condyles-r|patella-r|tibia-plateau-r|malleolus-r|humerus-head-r|humerus-condyles-r|carpals-l|glenoid-l|glenoid-r|acetabulum-l|acetabulum-r|pubic-symphysis|zygomatic-l|zygomatic-r|malleolus-lateral-l|talus-l|malleolus-lateral-r|talus-r|carpals-r|dog-trochanter-n|dog-patella-n|dog-trochanter-f|dog-patella-f|dog-acetabulum-n|dog-acetabulum-f",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "cranium",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 16
+ },
+ {
+  "facet": "mandible-ramus-l|mandible-ramus-r|fibula-l|fibula-r|bones-l-finger-1-metacarpal|bones-l-finger-2-metacarpal|bones-l-finger-3-metacarpal|bones-l-finger-4-metacarpal|bones-l-thumb-metacarpal|metatarsal-1-l|metatarsal-2-l|metatarsal-3-l|metatarsal-4-l|metatarsal-5-l|toe-1-l|metatarsal-1-r|metatarsal-2-r|metatarsal-3-r|metatarsal-4-r|metatarsal-5-r|toe-1-r|transverse-l5|transverse-l4|transverse-l3|transverse-l2|transverse-l1|transverse-t12|transverse-t11|transverse-t10|transverse-t9|transverse-t8|transverse-t7|transverse-t6|transverse-t5|transverse-t4|transverse-t3|transverse-t2|transverse-t1|nasal-bones|orbital-rim-l|orbital-rim-r|bones-r-finger-1-metacarpal|bones-r-finger-2-metacarpal|bones-r-finger-3-metacarpal|bones-r-finger-4-metacarpal|bones-r-thumb-metacarpal|dog-caudal-2|dog-phalanx-1-fn-o|dog-phalanx-2-fn-o|dog-phalanx-1-fn-p|dog-phalanx-2-fn-p|dog-phalanx-1-fn-q|dog-phalanx-2-fn-q|dog-phalanx-1-fn-i|dog-phalanx-2-fn-i|dog-phalanx-1-hn-o|dog-phalanx-1-hn-p|dog-phalanx-1-hn-q|dog-phalanx-1-hn-i|dog-phalanx-1-ff-o|dog-phalanx-2-ff-o|dog-phalanx-1-ff-p|dog-phalanx-2-ff-p|dog-phalanx-1-ff-q|dog-phalanx-2-ff-q|dog-phalanx-1-ff-i|dog-phalanx-2-ff-i|dog-phalanx-1-hf-o|dog-phalanx-1-hf-p|dog-phalanx-1-hf-q|dog-phalanx-1-hf-i|dog-ear-root-n|dog-ear-root-f",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 8
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:50: 3 joint and mass spheres that lie wholly inside the members they tie in every pose (joint-foot-l, joint-foot-r, dog-joint-head) are merged into those members; the other 65 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. Of the members, 33 ellipsoid bone masses are faceted bodies of 12 facets around and 1 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 73 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:50: 3 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (joint-foot-l, joint-foot-r, dog-joint-head), gehen in diesen Gliedern auf; die übrigen 65 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. Von den Gliedern sind 33 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 1 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 73 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": "joint-torso|joint-neck|joint-head|joint-thigh-l|joint-shank-l|joint-toe-l|joint-arm-l|joint-forearm-l|joint-hand-l|joint-thigh-r|joint-shank-r|joint-toe-r|joint-arm-r|joint-forearm-r|mass-pelvis|mass-torso|mass-head|mass-thigh-l|mass-thigh-r|mass-shank-l|mass-shank-r|mass-arm-l|mass-arm-r|mass-forearm-l|mass-forearm-r|mass-foot-l|mass-foot-r|joint-clavicle-l|joint-clavicle-r|joint-hand-r|dog-mass-thorax|dog-mass-lumbar|dog-mass-pelvis",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "cranium|jaw|femur-trochanter-l|femur-condyles-l|patella-l|tibia-plateau-l|malleolus-l|humerus-head-l|humerus-condyles-l|femur-trochanter-r|femur-condyles-r|patella-r|tibia-plateau-r|malleolus-r|humerus-head-r|humerus-condyles-r|acetabulum-l|acetabulum-r|malleolus-lateral-l|talus-l|malleolus-lateral-r|talus-r",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "dog-caudal-1|dog-humerus-n|dog-radius-ulna-n|dog-metacarpals-n|dog-femur-n|dog-tibia-n|dog-metatarsals-n|dog-humerus-f|dog-radius-ulna-f|dog-metacarpals-f|dog-femur-f|dog-tibia-f|dog-metatarsals-f",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 8
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:100: 2 joint and mass spheres that lie wholly inside the members they tie in every pose (joint-foot-l, joint-foot-r) are merged into those members; the other 33 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. Of the members, 22 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 13 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:100: 2 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (joint-foot-l, joint-foot-r), gehen in diesen Gliedern auf; die übrigen 33 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. Von den Gliedern sind 22 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 13 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": "joint-neck|joint-thigh-l|joint-shank-l|joint-foot-l|joint-arm-l|joint-thigh-r|joint-shank-r|joint-foot-r|joint-arm-r|mass-pelvis|mass-torso|mass-thigh-l|mass-thigh-r|dog-mass-thorax|dog-mass-lumbar",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "skull|femur-condyles-l|humerus-head-l|femur-condyles-r|humerus-head-r|talus-l|talus-r",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 12
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:200: 1 joint and mass spheres that lie wholly inside the members they tie in every pose (mass-head) are merged into those members; the other 15 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. Of the members, 7 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 0 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:200: 1 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (mass-head), gehen in diesen Gliedern auf; die übrigen 15 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. Von den Gliedern sind 7 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 0 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": "mass-torso",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   500
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "skull",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   500
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "pelvic-girdle",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   500
+  ],
+  "segments": 8
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:500: the other 1 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. Of the members, 1 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 1 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:500: die übrigen 1 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. Von den Gliedern sind 1 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 1 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   500
+  ]
+ }
+]

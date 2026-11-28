@@ -89,6 +89,7 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
             *slot = (*slot).min(measured);
         }
     }
+    if std::env::var_os("L3D_TRACE").is_some() { let mut ranked: Vec<(usize, std::time::Duration)> = best.iter().copied().enumerate().collect(); ranked.sort_by_key(|(_, turn)| std::cmp::Reverse(*turn)); eprintln!("[DEBUG] {tool_id} slowest turns (index, min over runs): {:?}", &ranked[..ranked.len().min(6)]); }
     let (index, worst) = best.iter().enumerate().max_by_key(|(_, turn)| **turn).map_or((0, std::time::Duration::ZERO), |(index, turn)| (index + 1, *turn));
     (best.len(), worst)
 }

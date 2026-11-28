@@ -15,7 +15,7 @@ import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦�
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
 import { python } from "../🧰️support/🐍️.ts";
-import { VIEWS, authoredScales, catalog, consistency, extentOf, sweep, toleranceM, type Extent } from "./🧰️.ts";
+import { VIEWS, authoredScales, catalog, catalogIds, consistency, extentOf, sweep, toleranceM, type Extent } from "./🧰️.ts";
 
 type Part = Partial<Extent>;
 type Travel = Record<string, { dx: number | string; dy: number | string }>;
@@ -125,7 +125,7 @@ describe("🧊️ a third-party library recomputes the extents", () => {
     const rings: Record<string, number[][][]> = {};
     const catalogOurs: Record<string, Extent | undefined> = {};
     for (const id of vectors.catalog.complete) {
-      const complete = catalog().find((candidate) => candidate.id === id)!;
+      const complete = catalog([id]).find((candidate) => candidate.id === id)!;
       for (const scale of authoredScales(complete)) {
         const state = evaluate(complete, { kind: "pose", pose: complete.presentation.defaultPose }, select(scale));
         for (const view of VIEWS) {
@@ -155,7 +155,7 @@ describe("🧊️ a third-party library recomputes the extents", () => {
 });
 
 describe("🧊️ the dimensions of the complete references", () => {
-  const assets = catalog().filter((asset) => vectors.catalog.complete.includes(asset.id));
+  const assets = catalog(vectors.catalog.complete);
 
   it("has the complete references", () => expect(assets.map((asset) => asset.id).sort()).toEqual([...vectors.catalog.complete].sort()));
 
@@ -175,19 +175,21 @@ describe("🧊️ the dimensions of the complete references", () => {
 });
 
 describe("🧊️ every asset of the catalog draws the side, the front and the top view", { timeout: 600_000 }, () => {
-  const assets = catalog();
+  const ids = catalogIds();
 
   it("has the authored representations to guard", () => {
-    expect(assets.length).toBeGreaterThanOrEqual(100);
-    expect(assets.flatMap(authoredScales).length).toBeGreaterThanOrEqual(500);
+    expect(ids.length).toBeGreaterThanOrEqual(100);
+    expect(ids.reduce((sum, id) => sum + authoredScales(catalog([id])[0]!).length, 0)).toBeGreaterThanOrEqual(500);
   });
 
-  it.each(assets.map((asset) => [asset.id, asset] as const))("%s draws non-empty finite geometry in every view for every pose and clip instant at every authored scale", (_, asset) => {
+  it.each(ids.map((id) => [id] as const))("%s draws non-empty finite geometry in every view for every pose and clip instant at every authored scale", (id) => {
+    const asset = catalog([id])[0]!;
     const findings = authoredScales(asset).flatMap((scale) => sweep(asset, scale));
     expect(findings.map((finding) => `[${finding.check}] ${finding.message}`).join("\n")).toBe("");
   });
 
-  it.each(assets.map((asset) => [asset.id, asset] as const))("%s keeps its three views one object at the default pose at every authored scale", (_, asset) => {
+  it.each(ids.map((id) => [id] as const))("%s keeps its three views one object at the default pose at every authored scale", (id) => {
+    const asset = catalog([id])[0]!;
     const findings = authoredScales(asset).flatMap((scale) => consistency(asset, scale));
     expect(findings.map((finding) => `[${finding.check}] ${finding.message}`).join("\n")).toBe("");
   });

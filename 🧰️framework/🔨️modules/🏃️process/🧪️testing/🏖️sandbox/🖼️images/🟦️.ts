@@ -1,3 +1,4 @@
+import { requireNativeStorageRootCapabilityV1 } from "../../../📦️artifacts/🏗️native-build/💾️storage/🛂️root-capability/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { readdirSync, realpathSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
@@ -41,6 +42,7 @@ export function mayHoldDiskImageV1(root: string, bound = 20000): boolean {
 export function detachDiskImagesUnderV1(root: string): readonly string[] {
   let real = resolve(root);
   try { real = realpathSync(real); } catch {}
+  requireNativeStorageRootCapabilityV1(real, "detach-images");
   if (!mayHoldDiskImageV1(real)) return [];
   const prefix = real + sep, detached: string[] = [];
   for (const { image, target } of attachedDiskImagesV1()) {

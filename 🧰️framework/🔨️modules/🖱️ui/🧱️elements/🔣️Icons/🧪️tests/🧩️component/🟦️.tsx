@@ -4,7 +4,7 @@ import { ICONS } from "@semio-tech/assets";
 import { activeUiTheme, setActiveUiTheme } from "@semio-tech/ui-styling";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
-import { CatalogIcon, Icon, decodeIcon, type IconName, type IconSizeToken } from "../../🟦️.tsx";
+import { CatalogIcon, Icon, decodeIcon, looksLikeIconId, type IconName, type IconSizeToken } from "../../🟦️.tsx";
 import { Icon as ChromeIcon } from "@semio-tech/ui-react/chrome";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import vectors from "../🧫️fixtures/🗂️catalog-glyphs/🔣️.json";
@@ -69,12 +69,23 @@ describe("named catalog chrome icons", () => {
     expect(container.firstElementChild!.getAttribute("data-icon-kind")).toBe(vector.kind);
     expect(container.textContent).toBe(vector.text);
   });
-  it("clips an unknown icon id to its icon box so the fallback text never draws over a neighbouring label", () => {
-    const { container } = render(<Icon icon={"definitely-not-a-vendored-icon" as IconName} size="small" />);
-    const glyph = container.firstElementChild as HTMLElement;
-    expect(glyph.getAttribute("data-icon-kind")).toBe("text");
-    expect(glyph.className).toContain("size-small");
-    expect(glyph.className).toContain("overflow-hidden");
-    expect(glyph.className).toContain("whitespace-nowrap");
+  it("never draws an unregistered icon id as its own letters: it keeps the icon box and exposes the id as data", () => {
+    for (const id of ["definitely-not-a-vendored-icon", "ruler", "mouse-pointer-click"]) {
+      const { container } = render(<Icon icon={id as IconName} size="small" />);
+      const glyph = container.firstElementChild as HTMLElement;
+      expect(glyph.getAttribute("data-icon-kind")).toBe("missing");
+      expect(glyph.getAttribute("data-icon-id")).toBe(id);
+      expect(glyph.textContent).toBe("");
+      expect(glyph.className).toContain("size-small");
+      expect(glyph.className).toContain("overflow-hidden");
+    }
+  });
+  it("keeps authored text icons as text: only identifier-shaped strings are missing icons", () => {
+    expect(looksLikeIconId("ruler")).toBe(true);
+    expect(looksLikeIconId("a-b")).toBe(true);
+    for (const text of ["Fx", "A1", "x", "ab", "text:ruler"]) expect(looksLikeIconId(text), text).toBe(false);
+    const { container } = render(<Icon icon={"text:ruler" as IconName} />);
+    expect((container.firstElementChild as HTMLElement).getAttribute("data-icon-kind")).toBe("text");
+    expect(container.textContent).toBe("ruler");
   });
 });

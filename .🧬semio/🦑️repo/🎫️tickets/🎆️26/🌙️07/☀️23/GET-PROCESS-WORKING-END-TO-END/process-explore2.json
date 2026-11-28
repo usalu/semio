@@ -1,0 +1,104 @@
+[
+ {
+  "name": "wait",
+  "js": "(async()=>{const h=window.__h;return 'w'})()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "dump Artifact",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.wait(2000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)+'\\n@@'+el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Artifact",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.wait(500);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Catalogue",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.wait(2000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)+'\\n@@'+el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Catalogue",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.wait(500);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Workshop",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.wait(2000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)+'\\n@@'+el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Workshop",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.wait(500);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "dump Inspection",
+  "js": "(async()=>{const h=window.__h;h.click('Inspection');await h.wait(2000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)+'\\n@@'+el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "close Inspection",
+  "js": "(async()=>{const h=window.__h;h.click('Inspection');await h.wait(500);return 'c'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "open Actions",
+  "js": "(async()=>{const h=window.__h;h.click('Actions');await h.wait(1500);return 'a'})()",
+  "settleMs": 500
+ },
+ {
+  "name": "form Add Step…",
+  "js": "(async()=>{const h=window.__h;h.click('Add Step…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Set Stock…",
+  "js": "(async()=>{const h=window.__h;h.click('Set Stock…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Set Active Example…",
+  "js": "(async()=>{const h=window.__h;h.click('Set Active Example…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Export Model…",
+  "js": "(async()=>{const h=window.__h;h.click('Export Model…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Set Selection Mode…",
+  "js": "(async()=>{const h=window.__h;h.click('Set Selection Mode…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Set Granularity…",
+  "js": "(async()=>{const h=window.__h;h.click('Set Granularity…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Paste…",
+  "js": "(async()=>{const h=window.__h;h.click('Paste…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Switch Alternative…",
+  "js": "(async()=>{const h=window.__h;h.click('Switch Alternative…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "form Import Document…",
+  "js": "(async()=>{const h=window.__h;h.click('Import Document…');await h.wait(1000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return el.join(' ; ')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "select all",
+  "js": "(async()=>{const h=window.__h;h.click('Select All');await h.wait(1500);return h.steps()&&JSON.stringify(h.steps())+document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,800)})()",
+  "settleMs": 300
+ }
+]

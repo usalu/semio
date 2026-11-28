@@ -138,14 +138,18 @@ export function worldPaintStep(gesture: WorldPaintGesture, event: WorldPaintEven
 export type WorldGumballTargets = { readonly mode: string; readonly ids: readonly string[] };
 
 /** 🛠️ A World3d gumball gesture between events: whether the selection record asked for live dispatch when it started,
- * the transform mode and handle it drags, its pinned targets, the pose its last delta reached (`sent`) and the newest
- * pose the pointer reported, whether a stream tick is in flight, whether a tick opened the app's tool transaction
- * (`streamed`), and whether a host cancel aborted it (the rest of the drag is swallowed). */
+ * the transform mode and handle it drags, its pinned targets, the pose of the grab (`origin`), the pose its last tick reached (`sent`)
+ * and the newest pose the pointer reported, whether a stream tick is in flight, whether a tick opened the app's tool
+ * transaction (`streamed`), whether the selection record asked for cumulative ticks (`cumulative`: every tick and the
+ * commit carry the whole offset from `origin`, so a tick the guest dropped as stale costs nothing) and whether a host
+ * cancel aborted it (the rest of the drag is swallowed). */
 export type WorldGumballGesture = {
   readonly live: boolean;
   readonly transformMode: string | undefined;
   readonly handle: GumballHandleKind | null;
   readonly targets: WorldGumballTargets | null;
+  readonly cumulative: boolean;
+  readonly origin: GumballPose | null;
   readonly sent: GumballPose | null;
   readonly latest: GumballPose | null;
   readonly inFlight: boolean;
@@ -157,7 +161,7 @@ export type WorldGumballGesture = {
  * in flight, the release (with the grab pose and the live targets as fallbacks for a release without a grab), or a host
  * cancel (`blur`, `captureLost`). */
 export type WorldGumballEvent =
-  | { readonly kind: "start"; readonly handle: GumballHandleKind; readonly pose: GumballPose; readonly targets: WorldGumballTargets; readonly live: boolean; readonly transformMode: string | undefined }
+  | { readonly kind: "start"; readonly handle: GumballHandleKind; readonly pose: GumballPose; readonly targets: WorldGumballTargets; readonly live: boolean; readonly cumulative: boolean; readonly transformMode: string | undefined }
   | { readonly kind: "drag"; readonly handle: GumballHandleKind; readonly pose: GumballPose }
   | { readonly kind: "settled" }
   | { readonly kind: "release"; readonly handle: GumballHandleKind; readonly before: GumballPose; readonly after: GumballPose; readonly targets: WorldGumballTargets }
@@ -170,20 +174,21 @@ export type WorldGumballDispatch = { readonly action: string; readonly args: Rec
 export type WorldGumballStepResult = { readonly gesture: WorldGumballGesture; readonly dispatch: WorldGumballDispatch | null; readonly skipped?: "no-selection-ids" | "no-delta" };
 
 /** 🫥️ The gesture before any grab. */
-export const WORLD_GUMBALL_IDLE: WorldGumballGesture = { live: false, transformMode: undefined, handle: null, targets: null, sent: null, latest: null, inFlight: false, streamed: false, aborted: false };
+export const WORLD_GUMBALL_IDLE: WorldGumballGesture = { live: false, transformMode: undefined, handle: null, targets: null, cumulative: false, origin: null, sent: null, latest: null, inFlight: false, streamed: false, aborted: false };
 
-function worldGumballDelta(transformMode: string | undefined, targets: WorldGumballTargets, handle: GumballHandleKind, before: GumballPose, after: GumballPose, phase?: "stream" | "commit"): Omit<WorldGumballStepResult, "gesture"> {
+function worldGumballDelta(transformMode: string | undefined, targets: WorldGumballTargets, handle: GumballHandleKind, before: GumballPose, after: GumballPose, phase?: "stream" | "commit", identityWhenStill = false): Omit<WorldGumballStepResult, "gesture"> {
   if (targets.ids.length === 0) return { dispatch: null, skipped: "no-selection-ids" };
   const base = { mode: targets.mode, ids: [...targets.ids] };
-  const payload = gumballTransformDeltaBetweenPoses(transformMode, before, after, base, handle) ?? (phase === "commit" ? gumballIdentityDelta(transformMode, base, handle) : null);
+  const payload = gumballTransformDeltaBetweenPoses(transformMode, before, after, base, handle) ?? (phase === "commit" || identityWhenStill ? gumballIdentityDelta(transformMode, base, handle) : null);
   if (!payload) return { dispatch: null, skipped: "no-delta" };
   return { dispatch: phase ? { action: payload.action, args: { ...payload.args, phase } } : payload };
 }
 
 function worldGumballPump(gesture: WorldGumballGesture): WorldGumballStepResult {
   const { sent, latest, handle, targets } = gesture;
-  if (!gesture.live || gesture.aborted || gesture.inFlight || !sent || !latest || !handle || !targets || gumballPosesEqual(sent, latest)) return { gesture, dispatch: null };
-  const { dispatch, skipped } = worldGumballDelta(gesture.transformMode, targets, handle, sent, latest, "stream");
+  const from = gesture.cumulative ? gesture.origin : sent;
+  if (!gesture.live || gesture.aborted || gesture.inFlight || !from || !sent || !latest || !handle || !targets || gumballPosesEqual(sent, latest)) return { gesture, dispatch: null };
+  const { dispatch, skipped } = worldGumballDelta(gesture.transformMode, targets, handle, from, latest, "stream", gesture.cumulative && gesture.streamed);
   return { gesture: { ...gesture, sent: latest, inFlight: dispatch !== null, streamed: gesture.streamed || dispatch !== null }, dispatch, skipped };
 }
 
@@ -191,7 +196,7 @@ function worldGumballPump(gesture: WorldGumballGesture): WorldGumballStepResult 
  * (`🧫️fixtures/🛠️gumball-live-protocol.json`). Local (no `gumballLiveDispatch`): the host previews the drag itself and the
  * release dispatches ONE net delta with no `phase` (a one-shot tool transaction), nothing when the pose never moved along
  * the handle. Live: every pose reported while no tick is in flight dispatches the delta from the pose the last tick
- * reached as `phase: "stream"` (one in flight, the newest pose wins), the release dispatches the remaining tail as
+ * reached as `phase: "stream"` (one in flight, the newest pose wins; a cumulative gesture sends the delta from the grab pose instead, the identity delta when the pose came back to it), the release dispatches the remaining tail as
  * `phase: "commit"` (the identity delta of the handle's verb when the tail moved nothing), and a host cancel after a
  * streamed tick dispatches the verb's identity delta with `phase: "abort"` + `reason` and swallows the rest of the drag.
  * The targets are the ones pinned at the grab, never the selection as it stands later. */
@@ -199,7 +204,7 @@ export function worldGumballStep(gesture: WorldGumballGesture, event: WorldGumba
   switch (event.kind) {
     case "start":
       return {
-        gesture: { ...WORLD_GUMBALL_IDLE, live: event.live, transformMode: event.transformMode, handle: event.handle, targets: { mode: event.targets.mode, ids: [...event.targets.ids] }, sent: event.pose, latest: event.pose, inFlight: gesture.inFlight },
+        gesture: { ...WORLD_GUMBALL_IDLE, live: event.live, transformMode: event.transformMode, handle: event.handle, targets: { mode: event.targets.mode, ids: [...event.targets.ids] }, cumulative: event.cumulative, origin: event.pose, sent: event.pose, latest: event.pose, inFlight: gesture.inFlight },
         dispatch: null,
       };
     case "drag":
@@ -209,7 +214,7 @@ export function worldGumballStep(gesture: WorldGumballGesture, event: WorldGumba
     case "release": {
       const idle = { ...WORLD_GUMBALL_IDLE, inFlight: gesture.inFlight };
       if (gesture.aborted) return { gesture: idle, dispatch: null };
-      const from = gesture.sent ?? event.before;
+      const from = (gesture.cumulative ? gesture.origin : gesture.sent) ?? event.before;
       if (!gesture.live && gumballPosesEqual(from, event.after)) return { gesture: idle, dispatch: null };
       return { gesture: idle, ...worldGumballDelta(gesture.transformMode, gesture.targets ?? event.targets, event.handle, from, event.after, gesture.live ? "commit" : undefined) };
     }

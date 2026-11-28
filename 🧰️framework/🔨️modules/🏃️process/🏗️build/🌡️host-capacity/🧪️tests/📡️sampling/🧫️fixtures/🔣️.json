@@ -332,7 +332,7 @@
    }
   },
   {
-   "name": "compressor-over-35-percent-warns",
+   "name": "compressor-over-35-percent-alone-is-no-pressure",
    "platform": "darwin",
    "cores": 10,
    "totalMegabytes": 16384,
@@ -358,7 +358,7 @@
     "cores": 10,
     "totalMegabytes": 16384,
     "availableMegabytes": 8192,
-    "pressure": "warn",
+    "pressure": "normal",
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": null,
     "load": 1,
@@ -369,14 +369,14 @@
    }
   },
   {
-   "name": "compressor-over-55-percent-is-critical",
+   "name": "compressor-over-55-percent-with-scarce-available-is-critical",
    "platform": "darwin",
    "cores": 10,
    "totalMegabytes": 16384,
    "atMs": 10000,
    "load": 1,
    "counters": {
-    "availableBytes": 8589934592,
+    "availableBytes": 2147483648,
     "compressedBytes": 10737418240,
     "constrainedBytes": null,
     "swapUsedBytes": 0,
@@ -394,7 +394,7 @@
     "platform": "darwin",
     "cores": 10,
     "totalMegabytes": 16384,
-    "availableMegabytes": 8192,
+    "availableMegabytes": 2048,
     "pressure": "critical",
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": null,
@@ -417,13 +417,22 @@
    "expectedPressure": "normal"
   },
   {
-   "name": "physical compressor is genuinely critical",
+   "name": "physical compressor with scarce available memory is genuinely critical",
+   "available": 4000,
+   "compressed": 18023,
+   "cgroup": null,
+   "kernel": "normal",
+   "expectedAvailable": 4000,
+   "expectedPressure": "critical"
+  },
+  {
+   "name": "compressed memory alone is reclaimable and no pressure while the kernel is normal and memory is free",
    "available": 11600,
    "compressed": 18023,
    "cgroup": null,
    "kernel": "normal",
    "expectedAvailable": 8192,
-   "expectedPressure": "critical"
+   "expectedPressure": "normal"
   },
   {
    "name": "low physical availability remains critical",

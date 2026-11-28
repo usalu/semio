@@ -49,12 +49,12 @@ impl OriginalWorkFixture{
  pub fn turn<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{self.caller.turn_with_decoder(grant,&mut self.decoder,run)}
  /// ⏱️ Narrows one authentic work loan without replacing its physical caller or spending future turn fuel.
  pub fn work_turn<T>(&mut self,grant:RetainedCloneGrant,fuel:u64,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{self.turn(grant,|cx|{let mut value=None;cx.with_original_work_loan(fuel,cx.deadline_us(),|cx|{value=Some(run(cx)?);Ok(())})?;Ok(value.unwrap())})}
- pub fn close<A:semio_plugin_decl_app::ArtifactApp,W:semio_plugin_retained_command::ArtifactCommandWork<A>>(&mut self,work:&mut W,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.turn(grant,|cx|cx.with_original_retirement(|cx|{
+ pub fn close<A:semio_plugin_decl_app::ArtifactApp,W:semio_plugin_retained_command::ArtifactCommandWork<A>>(&mut self,work:&mut W,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.caller.retirement_turn_with_decoder(grant,&mut self.decoder,|cx|{
   use semio_plugin_ownership::bounded_ownership::{original_lifecycle_step,PluginLifecycleStep};
   let demand=semio_framework_value::RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?};
   let loan=cx.retained_grant();let step=original_lifecycle_step(cx,loan,demand,|same,_|{let step=match work.close_step(same)?{InteractiveJobCloseStep::Pending{progress}=>PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Complete(progress),InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original Work fixture awaits retained child custody"}};Ok((step,work.terminal_is_empty()))})?;
   Ok(match step{PluginLifecycleStep::Progress(progress)=>InteractiveJobCloseStep::Pending{progress},PluginLifecycleStep::Complete(progress)=>InteractiveJobCloseStep::Complete{progress},PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>InteractiveJobCloseStep::Blocked})
- }))}
+ })}
  /// ♻️ Retires an original fixture root through this caller's funded physical source.
  pub fn retire_owned<T:semio_framework_value::retirement::RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant){
   let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::retain(value);

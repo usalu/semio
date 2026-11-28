@@ -29,6 +29,7 @@ type StoryPuzzle2dRuntime = {
   readonly selectedIds: readonly string[];
   readonly activeUtility: string;
   readonly selectionMethod: string;
+  readonly selectableHandles: boolean;
   readonly gridSnapEnabled: boolean;
   readonly gridFactor: number;
   readonly suggestionOffset: number;
@@ -45,6 +46,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   selectedIds: [],
   activeUtility: "select",
   selectionMethod: "rectangle",
+  selectableHandles: true,
   gridSnapEnabled: false,
   gridFactor: 1,
   suggestionOffset: 0,
@@ -263,6 +265,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
       interactive,
       activeUtility: runtime.activeUtility,
       selectionMethod: runtime.selectionMethod,
+      selectableHandles: runtime.selectableHandles,
       gridSnapEnabled: runtime.gridSnapEnabled,
       gridFactor: runtime.gridFactor,
       suggestionOffset: runtime.suggestionOffset,
@@ -389,7 +392,7 @@ export const OverviewSelect: Story = {
 export const LassoSelect: Story = {
   args: {
     initialFixture: STORY_DEFAULT_FIXTURE,
-    initialRuntime: { selectionMethod: "lasso" },
+    initialRuntime: { selectionMethod: "lasso", selectableHandles: false },
     interactive: true,
   },
 };

@@ -150,14 +150,14 @@ impl LayoutExportJob {
 
 impl LayoutExportJob{
     pub fn step_with_drawing_read<'a>(&'a mut self, context: &mut StepContext<'_>, drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> LayoutExportTurn<'a> {
+        if let Some(turn) = context.cancelled_turn() {
+            return turn;
+        }
         if !self.slot.settle(context)? {
             return Ok(None);
         }
         if self.slot.publication.is_some() {
             return self.drive_publication(context);
-        }
-        if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
         if (context.operation(),context.generation())!=self.source_identity {
             self.slot.publication = Some(Self::fault_publication("layout-export-stale-operation"));

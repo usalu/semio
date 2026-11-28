@@ -4,7 +4,7 @@ name = "semio-s-artifact-fem-2d-model"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "FEM 2d model: structural entities, schema, snapshot, diff, inferences and mutation guards"
+description = "FEM 2d model: structural entities, schema, snapshot and inferences"
 
 [package.metadata.semio]
 role = "library"

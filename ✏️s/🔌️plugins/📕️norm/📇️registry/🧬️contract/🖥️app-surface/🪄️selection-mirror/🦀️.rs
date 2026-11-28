@@ -27,6 +27,11 @@ fn picked_target(address: &str) -> (bool, String) {
     }
 }
 
+/// 🎯️ The owner of the highest utilisation among the applicable checks with a subject; a tie goes to the first such check in report order, so the choice is deterministic.
+pub fn worst_owner(report: &CheckReport) -> Option<String> {
+    report.checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).reduce(|best, check| if check.utilization.total_cmp(&best.utilization).is_gt() { check } else { best }).map(|check| check.subject.entity_id.clone())
+}
+
 /// 🎯️ The applicable check of an entity with the highest utilisation.
 pub(crate) fn governing(report: &CheckReport, entity: &str) -> Option<usize> {
     report.checks.iter().enumerate().filter(|(_, check)| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty() && semio_s_plugin_norm_structural_scene::projection_kit::base_id(&check.subject.entity_id) == semio_s_plugin_norm_structural_scene::projection_kit::base_id(entity)).max_by(|a, b| a.1.utilization.total_cmp(&b.1.utilization)).map(|(index, _)| index)
@@ -190,7 +195,7 @@ fn overlay_preview<F: NormFamily>(document: &F::Document, transient: &crate::Nor
     Some(typed)
 }
 
-/// 🛰️ Everything one editor paint reads, derived once: the host with its live report, the resolved selection, the focus entity and the worst entity; editor and viewer windows read the same values. `settled` is false while slow units still run on the session worker; `pending` then feeds the checks window progress.
+/// 🛰️ Everything one editor paint reads, derived once: the host with its live report, the resolved selection, the focus entity and the worst entity (the owner of the highest utilisation; a tie goes to the first check in report order, which is deterministic); editor and viewer windows read the same values. `settled` is false while slow units still run on the session worker; `pending` then feeds the checks window progress.
 pub struct LiveView<F: NormFamily> {
     pub host: NormHost<F>,
     pub selection: NormSelection,
@@ -249,7 +254,7 @@ impl<F: NormFamily> LiveView<F> {
     fn from_host(host: NormHost<F>, settled: bool, check_index: Option<u32>, picked: &[String]) -> Self {
         let selection = NormSelection::resolve(host.report(), check_index, picked);
         let focus = selection.primary(host.report());
-        let worst = host.report().checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|check| check.subject.entity_id.clone());
+        let worst = worst_owner(host.report());
         Self { host, selection, focus, worst, progress: F::live_progress(), settled }
     }
 

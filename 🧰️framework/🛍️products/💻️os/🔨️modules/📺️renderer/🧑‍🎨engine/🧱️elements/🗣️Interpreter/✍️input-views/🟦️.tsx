@@ -61,7 +61,7 @@ import { selectOptionDomId } from "../🎛️control-port/label-target.ts";
 /** 🖊️ Queues commits for one authored target and preserves newer drafts across acknowledgements.
  * External changes retain a conflicting draft until discarded; a target change starts a fresh draft. */
 function useCommitDraft(published: string, scope: string, guard: string, revision: string | null, send: (value: string, active: () => boolean, subscribeActive: (listener: () => void) => () => void) => UiControlCompletion, publication: (value: string) => string, lifetime?: object | null): [string, (next: string) => void, (value: string) => void, () => void, boolean] {
-  type Pending = { value: string; baseRevision: string | null; cancelled: boolean; settled: boolean; outcome: InputOutcomeV1 | undefined };
+  type Pending = { value: string; raw: string; baseRevision: string | null; cancelled: boolean; settled: boolean; outcome: InputOutcomeV1 | undefined };
   const [, render] = useState(0);
   const create = () => ({ scope, lifetime, listeners: new Set<() => void>(), guard, revision, published, draft: published, committed: published, queue: [] as { value: string; publication: string }[], awaiting: null as Pending | null, busy: false, conflicted: false });
   const owner = useRef(create());
@@ -74,8 +74,19 @@ function useCommitDraft(published: string, scope: string, guard: string, revisio
   const acknowledge = (): boolean => {
     const pending = state.awaiting;
     if (!pending || !pending.settled) return false;
-    const matches = pending.baseRevision === null ? pending.value === state.published : pending.outcome !== undefined && inputCommitReceiptMatchesPublicationV1(pending.outcome, state.revision) && pending.value === state.published;
-    if (matches) { state.awaiting = null; return true; }
+    const matches = pending.baseRevision === null ? pending.value === state.published : pending.outcome !== undefined && inputCommitReceiptMatchesPublicationV1(pending.outcome, state.revision);
+    if (matches) {
+      state.awaiting = null;
+      state.committed = state.published;
+      if (state.draft === pending.raw) state.draft = state.published;
+      return true;
+    }
+    if (pending.outcome?.kind === "applied" && !pending.outcome.commit && state.revision === pending.baseRevision) {
+      state.awaiting = null;
+      state.committed = state.published;
+      if (state.draft === pending.raw) state.draft = state.published;
+      return true;
+    }
     if (pending.baseRevision !== null && (!pending.outcome || pending.outcome.kind !== "applied" || !pending.outcome.commit || state.revision !== pending.baseRevision)) state.conflicted = true;
     return false;
   };
@@ -95,7 +106,7 @@ function useCommitDraft(published: string, scope: string, guard: string, revisio
     try {
       while (mounted.current && owner.current === state && state.queue.length > 0 && !state.conflicted && state.awaiting === null) {
         const next = state.queue.shift()!;
-        const pending: Pending = { value: next.publication, baseRevision: state.revision, cancelled: false, settled: false, outcome: undefined };
+        const pending: Pending = { value: next.publication, raw: next.value, baseRevision: state.revision, cancelled: false, settled: false, outcome: undefined };
         state.awaiting = pending;
         const outcome = await sender.current(next.value, () => mounted.current && owner.current === state && !pending.cancelled, (listener) => { state.listeners.add(listener); return () => { state.listeners.delete(listener); }; });
         if (!mounted.current || owner.current !== state) return;
@@ -113,7 +124,7 @@ function useCommitDraft(published: string, scope: string, guard: string, revisio
         pending.settled = true;
         acknowledge();
       }
-    } catch {
+    } catch (error) {
       const cancelled = state.awaiting?.cancelled === true;
       state.awaiting = null;
       if (!cancelled) { state.queue = []; state.committed = state.published; state.conflicted = true; }
@@ -158,6 +169,16 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   const decimalQuad = component.kind === "text" && component.commit === UI_DECIMAL_QUAD_COMMIT;
   const textForPublication = (text: string) => decimalQuad ? uiDecimalQuad(text) ?? text : text;
   const draftScope = inputDraftScope(record);
+  const latestId = useRef(record.id);
+  latestId.current = record.id;
+  const resolve = (): UiNodeRecord | undefined => {
+    const owns = (candidate: UiNodeRecord) => candidate.component.type === "input" && inputDraftScope(candidate) === draftScope;
+    const current = context.controls.read(latestId.current);
+    if (current && owns(current)) return current;
+    const moved = context.controls.find?.(owns);
+    if (moved) latestId.current = moved.id;
+    return moved;
+  };
   const draftConflictLabel = useLabel("ui.host.inputDraftConflict");
   const draftDiscardLabel = useLabel("ui.host.inputDraftDiscard");
   const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
@@ -185,7 +206,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   };
   const [draft, setDraft, commitDraft, discardDraft, draftConflict] = useCommitDraft(published, JSON.stringify([context.localDocumentOwner?.id, draftScope]), JSON.stringify(record.bindings), component.publicationRevision ?? null, (raw, active, subscribeActive) => {
     const read = () => {
-      const current = context.controls.read(record.id);
+      const current = resolve();
       if (!current || context.controls.disabled(current) || current.component.type !== "input" || inputDraftScope(current) !== draftScope) return null;
       const input = current.component;
       if (decimalQuad !== (input.kind === "text" && input.commit === UI_DECIMAL_QUAD_COMMIT)) return null;
@@ -193,7 +214,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
       return { target: JSON.stringify([draftScope, input.kind, input.displayFactor, input.precision]), value: factor != null && value.trim() !== "" && Number.isFinite(Number(value)) ? shownText(Number(value)) : textForPublication(value), revision: input.publicationRevision ?? "" };
     };
     const send = () => {
-      const current = context.controls.read(record.id);
+      const current = resolve();
       if (!active() || !read() || !current) throw new Error("Input command target changed");
       const number = component.kind === "number" ? typedNumber(raw) : null;
       const input = typeof number === "number" ? toUiValue(number) : (component.commit === UI_RETAINED_TEXT_COMMIT || component.commit === UI_RETAINED_TEXT_BODY_COMMIT) ? retainedUiTextInput(raw) as UiValue : toUiValue(raw);
@@ -344,7 +365,10 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
 
 /** 🔽️ A select as its `appearance` says: a menu that opens its options, or — `segmented` — every option at once as a radio
  * group (`ToggleGroup` under radio semantics): one checked option, arrow keys move the choice, the chosen one never presses
- * off. Both dispatch the picked value on `Trigger::Change`. */
+ * off. Both dispatch the picked value on `Trigger::Change`.
+ * A value that names no item (the empty value of an "add" or "delete" select) keeps the select CONTROLLED and unset, so the
+ * placeholder shows and every item, the first included, is a change; an undefined value would make the menu uncontrolled and
+ * show (and swallow the pick of) its first item. */
 export function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
   const value = context.controls.value(record) ?? component.value;
@@ -369,9 +393,8 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
       />
     );
   }
-  const menuValue = value === "" && !component.items.some(item => item.value === "") ? undefined : value;
   return (
-    <Select id={`${controlDomId(context, record)}-select`} disabled={context.controls.disabled(record)} value={menuValue} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+    <Select id={`${controlDomId(context, record)}-select`} disabled={context.controls.disabled(record)} value={value} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
       <SelectTrigger id={controlDomId(context, record)} aria-label={record.accessibility.label ?? undefined} aria-labelledby={context.field?.label} aria-describedby={context.field?.describedBy} aria-required={context.field?.required || undefined} aria-invalid={context.field?.invalid || undefined} aria-errormessage={context.field?.invalid ? context.field.error : undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>

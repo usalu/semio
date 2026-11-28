@@ -140,6 +140,8 @@ export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:R
   if(argument==="-L"&&(args[index+1]??"").startsWith("dependency=")){index++;continue;}
   if(argument==="--diagnostic-width"){index++;continue;}
   if(argument.startsWith("--diagnostic-width="))continue;
+  if(argument==="-Z"&&(args[index+1]??"").startsWith("threads=")){index++;continue;}
+  if(argument.startsWith("-Zthreads="))continue;
   if(argument==="--color"){index++;continue;}
   if(argument.startsWith("--color="))continue;
   if(argument==="--json"||argument.startsWith("--json=")){
@@ -161,9 +163,21 @@ export function sdkIdentityV1(path:string):string{
  return basename(real);
 }
 
+/** 🧵️ The flags without the front-end thread count (`-Z threads=N` in both spellings): how many threads the front end uses changes the speed and the memory of a compilation, never its output (a unit that is shared through the fleet always compiles with one thread, see {@link deterministicFrontEndArgumentsV1}), and it differs between the launch paths of Cargo, the hosts and the moments (the repository's `-Z threads=0`, doubled or missing, the memory policy of `🧵️threads`), so it never enters a key. */
+export function withoutFrontEndThreadsV1(flags:readonly string[]):string[]{
+ const kept:string[]=[];
+ for(let index=0;index<flags.length;index++){
+  const flag=flags[index]!;
+  if(flag==="-Z"&&(flags[index+1]??"").startsWith("threads=")){index++;continue;}
+  if(flag.startsWith("-Zthreads="))continue;
+  kept.push(flag);
+ }
+ return kept;
+}
+
 /** 🚩️ The Cargo-encoded compiler flags (separated by U+001F) with the machine-specific `FROM` of each path remapping replaced by the role it plays (see {@link machineNeutralRemapV1}), in the joined form and in the two-argument form. */
 export function neutralRustflagsV1(encoded:string):string{
- const parts=encoded.split("\u001f");
+ const parts=withoutFrontEndThreadsV1(encoded.split("\u001f"));
  return parts.map((part,index)=>parts[index-1]==="--remap-path-prefix"?machineNeutralRemapV1("--remap-path-prefix="+part).slice("--remap-path-prefix=".length):machineNeutralRemapV1(part)).join("\u001f");
 }
 
@@ -185,6 +199,19 @@ export function withoutIncrementalV1(args:readonly string[]):readonly string[]{
  return kept;
 }
 
+/** 🧵️ The command line with the compiler's parallel front end turned off (`-Z threads=N` in the spellings `-Z threads=N` and `-Zthreads=N` become `threads=1`): with more than one thread the compiler orders the definitions it creates while lowering (the opaque types of `async fn` in a trait, for one) by whichever thread is first, so two compilations of one unit, on one machine or two, give other `.rmeta` tables and an other `.rlib`, and the second origin of a shared unit is refused as diverged. A unit that is shared through the fleet is compiled with one thread; the key keeps what Cargo gave, because every machine gives the same.
+ * @see https://doc.rust-lang.org/nightly/cargo/reference/unstable.html */
+export function deterministicFrontEndArgumentsV1(args:readonly string[]):readonly string[]{
+ return args.map((argument,index)=>/^-Zthreads=/u.test(argument)?"-Zthreads=1":args[index-1]==="-Z"&&/^threads=/u.test(argument)?"threads=1":argument);
+}
+
+/** 🔢️ The front-end thread count a command line ends up with (`-Z threads=N` in either spelling, the last one wins), `undefined` when it names none; the unit event of a compilation tells it, so the policy of {@link deterministicFrontEndArgumentsV1} is visible in the telemetry. */
+export function frontEndThreadsV1(args:readonly string[]):string|undefined{
+ let found:string|undefined;
+ for(let index=0;index<args.length;index++){const argument=args[index]!,value=/^-Zthreads=(.*)$/u.exec(argument)?.[1]??(args[index-1]==="-Z"?/^threads=(.*)$/u.exec(argument)?.[1]:undefined);if(value!==undefined)found=value;}
+ return found;
+}
+
 /** 📦️ The OUT_DIR of a build script as a key value: `<anything>/build/<crate>-<hash>/out` (classic layout) or `<anything>/build/<crate>/<hash>/out` (`build-dir-new-layout`) is `⟨out⟩<crate>` (Cargo's hash of the unit and the directory the build lives in differ between checkouts, lanes and machines, the generated files are keyed by their bytes), any other path stays as it is, with the lane root replaced. */
 export function outDirectoryIdentityV1(path:string,laneRoot:string|undefined):string{
  const text=laneNeutralV1(path,laneRoot),named=/(?:^|[\\/])build[\\/](?:([^\\/]+)-[0-9a-f]{16}|([^\\/]+)[\\/][0-9a-f]{16})[\\/]out[\\/]?$/u.exec(text);
@@ -203,16 +230,21 @@ export function keyEnvironmentV1(environment:Readonly<Record<string,string|undef
  return rows;
 }
 
-/** 🔑️ The first-level key: toolchain, normalized command line, root source bytes, dependency artifact bytes and selected environment. */
-export function unitKeyV1(input:Readonly<{toolchain:string;normalized:readonly string[];sourceSha256:string;externs:readonly Readonly<{name:string;sha256:string}>[];environment:readonly (readonly [string,string])[]}>):string{
- return sha256V1(JSON.stringify([policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment]));
+/** ⚖️ The output-determinism contract the compiler outputs of this code obey (`key.outputDeterminism` of the policy): one front-end thread, canonical dep-info and streams, a module remap that holds or an unshared unit, Cargo's unit identity keyed. Part of every compilation key, so an entry written by code under another contract is never read and never competes with the outputs of this one: raising the version retires all earlier entries at once (they age out), and the first write of a key is a write under the current contract.
+ * @see ../🧬️schema/🔣️.json */
+export const OUTPUT_DETERMINISM_V1:Readonly<{version:string;rules:readonly string[]}>=policy.key.outputDeterminism;
+
+/** 🔑️ The first-level key: toolchain, normalized command line, root source bytes, dependency artifact bytes, selected environment and, for a compilation (never for a build script run, whose outputs do not depend on a compiler front end), the output-determinism contract version and Cargo's own unit identity (`cargoIdentity`, the `-C extra-filename` of the command line: it is embedded in the metadata of the output, so two Cargo identities are two outputs). */
+export function unitKeyV1(input:Readonly<{toolchain:string;normalized:readonly string[];sourceSha256:string;externs:readonly Readonly<{name:string;sha256:string}>[];environment:readonly (readonly [string,string])[];cargoIdentity?:string}>):string{
+ const compiled=!input.sourceSha256.startsWith("run:");
+ return sha256V1(JSON.stringify([policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment,...compiled?[["determinism",OUTPUT_DETERMINISM_V1.version],...input.cargoIdentity?[["cargo",input.cargoIdentity]]:[]]:[]]));
 }
 
 /** 🧩️ Names the parts of a first-level key by short digests (toolchain, arguments, source, externs, environment), so two compilations of one crate that disagree on the key are explained by the part that differs.
  * @see ./🧪️tests/🧩️parts/🟦️.ts */
 export function unitKeyPartsV1(input:Parameters<typeof unitKeyV1>[0]):string{
  const part=(value:unknown)=>sha256V1(JSON.stringify(value)).slice(0,8);
- return["toolchain:"+part(input.toolchain),"args:"+part(input.normalized),"source:"+part(input.sourceSha256),"externs:"+part(input.externs.map(row=>[row.name,row.sha256])),"environment:"+part(input.environment)].join(" ");
+ return["toolchain:"+part(input.toolchain),"args:"+part(input.normalized),"source:"+part(input.sourceSha256),"externs:"+part(input.externs.map(row=>[row.name,row.sha256])),"environment:"+part(input.environment),"determinism:"+OUTPUT_DETERMINISM_V1.version,"cargo:"+part(input.cargoIdentity??"")].join(" ");
 }
 
 function unescapeDepPath(text:string):string{return text.replace(/\\ /gu," ");}
@@ -321,11 +353,12 @@ export function argumentClassesV1(normalized:readonly string[]):ReadonlyMap<stri
 }
 
 const VALUE_ENVIRONMENT=new Set(["CARGO_ENCODED_RUSTFLAGS","RUSTFLAGS"]);
-/** 🧾️ The key of a lookup as named components, each an individual digest, so two keys of one crate can be diffed: `toolchain`, `source`, `platform`, `roots`, one `extern:<name>` per dependency artifact, one `env:<NAME>` per observed variable and one `args.<class>` per argument class (see {@link argumentClassesV1}). `values` carries the text of the small, path-free classes (diagnostics, codegen, features, cfg, lints, unstable, kind, edition, target, remap) cut to a bounded length.
+/** 🧾️ The key of a lookup as named components, each an individual digest, so two keys of one crate can be diffed: `toolchain`, `source`, `determinism`, `cargo`, `platform`, `roots`, one `extern:<name>` per dependency artifact, one `env:<NAME>` per observed variable and one `args.<class>` per argument class (see {@link argumentClassesV1}). `values` carries the text of the small, path-free classes (diagnostics, codegen, features, cfg, lints, unstable, kind, edition, target, remap) cut to a bounded length.
  * @see ./🧪️tests/🧬️components/🟦️.ts */
 export function unitKeyComponentsV1(input:Parameters<typeof unitKeyV1>[0],extra:Readonly<{platform?:string;roots?:string}>={}):Readonly<{components:Record<string,string>;values:Record<string,string>}>{
  const width=policy.lookups.digestCharacters,part=(value:unknown)=>sha256V1(JSON.stringify(value)).slice(0,width),components:Record<string,string>={},values:Record<string,string>={};
  components.toolchain=part(input.toolchain);components.source=input.sourceSha256.slice(0,width);
+ if(!input.sourceSha256.startsWith("run:")){components.determinism=part(OUTPUT_DETERMINISM_V1.version);if(input.cargoIdentity)components.cargo=part(input.cargoIdentity);}
  if(extra.platform!==undefined)components.platform=part(extra.platform);
  if(extra.roots!==undefined)components.roots=part(extra.roots);
  for(const row of input.externs)components["extern:"+row.name]=/^[0-9a-f]{16,}$/u.test(row.sha256)?row.sha256.slice(0,width):part(row.sha256);

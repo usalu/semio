@@ -1,0 +1,32 @@
+[
+ {
+  "set": "volumes.50.structure[uterine-wall].capStart",
+  "was": true,
+  "value": false
+ },
+ {
+  "set": "volumes.50.structure[uterine-wall].capEnd",
+  "was": true,
+  "value": false
+ },
+ {
+  "set": "volumes.100.structure[uterine-wall].capStart",
+  "was": true,
+  "value": false
+ },
+ {
+  "set": "volumes.100.structure[uterine-wall].capEnd",
+  "was": true,
+  "value": false
+ },
+ {
+  "set": "volumes.200.structure[uterine-wall].capStart",
+  "was": true,
+  "value": false
+ },
+ {
+  "set": "volumes.200.structure[uterine-wall].capEnd",
+  "was": true,
+  "value": false
+ }
+]

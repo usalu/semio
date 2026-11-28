@@ -129,6 +129,7 @@ semio_ui_locale::app_labels! {
         stage_failed: native_en "Analysis failed", native_de "Berechnung fehlgeschlagen", reuse_en "Analysis failed", reuse_de "Berechnung fehlgeschlagen";
         stage_preparing: native_en "Preparing analysis", native_de "Berechnung wird vorbereitet", reuse_en "Preparing analysis", reuse_de "Berechnung wird vorbereitet";
         stage_queued: native_en "Analysis queued", native_de "Berechnung vorgemerkt", reuse_en "Analysis queued", reuse_de "Berechnung vorgemerkt";
+        updating_results: native_en "Updating results…", native_de "Ergebnisse werden aktualisiert…", reuse_en "Updating results…", reuse_de "Ergebnisse werden aktualisiert…";
 
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
 

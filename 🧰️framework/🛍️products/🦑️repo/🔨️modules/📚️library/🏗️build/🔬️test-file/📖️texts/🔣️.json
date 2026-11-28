@@ -79,6 +79,22 @@
       "en": "[test-file] managed Python is unavailable ({reason}); running without it",
       "de": "[test-file] Verwaltetes Python ist nicht verfügbar ({reason}); Lauf ohne es"
     },
+    "run.remote-done": {
+      "en": "[test-file] {file} ran on {origin} ({seconds} s)",
+      "de": "[test-file] {file} lief auf {origin} ({seconds} s)"
+    },
+    "run.remote-local": {
+      "en": "[test-file] {file} runs here, the remote run was not used: {reason}",
+      "de": "[test-file] {file} läuft hier, der entfernte Lauf wurde nicht genutzt: {reason}"
+    },
+    "run.cancelled": {
+      "en": "The test run was cancelled",
+      "de": "Der Testlauf wurde abgebrochen"
+    },
+    "run.deadline": {
+      "en": "{file} exceeded its deadline of {seconds} s",
+      "de": "{file} hat seine Frist von {seconds} s überschritten"
+    },
     "run.oracle-environment": {
       "en": "The locked Python environment is not synchronized: run `repo dependencies ensure` ({file})",
       "de": "Die gesperrte Python-Umgebung ist nicht synchronisiert: `repo dependencies ensure` ausführen ({file})"
@@ -98,6 +114,10 @@
     "row.failed": {
       "en": "FAILED  {file} ({suite}, {seconds} s{counts})",
       "de": "FEHLGESCHLAGEN  {file} ({suite}, {seconds} s{counts})"
+    },
+    "row.ran-on": {
+      "en": ", ran on {origin}",
+      "de": ", lief auf {origin}"
     },
     "row.error": {
       "en": "  error: {error}",

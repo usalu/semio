@@ -19,7 +19,7 @@ impl<T:RetireOwned> Collection<T>{
 }
 
 impl<T:RetireOwned> Drop for Collection<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"owned collection retired before terminal-empty");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.pending)}}}}
-impl<T:RetireOwned> RetireOwned for Vec<T>{type RetirementCursor=Collection<T>;fn retirement_seed(self)->Self::RetirementCursor{Collection{original:ManuallyDrop::new(self),pending:ManuallyDrop::new(None)}}fn retirement_ready(&self)->bool{self.iter().all(RetireOwned::retirement_ready)}fn controlled_retirement_supported()->bool{support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&RetirementSupport<'_>)->bool{path.supports::<T>()}}
+impl<T:RetireOwned> RetireOwned for Vec<T>{type RetirementCursor=Collection<T>;fn retirement_cold_bytes(&self)->Option<usize>{(!std::mem::needs_drop::<T>()&&(T::retirement_element_copy_bytes()!=0||size_of::<T>()==0)).then(||self.capacity()*size_of::<T>())}fn retirement_seed(self)->Self::RetirementCursor{Collection{original:ManuallyDrop::new(self),pending:ManuallyDrop::new(None)}}fn retirement_ready(&self)->bool{self.iter().all(RetireOwned::retirement_ready)}fn controlled_retirement_supported()->bool{support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&RetirementSupport<'_>)->bool{path.supports::<T>()}}
 #[doc(hidden)]
 pub struct DequeCollection<T:RetireOwned>{original:ManuallyDrop<std::collections::VecDeque<T>>,pending:ManuallyDrop<Option<T>>}
 impl<T:RetireOwned> RetirementCursor for DequeCollection<T>{

@@ -4,7 +4,16 @@
   "role": "extension",
   "manifest": {
     "pluginId": "flow-extension-math",
-    "label": "Math",
+    "label": {
+      "native": {
+        "en": "Math",
+        "de": "Mathematik"
+      },
+      "reuse": {
+        "en": "Math",
+        "de": "Mathematik"
+      }
+    },
     "version": "0.1.0",
     "apps": [],
     "examples": [],

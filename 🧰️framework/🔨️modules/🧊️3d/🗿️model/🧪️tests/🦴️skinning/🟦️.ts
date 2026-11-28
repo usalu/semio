@@ -1,5 +1,5 @@
 /** 🦴️ Skinning: weights, joint order, inverse bind matrices, rigid and skinned meshes; the posed skin is evaluated by three's Skeleton/SkinnedMesh from the kernel's local transforms and compared with the hand-computed linear blend. */
-import { Bone, BufferAttribute, BufferGeometry, Matrix4, Object3D, Skeleton, SkinnedMesh, Vector3 } from "three";
+import { Bone, Box3, BoxGeometry, BufferAttribute, BufferGeometry, Matrix4, Mesh, Object3D, Skeleton, SkinnedMesh, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { poseModel, tessellate, validateModel } from "../../🟦️.ts";
 import { fixture } from "../🧰️support/🟦️.ts";
@@ -98,5 +98,33 @@ describe("skinning", () => {
     for (let v = 0; v < hand.positions.length / 3; v++) c.add(new Vector3().fromArray(hand.positions, v * 3).applyMatrix4(world));
     c.divideScalar(hand.positions.length / 3);
     expect(c.distanceTo(new Vector3(...(e.lowerWorldPosition as [number, number, number])))).toBeLessThan(0.01);
+  });
+
+  it("repeats a weighted solid in the frame of its node, where three places the same copies as children of that node", async () => {
+    const out = await tessellate(data.repeated.document, data.quality);
+    expect(validateModel(out).filter((i) => i.severity === "error")).toEqual([]);
+    const p = out.meshes.find((m) => m.id === out.nodes.find((n) => n.skin)!.mesh)!.primitives[0]!;
+    const solid = data.repeated.document.solids[0];
+    const node = data.repeated.document.nodes[0];
+    const carrier = new Object3D();
+    carrier.position.fromArray(node.translation);
+    carrier.quaternion.fromArray(node.rotation);
+    const perCopy = p.positions.length / solid.repeat.count;
+    expect(Number.isInteger(perCopy / 3)).toBe(true);
+    for (let k = 0; k < solid.repeat.count; k++) {
+      const child = new Mesh(new BoxGeometry(...(solid.size as [number, number, number])));
+      child.position.fromArray(solid.transform.translation.map((v: number, at: number) => v + k * solid.repeat.translation[at]));
+      carrier.add(child);
+      carrier.updateMatrixWorld(true);
+      const reference = new Box3().expandByObject(child, true);
+      const ours = new Box3().setFromArray(p.positions.slice(k * perCopy, (k + 1) * perCopy));
+      const want = data.repeated.expected.copies[k];
+      for (let at = 0; at < 3; at++) {
+        expect(Math.abs(ours.min.getComponent(at) - want.min[at])).toBeLessThan(data.repeated.expected.tolerance);
+        expect(Math.abs(ours.max.getComponent(at) - want.max[at])).toBeLessThan(data.repeated.expected.tolerance);
+        expect(Math.abs(ours.min.getComponent(at) - reference.min.getComponent(at))).toBeLessThan(1e-6);
+        expect(Math.abs(ours.max.getComponent(at) - reference.max.getComponent(at))).toBeLessThan(1e-6);
+      }
+    }
   });
 });

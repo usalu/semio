@@ -4,15 +4,15 @@
 //! `guards::node_reference` resolution of `node_id` (`mutation.target-missing`, Error).
 //! `replace-support` calls the SAME guard, so the twins cannot drift apart.
 use super::CreateSupport;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportInsertion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportInsertion;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportsDelta;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSupport, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
-    if let Some(rejection) = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards::scoped_identity(&["support", &payload.support.id]) { return rejection; }
+    if let Some(rejection) = semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards::scoped_identity(&["support", &payload.support.id]) { return rejection; }
     if base.supports.iter().any(|support| support.id == payload.support.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A support with id \"{}\" already exists.", payload.support.id), [payload.support.id.clone()]);
     }

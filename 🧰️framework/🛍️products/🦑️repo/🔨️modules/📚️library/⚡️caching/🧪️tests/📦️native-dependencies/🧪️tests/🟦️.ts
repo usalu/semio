@@ -1,4 +1,5 @@
 import {test} from "bun:test";
+import{stretchedBudgetMillisecondsV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {testNativeDependencies} from "../🟦️.ts";
@@ -48,8 +49,8 @@ test("the actual Native preparation child uses the retained compiler target inst
 }),20000);
 
 test("complete original native dependency source and preparation receiving laws",async()=>{const repository=await privateRepositoryWorkspaceV1();return repository.invoke(async original=>{
- const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original native dependency receiver requires its explicit artifact root");await testNativeDependencies(testCheckoutRootV1(),output,original,createIssuedResourceControlV1(original,"native-dependencies:test-entry",0),repository.root);
-},{maximumElapsedMilliseconds:110000});},120000);
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original native dependency receiver requires its explicit artifact root");await testNativeDependencies(testCheckoutRootV1(),output,original,createIssuedResourceControlV1(original,"native-dependencies:test-entry",0),repository.root,stretchedBudgetMillisecondsV1(fixture.receivingBudget.probeMilliseconds));
+},{maximumElapsedMilliseconds:stretchedBudgetMillisecondsV1(fixture.receivingBudget.invocationMilliseconds)});},stretchedBudgetMillisecondsV1(fixture.receivingBudget.testMilliseconds));
 
 import{expect}from"bun:test";
 import ts from"typescript";

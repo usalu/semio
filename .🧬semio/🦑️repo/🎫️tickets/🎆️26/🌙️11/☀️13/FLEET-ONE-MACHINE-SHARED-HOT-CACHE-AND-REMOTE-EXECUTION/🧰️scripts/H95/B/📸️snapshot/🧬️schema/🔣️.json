@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/build/snapshot/v1",
+  "title": "Snapshot: a copy-on-write copy of the source closure that one build command reads from start to end",
+  "definitions": {
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "Mode": {
+      "enum": [
+        "root",
+        "digest"
+      ]
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "commands",
+        "environment",
+        "roots",
+        "rustRoots",
+        "rootFiles",
+        "excludedSegments",
+        "capture",
+        "storage",
+        "incremental"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "commands": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Mode"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "marker",
+            "liveRoot",
+            "receipt",
+            "mode",
+            "agent"
+          ],
+          "properties": {
+            "marker": {
+              "type": "string"
+            },
+            "liveRoot": {
+              "type": "string"
+            },
+            "receipt": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "agent": {
+              "type": "string"
+            }
+          }
+        },
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rustRoots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rootFiles": {
+          "const": "*"
+        },
+        "excludedSegments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumRounds",
+            "backoffMilliseconds",
+            "fileRetries",
+            "movedExamples"
+          ],
+          "properties": {
+            "maximumRounds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "backoffMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fileRetries": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "movedExamples": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directory",
+            "manifestFile",
+            "lockSuffix",
+            "keepHours",
+            "maximumLanes"
+          ],
+          "properties": {
+            "directory": {
+              "type": "string"
+            },
+            "manifestFile": {
+              "type": "string"
+            },
+            "lockSuffix": {
+              "type": "string"
+            },
+            "keepHours": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumLanes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "incremental": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lane",
+            "fullVerifyMinutes",
+            "maximumRounds",
+            "changelogKeep",
+            "fullChangelogThreshold",
+            "lockWaitSeconds",
+            "pendingSeconds"
+          ],
+          "properties": {
+            "lane": {
+              "type": "string"
+            },
+            "fullVerifyMinutes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumRounds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "changelogKeep": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "fullChangelogThreshold": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "lockWaitSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pendingSeconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "digest",
+        "files",
+        "copied",
+        "removed",
+        "rounds",
+        "consistent",
+        "seconds",
+        "liveRoot",
+        "snapshotRoot",
+        "mode"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copied": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "consistent": {
+          "type": "boolean"
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "liveRoot": {
+          "type": "string"
+        },
+        "snapshotRoot": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/definitions/Mode"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "via": {
+          "enum": [
+            "journal",
+            "listing"
+          ]
+        },
+        "lagSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

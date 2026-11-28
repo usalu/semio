@@ -13,6 +13,7 @@ pub type SearchResult<T:Topology+Clone+Send+'static> = Result<SolveOutcome,Searc
 
 impl<T:Topology+Clone+Send> InteractiveJob for SearchJob<T> {
     fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{
+        if let Some(turn)=cx.cancelled_turn(){return InteractiveJobStep::from_callback(turn)}
         if self.yield_next {
             return InteractiveJobStep::from_callback(match JobOutcomeBorrow::admit_yield(cx) {
                 Ok(Some(outcome))=>{self.yield_next=false;Ok(Some(outcome))},

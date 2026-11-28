@@ -5,10 +5,10 @@
 //! resolutions `create-element` runs (`mutation.target-missing`, Error), and finally the
 //! `mutation.no-op` warning when the replacement equals what is already there.
 use super::ReplaceElement;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dElementsDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dElementsModification;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
@@ -26,6 +26,6 @@ pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshotValue) -> protocol::Mu
     if existing == payload.new_element.as_ref() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Element \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { modified: vec![Fem2dElementsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch::replacement(&payload.new_element) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { modified: vec![Fem2dElementsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dElementPatch::replacement(&payload.new_element) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

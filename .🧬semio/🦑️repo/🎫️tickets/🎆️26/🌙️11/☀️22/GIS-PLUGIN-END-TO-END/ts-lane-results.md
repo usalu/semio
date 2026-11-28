@@ -130,3 +130,43 @@ After the lease fix the online `cargo update --workspace` refreshed the 11 remai
 - "Canonical build owner identity collision" (refs 8cbea551, 53894af8) was caused by `📋️build-owners.json` listing `@semio-tech/os-store-schema-exports-rs` twice with identical content (file modified 17:34 by another agent). I removed the duplicate row (4998 to 4997 owners, indent-2 format preserved). Scan of all non-ticket `📋️project.json` names and Cargo `[package]` names found no other duplicates. Afterwards the dry-run of `@semio-tech/gis-js:test` plans again.
 - `repo run @semio-tech/gis-js:test` then ran for the first time and failed (exit 1, reference d844f9ab): Nx "Running target test for project @semio-tech/gis-js and 6 tasks it depends on", the dependency `@semio-tech/ui-contract-rs:generate:prototype` was cancelled by the host warden (`cargo pid 26488 (bun ./📜️script.ts generate, 216 MB)`, host critically short of memory) and `gis-js:test` was not run. The unit report shows "68 restored local, 1 restored fleet, 176 compiled": the `gis-js:test` target pulls Rust units (ui-contract-rs generate and its closure), so it is not a bun-only target. This lane must not compile Rust, so I stopped here. gis-gismap-js and gis-gisterrain test targets were not run (their `test` dependency closure is the same kind). Needs the compile lane: `repo run @semio-tech/gis-js:test @semio-tech/gis-gismap-js:test @semio-tech/gis-gisterrain:test` once memory is calm. The bun test files they invoke passed under `repo test-file` (see table above).
 - The inference-panel vitest (`@semio-tech/s-plugin-composition:test`) was not dry-run in this lane; its dependency closure is likely to pull the same generate tasks. Status: not run, unverified.
+
+### TS package targets, interim (04:20 CET)
+| Target | Result | Cause |
+|---|---|---|
+| `s-plugin-composition:test` (inference-panel vitest) | rc=124 at 3000 s | graph planning starved of host memory behind other lanes' planners; before that it failed on a resolver bug (below) |
+| `gis-gisterrain:test` | rc=1 | host warden cancelled cargo for memory; `ui-contract-rs:generate` and `framework-actor-rs:typegen` failed, test task never ran |
+| `gis-gismap-js:test` | running (planning) | |
+| `gis-js:test` | not started (passed earlier) | |
+- Root cause fixed: `workspacePackageModuleV1` skipped stylesheet exports when `declarations=true` (compile-input phase of a `.css` import), throwing `export-target-missing` for `@semio-tech/presentation-react/🎨️.css`. Guard removed in `🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs`; JSON row `🧪️tests/stylesheet-export.json` and `stylesheet-export.test.ts` added (6 resolver tests pass).
+- `ts-lane-run.sh` (compile.lock4) runs the four targets; `ts-lane-rerun.sh` then reruns gisterrain and composition with a 7200 s timeout (`ts-rerun-results.txt`).
+
+### TS package targets, status 05:50 CET (reruns still in flight)
+| Target | Last result | Cause / next |
+|---|---|---|
+| `s-plugin-composition:test` (contains inference-panel vitest) | rerun planning (7200 s timeout) | first run rc=124 in planning; resolver bug for `@semio-tech/presentation-react/🎨️.css` fixed earlier |
+| `gis-gisterrain:test` | rerun rc=1 at 05:01 | graph service ENOENT on `⚡️caching/💾️storage/🚀️bootstrap` (bad import depth in `🪟️windows/🟦️.ts`, fixed 05:03); third attempt queued (`ts-lane-rerun4.sh`) |
+| `gis-gismap-js:test` | rc=124 / service restart | rerun queued (`ts-lane-rerun2.sh`) |
+| `gis-js:test` | rc=1 | same bad bootstrap import; rerun queued (`ts-lane-rerun3.sh`) |
+- Fix: `⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🟦️.ts` line 9 now uses five `../`.
+- Scripts chain on `compile.lock4`; results in `🗑️generated/ts-rerun{,2,3,4}-results.txt`.
+
+### TS package targets, status 11:00 CET (single sequential script `ts-lane-final.sh`, 7200 s each)
+| Target | Result |
+|---|---|
+| `s-plugin-composition:test` (inference-panel vitest) | not finished: planning since 08:50, graph-slice read restarts and waits for host capacity (0 MB above the 2048 MB floor, 8 grants, 4 queued) |
+| `gis-gisterrain:test` | queued; last real result rc=1 (bad bootstrap import path, fixed) |
+| `gis-gismap-js:test` | queued; last results rc=124 / service restart |
+| `gis-js:test` | queued; last real result rc=1 (same import path, fixed) |
+- No real test failure has been observed in any of the four; every failure so far was tooling or host capacity, or the two root causes fixed (stylesheet export resolution in `🟨️.mjs`; import depth in `🪟️windows/🟦️.ts`).
+- `ts-lane-final.sh` still runs; results in `🗑️generated/ts-last-results.txt`.
+
+### TS package targets, status 12:42 CET (coordinator's exclusive run-many)
+All four targets (`s-plugin-composition:test` with the inference-panel vitest, `gis-gisterrain:test`, `gis-gismap-js:test`, `gis-js:test`) are in one `repo run-many` (`exclusive-plan-window.sh`, log `🗑️generated/excl-ts-test.log`); after 1 h it is still in graph planning (slice read restarted, 472 s, waiting for host capacity decisions). No test has run; no real test failure observed. Final pass/fail table pending `🗑️generated/excl-results.txt`.
+
+### Package targets under the compile lock, round 1 (logs in `🗑️generated/round1/`)
+- `repo run @semio-tech/gis-js:test`: exit 0, 1132 s. `Ran 8 tests across 5 files`, `8 pass`, `0 fail`, "gis ts ok", "Successfully ran target test for project @semio-tech/gis-js and 6 tasks it depends on" (131 units restored local, 18 compiled; slowest task `@semio-tech/framework-actor-rs:typegen:prototype`, 2m 1s). So this target does build Rust-side dependency tasks; the earlier failure was the warden cancelling `@semio-tech/ui-contract-rs:generate` (`repo ./📜️script.ts generate`, a TS generator script in a Rust package) under memory pressure.
+- `@semio-tech/gis-gismap-js:test`: failed, "Nx run failed: 4 task(s) did not succeed", reference 823c782f. Failed dependency tasks: `framework-actor-rs:typegen`, `framework-async-rs:typegen` ("the package 'semio-framework-async' does not contain this feature: typegen; help: package with the missing feature: semio-ui-contract"), `framework-rs:generate`, plus wasm builds `framework-editor-rs`, `framework-os-node-graph-rs`, `framework-surface-rs` and `framework-os-dev:channel-version-descriptors-check` were also listed. The async typegen runner (`🧰️framework/🔨️modules/⏳️async/🧪️tests/🔬️rust-package-commands/🟦️.ts`) was edited at 21:02 CET by another lane after this failure (it now uses the companion crate manifest and no feature), so this may be fixed; rerun in round 2.
+- `@semio-tech/gis-gisterrain:test`: failed, 1 task did not succeed, reference 90711a00: `framework-actor-rs:typegen:prototype` "Native Cargo owner preparation failed status=1"; `gis-gisterrain:test` not run. The same typegen passed in the gis-js run (2m 1s), so it is not deterministic.
+- `@semio-tech/s-plugin-composition:test` (inference-panel owner target): failed before running, "The resident service met an unexpected failure (reference f02828e3): BUILD_SOURCE_UNPARSEABLE: Workspace import is not resolved by current package metadata: @semio-tech/presentation-react/🎨️.css" from the presentation story. The package (`…/⚛️react/📦️packages/🟦️typescript`) exports `./🎨️.css` and the file exists, so the build's package metadata is stale or not seeing the export. Not a GIS defect; not fixed by me.
+- Round 2 (the three failing targets again, under the lock): `ts-lane-targets-locked.sh`, results in `🗑️generated/ts-targets-locked-exit2.txt`.

@@ -12,6 +12,7 @@
     {"name": "arguments", "changes": "args", "set": {"normalized": ["--crate-name", "libc", "--edition=2021", "-C", "metadata=abd"]}},
     {"name": "source", "changes": "source", "set": {"sourceSha256": "00"}},
     {"name": "externs", "changes": "externs", "set": {"externs": [{"name": "core", "sha256": "builtin"}, {"name": "dep", "sha256": "0124"}]}},
-    {"name": "environment", "changes": "environment", "set": {"environment": [["CARGO_PKG_NAME", "libc"], ["SDKROOT", "/other"]]}}
+    {"name": "environment", "changes": "environment", "set": {"environment": [["CARGO_PKG_NAME", "libc"], ["SDKROOT", "/other"]]}},
+    {"name": "cargo identity", "changes": "cargo", "set": {"cargoIdentity": "-3c9971acb8b0a698"}}
   ]
 }

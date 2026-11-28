@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "scripts": [
+    {
+      "name": "serde-core-minor",
+      "source": "use std::process::Command;\nfn rustc_minor_version() -> Option<u32> {\n let rustc = env::var_os(\"RUSTC\")?;\n let output = Command::new(rustc).arg(\"--version\").output().ok()?;\n None\n}\nfn main(){ let t = env::var(\"TARGET\").unwrap(); let p = env::var(\"CARGO_PKG_VERSION_PATCH\").unwrap(); }",
+      "dependencies": [],
+      "environment": {},
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true
+    },
+    {
+      "name": "quote-minor",
+      "source": "let rustc = env::var_os(\"RUSTC\")?;\nlet output = Command::new(rustc).arg(\"--version\").output().ok()?;",
+      "dependencies": [],
+      "environment": {},
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true
+    },
+    {
+      "name": "crc32fast-chain",
+      "source": "Command::new(env::var_os(\"RUSTC\")?)\n .arg(\"--version\")\n .output()",
+      "dependencies": [],
+      "environment": {},
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true
+    },
+    {
+      "name": "libc-guarded-freebsd",
+      "source": "let rustc = env::var_os(\"RUSTC\").expect(\"x\");\nlet mut cmd = Command::new(rustc);\nif target_os == \"freebsd\" { let o = Command::new(\"freebsd-version\").output(); }",
+      "dependencies": [],
+      "environment": {
+        "CARGO_CFG_TARGET_OS": "macos"
+      },
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true
+    },
+    {
+      "name": "libc-guarded-emscripten",
+      "source": "let rustc = env::var_os(\"RUSTC\").expect(\"x\");\nlet mut cmd = Command::new(rustc);\nlet output = Command::new(emcc).arg(\"-dumpversion\").output().ok()?;",
+      "dependencies": [],
+      "environment": {
+        "CARGO_CFG_TARGET_OS": "macos"
+      },
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true,
+      "absent": [],
+      "carry": []
+    },
+    {
+      "name": "libc-on-freebsd",
+      "source": "let rustc = env::var_os(\"RUSTC\").expect(\"x\");\nlet mut cmd = Command::new(rustc);\nlet o = Command::new(\"freebsd-version\").output();",
+      "dependencies": [],
+      "environment": {
+        "CARGO_CFG_TARGET_OS": "freebsd"
+      },
+      "probe": "foreign",
+      "kind": "host-bound",
+      "reason": "host-bound:spawns-program"
+    },
+    {
+      "name": "libc-unknown-target",
+      "source": "let o = Command::new(\"freebsd-version\").output();",
+      "dependencies": [],
+      "environment": {},
+      "probe": "foreign",
+      "kind": "host-bound",
+      "reason": "host-bound:spawns-program"
+    },
+    {
+      "name": "anyhow-compile-probe",
+      "source": "let rustc = cargo_env_var(\"RUSTC\");\nlet mut cmd = Command::new(rustc);\ncmd.arg(\"--emit=metadata\").arg(\"probe.rs\");",
+      "dependencies": [],
+      "environment": {},
+      "probe": "compile",
+      "kind": "needs-toolchain",
+      "reason": "toolchain-compile-probe"
+    },
+    {
+      "name": "autocfg-user",
+      "source": "fn main(){ let ac = autocfg::new(); ac.emit_has_path(\"std::x\"); }",
+      "dependencies": [
+        "autocfg"
+      ],
+      "environment": {},
+      "probe": "compile",
+      "kind": "needs-toolchain",
+      "reason": "toolchain-compile-probe"
+    },
+    {
+      "name": "version-check-user",
+      "source": "fn main(){ if version_check::is_min_version(\"1.40\").unwrap_or(false) { println!(\"cargo:rustc-cfg=x\"); } }",
+      "dependencies": [
+        "version_check"
+      ],
+      "environment": {},
+      "probe": "version",
+      "kind": "portable",
+      "standIn": true
+    },
+    {
+      "name": "git-revision",
+      "source": "let o = Command::new(\"git\").arg(\"rev-parse\").output();",
+      "dependencies": [],
+      "environment": {},
+      "probe": "foreign",
+      "kind": "host-bound",
+      "reason": "host-bound:git-revision"
+    },
+    {
+      "name": "pkg-config-user",
+      "source": "pkg_config::probe_library(\"sqlite3\").unwrap();",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:native-library"
+    },
+    {
+      "name": "network",
+      "source": "let s = std::net::TcpStream::connect(\"x\");",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:network"
+    },
+    {
+      "name": "icu-absent",
+      "source": "if let Some(d) = env::var_os(\"ICU4X_DATA_DIR\") { println!(\"x\"); }",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "portable",
+      "standIn": false,
+      "absent": [
+        "ICU4X_DATA_DIR"
+      ],
+      "carry": []
+    },
+    {
+      "name": "icu-set-to-path",
+      "source": "if let Some(d) = env::var_os(\"ICU4X_DATA_DIR\") { println!(\"x\"); }",
+      "dependencies": [],
+      "environment": {
+        "ICU4X_DATA_DIR": "/Users/someone/icu"
+      },
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:host-environment"
+    },
+    {
+      "name": "libm-flag-set",
+      "source": "if env::var(\"ENSURE_NO_PANIC\").is_ok() { println!(\"cargo:rustc-cfg=ensure_no_panic\"); }",
+      "dependencies": [],
+      "environment": {
+        "ENSURE_NO_PANIC": "1"
+      },
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:host-environment"
+    },
+    {
+      "name": "dep-links-version",
+      "source": "let v = env::var(\"DEP_PRETTYPLEASE02_VERSION\");",
+      "dependencies": [],
+      "environment": {
+        "DEP_PRETTYPLEASE02_VERSION": "0.2"
+      },
+      "probe": "none",
+      "kind": "portable",
+      "standIn": false,
+      "absent": [],
+      "carry": [
+        [
+          "DEP_PRETTYPLEASE02_VERSION",
+          "0.2"
+        ]
+      ]
+    },
+    {
+      "name": "dep-links-path",
+      "source": "let v = env::var(\"DEP_X_INCLUDE\");",
+      "dependencies": [],
+      "environment": {
+        "DEP_X_INCLUDE": "/Users/someone/include"
+      },
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:host-value"
+    },
+    {
+      "name": "include-builder-resolved",
+      "source": "include!(\"../../../🏗️builder/🦀️.rs\");",
+      "dependencies": [],
+      "environment": {},
+      "include": {
+        "../../../🏗️builder/🦀️.rs": "fn main(){ if env::var(\"CARGO_CFG_TARGET_ARCH\").as_deref() == Ok(\"wasm32\") { } }"
+      },
+      "probe": "none",
+      "kind": "portable",
+      "standIn": false,
+      "absent": [],
+      "carry": []
+    },
+    {
+      "name": "include-builder-unreadable",
+      "source": "include!(\"../../../🏗️builder/🦀️.rs\");",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:host-path"
+    },
+    {
+      "name": "linker-flag-literal",
+      "source": "if env::var(\"CARGO_CFG_TARGET_OS\").as_deref() == Ok(\"windows\") { let stack = \"/STACK:8388608\"; println!(\"cargo:rustc-link-arg={stack}\"); }",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "portable",
+      "standIn": false,
+      "absent": [],
+      "carry": []
+    },
+    {
+      "name": "reads-etc-hosts",
+      "source": "let hosts = fs::read_to_string(\"/etc/hosts\").unwrap_or_default();",
+      "dependencies": [],
+      "environment": {},
+      "probe": "none",
+      "kind": "host-bound",
+      "reason": "host-bound:host-path"
+    }
+  ],
+  "standIn": {
+    "identity": "rustc 1.99.0 (abcdef012 2030-01-01)\nbinary: rustc\ncommit-hash: abcdef0123456789abcdef0123456789abcdef01\ncommit-date: 2030-01-01\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 30.0.0\n",
+    "answers": [
+      {
+        "arguments": [
+          "--version"
+        ],
+        "output": "rustc 1.99.0 (abcdef012 2030-01-01)\n"
+      },
+      {
+        "arguments": [
+          "-V"
+        ],
+        "output": "rustc 1.99.0 (abcdef012 2030-01-01)\n"
+      },
+      {
+        "arguments": [
+          "-vV"
+        ],
+        "output": "all"
+      },
+      {
+        "arguments": [
+          "--version",
+          "--verbose"
+        ],
+        "output": "all"
+      },
+      {
+        "arguments": [
+          "--print",
+          "cfg"
+        ],
+        "output": null
+      },
+      {
+        "arguments": [
+          "--emit=metadata",
+          "probe.rs"
+        ],
+        "output": null
+      }
+    ]
+  }
+}

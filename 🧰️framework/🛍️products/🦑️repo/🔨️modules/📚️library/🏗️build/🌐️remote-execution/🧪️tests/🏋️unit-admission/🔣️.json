@@ -621,6 +621,66 @@
   },
   {
    "pressure": "normal",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 256,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1024,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1025,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 2048,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 6144,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 256,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1024,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1025,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 2048,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 6144,
+   "gate": "normal"
+  },
+  {
+   "pressure": "normal",
    "swapOutMegabytesPerSecond": 52,
    "megabytes": 256,
    "gate": "normal"
@@ -743,13 +803,13 @@
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 1.2,
    "megabytes": 256,
-   "gate": "pressure-warn"
+   "gate": "relaxed"
   },
   {
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 1.2,
    "megabytes": 1024,
-   "gate": "pressure-warn"
+   "gate": "relaxed"
   },
   {
    "pressure": "warn",
@@ -766,6 +826,66 @@
   {
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 1.2,
+   "megabytes": 6144,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 256,
+   "gate": "relaxed"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1024,
+   "gate": "relaxed"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1025,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 2048,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 6144,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 256,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1024,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1025,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 2048,
+   "gate": "pressure-warn"
+  },
+  {
+   "pressure": "warn",
+   "swapOutMegabytesPerSecond": 20,
    "megabytes": 6144,
    "gate": "pressure-warn"
   },
@@ -916,6 +1036,66 @@
   {
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 1.2,
+   "megabytes": 6144,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 256,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1024,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 1025,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 2048,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 12,
+   "megabytes": 6144,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 256,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1024,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 1025,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 20,
+   "megabytes": 2048,
+   "gate": "pressure-critical"
+  },
+  {
+   "pressure": "critical",
+   "swapOutMegabytesPerSecond": 20,
    "megabytes": 6144,
    "gate": "pressure-critical"
   },

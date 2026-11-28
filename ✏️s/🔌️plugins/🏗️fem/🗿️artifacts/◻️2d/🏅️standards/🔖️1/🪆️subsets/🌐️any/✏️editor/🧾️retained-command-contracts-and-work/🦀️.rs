@@ -96,7 +96,7 @@ pub(super) const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
-    ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 pub(super) fn fem2d_retained_contract() -> ToolExecutionContract {
@@ -149,7 +149,7 @@ fn fem2d_retained_reduce(
         Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
         Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
         Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
-        Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
+        Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
         _ => command.dispatch(&doc, &cfg),
     }
 }

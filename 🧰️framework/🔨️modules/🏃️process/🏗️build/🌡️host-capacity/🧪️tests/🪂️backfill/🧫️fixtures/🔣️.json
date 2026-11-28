@@ -1,0 +1,30 @@
+{
+ "_comment": "Inputs hand-authored: a 5000 MB request waits beside ten running 500 MB requests while a stream of 500 MB requests arrives every 10 s; foreign processes hold 1500 MB. The expected admission seconds and counts come from the independent Python oracle (python3 oracle.py), never from the TypeScript implementation.",
+ "stepSeconds": 5,
+ "horizonSeconds": 600,
+ "totalMegabytes": 16384,
+ "foreignMegabytes": 1500,
+ "memory": {
+  "interactiveReserveBasisPoints": 2500,
+  "interactiveReserveMinimumMegabytes": 2048,
+  "interactiveReserveMaximumMegabytes": 8192,
+  "sessionCapBasisPoints": 4000
+ },
+ "bigMegabytes": 5000,
+ "smallMegabytes": 500,
+ "runSeconds": 100,
+ "arrivalEverySeconds": 10,
+ "initialEndSeconds": [
+  40,
+  50,
+  60,
+  70,
+  80,
+  90,
+  100,
+  110,
+  120,
+  130
+ ],
+ "measuredWaitSeconds": 60
+}

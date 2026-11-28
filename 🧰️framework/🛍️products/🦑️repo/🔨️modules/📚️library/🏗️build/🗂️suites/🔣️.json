@@ -129,6 +129,22 @@
       ]
     },
     {
+      "id": "build-diagnostics",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🩺️diagnostics"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "tools": [
+        "python"
+      ]
+    },
+    {
       "id": "build-targets-selection",
       "budgetMs": 300000,
       "typecheck": "none",
@@ -789,7 +805,8 @@
       "typecheck": "none",
       "trees": [
         "🔬️test-file",
-        "🔬️typecheck"
+        "🔬️typecheck",
+        "🚉️land"
       ],
       "platforms": [
         "darwin",

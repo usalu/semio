@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 use semio_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, MediaClass, MediaForm, MediaPayload};
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
-use crate::editor::sourcing::config::{SetContributionsEdit, SetFilterModulesEdit, SetFilterQueryEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SetContributionsEdit, ToggleFilterModuleEdit, SetFilterQueryEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool, load_document_json, set_active_example, set_contributions, set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit;

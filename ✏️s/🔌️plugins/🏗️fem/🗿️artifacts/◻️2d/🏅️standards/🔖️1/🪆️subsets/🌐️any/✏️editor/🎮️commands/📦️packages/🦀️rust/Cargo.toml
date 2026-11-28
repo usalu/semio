@@ -37,5 +37,6 @@ semio-s-artifact-fem-2d-material = { workspace = true }
 semio-s-artifact-fem-2d-mesh = { workspace = true }
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-diff = { workspace = true }
 semio-s-artifact-fem-2d-mutations = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }

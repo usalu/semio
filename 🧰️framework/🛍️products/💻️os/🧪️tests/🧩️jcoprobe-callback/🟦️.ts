@@ -1,6 +1,6 @@
 /** 🧪️ terra-jco-spike bun/node harness — drives the jco-transpiled `jcoprobe` component through
  * S1-S4 and prints PASS/FAIL verdict lines the report can quote verbatim. */
-import { probe } from "../../🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
+const { probe } = await import(new URL("../../🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js", import.meta.url).href);
 
 type JcoProbeVerdict = Readonly<{ id: string; ok: boolean; detail: string }>;
 

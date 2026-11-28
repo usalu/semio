@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "noteCount": 51,
+  "noteCount": 53,
   "dependenciesSynopsis": "dependencies sync|lock --all|--scope <owner> | ensure",
   "scopedSubcommands": [
     {

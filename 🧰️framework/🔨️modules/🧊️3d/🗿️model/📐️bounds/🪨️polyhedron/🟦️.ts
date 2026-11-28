@@ -1,9 +1,10 @@
 /** 📐️ Three physical spans along the principal directions of a vertex cloud. */
 import type { Vec3 } from "../../🧬️schema/🟦️.ts";
 import { cross, dot, sub, type V3 } from "../../🧮️math/🟦️.ts";
+import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 const unit = (p: V3): V3 => {
-  const length = Math.hypot(...p);
+  const length = portable.hypot(...p);
   return length === 0 ? [0, 0, 0] : [p[0] / length, p[1] / length, p[2] / length];
 };
 
@@ -29,8 +30,8 @@ export function polyhedronExtents(vertices: readonly Vec3[], first: readonly num
       if (Math.abs(off) <= threshold) continue;
       changed = true;
       const delta = (covariance[b]![b]! - covariance[a]![a]!) / (2 * off);
-      const tangent = (delta < 0 ? -1 : 1) / (Math.abs(delta) + Math.hypot(1, delta));
-      const cosine = 1 / Math.hypot(1, tangent), sine = tangent * cosine;
+      const tangent = (delta < 0 ? -1 : 1) / (Math.abs(delta) + portable.hypot(1, delta));
+      const cosine = 1 / portable.hypot(1, tangent), sine = tangent * cosine;
       covariance[a]![a]! -= tangent * off;
       covariance[b]![b]! += tangent * off;
       covariance[a]![b] = covariance[b]![a] = 0;

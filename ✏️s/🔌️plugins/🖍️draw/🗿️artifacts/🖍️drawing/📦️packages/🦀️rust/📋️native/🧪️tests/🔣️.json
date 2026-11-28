@@ -1,12 +1,13 @@
 {
   "version": 1,
-  "expectedPackages": 40,
+  "expectedPackages": 41,
   "requiredPackages": [
     "semio-s-artifact-draw-drawing",
     "semio-draw-member-decode",
     "semio-s-artifact-draw-drawing-editor-member-wire",
     "semio-s-artifact-draw-drawing-editor-tests",
     "semio-s-artifact-draw-drawing-editor-tests-2",
+    "semio-s-artifact-draw-drawing-editor-tests-3",
     "semio-s-artifact-draw-drawing-model-tests",
     "semio-s-artifact-draw-drawing-viewer",
     "semio-s-artifact-draw-drawing-geometry",

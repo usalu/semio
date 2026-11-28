@@ -1,10 +1,10 @@
 import { strict as assert } from "node:assert";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { admitSemioConversionsV1, renderCatalogV1, renderConversionDependenciesV1, selectSemioConversionDependenciesV1 } from "../🟦️.ts";
 
-/** 🧪️ Compares conversion authority admission and rendering with an independent schema oracle, and the committed authority with the crates the leaves actually name. */
+/** 🧪️ Compares conversion authority admission and rendering with an independent schema oracle, and the committed authority with the crates the leaves actually name (a nested crate's leaves belong to that crate). */
 export function runSemioConversionDefinitionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const corpus = read("🧫️fixtures/🔣️.json");
@@ -22,11 +22,11 @@ export function runSemioConversionDefinitionChecks(): number {
     const owned = new Set(crates);
     const conversions = doc.conversions ?? [];
     const packages = [doc.catalog?.package, ...conversions.map((row: { package: string }) => row.package)];
-    const oracle = validShape(doc) && owned.size === crates.length && conversions.every((row: { targets: string[] }) => row.targets.every((target) => owned.has(target))) && new Set(packages).size === packages.length && new Set(conversions.map((row: { subset: string; direction: string }) => `${row.subset}:${row.direction}`)).size === conversions.length;
+    const oracle = validShape(doc) && owned.size === crates.length && conversions.every((row: { targets: string[] }) => row.targets.every((target) => owned.has(target))) && new Set(packages).size === packages.length && ((claimed: string[]) => new Set(claimed).size === claimed.length)(conversions.flatMap((row: { subset: string; direction: string; targets: string[] }) => row.targets.map((target) => `${row.subset}:${row.direction}:${target}`)));
     assert.equal(oracle, vector.accepted, `${vector.id}: independent admission`);
     if (!vector.accepted) { assert.throws(() => admitSemioConversionsV1(doc), vector.id); continue; }
     const authority = admitSemioConversionsV1(doc);
-    for (const row of authority.conversions) assert.equal(renderConversionDependenciesV1(row), vector.rendered[`${row.subset}-${row.direction}`], vector.id);
+    for (const row of authority.conversions) assert.equal(renderConversionDependenciesV1(row), vector.rendered[row.package], vector.id);
     const catalog = renderCatalogV1(authority);
     assert.equal(catalog.source, vector.rendered.catalogSource, vector.id);
     assert.equal(catalog.dependencies, vector.rendered.catalogDependencies, vector.id);
@@ -35,7 +35,7 @@ export function runSemioConversionDefinitionChecks(): number {
   const authority = admitSemioConversionsV1(read("../🔣️.json"));
   const named = (directory: string): Set<string> => {
     const found = new Set<string>();
-    const walk = (path: string) => { for (const entry of readdirSync(path, { withFileTypes: true })) { if (entry.name === "📦️packages" || entry.name === "🧪️tests") continue; const next = join(path, entry.name); if (entry.isDirectory()) walk(next); else if (entry.name.endsWith(".rs")) for (const match of readFileSync(next, "utf8").matchAll(/\bsemio_s_artifact_stdio_([a-z0-9_]+)::/g)) if (!match[1]!.startsWith("semio")) found.add(`semio-s-artifact-stdio-${match[1]!.replaceAll("_", "-")}`); } };
+    const walk = (path: string) => { for (const entry of readdirSync(path, { withFileTypes: true })) { if (entry.name === "📦️packages" || entry.name === "🧪️tests") continue; const next = join(path, entry.name); if (entry.isDirectory()) { if (!existsSync(join(next, "📦️packages"))) walk(next); } else if (entry.name.endsWith(".rs")) for (const match of readFileSync(next, "utf8").matchAll(/\bsemio_s_artifact_stdio_([a-z0-9_]+)::/g)) if (!match[1]!.startsWith("semio")) found.add(`semio-s-artifact-stdio-${match[1]!.replaceAll("_", "-")}`); } };
     walk(directory);
     return found;
   };

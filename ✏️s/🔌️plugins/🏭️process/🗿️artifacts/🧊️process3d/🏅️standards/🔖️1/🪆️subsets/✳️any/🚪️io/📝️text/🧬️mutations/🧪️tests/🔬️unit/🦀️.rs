@@ -151,3 +151,13 @@ async fn imported_mesh_stock_round_trips_document_dsl() {
     let snapshot = Process3dSnapshot { stock_id: "stock".into(), stock_label: "Imported GLB".into(), stock_pose: Pose::default(), stock_solid, ..empty_process3d_snapshot() };
     semio_os_store_test_support::assert_dsl_round_trip(&snapshot);
 }
+
+#[test]
+fn malformed_embedded_json_in_op_text_is_refused_without_panicking() {
+    let valid = <Process3dMutation as OpText>::print_op(&Process3dMutation::CreateStep(create_step::CreateStep { index: 0, step: cut_step("cut-1") }));
+    let (head, _) = valid.split_once("{").expect("op line embeds step json");
+    let malformed = format!("{head}\"not json\"");
+    assert!(std::panic::catch_unwind(|| <Process3dMutation as OpText>::parse_op(&malformed)).expect("parse_op must not panic").is_err());
+    let wrong_shape = valid.replace("\"measure\"", "\"measureX\"");
+    assert!(std::panic::catch_unwind(|| <Process3dMutation as OpText>::parse_op(&wrong_shape)).expect("parse_op must not panic").is_err());
+}

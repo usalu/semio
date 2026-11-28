@@ -75,6 +75,7 @@ async fn the_artifact_kind_spec_is_a_data_value_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_checks_falls_back_to_a_placeholder_when_nothing_was_computed() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = report_body(&CheckReport::default(), Vec::new());
     assert!(json.contains("No checks computed."), "{json}");
 }
@@ -82,7 +83,7 @@ async fn render_checks_falls_back_to_a_placeholder_when_nothing_was_computed() {
 #[semio_framework_async_macros::async_test]
 async fn render_checks_assigns_a_distinct_identity_to_each_check_row() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
-    let json = report_body(&oversized_report(2), Vec::new());
+    let json = report_body_in(&oversized_report(2), Vec::new(), 4 * MEASURED_VIEWPORT_ROWS);
     assert!(json.contains("\"norm-checks-check-0\""), "the first row keeps its own identity: {json}");
     assert!(json.contains("\"norm-checks-check-1\""), "the second row keeps its own identity: {json}");
 }
@@ -177,7 +178,11 @@ fn oversized_report(checks: usize) -> CheckReport {
 
 /// 🪟️ The results body exactly as the host reads it, for the host-known windows in `requests`.
 fn report_body(report: &CheckReport, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    report_body_in(report, requests, MEASURED_VIEWPORT_ROWS)
+}
+
+fn report_body_in(report: &CheckReport, requests: Vec<TreeWindowRequest>, viewport_rows: u32) -> String {
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(viewport_rows), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render_checks(report, &TreeWindows::for_body(&view, "norm.x.play.results"), Locale::En, None).expect("report tree");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the report tree")
 }
@@ -196,6 +201,7 @@ fn an_oversized_report_stamps_its_total_and_never_a_continuation_row() {
 /// 🪟️ Law (b): a section the host closed stamps its total and materialises nothing.
 #[test]
 fn a_closed_report_section_stamps_its_total_and_materialises_no_rows() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_CHECKS_SECTION_ID.into(), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":301"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("norm-checks-check-"), "a closed section materialises no rows: {json}");

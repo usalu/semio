@@ -195,6 +195,9 @@ impl protocol::OpBinary for SequenceMainWindowConfigMutation {
     }
 }
 
+semio_os_kernel::original_decoded_operation_receiving!(SequenceMainWindowConfigMutation);
+semio_os_kernel::artifact_persisted_encoded_binary_operation!(SequenceMainWindowConfigMutation);
+
 pub struct SequenceMainWindowConfigOwner;
 
 impl semio_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner {

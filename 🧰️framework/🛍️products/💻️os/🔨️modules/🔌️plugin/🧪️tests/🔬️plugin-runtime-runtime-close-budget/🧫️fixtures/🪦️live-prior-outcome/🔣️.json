@@ -1,0 +1,8 @@
+{
+  "limit": 8,
+  "sequences": [
+    { "name": "one faulted or cancelled job is an ordinary terminal", "outcomes": ["fault"], "verdicts": ["ready"] },
+    { "name": "a clean job clears the run", "outcomes": ["fault", "fault", "fault", "fault", "fault", "fault", "fault", "clean", "fault"], "verdicts": ["ready", "ready", "ready", "ready", "ready", "ready", "ready", "pending", "ready"] },
+    { "name": "the limit-th consecutive job is the fault", "outcomes": ["fault", "fault", "fault", "fault", "fault", "fault", "fault", "fault"], "verdicts": ["ready", "ready", "ready", "ready", "ready", "ready", "ready", "fault"] }
+  ]
+}

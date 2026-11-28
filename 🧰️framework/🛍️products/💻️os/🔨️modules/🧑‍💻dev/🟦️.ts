@@ -27,14 +27,14 @@ const pluginFilter = boot.variant;
 const appId = import.meta.env.VITE_SEMIO_APP_ID || boot.defaultAppId;
 
 /** 👁️✏️ Per-server default surface role (contract §5): `VITE_SEMIO_APP_ROLE` is
- * `"viewer"`|`"editor"`, default `"editor"`. Mirrors `resolveBootAppRole`'s own validation so an
- * unrecognized value falls back rather than throwing. */
-const envAppRole: AppRole = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";
+ * `"viewer"`|`"editor"`, UNSTATED by default so the pinned app id names the role. Mirrors
+ * `resolveBootAppRole`'s own validation so an unrecognized value is ignored rather than throwing. */
+const envAppRole: AppRole | undefined = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : import.meta.env.VITE_SEMIO_APP_ROLE === "editor" ? "editor" : undefined;
 
 /** 👁️✏️ Per-navigation surface role: `?role=viewer`/`?role=editor` wins over the env default, so
  * `http://127.0.0.1:6018/?plugin=<variant>&role=viewer` opens the viewer without restarting the server —
  * the React half of the `?role=` axis the wgpu browser boot already reads. */
-const appRole: AppRole = typeof window === "undefined" ? envAppRole : resolveBootQueryAppRole(window.location.search, envAppRole);
+const appRole: AppRole | undefined = typeof window === "undefined" ? envAppRole : resolveBootQueryAppRole(window.location.search, envAppRole);
 
 /** 🏷️ Baked-in shell brand for this artifact (registry `brand` column or `SEMIO_BRAND`); no `?query=` override. */
 const brand = resolveShellBrandById(options.brands, import.meta.env.VITE_SEMIO_BRAND || undefined);

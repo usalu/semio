@@ -2,7 +2,7 @@ use crate::{BoundedJob, JOB_KIND_MIGRATE, PHASE_DECODED, checkpoint_jobs, fault}
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::future::Future;
 use semio_framework_actor::OriginalJobStep as JobStep;
-use crate::tests::{cancel_fixture, slice_fixture, start_fixture, terminal_fixture};
+use crate::tests::Fixture;
 
 
 fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
@@ -35,26 +35,27 @@ pub async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
 /// `store::os_store::codec_registry::migrate_document` and runs the registered re-encode, not just `job.unknown-kind`.
 #[semio_framework_async_macros::async_test]
 async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
+    let mut fx = Fixture::default();
     let (from, to) = register_job_test_migration().await;
     let input = input_bytes(&from, &to, vec![1, 2, 3]).await;
-    start_fixture(400, JOB_KIND_MIGRATE, input.clone(), None);
+    fx.start(400, JOB_KIND_MIGRATE, input.clone(), None);
 
-    match slice_fixture(400) {
+    match fx.slice(400) {
         JobStep::Running(Some(progress)) => {
             assert_eq!(progress, format!("{from}->{to}").into_bytes());
         }
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 1 must be Running(Some(coordinates)), not fail: {} {}", fault.code.0, fault.message);
+            let fault = crate::tests::fault_view(&bytes);
+            panic!("slice 1 must be Running(Some(coordinates)), not fail: {} {}", fault.code, fault.message);
         }
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
         JobStep::Running(None) => panic!("slice 1 must be Running(Some(coordinates)), not a bare Running(None)"),
     }
-    match slice_fixture(400) {
+    match fx.slice(400) {
         JobStep::Done(bytes) => assert_eq!(bytes, vec![1, 2, 3, 0xAB]),
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 2 must dispatch to the registered migration, not fail: {} {}", fault.code.0, fault.message);
+            let fault = crate::tests::fault_view(&bytes);
+            panic!("slice 2 must dispatch to the registered migration, not fail: {} {}", fault.code, fault.message);
         }
         JobStep::Running(_) => panic!("slice 2 must finish Done, the native migration call is atomic"),
     }
@@ -64,26 +65,28 @@ async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migra
 /// resumed run reaches the SAME `Done` output as an uninterrupted run.
 #[semio_framework_async_macros::async_test]
 async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
+    let mut fx = Fixture::default();
     let (from, to) = register_job_test_migration().await;
     let input = input_bytes(&from, &to, vec![9, 9]).await;
 
-    start_fixture(401, JOB_KIND_MIGRATE, input.clone(), None);
-    slice_fixture(401);
-    let baseline = match slice_fixture(401) {
+    fx.start(401, JOB_KIND_MIGRATE, input.clone(), None);
+    fx.slice(401);
+    let baseline = match fx.slice(401) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("uninterrupted run must finish Done within 2 slices"),
     };
 
-    start_fixture(402, JOB_KIND_MIGRATE, input.clone(), None);
-    slice_fixture(402);
+    fx.start(402, JOB_KIND_MIGRATE, input.clone(), None);
+    fx.slice(402);
     let entries = checkpoint_jobs().await;
     let entry = entries.iter().find(|entry| entry.job == 402).expect("job 402 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
     let checkpoint = entry.checkpoint.clone();
-    cancel_fixture(402);
-    terminal_fixture(402);
-    start_fixture(402, JOB_KIND_MIGRATE, input.clone(), checkpoint);
-    let restored_final = match slice_fixture(402) {
+    assert_eq!(entry.input.as_deref(), Some(input.as_slice()));
+    fx.cancel(402);
+    fx.terminal(402);
+    fx.start(402, JOB_KIND_MIGRATE, entry.input.clone().expect("the checkpoint keeps the replay input"), checkpoint);
+    let restored_final = match fx.slice(402) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call"),
     };
@@ -92,17 +95,18 @@ async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
 
 #[semio_framework_async_macros::async_test]
 async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
+    let mut fx = Fixture::default();
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
     let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
     let input = input_bytes(&from, &to, vec![1]).await;
-    start_fixture(403, JOB_KIND_MIGRATE, input.clone(), None);
-    slice_fixture(403);
-    match slice_fixture(403) {
+    fx.start(403, JOB_KIND_MIGRATE, input.clone(), None);
+    fx.slice(403);
+    match fx.slice(403) {
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            assert_eq!(fault.code.0, "job.migrate");
+            let fault = crate::tests::fault_view(&bytes);
+            assert_eq!(fault.code, "job.migrate");
         }
         _ => panic!("a migration nobody registered must fail on slice 2, not succeed"),
     }
@@ -110,11 +114,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
 #[semio_framework_async_macros::async_test]
 async fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
-    start_fixture(404, JOB_KIND_MIGRATE, b"not json".to_vec(), None);
-    match slice_fixture(404) {
+    let mut fx = Fixture::default();
+    fx.start(404, JOB_KIND_MIGRATE, b"not json".to_vec(), None);
+    match fx.slice(404) {
         JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            assert_eq!(fault.code.0, "job.migrate.decode");
+            let fault = crate::tests::fault_view(&bytes);
+            assert_eq!(fault.code, "job.migrate.decode");
         }
         _ => panic!("garbage migrate input must fail on slice 1"),
     }

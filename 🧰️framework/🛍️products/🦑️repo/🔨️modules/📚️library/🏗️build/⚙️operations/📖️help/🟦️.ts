@@ -67,7 +67,7 @@ function scopedExamples(examples:readonly BuildHelpExampleV1[],synopsis:string):
 /** 🖨️ Renders the usage of the whole CLI, one operation or one subcommand from the catalogue in the chosen language. */
 export function renderBuildHelpV1(catalogSource:BuildHelpCatalogV1,request:BuildHelpRequestV1,language:string):string{
  const catalog=JSON.parse(expandBackends(JSON.stringify(catalogSource))) as BuildHelpCatalogV1;
- const label=(name:string)=>catalog.labels[name]![language]!,text=(value:BuildHelpTextV1)=>value[language]!,flag=(name:string)=>catalog.flags.find(row=>row.name===name)!;
+ const label=(name:string)=>catalog.labels[name]![language]!,text=(value:BuildHelpTextV1)=>value[language]!,flag=(name:string)=>catalog.flags.find(row=>row.name===name&&row.operations?.includes(request.operation!)===true)??catalog.flags.find(row=>row.name===name)!;
  const global=catalog.flags.filter(row=>row.operations===undefined),lines:string[]=[];
  const globals=()=>["",`${label("globalOptions")}:`,...table(global.map(row=>[spelling(row),text(row.description)] as const))];
  const languageChoice=catalog.languages.join("|");

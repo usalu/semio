@@ -1,0 +1,1041 @@
+{
+  "why": "The cumulative variant of the host side of the gumball tool protocol: a selection record with `gumballCumulative` makes `worldGumballStep` send every `stream` tick and the `commit` as the WHOLE offset from the grab pose (angle, factor) instead of the delta since the previous tick, and the identity while the pose is back on the grab, so each tick is idempotent and a tick the guest drops as stale costs the gesture nothing. A case's `cumulative`, `live`, `transformMode` and `targets` fill its `start` events. A guest that consumes cumulative ticks (fem 3d) replays a case's dispatches with the target ids replaced by one movable node of its own document, then again with each single stream dispatch dropped and again with every stream dispatch dropped, and must publish exactly `guest.edits` edits moving it by `guest.offset` every time. Guests that compose deltas replay `gumball-live-protocol.json` instead.",
+  "cases": [
+    {
+      "name": "a cumulative drag streams the whole offset from the grab, the newest pose wins while a tick is in flight, and the release commits the whole offset",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "move",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.25,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0.25,
+              "dy": 0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.5,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.75,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0.75,
+              "dy": 0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "moveX",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                1,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 1,
+              "dy": 0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        }
+      ],
+      "guest": {
+        "edits": 1,
+        "offset": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "a cumulative release without any streamed tick commits the whole offset alone",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "move",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "moveX",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                0.5,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0.5,
+              "dy": 0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        }
+      ],
+      "guest": {
+        "edits": 1,
+        "offset": [
+          0.5,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "a cumulative drag back to the grab pose streams the identity and commits it",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "move",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.5,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0.5,
+              "dy": 0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0,
+              "dy": 0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "moveX",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0,
+              "dy": 0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a cumulative turn streams the whole angle from the grab",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "rotate",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "rotateZ",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "rotateZ",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0.24740395925452294,
+                0.9689124217106447
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "rotateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.5,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "rotateZ",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0.36627252908604757,
+                0.9305076219123143
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "rotateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.75,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "rotateZ",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0.479425538604203,
+                0.8775825618903728
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "rotateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 1.0,
+              "phase": "commit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a cumulative scaling streams the whole factor from the grab",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "scale",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "scaleUniform",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "scaleUniform",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "scaleSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "sx": 2,
+              "sy": 2,
+              "sz": 2,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "scaleUniform",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                3,
+                3,
+                3
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": {
+            "action": "scaleSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "sx": 3,
+              "sy": 3,
+              "sz": 3,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "scaleUniform",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                3,
+                3,
+                3
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "scaleSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "sx": 3,
+              "sy": 3,
+              "sz": 3,
+              "phase": "commit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a host blur after a streamed cumulative tick aborts with the verb's identity delta",
+      "live": true,
+      "cumulative": true,
+      "transformMode": "move",
+      "targets": {
+        "mode": "object",
+        "ids": [
+          "target"
+        ]
+      },
+      "steps": [
+        {
+          "event": {
+            "kind": "start",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.5,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0.5,
+              "dy": 0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "cancel",
+            "reason": "blur"
+          },
+          "dispatch": {
+            "action": "translateSelection",
+            "args": {
+              "mode": "object",
+              "ids": [
+                "target"
+              ],
+              "dx": 0,
+              "dy": 0,
+              "dz": 0,
+              "phase": "abort",
+              "reason": "blur"
+            }
+          }
+        },
+        {
+          "event": {
+            "kind": "settled"
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "drag",
+            "handle": "moveX",
+            "pose": {
+              "position": [
+                0.75,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        },
+        {
+          "event": {
+            "kind": "release",
+            "handle": "moveX",
+            "before": {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "after": {
+              "position": [
+                0.75,
+                0,
+                0
+              ],
+              "quaternion": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "dispatch": null
+        }
+      ],
+      "guest": {
+        "edits": 0,
+        "offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

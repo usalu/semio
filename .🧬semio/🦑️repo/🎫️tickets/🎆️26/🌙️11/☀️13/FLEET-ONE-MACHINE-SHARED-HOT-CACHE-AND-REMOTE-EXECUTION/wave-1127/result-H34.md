@@ -1,0 +1,22 @@
+# H34: full cache images (m11, m12, m14 and the fleet)
+
+## Findings (S/origins/*/partitions.json, ready logs, 11-27)
+- The `x of y` rows in ready logs are FREE of TOTAL megabytes (header "free of total"). `.cache/b/o/m 2038 of 2047` and `.cache/b/l/m 56 of 62` are EMPTY images, not full ones. m14's workspace failure is not storage: `Cargo artifact build failed` for norm-din4108 after a 1755 s cargo phase (plus a Go `error obtaining VCS status: exit status 128`, open, not mine); its host has 60 GB free.
+- Real full images: m12 `r` 47 MB free of 40959 (03:17, since recovered to 12 GB, m12 Ready now); m11 `r` hit ENOSPC at the cargo dep-info/fingerprint writes under `.cache/b/r/m/u/l/q90be4b` (03:04, 21 GB free after the dying run released its lane). Replay of all stored disk-fact blocks of the fleet shows the same fullness on m01 (`d` 413 MB, `r` 2.9 GB of 96 GB), m03 (`r` 39 MB of 54 GB), m08 (`d` 2 GB), m13 (`d` 1.5 GB, `r` 1.4 GB). It is a peak of the live run (lanes, incremental sessions, 2 GB-per-variant units of one crate that a held profile lease protects), freed again when the run dies.
+- Envelopes over-promise: declared image totals add up to 130-180 GB of a 228 GB host (m01/m02 180 GB: `r` 96 GiB, `d` 36 GiB born before the 32 GiB unmap cap), host free sits at 10-35 GB. Thin images show the host's free bytes, so the host is the limit there.
+- Before this lane: the in-run guard and the start gate looked only at the host `.cache` volume; an image at 0 free was invisible, ENOSPC ended the stage as a generic `stage-failed` with growing back-off.
+
+## Landed (04:02 slot, see landings.md)
+`🚦️ready/🖼️image-guard` + wiring in `🚦️ready/🟦️.ts`: pre-start gate and in-run guard per image (need 10 % of the image clamped 256 MB-6 GiB, floor 4 % clamped 128 MB-3 GiB, never above a quarter); collection inside the image in place before refusing (`reclaimUnitStorageV1` for `r`: temporaries, incremental sessions, stale units; then the registry writers below the mount; host-limited images get the whole registry; no exclusive lease, no detach); `image-short` refusal (bilingual, purpose, free of total, host free, consumers with commands, rechecked every 5 min or +256 MB instead of 6 h); `image-full` (stage died with ENOSPC inside an image, named from the compiler's own lines, short back-off, kept across refreshes); `heal` (in-place growth when idle, within host free and the 32 GiB cap) now also before `workspace`.
+Answer to the coordinator note (m11 cargo ENOSPC): a cargo ENOSPC in the `r` image is now `image-full`, the next start gate collects inside `r` and refuses typed `image-short` until room is back, retried every 5 min.
+
+## Proof
+`🖼️image-guard/🧪️tests` 9/0 (Python model of floor/need, real m12/m11 lines); `🧪️tests/🖼️image-guard` 5/0 (loop: in-place collection starts the stage, short image refusal en/de and recheck, ENOSPC -> image-full with back-off 1); neighbours disk-recovery 11/0, disk-guard 4/0, disk-unknown 6/0, stage-plan 3/0, resume 8/0, main ready 58/0. `repo typecheck` product files 0 errors; dangling-imports 0. Replay of stored fleet blocks (`🧰️scripts/H34/replay-fleet-logs.ts`) names exactly the images that were full (m12 r, m03 r, m13 d/r, m01 d/r) and none of the healthy ones. After landing: m12 Ready, m11 running workspace (no refusal yet), m14 backoff memory-cancelled.
+
+## Not done / open
+- Sizing from measured need and host size: only the start/floor rules scale with the image; births still follow the elastic rule from host free. Needed: cap the sum of envelopes to about 50 % of host total and size per purpose from measured peak used (in-image used peaks: d 21-24 GB, g 4-10, p 11-21, r 31-47, t 3).
+- Oversize `r` (40-96 GiB) and `d` (36 GiB) images cannot grow or unmap; retiring them yields a 32 GiB image smaller than the 37 GB `r` working set seen on m12: needs lane-level sharding of `r` (pool wiring).
+- A held profile lease still protects every unit variant of the profile (no per-unit proof of "not planned"): the main fill mechanism for `r` is untouched.
+- `repo test-file` was refused at 04:05 by `Bounded physical Source revision required: 🕸️graph/🕰️generations/🟨️.mjs` (H35's landing); tests ran with the hermetic bun command.
+- Census `allocatedBytes` is logical rounding, not physical blocks (fixed.dmg shows full size): physical slack per image is not visible in partitions.json.
+- No live proof yet that m11 passes workspace; watch its ready.json.

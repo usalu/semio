@@ -20,13 +20,13 @@ pub struct ChangeCombinationTerm {
     #[value(skip_serializing_if="Option::is_none",deserialize_with="protocol::list_delta::supplied_value",deserialize_controlled_with="protocol::list_delta::supplied_value_controlled",default_controlled="protocol::list_delta::supplied_value_default",retire_with="protocol::list_delta::supplied_value_retire")]
     pub index: Option<usize>,
 }
-impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeCombinationTerm where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationTerm> {
+impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeCombinationTerm where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationTerm> {
     const SEMANTICS:SemanticDescriptor=SemanticDescriptor{verb:"change",entity:"combination-term",kind:"change-combination-term",record:"ChangedCombinationTerm"};
     fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native(&format!("Change combination term {}",self.id),&format!("Kombination {} ändern",self.id))}
     fn target(&self)->Vec<String>{vec![self.id.clone()]}
 }
-impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeCombinationTerm where Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationTerm> {
-    fn diff(&self,base:&Fem2dSnapshotValue)->protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff>{super::diff::diff(self,base)}
+impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeCombinationTerm where Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationTerm> {
+    fn diff(&self,base:&Fem2dSnapshotValue)->protocol::MutationOutcome<semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff>{super::diff::diff(self,base)}
 
     fn inverse(&self,base:&Fem2dSnapshotValue)->Result<Vec<Op>,semio_framework_value::ValueError>{super::inverse::inverse(self,base)}
 }

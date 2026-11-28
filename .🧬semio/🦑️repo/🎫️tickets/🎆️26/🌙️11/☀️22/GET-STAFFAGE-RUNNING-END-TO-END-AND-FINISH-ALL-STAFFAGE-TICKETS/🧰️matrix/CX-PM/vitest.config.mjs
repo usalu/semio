@@ -1,0 +1,1 @@
+export default { root: "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/🗿️model/..", test: { root: "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/🗿️model/..", name: "model", environment: "node", include: ["🗿️model/🧪️tests/*/🟦️.ts", "🗿️model/*/🧪️tests/*/🟦️.ts"], exclude: ["**/🧰️support/**", "**/node_modules/**"], testTimeout: 180000 } };

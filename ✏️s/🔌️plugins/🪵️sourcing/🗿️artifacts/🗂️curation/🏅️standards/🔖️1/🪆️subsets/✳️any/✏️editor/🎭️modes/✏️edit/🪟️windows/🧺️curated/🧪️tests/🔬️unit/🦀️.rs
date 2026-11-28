@@ -14,8 +14,8 @@ use crate::editor_unit_tests::context::{dispatch, new_app, render as render_body
 fn curated_document() -> CurationSnapshot {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let ids: Vec<String> = crate::stock_of(&document).iter().take(2).map(|kind| kind.id.clone()).collect();
-    crate::schema::curation_set(&mut document, &ids[0], 3);
-    crate::schema::curation_set(&mut document, &ids[1], 1);
+    crate::schema::domain::curation_set(&mut document, &ids[0], 3);
+    crate::schema::domain::curation_set(&mut document, &ids[1], 1);
     document
 }
 
@@ -83,7 +83,7 @@ async fn curated_rows_offer_curate_and_uncurate_within_the_two_action_budget() {
     assert_eq!(actions[0].action.action.as_str(), "curationAdd");
     assert_eq!(actions[1].action.action.as_str(), "curationRemove");
     let availability = kind.availability;
-    crate::schema::curation_set(&mut document, &object_id, availability);
+    crate::schema::domain::curation_set(&mut document, &object_id, availability);
     let saturated = curated_rows(&document, &SourcingCurationConfig::default());
     let (item, kind) = saturated.iter().find(|(item, _)| item.object_id == object_id).expect("the saturated row");
     let actions = curated_row_actions(item, kind, labels());

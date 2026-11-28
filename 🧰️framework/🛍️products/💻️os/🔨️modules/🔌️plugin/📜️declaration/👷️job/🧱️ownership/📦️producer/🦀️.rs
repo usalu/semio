@@ -67,6 +67,7 @@ impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
         use semio_framework_job::InteractiveJobStep as Step;
         let cancelled=|cx:&mut StepContext<'_>|Step::from_callback(JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into));
         let yielded=|cx:&mut StepContext<'_>|Step::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(Into::into));
+        if self.held.is_none(){if let Some(turn)=cx.cancelled_turn(){return Step::from_callback(turn)}}
         let Some(source)=self.state.as_ref()else{return cancelled(cx)};
         if self.held.is_none(){
             match source.try_lock(){
@@ -128,7 +129,7 @@ mod lending_tests {
     static BEGIN_CLOSES:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
     struct Stub;
     impl semio_framework_job::InteractiveJob for Stub {
-        fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(Into::into))}
+        fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(cx.cancelled_turn().unwrap_or_else(||JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)))}
         fn borrow_outcome<'a>(&'a self,_:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"lending specimen has no output"))}
         fn begin_close(&mut self){BEGIN_CLOSES.fetch_add(1,std::sync::atomic::Ordering::SeqCst);}
         fn close_step(&mut self,_:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
@@ -189,5 +190,26 @@ mod lending_tests {
         lender.begin_close();
         assert_eq!(BEGIN_CLOSES.load(std::sync::atomic::Ordering::SeqCst),before+1,"begin_close reaches the job once the gate is free");
         retire(lender);
+    }
+
+    #[test]
+    fn a_cancelled_step_cancels_before_lending_the_job_and_a_lent_job_cancels_at_its_next_step() {
+        use semio_framework_job::cancel_probe::{CancelProbe,ProbeTurn};
+        let mut job=ArtifactReservedToolJob::new(Stub);
+        let mut probe=CancelProbe::new(semio_framework_job::OperationId(95201),semio_framework_job::Generation(1));
+        probe.cancel();
+        assert_eq!(probe.step_to_outcome(&mut job,1_000,4096),ProbeTurn::Cancelled);
+        {
+            let state=job.state.as_ref().expect("state").try_lock().expect("idle gate");
+            assert!(job.held.is_none()&&!state.lent&&state.inner.is_some(),"a cancelled step never lends the job out of the gated state");
+        }
+        probe.close(&mut job);
+        let mut job=ArtifactReservedToolJob::new(Stub);
+        let mut probe=CancelProbe::new(semio_framework_job::OperationId(95202),semio_framework_job::Generation(1));
+        assert_eq!(probe.step_to_outcome(&mut job,1_000,4096),ProbeTurn::Yield);
+        assert!(job.held.is_some(),"a live step lends the job to the stepping handle");
+        probe.cancel();
+        assert_eq!(probe.step_to_outcome(&mut job,1_000,4096),ProbeTurn::Cancelled);
+        probe.close(&mut job);
     }
 }

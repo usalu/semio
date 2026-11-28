@@ -29,12 +29,19 @@ mod original_float_field;
 pub use original_float_field::OriginalFloatFieldWork;
 #[path="🏭️construction/🦀️.rs"]
 mod original_construction;
-pub use original_construction::{OriginalConstructionDemand,OriginalConstructionAdmission,OriginalConstructionStatus,OriginalConstructionFailure,OriginalConstructionOrigin,OriginalConstructionReason,original_construction_reserve,original_construction_settled_quote,original_receiving_scope_quote,ORIGINAL_RECEIVING_ACKNOWLEDGEMENT_ACTIONS,original_construction_settled_turn_quote,original_decoder_teardown_quote,ORIGINAL_DECODER_TEARDOWN_STEPS,original_construction_settle_overhead,admit_original_construction,admit_original_construction_settled};
+pub use original_construction::{OriginalConstructionDemand,OriginalConstructionAdmission,OriginalConstructionStatus,OriginalConstructionFailure,OriginalConstructionOrigin,OriginalConstructionReason,original_construction_reserve,original_construction_step_floor,original_construction_settled_quote,original_receiving_scope_quote,ORIGINAL_RECEIVING_ACKNOWLEDGEMENT_ACTIONS,original_construction_settled_turn_quote,original_decoder_teardown_quote,ORIGINAL_DECODER_TEARDOWN_STEPS,original_construction_settle_overhead,admit_original_construction,admit_original_construction_settled};
 #[path="🚦️clock-stride-and-job-protocol/▶️drive/🦀️.rs"]
 mod original_driver;
 pub use original_driver::drive_step;
 #[path="🔎️reconcile/🧬️schema/🦀️.rs"]
 pub mod reconcile;
+#[path="🔀️supersede/🦀️.rs"]
+mod supersede;
+pub use supersede::{begin_supersede,supersede_epoch};
+
+#[cfg(feature="testkit")]
+#[path="🧪️testing/🛑️cancel-probe/🦀️.rs"]
+pub mod cancel_probe;
 
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;

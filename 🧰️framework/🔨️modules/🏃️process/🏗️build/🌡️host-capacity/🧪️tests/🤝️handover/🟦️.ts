@@ -21,7 +21,7 @@ const control=(signal=new AbortController().signal)=>({signal,remainingMilliseco
 const request=(over:object={})=>({id:newHostCapacityIdV1(),operation:"run",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:13000,perJobMegabytes:0,cpuPerJob:1,...over});
 const options=(directory:string,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request:request(),control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:host(),swappedOutMegabytes:0}),...over});
 const STARTED="Sat Oct 24 19:14:40 2026",PARENT=async()=>({pid:process.pid,started:STARTED});
-const grants=(directory:string)=>readdirSync(join(directory,"grants")),queue=(directory:string)=>readdirSync(join(directory,"queue"));
+const grants=(directory:string)=>readdirSync(join(directory,"grants")).filter(name=>name.endsWith(".json")),queue=(directory:string)=>readdirSync(join(directory,"queue"));
 const stale=()=>Error("This command runs an outdated implementation");
 const park=async(directory:string,lines:string[]=[],environment:Record<string,string>={LANG:"en_US.UTF-8"},ask:object={},real=false)=>{
  await expect(withHostCapacityV1(options(directory,{park:()=>true,...real?{}:{self:async()=>STARTED},write:line=>lines.push(line),environment,request:request(ask)}),async()=>{throw stale();})).rejects.toThrow("outdated implementation");

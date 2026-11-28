@@ -20,7 +20,7 @@
         "stallMilliseconds": 600000,
         "askGraceMilliseconds": 300000,
         "progressWriteMilliseconds": 5000,
-        "maximumHandovers": 3,
+        "maximumStalledHandovers": 3,
         "commandCharacters": 200
       }
     },

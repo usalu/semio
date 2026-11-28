@@ -4,7 +4,7 @@ use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{Re
 use std::{mem::{ManuallyDrop,size_of},ptr::NonNull,sync::atomic::Ordering};
 
 pub use semio_framework_value_clone_source_lease::RetainedCloneLeaseOwner;
-struct SourcePayload<A:RetireOwned+Sync,B:RetireOwned>{source:ControlledRetirement<SealedShared<A>>,authority:ControlledRetirement<B>,close_route:Option<(crate::retained_clone::OriginalEffectInvocationIdentity,u8,bool)>}
+struct SourcePayload<A:RetireOwned+Sync,B:RetireOwned>{source:ControlledRetirement<SealedShared<A>>,authority:ControlledRetirement<B>,close_route:Option<(crate::retained_clone::OriginalEffectInvocationIdentity,u8,bool)>,cold:(usize,u64)}
 impl<A:RetireOwned+Sync,B:RetireOwned> SourcePayload<A,B>{
  fn close_selected<'r>(&mut self,original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,recover:bool)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{
   let invocation=effect.invocation().ok_or_else(||ValueError::invariant("source payload close lacks original invocation"))?;let mode=if recover{crate::retained_clone::OriginalEffectCallbackMode::Recover}else{crate::retained_clone::OriginalEffectCallbackMode::Receive};if invocation.mode()!=mode{return Err(ValueError::invariant("source payload close changed invocation mode"))}
@@ -13,7 +13,9 @@ impl<A:RetireOwned+Sync,B:RetireOwned> SourcePayload<A,B>{
  }
 }
 impl<A:RetireOwned+Sync,B:RetireOwned> ErasedSnapshotRetirement for SourcePayload<A,B>{
- fn native_header_release(&self)->Option<semio_framework_value_retirement::RetirementHeaderRelease>{if self.terminal_is_empty(){Some(unsafe{semio_framework_value_retirement::RetirementHeaderRelease::native(self,0,0)})}else{None}}
+ fn native_header_release(&self)->Option<semio_framework_value_retirement::RetirementHeaderRelease>{if self.terminal_is_empty(){Some(unsafe{semio_framework_value_retirement::RetirementHeaderRelease::native(self,self.cold.0,self.cold.1)})}else{None}}
+ fn cold_close_quote(&self)->Option<(usize,u64)>{if self.close_route.is_some(){return None}let(source,work)=self.source.cold_close_quote()?;let(authority,authority_work)=self.authority.cold_close_quote()?;Some((source.checked_add(authority)?,work.checked_add(authority_work)?))}
+ fn cold_close(&mut self)->Option<usize>{let(bytes,work)=self.cold_close_quote()?;self.source.cold_close()?;self.authority.cold_close()?;self.cold=(bytes,work);Some(bytes)}
 
  fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_selected(None,body,effect,reply,false)}
  fn recover_close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_selected(None,body,effect,reply,true)}
@@ -75,7 +77,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn try_borrow(&self)->Result<RetainedCloneRef<'_,T>,ValueError>{
   if self.owner.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained source original owner is absent"));}
   let binding=self.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained source original lease is absent"))?;
-  let lease=binding.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained source original lease is closed"))?;
+  let lease=binding.lease().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained source original lease is closed"))?;
   Ok(RetainedCloneRef{value:unsafe{self.value.as_ref()},lease,projection:binding.projection})
  }
  /// 🔐️ Retains the exact original projection only through its genuine owning source.
@@ -195,6 +197,13 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
 impl<A:RetireOwned+Sync> RetainedCloneSource<A,A>{
  /// 🧳️ Retains both original inputs before any real source allocation.
  pub fn admission_owned<B:RetireOwned>(owner:A,authority:B)->RetainedCloneSourceAdmission<A,A,B>{RetainedCloneSourceAdmission::new(owner,authority)}
+}
+impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
+ /// 🧾️ Closes a source whose whole custody is its lease binding in one compact funded item, see [`RetainedCloneBinding::close_compact`]; `None` while any other owner, route or handback state remains or nothing can run, so the stepwise close continues.
+ pub fn close_compact(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->Option<crate::OriginalRetirementPoll>{
+  if self.owner.is_some()||self.owner_close.is_some()||self.return_owner.is_some()||self.returned_value.is_some()||!self.returned_close.is_empty()||self.close_route.is_some()||self.take_route.is_some()||self.publication.is_some(){return None}
+  RetainedCloneBinding::close_compact(&mut self.lease,effect)
+ }
 }
 #[path="🎟️admission/🧭️projection.rs"]
 mod source_projection;

@@ -4,7 +4,16 @@
   "role": "extension",
   "manifest": {
     "pluginId": "flow-extension-primitive",
-    "label": "Core",
+    "label": {
+      "native": {
+        "en": "Core",
+        "de": "Kern"
+      },
+      "reuse": {
+        "en": "Core",
+        "de": "Kern"
+      }
+    },
     "version": "0.1.0",
     "apps": [],
     "examples": [],

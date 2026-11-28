@@ -8759,6 +8759,7 @@ dependencies = [
  "semio-s-artifact-stdio-xml",
  "semio-s-artifact-stdio-zip",
  "semio-ui-locale",
+ "serde_json",
  "zip 6.0.0",
 ]
 
@@ -8821,6 +8822,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-schema-state",
  "semio-framework-test-fixtures",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-command",

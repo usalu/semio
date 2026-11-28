@@ -172,7 +172,10 @@ pub async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64
                 semio_framework_value::factory::OwnedValueRetirementFactory::<TestMutation>::default(),
                 store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
                 test_document_preparation_factory(),
-            ))
+            )).map(|(mut owners, progress)| {
+                owners.operation_wire = owners.operation_wire.with_original_binary_receiving();
+                (owners, progress)
+            })
         }
     }
 
@@ -206,7 +209,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[doc(hidden)]
 pub async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         declare_test_child(app, child_id).await;
-        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
+        let dialect = test_child_dialect().await;
+        let mut child = <TestMembers as semio_os_kernel::MemberFactory>::create(child_id, &dialect, &pack::snapshot::ArtifactPack::encode_pack(&TestSnapshot::default()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("construct child");
+        semio_os_kernel::ReferenceSpaceMember::set_owner(&mut child, Some(store::OwnerRef { parent: ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: <TestApp as ArtifactApp>::DIALECT.into() }, slot: "slot".into(), child_id: child_id.into() })).await;
+        app.register_child("slot", child_id, test_child_dialect().await, child, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
     }
 
     /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —

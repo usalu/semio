@@ -13,6 +13,26 @@ fn original_plugin_bootstrap_honors_scoped_work_before_context_or_bundle_birth()
  }
 }
 #[test]
+fn original_guest_close_releases_a_pending_native_source_before_its_source_retirement(){
+ use semio_framework_job::{OriginalNativeRetirement,OriginalTurnFailure,StepBudget,StepContext};
+ fn clock()->Option<u64>{Some(10)}
+ struct Home(bool);
+ impl OriginalNativeRetirement for Home{
+  fn close_on_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.0{return Ok(true)}if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.0=true;Ok(true)}
+  fn terminal_is_empty(&self)->bool{self.0}
+ }
+ let grant=RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<26,maximum_capacity_bytes:1<<26,maximum_release_bytes:1<<26,maximum_depth:4096};
+ let mut input=RetainedTurnInput{operation:720,generation:1,epoch:1,work:OriginalActorTurnWork{clock_binding:720,absolute_deadline_us:1000,fuel:100000},grant};
+ let mut entry=guest_context::OriginalActorGuestEntry::new();
+ let mut ready=false;let mut turns=0;
+ while !ready{let budget=semio_framework_actor::OriginalJobBudget{input,retained_policy:input.grant,fuel:1000,deadline_us:1000,cancelled:false};let call=entry.admit_plugin_step(budget,clock,|_|Ok(()));ready=call.result.as_ref().map(|a|a.ready).expect("guest admission");let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;turns+=1;assert!(turns<256);}
+ let mut home=Some(Home(false));let mut lease=None;turns=0;
+ while lease.is_none(){let mut spent=RetainedCloneProgress::default();let call=entry.dispatch_cleanup_step(input,StepBudget::new(1000,1000,input.grant),&mut spent,clock,|cx|cx.admit_original_native(&mut home,&mut lease));assert!(call.result.is_ok());let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;turns+=1;assert!(turns<256);}
+ drop(lease);turns=0;
+ while !entry.terminal_is_empty(){let call=entry.close_plugin_step(semio_framework_actor::OriginalJobBudget{input,retained_policy:input.grant,fuel:1000,deadline_us:1000,cancelled:true});assert!(call.result.is_ok());let moved=call.receipt_spent!=RetainedCloneProgress::default()||call.work_units_spent!=0;assert!(moved,"a non-terminal guest close step must spend or report its blocker");let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;turns+=1;assert!(turns<4096,"settled return rows and pending native sources must not pin the guest Source forever");}
+}
+
+#[test]
 fn original_public_actor_guest_entry_keeps_same_fault_and_raw_receipts_through_paid_native_publication(){
  use semio_framework_value::FromValue;
  use semio_framework_job::{StepBudget,JobOutcomeView};

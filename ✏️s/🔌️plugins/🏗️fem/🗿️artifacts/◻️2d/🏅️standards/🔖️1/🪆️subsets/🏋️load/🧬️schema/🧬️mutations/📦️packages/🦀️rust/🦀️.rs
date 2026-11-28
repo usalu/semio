@@ -19,6 +19,9 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
+                        #[path = "../../🔗️combination-terms/🦀️.rs"]
+                        pub mod combination_terms;
+
                         #[path = "."]
                         pub mod change_load {
                             #[path = "../../🩹️change-load/🦀️.rs"]

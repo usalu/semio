@@ -6,10 +6,11 @@ import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import budgetPolicy from "../../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {formatMachinePlanV1,machineCapacityV1,machineHostFloorV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
+import {formatMachinePlanV1,machineCapacityV1,machineHostCapV1,machineHostFloorV1,machineHostReserveV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
 import admission from "../../../../🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
+import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 const GIB=1024**3,clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value)),declared=machinePolicyV1();
 function generator(seed:number):()=>number{let state=seed>>>0;return()=>{state=(state+0x6d2b79f5)>>>0;let value=state;value=Math.imul(value^value>>>15,value|1);value^=value+Math.imul(value^value>>>7,value|61);return((value^value>>>14)>>>0)/4294967296;};}
@@ -84,7 +85,7 @@ test("the split is exact: floors, demands, weights, spare and rounding",()=>{
 test("the plan equals an independent exact-rational oracle on 400 seeded machines",()=>{
  const cases=corpus(400),directory=mkdtempSync(join(tmpdir(),"mb-")),file=join(directory,"cases.json");
  try{
-  writeFileSync(file,JSON.stringify({admission:admission.definitions.Policy.const,stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,hostFreeFloorPercent:declared.hostFreeFloorPercent,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
+  writeFileSync(file,JSON.stringify({admission:admission.definitions.Policy.const,stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,hostFreeFloorPercent:declared.hostFreeFloorPercent,hostReserveBytes:declared.hostReserveBytes,hostReservePercent:declared.hostReservePercent,hostSharePercent:declared.hostSharePercent,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
   const run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py"),file],{encoding:"utf8",maxBuffer:1<<28});
   expect(run.status,run.stderr).toBe(0);
   const expected=JSON.parse(run.stdout) as Array<Record<string,unknown>>;
@@ -107,7 +108,7 @@ test("laws: quotas add up, nothing under its fair share is cut, planning converg
    expect(row.quotaBytes,label).toBeGreaterThanOrEqual(declared.stores.find(store=>store.id===row.id)!.floorBytes);
   }
   if(plan.stores.every(row=>machineCapacityV1(declared.stores.find(store=>store.id===row.id)!,row.envelopeBytes)>=row.demandBytes)&&plan.stores.reduce((sum,row)=>sum+Math.max(row.demandBytes,declared.stores.find(store=>store.id===row.id)!.floorBytes),0)<=plan.effectiveTotalBytes)expect(plan.evictBytes+plan.blockedBytes,label+" fits").toBe(0);
-  const after=planMachineBudgetV1({...input,hostFreeBytes:plan.pressureBytes>0?declared.hostFreeFloorBytes:input.hostFreeBytes,uses:input.uses.map(use=>{const row=plan.stores.find(candidate=>candidate.id===use.id)!;return{...use,usedBytes:use.usedBytes-row.evictBytes,evictableBytes:use.evictableBytes===null?null:use.evictableBytes-row.evictBytes};})});
+  const after=planMachineBudgetV1({...input,hostFreeBytes:plan.pressureBytes>0?plan.reserveBytes:input.hostFreeBytes,uses:input.uses.map(use=>{const row=plan.stores.find(candidate=>candidate.id===use.id)!;return{...use,usedBytes:use.usedBytes-row.evictBytes,evictableBytes:use.evictableBytes===null?null:use.evictableBytes-row.evictBytes};})});
   expect(after.evictBytes,label+" converges once the host is relieved").toBe(0);
   expect(after.blockedBytes,label+" blocked never grows beyond the one byte per store the largest-remainder split may move").toBeLessThanOrEqual(plan.blockedBytes+plan.stores.length);
   const larger=planMachineBudgetV1({...input,totalBytes:input.totalBytes+4*GIB});
@@ -116,7 +117,7 @@ test("laws: quotas add up, nothing under its fair share is cut, planning converg
 });
 
 test("host pressure shrinks the budget by what the host lacks, never below the floors",()=>{
- const uses=declared.stores.map(store=>({id:store.id,usedBytes:3*GIB,envelopeBytes:store.loose?null:6*GIB,evictableBytes:null})),calm=planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:declared.hostFreeFloorBytes,uses}),tight=planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:declared.hostFreeFloorBytes-4*GIB,uses});
+ const uses=declared.stores.map(store=>({id:store.id,usedBytes:3*GIB,envelopeBytes:store.loose?null:6*GIB,evictableBytes:null})),calm=planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:declared.hostReserveBytes!,uses}),tight=planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:declared.hostReserveBytes!-4*GIB,uses});
  expect(calm.pressureBytes).toBe(0);expect(calm.evictBytes).toBe(0);
  expect(tight.pressureBytes).toBe(4*GIB);
  expect(tight.effectiveTotalBytes).toBeLessThan(calm.effectiveTotalBytes);
@@ -130,7 +131,7 @@ test("the report reads the same in English and German and names what must go and
  expect(en.length).toBe(de.length);expect(en.length).toBe(declared.stores.length+3);
  expect(en[0]).toContain("from --budget");expect(de[0]).toContain("aus der Rechnerdatei");
  expect(en.join("\n")).toContain("kept by holders or owners");expect(de.join("\n")).toContain("von Haltern oder Verwaltern behalten");
- expect(en.join("\n")).toContain("below its free-space floor");expect(de.join("\n")).toContain("Untergrenze");
+ expect(en.join("\n")).toContain("below its free-space reserve");expect(de.join("\n")).toContain("Reserve von");
  for(const line of[...en,...de])expect(line).not.toMatch(/\{[a-z]+\}/u);
 });
 
@@ -155,11 +156,43 @@ test("the quota of an image that admits build commands never exceeds the image m
 });
 
 /** 🧯️ Contract: the free-space floor of the host is a fraction of the volume with the declared bytes as its upper bound, so a 60 GB volume never demands 15 GiB kept free and a 256 GB one keeps the bound; an unknown volume size keeps the declared bytes; the same decision is made by the independent oracle in `🐍️.py` for every seeded machine above. */
+/** 🧱️ Contract: the caches of a machine never plan more than `hostSharePercent` of the volume, so the declared 194 GiB total on a 228 GiB disk plans 60 % of it; an unknown volume stays unbounded; the same ceiling is applied by the oracle in `🐍️.py` for every seeded machine. */
+test("the effective total is bounded by a share of the host volume",()=>{
+ expect(declared.hostSharePercent).toBeGreaterThan(0);
+ const disk=228*GIB,cap=machineHostCapV1(declared,disk),uses=declared.stores.map(store=>({id:store.id,usedBytes:3*GIB,envelopeBytes:store.loose?null:6*GIB,evictableBytes:null}));
+ expect(cap).toBe(Math.floor(disk*declared.hostSharePercent!/100/declared.alignBytes)*declared.alignBytes);expect(cap).toBeLessThan(disk-declared.hostFreeFloorBytes);
+ expect(machineHostCapV1(declared,null)).toBe(Infinity);expect(machineHostCapV1({...declared,hostSharePercent:undefined},disk)).toBe(Infinity);expect(machineHostCapV1(declared,100*1048576)).toBe(declared.alignBytes);
+ const huge=planMachineBudgetV1({totalBytes:declared.defaultTotalBytes,hostFreeBytes:200*GIB,hostTotalBytes:disk,uses});
+ expect(huge.effectiveTotalBytes).toBe(Math.max(declared.stores.reduce((sum,store)=>sum+store.floorBytes,0),Math.min(declared.defaultTotalBytes,cap)));expect(huge.effectiveTotalBytes).toBeLessThanOrEqual(cap);
+ expect(planMachineBudgetV1({totalBytes:declared.defaultTotalBytes,hostFreeBytes:200*GIB,uses}).effectiveTotalBytes).toBe(declared.defaultTotalBytes);
+});
+
 test("the host free floor is a share of the volume bounded by the declared bytes",()=>{
  expect(declared.hostFreeFloorPercent).toBeGreaterThan(0);
  for(const[total,expected]of[[60*10**9,Math.floor(60*10**9*declared.hostFreeFloorPercent!/100/declared.alignBytes)*declared.alignBytes],[400*10**9,declared.hostFreeFloorBytes],[2**40,declared.hostFreeFloorBytes],[GIB,declared.alignBytes]]as const)expect(machineHostFloorV1(declared,total),String(total)).toBe(expected);
  expect(machineHostFloorV1(declared,null)).toBe(declared.hostFreeFloorBytes);expect(machineHostFloorV1(declared,undefined)).toBe(declared.hostFreeFloorBytes);expect(machineHostFloorV1({...declared,hostFreeFloorPercent:undefined},60*10**9)).toBe(declared.hostFreeFloorBytes);
  const uses=declared.stores.map(store=>({id:store.id,usedBytes:3*GIB,envelopeBytes:store.loose?null:6*GIB,evictableBytes:null}));
- expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:5*GIB,hostTotalBytes:60*10**9,uses}).pressureBytes).toBe(0);
- expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:5*GIB,hostTotalBytes:400*10**9,uses}).pressureBytes).toBe(declared.hostFreeFloorBytes-5*GIB);
+ expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:6*GIB,hostTotalBytes:60*10**9,uses}).pressureBytes).toBe(0);
+ expect(planMachineBudgetV1({totalBytes:60*GIB,hostFreeBytes:6*GIB,hostTotalBytes:400*10**9,uses}).pressureBytes).toBe(declared.hostReserveBytes!-6*GIB);
+});
+
+/** 🛟️ Contract: gc keeps a reserve free on the volume, a share of it bounded by the declared bytes and never below the hard floor; the budget of a machine is derived from the live volume (what the caches hold now plus what is free, minus the reserve), so the 194 GiB default on a 228 GiB volume that other data already fills evicts instead of reporting "within the budget". The oracle in `🐍️.py` applies the same arithmetic to the seeded machines and to `🧫️fixtures/🔣️.json`. */
+test("the reserve is a share of the volume between the hard floor and the declared bytes",()=>{
+ expect(declared.hostReserveBytes!).toBeGreaterThanOrEqual(declared.hostFreeFloorBytes);
+ for(const[total,expected]of[[228*GIB,Math.floor(228*GIB*declared.hostReservePercent!/100/declared.alignBytes)*declared.alignBytes],[2**40,declared.hostReserveBytes!],[GIB,declared.alignBytes]]as const)expect(machineHostReserveV1(declared,total),String(total)).toBe(Math.max(machineHostFloorV1(declared,total),Math.min(declared.hostReserveBytes!,expected)));
+ expect(machineHostReserveV1(declared,null)).toBe(declared.hostReserveBytes!);expect(machineHostReserveV1({...declared,hostReservePercent:undefined},228*GIB)).toBe(declared.hostReserveBytes!);
+ expect(()=>readMachinePolicyV1({...clone(policy),hostReserveBytes:policy.hostFreeFloorBytes-1})).toThrow("Closed machine disk budget required");
+});
+
+test("fixtures: a default total larger than what the volume leaves is derived from the live volume and evicts under pressure",()=>{
+ const cases=fixtures.cases as Array<{name:string;totalBytes:number;source:"default"|"argument";hostTotalBytes:number;hostFreeBytes:number;uses:Array<{id:string;usedBytes:number;envelopeBytes:number|null;evictableBytes:number|null}>;expect:{pressure:boolean;derived:boolean;evicts:boolean;withinReserve:boolean}}>;
+ expect(cases.length).toBeGreaterThan(2);
+ for(const row of cases){
+  const plan=planMachineBudgetV1({totalBytes:row.totalBytes,hostFreeBytes:row.hostFreeBytes,hostTotalBytes:row.hostTotalBytes,uses:row.uses}),title=formatMachinePlanV1("en",plan,row.source)[0]!;
+  expect(plan.pressureBytes>0,row.name).toBe(row.expect.pressure);
+  expect(plan.evictBytes>0,row.name).toBe(row.expect.evicts);
+  expect(title.includes("derived from the volume"),row.name).toBe(row.expect.derived);
+  expect(plan.hostBudgetBytes===null||plan.effectiveTotalBytes<=Math.max(plan.hostBudgetBytes,declared.stores.reduce((sum,store)=>sum+store.floorBytes,0)),row.name).toBe(true);
+  if(row.expect.withinReserve){const freed=planMachineBudgetV1({totalBytes:row.totalBytes,hostFreeBytes:row.hostFreeBytes+plan.evictBytes,hostTotalBytes:row.hostTotalBytes,uses:row.uses.map(use=>({...use,usedBytes:use.usedBytes-(plan.stores.find(item=>item.id===use.id)?.evictBytes??0)}))});expect(freed.evictBytes,row.name+" converges within 5 % of the pressure (headroom differs per store)").toBeLessThanOrEqual(plan.pressureBytes*0.05);}
+ }
 });

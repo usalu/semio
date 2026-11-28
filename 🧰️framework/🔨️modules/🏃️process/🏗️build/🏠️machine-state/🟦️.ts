@@ -11,10 +11,10 @@ export function machineStateDirectoryV1(environment:Readonly<Record<string,strin
  return named!==undefined&&named!==""&&isAbsolute(named)&&named.length<=P.maximumDirectoryCharacters?normalize(named):undefined;
 }
 
-/** 🧭️ `join(root,...segments)` with the machine state moved: a path below `<root>/.cache` (or `<root>/.nx`) goes below the declared state directory instead, every other path stays below the root. It is the only place that knows where a machine keeps what it writes; without a declaration it is exactly `join`. @see https://nodejs.org/api/path.html#pathjoinpaths */
+/** 🧭️ `join(root,...segments)` with the machine state moved (a root inside the declared directory, such as a private test repository, keeps its own state): a path below `<root>/.cache` (or `<root>/.nx`) goes below the declared state directory instead, every other path stays below the root. It is the only place that knows where a machine keeps what it writes; without a declaration it is exactly `join`. @see https://nodejs.org/api/path.html#pathjoinpaths */
 export function machinePathV1(root:string,...segments:string[]):string{
  const directory=machineStateDirectoryV1();
- if(directory===undefined)return join(root,...segments);
+ if(directory===undefined||normalize(root)===directory.replace(/[\\/]+$/,"")||normalize(root).startsWith(directory.replace(/[\\/]+$/,"")+sep))return join(root,...segments);
  const parts=join(".",...segments).split(sep),moved=P.moved.find(row=>row.prefix===parts[0]);
  return moved===undefined?join(root,...segments):join(directory,...moved.to,...parts.slice(1));
 }

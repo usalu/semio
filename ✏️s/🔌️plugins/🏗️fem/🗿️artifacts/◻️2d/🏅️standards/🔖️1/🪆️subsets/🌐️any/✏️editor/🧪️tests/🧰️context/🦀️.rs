@@ -49,7 +49,7 @@ impl Drop for Fem2dApp {
 }
 
 /// 📱️ The addressed fixture window for a registered action or render.
-fn view(kind: &str) -> ViewModel {
+pub fn view(kind: &str) -> ViewModel {
     let id = if kind == model_window::WINDOW_KIND_ID { "model-left" } else { "results-left" };
     ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
@@ -171,4 +171,17 @@ pub fn history_verb<'a>(app: &'a mut Fem2dApp, verb: &'a str) -> Pin<Box<dyn Fut
 pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
     let kind = if body_key == model_window::BODY_KEY { model_window::WINDOW_KIND_ID } else { results_window::WINDOW_KIND_ID };
     ::semio_framework_async::poll::resolve_ready(render_registered_fixture_app(&mut app.0, body_key, &view(kind), app.1.cx())).expect("fixture projection")
+}
+
+/// 🚦️ Admits `command` from the model window WITHOUT settling its publication, so a law can hold several typed operations in flight at once the way a fast pointer stream does.
+pub async fn dispatch_unsettled(app: &mut Fem2dApp, command: Fem2dCommand) {
+    let mut action = meta("local");
+    action.view_state = Some(view(model_window::WINDOW_KIND_ID).into());
+    dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx()).await.expect("admit the typed operation");
+}
+
+/// 🏁️ Settles every typed operation in flight and answers the debug text of the refusal the pump surfaces, if any.
+pub async fn settle_pending(app: &mut Fem2dApp) -> Result<(), String> {
+    let mut identity = fixture_identity();
+    settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, fixture_mounted_policy(), &mut identity, app.1.cx()).await.map(|_| ()).map_err(|fault| format!("{fault:?}"))
 }

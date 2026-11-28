@@ -17,6 +17,7 @@ import { join, relative, sep } from "node:path";
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 import { withRepositoryTestArtifactsV1 } from "../../💾️storage/🟦️.ts";
+import { privateRepositoryWorkspaceV1 } from "../../../📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
 import { discoverTestContributions, profileTable, oracleImportsInProduction, discoverTestCases, loadOracleRegistry, repoRootFromHere, testTaxonomy, repositoryContractBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -25,12 +26,20 @@ export const relativeToRepo = (root: string, target: string): string => relative
 
 export const repoRoot = repoRootFromHere();
 
+/**
+ * 🧫️ The private repository this test process writes into: its own store, caches and scratch. A test reads the checkout
+ * (`repoRoot`: discovery, registry, contracts) and every output it materializes for that checkout lands here, so no test
+ * touches the live repository store of the checkout.
+ * @see ../../../📚️library/🧪️testing/🧫️private-repository/🟦️.ts
+ */
+const repository = await privateRepositoryWorkspaceV1();
+
 /** 💾️ Runs one body under the original finite test artifact custody: the platform refuses every ambient output root, so a test that writes or reads the test cache does it inside this callback. A named `scope` (`group/label`) gives the body its own task shard, and `exclusive` access is the custody a retirement needs. */
 export const withTestArtifacts = async <T>(body: () => T | Promise<T>, access: "shared" | "exclusive" = "shared", scope?: string): Promise<T> => {
   const previous = process.env.SEMIO_TEST_OUTPUT_SCOPE;
   if (scope !== undefined) process.env.SEMIO_TEST_OUTPUT_SCOPE = scope;
   try {
-    return await withBuildTestInvocationV1((original) => withRepositoryTestArtifactsV1(repoRoot, original, createIssuedResourceControlV1(original, "test:artifact-entry", 0), async () => body(), access));
+    return await withBuildTestInvocationV1((original) => withRepositoryTestArtifactsV1(repository.root, original, createIssuedResourceControlV1(original, "test:artifact-entry", 0), async () => body(), access, [repoRoot]));
   } finally {
     if (previous === undefined) delete process.env.SEMIO_TEST_OUTPUT_SCOPE;
     else process.env.SEMIO_TEST_OUTPUT_SCOPE = previous;

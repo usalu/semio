@@ -55,10 +55,10 @@ test("a leader whose client is killed: the load goes on for the follower that jo
 
 test("a killed load of another slice of the same checkout: the next one runs alongside it from the start, and nothing of the killed one holds the slot",async()=>{
  const{counter,pool,request}=setup("dead"),killed=new AbortController();
- const first=pool.run(request("first",{arguments:["one"]}),{signal:killed.signal}).catch((error:Error)=>error);
+ const first=pool.run(request("first",{arguments:["run","one:test"],total:60}),{signal:killed.signal}).catch((error:Error)=>error);
  expect(await waitFor(()=>existsSync(join(base,"dead-first.pid"))&&readFileSync(join(base,"dead-first.pid"),"utf8")!=="",15000)).toBe(true);
  const grand=grandOf(join(base,"dead-first.pid"));expect(alive(grand)).toBe(true);
- const second=pool.run(request("second",{arguments:["two"],total:3}));
+ const second=pool.run(request("second",{arguments:["run","two:test"],total:3}));
  expect(await waitFor(()=>counted(counter).includes("second"),15000)).toBe(true);
  expect(counted(counter)).toEqual(["first","second"]);expect(alive(grand)).toBe(true);
  killed.abort(new Error("stopped"));

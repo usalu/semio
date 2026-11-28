@@ -26,6 +26,5 @@
       "substitutes": ["metamorphic-laws", "independent-implementations"],
       "coversMutations": false
     }
-  ],
-  "oracleHostPackages": [{ "implementation": "typescript", "package": "yaml", "version": "2.8.1" }]
+  ]
 }

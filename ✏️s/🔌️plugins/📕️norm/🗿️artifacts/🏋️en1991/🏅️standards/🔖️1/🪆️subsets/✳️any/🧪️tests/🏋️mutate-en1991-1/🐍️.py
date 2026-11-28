@@ -40,8 +40,11 @@ KINDS = CATALOG["kinds"]
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
 VECTORS = {vector["mutationId"]: (vector["mutationDirectoryName"], vector["scenarios"][0]["directoryName"]) for vector in CATALOG["vectors"]}
 
+#: 🧬️ The directory each kind's mutation owns under the schema tree, which can differ from its shortened fixture directory.
+SOURCES = {vector["mutationId"]: vector["sourceMutationDirectoryName"] for vector in CATALOG["vectors"]}
+
 #: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.
-SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
+SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / SOURCES[kind] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
 
 #: 🗣️ The real committed EN 1991 document, read where the domain already keeps it.
 DSL_ASSET = "asset://🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio"

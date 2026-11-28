@@ -1,7 +1,8 @@
 import {createHash} from "node:crypto";
-import {readdirSync,readFileSync} from "node:fs";
+import {readdirSync,readFileSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
+import {guardPlanVerdictV1} from "./🏁️verdict/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {buildInvocationGraphSelectionV1} from "../../🕸️graph/🚪️admission/🟦️.ts";
@@ -9,6 +10,7 @@ import type {BuildGraphV1} from "../../🕸️graph/📋️model/🟦️.ts";
 import residentSchema from "../../🏡️resident/🧬️schema/🔣️.json" with {type:"json"};
 import scopeSchema from "../../🧭️selection/🎯️scope/🧬️schema/🔣️.json" with {type:"json"};
 import {BUILD_TEXTS_V1,refuseBuildV1} from "../../📖️texts/🟦️.ts";
+import {settleHostImplementationV1,type SettledRecordV1} from "../🕰️settled/🟦️.ts";
 import type {ConsentProbeV1} from "../../🏡️resident/🔐️consent/🟨️.mjs";
 import {textV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1} from "../🟦️.ts";
@@ -56,9 +58,9 @@ export function hostServiceRevisionPathsV1(library:string=revisionLibraryV1):rea
 }
 
 /** 🔖️ The digest of the code the host service runs on (the files of `hostServiceRevisionPathsV1`): a service started on older code of these files is another implementation than a client on the current code, so it is replaced and retires, instead of a service that has run since the night holding the budget of its old rules. A file that cannot be read counts as absent. */
-export function hostServiceRevisionV1():string{
+export function hostServiceRevisionV1(library:string=revisionLibraryV1):string{
  const hash=createHash("sha256");
- for(const path of hostServiceRevisionPathsV1()){hash.update(path+"\0");try{hash.update(readFileSync(join(revisionLibraryV1,path)));}catch{hash.update("absent");}}
+ for(const path of hostServiceRevisionPathsV1(library)){hash.update(path+"\0");try{hash.update(readFileSync(join(library,path)));}catch{hash.update("absent");}}
  return hash.digest("hex");
 }
 
@@ -66,6 +68,22 @@ export function hostServiceRevisionV1():string{
 export function hostImplementationV1(root:string,environment:NodeJS.ProcessEnv,revision:()=>string=hostServiceRevisionV1):string{
  const sealed=environment.SEMIO_SEALED_DOOR_DIGEST;
  return sealed&&/^[0-9a-f]{64}$/u.test(sealed)?sealed:createHash("sha256").update("live\0"+root+"\0"+(environment.SEMIO_REPO_SEAL??"")+"\0"+revision()).digest("hex");
+}
+
+/** 🗓️ The implementation a live client asks for: the one a service of this checkout already runs while the service files are still being edited (see `settleHostImplementationV1`), else `wanted`; the record lives next to the descriptors of the service in the runtime directory and is best effort (any failure asks for `wanted`). A sealed door digest is a promoted implementation and is never deferred.
+ * @see ../🕰️settled/🧪️tests/🟦️.ts */
+export async function settledHostImplementationV1(root:string,environment:NodeJS.ProcessEnv,wanted:string,now:number=Date.now()):Promise<string>{
+ if(wanted===environment.SEMIO_SEALED_DOOR_DIGEST)return wanted;
+ try{
+  const resident=await import("../../🏡️resident/🟨️.mjs"),file=join(resident.hostEndpointsV1(wanted,environment).directory,"settled-"+createHash("sha256").update(root).digest("hex").slice(0,12)+".json");
+  let record:SettledRecordV1|undefined;try{record=JSON.parse(readFileSync(file,"utf8"));}catch{}
+  const moved=record!==undefined&&record.settled!==wanted;
+  const editedAt=moved?Math.max(0,...hostServiceRevisionPathsV1().map(path=>{try{return statSync(join(revisionLibraryV1,path)).mtimeMs;}catch{return 0;}})):0;
+  const answers=moved&&await resident.requestHostStatusV1({implementation:record!.settled,environment}).then(()=>true,()=>false);
+  const policy=residentSchema.definitions.HostPolicy.const.reload,runtime=resident.hostEndpointsV1(wanted,environment,undefined,undefined,root),live=resident.liveGenerationsV1({directory:runtime.directory,identity:runtime.identity}).map((row:{implementation:string})=>row.implementation),settled=settleHostImplementationV1({wanted,record,now,editedAt,answers:answers===true,quietMilliseconds:policy.quietMilliseconds,maximumDeferralMilliseconds:policy.maximumDeferralMilliseconds,generations:{live,maximum:policy.maximumGenerations,maximumMilliseconds:policy.generationDeferralMilliseconds}});
+  if(JSON.stringify(settled.record)!==JSON.stringify(record)){const temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,JSON.stringify(settled.record));renameSync(temporary,file);}
+  return settled.implementation;
+ }catch{return wanted;}
 }
 
 /** 🧮️ Reads the tasks of a reply as the scoped plan of its closure: unique tasks, the unique edges between them and the projects they belong to; refuses a task that depends on a task outside the plan and names the violated rule, path and counts when the plan breaks the closed schema. */
@@ -84,6 +102,10 @@ export function scopedPlanOfReplyV1(request:InvocationPlanRequestV1,tasks:PlanRe
  return plan;
 }
 
+/** 🧮️ The count of consecutive hand-overs without progress after one more hand-over, or `undefined` when the client gives up: an ask that observed original work (a slice frame with `observed`) resets the count, so a read that keeps progressing is asked again as long as it progresses however often the services that carry it end; only `maximum` hand-overs in a row without any progress end it.
+ * @see ../../🏡️resident/🧪️tests/🤝️handover/🔣️.json */
+export const stalledHandoversAfterV1=({stalled,progressed,maximum}:Readonly<{stalled:number;progressed:boolean;maximum:number}>):number|undefined=>progressed?0:stalled>=maximum?undefined:stalled+1;
+
 /** 🚨️ A failed plan request as a localized refusal of the build catalog, so the command line reports it in the language it resolved and ends with a failing exit status: the service refusal carries its text in the language of the request, a service that could not answer names its reason; a graph read the fleet did not serve in time (`unserved`, retry later) keeps its own class and so ends with exit status 75, a service that macOS keeps from reading the checkout (`consent`) ends with exit status 4; any other failure is kept as it is. */
 export function refusalOfPlanV1(error:unknown,language:string,resident:Readonly<{PlanRefusedErrorV1:new(...rest:never[])=>Error;HostUnavailableErrorV1:new(...rest:never[])=>Error}>):unknown{
  if(error instanceof resident.PlanRefusedErrorV1){const refusal=error as Error&{message_:Readonly<Record<string,string>>};return refuseBuildV1(((error as Error&{code?:string;retry?:string}).code==="unserved"?"unserved":(error as Error&{code?:string}).code==="consent"?"consent":"refused"),"graph.plan-refused",{text:refusal.message_[language]??refusal.message},{cause:error});}
@@ -95,21 +117,25 @@ export function refusalOfPlanV1(error:unknown,language:string,resident:Readonly<
 export const planPriorityV1=(environment:NodeJS.ProcessEnv):number=>environment.SEMIO_GRAPH_BACKGROUND==="1"?8:1;
 
 /** 🛰️ Asks the host service for the plan of one invocation: first probes the checkout (a machine without the macOS file access consent ends here with the typed refusal `consent`, exit status 4, before a service is started or asked), starts the service when none runs (a service that is denied after all is retired and replaced once by a service under the access of the caller, when the caller can read the checkout itself; a second denial is exit status 4 only when the caller cannot read the checkout either, otherwise the failure `graph.service-denied` that carries the place, route, pid and parent of the service), reports its progress and withdraws the request when the signal aborts. */
-export async function requestInvocationPlanV1(options:Readonly<{root:string;request:InvocationPlanRequestV1;environment:NodeJS.ProcessEnv;agent:string;signal?:AbortSignal;write:(line:string)=>void}>&{ports?:Readonly<{requestPlanV1?:(options:any)=>Promise<any>;spawnHostServiceV1?:(options:any)=>any;probeConsentV1?:(root:string)=>Promise<ConsentProbeV1>;retireHostServiceV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;only?:number;signal?:AbortSignal})=>Promise<unknown>;lastAccessDenialV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;since?:number})=>Readonly<{route?:string;place?:string}>|undefined;rememberLaunchdRefusalV1?:(root:string,options:{place:string})=>void;restartOwnerV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;signal?:AbortSignal},owned:()=>Promise<any>,joined:()=>Promise<any>)=>Promise<any>;writeAccessReceiptV1?:(directory:string,receipt:any)=>void;invalidateLauncherMarkerV1?:(root:string)=>void}>}):Promise<InvocationPlanV1>{
+async function requestInvocationPlanInnerV1(options:Readonly<{root:string;request:InvocationPlanRequestV1;environment:NodeJS.ProcessEnv;agent:string;signal?:AbortSignal;write:(line:string)=>void}>&{ports?:Readonly<{requestPlanV1?:(options:any)=>Promise<any>;spawnHostServiceV1?:(options:any)=>any;probeConsentV1?:(root:string)=>Promise<ConsentProbeV1>;retireHostServiceV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;only?:number;signal?:AbortSignal})=>Promise<unknown>;lastAccessDenialV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;since?:number})=>Readonly<{route?:string;place?:string}>|undefined;rememberLaunchdRefusalV1?:(root:string,options:{place:string})=>void;restartOwnerV1?:(options:{implementation:string;environment:NodeJS.ProcessEnv;signal?:AbortSignal},owned:()=>Promise<any>,joined:()=>Promise<any>)=>Promise<any>;writeAccessReceiptV1?:(directory:string,receipt:any)=>void;invalidateLauncherMarkerV1?:(root:string)=>void}>}):Promise<InvocationPlanV1>{
  const{root,request,environment,agent,signal,write}=options,resident=await import("../../🏡️resident/🟨️.mjs"),ask=options.ports?.requestPlanV1??resident.requestPlanV1,spawn=options.ports?.spawnHostServiceV1??resident.spawnHostServiceV1;
- const language=resolveLanguageV1(["en","de"] as const,request.arguments,environment).language,implementation=hostImplementationV1(root,environment),script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts");
+ const language=resolveLanguageV1(["en","de"] as const,request.arguments,environment).language,implementation=options.ports?.requestPlanV1===undefined?await settledHostImplementationV1(root,environment,hostImplementationV1(root,environment)):hostImplementationV1(root,environment),script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts");
  const probeOf=options.ports?.probeConsentV1??resident.probeConsentV1,launcherSha=():Record<string,string>=>{const identity=resident.consentIdentityV1(),sha=identity&&resident.launcherDigestV1(identity.path);return sha?{launcherSha256:sha}:{};};
  const retire=options.ports?.retireHostServiceV1??(options.ports?.requestPlanV1===undefined?resident.retireHostServiceV1:async()=>undefined),restart=options.ports?.restartOwnerV1??(options.ports?.requestPlanV1===undefined?resident.withRestartOwnerV1:(_:unknown,owned:()=>Promise<any>)=>owned());
  const began=Date.now()-5000,probe=await probeOf(root);
  if(probe.state!=="unprotected")try{(options.ports?.writeAccessReceiptV1??resident.writeAccessReceiptV1)(resident.accessDirectoryV1(root),{version:1,role:"client",pid:process.pid,state:probe.state,root,folder:probe.folder,identity:resident.consentIdentityV1()?.path??"",at:Date.now(),...launcherSha()});}catch{}
  if(probe.state==="denied"||probe.state==="waiting"){const fields={folder:probe.folder,root,identity:resident.consentIdentityV1()?.path??"repo"};throw probe.state==="denied"?refuseBuildV1("consent","graph.consent-denied",{...fields,place:(probe as {place?:string}).place??root}):refuseBuildV1("consent","graph.consent-waiting",fields);}
- const askWith=(starting:NodeJS.ProcessEnv,ignorePids:readonly number[]=[])=>ask({root,implementation,identify:()=>hostImplementationV1(root,environment),targets:request.targets,agent,priority:planPriorityV1(environment),language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment:starting,cwd:root}),...ignorePids.length>0?{ignorePids}:{},onProgress:(frame:{message?:Record<string,string>})=>{const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}});
- const handovers=(await import("../../🕸️graph/🕰️generations/🔐️custody/🟨️.mjs")).CUSTODY_POLICY_V1.maximumHandovers;
- const askHanded=async(attempt:number):Promise<any>=>askWith(environment).catch((error:unknown)=>{
-  if(!(error instanceof resident.PlanRefusedErrorV1&&(error as Error&{code?:string}).code==="handover")||attempt>=handovers)throw error;
-  write("The graph read handed over to current code; asking again / Das Lesen des Graphen wurde an aktuellen Code übergeben; die Anfrage wird erneut gestellt");
-  return askHanded(attempt+1);
- });
+ const askWith=(starting:NodeJS.ProcessEnv,ignorePids:readonly number[]=[],observe:(frame:{observed?:boolean})=>void=()=>undefined)=>ask({root,implementation,identify:()=>hostImplementationV1(root,environment),targets:request.targets,agent,priority:planPriorityV1(environment),language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment:starting,cwd:root}),...ignorePids.length>0?{ignorePids}:{},onProgress:(frame:{message?:Record<string,string>;observed?:boolean})=>{observe(frame);const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}});
+ const handovers=(await import("../../🕸️graph/🕰️generations/🔐️custody/🟨️.mjs")).CUSTODY_POLICY_V1.maximumStalledHandovers;
+ const askHanded=async(stalled:number):Promise<any>=>{
+  let progressed=false;
+  return askWith(environment,[],frame=>{if(frame.observed===true)progressed=true;}).catch((error:unknown)=>{
+   const next=error instanceof resident.PlanRefusedErrorV1&&(error as Error&{code?:string}).code==="handover"?stalledHandoversAfterV1({stalled,progressed,maximum:handovers}):undefined;
+   if(next===undefined)throw error;
+   write("The graph read handed over to current code; asking again / Das Lesen des Graphen wurde an aktuellen Code übergeben; die Anfrage wird erneut gestellt");
+   return askHanded(next);
+  });
+ };
  const result=await askHanded(0).catch(async(error:unknown)=>{
   if(!(error instanceof resident.PlanRefusedErrorV1&&(error as Error&{code?:string}).code==="consent"))throw refusalOfPlanV1(error,language,resident);
   const again=await probeOf(root);
@@ -143,6 +169,13 @@ export async function requestInvocationPlanV1(options:Readonly<{root:string;requ
  const answer=Object.freeze({keys:Object.fromEntries(plan.tasks.filter(task=>typeof task.key==="string").map(task=>[task.id,task.key as string])),revision:reply.revision,...reply.manifest?{manifest:reply.manifest}:{},...reply.pin?{pin:reply.pin}:{},scoped:scopedPlanOfReplyV1(request,plan.tasks),stale:plan.tasks.filter(task=>task.stale).map(task=>task.id),cacheHits:reply.cacheHits,handoff,generationKey:createHash("sha256").update(document.generationPin??reply.manifest??reply.revision).digest("hex")});
  write(textV1(BUILD_TEXTS_V1.catalog,"graph.plan-verified",language));
  return answer;
+}
+
+/** 🛰️ Asks the host service for the plan of one invocation; whatever happens, the request ends with the plan, a typed error or the bilingual final verdict of `guardPlanVerdictV1` (nonzero exit code), never silently.
+ * @see ./🏁️verdict/🟦️.ts */
+export async function requestInvocationPlanV1(options:Parameters<typeof requestInvocationPlanInnerV1>[0]):ReturnType<typeof requestInvocationPlanInnerV1>{
+ const guard=guardPlanVerdictV1();
+ try{return await requestInvocationPlanInnerV1(options);}finally{guard.done();}
 }
 
 /** 📦️ Reads and verifies the content-addressed slice document the service wrote. */

@@ -6,6 +6,7 @@ import {runtimeServeV1} from "../../../../../../../../📦️packages/🟦️typ
 import {SLOT_HEADER_V1} from "../../../🪢️slots/🟦️.ts";
 import {registerNxSlotsV1,type NxTaskRowV1} from "../../🪢️nx-slots/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import stallSchema from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🚦️ The authored single-flight policy: lease and heartbeat, wait budget, timeouts, circuit breaker and the environment names.
  * @see ./🧬️schema/🔣️.json */
@@ -20,7 +21,7 @@ export type NxFlightCountersV1=Readonly<{hits:number;misses:number;claimed:numbe
 /** 📣️ A noteworthy step of a front; the caller turns it into a bilingual line with `nxFlightTextV1`. */
 export type NxFlightEventV1=Readonly<{kind:"waiting"|"served"|"duplicated"|"unavailable";key?:string;holder?:string;seconds?:number;endpoint?:string}>;
 /** ⚙️ How to start a front: the upstream cache origin, its instance, the real token and optional overrides. */
-export type NxFlightOptionsV1=Readonly<{upstream:string;instance:string;token?:string|undefined;owner?:string;timing?:Partial<NxFlightTimingV1>;fetch?:typeof fetch;report?:(event:NxFlightEventV1)=>void;port?:number}>;
+export type NxFlightOptionsV1=Readonly<{upstream:string;instance:string;token?:string|undefined;owner?:string;timing?:Partial<NxFlightTimingV1>;fetch?:typeof fetch;report?:(event:NxFlightEventV1)=>void;waiting?:()=>()=>void;port?:number}>;
 /** 🔌️ One running front: the origin Nx talks to, the per-run token it must present and the lifecycle. */
 export interface NxFlightV1{readonly origin:string;readonly url:string;readonly token:string;readonly owner:string;counters():NxFlightCountersV1;registerSlots(rows:readonly Pick<NxTaskRowV1,"hash"|"project"|"target"|"configuration">[]):Promise<Readonly<{claimed:number;missing:number}>|undefined>;environment():Record<string,string>;stop():Promise<void>}
 
@@ -32,8 +33,15 @@ export function nxFlightTextV1(language:"en"|"de",event:NxFlightEventV1):string{
 
 /** ⏲️ Reads the wait budget a person may set in whole seconds (0 never waits) and keeps every other duration of the policy. */
 export function nxFlightTimingV1(environment:Readonly<Record<string,string|undefined>>={}):NxFlightTimingV1{
- const {version:_version,environment:_names,finishPath:_path,...timing}=policy,asked=environment[policy.environment.wait],seconds=asked===undefined||asked===""?undefined:Number(asked);
+ const {version:_version,environment:_names,finishPath:_path,stallGraceMilliseconds:_grace,...timing}=policy,asked=environment[policy.environment.wait],seconds=asked===undefined||asked===""?undefined:Number(asked);
  return {...timing,...(seconds!==undefined&&Number.isFinite(seconds)&&seconds>=0?{waitBudgetMilliseconds:Math.floor(seconds*1000)}:{})};
+}
+
+/** ⏳️ The stall period an Nx run needs while this front can park it: a task whose hash another machine computes is awaited for up to the wait budget, and Nx prints nothing and has no child process then, so the 10 minute liveness rule of the Script process would kill the run (exit 124) while its peer is still working. Returns the environment that lifts the stall period to the wait budget plus the grace; empty when the period already is that long or the front never waits.
+ * @see ./🧬️schema/🔣️.json */
+export function nxFlightStallEnvironmentV1(environment:Readonly<Record<string,string|undefined>>):Record<string,string>{
+ const names=stallSchema.definitions.Policy.const,needed=nxFlightTimingV1(environment).waitBudgetMilliseconds+policy.stallGraceMilliseconds,asked=Number(environment[names.stallEnvironment]),current=Number.isSafeInteger(asked)&&asked>=1000?asked:names.stallMilliseconds;
+ return needed>current?{[names.stallEnvironment]:String(needed)}:{};
 }
 
 const empty=():Response=>new Response("Not found\n",{status:404,headers:{"content-type":"text/plain"}});
@@ -139,7 +147,8 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
   if(first.status===200){count.hits++;await release(key);return first;}
   await first.body?.cancel();count.misses++;
   if(first.status!==404){count.dropped++;return empty();}
-  const served=await wait(key,request.signal);
+  const leave=options.waiting?.()??(()=>undefined);let served:Response|undefined;
+  try{served=await wait(key,request.signal);}finally{leave();}
   return served??empty();
  };
  const put=async(key:string,request:Request):Promise<Response>=>{
@@ -204,7 +213,7 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
 }
 
 /** 🧭️ Routes the Nx cache environment that `nxRemoteCacheEnvironmentV1` resolved through a front: the real server and token move behind the loopback, Nx gets the front's address and per-run token, and the executors get the front's origin. Leaves the environment unchanged (`undefined`) when the switch is off, Nx is not routed to a remote cache or the address is not a cache origin with an instance. */
-export async function routeNxThroughFlightV1(environment:Readonly<Record<string,string|undefined>>,options:Readonly<{report?:(event:NxFlightEventV1)=>void;fetch?:typeof fetch;timing?:Partial<NxFlightTimingV1>}>={}):Promise<NxFlightV1|undefined>{
+export async function routeNxThroughFlightV1(environment:Readonly<Record<string,string|undefined>>,options:Readonly<{report?:(event:NxFlightEventV1)=>void;waiting?:()=>()=>void;fetch?:typeof fetch;timing?:Partial<NxFlightTimingV1>}>={}):Promise<NxFlightV1|undefined>{
  if(environment[policy.environment.switch]==="off")return undefined;
  const server=environment.NX_SELF_HOSTED_REMOTE_CACHE_SERVER,token=environment.NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN;
  if(server===undefined||server==="")return undefined;
@@ -212,7 +221,7 @@ export async function routeNxThroughFlightV1(environment:Readonly<Record<string,
  const segments=parsed.pathname.split("/").filter(Boolean);
  if(segments.length!==1||parsed.search!==""||parsed.hash!==""||!INSTANCE.test(segments[0]!)||parsed.username!==""||parsed.password!=="")return undefined;
  const contract=resolveRemoteCacheV1(environment)?.contract??resolveRemoteCacheContractV1(environment);
- return startNxFlightV1({upstream:parsed.origin,instance:segments[0]!,token,timing:{...nxFlightTimingV1(environment),...(contract===undefined?{}:{requestTimeoutMilliseconds:contract.timeoutSeconds*1000}),...options.timing},...(options.report?{report:options.report}:{}),fetch:options.fetch??remoteCacheFetchV1(environment)});
+ return startNxFlightV1({upstream:parsed.origin,instance:segments[0]!,token,timing:{...nxFlightTimingV1(environment),...(contract===undefined?{}:{requestTimeoutMilliseconds:contract.timeoutSeconds*1000}),...options.timing},...(options.report?{report:options.report}:{}),...(options.waiting?{waiting:options.waiting}:{}),fetch:options.fetch??remoteCacheFetchV1(environment)});
 }
 
 /** 🏁 Tells the front of this Nx run that the task `hash` ended: releases its claim at once and hands over its slot so the upload carries it. Called by the executor of the task; it needs no failure handling because it never throws, never waits longer than two seconds and does nothing without a front. */

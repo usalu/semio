@@ -162,6 +162,9 @@ impl SurfaceContexts {
         Ok(())
     }
 
+    /// 🔒️ Whether an original view read or capture pins this registry: every mutating entry point (`insert`, `update_view`, `remove`) must wait until it is released.
+    pub fn capture_held(&self)->bool{self.cached_capture.is_some()}
+
     pub fn borrow(&self,surface:&str)->Option<SurfaceContextRef<'_>>{let(index,binding)=self.slots.iter().enumerate().find_map(|(index,slot)|slot.as_ref().filter(|binding|binding.surface==surface).map(|binding|(index,binding)))?;let view=if self.captured_slot==Some(index){self.cached_source.as_ref().and_then(|source|source.original_authority()).or(binding.view_state.as_ref())}else{binding.view_state.as_ref()}?;Some(SurfaceContextRef{body_key:&binding.body_key,view_state:view})}
     #[cfg(test)]
     pub fn window_lease(&self,window:&str,locale:semio_framework::Locale)->Option<SurfaceWindowLease>{

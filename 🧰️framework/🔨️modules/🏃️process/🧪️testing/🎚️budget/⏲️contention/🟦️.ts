@@ -10,6 +10,7 @@ import {refuseProcessV1} from "../../../📖️texts/🟦️.ts";
 export type ContentionPolicyV1 = Readonly<{
   version: 1;
   tickMilliseconds: number;
+  inheritance?: Readonly<{ environment: string }>;
   stretch: Readonly<{ minimumBasisPoints: number; maximumBasisPoints: number }>;
   announce: Readonly<{ thresholdBasisPoints: number; stepBasisPoints: number; everyMilliseconds: number }>;
   probe: Readonly<{ platforms: readonly string[]; cpuMilliseconds: number; everyMilliseconds: number; smoothingBasisPoints: number }>;
@@ -49,8 +50,35 @@ export type StretchedBudgetV1 = Readonly<{ milliseconds: number; neededMilliseco
 
 /** 🧮️ A declared budget in milliseconds stretched by the contention `ratio` (the contention this process met at its first deadline when none is given, so every deadline of one run stretches by the same factor), clamped to the policy bounds and then to the schema ceiling, reporting whether the ceiling cut it; a clamped run is still admitted. */
 export function stretchedBudgetV1(milliseconds: number, ratio?: number, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): StretchedBudgetV1 {
-  const needed = Math.ceil(milliseconds * budgetStretchV1(ratio ?? (launchRatio ??= sharedHostContentionV1()().ratio), policy)), ceiling = STRETCHED_BUDGET_CEILING_MILLISECONDS_V1;
+  const needed = Math.ceil(milliseconds * budgetStretchV1(ratio ?? launchContentionRatioV1(policy), policy)), ceiling = STRETCHED_BUDGET_CEILING_MILLISECONDS_V1;
   return Object.freeze({ milliseconds: Math.min(needed, ceiling), neededMilliseconds: needed, clamped: needed > ceiling });
+}
+
+/** 🧬️ The stretch a parent run handed down (basis points in the environment variable the policy names), or `undefined`: a nested process never funds a deadline with less stretch than the run that started it, and the stretch of a run tree is measured once, by the host that executes its root. */
+export function inheritedStretchRatioV1(environment: Readonly<Record<string, string | undefined>> = process.env, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): number | undefined {
+  const name = policy.inheritance?.environment, text = name === undefined ? undefined : environment[name], value = text === undefined || !/^\d{1,7}$/u.test(text) ? Number.NaN : Number(text);
+  return Number.isSafeInteger(value) && value >= policy.stretch.minimumBasisPoints && value <= policy.stretch.maximumBasisPoints ? value / 10000 : undefined;
+}
+
+/** 🚀️ The contention ratio this process funds every deadline with: its own first measurement or the one inherited from its parent run, whichever is larger, fixed at the first call. */
+function launchContentionRatioV1(policy: ContentionPolicyV1): number {
+  return launchRatio ??= Math.max(inheritedStretchRatioV1(process.env, policy) ?? 0, sharedHostContentionV1()().ratio);
+}
+
+/** 🧮️ The stretch every deadline of this process is funded with, in basis points (what a remote run is told as its minimum and what children inherit). */
+export function launchStretchBasisPointsV1(policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): number {
+  return Math.round(budgetStretchV1(launchContentionRatioV1(policy), policy) * 10000);
+}
+
+/** 📤️ The environment that hands a stretch (basis points) to a process, so that it funds its deadlines with at least that stretch; empty when the policy names no variable. */
+export function stretchEnvironmentV1(basisPoints: number, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): Readonly<Record<string, string>> {
+  const name = policy.inheritance?.environment;
+  return name === undefined ? {} : { [name]: String(Math.round(basisPoints)) };
+}
+
+/** 📤️ The environment a child process of a run receives so that it funds its deadlines with the stretch of this process and never measures a second one smaller. */
+export function budgetStretchEnvironmentV1(policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): Readonly<Record<string, string>> {
+  return stretchEnvironmentV1(launchStretchBasisPointsV1(policy), policy);
 }
 
 /** 🧮️ The funded milliseconds of `stretchedBudgetV1`; every runner, envelope and plan deadline derives from its declared budget through this one function. */

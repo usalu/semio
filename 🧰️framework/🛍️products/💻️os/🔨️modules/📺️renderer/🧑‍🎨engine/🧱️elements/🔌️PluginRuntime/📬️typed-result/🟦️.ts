@@ -90,6 +90,20 @@ export function publishOperationFault(receiver: number, error: SemioFaultError):
   return true;
 }
 
+/** 🏁️ Per-instance sinks that settle the waiter of one operation which ended in a fault: a fault page whose owning host call already returned must still end the input that started the operation, or that input stays pending forever. */
+export const operationFaultSettlers = new Map<number, Set<(operation: bigint, error: SemioFaultError) => void>>();
+
+/** 🏁️ Hands an operation's unattributed fault to the instance's settle sinks; returns whether one took it. */
+export function settleOperationFault(receiver: number, operation: bigint, error: SemioFaultError): boolean {
+  const sinks = operationFaultSettlers.get(receiver);
+  if (sinks === undefined || sinks.size === 0) return false;
+  for (const sink of [...sinks]) {
+    try { sink(operation, error); }
+    catch (failure) { console.error("operation-fault settler failed", failure); }
+  }
+  return true;
+}
+
 /** 🚨️ Shell fault path for a typed-operation fault page no host call may be rejected with. */
 function reportTypedOperationFault(code: string, message: string): void {
   console.error(`${code}: ${message}`);
@@ -144,7 +158,7 @@ export class TypedOperationRouter {
   });
   private readonly live = new Set<TypedOperationCall>();
   private readonly parked: { readonly call: TypedOperationCall; readonly receiver: number; readonly operation: bigint; readonly message: string }[] = [];
-  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic, private readonly publishFault: (receiver: number, error: SemioFaultError) => boolean = publishOperationFault) {}
+  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic, private readonly publishFault: (receiver: number, error: SemioFaultError) => boolean = publishOperationFault, private readonly settleFault: (receiver: number, operation: bigint, error: SemioFaultError) => boolean = settleOperationFault) {}
   open(label: string, adopts = true): TypedOperationCall {
     const call = new TypedOperationCall(this, label, adopts);
     this.live.add(call);
@@ -162,7 +176,9 @@ export class TypedOperationRouter {
     if (this.observe(call, token)) return true;
     const owner = this.owners.get(typedOperationOwnerKey(token));
     if (!owner || !this.live.has(owner)) {
-      if (!this.publishFault(token.receiver, typedOperationFaultError(message))) this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
+      const error = typedOperationFaultError(message);
+      const settled = this.settleFault(token.receiver, BigInt(operation), error);
+      if (!this.publishFault(token.receiver, error) && !settled) this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
       return false;
     }
     if (this.parked.length >= TYPED_OPERATION_PARK_CAPACITY) {

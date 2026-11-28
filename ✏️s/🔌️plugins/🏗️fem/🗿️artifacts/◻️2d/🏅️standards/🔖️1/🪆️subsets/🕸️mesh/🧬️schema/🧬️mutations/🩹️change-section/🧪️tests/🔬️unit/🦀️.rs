@@ -1,4 +1,4 @@
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::{ColdMutation, Mutation};
@@ -72,7 +72,7 @@ fn section_field_intent_wire_refuses_unknown_outer_fields() {
     assert!(semio_framework_pack_json::from_json_str::<Fem2dMutation>(r#"{"mutation":"changeSection","id":"steel","patch":{"e":190000000000},"newSection":{}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionPatch;
 /// 📨️ Sparse scalar setters omit untouched properties and reject explicit nulls and identity fields.
 #[test]
 fn structural_patch_wire_distinguishes_absence_from_null() {

@@ -49,7 +49,7 @@ fn rejection_leaves_the_document_untouched() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-load/🪪️denies-rename-732de0: a rejecting replace-load must carry the empty diff, never a half-built delta");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-load/🪪️denies-rename-732de0: a rejecting replace-load must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-load/🪪️denies-rename-732de0: the refusal is reported as mutation.target-mismatch");

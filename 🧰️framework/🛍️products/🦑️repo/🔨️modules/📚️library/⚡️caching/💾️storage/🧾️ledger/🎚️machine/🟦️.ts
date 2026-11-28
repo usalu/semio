@@ -10,7 +10,7 @@ export type MachineStoreV1=Readonly<{id:string;partition?:string;loose?:true;adm
 /** 👯️ One place where identical large files are looked for and replaced by copy-on-write clones. */
 export type MachineDedupeV1=Readonly<{id:string;partition:string;directory?:string;minimumBytes:number;quietMs:number;maximumFiles:number}>;
 /** 🎚️ The closed machine disk budget policy. */
-export type MachinePolicyV1=Readonly<{version:1;defaultTotalBytes:number;environment:string;file:string;hostFreeFloorBytes:number;hostFreeFloorPercent?:number;alignBytes:number;toleranceBytes:number;stores:readonly MachineStoreV1[];dedupe:readonly MachineDedupeV1[]}>;
+export type MachinePolicyV1=Readonly<{version:1;defaultTotalBytes:number;environment:string;file:string;hostFreeFloorBytes:number;hostFreeFloorPercent?:number;hostReserveBytes?:number;hostReservePercent?:number;hostSharePercent?:number;alignBytes:number;toleranceBytes:number;stores:readonly MachineStoreV1[];dedupe:readonly MachineDedupeV1[]}>;
 /** 🧭️ Where the total of this machine came from, strongest source first. */
 export type MachineSourceV1="argument"|"environment"|"file"|"default";
 /** 💰️ The resolved total in bytes and its source. */
@@ -20,7 +20,7 @@ export type MachineUseV1=Readonly<{id:string;usedBytes:number;envelopeBytes:numb
 /** 📤️ The plan of one store: its share of the total, what must go, what cannot go and the image size that would fit. */
 export type MachineStorePlanV1=Readonly<{id:string;usedBytes:number;demandBytes:number;quotaBytes:number;contentLimitBytes:number;excessBytes:number;evictBytes:number;blockedBytes:number;envelopeBytes:number|null;resizeToBytes:number|null;state:"within"|"evict"|"blocked"}>;
 /** 🧮️ The plan of the whole machine. */
-export type MachinePlanV1=Readonly<{version:1;totalBytes:number;effectiveTotalBytes:number;pressureBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;converged:boolean;stores:readonly MachineStorePlanV1[]}>;
+export type MachinePlanV1=Readonly<{version:1;totalBytes:number;effectiveTotalBytes:number;reserveBytes:number;hostBudgetBytes:number|null;pressureBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;converged:boolean;stores:readonly MachineStorePlanV1[]}>;
 /** 🏷️ One member of a quota split. */
 export type MachineShareV1=Readonly<{id:string;weight:number;floor:number;demand:number}>;
 
@@ -43,7 +43,7 @@ export function readMachinePolicyV1(value:unknown,partitions:Readonly<Record<str
  if(weights!==10000)refuse("machine.policy.weights",{weights});
  if(loose>1)refuse("machine.policy.loose");
  for(const partition of Object.keys(partitions))if(!owned.has(partition))refuse("machine.policy.orphan",{partition});
- if(floors>document.defaultTotalBytes)refuse("machine.policy.floors");
+ if(floors>document.defaultTotalBytes||(document.hostReserveBytes??document.hostFreeFloorBytes)<document.hostFreeFloorBytes)refuse("machine.policy.floors");
  return Object.freeze(document);
 }
 
@@ -106,6 +106,20 @@ export function machineHostFloorV1(declared:Pick<MachinePolicyV1,"hostFreeFloorB
  return Math.min(declared.hostFreeFloorBytes,Math.max(declared.alignBytes,Math.floor(hostTotalBytes*declared.hostFreeFloorPercent/100/declared.alignBytes)*declared.alignBytes));
 }
 
+/** 🛟️ The free bytes gc keeps on the host volume, above the hard floor: `hostReservePercent` of the volume (aligned down) bounded by the declared `hostReserveBytes`, never below `machineHostFloorV1` (the floor itself when no reserve is declared), so collection starts while a build still has room to write instead of after the volume is full. */
+export function machineHostReserveV1(declared:Pick<MachinePolicyV1,"hostFreeFloorBytes"|"hostFreeFloorPercent"|"hostReserveBytes"|"hostReservePercent"|"alignBytes">,hostTotalBytes?:number|null):number{
+ const floor=machineHostFloorV1(declared,hostTotalBytes);
+ if(declared.hostReserveBytes===undefined)return floor;
+ if(declared.hostReservePercent===undefined||typeof hostTotalBytes!=="number"||!(hostTotalBytes>0))return Math.max(floor,declared.hostReserveBytes);
+ return Math.max(floor,Math.min(declared.hostReserveBytes,Math.max(declared.alignBytes,Math.floor(hostTotalBytes*declared.hostReservePercent/100/declared.alignBytes)*declared.alignBytes)));
+}
+
+/** 🧱️ The most the caches of this machine may hold in all: `hostSharePercent` of the volume (aligned down, never below one alignment step) when the volume size is known, else unbounded, so a declared total larger than the disk, as 194 GiB on a 228 GiB volume, never plans more than the volume can give. */
+export function machineHostCapV1(declared:Pick<MachinePolicyV1,"hostSharePercent"|"alignBytes">,hostTotalBytes?:number|null):number{
+ if(declared.hostSharePercent===undefined||typeof hostTotalBytes!=="number"||!(hostTotalBytes>0))return Infinity;
+ return Math.max(declared.alignBytes,Math.floor(hostTotalBytes*declared.hostSharePercent/100/declared.alignBytes)*declared.alignBytes);
+}
+
 const demandOf=(usedBytes:number,headroomBasisPoints:number):number=>headroomBasisPoints===0?usedBytes:Number(ceilDiv(BigInt(usedBytes)*10000n,BigInt(10000-headroomBasisPoints)));
 const limitOf=(quotaBytes:number,headroomBasisPoints:number):number=>Number(BigInt(quotaBytes)*BigInt(10000-headroomBasisPoints)/10000n);
 const alignUp=(value:number,align:number):number=>Math.ceil(value/align)*align;
@@ -115,13 +129,14 @@ const alignDown=(value:number,align:number):number=>Math.floor(value/align)*alig
 export const machineCapacityV1=(store:Pick<MachineStoreV1,"admitsCommands">,envelopeBytes:number|null):number=>envelopeBytes===null?Infinity:Math.max(0,envelopeBytes-(store.admitsCommands?headroomReserveBytesV1(envelopeBytes):0));
 
 /**
- * 🗺️ Plans the machine budget from what every store holds: quotas by weighted max-min fairness over the capacity each store needs for its content plus its headroom, a smaller effective total while the host is below its free-space floor, what each collector must free to reach the content limit of its quota, what only a holder or an owner can free (blocked) and the image size that would fit the quota.
+ * 🗺️ Plans the machine budget from what every store holds: quotas by weighted max-min fairness over the capacity each store needs for its content plus its headroom, a smaller effective total while the host is below its free-space reserve (the budget derived from the live volume: what the caches need now, each at least its floor, plus what is free minus the reserve (free space and reserve counted in content terms: scaled by the headroom the stores keep, so that evicting the planned bytes frees what the host lacks), so what the rest of the system uses counts against the caches), what each collector must free to reach the content limit of its quota, what only a holder or an owner can free (blocked) and the image size that would fit the quota.
  * A quota never exceeds the capacity of its fixed image (`machineCapacityV1`) unless its floor is larger, so the quotas of capped stores may add up to less than the total. Applying the planned evictions and planning again plans nothing further (the plan converges in one step; an excess within the tolerance is rounding, not work); a store whose demand is below its fair share is never cut.
  */
 export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBytes:number|null;hostTotalBytes?:number|null;uses:readonly MachineUseV1[]}>,declared:MachinePolicyV1=machinePolicyV1()):MachinePlanV1{
  const stores=declared.stores,use=new Map(input.uses.map(row=>[row.id,row])),rows=stores.map(store=>{const held=use.get(store.id);return{store,used:held?.usedBytes??0,envelope:held?.envelopeBytes??null,allocated:held?.allocatedBytes??null,evictable:held?.evictableBytes??null};});
- const demands=rows.map(row=>demandOf(row.used,row.store.headroomBasisPoints)),floors=stores.reduce((sum,store)=>sum+store.floorBytes,0),demandTotal=demands.reduce((sum,value)=>sum+value,0);
- const floorBytes=machineHostFloorV1(declared,input.hostTotalBytes),pressureBytes=input.hostFreeBytes!==null&&input.hostFreeBytes<floorBytes?floorBytes-input.hostFreeBytes:0,effectiveTotalBytes=Math.max(floors,Math.min(input.totalBytes,pressureBytes>0?demandTotal-pressureBytes:input.totalBytes));
+ const demands=rows.map(row=>demandOf(row.used,row.store.headroomBasisPoints)),floors=stores.reduce((sum,store)=>sum+store.floorBytes,0),demandTotal=demands.reduce((sum,value)=>sum+value,0); const usedTotal=rows.reduce((sum,row)=>sum+row.used,0),hostSlackOf=(slack:number):number=>usedTotal===0?slack:slack<0?-Number(ceilDiv(BigInt(-slack)*BigInt(demandTotal),BigInt(usedTotal))):Number(BigInt(slack)*BigInt(demandTotal)/BigInt(usedTotal));
+ const needTotal=demands.reduce((sum,value,index)=>sum+Math.max(value,stores[index]!.floorBytes),0);
+ const reserveBytes=machineHostReserveV1(declared,input.hostTotalBytes),pressureBytes=input.hostFreeBytes!==null&&input.hostFreeBytes<reserveBytes?reserveBytes-input.hostFreeBytes:0,hostBudgetBytes=input.hostFreeBytes===null?null:Math.max(0,needTotal+hostSlackOf(input.hostFreeBytes-reserveBytes)),ceilingBytes=Math.min(input.totalBytes,machineHostCapV1(declared,input.hostTotalBytes)),effectiveTotalBytes=Math.max(floors,Math.min(ceilingBytes,hostBudgetBytes??Infinity));
  const quotas=splitMachineBudgetV1(effectiveTotalBytes,rows.map((row,index)=>({id:row.store.id,weight:row.store.weightBasisPoints,floor:row.store.floorBytes,demand:demands[index]!})),true);
  const plans=rows.map((row,index):MachineStorePlanV1=>{
   const quotaBytes=Math.max(row.store.floorBytes,Math.min(quotas.get(row.store.id)!,machineCapacityV1(row.store,row.envelope))),contentLimitBytes=limitOf(quotaBytes,row.store.headroomBasisPoints),excess=Math.max(0,row.used-contentLimitBytes),excessBytes=excess>declared.toleranceBytes?excess:0,evictBytes=Math.min(excessBytes,row.evictable??row.used),blockedBytes=excessBytes-evictBytes,demandBytes=demands[index]!;
@@ -129,13 +144,13 @@ export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBy
   return Object.freeze({id:row.store.id,usedBytes:row.used,demandBytes,quotaBytes,contentLimitBytes,excessBytes,evictBytes,blockedBytes,envelopeBytes:row.envelope,resizeToBytes,state:blockedBytes>0?"blocked":evictBytes>0?"evict":"within"});
  });
  const usedBytes=rows.reduce((sum,row)=>sum+row.used,0),footprintBytes=rows.reduce((sum,row)=>sum+Math.max(row.allocated??row.envelope??row.used,row.used),0),evictBytes=plans.reduce((sum,plan)=>sum+plan.evictBytes,0),blockedBytes=plans.reduce((sum,plan)=>sum+plan.blockedBytes,0);
- return Object.freeze({version:1,totalBytes:input.totalBytes,effectiveTotalBytes,pressureBytes,usedBytes,footprintBytes,overBytes:Math.max(0,footprintBytes-input.totalBytes),evictBytes,blockedBytes,converged:blockedBytes===0,stores:Object.freeze(plans)});
+ return Object.freeze({version:1,totalBytes:input.totalBytes,effectiveTotalBytes,reserveBytes,hostBudgetBytes,pressureBytes,usedBytes,footprintBytes,overBytes:Math.max(0,footprintBytes-ceilingBytes),evictBytes,blockedBytes,converged:blockedBytes===0,stores:Object.freeze(plans)});
 }
 
-/** 🖨️ Renders a machine plan as lines in one language: the total with its source, the host pressure, then one row per store. */
+/** 🖨️ Renders a machine plan as lines in one language: the total with its source (a default total the live volume cannot give is shown as the budget derived from the volume), the host pressure, then one row per store. */
 export function formatMachinePlanV1(language:CacheLanguageV1,plan:MachinePlanV1,source:MachineSourceV1):readonly string[]{
- const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(language,key,variables),bytes=formatCacheBytesV1,lines=[text("machine.title",{total:bytes(plan.totalBytes),source:text("machine.source."+source),used:bytes(plan.usedBytes),footprint:bytes(plan.footprintBytes)})];
- if(plan.pressureBytes>0)lines.push(text("machine.pressure",{missing:bytes(plan.pressureBytes),effective:bytes(plan.effectiveTotalBytes)}));
+ const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(language,key,variables),bytes=formatCacheBytesV1,derived=source==="default"&&plan.hostBudgetBytes!==null&&plan.hostBudgetBytes<plan.totalBytes,lines=[text("machine.title",{total:bytes(derived?Math.max(plan.hostBudgetBytes!,plan.effectiveTotalBytes):plan.totalBytes),source:text("machine.source."+(derived?"derived":source)),used:bytes(plan.usedBytes),footprint:bytes(plan.footprintBytes)})];
+ if(plan.pressureBytes>0)lines.push(text("machine.pressure",{missing:bytes(plan.pressureBytes),reserve:bytes(plan.reserveBytes),effective:bytes(plan.effectiveTotalBytes)}));
  for(const row of plan.stores){
   const notes=(row.envelopeBytes!==null?text("machine.note.image",{image:bytes(row.envelopeBytes)}):"")+(row.evictBytes>0?text("machine.note.evict",{bytes:bytes(row.evictBytes)}):"")+(row.blockedBytes>0?text("machine.note.blocked",{bytes:bytes(row.blockedBytes)}):"")+(row.resizeToBytes!==null?text("machine.note.resize",{bytes:bytes(row.resizeToBytes)}):"");
   lines.push("  "+text("machine.row",{id:row.id,used:bytes(row.usedBytes),quota:bytes(row.quotaBytes),notes}));

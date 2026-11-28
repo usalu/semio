@@ -7871,6 +7871,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-mechanics",
+ "serde_json",
 ]
 
 [[package]]

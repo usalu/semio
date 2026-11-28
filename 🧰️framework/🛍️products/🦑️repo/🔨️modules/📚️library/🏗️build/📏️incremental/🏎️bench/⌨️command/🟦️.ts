@@ -3,6 +3,7 @@ import {arch,cpus,platform,totalmem} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import acceptance from "../🛂️acceptance/🧬️schema/🔣️.json" with {type:"json"};
+import latency from "../⏲️latency/🧬️schema/🔣️.json" with {type:"json"};
 import slo from "../🎯️slo/🔣️.json" with {type:"json"};
 import {incrementalDisposableV1} from "../../🏃️runner/🟦️.ts";
 import {incrementalCommandPortsV1,incrementalDefaultRootV1,incrementalLanguageV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
@@ -18,7 +19,7 @@ export type BenchArgumentsV1=Readonly<{operation:typeof operations[number];slo:r
 const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--slo","--runs","--baseline","--save-baseline","--current","--history","--markdown","--max-load","--implementations","--root","--file","--lang"]),plainOptions=Object.freeze(["--json","--prepare"]);
 
 /** 🍙️ The option names `repo bench` accepts, so the operations catalogue can be checked against the parser. */
-export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{const own=acceptance.definitions.Policy.const.options;return {valued:[...valuedOptions,...own.valued],plain:[...plainOptions,...own.plain]};}
+export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{const own=acceptance.definitions.Policy.const.options,late=latency.definitions.Policy.const.options;return {valued:[...valuedOptions,...own.valued,...late.valued],plain:[...plainOptions,...own.plain,...late.plain]};}
 
 /** 🍚️ Reads `bench list|run|compare` with its options; every unknown or repeated option is refused in both languages. */
 export function benchArgumentsV1(args:readonly string[]):BenchArgumentsV1{
@@ -120,9 +121,10 @@ export async function benchCommandPortsV1(root:string,invocation:import("../../.
  return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),list:async(folder:string)=>readdir(resolve(folder)).catch(error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return [];throw error;}),remove:async(path:string)=>{await rm(resolve(path),{force:true});},writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
 }
 
-/** 🍜️ The entry the build CLI calls for `repo bench`; `repo bench acceptance` is the acceptance module's own command. */
+/** 🍜️ The entry the build CLI calls for `repo bench`; `repo bench acceptance` and `repo bench latency` are their modules' own commands. */
 export async function runBenchV1(root:string,args:readonly string[],invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void>{
  const rest=args.slice(args[0]==="bench"?1:0);
  if(rest[0]==="acceptance"){const{runAcceptanceV1}=await import("../🛂️acceptance/⌨️command/🟦️.ts");await runAcceptanceV1(root,rest.slice(1),invocation);return;}
+ if(rest[0]==="latency"){const{runLatencyEntryV1}=await import("../⏲️latency/⌨️command/🟦️.ts");await runLatencyEntryV1(root,rest.slice(1),invocation);return;}
  await runBenchCommandV1(root,args,await benchCommandPortsV1(root,invocation));
 }

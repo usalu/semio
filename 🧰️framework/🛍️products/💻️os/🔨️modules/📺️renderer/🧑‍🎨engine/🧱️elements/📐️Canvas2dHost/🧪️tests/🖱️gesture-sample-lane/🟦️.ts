@@ -213,4 +213,18 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
       expect(receiver.sent.at(-1)!.args, mode).toMatchObject({ shift, ctrl, meta: false });
     }
   });
+  it("keeps a left drag marquee-ing instead of panning while a non-selective radio is on", async () => {
+    const none = { shift: false, ctrl: false, meta: false, alt: false };
+    for (const [mode, selecting] of [["replace", false], ["additive", true], ["subtractive", true], ["invertive", true]] as const) {
+      const receiver = manualReceiver();
+      const live = new JsonLayersCanvasSession(() => "[]", { x: 0, y: 0, zoom: 1 }, () => undefined, receiver.dispatch, undefined, () => mode);
+      live.setSize(640, 480, 1);
+      (live as any).leftDragPans = true;
+      live.pointerDown(5, 5, 0, false, none);
+      live.pointerMove(60, 60, none);
+      live.pointerUp(60, 60, none);
+      await receiver.settleAll();
+      expect(receiver.sent.some(({ action }) => action === "canvasPointerDown"), mode).toBe(selecting);
+    }
+  });
 });

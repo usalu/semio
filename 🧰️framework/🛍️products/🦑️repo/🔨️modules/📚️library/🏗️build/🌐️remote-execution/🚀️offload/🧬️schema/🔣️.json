@@ -298,7 +298,7 @@
           }
         },
         "deadline": {
-          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (a unit that has run on the fleet for twice what it costs here is lost: the local compile is cheaper than the wait; floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it.",
+          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (a unit that has run on the fleet for twice what it costs here is lost: the local compile is cheaper than the wait; floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it, and how long an operation that went back to the queue after its worker dropped it (lost, left, refused) may wait for another machine before the unit compiles here (requeueMilliseconds, counted within the deadline). The floor is the shortest wait for a unit that was measured, the unknown value the wait for one that was never measured (a compile starved of memory or cores is not recorded), so a four-second unit never waits minutes for a machine that does not answer.",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -309,7 +309,8 @@
             "linkedCapMilliseconds",
             "linkedUnknownMilliseconds",
             "silenceMilliseconds",
-            "reattachMilliseconds"
+            "reattachMilliseconds",
+            "requeueMilliseconds"
           ],
           "properties": {
             "factor": {
@@ -341,6 +342,10 @@
               "minimum": 1
             },
             "reattachMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requeueMilliseconds": {
               "type": "integer",
               "minimum": 1
             }
@@ -943,13 +948,14 @@
     },
     "deadline": {
       "factor": 2,
-      "floorMilliseconds": 60000,
+      "floorMilliseconds": 30000,
       "capMilliseconds": 900000,
-      "unknownMilliseconds": 240000,
+      "unknownMilliseconds": 90000,
       "linkedCapMilliseconds": 1200000,
       "linkedUnknownMilliseconds": 1200000,
       "silenceMilliseconds": 20000,
-      "reattachMilliseconds": 10000
+      "reattachMilliseconds": 10000,
+      "requeueMilliseconds": 20000
     },
     "cost": {
       "minimumUtilisation": 0.5,

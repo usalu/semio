@@ -24,6 +24,54 @@ async fn time_travel_actor_discard_original_prepares_effects_before_atomic_publi
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
+/// 🗑️ LAW: the Discard staging receipt is funded from the original caller's remaining authority, never from a mounted maintenance policy richer than the turn that stages it; the reactor refuses an original publication receipt whose grant exceeds the caller's remaining authority.
+#[semio_framework_async_macros::async_test]
+async fn a_discard_staging_receipt_never_exceeds_the_remaining_caller_authority(){
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (poor,maximum_identity_bytes)=original_time_travel_fixture_caller();let rich_grant=semio_framework_value::RetainedCloneGrant{maximum_items:u32::MAX as usize,maximum_copy_bytes:u32::MAX as usize,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:u32::MAX as usize};
+    let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{maintenance:rich_grant,..poor}.validate().unwrap();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let fixture=fixture();
+    let mut app=seeded_app(&fixture,mounted_policy,&mut identity).await;
+    run_step(&mut app,&fixture,&serde_json::json!({"begin":1}),mounted_policy,&mut identity,cx).await;
+    let acting=ActionMeta{view_state:meta(&fixture).view_state,..artifact_app_laws::meta(app.stores.store.local_actor_id().0.as_str())};
+    artifact_app_laws::dispatch_fixture_action(&mut app,"historyEditDiscard",Some(DslValue::Object(Vec::new())),&acting,&mut identity,cx,mounted_policy.maintenance).await.expect("discard stages its command");
+    let remaining=cx.retained_grant();
+    let (grant,receipt)=app.take_history_command_receipt().expect("the discard staged its original command receipt");
+    assert!(grant.maximum_items<=remaining.maximum_items&&grant.maximum_copy_bytes<=remaining.maximum_copy_bytes&&grant.maximum_capacity_bytes<=remaining.maximum_capacity_bytes&&grant.maximum_release_bytes<=remaining.maximum_release_bytes&&grant.maximum_depth<=remaining.maximum_depth,"discard receipt grant {grant:?} exceeds the remaining caller authority {remaining:?}");
+    assert!(receipt.fits(grant));
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
+/// 🧹️ LAW: a selected preview that still holds its base keeps its original snapshot and mutation cleanup issuers across ordinary retirement drives, so the discard that later cancels it retires the base without an "original base cleanup issuers" refusal.
+#[semio_framework_async_macros::async_test]
+async fn a_selected_preview_base_keeps_its_cleanup_issuers_across_retirement_drives_until_discard(){
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let fixture=fixture();
+    let mut app=seeded_app(&fixture,mounted_policy,&mut identity).await;
+    for step in [serde_json::json!({"begin":3}),serde_json::json!({"input":{"path":"/value","value":8}})]{
+        if let Some(result)=run_step(&mut app,&fixture,&step,mounted_policy,&mut identity,cx).await{assert_eq!(rejected(&result),None,"{step} was refused");}
+    }
+    for round in 0..3{
+        pump_until(&mut app,"ordinary retirement settles while the preview base is live",|app|!app.time_travel.has_pending_work(),mounted_policy,&mut identity,cx).await;
+        let step=serde_json::json!({"input":{"path":"/value","value":9+round}});
+        if let Some(result)=run_step(&mut app,&fixture,&step,mounted_policy,&mut identity,cx).await{assert_eq!(rejected(&result),None,"{step} was refused");}
+    }
+    if let Some(result)=run_step(&mut app,&fixture,&serde_json::json!({"discard":null}),mounted_policy,&mut identity,cx).await{assert_eq!(rejected(&result),None,"the discard was refused");}
+    pump_until(&mut app,"the discard retires its preview base",|app|!app.time_travel.has_pending_work(),mounted_policy,&mut identity,cx).await;
+    close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
 /// ⚖️ LAW: an overwrite leaves exactly the document a fresh store folding the edited log reaches.
 #[semio_framework_async_macros::async_test]
 async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
@@ -38,10 +86,11 @@ async fn an_overwrite_head_equals_a_fresh_fold_of_the_edited_log() {
     for step in scenario["steps"].as_array().expect("steps") {
         run_step(&mut app, &fixture, step, mounted_policy, &mut identity,cx).await;
     }
+    pump_until(&mut app, "the overwrite finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     let mut fresh = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
     for (index, op) in fixture["seed"].as_array().expect("seed").iter().enumerate() {
         let op = if index == 1 { SetLabel { value: "b".into() }.into() } else { seed_op(op) };
-        fresh.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity).await.expect("fresh edit");
+        in_original_loan!(cx, |identity| fresh.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![op], transaction: None }, &mut identity)).expect("fresh edit");
     }
     assert_eq!(app.stores.store.snapshot().expect("edited head"), fresh.stores.store.snapshot().expect("fresh head"));
     close(&mut app,cx);
@@ -64,7 +113,7 @@ async fn finalize_opens_the_injected_dialog_with_a_localized_default_name() {
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
         run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
-    let result = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity).await;
+    let result = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity,cx).await;
     let Some(Effect::OpenDialog { dialog_id, args, .. }) = result.requested_effects.first() else { panic!("finalize opens a dialog: {:?}", result.requested_effects) };
     assert_eq!(dialog_id, semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID);
     assert_eq!(args.as_ref().and_then(|args| args.get("name")).and_then(DslValue::as_str), Some("Edited history"), "the default name is localized, never a literal");
@@ -73,9 +122,9 @@ async fn finalize_opens_the_injected_dialog_with_a_localized_default_name() {
     assert!(definition.dialogs.iter().any(|dialog| dialog.id == semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID), "every editor declares the finalize dialog");
     assert!(semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS.iter().all(|id| definition.actions.iter().any(|action| action.id == *id)), "every editor declares the history-edit verbs");
     assert!(result.history_patch.as_ref().and_then(|patch| patch.time_travel.as_ref()).is_some_and(|status| status.stage == semio_framework::kernel::HistoryTimeTravelStage::Choosing), "the verb result carries the choosing status");
-    verb(&mut app, &fixture, "historyEditBack", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditBack", Vec::new(), mounted_policy, &mut identity,cx).await;
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing, "cancel goes back to reviewing, never discards");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -96,7 +145,7 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     let edits = app.stores.store.envelope().vcs.edits.len();
     let transaction = protocol::TransactionRef { id: "tx-0123456789abcdef".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
     let emit = Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), vec![SetCount { value: 2 }.into(), SetLabel { value: "t".into() }.into()]);
-    app.dispatch_emit("select", emit, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
+    app.dispatch_ctx().dispatch_emit("select", emit, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
     assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits + 1, "one transaction is one edit");
     let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     let row = patch.upserts.iter().find(|entry| entry.transaction.is_some()).expect("the transaction row");
@@ -106,7 +155,7 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     assert_eq!(row.label.resolve(Terminology::Native, Locale::En), "Set count to 2 (+1)", "the row reads its mutations' labels");
     assert_eq!(row.key(), format!("edit:{}", row.edit_id.as_deref().expect("edit id")));
     assert!(!row.op_lines.is_empty(), "the wire row keeps its printed operations");
-    let history = render_history(&mut app, Locale::En).await;
+    let history = render_history(&mut app, Locale::En,cx).await;
     let mut rendered = find_node(&history, &format!("framework.history.entry.{}", row.seq)).unwrap_or_else(|| panic!("the transaction row: {history}")).clone();
     rendered.as_object_mut().expect("a node").remove("children");
     assert!(row.op_lines.iter().all(|line| !rendered.to_string().contains(line.as_str())), "labelled mutation children replace the raw op-lines description: {rendered}");
@@ -132,13 +181,13 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
     let gesture = protocol::TransactionRef { id: "tx-00000000000000c1".into(), tool: format!("{}#gesture", ToyHistoryApp::APP_ID) };
     let select = protocol::TransactionRef { id: "tx-00000000000000c2".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
     for transaction in [&gesture, &select] {
-        app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
+        app.dispatch_ctx().dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
     }
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
-    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("text reload");
     reloaded.render_ctx().refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
-    artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack"), &mut identity).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack"), &mut identity,cx).await.expect("pack reload");
     repacked.render_ctx().refresh_cache().await.expect("the repacked log backfills");
     for (who, app) in [("authored", &mut app), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         let patch = app.render_ctx().history_patch(true).await.expect("history patch");
@@ -170,7 +219,7 @@ async fn the_catalogue_route_reads_the_framework_label_never_a_hand_written_one(
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let label = app.tools.verb_label(CATALOGUE_EXAMPLE_ACTION_ID).expect("the framework labels its runtime verb");
     assert_eq!((label.resolve(Terminology::Native, Locale::En), label.resolve(Terminology::Native, Locale::De)), ("Load example", "Beispiel laden"));
-    let result = app.dispatch_action(CATALOGUE_EXAMPLE_ACTION_ID, Some(&dsl(&serde_json::json!({ "exampleId": "five" }))), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the catalogue route loads the example");
+    let result = artifact_app_laws::dispatch_fixture_action(&mut app, CATALOGUE_EXAMPLE_ACTION_ID, Some(dsl(&serde_json::json!({ "exampleId": "five" }))), &meta(&fixture), &mut identity, cx, mounted_policy.maintenance).await.expect("the catalogue route loads the example");
     assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "the example is loaded: {:?}", result.requested_effects);
     let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     assert!(patch.upserts.iter().filter(|row| row.action_id == CATALOGUE_EXAMPLE_ACTION_ID).all(|row| row.label.resolve(Terminology::Native, Locale::En) == "Load example"), "no row reads a hand-written label");

@@ -30,7 +30,7 @@ export const reuse = "Hexagonal Cut Concrete Forest";
 /** 🗣️ The demo stock names the editor shows per language (English document names, German catalog names); `reuse` is the common prefix of both reuse rows. */
 export const stockNames = {
   en: { kinds, reuse, reuseRows: ["Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Right"] },
-  de: { kinds: ["Brettschichtholz GL24h 200×400", "KVH C24 100×200", "Stahl IPE 200", "Stahl HEA 160", "Drehflügelfenster 100×120", "Festverglasung 150×150", "Dreh-Kipp-Fenster 120×140", "Betondecke 240 mm", "BSP-Decke 160 mm", "Hohlkörperdecke 265 mm"], reuse: "Sechseckig geschnittener Betonwald", reuseRows: ["Sechseckig geschnittener Betonwald links", "Sechseckig geschnittener Betonwald rechts"] },
+  de: { kinds: ["Brettschichtholz GL24h 200×400", "Konstruktionsvollholz C24 100×200", "Stahl IPE 200", "Stahl HEA 160", "Drehflügelfenster 100×120", "Festverglasung 150×150", "Dreh-Kipp-Fenster 120×140", "Betondecke 240 mm", "BSP-Decke 160 mm", "Hohlkörperdecke 265 mm"], reuse: "Sechseckig geschnittener Betonwald", reuseRows: ["Sechseckig geschnittener Betonwald links", "Sechseckig geschnittener Betonwald rechts"] },
 } as const;
 const allEnglish = [...kinds, "Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Right"];
 const allGerman = [...stockNames.de.kinds, ...stockNames.de.reuseRows];
@@ -73,6 +73,23 @@ export async function session(browser: Browser, language: "en" | "de") {
     verdicts.push(verdict);
   };
   return { context, page, faults, t, kinds: [...names_.kinds], reuse: names_.reuse, n, shot, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step };
+}
+
+/** 📎️ Attaches `folder` through the sync status menu and waits for the first sync; a folder remembered by an earlier step is forgotten first. */
+export async function attachFolder(s: { page: Page; settle: (ms?: number) => Promise<void> }, folder: string) {
+  const forget = s.page.locator("#s-folder-forget");
+  if (await forget.count() > 0) { await forget.click(); await s.settle(1500); }
+  const group = s.page.locator("[id='ui.utilities.group.sync']"), entry = s.page.locator("[id='framework.sync.folder']"), path = s.page.locator("[id='framework.sync.folder.path']");
+  if (!(await path.isVisible())) {
+    if (!(await entry.isVisible())) {
+      if (!(await group.isVisible())) await s.page.locator("#s-sync-status").click();
+      await group.click();
+    }
+    await entry.click();
+  }
+  await path.fill(folder);
+  await s.page.getByRole("button", { name: /^(Attach|Verbinden)$/u }).click();
+  await s.settle(2500);
 }
 
 /** 🏁️ Runs one journey per requested language in a fresh browser, writes `<name>.json` of all verdicts and sets the exit code. */

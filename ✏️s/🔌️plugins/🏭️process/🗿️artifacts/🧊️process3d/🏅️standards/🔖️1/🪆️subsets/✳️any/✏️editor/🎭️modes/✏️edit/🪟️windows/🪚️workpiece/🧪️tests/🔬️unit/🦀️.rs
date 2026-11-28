@@ -187,6 +187,7 @@ async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
         decode_fixture_scene_with_lanes::<World3dScene>(&tree).expect("workpiece scene")
     };
     let mut application = context::app();
+    context::install_contributions(&mut application, context::demonstrator_contributions_pack());
     let before = application.snapshot().expect("published snapshot").step_payloads.len();
     let mut view = context::main_window_view();
     let mut second = view.clone();

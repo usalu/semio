@@ -46,7 +46,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
         }
         if self.read.is_some(){
             if let Err(error)=pay_pure_work(effect,&mut work){return done(Err(error.into()),work);}
-            if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(crate::SnapshotReadRegistryAliasRetirement::new(lease.registry));}}
+            if let Some(mut read)=self.read.take(){if let Some(alias)=read.return_original_lease(){*self.registry=Some(alias);}}
             return moved(work);
         }
         if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,body,&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress()));}

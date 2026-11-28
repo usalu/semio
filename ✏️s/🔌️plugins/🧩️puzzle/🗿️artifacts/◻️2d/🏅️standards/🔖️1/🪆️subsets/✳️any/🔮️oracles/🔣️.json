@@ -237,48 +237,6 @@
       "rationale": "The second ecosystem's differ, in `../🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts`, on the same terms as `puzzle-2d-jsonpatch-diff`: derive RFC 6902 from `(before, after)`, apply it back to reproduce the committed after-snapshot, and hold the typed `Puzzle2dDiff` to the members those op paths reach and to a `patched` set that is exactly the records RFC 6902 needs an operation for. Equality is asked of the library itself — an empty patch between the reproduction and the committed file — because `ordered-json-v1` holds array order significant and key order never, which a string comparison gets wrong. An unrelated implementation of the same RFC agreeing with the Python one is what rules out a differ-specific artefact."
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "python",
-      "package": "networkx",
-      "version": "3.6.1"
-    },
-    {
-      "implementation": "python",
-      "package": "shapely",
-      "version": "2.1.2"
-    },
-    {
-      "implementation": "python",
-      "package": "jsonschema",
-      "version": "4.26.0"
-    },
-    {
-      "implementation": "python",
-      "package": "jsonpatch",
-      "version": "1.33"
-    },
-    {
-      "implementation": "python",
-      "package": "deepdiff",
-      "version": "9.1.0"
-    },
-    {
-      "implementation": "typescript",
-      "package": "graphology",
-      "version": "0.26.0"
-    },
-    {
-      "implementation": "typescript",
-      "package": "jsonschema",
-      "version": "1.5.0"
-    },
-    {
-      "implementation": "typescript",
-      "package": "fast-json-patch",
-      "version": "3.1.1"
-    }
-  ],
   "noOracleDecisions": [],
   "mutationCatalogs": [
     {

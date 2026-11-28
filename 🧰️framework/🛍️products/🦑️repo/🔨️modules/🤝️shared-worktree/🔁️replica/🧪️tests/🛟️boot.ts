@@ -231,7 +231,7 @@ test("a daemon that runs and whose loop stays blocked for 120 s by default is en
  const next=tree("blocked-restart-next",command("worktree","ok"));
  mkdirSync(join(next.repo,".cache","f","boot"),{recursive:true});copyFileSync(join(where.repo,".cache","f","boot","loop-blocked-restart.json"),join(next.repo,".cache","f","boot","loop-blocked-restart.json"));
  const finished=await stage(next,["run"]);
- expect(finished.code).toBe(0);expect(ran(finished)!["restart"]).toEqual({count:1,lastMs:record.wallMs});
+ expect(finished.code).toBe(0);expect(ran(finished)!["restart"]).toEqual({count:1,lastMs:record.wallMs,activity:"publish"});
  const again=await stage(where,["run"],{BLOCK_FOR:"60000",SEMIO_FLEET_BOOT_BLOCK_MS:"500",SEMIO_FLEET_BOOT_KILL_MS:"2500",SEMIO_FLEET_BOOT_BEAT_MS:"100",SEMIO_FLEET_BOOT_EARLY_MS:"300"});
  expect(again.code).not.toBe(0);expect((await readBlockedRestartV1(where.repo))!.count).toBe(2);
 });

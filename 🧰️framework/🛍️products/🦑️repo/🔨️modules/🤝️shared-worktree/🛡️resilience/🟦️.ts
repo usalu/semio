@@ -586,10 +586,10 @@ export function activityV1(name:ActivityV1):void{
  (globalThis as unknown as Record<symbol,((name:ActivityV1)=>void)|undefined>)[activitySymbol]?.(name);
 }
 
-/** 🧱️ The blocks of the event loop that this process recorded (`kind` `loop-blocked`, how often and when last: the boot stage counts every wake-up that came `blockMs` or more too late) and the ends that the boot stage made of earlier daemons of this machine (`kind` `loop-blocked-restart`, how often and when last). Empty when none happened. */
+/** 🧱️ The blocks of the event loop that this process recorded (`kind` `loop-blocked`, how often and when last: the boot stage counts every wake-up that came `blockMs` or more too late) and the ends that the boot stage made of earlier daemons of this machine (`kind` `loop-blocked-restart`, how often and when last, and `loop-blocked-in-<activity>` for the activity the last blocked daemon sat in, so the fleet report names what blocks a machine without reading its disk). Empty when none happened. */
 export function blockedFailuresV1():readonly FailureSummaryV1[]{
- const holder=globalThis as unknown as Record<symbol,{count:number;lastMs:number}|undefined>,found=holder[Symbol.for("semio.fleet.blocked")],ended=holder[restartSymbol];
- return [...found===undefined||found.count===0?[]:[{kind:"loop-blocked",count:found.count,lastMs:found.lastMs}],...ended===undefined||ended.count===0?[]:[{kind:"loop-blocked-restart",count:ended.count,lastMs:ended.lastMs}]];
+ const holder=globalThis as unknown as Record<symbol,{count:number;lastMs:number;activity?:string}|undefined>,found=holder[Symbol.for("semio.fleet.blocked")],ended=holder[restartSymbol];
+ return [...found===undefined||found.count===0?[]:[{kind:"loop-blocked",count:found.count,lastMs:found.lastMs}],...ended===undefined||ended.count===0?[]:[{kind:"loop-blocked-restart",count:ended.count,lastMs:ended.lastMs},...ended.activity===undefined?[]:[{kind:"loop-blocked-in-"+ended.activity,count:ended.count,lastMs:ended.lastMs}]]];
 }
 
 /** 📍️ The path of the record that the boot stage leaves when it ends a blocked daemon. */

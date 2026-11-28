@@ -84,7 +84,7 @@ impl<'source,T:NativeReceive<DslValue>+Sync> JsonNativeInputCursor<'source,T>{
    Phase::Shell=>{*self.receiver=Some(NativeReceivingOriginal::new(self.source_owner.take().ok_or_else(||invalid("native JSON source absent"))?));self.phase=Phase::Receive;Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes-size_of::<Phase>(),..Default::default()})),work:1})},
    Phase::Receive=>{
     let receiver=self.receiver.as_mut().ok_or_else(||invalid("native JSON receiver absent"))?;
-    let poll=receiver.advance(control,witness,body,maximum_work_units,child).and_then(|step|Ok(RetainedCloneStep::Progress(step.progress())));
+    let poll=receiver.advance(control,witness,body,maximum_work_units,RetainedCloneGrant{maximum_items:g.maximum_items,..child}).and_then(|step|Ok(RetainedCloneStep::Progress(step.progress())));
     if receiver.output_ready(){self.phase=Phase::Ready}
     poll
    },

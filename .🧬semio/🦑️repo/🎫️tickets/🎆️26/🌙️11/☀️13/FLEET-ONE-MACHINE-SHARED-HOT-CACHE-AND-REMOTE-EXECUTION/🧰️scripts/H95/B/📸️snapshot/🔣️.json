@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "commands": {
+    "cargo": "root",
+    "test-file": "root",
+    "typecheck": "root",
+    "test": "root",
+    "run": "digest",
+    "run-many": "digest"
+  },
+  "environment": {
+    "marker": "SEMIO_SOURCE_SNAPSHOT",
+    "liveRoot": "SEMIO_SOURCE_SNAPSHOT_LIVE_ROOT",
+    "receipt": "SEMIO_SOURCE_SNAPSHOT_RECEIPT",
+    "mode": "SEMIO_SOURCE_SNAPSHOT_MODE",
+    "agent": "SEMIO_AGENT"
+  },
+  "roots": [
+    "🧰️framework"
+  ],
+  "rustRoots": [
+    "✏️s"
+  ],
+  "rootFiles": "*",
+  "excludedSegments": [
+    "node_modules",
+    "target",
+    ".cache",
+    ".git",
+    "🗑️generated",
+    "🤖️generated"
+  ],
+  "capture": {
+    "maximumRounds": 4,
+    "backoffMilliseconds": 250,
+    "fileRetries": 3,
+    "movedExamples": 3
+  },
+  "storage": {
+    "directory": "s",
+    "manifestFile": "manifest.json",
+    "lockSuffix": ".lock",
+    "keepHours": 24,
+    "maximumLanes": 8
+  },
+  "incremental": {
+    "lane": "main",
+    "fullVerifyMinutes": 30,
+    "maximumRounds": 4,
+    "changelogKeep": 500,
+    "fullChangelogThreshold": 2000,
+    "lockWaitSeconds": 120,
+    "pendingSeconds": 120
+  }
+}

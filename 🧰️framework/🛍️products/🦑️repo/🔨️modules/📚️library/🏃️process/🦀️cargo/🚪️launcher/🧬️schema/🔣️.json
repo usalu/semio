@@ -39,7 +39,8 @@
           "required": [
             "store",
             "configuration",
-            "parallelism"
+            "parallelism",
+            "freshLane"
           ],
           "properties": {
             "store": {
@@ -50,6 +51,9 @@
             },
             "parallelism": {
               "const": "--parallelism"
+            },
+            "freshLane": {
+              "const": "--fresh-lane"
             }
           }
         },
@@ -214,6 +218,9 @@
               "const": "planned"
             }
           ]
+        },
+        "freshLane": {
+          "const": true
         },
         "kind": {
           "enum": [
@@ -403,6 +410,9 @@
             }
           ]
         },
+        "freshLane": {
+          "const": true
+        },
         "kind": {
           "enum": [
             "compile",
@@ -467,7 +477,8 @@
         "options": {
           "store": "--store",
           "configuration": "--configuration",
-          "parallelism": "--parallelism"
+          "parallelism": "--parallelism",
+          "freshLane": "--fresh-lane"
         },
         "delimiter": "--",
         "stores": [

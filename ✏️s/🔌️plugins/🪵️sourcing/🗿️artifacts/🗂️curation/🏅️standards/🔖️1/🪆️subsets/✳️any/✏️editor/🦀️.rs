@@ -8,7 +8,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::{CurationSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATION_SCHEMA};
-use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetFilterQueryEdit, SetFilterModulesEdit, SetFilterTypologyEdit, SetFilterMinAvailabilityEdit, SetSortEdit, SetContributionsEdit};
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetFilterQueryEdit, ToggleFilterModuleEdit, SetFilterTypologyEdit, SetFilterMinAvailabilityEdit, SetSortEdit, SetContributionsEdit};
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::modes::edit::windows::grid::config::{self as grid_config, GridWindowConfigMutation};
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};

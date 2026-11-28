@@ -276,3 +276,95 @@ fn scalar(caller: &mut OriginalJobFixtureCaller, owner: &mut CoreInstanceOpening
     assert_eq!(stalled, status == CoreOriginalInvocationStatus::Pending && total == trace::Work::default());
     (status, fuel, receipt)
 }
+
+/// 📏️ A straight-line `() -> i64` module of `additions` scalar pairs, the shape whose fuel the scalar window posts in bulk.
+fn straight_line_module(additions: usize) -> Vec<u8> {
+    let leb = |mut number: usize| {
+        let mut out = vec![];
+        loop {
+            let byte = (number & 127) as u8;
+            number >>= 7;
+            if number == 0 { out.push(byte); return out; }
+            out.push(byte | 128);
+        }
+    };
+    let mut body = vec![0x00, 0x42, 0x00];
+    for _ in 0..additions { body.extend([0x42, 0x03, 0x7c]); }
+    body.push(0x0b);
+    let mut code = vec![0x01];
+    code.extend(leb(body.len()));
+    code.extend(&body);
+    let mut module = b"\0asm\x01\0\0\0".to_vec();
+    module.extend([0x01, 0x05, 0x01, 0x60, 0x00, 0x01, 0x7e, 0x03, 0x02, 0x01, 0x00, 0x07, 0x0a, 0x01, 0x06]);
+    module.extend(b"invoke");
+    module.extend([0x00, 0x00, 0x0a]);
+    module.extend(leb(code.len()));
+    module.extend(code);
+    module
+}
+
+/// 🧮️ Runs the module to completion with `fuel` per call; returns its result, the fuel the Source ledger posted in total and the most instructions one call admitted.
+fn run_straight_line(bytes: &[u8], fuel: u64) -> (Option<Vec<Value>>, u64, u64) {
+    let module = Arc::new(CoreModule::parse(bytes).unwrap());
+    let stock = RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 8_000_000,
+        maximum_capacity_bytes: 8_000_000, maximum_release_bytes: 8_000_000, maximum_depth: 16 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(197), Generation(1), stock, clock, 10_000_000, 1_000_000);
+    let mut epoch = 1;
+    let mut owner = caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; CoreInstanceOpening::begin(&module, cx) }).unwrap().unwrap();
+    while !owner.resources_ready() {
+        epoch += 1;
+        caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; owner.advance(&module, cx) }).unwrap();
+    }
+    epoch += 1;
+    assert!(caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; owner.begin_function_step(&module, 0, &[], cx) }).unwrap());
+    let (mut posted_total, mut widest) = (0, 0);
+    for _ in 0..100_000 {
+        epoch += 1;
+        let (call, posted) = caller.turn(stock, |cx| {
+            cx.bind_original_source_epoch(epoch)?;
+            let input = RetainedTurnInput { grant: cx.retained_grant(), ..RetainedTurnInput::borrow_original(cx)? };
+            let before = cx.fuel_remaining();
+            let call = owner.advance_scalar(&module, OriginalGuestExecutionBudget { input, fuel, deadline_us: cx.deadline_us() }, cx)?;
+            Ok((call, before - cx.fuel_remaining()))
+        }).unwrap();
+        let used = call.execution.spent_fuel.unwrap();
+        assert!(posted >= used, "every admitted instruction is posted: {posted} < {used}");
+        posted_total += posted;
+        widest = widest.max(used);
+        if call.result.unwrap() == CoreOriginalInvocationStatus::Complete { break; }
+    }
+    let values = owner.invocation_values().map(<[Value]>::to_vec);
+    for _ in 0..64 {
+        if owner.terminal_is_empty() { break; }
+        epoch += 1;
+        caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; owner.close_step(&module, cx) }).unwrap();
+    }
+    assert!(owner.terminal_is_empty());
+    caller.retire(stock);
+    (values, posted_total, widest)
+}
+
+/// 🪟️ Law: the scalar window posts exactly the fuel the instructions cost, whether one call admits one instruction or a whole window, and agrees with Wasmtime on the result.
+#[test]
+fn scalar_window_posts_exactly_the_fuel_of_the_admitted_instructions() {
+    let bytes = straight_line_module(300);
+    let engine = wasmtime::Engine::default();
+    let oracle = wasmtime::Module::new(&engine, &bytes).unwrap();
+    let mut store = wasmtime::Store::new(&engine, ());
+    let instance = wasmtime::Instance::new(&mut store, &oracle, &[]).unwrap();
+    let reference = instance.get_typed_func::<(), i64>(&mut store, "invoke").unwrap().call(&mut store, ()).unwrap();
+    assert_eq!(reference, 900);
+    let (single_values, single_posted, single_widest) = run_straight_line(&bytes, 1);
+    let (window_values, window_posted, window_widest) = run_straight_line(&bytes, 100_000);
+    assert_eq!(single_values, Some(vec![Value::I64(reference)]));
+    assert_eq!(window_values, single_values);
+    assert_eq!(window_posted, single_posted, "bulk posting never changes the fuel ledger");
+    assert_eq!(single_widest, 1);
+    assert!(window_widest > 1 && window_widest <= single_posted, "one call admits many instructions under one check");
+}
+
+/// 🪟️ Law: no fuel is ever granted past the window bound, so cancellation and deadline checks are at most one window of instructions apart.
+#[test]
+fn scalar_window_stays_within_its_declared_bound() {
+    assert!(SCALAR_WINDOW >= 1 && SCALAR_WINDOW <= 4096);
+}

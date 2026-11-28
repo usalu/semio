@@ -12,6 +12,16 @@ export type ElasticRuleV1=Readonly<{needBytes:number;floorBytes:number;headroomP
 export function imageCapBytesV1(platform:string=process.platform):number{return nativeImageShardCapBytesV1(platform)||Infinity;}
 /** 🏋️ Whether a live image was born above the cap of its platform (it can never return freed blocks and is retired at the next quiescent moment once it is bloated). Pure and language-agnostic. */
 export function imageOversizeV1(receiptBytes:number|null|"missing",platform:string=process.platform):boolean{return typeof receiptBytes==="number"&&receiptBytes>imageCapBytesV1(platform);}
+/** 📏️ The working set a worker's scan of a cache partition measured (`partitions.json` of the fleet store): the bytes its files hold without the backing file of the image itself, which the scan counts too. */
+export function workingSetBytesV1(scan:Readonly<{bytes:number;backingBytes:number}>):number{return Math.max(0,scan.bytes-scan.backingBytes);}
+/** 🧩️ How many images of at most `capBytes` hold a measured working set, and how large each is: as many as keep every image below the high-water mark (`highWaterBasisPoints`) of the cap, each sized so its share of the working set fills at most the high-water mark of it, aligned up, within the minimum and the aligned cap; refused when the host cannot hold the working set (sparse images cost only what is written) within its free bytes less the reserve. Pure and language-agnostic.
+ * @see ../🧬️schema/🔣️.json */
+export function imageShardPlanV1(input:Readonly<{workingSetBytes:number;capBytes:number;alignBytes:number;minimumBytes:number;highWaterBasisPoints:number;hostFreeBytes:number;hostFreeReservePercent:number}>):Readonly<{shards:number;perShardBytes:number;totalBytes:number}|{refused:"host-free"}>{
+ const cap=Math.floor(input.capBytes/input.alignBytes)*input.alignBytes,usable=Math.floor(cap*input.highWaterBasisPoints/10000),room=Math.floor(input.hostFreeBytes*input.hostFreeReservePercent/100);
+ if(input.workingSetBytes>room)return{refused:"host-free"};
+ const shards=Math.max(1,Math.ceil(input.workingSetBytes/usable)),share=Math.ceil(input.workingSetBytes/shards),want=Math.ceil(Math.ceil(share*10000/input.highWaterBasisPoints)/input.alignBytes)*input.alignBytes,perShardBytes=Math.min(cap,Math.max(input.minimumBytes,want));
+ return{shards,perShardBytes,totalBytes:shards*perShardBytes};
+}
 /** 🖼️ Sizes a new image from its working set and the host: need times headroom, capped by the rule's maximum and by what the host volume may give (its free bytes minus the reserve), aligned down, never below the given minimum (the rule's `minimumBytes`, not the declared capacity: a host with less free space than the declared capacity still gets an image that fits). */
 export function elasticCapacityV1(rule:ElasticRuleV1,minimumBytes:number,hostFreeBytes:number):number{
  const wanted=Math.ceil(rule.needBytes*(100+rule.headroomPercent)/100),ceiling=Math.min(rule.maximumBytes,imageCapBytesV1(),Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100)),target=Math.min(wanted,Math.max(ceiling,minimumBytes));

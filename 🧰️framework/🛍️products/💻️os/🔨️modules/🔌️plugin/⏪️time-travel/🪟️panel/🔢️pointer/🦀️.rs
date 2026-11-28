@@ -349,6 +349,10 @@ pub fn time_travel_coerce(input: &ActionArgDef, element: bool, value: &DslValue)
         }
         (ArgSchema::Boolean, false) => value.as_bool().or_else(|| value.as_str().and_then(|text| text.parse().ok())).map(DslValue::Bool),
         (ArgSchema::String { .. }, false) => text(value),
+        (ArgSchema::Object { .. } | ArgSchema::Array { .. } | ArgSchema::Any, false) => match value {
+            DslValue::String(json) => semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|parsed| semio_framework_pack_json::to_dsl_value(&parsed)).filter(|parsed| !matches!(input.schema, ArgSchema::Any) || matches!(parsed, DslValue::Object(_) | DslValue::Array(_))).or_else(|| matches!(input.schema, ArgSchema::Any).then(|| value.clone())),
+            other => Some(other.clone()),
+        },
         (ArgSchema::Reference { many: false, id_type, .. }, false) | (ArgSchema::Reference { many: true, id_type, .. }, true) => reference_id_text(value).and_then(|id| id_type.id_value(&id)),
         (ArgSchema::Reference { many: true, id_type, .. }, false) => match value {
             DslValue::Array(items) => items.iter().map(|item| reference_id_text(item).and_then(|id| id_type.id_value(&id))).collect::<Option<Vec<_>>>().map(DslValue::Array),

@@ -1,0 +1,20 @@
+{
+  "description": "One tessellation pattern drawn at three places by one lit primitive of three solids, plus a transparent double-sided material and a lines primitive. Triangle t (0 <= t < patternTriangles) of a copy with offset (ox, oy, oz) has the corners (ox + t, oy, oz), (ox + t + 0.5, oy + 1, oz), (ox + t + 1, oy, oz) and the indices (3t, 3t + 1, 3t + 2) counted from the first vertex of its copy; every vertex of a copy has the normal of that copy. The lines draw the first triangle of every copy as the segments (3t, 3t + 1) and (3t + 1, 3t + 2).",
+  "patternTriangles": 400,
+  "copyOffsets": [[0, 0, 0], [0, 0, 3], [0, 4, 0]],
+  "copyNormals": [[0, 0, 1], [0, 0.6, 0.8], [0.6, 0, 0.8]],
+  "copyIds": ["crown-a", "crown-b", "crown-c"],
+  "plainMaterial": "leaf",
+  "glassMaterial": "glass",
+  "edgeMaterial": "edge",
+  "expect": {
+    "trianglePrimitives": 3,
+    "triangleCount": 1200,
+    "sharedIndexAccessors": 1,
+    "indexComponentTypes": { "pattern": 5123, "triangle": 5121, "plainTriangle": 5123 },
+    "maxBufferViews": 4,
+    "attributeKinds": ["POSITION", "NORMAL"],
+    "defaults": { "alphaMode": "OPAQUE", "doubleSided": false, "trianglesMode": 4, "linesMode": 1 },
+    "kept": { "alphaMode": "BLEND", "doubleSided": true }
+  }
+}

@@ -11,6 +11,7 @@
   "maximumYields",
   "wakeMilliseconds",
   "pollMilliseconds",
+  "doorPollMilliseconds",
   "progressMilliseconds",
   "environment",
   "exitCode",
@@ -55,6 +56,11 @@
    "type": "integer",
    "minimum": 100
   },
+  "doorPollMilliseconds": {
+   "type": "integer",
+   "minimum": 100,
+   "maximum": 1000
+  },
   "progressMilliseconds": {
    "type": "integer",
    "minimum": 1000
@@ -92,7 +98,8 @@
    "additionalProperties": false,
    "required": [
     "waiting",
-    "resumed"
+    "resumed",
+    "holderGone"
    ],
    "properties": {
     "waiting": {
@@ -114,6 +121,24 @@
      }
     },
     "resumed": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "en",
+      "de"
+     ],
+     "properties": {
+      "en": {
+       "type": "string",
+       "minLength": 1
+      },
+      "de": {
+       "type": "string",
+       "minLength": 1
+      }
+     }
+    },
+    "holderGone": {
      "type": "object",
      "additionalProperties": false,
      "required": [

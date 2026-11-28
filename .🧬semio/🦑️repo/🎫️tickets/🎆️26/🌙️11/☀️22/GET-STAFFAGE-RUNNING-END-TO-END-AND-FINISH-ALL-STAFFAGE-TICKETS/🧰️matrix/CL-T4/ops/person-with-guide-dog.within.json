@@ -1,0 +1,23 @@
+[
+ {
+  "remove": "joint-foot-l|joint-foot-r|dog-joint-head",
+  "list": "structure",
+  "scales": [
+   50
+  ]
+ },
+ {
+  "remove": "joint-foot-l|joint-foot-r",
+  "list": "structure",
+  "scales": [
+   100
+  ]
+ },
+ {
+  "remove": "mass-head",
+  "list": "structure",
+  "scales": [
+   200
+  ]
+ }
+]

@@ -162,18 +162,11 @@ pub async fn plugin_create_app_with_id<PA: PluginApp>(runtime: &PluginRuntime<PA
 }
 pub(super) const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
 #[doc(hidden)]
-pub const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
-/// ⏱️ Real time a close ladder must spend making no progress before the structural accountant is
-/// allowed to call it stalled — the SECOND half of the zero-progress verdict, next to the step
-/// count above.
+/// 🧱️ Consecutive funded close turns without a progress receipt before the ladder is called stalled. The ONLY input of the zero-progress verdict: a progress witness, never a duration, so an expired wall-clock budget yields and retries on a later turn instead of faulting.
 ///
-/// 🐛️ The count alone was the whole rule, and a count is not a duration: eight consecutive steps
-/// that each observe an empty ladder cost microseconds, so a close that had nothing left to retire
-/// faulted with `plugin.internal.zero-progress` reporting `elapsed 0us` against an `8000us`
-/// ceiling — a stall credit judged exhausted before any time had passed (six-pane demonstrator
-/// boot, ticket 26/08/28, `📓️fix-2026-09-16-concurrent-boot-timeout-and-close-fault.md`). A ladder
-/// that is genuinely wedged still burns this credit within a few reactor turns; one that is merely
-/// finishing never does.
+/// 🐛️ Until 2026-11-28 the verdict also needed [`RUNTIME_CLOSE_STALL_CREDIT_US`] of wall time, which a loaded machine satisfies by itself, and the close job judged "starved" with `retirement_should_yield`, which ignores the deadline inside the retirement loan; a ladder that yielded empty because its clock ran out faulted `plugin.internal.zero-progress`.
+pub const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 64;
+/// ⏱️ Reporting reference of one stall run in wall time (the interactive ceiling): the message quotes the measured run against it. Never a verdict input.
 #[doc(hidden)]
 pub const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;
 

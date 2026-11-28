@@ -127,6 +127,130 @@
    "boundsTolerance": 0.002
   },
   {
+   "name": "explicit-segments",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "cyl8",
+    "title": {
+     "en": "cyl",
+     "de": "cyl"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         0.5
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": true,
+      "capEnd": true,
+      "segments": 8
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.11313708498984763,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.2,
+      0
+     ],
+     "max": [
+      0.2,
+      0.2,
+      1
+     ]
+    },
+    "closed": true,
+    "oracle": "CylinderGeometry",
+    "segments": 8,
+    "triangles": 48
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
    "name": "frustum",
    "document": {
     "version": "semio.model/v1",

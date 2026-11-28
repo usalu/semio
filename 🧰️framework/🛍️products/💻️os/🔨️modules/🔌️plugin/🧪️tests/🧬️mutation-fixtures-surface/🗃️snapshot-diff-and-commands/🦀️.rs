@@ -1,6 +1,6 @@
 /// 🗃️ Snapshot, diff and commands of the surface fixture: the testkit dialect, the surface snapshot with its sqlite, composition, dsl and pack implementations, the surface diff and the editor and viewer commands with their op text and binary codecs.
 
-const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
+const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-surface")]

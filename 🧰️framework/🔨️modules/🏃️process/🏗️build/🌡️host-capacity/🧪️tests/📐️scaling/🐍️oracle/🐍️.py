@@ -38,7 +38,7 @@ def swap_stop(policy,host):
 def swap_hosts():
     rows=[]
     for total in TOTALS:
-        for name,available,used,rate in [("idle with old swap",0.55,0.9,0.0),("old swap, light traffic, memory plentiful",0.55,0.9,total*0.00008),("old swap, heavy traffic, memory plentiful",0.55,0.9,total*0.0005),("worked swap, memory short",0.10,0.6,total*0.00008),("worked swap, little occupied",0.10,0.1,total*0.00008),("saturated traffic",0.80,0.0,total*0.0045),("no counters",0.10,None,None)]:
+        for name,available,used,rate in [("idle with old swap",0.55,0.9,0.0),("old swap, light traffic, memory plentiful",0.55,0.9,total*0.00008),("old swap, heavy traffic, memory plentiful",0.55,0.9,total*0.0005),("worked swap, memory short",0.10,0.6,total*0.0012),("worked swap, little occupied",0.10,0.1,total*0.0012),("saturated traffic",0.80,0.0,total*0.0045),("no counters",0.10,None,None)]:
             rows.append({"name":f"{total} {name}","host":{"totalMegabytes":total,"availableMegabytes":int(total*available),"swapUsedMegabytes":None if used is None else int(total*used),"swapOutMegabytesPerSecond":None if rate is None else round(rate,2)}})
     return rows
 

@@ -13,6 +13,20 @@ fn renders_mesh_edge_preview_for_the_default_example() {
     use pack::snapshot::ArtifactDsl;
     let document = Fem2dSnapshotRetiring::new(Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse default example"));
     let node = render(&document, semio_plugin::Locale::En).expect("fixture surface admission");
-    let scene: Canvas2dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble canvas scene");
+    let scene: Canvas2dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node.children[1].children[0]).expect("assemble canvas scene");
     assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the view scene: {}", scene.layers_json);
+}
+
+#[test]
+fn viewer_scene_pans_with_primary_drag_and_carries_the_case_caption() {
+    use pack::snapshot::ArtifactDsl;
+    let document = Fem2dSnapshotRetiring::new(Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse default example"));
+    let node = render(&document, semio_plugin::Locale::En).expect("fixture surface admission");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
+    assert!(json.contains("Case: "), "expected the load case caption above the viewer scene: {json}");
+    let node = render(&document, semio_plugin::Locale::En).expect("fixture surface admission");
+    let scene: Canvas2dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node.children[1].children[0]).expect("assemble canvas scene");
+    for armed in ["\"id\":\"meta:utility\"", "\"leftDragPans\":true", "\"rightDragPans\":true"] {
+        assert!(scene.layers_json.contains(armed), "the viewer scene arms primary-drag pan ({armed}): {}", scene.layers_json);
+    }
 }

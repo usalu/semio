@@ -1,0 +1,22 @@
+{
+  "title": "Generated Record Codecs With Round-Trip Laws and a First-Open Speed Floor",
+  "emoji": "🔁",
+  "status": "open",
+  "description": "Make saved-data mismatches and slow paths visible in seconds (wave-4 worker feedback, ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION, wave-1127/proposal-review-worker-speedups-4.md). (1) Generate both sides (writer and reader) of each persisted data format from one schema declaration, plus a round-trip law test (save -\u003e load -\u003e equal) per format; start with the format behind the most recent save/load mismatch (host-capacity grant record: row + .stats + .format sidecars, writer/reader skew 2026-11-28, H110). (2) A speed floor benchmark: a real plugin's first open measured against a declared minimum speed, run in CI, reusing `repo bench`, so an unoptimised slow path cannot pass for a broken feature. Done = one format generated from its declaration with a passing round-trip law, and the first-open benchmark wired with a floor; written up in the ticket folder.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "3cd93264-fa55-4925-9961-500dd599644f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-28 02:09:31",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make saved-data mismatches and slow paths visible in seconds (wave-4 worker feedback, ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION, wave-1127/proposal-review-worker-speedups-4.md). (1) Generate both sides (writer and reader) of each persisted data format from one schema declaration, plus a round-trip law test (save -\u003e load -\u003e equal) per format; start with the format behind the most recent save/load mismatch (host-capacity grant record: row + .stats + .format sidecars, writer/reader skew 2026-11-28, H110). (2) A speed floor benchmark: a real plugin's first open measured against a declared minimum speed, run in CI, reusing `repo bench`, so an unoptimised slow path cannot pass for a broken feature. Done = one format generated from its declaration with a passing round-trip law, and the first-open benchmark wired with a floor; written up in the ticket folder.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

@@ -16,7 +16,8 @@ impl OriginalFixtureCaller{
  pub fn admit()->Result<Self,ValueError>{
   let policy:CallerPolicy=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).expect("closed original fixture caller policy");assert_eq!(policy.source_kind,"original-parent");assert_eq!(policy.clock_us,fixture_now_us().unwrap());
   let mut caller=OriginalJobFixtureCaller::admit(OperationId(policy.operation),Generation(policy.generation),policy.grant,fixture_now_us,policy.deadline_us,policy.fuel);caller.birth_returns(policy.grant);
-  Ok(Self{policy,caller,decoder:semio_framework_job::OriginalJobDecodeOwner::empty(),lent:false})
+  let decoder=caller.receipted_decoder(policy.grant);
+  Ok(Self{policy,caller,decoder,lent:false})
  }
  /// 🪢️ Lends one original context; another call cannot recreate its original fuel or ceiling.
  pub fn context(&mut self)->StepContext<'_>{assert!(!self.lent,"original fixture context can only be issued once");self.lent=true;self.caller.lend_refreshed_context().with_original_decoder(&mut self.decoder)}

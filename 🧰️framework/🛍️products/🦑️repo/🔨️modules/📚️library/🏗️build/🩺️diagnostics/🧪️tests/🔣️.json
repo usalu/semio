@@ -1,0 +1,17 @@
+{
+  "environments": [
+    {"name": "unset", "value": null, "areas": []},
+    {"name": "empty", "value": "", "areas": []},
+    {"name": "zero", "value": "0", "areas": []},
+    {"name": "off", "value": "OFF", "areas": []},
+    {"name": "none", "value": "none", "areas": []},
+    {"name": "one", "value": "graph", "areas": ["graph"]},
+    {"name": "two with blanks", "value": " graph , cache ", "areas": ["cache", "graph"]},
+    {"name": "duplicates", "value": "cache,cache,graph", "areas": ["cache", "graph"]},
+    {"name": "upper case", "value": "Cargo-Admission", "areas": ["cargo-admission"]},
+    {"name": "everything", "value": "all", "areas": ["cache", "capacity", "cargo-admission", "graph", "leases", "ready", "remote-execution", "resident", "timing"]},
+    {"name": "everything among others", "value": "graph,all", "areas": ["cache", "capacity", "cargo-admission", "graph", "leases", "ready", "remote-execution", "resident", "timing"]},
+    {"name": "unknown", "value": "graph,nothing", "refused": ["nothing"]},
+    {"name": "only unknown", "value": "verbose", "refused": ["verbose"]}
+  ]
+}

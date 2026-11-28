@@ -397,6 +397,10 @@ pub fn paint_report<F: semio_s_plugin_norm_compliance::NormFamily>(document: &F:
     paint_report_of(|budget| F::live_responsive(document, budget))
 }
 
+/// 🧷️ The settled report of a document, waiting for every unit; only for work that must see all checks (never a paint path, which uses [`paint_report`]).
+/// @see [`paint_report`]
+pub fn settled_report<F: semio_s_plugin_norm_compliance::NormFamily>(document: &F::Document) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> { F::live_report(document) }
+
 /// 🖼️ Family-free [`paint_report`] for viewers, which have no `NormFamily`: `responsive` is the `live::responsive(document, budget)` of the snapshot's `live_report!` module, called with [`PAINT_BUDGET`].
 pub fn paint_report_of(responsive: impl FnOnce(std::time::Duration) -> (std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport>, bool)) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> {
     responsive(PAINT_BUDGET).0
@@ -529,7 +533,7 @@ pub fn live_interaction_topology_unfiltered<A: NormLiveEditor>(document: &A::Sna
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
-    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let report = settled_report::<A::Family>(document);
     let scene = A::live_scene(document, ViewOptions::none());
     Ok(crate::norm_interaction_topology_filtered(domain, &semio_framework_value::ToValue::to_value(document), &scene, &report, None))
 }

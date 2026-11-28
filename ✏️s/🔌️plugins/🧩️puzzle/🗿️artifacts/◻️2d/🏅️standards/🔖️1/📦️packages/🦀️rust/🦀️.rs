@@ -9,7 +9,7 @@ pub use semio_s_plugin_puzzle_retained as retained_command;
 pub use semio_s_plugin_puzzle_jobs as puzzle_job;
 pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
-pub use crate::standards::v1::artifact_items_2::{ArtifactApps, artifact, definition, pilot_languages};
+pub use crate::standards::v1::artifact_items_2::{ArtifactApps, artifact, artifact_with, definition, pilot_languages};
 
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;

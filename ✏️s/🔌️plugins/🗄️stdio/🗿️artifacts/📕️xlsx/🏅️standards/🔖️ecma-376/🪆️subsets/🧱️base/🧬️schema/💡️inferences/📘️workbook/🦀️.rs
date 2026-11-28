@@ -3,7 +3,12 @@
 use crate::standards::v_ecma_376::subsets::base::schema::{refusal::XlsxError, vocabulary::*};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::shared_formula::{expand_shared_formula, SharedMaster};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
+use std::collections::HashMap;
+
+/// 📋️ Shared-formula masters keyed by group index (`si`).
+pub type SharedFormulas = HashMap<String, SharedMaster>;
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
@@ -160,14 +165,95 @@ fn extract_typed_value(children: &[XmlNode], cell_scope: &[(String, String)], na
     }
 }
 
+/// 🧭️ One worksheet cell element with its document path and logical coordinates (1-based row, 0-based column).
+pub struct WorksheetCellRef<'a> {
+    pub path: Vec<usize>,
+    pub row: u32,
+    pub col: u32,
+    pub node: &'a XmlNode,
+    pub scope: Vec<(String, String)>,
+    pub namespace: String,
+}
+
+/// 🧭️ Every cell of the worksheet whose root element is `root`, in document order.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn worksheet_cell_refs(root: &XmlNode) -> Result<Vec<WorksheetCellRef<'_>>, String> {
+    let root_scope = namespace_scope(&[], root);
+    let XmlNode::Element { name, children, .. } = root else { return Err("worksheet root is not an element".into()) };
+    let (namespace, _) = expanded_element_name(name, &root_scope)?;
+    let mut cells = Vec::new();
+    for (sheet_data_index, child) in children.iter().enumerate() {
+        let scope = namespace_scope(&root_scope, child);
+        if !element_matches(child, &scope, &[namespace.as_str()], "sheetData")? {
+            continue;
+        }
+        let XmlNode::Element { children: rows, .. } = child else { unreachable!() };
+        for row in positioned_worksheet_children(rows, &scope, &namespace, WorksheetAxis::Rows) {
+            let row = row?;
+            let XmlNode::Element { children: row_children, .. } = row.node else { unreachable!() };
+            for cell in positioned_worksheet_children(row_children, &row.scope, &namespace, WorksheetAxis::Columns(row.position)) {
+                let cell = cell?;
+                cells.push(WorksheetCellRef { path: vec![sheet_data_index, row.index, cell.index], row: row.position, col: cell.position, node: cell.node, scope: cell.scope, namespace: namespace.clone() });
+            }
+        }
+        break;
+    }
+    Ok(cells)
+}
+
+/// 🔎️ The `<f>` element of a cell and its `t`/`si` attributes.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn formula_element<'a>(children: &'a [XmlNode], cell_scope: &[(String, String)], namespace: &str) -> Result<Option<(&'a XmlNode, Vec<(String, String)>)>, String> {
+    for child in children {
+        let scope = namespace_scope(cell_scope, child);
+        if element_matches(child, &scope, &[namespace], "f")? {
+            return Ok(Some((child, scope)));
+        }
+    }
+    Ok(None)
+}
+
+/// 🔖️ The shared-formula group index a `<f t="shared" si>` element belongs to; `None` for every other formula.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn shared_formula_index(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str) -> Result<Option<String>, String> {
+    let Some((node, scope)) = formula_element(children, cell_scope, namespace)? else { return Ok(None) };
+    if attribute_value(node, &scope, &[""], "t")? != Some("shared") {
+        return Ok(None);
+    }
+    Ok(attribute_value(node, &scope, &[""], "si")?.map(str::to_string))
+}
+
+/// 📋️ The master of every shared-formula group of `cells`, keyed by its `si`: the cell of that group that spells the formula text.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn shared_formula_masters(cells: &[WorksheetCellRef<'_>]) -> Result<SharedFormulas, String> {
+    let mut masters = SharedFormulas::new();
+    for cell in cells {
+        let XmlNode::Element { children, .. } = cell.node else { continue };
+        let Some(index) = shared_formula_index(children, &cell.scope, &cell.namespace)? else { continue };
+        let expr = child_text(children, &cell.scope, &cell.namespace, "f")?.unwrap_or_default();
+        if !expr.is_empty() {
+            masters.entry(index).or_insert(SharedMaster { expr, row: cell.row, col: cell.col });
+        }
+    }
+    Ok(masters)
+}
+
 /// 🔎️ Resolves one `<c>` element's full value — a `<f>` child present makes this a `Formula`
 /// cell (ECMA-376 §18.3.1.40); its `cached` is the SAME `<v>`/`t` pair, re-typed by
-/// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
+/// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`). A dependent shared-formula
+/// cell (`<f t="shared" si/>` without text) spells its master's formula translated to `position`
+/// (an orphan or an unknown position keeps the empty text).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
-    if let Some(expr) = child_text(children, cell_scope, namespace, "f").map_err(|detail| XlsxError::Xml { part: part.into(), detail })? {
-        let cached =
-            if child_text(children, cell_scope, namespace, "v").map_err(|detail| XlsxError::Xml { part: part.into(), detail })?.is_some() { Some(Box::new(extract_typed_value(children, cell_scope, namespace, t, sst_len, part)?)) } else { None };
+pub fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str, shared: &SharedFormulas, position: Option<(u32, u32)>) -> Result<XlsxCellValue, XlsxError> {
+    let bad = |detail| XlsxError::Xml { part: part.into(), detail };
+    if let Some(mut expr) = child_text(children, cell_scope, namespace, "f").map_err(bad)? {
+        if expr.is_empty() {
+            let master = shared_formula_index(children, cell_scope, namespace).map_err(bad)?.and_then(|index| shared.get(&index));
+            if let (Some(master), Some((row, col))) = (master, position) {
+                expr = expand_shared_formula(master, row, col);
+            }
+        }
+        let cached = if child_text(children, cell_scope, namespace, "v").map_err(bad)?.is_some() { Some(Box::new(extract_typed_value(children, cell_scope, namespace, t, sst_len, part)?)) } else { None };
         return Ok(XlsxCellValue::Formula { expr, cached });
     }
     extract_typed_value(children, cell_scope, namespace, t, sst_len, part)
@@ -177,31 +263,34 @@ pub fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)],
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
-    let (root, root_scope, namespace) = spreadsheet_root(doc, part, "worksheet")?;
-    let XmlNode::Element { children, .. } = root else { unreachable!() };
-    let mut sheet_data_match = None;
-    for child in children {
-        let scope = namespace_scope(&root_scope, child);
-        if element_matches(child, &scope, &[namespace.as_str()], "sheetData").map_err(&bad)? {
-            let XmlNode::Element { children, .. } = child else { unreachable!() };
-            sheet_data_match = Some((children, scope));
-            break;
-        }
+    let (root, _, _) = spreadsheet_root(doc, part, "worksheet")?;
+    let refs = worksheet_cell_refs(root).map_err(&bad)?;
+    if refs.is_empty() && !has_sheet_data(root).map_err(&bad)? {
+        return Err(bad("missing SpreadsheetML <sheetData>".into()));
     }
-    let (sheet_data, sheet_data_scope) = sheet_data_match.ok_or_else(|| bad("missing SpreadsheetML <sheetData>".into()))?;
-    let mut cells = Vec::new();
-    for row in positioned_worksheet_children(sheet_data, &sheet_data_scope, &namespace, WorksheetAxis::Rows) {
-        let row = row.map_err(&bad)?;
-        let XmlNode::Element { children: row_children, .. } = row.node else { unreachable!() };
-        for cell in positioned_worksheet_children(row_children, &row.scope, &namespace, WorksheetAxis::Columns(row.position)) {
-            let cell = cell.map_err(&bad)?;
-            let XmlNode::Element { children, .. } = cell.node else { unreachable!() };
-            let t = attribute_value(cell.node, &cell.scope, &[""], "t").map_err(&bad)?;
-            let value = extract_cell_value(children, &cell.scope, &namespace, t, sst_len, part)?;
-            cells.push(XlsxCell { row: row.position, col: cell.position, value });
-        }
+    let masters = shared_formula_masters(&refs).map_err(&bad)?;
+    let mut cells = Vec::with_capacity(refs.len());
+    for cell in &refs {
+        let XmlNode::Element { children, .. } = cell.node else { unreachable!() };
+        let t = attribute_value(cell.node, &cell.scope, &[""], "t").map_err(&bad)?;
+        let value = extract_cell_value(children, &cell.scope, &cell.namespace, t, sst_len, part, &masters, Some((cell.row, cell.col)))?;
+        cells.push(XlsxCell { row: cell.row, col: cell.col, value });
     }
     Ok(cells)
+}
+
+/// 🔎️ Whether the worksheet `root` has a SpreadsheetML `sheetData` child.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn has_sheet_data(root: &XmlNode) -> Result<bool, String> {
+    let root_scope = namespace_scope(&[], root);
+    let XmlNode::Element { name, children, .. } = root else { return Ok(false) };
+    let (namespace, _) = expanded_element_name(name, &root_scope)?;
+    for child in children {
+        if element_matches(child, &namespace_scope(&root_scope, child), &[namespace.as_str()], "sheetData")? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 //#endregion 🔖️WorksheetXml
 

@@ -1,0 +1,13 @@
+tower-crane
+basketball-player
+parent-carrying-toddler
+person-in-winter-coat
+person-pushing-bicycle
+person-sweeping
+standing-desk-worker
+waiter-with-tray
+worker-carrying-box
+tram
+person-with-rollator
+tennis-player
+city-car

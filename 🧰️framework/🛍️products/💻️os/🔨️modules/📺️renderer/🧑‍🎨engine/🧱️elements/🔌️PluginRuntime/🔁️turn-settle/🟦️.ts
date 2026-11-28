@@ -22,7 +22,7 @@ import {
 } from "../🪝️wire-codec/🟦️.ts";
 import { consumeTypedOperationEffects, typedOperationAcknowledgements, TypedOperationCall } from "../📬️typed-result/🟦️.ts";
 import { DEFAULT_SHARD_BUDGET } from "../🛰️runtime-singletons/🟦️.ts";
-import { submitPluginTurn } from "../🧵️turn-dispatch/🟦️.ts";
+import { commandIngressQueuedV1, submitPluginTurn } from "../🧵️turn-dispatch/🟦️.ts";
 import { retainTurnPresence } from "../🖼️surface-refresh/🟦️.ts";
 
 //#region 🔖️plugin-runtime
@@ -296,6 +296,17 @@ export function settleYieldsToRefreshV1(results: readonly WireTurnResult[], star
   return nowMs - startedMs >= (owed ? PLUGIN_OPERATION_OWED_SLICE_MS : PLUGIN_OPERATION_REFRESH_SLICE_MS) && results.some((result) => effectsRequestOperationProgressV1(result.effects));
 }
 
+/** 🚏️ Whether a draining settle must hand the actor's command lane back because a host call waits behind it — an archive
+ * poll or cancel, an input command, a refresh. Nothing is yielded while an acknowledgement or deferred event is still owed,
+ * since the next turn would then lose it.
+ *
+ * 🐛️ Without this a refresh settle held the lane for as many as {@link PLUGIN_UI_CONTINUATION_LIMIT} continuations whenever
+ * the guest kept answering `more-work` with nothing to publish — a whole-document archive load — so the shell's queued
+ * `PollDocumentArchiveLoad` (and its cancel) waited 34 to 84 s for the load to finish and no status ever reached the banner. */
+export function settleYieldsToQueuedCommandV1(acknowledgementsOwed: boolean, queuedCommands: number): boolean {
+  return !acknowledgementsOwed && queuedCommands > 0;
+}
+
 /** 🪟️ Whether a surface this settle ASKED to be made visible is still owed: the guest has not published it in this
  * settle and is still answering `more-work`, so the drive that finishes the reconcile is THIS one. An `idle` guest owes
  * nothing — an unchanged body publishes no patch by contract (`PatchTracker` emits nothing for an unchanged tree), so
@@ -406,7 +417,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
     const ingressOwed = acknowledgements.length > 0 || deferredPending();
     if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !ingressOwed && !outstanding() && !cancelled()) quiesced = true;
     else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) { closeDecide(); throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call); }
-    sliced = !cancelled() && drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), ingressOwed, outstanding(), owed());
+    sliced = !cancelled() && drainOperations && !quiesced && (settleYieldsToQueuedCommandV1(ingressOwed, commandIngressQueuedV1(actorId)) || settleYieldsToRefreshV1(results, startedMs, performance.now(), ingressOwed, outstanding(), owed()));
     const yielding = !quiesced && !sliced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && (hasWork() || ingressOwed);
     closeDecide();
     if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
@@ -419,7 +430,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
         `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`,
     );
   }
-  if (!cancelled() && requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
+  if (!cancelled() && !sliced && requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
     const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
     const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
     throw new Error(`PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)}, faults=${JSON.stringify(settleShellFaultMessages(actorId, results))})`);

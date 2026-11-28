@@ -10369,6 +10369,14 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-test-fixtures",
  "semio-framework-value",
+ "semio-hub-norm-din16798-editor",
+ "semio-hub-norm-din16798-viewer",
+ "semio-hub-norm-din4108-editor",
+ "semio-hub-norm-din4108-viewer",
+ "semio-hub-norm-iso16757-editor",
+ "semio-hub-norm-iso16757-viewer",
+ "semio-hub-norm-vdi3805-editor",
+ "semio-hub-norm-vdi3805-viewer",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-contract",
@@ -10408,6 +10416,58 @@ dependencies = [
  "semio-framework-pack",
  "semio-hub-norm",
  "semio-plugin",
+]
+
+[[package]]
+name = "semio-hub-norm-din16798-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-din16798-editor",
+]
+
+[[package]]
+name = "semio-hub-norm-din16798-viewer"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-din16798-viewer",
+]
+
+[[package]]
+name = "semio-hub-norm-din4108-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-din4108-editor",
+]
+
+[[package]]
+name = "semio-hub-norm-din4108-viewer"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-din4108-viewer",
 ]
 
 [[package]]
@@ -10591,7 +10651,11 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1992-editor"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1992-editor",
 ]
@@ -10600,7 +10664,11 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1992-viewer"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1992-viewer",
 ]
@@ -10609,7 +10677,11 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1993-editor"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1993-editor",
 ]
@@ -10618,7 +10690,11 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1993-viewer"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1993-viewer",
 ]
@@ -10627,7 +10703,11 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1994-editor"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1994-editor",
 ]
@@ -10636,9 +10716,65 @@ dependencies = [
 name = "semio-hub-norm-eurocode-structural-en1994-viewer"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-norm-en1994-viewer",
+]
+
+[[package]]
+name = "semio-hub-norm-iso16757-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-iso16757-editor",
+]
+
+[[package]]
+name = "semio-hub-norm-iso16757-viewer"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-iso16757-viewer",
+]
+
+[[package]]
+name = "semio-hub-norm-vdi3805-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-vdi3805-editor",
+]
+
+[[package]]
+name = "semio-hub-norm-vdi3805-viewer"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-vdi3805-viewer",
 ]
 
 [[package]]
@@ -11897,6 +12033,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-pack",
+ "semio-framework-value",
  "semio-hub-stdio-catalog-projection",
  "semio-os-kernel",
  "semio-plugin",
@@ -22751,47 +22888,8 @@ dependencies = [
 name = "semio-s-artifact-bim-model-entities-families-tests"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-2d-compute",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-composition-admission",
- "semio-framework-deflate",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-expression",
- "semio-framework-geometry",
- "semio-framework-io-base64",
- "semio-framework-job",
- "semio-framework-pack",
- "semio-framework-pack-json",
  "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
  "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-bim-model-authored",
- "semio-s-artifact-bim-model-entities",
- "semio-s-artifact-bim-model-inferences",
- "semio-s-artifact-bim-model-mut-any-190",
- "semio-s-artifact-bim-model-quantities",
- "semio-s-artifact-bim-model-schema",
- "semio-s-artifact-bim-model-snapshot",
- "semio-s-artifact-bim-model-tests",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-ifc-2x3-base",
- "semio-s-artifact-stdio-ifc-2x3-base-model",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-svg",
- "semio-s-artifact-stdio-xml",
- "semio-ui-contract",
- "semio-ui-locale",
 ]
 
 [[package]]
@@ -39251,6 +39349,7 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-diff-document",
  "semio-s-artifact-fem-2d-editor",
  "semio-s-artifact-fem-2d-io",
@@ -39272,6 +39371,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-model",
  "semio-ui-locale",
 ]
@@ -39286,8 +39387,34 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-model",
  "semio-ui-locale",
+]
+
+[[package]]
+name = "semio-s-artifact-fem-2d-diff"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-os-kernel",
+ "semio-s-artifact-fem-2d-model",
+ "semio-s-fem-material",
+ "semio-s-fem-node",
+ "semio-s-fem-receiving",
 ]
 
 [[package]]
@@ -39315,6 +39442,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-plugin-retained-command",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-editor-commands",
  "semio-s-artifact-fem-2d-editor-interaction",
  "semio-s-artifact-fem-2d-editor-model-window",
@@ -39352,6 +39480,7 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-fem-2d-analysis",
  "semio-s-artifact-fem-2d-boundary",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-editor-interaction",
  "semio-s-artifact-fem-2d-io",
  "semio-s-artifact-fem-2d-load",
@@ -39373,15 +39502,19 @@ name = "semio-s-artifact-fem-2d-editor-interaction"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-geometry",
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-pack-json",
  "semio-framework-tool-machine",
  "semio-framework-value",
+ "semio-framework-value-derive",
  "semio-framework-value-persistent",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-editor-transient",
  "semio-s-artifact-fem-2d-mesh",
  "semio-s-artifact-fem-2d-model",
@@ -39455,6 +39588,7 @@ dependencies = [
  "semio-s-fem-analyses-model",
  "semio-s-fem-app-surface",
  "semio-s-fem-model",
+ "semio-ui-contract",
  "semio-ui-locale",
  "serde",
 ]
@@ -39543,6 +39677,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-fem-2d-guards"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-model",
+ "semio-s-fem-material",
+ "semio-s-fem-node",
+]
+
+[[package]]
 name = "semio-s-artifact-fem-2d-io"
 version = "0.1.0"
 dependencies = [
@@ -39556,6 +39701,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-engine",
  "semio-s-artifact-fem-2d-model",
  "semio-s-artifact-fem-2d-mutations",
@@ -39582,6 +39728,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-load-2",
  "semio-s-artifact-fem-2d-model",
  "semio-ui-locale",
@@ -39597,6 +39745,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-model",
  "semio-ui-locale",
 ]
@@ -39611,6 +39761,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-model",
  "semio-s-fem-material",
  "semio-ui-locale",
@@ -39627,6 +39779,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-mesh-regions",
  "semio-s-artifact-fem-2d-mesh-topology",
  "semio-s-artifact-fem-2d-model",
@@ -39644,6 +39798,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-mesh-topology",
  "semio-s-artifact-fem-2d-model",
  "semio-s-fem-node",
@@ -39660,6 +39816,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-mesh-topology",
  "semio-s-artifact-fem-2d-model",
  "semio-s-fem-node",
@@ -39676,6 +39834,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-mesh-topology",
  "semio-s-artifact-fem-2d-model",
  "semio-s-fem-node",
@@ -39692,6 +39852,8 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-fem-2d-diff",
+ "semio-s-artifact-fem-2d-guards",
  "semio-s-artifact-fem-2d-model",
  "semio-s-fem-node",
  "semio-ui-locale",
@@ -39739,6 +39901,7 @@ dependencies = [
  "semio-os-store-one-item",
  "semio-s-artifact-fem-2d-analysis",
  "semio-s-artifact-fem-2d-boundary",
+ "semio-s-artifact-fem-2d-diff",
  "semio-s-artifact-fem-2d-engine",
  "semio-s-artifact-fem-2d-load",
  "semio-s-artifact-fem-2d-material",
@@ -39935,6 +40098,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-2d-load",
  "semio-s-artifact-fem-2d-model",
  "semio-s-artifact-fem-3d-analysis",
  "semio-s-artifact-fem-3d-boundary",
@@ -40065,6 +40229,7 @@ dependencies = [
  "semio-framework-value-registry",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-fem-2d-model",
  "semio-s-artifact-fem-3d-editor-results-window",
  "semio-s-artifact-fem-3d-editor-visual-job",
  "semio-s-artifact-fem-3d-model",
@@ -49105,7 +49270,9 @@ version = "0.1.0"
 name = "semio-s-artifact-norm-en1993-diff-rows-fatigue-fire"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -49115,7 +49282,9 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-diff-rows-frame"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -49125,7 +49294,9 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-diff-rows-joints"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -49135,7 +49306,9 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-diff-rows-members"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -49145,7 +49318,9 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-diff-rows-structures"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -49155,7 +49330,9 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-diff-rows-thin-walled"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-schema",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1993-model",
@@ -52037,6 +52214,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-en1994-checks-catalogue",
+ "semio-s-artifact-norm-en1994-checks-catalogue-fatigue",
  "semio-s-artifact-norm-en1994-model",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-mechanics",
@@ -52046,9 +52224,17 @@ dependencies = [
 name = "semio-s-artifact-norm-en1994-checks-catalogue"
 version = "0.1.0"
 dependencies = [
+ "semio-s-artifact-norm-en1994-checks-catalogue-fatigue",
  "semio-s-artifact-norm-en1994-model",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-mechanics",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1994-checks-catalogue-fatigue"
+version = "0.1.0"
+dependencies = [
+ "semio-s-plugin-norm-compliance",
 ]
 
 [[package]]
@@ -52747,6 +52933,7 @@ name = "semio-s-artifact-norm-en1994-scene"
 version = "0.1.0"
 dependencies = [
  "semio-s-artifact-norm-en1994-checks",
+ "semio-s-artifact-norm-en1994-checks-catalogue-fatigue",
  "semio-s-artifact-norm-en1994-model",
  "semio-s-artifact-norm-en1994-scene-base",
  "semio-s-plugin-norm-compliance",
@@ -69263,6 +69450,7 @@ dependencies = [
  "semio-framework-tool-machine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-testing-admission",
  "semio-os-infinite",
  "semio-os-infinite-directed-presentation",
  "semio-os-kernel",
@@ -69452,6 +69640,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
+ "semio-plugin-job-receiving",
  "semio-s-artifact-sequence-sequence-editor",
  "semio-s-artifact-sequence-sequence-inferences",
  "semio-s-artifact-sequence-sequence-schema",
@@ -81641,6 +81830,8 @@ dependencies = [
  "semio-s-artifact-stdio-semio-document-import",
  "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-semio-drawing-import",
+ "semio-s-artifact-stdio-semio-drawing-pdf-export",
+ "semio-s-artifact-stdio-semio-drawing-pdf-import",
  "semio-s-artifact-stdio-semio-flow-export",
  "semio-s-artifact-stdio-semio-flow-import",
  "semio-s-artifact-stdio-semio-image-export",
@@ -82045,8 +82236,6 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
@@ -82070,7 +82259,6 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
  "semio-s-artifact-stdio-svg",
@@ -82217,6 +82405,20 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-lower",
+ "semio-s-artifact-stdio-semio-base",
+ "semio-s-artifact-stdio-semio-drawing",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing-pdf-import"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
 ]

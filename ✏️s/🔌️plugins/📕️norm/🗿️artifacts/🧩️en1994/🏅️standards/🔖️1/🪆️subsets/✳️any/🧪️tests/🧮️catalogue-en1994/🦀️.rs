@@ -10,6 +10,7 @@ mod steps;
 mod subject {
     use super::steps::Binding;
     use semio_s_artifact_norm_en1994_checks::catalogue::*;
+    use semio_s_artifact_norm_en1994_checks_catalogue_fatigue as fatigue;
     use std::f64::consts::PI;
 
     const FY: f64 = 355e6;

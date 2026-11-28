@@ -2,7 +2,8 @@ import {existsSync} from "node:fs";
 import {readFleetSettingsV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📡️client/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {forgetSpoolV1,readSpoolRegistryV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📮️registry/🟦️.ts";
-import {spoolLengthV1,startUploaderV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts";
+import {startUploaderV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts";
+import {spoolLengthV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📏️spool-size/🟦️.ts";
 import {sleep,type RemoteExecutionSidecarContextV1} from "../🧰️shared/🟦️.ts";
 
 type Environment=Readonly<Record<string,string|undefined>>;

@@ -241,6 +241,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     Ok((receipt, unit))
                 })?;
                 *spent=spent.checked_add(unit)?;
+                if std::env::var_os("L3D_TRACE").is_some(){let phase=match mounted.pending_artifact_publication.as_ref(){Some(PendingArtifactStorePublication::Artifact(p))=>format!("{:?}/closing={}",p.phase(),mounted.pending_artifact_publication.as_ref().is_some_and(|p|p.is_closing())),Some(_)=>"other".to_string(),None=>"-".to_string()};eprintln!("[DEBUG] unit items={} bytes={} rel={} cap={} page={} pend={} stage={:?} phase={} before={:?}",unit.copied_items,unit.copied_bytes,unit.released_bytes,unit.retained_capacity_bytes,mounted.result_page.is_some(),mounted.pending_artifact_publication.is_some(),mounted.stage,phase,before);}
                 if self.stores.store.backbone_ref().is_some() {
                     self.stores.store.flush_announcements().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if let Some(PendingArtifactStorePublication::Artifact(publication)) = mounted.pending_artifact_publication.as_mut() {

@@ -98,7 +98,7 @@ pub mod durable_group {
 use semio_os_store_engine_member_group as member_group;
 
 pub use semio_os_store_one_item_batch::paged_one_item;
-pub use paged_one_item::{OneItemOwners, bounded_cold_mutation_apply_preparation_factory, cold_mutation_apply_preparation_factory, ColdPreparationBounds, mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, ColdMutationApplyFactory, MutationApplyEdit, PagedOneItemPreparationFactory, RetainedColdMutationApplyFactory};
+pub use paged_one_item::{OneItemOwners, bounded_cold_mutation_apply_preparation_factory, cold_mutation_apply_preparation_factory, ColdHeapQuote, ColdPreparationBounds, mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, ColdMutationApplyFactory, MutationApplyEdit, PagedOneItemPreparationFactory, RetainedColdMutationApplyFactory};
 pub use semio_os_store_one_item::semantic::PagedOneItemEdit;
 pub use semio_os_store_one_item::semantic::PagedOneItemEditStep;
 pub use semio_os_store_one_item::semantic::{PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};

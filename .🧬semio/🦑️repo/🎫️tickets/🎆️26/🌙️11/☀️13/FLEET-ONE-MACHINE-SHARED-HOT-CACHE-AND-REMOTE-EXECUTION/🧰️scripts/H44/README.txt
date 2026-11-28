@@ -1,0 +1,4 @@
+H44 kept scripts (wave 1127): load-aware test verdict, parallel multi-file dispatch, streamed output, retry window 8000/3000.
+apply.py <library-build-root> [--check]: the staged patch as anchored single-occurrence edits (staged/ holds the whole-file replacements gate.ts, remote.ts, the appended tests and the language-neutral vectors). The anchors are consumed by the landing, do not run it again on the live tree.
+relayer.sh: copies the live files into a scratch overlay and applies apply.py there; run.sh <build-relative test file> runs a test file against the overlay (overlay-plugin.ts maps relative imports to overlay copies; RUNDIR=<checkout> for tests that look for MODULE.bazel).
+proof.py: live proof, a 3-file `repo test-file` call with SEMIO_TEST_FILE_OFFLOAD=always|never, prints where each file ran and the result rows.

@@ -1,0 +1,52 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-editor-tests-3"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-draw-drawing-editor: the unit laws of the drawing editor selection, nodes, commands, envelopes, pointers and clipboard runtime outside the shared unit context"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-scene-mounted = { workspace = true }
+base64_codec = { workspace = true }
+png = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-os-store-test-support = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-ui-locale = { workspace = true }
+semio-ui-scene = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-draw-drawing-editor = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
+semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-editor-tool = { workspace = true }
+semio-s-artifact-draw-drawing-examples = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-host-arena = { workspace = true }
+semio-s-artifact-draw-drawing-io = { workspace = true }
+semio-s-artifact-draw-drawing-metadata = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene-paint = { workspace = true, features = ["testkit"] }
+semio-s-artifact-stdio-pdf = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-interaction = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }

@@ -22,7 +22,7 @@ const until=async(check:()=>boolean)=>{for(let wait=0;!check()&&wait<200;wait++)
 
 test("loads of different slices of one checkout run side by side up to the worker maximum, the next one waits for a worker",async()=>{
  const{pool,started,finish}=harness(2),queue:any[]=[];
- const first=pool.run({root:"/tmp/queue",name:"first",arguments:["1"]}),second=pool.run({root:"/tmp/queue",name:"second",arguments:["2"]}),third=pool.run({root:"/tmp/queue",name:"third",arguments:["3"]},{onProgress:(_ms:number,detail:any)=>{if(detail?.phase==="queue")queue.push(detail.decision);}});
+ const first=pool.run({root:"/tmp/queue",name:"first",arguments:["exec","--projects=p1"]}),second=pool.run({root:"/tmp/queue",name:"second",arguments:["exec","--projects=p2"]}),third=pool.run({root:"/tmp/queue",name:"third",arguments:["exec","--projects=p3"]},{onProgress:(_ms:number,detail:any)=>{if(detail?.phase==="queue")queue.push(detail.decision);}});
  await until(()=>started.length===2&&queue.length>=2);
  expect(started).toEqual(["first","second"]);expect(queue.every(decision=>decision.key==="queued-pool"&&decision.used===2&&decision.budget===2&&decision.limit===1)).toBe(true);
  finish.get("first")!();await first;await until(()=>started.length===3);expect(started).toEqual(["first","second","third"]);
@@ -42,7 +42,7 @@ test("a load of another checkout waits for a free worker and says so in both lan
 
 test("a queued load whose client left starts nothing and a later load takes the freed worker",async()=>{
  const{pool,started,finish}=harness(1),controller=new AbortController();
- const first=pool.run({root:"/tmp/leave",name:"first",arguments:["1"]}),leaving=pool.run({root:"/tmp/leave",name:"leaving",arguments:["2"]},{signal:controller.signal}),third=pool.run({root:"/tmp/leave",name:"third",arguments:["3"]});
+ const first=pool.run({root:"/tmp/leave",name:"first",arguments:["exec","--projects=p1"]}),leaving=pool.run({root:"/tmp/leave",name:"leaving",arguments:["exec","--projects=p2"]},{signal:controller.signal}),third=pool.run({root:"/tmp/leave",name:"third",arguments:["exec","--projects=p3"]});
  await until(()=>started.length===1);controller.abort(new Error("gone"));
  const error:any=await leaving.then(()=>undefined,reason=>reason);expect(error.message).toBe("gone");
  await new Promise(done=>setTimeout(done,60));expect(started).toEqual(["first"]);

@@ -6,13 +6,13 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 use protocol::Inference;
 use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_of, kind_holding};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 use semio_framework_test_fixtures::fixture_text;
 
 static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
+    decode_model_snapshot_json(*TABLE).expect("the table decodes")
 }
 
 fn write(kind: &str, key: &str, id: &str, value: &str) -> Option<ModelMutation> {

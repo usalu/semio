@@ -1,0 +1,415 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/build-script-probe/v1",
+  "title": "Build script probes",
+  "description": "What a build script may ask of the host and still run on another machine: the compiler questions answered from the declared toolchain identity of the run key (version probes), the compiler questions that need the identical toolchain (compile probes), the environment names a script reads (carried with their keyed value, or keyed as absent), and the declared reason of every script that stays on its host. / Was ein Build-Skript vom Host erfragen darf und trotzdem auf einer anderen Maschine läuft: Compiler-Fragen, die aus der deklarierten Toolchain-Identität des Laufschlüssels beantwortet werden (Versions-Proben), Compiler-Fragen, die dieselbe Toolchain brauchen (Kompilier-Proben), die gelesenen Umgebungsnamen (mit Schlüsselwert mitgegeben oder als abwesend verschlüsselt) und der deklarierte Grund jedes Skripts, das auf seinem Host bleibt.",
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arguments",
+        "lines"
+      ],
+      "properties": {
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "lines": {
+          "enum": [
+            "first",
+            "all"
+          ]
+        }
+      }
+    },
+    "Library": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "class"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "class": {
+          "enum": [
+            "version",
+            "compile"
+          ]
+        }
+      }
+    },
+    "Guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "targetOs"
+      ],
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "targetOs": {
+          "type": "string"
+        }
+      }
+    },
+    "HostBound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pattern",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "standIn",
+        "compilerEnvironment",
+        "spawn",
+        "libraries",
+        "targetGuards",
+        "hostBound",
+        "environment"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "standIn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "identity",
+            "refusedMarker",
+            "exitStatus",
+            "answers",
+            "lines"
+          ],
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "identity": {
+              "type": "string"
+            },
+            "refusedMarker": {
+              "type": "string"
+            },
+            "exitStatus": {
+              "type": "integer"
+            },
+            "answers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Answer"
+              }
+            },
+            "lines": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "compilerEnvironment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "carried",
+            "dropped"
+          ],
+          "properties": {
+            "carried": {
+              "type": "string"
+            },
+            "dropped": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "spawn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compilerSpellings",
+            "compileMarkers"
+          ],
+          "properties": {
+            "compilerSpellings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "compileMarkers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "libraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Library"
+          }
+        },
+        "targetGuards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Guard"
+          }
+        },
+        "hostBound": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HostBound"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "carriedPrefixes",
+            "carriedNames",
+            "unsafeValue",
+            "maximumBytes"
+          ],
+          "properties": {
+            "carriedPrefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "carriedNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "unsafeValue": {
+              "type": "string"
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "policy": {
+    "version": 1,
+    "standIn": {
+      "file": "in/tools/rustc",
+      "identity": "in/tools/rustc.identity",
+      "refusedMarker": ".semio-stand-in-refused",
+      "exitStatus": 97,
+      "answers": [
+        {
+          "arguments": [
+            "--version"
+          ],
+          "lines": "first"
+        },
+        {
+          "arguments": [
+            "-V"
+          ],
+          "lines": "first"
+        },
+        {
+          "arguments": [
+            "-vV"
+          ],
+          "lines": "all"
+        },
+        {
+          "arguments": [
+            "--version",
+            "--verbose"
+          ],
+          "lines": "all"
+        },
+        {
+          "arguments": [
+            "--verbose",
+            "--version"
+          ],
+          "lines": "all"
+        }
+      ],
+      "lines": [
+        "#!/bin/sh",
+        "# semio-rustc-stand-in",
+        "identity=\"$(dirname \"$0\")/rustc.identity\"",
+        "case \"$*\" in",
+        "\"--version\"|\"-V\") head -n 1 \"$identity\" ;;",
+        "\"-vV\"|\"--version --verbose\"|\"--verbose --version\") cat \"$identity\" ;;",
+        "*) : > \"$OUT_DIR/.semio-stand-in-refused\"; echo \"semio rustc stand-in: arguments not answered from the declared toolchain / Argumente nicht aus der deklarierten Toolchain beantwortbar\" >&2; exit 97 ;;",
+        "esac"
+      ]
+    },
+    "compilerEnvironment": {
+      "carried": "RUSTC",
+      "dropped": [
+        "RUSTC_WRAPPER",
+        "RUSTC_WORKSPACE_WRAPPER"
+      ]
+    },
+    "spawn": {
+      "compilerSpellings": [
+        "^rustc$",
+        "^rustc_wrapper$",
+        "^wrapper$",
+        "^rustc_workspace_wrapper$",
+        "^workspace_wrapper$",
+        "^cargo_env_var\\s*\\(\\s*\"RUSTC\"\\s*\\)$",
+        "^env\\s*::\\s*var_os\\s*\\(\\s*\"RUSTC\"\\s*\\)\\s*(?:\\?|\\.unwrap\\s*\\(\\s*\\)|\\.expect\\s*\\([^)]*\\))?$",
+        "^rustc\\s*\\.\\s*next\\s*\\(\\s*\\)\\s*\\.\\s*unwrap\\s*\\(\\s*\\)$",
+        "^[a-z_]*rustc[a-z_]*$"
+      ],
+      "compileMarkers": [
+        "\\bprobe\\b",
+        "--emit",
+        "--crate-type",
+        "--out-dir"
+      ]
+    },
+    "libraries": [
+      {
+        "name": "version_check",
+        "class": "version"
+      },
+      {
+        "name": "rustc_version",
+        "class": "version"
+      },
+      {
+        "name": "autocfg",
+        "class": "compile"
+      }
+    ],
+    "targetGuards": [
+      {
+        "program": "freebsd-version",
+        "targetOs": "freebsd"
+      },
+      {
+        "program": "emcc",
+        "targetOs": "emscripten"
+      }
+    ],
+    "hostBound": [
+      {
+        "id": "all-environment",
+        "pattern": "\\benv\\s*::\\s*vars(?:_os)?\\s*\\(",
+        "text": {
+          "en": "reads the whole environment",
+          "de": "liest die gesamte Umgebung"
+        }
+      },
+      {
+        "id": "git-revision",
+        "pattern": "Command\\s*::\\s*new\\s*\\(\\s*\"git\"",
+        "text": {
+          "en": "asks git for the revision of the source checkout",
+          "de": "fragt git nach der Revision des Quell-Checkouts"
+        }
+      },
+      {
+        "id": "bundled-assembler",
+        "pattern": "Command\\s*::\\s*new\\s*\\(\\s*\"\\./target/tools",
+        "text": {
+          "en": "starts an assembler it downloaded into the target directory",
+          "de": "startet einen Assembler, den es ins Target-Verzeichnis geladen hat"
+        }
+      },
+      {
+        "id": "native-library",
+        "pattern": "\\bpkg_config\\b|\\bcc\\s*::|\\bcmake\\s*::|\\bbindgen\\b|\\bvcpkg\\b|\\bsystem_deps\\b|\\bprotoc\\b|\\bprost_build\\b|\\btonic_build\\b|\\bcxx_build\\b|\\bwhich\\s*::",
+        "text": {
+          "en": "looks for native libraries or tools of the host",
+          "de": "sucht native Bibliotheken oder Werkzeuge des Hosts"
+        }
+      },
+      {
+        "id": "network",
+        "pattern": "std\\s*::\\s*net\\b|\\bTcpStream\\b|\\bUdpSocket\\b|\\bTcpListener\\b|\\breqwest\\b|\\bureq\\b|\\bcurl\\s*::|\\bhyper\\b",
+        "text": {
+          "en": "reaches the network",
+          "de": "greift auf das Netzwerk zu"
+        }
+      },
+      {
+        "id": "host-path",
+        "pattern": "\"(?:/(?![A-Z]+:)[A-Za-z0-9_.~-][^\"]*|~/[^\"]*|\\.\\.(?:/[^\"]*)?)\"",
+        "text": {
+          "en": "reads a path outside its package",
+          "de": "liest einen Pfad außerhalb seines Pakets"
+        }
+      }
+    ],
+    "environment": {
+      "carriedPrefixes": [
+        "DEP_"
+      ],
+      "carriedNames": [
+        "CARGO_MANIFEST_LINKS"
+      ],
+      "unsafeValue": "[/\\\\]|@root|^~",
+      "maximumBytes": 4096
+    }
+  }
+}

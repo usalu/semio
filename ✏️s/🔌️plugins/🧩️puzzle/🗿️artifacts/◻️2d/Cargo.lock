@@ -18899,8 +18899,6 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",

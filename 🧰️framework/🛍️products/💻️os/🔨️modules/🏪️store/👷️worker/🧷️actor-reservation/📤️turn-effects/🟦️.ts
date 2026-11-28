@@ -106,7 +106,7 @@ export class ReservationTurnEffects {
         }
         continue;
       }
-      if (mode === "control") throw new Error("actor-document-control.data-before-receipt");
+      if (mode === "control") { try { console.log("[DEBUG] vh-control-data", JSON.stringify({ kind: documentBackboneEffectV1(payload), bytes: payload.byteLength, target })); } catch (error) { console.log("[DEBUG] vh-control-data-undecodable", String(error)); } throw new Error("actor-document-control.data-before-receipt"); }
       if (target.tag !== "backbone" || typeof target.val !== "string") throw new Error("document browser actor: unsupported message target");
       if (!this.session.documentBackboneReady && !this.session.backboneDraining) throw new Error("actor-document-port.not-live");
       const binding = this.session.documentBinding;

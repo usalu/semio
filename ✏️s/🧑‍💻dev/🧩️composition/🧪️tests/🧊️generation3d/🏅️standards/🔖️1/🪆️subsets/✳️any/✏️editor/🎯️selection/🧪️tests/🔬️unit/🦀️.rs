@@ -27,21 +27,21 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
     {
         let ids = ["extrude@meshOut#0.face.0".into()];
         assert!(validate_cached_components(&snapshot.host_snapshot, session, &ids, None).is_err());
-        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, |host, session| {
+        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, crate::preview_reply::TURN, |host, session| {
             host.evaluate().unwrap();
             session.capture_baseline_from(host);
-        });
+        }).expect("the evaluation host binds its snapshot");
         validate_cached_components(&snapshot.host_snapshot, session, &ids, None).unwrap();
         for mode in ["face", "edge", "vertex"] {
             assert!(validate_cached_components(&snapshot.host_snapshot, session, &[format!("extrude@meshOut#0.{mode}.999999")], None).is_err());
         }
-        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, |host, session| {
+        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, crate::preview_reply::TURN, |host, session| {
             let (id, _, _) = semio_s_artifact_procedural_3d_transforms::ensure_component_node(host, &ids, "translate").unwrap();
             validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).unwrap();
             host.set_neuron_params("extrude", r#"{"distance":{"$schema":"number","value":0.7}}"#).unwrap();
             assert!(validate_cached_components(&host.host_snapshot, session, &ids, None).is_err());
             assert!(validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).is_err());
-        });
+        }).expect("the evaluation host binds its snapshot");
     }
     crate::flow_operators::retire_flow_eval_session(owned_session);
     snapshot.retire_cold();

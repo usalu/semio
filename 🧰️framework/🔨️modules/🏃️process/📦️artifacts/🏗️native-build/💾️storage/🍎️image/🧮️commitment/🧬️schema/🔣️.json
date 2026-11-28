@@ -1,0 +1,240 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 1,
+    "description": "The host-wide commitment budget of all sparse images. Every image declares a capacity that costs nothing until written, but every declaration may be filled, so the promises of all home images and all shards of all roots together are bounded by what the host volume can give. One image promises what it holds (its host blocks) plus a growth reserve of `growthReserveBytes`, never more than it declares: a sparse image that holds almost nothing does not claim its whole declaration against the ceiling, and the image that asks to grow is admitted against what the others really hold and may still grow by. the ceiling is the smaller of the volume capacity less a safety reserve and the blocks the images hold now plus the free bytes above the reserve multiplied by `overcommitPercent` (sparse images are rarely filled together, and collection returns idle ones). A birth or a growth is admitted only inside the ceiling; a request that does not fit is first answered by reclaiming (retiring idle images whole) and refused only when that cannot cover the shortfall. A new image promises the host only its growth reserve at birth (`nativeImageCommitmentRequestCostBytesV1`, the same unit a standing image is counted in), so a request is admitted against the room in that unit, never by its declared capacity; a room smaller than the growth reserve bounds what a birth may declare (`nativeImageCommitmentDeclarableBytesV1`).",
+    "reserveFloorBytes": 17179869184,
+    "reservePercent": 8,
+    "overcommitPercent": 300,
+    "growthReserveBytes": 4294967296,
+    "alignBytes": 1073741824,
+    "receiptName": "image.json",
+    "imageName": "fixed.dmg",
+    "messages": {
+     "refused": {
+      "en": "The host cannot promise {need} more image capacity: {committed} are declared already against a ceiling of {ceiling}.",
+      "de": "Der Host kann {need} weitere Image-Kapazit\u00e4t nicht zusagen: {committed} sind bereits gegen eine Obergrenze von {ceiling} deklariert."
+     }
+    }
+   }
+  },
+  "Ceiling": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hostCapacityBytes",
+    "hostFreeBytes",
+    "allocatedBytes",
+    "reserveBytes",
+    "ceilingBytes"
+   ],
+   "properties": {
+    "hostCapacityBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "hostFreeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "allocatedBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "reserveBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "ceilingBytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Admission": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ceilingBytes",
+    "committedBytes",
+    "requestBytes",
+    "admitted",
+    "roomBytes",
+    "shortfallBytes"
+   ],
+   "properties": {
+    "ceilingBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "committedBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "requestBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "admitted": {
+     "type": "boolean"
+    },
+    "roomBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "shortfallBytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Layout": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "platform",
+    "capacityBytes",
+    "fits"
+   ],
+   "properties": {
+    "platform": {
+     "enum": [
+      "darwin",
+      "linux",
+      "win32"
+     ]
+    },
+    "capacityBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "fits": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Corpus": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ceiling",
+    "admission",
+    "layout",
+    "sum",
+    "cost",
+    "declarable"
+   ],
+   "properties": {
+    "ceiling": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Ceiling"
+     }
+    },
+    "admission": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Admission"
+     }
+    },
+    "layout": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Layout"
+     }
+    },
+    "sum": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "rows",
+       "committedBytes"
+      ],
+      "properties": {
+       "committedBytes": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "rows": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "capacityBytes",
+          "allocatedBytes"
+         ],
+         "properties": {
+          "capacityBytes": {
+           "type": "integer",
+           "minimum": 1
+          },
+          "allocatedBytes": {
+           "type": "integer",
+           "minimum": 0
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "cost": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Cost"
+     }
+    },
+    "declarable": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Declarable"
+     }
+    }
+   }
+  },
+  "Cost": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "declaredBytes",
+    "costBytes"
+   ],
+   "properties": {
+    "declaredBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "costBytes": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "Declarable": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "roomBytes",
+    "declarableBytes"
+   ],
+   "properties": {
+    "roomBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "declarableBytes": {
+     "type": [
+      "integer",
+      "null"
+     ],
+     "minimum": 0
+    }
+   }
+  }
+ }
+}

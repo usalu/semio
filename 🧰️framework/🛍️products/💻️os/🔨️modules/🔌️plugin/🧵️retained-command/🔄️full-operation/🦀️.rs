@@ -550,7 +550,6 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let grant=effect.grant();
         if !self.result_page_retirement_pending(){return Ok(Default::default());}
         let demand=self.result_page_retirement_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;if !plugin_turn_admitted(demand,grant)?{return Ok(Default::default());}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<TypedOperationResultPage>>()-size_of::<bool>(),..grant};let page=self.result_page.as_mut().unwrap();let mut progress=page.close_step(&mut effect.nested(child)).map_err(plugin_retirement_fault)?.progress();
-        if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] page step items={} bytes={} rel={} cap={}",progress.copied_items,progress.copied_bytes,progress.released_bytes,progress.retained_capacity_bytes);}
         if page.terminal_is_empty(){self.result_page=None;self.result_page_presented=false;progress.copied_bytes+=size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>();}
         Ok(progress)
     }

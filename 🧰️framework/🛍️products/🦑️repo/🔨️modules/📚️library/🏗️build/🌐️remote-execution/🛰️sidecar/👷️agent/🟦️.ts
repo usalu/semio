@@ -1,6 +1,6 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {cacheAreaHomeV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {existsSync} from "node:fs";
+import {existsSync,mkdirSync,readFileSync,renameSync,writeFileSync} from "node:fs";
 import {availableParallelism,homedir,hostname,networkInterfaces} from "node:os";
 import {delimiter,join} from "node:path";
 import {refreshFleetCacheFactsV1,remoteCacheFetchV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
@@ -14,26 +14,43 @@ import {fleetFetchContextV1} from "../../../../⚡️caching/🚀️bootstrap/�
 import {refreshFleetMirrorStateV1} from "../../../../⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🪞️mirror/🟦️.ts";
 import {detectWorkerRustcV1} from "../../🚀️offload/🧰️toolchain/🟦️.ts";
 import {detectWorkerCommandsV1} from "../../🚀️offload/🧰️command/🛠️worker-tools/🟦️.ts";
+import {detectWorkerCheckoutTestsV1} from "../../🚀️offload/🔬️checkout-test/👷️worker/🟦️.ts";
 import {remoteExecutionWorkerWhyV1} from "../../🌡️load/🔎️why/🟦️.ts";
 import {checkRemoteExecutionAgentReadinessV1} from "../../🛰️agent/🩺️readiness/🟦️.ts";
 import {readRemoteExecutionPolicyV1,type RemoteExecutionSandboxV1} from "../../🟦️.ts";
 import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1,remoteExecutionWorkerApiV1} from "../🧰️shared/🟦️.ts";
 import {resolveRemoteExecutionEndpointV1} from "../../🧭️endpoint/🟦️.ts";
+import {readySidecarSilenceV1,readySilenceChildNoticeV1,readySilenceChildWatchV1,readySilencePolicyV1,readySilenceStatusFileV1} from "../🚦️ready/💔️silence/🟦️.ts";
 
 /** 🌱️ Runs the graph server as a child process of the agent with a closure of its own: an edit of the graph code (hundreds of files) restarts only this child, never the agent and its workers, and the child resumes from its state file. It is started again with a back-off when it ends (at once after status 75, which means new code), is asked to end (SIGTERM, it saves its state) when the agent stops or restarts, and is not started at all with `SEMIO_GRAPH_SERVER=off`. */
-export function superviseGraphChildV1(context:RemoteExecutionSidecarContextV1,entry:string,role:"graph"|"pool"|"ready"|"spool"="graph",options:Readonly<{graceMilliseconds?:number}>={}):Readonly<{stop():Promise<void>}>{
+export function superviseGraphChildV1(context:RemoteExecutionSidecarContextV1,entry:string,role:"graph"|"pool"|"ready"|"spool"="graph",options:Readonly<{graceMilliseconds?:number;silencePollMilliseconds?:number;silenceGraceMilliseconds?:number}>={}):Readonly<{stop():Promise<void>}>{
  const grace=options.graceMilliseconds??5000;
  const ended=new AbortController(),signal=AbortSignal.any([context.signal,ended.signal]);
  let child:ReturnType<typeof Bun.spawn>|undefined;
  const finished=(async():Promise<void>=>{
   if(context.environment[role==="graph"?"SEMIO_GRAPH_SERVER":role==="pool"?"SEMIO_OWNER_POOL":role==="spool"?"SEMIO_SPOOL":"SEMIO_READY"]==="off")return;
-  let delay=1000;
+  let delay=1000,startedMs=Date.now();
+  const statusFile=role==="ready"?readySilenceStatusFileV1(context.environment):undefined,watch=readySilenceChildWatchV1({...readySilencePolicyV1,silenceChildGraceMilliseconds:options.silenceGraceMilliseconds??readySilencePolicyV1.silenceChildGraceMilliseconds});
+  const watchdog=statusFile===undefined?undefined:setInterval(()=>{
+   const old=child;
+   if(old===undefined||signal.aborted)return;
+   try{
+    const status=JSON.parse(readFileSync(statusFile,"utf8")),now=Date.now();
+    if(watch.observe(status,now,startedMs)!=="restart")return;
+    const silence=readySidecarSilenceV1({status,nowMs:now}),text=readySilenceChildNoticeV1(silence);
+    context.write(`ready ${text}`);
+    try{const note=`${statusFile.slice(0,-"ready.json".length)}ready-wedge.json`,temporary=`${note}.${process.pid}.tmp`;mkdirSync(statusFile.slice(0,-"ready.json".length),{recursive:true});writeFileSync(temporary,JSON.stringify({version:1,pid:old.pid,atMs:now,silentMs:silence.ageMs,missedBeats:silence.missedBeats,en:text.split(" / ")[0],de:text.split(" / ")[1]}));renameSync(temporary,note);}catch{}
+    try{old.kill("SIGKILL");}catch{}
+   }catch{}
+  },options.silencePollMilliseconds??5000);
+  watchdog?.unref?.();
   while(!signal.aborted){
    const started=Date.now();
    let code=1;
+   startedMs=started;
    try{child=Bun.spawn([process.execPath,entry,role],{windowsHide:true,stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...context.environment,...role==="pool"?graphChildEnvironmentV1():{},SEMIO_SIDECAR_CHILD:"1"} as Record<string,string>});code=await child.exited;}catch{}
    child=undefined;
-   if(signal.aborted)return;
+   if(signal.aborted){if(watchdog!==undefined)clearInterval(watchdog);return;}
    if(code===75){delay=1000;await sleep(500,signal);continue;}
    if(Date.now()-started>=60_000)delay=1000;
    context.write(`${role} ended with status ${code}, starting again in ${delay/1000} s`);
@@ -77,7 +94,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
     if(next!==undefined&&next!==endpoint){say("the scheduler moved, joining the new one");controller.abort();}
    });
   },30_000);
-  const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)}),commands=await detectWorkerCommandsV1(context.root,environment);
+  const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)}),commands=await detectWorkerCommandsV1(context.root,environment),checkoutTests=await detectWorkerCheckoutTestsV1(context.root,environment);
   let directory=join(context.root,".cache"),detached:Error|undefined;
   try{directory=cacheAreaHomeV1(context.root,"remote-execution-worker").directory;}catch(error){if((error as Error).name!=="CacheAreaDetachedError")throw error;detached=error as Error;}
   const why=detached!==undefined?remoteExecutionWorkerWhyV1("partition-detached",detached.message.split(" / ")[0]):checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
@@ -87,7 +104,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
    await runRemoteExecutionAgentV1({
     root:context.root,code,environment,scheduler,token,cacheToken:token,fetch:schedulerCall,cacheFetch:cacheCall,actions:policy.worker.actions as "rustc"|"any"|"none",concurrency:policy.worker.concurrency===0?availableParallelism():policy.worker.concurrency,
     directory,sandbox:policy.worker.sandbox as "auto"|RemoteExecutionSandboxV1,materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
-    network:policy.worker.network as "deny"|"allow",confinement:policy.worker.confinement as "required"|"best-effort",loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:[...rustc?.properties??[],...commands.properties],...rustc?{tools:rustc.tools}:{},commands:commands.tools,worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
+    network:policy.worker.network as "deny"|"allow",confinement:policy.worker.confinement as "required"|"best-effort",loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:[...rustc?.properties??[],...commands.properties,...checkoutTests?.properties??[]],...rustc?{tools:rustc.tools}:{},commands:commands.tools,...checkoutTests?{checkoutTests}:{},worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
     onEvent:event=>{say(`worker ${event.stage}: ${event.detail}`);},onReport:event=>{say(`load report ${event.stage}: ${event.detail}`);},
    });
   }finally{clearInterval(watch);if(recheck!==undefined)clearTimeout(recheck);context.signal.removeEventListener("abort",stop);}

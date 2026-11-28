@@ -22,7 +22,7 @@ solidSuite("🧵️loft", (c, ours, resolved) => {
   const sections = (c.document.solids[0] as any).sections as Section[];
   if (c.expected.oracle === "CylinderGeometry") {
     const length = new Vector3(...(sections[sections.length - 1]!.at as [number, number, number])).distanceTo(new Vector3(...(sections[0]!.at as [number, number, number])));
-    const cylinder = new CylinderGeometry(sections[sections.length - 1]!.rx, sections[0]!.rx, length, 192, 1);
+    const cylinder = new CylinderGeometry(sections[sections.length - 1]!.rx, sections[0]!.rx, length, c.expected.segments ?? 192, 1);
     cylinder.deleteAttribute("normal");
     cylinder.deleteAttribute("uv");
     expect(Math.abs(Math.abs(signedVolume(cylinder)) - signedVolume(ours)) / signedVolume(ours)).toBeLessThan(0.01);

@@ -463,6 +463,13 @@ pub mod testing {
         RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 }
     }
 
+    static DBG: [std::sync::atomic::AtomicU64; 5] = [const { std::sync::atomic::AtomicU64::new(0) }; 5];
+    fn dbg_count(i: usize) {
+        use std::sync::atomic::Ordering::Relaxed;
+        let n = DBG[i].fetch_add(1, Relaxed) + 1;
+        if n % 250_000 == 0 { eprintln!("[DEBUG] step_job false-branch counts recv={} admit={} preparing={} pending={}", DBG[0].load(Relaxed), DBG[1].load(Relaxed), DBG[2].load(Relaxed), DBG[3].load(Relaxed)); }
+    }
+
     /// 🪪️ One fixture keeps the original roots, physical decoder, clock and cumulative source stock through every work and close turn.
     pub struct OriginalFixture {
         caller: Option<semio_framework_job::OriginalJobFixtureCaller>,
@@ -489,14 +496,15 @@ pub mod testing {
         /// 🔭️ [`Self::step_job`] that also reports the callback verdict the production step observed.
         pub fn step_job_observed<J: InteractiveJob + ?Sized>(&mut self, job: &mut J, budget: semio_framework_job::StepBudget, verdict: &mut Option<semio_framework_trace::CallbackVerdict>) -> Result<Option<(JobTurn, Option<Vec<u8>>)>, semio_framework_job::OriginalTurnFailure> {
             let answered = self.caller.as_mut().expect("original fixture remains live").turn_with_decoder(budget.retained, &mut self.decoder, |cx| {
-                if self.received.is_some() && !self.returns.receive_outcome(cx, &mut self.received)? { return Ok(false); }
+                if self.received.is_some() && !self.returns.receive_outcome(cx, &mut self.received)? { dbg_count(0); return Ok(false); }
                 if self.summary.is_some() { return self.returns.acknowledge_outcome(cx); }
                 let admission_work = cx.original_source_parent()?.loan_admission_work_demand()?;
-                if !cx.with_original_work_loan(admission_work, budget.deadline_us, |cx| self.returns.admit(cx))? { return Ok(false); }
+                if !cx.with_original_work_loan(admission_work, budget.deadline_us, |cx| self.returns.admit(cx))? { dbg_count(1); return Ok(false); }
                 cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
                     let (_, receiver) = self.returns.context_parts()?;
                     match semio_framework_job::drive_step(job, cx, receiver, "puzzle_fixture", semio_framework_job::InteractiveStage::InteractiveStep, verdict)? {
-                        semio_framework_job::OriginalJobReturn::Preparing | semio_framework_job::OriginalJobReturn::Pending => Ok(false),
+                        semio_framework_job::OriginalJobReturn::Preparing => { dbg_count(2); Ok(false) }
+                        semio_framework_job::OriginalJobReturn::Pending => { dbg_count(3); Ok(false) }
                         semio_framework_job::OriginalJobReturn::Outcome(reply) => {
                             self.summary = Some(match reply.original() {
                                 None => (JobTurn::Yield, None),
@@ -682,6 +690,7 @@ mod tests {
     impl EchoJob {
     /// 🪜️ Runs the authored body under the original caller before the trait boundary returns its failure.
     fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+            if let Some(turn)=cx.cancelled_turn(){return turn}
             match self.outbox.phase(cx)? {
                 OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                 OutboxPhase::Delivered | OutboxPhase::Retiring => {
@@ -765,5 +774,26 @@ impl InteractiveJob for EchoJob {
             original.close_job(&mut job);
             original.finish();
         }
+    }
+
+    /// 🛑️ A cancelled step cancels before it quotes demands or takes the wire, and a job cancelled mid-run cancels at its next step.
+    #[test]
+    fn a_cancelled_echo_step_cancels_before_any_work_and_mid_run_at_the_next_step() {
+        use semio_framework_job::cancel_probe::{CancelProbe, ProbeTurn};
+        let raw = vec![0xA5; 1 << 16];
+        let mut job = EchoJob::new(raw.clone());
+        let mut probe = CancelProbe::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(1));
+        probe.cancel();
+        assert_eq!(probe.step_to_outcome(&mut job, 1 << 20, 4096), ProbeTurn::Cancelled);
+        assert_eq!(job.raw, raw, "the cancelled step never takes the wire");
+        probe.close(&mut job);
+
+        let mut job = EchoJob::new(raw.clone());
+        let mut probe = CancelProbe::new(semio_framework_job::OperationId(3), semio_framework_job::Generation(1));
+        assert_ne!(probe.step(&mut job, 1 << 20), ProbeTurn::Cancelled);
+        assert!(job.raw.is_empty(), "a live step takes the wire into its outbox");
+        probe.cancel();
+        assert_eq!(probe.step_to_outcome(&mut job, 1 << 20, 4096), ProbeTurn::Cancelled);
+        probe.close(&mut job);
     }
 }

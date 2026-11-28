@@ -1,0 +1,24 @@
+{
+  "why": "Example invocations of the FEM 2D editor's verbs that act on its demo example (nodes n1 n2 p8 p0_l1, beam e3, steel, chs76, slab r1 on concrete, cases dead live, combination uls). The declared-verb law boots every probe with `setActiveExample` below and overlays these arguments on the staged declared defaults, so every declared argument is probed on an invocation that can act.",
+  "verbs": {
+    "setActiveExample": { "exampleId": "demo" },
+    "addBar": { "start": "n1", "end": "p8", "materialId": "steel", "sectionId": "chs76" },
+    "addBeam": { "start": "n1", "end": "p8", "materialId": "steel", "sectionId": "chs76" },
+    "addSupport": { "nodeId": "p0_l1" },
+    "addNodalLoad": { "nodeId": "p8_l1", "value": -100 },
+    "addMemberUdl": { "elementId": "e3", "wy": -100 },
+    "addAreaLoad": { "regionId": "r1", "pressure": 100 },
+    "addRegion": { "x": 20, "y": 0, "width": 3, "height": 3, "materialId": "concrete" },
+    "addCombination": { "name": "SLS", "terms": "dead:1, live:1" },
+    "setSelfWeight": { "caseId": "live", "enabled": true },
+    "patchNode": { "id": "p8", "field": "x", "value": "8.5" },
+    "patchElement": { "id": "e3", "field": "materialId", "value": "timber" },
+    "patchMaterial": { "id": "steel", "field": "nu", "value": "0.31" },
+    "patchSection": { "id": "chs76", "field": "area", "value": "0.002" },
+    "patchSupport": { "id": "s1", "field": "tx", "value": "false" },
+    "patchRegion": { "id": "r1", "field": "thickness", "value": "0.25" },
+    "patchLoadCase": { "id": "live", "field": "name", "value": "Imposed" },
+    "patchCombination": { "id": "uls", "field": "term:live", "value": "1.4" },
+    "focusEntity": { "id": "r1" }
+  }
+}

@@ -1,3 +1,4 @@
+import{requireNativeStorageRootCapabilityV1}from"../../🛂️root-capability/🟦️.ts";
 import schema from"../👟️kick/🧬️schema/🔣️.json" with { type: "json" };
 import{nativeImageInventoryV1,nativeImageInformationV1}from"../📥️information/🟦️.ts";
 import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../👤️owners/🟦️.ts";
@@ -9,7 +10,7 @@ const rowOf=async(run:CommandRunnerV1,image:string):Promise<RecordV1|undefined>=
 /** 🧽️ Deletes every sibling volume `semio-trim` that a killed in-place kick left in the containers of an image: the image attaches without a mount (a volume of a failed attach never mounts), each container is listed through `diskutil apfs list` and the sibling volumes are deleted, and an image that this call attached, or that holds no mount, is detached again. Returns whether a volume was deleted; an image that is mounted is never touched, its sibling volume may belong to a kick that is running. macOS only; the volume is the kick's own scratch volume and holds nothing.
  * @see ../👟️kick/🟦️.ts */
 export async function removeNativeImageSiblingVolumesV1(run:CommandRunnerV1,image:string):Promise<boolean>{
- let row=await rowOf(run,image),own=false;
+ requireNativeStorageRootCapabilityV1(image,"remove-volumes");let row=await rowOf(run,image),own=false;
  if(row===undefined){await run(nativeImageAttachProgramV1,["image","attach","--noMount","--nobrowse",image]);row=await rowOf(run,image);own=true;}
  if(row===undefined)return false;
  const entities=list(row[mechanism.entitiesKey]),devices=entities.map(entity=>entity[mechanism.entryKey]).filter((value):value is string=>typeof value==="string"&&/^\/dev\/disk[0-9]+$/u.test(value)),mounted=entities.some(entity=>typeof entity["mount-point"]==="string");

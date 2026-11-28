@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-section`: one-field edit of a cross-section (`name`, `area`, `iy`) → `ChangeSection`.
 
 use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSectionPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;

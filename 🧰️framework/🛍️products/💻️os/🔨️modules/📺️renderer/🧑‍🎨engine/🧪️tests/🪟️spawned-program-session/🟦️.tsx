@@ -43,6 +43,7 @@ import {
   spawnedLayoutRenameV1,
   spawnedProgramWindowInstancesV1,
   spawnedWindowInstanceIdV1,
+  treeWindowViewFieldsOfProgramV1,
   spawnedWindowKindOfInstanceV1,
   spawnProgramRefusalCodeV1,
   spawnProgramRefusalNoticeTextV1,
@@ -119,6 +120,14 @@ describe("🪟️ spawned window identity", () => {
     expect(guestWindowIdV1("draw-1::draw-main", ["draw-1"])).toBe("draw-main");
     expect(guestWindowIdV1("s-home-main", ["draw-1"])).toBe("s-home-main");
     expect(guestWindowIdV1(null, ["draw-1"])).toBe(undefined);
+  });
+
+  it("addresses tree-window state to the program that owns the window, under the guest's own body key", () => {
+    const fields = { treeViewportRows: 9, treeWindows: [{ bodyKey: "panel:outliner", nodeKey: "a" }, { bodyKey: "office-1::main", nodeKey: "b" }, { bodyKey: "office-2::main", nodeKey: "c" }] };
+    const guestBodyKeyOf = (guestWindowId: string) => (guestWindowId === "main" ? "framework.window.table" : undefined);
+    expect(treeWindowViewFieldsOfProgramV1(fields, null, ["office-1", "office-2"], guestBodyKeyOf).treeWindows).toEqual([{ bodyKey: "panel:outliner", nodeKey: "a" }]);
+    expect(treeWindowViewFieldsOfProgramV1(fields, "office-1", ["office-1", "office-2"], guestBodyKeyOf)).toEqual({ treeViewportRows: 9, treeWindows: [{ bodyKey: "framework.window.table", nodeKey: "b" }] });
+    expect("treeWindows" in treeWindowViewFieldsOfProgramV1(fields, "office-3", ["office-1", "office-2", "office-3"], guestBodyKeyOf)).toBe(false);
   });
 
   const presentEntries = (entries: Readonly<Record<string, string | null | undefined>>): Record<string, string | null> => {

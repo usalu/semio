@@ -53,7 +53,9 @@ def sn(dc, ns):
     ly = np.log10([dc, dd, dl])
     ns = np.asarray(ns, dtype=float)
     lo = np.log10(ns)
-    below = 10 ** np.interp(lo, lx, ly)
+    inside = 10 ** np.interp(lo, lx, ly)
+    steep = 10 ** (ly[0] + (lx[0] - lo) / 3)
+    below = np.where(ns < 2e6, steep, inside)
     return np.where(ns > 1e8, dl, below).tolist()
 
 

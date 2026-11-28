@@ -57,6 +57,18 @@ pub struct Fem3dSnapshot {
     pub analysis: FemAnalysisSettings,
 }
 
+/// 🔏️ Digest of everything a solve depends on: every entity and the physics analysis settings; display-only settings such as the deformation scale are left out, so an equal digest means the current results still hold.
+impl Fem3dSnapshot {
+    pub fn physics_fingerprint(&self) -> u64 {
+        let Self { nodes, elements, materials, sections, solids, supports, load_cases, combinations, analysis } = self;
+        let mut hasher = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::PhysicsHasher::default();
+        nodes.iter().for_each(|row| { hasher.debug(row); });
+        materials.iter().for_each(|row| { hasher.debug(row); });
+        hasher.debug(elements).debug(sections).debug(solids).debug(supports).debug(load_cases).debug(combinations).analysis(analysis);
+        hasher.finish()
+    }
+}
+
 impl Fem3dSnapshot {
 
     /// 🛂️ Checks borrowed native record identities before any typed snapshot owner is constructed.

@@ -1,0 +1,130 @@
+import {mkdirSync,readFileSync,renameSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import {freeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
+import {volumeMountOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
+import {machineHostCapV1,machineHostFloorV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
+import machinePolicy from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json" with {type:"json"};
+import {CAS_BUDGET_V1,CAS_POLICY_V1,CAS_RESERVE_FACTOR_V1,type CasBudgetV1,type CasPolicyV1,type CasRoleSizingV1,type CasRoleV1} from "../🧬️schema/🟦️.ts";
+
+/** 🌡️ The partition that holds a path: its mount point, size, the bytes a writer may still use and the role of the machine for the store (read where the partition is measured, so every cap computed from it agrees). */
+export type CasPartitionV1=Readonly<{partition:string;totalBytes:number;freeBytes:number;role?:CasRoleV1}>;
+/** 🧑‍🏭️ The environment variable that names the role of a machine explicitly (`worker`, `builder` or `cache-host`). */
+export const CAS_ROLE_ENVIRONMENT_V1="SEMIO_CAS_ROLE";
+
+/** 🔭️ Measures the partition of a path (of its nearest existing ancestor); `undefined` when the host cannot say how large the partition is, so that no collection starts on a guess. @see ../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts */
+export function measureCasPartitionV1(path:string):CasPartitionV1|undefined{
+ const space=freeSpaceSyncV1(path,{nearest:true});
+ if(space?.totalBytes===undefined||!(space.totalBytes>0))return undefined;
+ return Object.freeze({partition:volumeMountOfV1(path),totalBytes:space.totalBytes,freeBytes:Math.min(space.totalBytes,space.availableBytes),role:readCasRoleV1(path)});
+}
+
+/** 📏️ The share of a partition in use, counting `incomingBytes` still to be written. */
+export const casPartitionUsedFractionV1=(partition:Pick<CasPartitionV1,"totalBytes"|"freeBytes">,incomingBytes:number=0):number=>(partition.totalBytes-partition.freeBytes+incomingBytes)/partition.totalBytes;
+
+/** 🧮️ The bytes the store has to free so that its partition falls to the low used share: 0 unless the partition is above its high used share. */
+export function casPartitionNeedBytesV1(partition:Pick<CasPartitionV1,"totalBytes"|"freeBytes">|undefined,policy:Pick<CasPolicyV1,"partition">):number{
+ if(partition===undefined)return 0;
+ const used=partition.totalBytes-partition.freeBytes,{highUsedFraction,lowUsedFraction}=policy.partition;
+ return used>partition.totalBytes*highUsedFraction?Math.ceil(used-partition.totalBytes*lowUsedFraction):0;
+}
+
+/** 🚦️ What a writer or a build does before it adds to the partition: go on, start a collection in the background and go on, wait for a collection, measure the store in the background, or be refused. */
+export type CasEnforcementActionV1="allow"|"collect-background"|"collect-now"|"measure"|"refuse";
+/** 🚦️ Why: it fits, the store is above its high watermark or its cap, the partition is above its high or critical share, or the size of the store is not known yet. */
+export type CasEnforcementReasonV1="fits"|"cap-high"|"cap-exceeded"|"partition-high"|"partition-critical"|"unknown-usage";
+/** 🚦️ Everything the pure admission rule decides on: the bytes the store holds (`undefined` when not known), the bytes about to be written, the partition (`undefined` when not measurable) and whether a collection already ran within the minimum age. */
+export type CasEnforcementInputV1=Readonly<{policy:Pick<CasPolicyV1,"capBytes"|"highWatermark"|"partition">;storeBytes:number|undefined;incomingBytes:number;partition:Pick<CasPartitionV1,"totalBytes"|"freeBytes">|undefined;collected:boolean}>;
+/** 🚦️ The verdict on one write or build. */
+export type CasEnforcementDecisionV1=Readonly<{action:CasEnforcementActionV1;reason:CasEnforcementReasonV1}>;
+
+/** 🚦️ Decides what a write or a build does. The partition is judged first: at its critical used share a write waits for a collection and is refused when one already ran and the share is still critical; at its high share a collection starts in the background. Then the store: above its cap a write waits for a collection (after one ran it goes on, because what is left is pinned, leased or too young and refusing would stop builds that need nothing from the store), above its high watermark a collection starts in the background, and an unknown size is measured in the background. Pure and deterministic; the independent Python oracle in the tests judges the same cases. */
+export function decideCasEnforcementV1(input:CasEnforcementInputV1):CasEnforcementDecisionV1{
+ const verdict=(action:CasEnforcementActionV1,reason:CasEnforcementReasonV1):CasEnforcementDecisionV1=>Object.freeze({action,reason});
+ if(input.partition!==undefined){
+  const used=casPartitionUsedFractionV1(input.partition,input.incomingBytes),{criticalUsedFraction,highUsedFraction}=input.policy.partition;
+  if(used>=criticalUsedFraction)return verdict(input.collected?"refuse":"collect-now","partition-critical");
+  if(used>=highUsedFraction&&!input.collected)return verdict("collect-background","partition-high");
+ }
+ if(input.storeBytes===undefined)return verdict("measure","unknown-usage");
+ const held=input.storeBytes+input.incomingBytes;
+ if(held>input.policy.capBytes&&!input.collected)return verdict(input.partition===undefined?"collect-now":"collect-background","cap-exceeded");
+ if(held>input.policy.capBytes*input.policy.highWatermark&&!input.collected)return verdict("collect-background","cap-high");
+ return verdict("allow","fits");
+}
+
+/** 📐️ The disk budget of one partition in bytes: the cushion that must stay free after a command starts, the reserve below which a collection starts, the hysteresis a collection frees beyond it, and whether the partition is large enough to derive them (`derivable`). */
+export type CasPartitionBudgetV1=Readonly<{derivable:boolean;cushionBytes:number;reserveBytes:number;hysteresisBytes:number}>;
+
+/** 📐️ Derives the disk budget from the size of the partition instead of a fixed used share, so a 256 GB disk and a 4 TB disk both keep what a stage needs free: cushion = largest need / divisor, reserve = largest need x the safety factor of the scale family, hysteresis = largest need; derivable only from `minimumTotalFactor` x (reserve + hysteresis) bytes. @see ../🧬️schema/🔣️.json */
+export function casPartitionBudgetV1(totalBytes:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPartitionBudgetV1{
+ const reserveBytes=budget.largestNeedBytes*factor,hysteresisBytes=budget.largestNeedBytes;
+ return Object.freeze({derivable:totalBytes>=(reserveBytes+hysteresisBytes)*budget.minimumTotalFactor,cushionBytes:Math.ceil(budget.largestNeedBytes/budget.cushionDivisor),reserveBytes,hysteresisBytes});
+}
+
+/** 🌡️ The policy a partition is judged by (on the host that runs the fleet cache server a store above the cap in force also judges its held entries against that cap, never below the protected share of the proportional cap, so the least recently used holder entries make room instead of the server refusing every write for good): the declared policy with the used shares replaced by the shares its derived budget gives (critical = 1 - cushion / size, high = 1 - reserve / size, low = 1 - (reserve + hysteresis) / size); a partition that cannot derive them, or an unmeasured one, keeps the declared shares. */
+export function casPartitionPolicyForV1(policy:CasPolicyV1,partition:(Pick<CasPartitionV1,"totalBytes">&Partial<Pick<CasPartitionV1,"freeBytes"|"role">>) | undefined,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPolicyV1{
+ if(partition===undefined)return policy;
+ const cap=casEffectiveCapBytesV1(policy,partition,storeBytes,budget,factor),proportional=casProportionalCapBytesV1(policy,partition,storeBytes,budget,factor),role=policy.sizing.roles.find(entry=>entry.id===(partition.role??policy.sizing.defaultRole)),heldCap=proportional>cap?(role?.server===true&&storeBytes!==undefined&&storeBytes>cap?Math.max(cap,Math.floor(proportional*policy.holderProtectedShare)):proportional):undefined,capped=cap===policy.capBytes?policy:Object.freeze({...policy,capBytes:cap,...heldCap===undefined?{}:{heldCapBytes:heldCap}}),derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ if(!derived.derivable)return capped;
+ const total=partition.totalBytes;
+ return Object.freeze({...capped,partition:Object.freeze({criticalUsedFraction:1-derived.cushionBytes/total,highUsedFraction:1-derived.reserveBytes/total,lowUsedFraction:1-(derived.reserveBytes+derived.hysteresisBytes)/total})});
+}
+
+/** 🧑‍🏭️ Where the role records of a store live: one small file per role, `<root>/v1/r/<role>.json`. */
+export const casRoleDirectoryV1=(root:string):string=>join(root,"v1","r");
+
+/** 🧑‍🏭️ Declares that this machine plays `role` for the store (the fleet cache server declares `cache-host` while it runs): writes a record that expires after `sizing.roleTtlMs` unless renewed. */
+export function declareCasRoleV1(root:string,role:CasRoleV1,policy:Pick<CasPolicyV1,"sizing">=CAS_POLICY_V1,now:number=Date.now()):void{
+ const directory=casRoleDirectoryV1(root);mkdirSync(directory,{recursive:true});
+ const target=join(directory,role+".json"),temporary=join(directory,role+"."+process.pid+".tmp");
+ writeFileSync(temporary,JSON.stringify({version:1,role,renewedAtMs:now,expiresAtMs:now+policy.sizing.roleTtlMs}));renameSync(temporary,target);
+}
+
+/** 🧑‍🏭️ The role of this machine for the store at `root`: the environment `SEMIO_CAS_ROLE` when it names a role, else the strongest role with a live record (cache-host before builder before worker, the order of the declared roles reversed), else `sizing.defaultRole`. */
+export function readCasRoleV1(root:string,policy:Pick<CasPolicyV1,"sizing">=CAS_POLICY_V1,environment:Readonly<Record<string,string|undefined>>=process.env,now:number=Date.now()):CasRoleV1{
+ const declared=policy.sizing.roles,named=declared.find(role=>role.id===environment[CAS_ROLE_ENVIRONMENT_V1]);
+ if(named!==undefined)return named.id;
+ for(const role of [...declared].reverse())try{const record=JSON.parse(readFileSync(join(casRoleDirectoryV1(root),role.id+".json"),"utf8")) as {expiresAtMs?:number};if(typeof record.expiresAtMs==="number"&&record.expiresAtMs>now)return role.id;}catch{}
+ return policy.sizing.defaultRole;
+}
+
+/** 📐️ The bytes a role needs at least: transient offload inputs, the full release caches of its checkouts and, on the server host, the fleet cache server's blobs. */
+export function casRoleFloorBytesV1(policy:Pick<CasPolicyV1,"sizing">,role:CasRoleV1):number{
+ const row=policy.sizing.roles.find(entry=>entry.id===role)??policy.sizing.roles.find(entry=>entry.id===policy.sizing.defaultRole)!;
+ return policy.sizing.transientBytes+row.releases*policy.sizing.releaseBytes+(row.server?policy.sizing.serverBytes:0);
+}
+
+/** 🧱️ The ceiling of the store derived from the machine budget: the declared `capBytes` or, when smaller, `hostSharePercent` of the partition (`machineHostCapV1`), so the store never plans more than the machine budget leaves to all caches together. @see ../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json */
+export const casBudgetCapBytesV1=(policy:Pick<CasPolicyV1,"capBytes">,partition:Pick<CasPartitionV1,"totalBytes">|undefined):number=>Math.min(policy.capBytes,machineHostCapV1(machinePolicy,partition?.totalBytes));
+
+/** 🧯️ The proportional cap on this partition for the machine's role (`partition.role`, else the default role): the larger of the role's share of the partition, its floor (`casRoleFloorBytesV1`: transient inputs + the release caches of its checkouts + the server blobs on the cache host) and its claim on free room (`freePercent` of the room below, so the cache host's cap follows the free space of its partition and is recomputed on every judgement), at most what the store holds plus what the partition can still give above its free headroom (the larger of the machine budget's host floor `machineHostFloorV1` and the reserve below its high watermark, so the store's own growth never pushes the partition over it), never below `minimumCapBytes` and never above the ceiling of the machine budget `casBudgetCapBytesV1` (the declared `capBytes` or `hostSharePercent` of the partition), aligned down to the alignment step of the machine budget so that the cap does not move with every written byte. The store therefore shrinks as the disk fills instead of waiting for the critical share. An unknown store size leaves the room out. The fleet cache server's blob bound is a share of this number (`remoteCacheBlobBoundV1`) and so follows it. @see ../🧬️schema/🔣️.json */
+export function casProportionalCapBytesV1(policy:Pick<CasPolicyV1,"capBytes"|"minimumCapBytes"|"sizing"|"partition">,partition:Pick<CasPartitionV1,"totalBytes"|"role">&Partial<Pick<CasPartitionV1,"freeBytes">>,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):number{
+ const role=policy.sizing.roles.find(entry=>entry.id===(partition.role??policy.sizing.defaultRole))??policy.sizing.roles.find(entry=>entry.id===policy.sizing.defaultRole)!,derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ const hostFloor=machineHostFloorV1(machinePolicy,partition.totalBytes),watermarkFree=derived.derivable?derived.reserveBytes:Math.ceil(partition.totalBytes*(1-policy.partition.highUsedFraction)),headroom=Math.max(hostFloor,watermarkFree);
+ const share=Math.floor(partition.totalBytes*role.sharePercent/100),room=storeBytes===undefined?Infinity:storeBytes+Math.max(0,(partition.freeBytes??0)-headroom),claim=Number.isFinite(room)?Math.floor(room*role.freePercent/100):0,wantedBytes=Math.max(share,casRoleFloorBytesV1(policy,role.id),claim),step=machinePolicy.alignBytes;
+ const wanted=Math.max(policy.minimumCapBytes,Math.min(wantedBytes,room)),aligned=Math.max(policy.minimumCapBytes,Math.floor(wanted/step)*step);
+ return Math.min(casBudgetCapBytesV1(policy,partition),aligned);
+}
+
+
+/** 🛟️ The floor of a role's hard reserve on a partition: the declared `reserveFloorBytes` bounded by `reserveFloorMaxPercent` of the partition, so a floor sized for a 926 GiB server never claims a third of a 228 GiB laptop volume. @see ../🧬️schema/🔣️.json */
+export const casReserveFloorBytesV1=(policy:Pick<CasPolicyV1,"sizing">,role:Pick<CasRoleSizingV1,"reserveFloorBytes">,totalBytes:number):number=>Math.min(role.reserveFloorBytes,Math.floor(totalBytes*policy.sizing.reserveFloorMaxPercent/100));
+
+/** 🛟️ The hard free-space reserve of a role on a partition in bytes: the largest of `reservePercent` of the partition, the volume-bounded floor (`casReserveFloorBytesV1`) and the machine budget's host free floor (`machineHostFloorV1`, so the store never plans to use what the machine budget keeps free), at most half the partition. On a 926 GiB cache host: 8 % = 74.08 GiB (floor 72 GiB: the 70 GiB a release build needs free, plus 2 GiB); on a 228 GiB laptop 12 % = 27.36 GiB. @see ../🧬️schema/🔣️.json */
+export function casReserveBytesV1(policy:Pick<CasPolicyV1,"sizing">,partition:Pick<CasPartitionV1,"totalBytes"|"role">):number{
+ const role=policy.sizing.roles.find(entry=>entry.id===(partition.role??policy.sizing.defaultRole))??policy.sizing.roles.find(entry=>entry.id===policy.sizing.defaultRole)!;
+ return Math.min(Math.floor(partition.totalBytes/2),Math.max(Math.floor(partition.totalBytes*role.reservePercent/100),casReserveFloorBytesV1(policy,role,partition.totalBytes),machineHostFloorV1(machinePolicy,partition.totalBytes)));
+}
+
+/** 🛟️ Where the partition stands against its reserve: the reserve, the free bytes and the distance to it (negative below the reserve). */
+export type CasReserveStateV1=Readonly<{reserveBytes:number;freeBytes:number;distanceBytes:number}>;
+/** 🛟️ The state of a measured partition against the reserve of its role. */
+export const casReserveStateV1=(policy:Pick<CasPolicyV1,"sizing">,partition:Pick<CasPartitionV1,"totalBytes"|"freeBytes"|"role">):CasReserveStateV1=>{const reserveBytes=casReserveBytesV1(policy,partition);return Object.freeze({reserveBytes,freeBytes:partition.freeBytes,distanceBytes:partition.freeBytes-reserveBytes});};
+
+/** 🧯️ The cap in force: the smaller of the proportional cap (`casProportionalCapBytesV1`) and what keeps the free room at the role's hard reserve, `store bytes + free - reserve` (aligned down, never below `minimumCapBytes`): the store never grows into the reserve, and when the free room falls below it the cap falls below the store, so the collector frees expired inputs and unreferenced data in bounded steps (never a held entry: the planner judges those against `heldCapBytes`, the proportional cap). Without a known store size or free room only the proportional cap applies. @see ../🧬️schema/🔣️.json */
+export function casEffectiveCapBytesV1(policy:Pick<CasPolicyV1,"capBytes"|"minimumCapBytes"|"sizing"|"partition">,partition:Pick<CasPartitionV1,"totalBytes"|"role">&Partial<Pick<CasPartitionV1,"freeBytes">>,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):number{
+ const proportional=casProportionalCapBytesV1(policy,partition,storeBytes,budget,factor);
+ if(storeBytes===undefined||partition.freeBytes===undefined)return proportional;
+ const hard=storeBytes+partition.freeBytes-casReserveBytesV1(policy,partition),step=machinePolicy.alignBytes;
+ return Math.min(proportional,Math.max(policy.minimumCapBytes,Math.floor(hard/step)*step));
+}

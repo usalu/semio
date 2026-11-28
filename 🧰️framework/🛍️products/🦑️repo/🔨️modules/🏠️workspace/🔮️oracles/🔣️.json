@@ -88,17 +88,5 @@
       ],
       "coversMutations": false
     }
-  ],
-  "oracleHostPackages": [
-    {
-      "implementation": "typescript",
-      "package": "micromatch",
-      "version": "4.0.8"
-    },
-    {
-      "implementation": "typescript",
-      "package": "ignore",
-      "version": "7.0.5"
-    }
   ]
 }

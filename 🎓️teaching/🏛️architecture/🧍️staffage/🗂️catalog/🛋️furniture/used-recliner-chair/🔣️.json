@@ -16196,15 +16196,15 @@
      },
      {
       "id": "mass-blanket",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "blanket",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16218,15 +16218,15 @@
      },
      {
       "id": "mass-frame",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "frame",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16240,15 +16240,15 @@
      },
      {
       "id": "mass-seat",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16262,15 +16262,15 @@
      },
      {
       "id": "mass-back",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "back",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16284,15 +16284,15 @@
      },
      {
       "id": "mass-link",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "link",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16306,15 +16306,15 @@
      },
      {
       "id": "mass-footrest",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "footrest",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16328,15 +16328,15 @@
      },
      {
       "id": "mass-lever",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "lever",
       "material": "steel-black",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -16355,8 +16355,8 @@
       "de": "Für 75 mm modelliert: jeder Arm ist ein gezogener Kasten mit der Rundung im Seitenprofil, die Lehne ein Kissen, Sitz, Sitzkasten, Fußstützenblock, Deckenplatte und Drehrohr; die Gleiter bleiben als kleine Teile im Armsockel."
      },
      {
-      "en": "Structure: arm frames as 80 mm walls, the back stiles slender, seat box, link plates and lever slender, masses of the scale's feature.",
-      "de": "Tragwerk: Armrahmen als 80-mm-Wände, die Lehnenholme schlank, Sitzkasten, Lenkerbleche und Hebel schlank, Massen in der Größe des Merkmals."
+      "en": "Structure: arm frames as 80 mm walls, the back stiles slender, seat box, link plates and lever slender, masses of the scale's feature. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Tragwerk: Armrahmen als 80-mm-Wände, die Lehnenholme schlank, Sitzkasten, Lenkerbleche und Hebel schlank, Massen in der Größe des Merkmals. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

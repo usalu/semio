@@ -729,3 +729,41 @@ for (const locale of ["en", "de"] as const) for (const law of femFieldIntents.ca
     }
   }
 });
+for (const [typed, canonical] of [["TRUE", "true"], ["007", "7"], ["", ""]] as const) for (const mode of ["stable-node", "moved-node"] as const) it(`reconciles the draft ${JSON.stringify(typed)} to the model's canonical ${JSON.stringify(canonical)} once its commit is acknowledged with ${mode}`, async () => {
+  const store = new UiDocumentStore("canonical-draft");
+  const intents: any[] = [];
+  let complete: (outcome: InputOutcomeV1) => void = () => {};
+  const context = { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); return new Promise<InputOutcomeV1>((resolve) => { complete = resolve; }); } };
+  const publish = (value: string, revision: string, ordinal: number, id: number) => store.loadSnapshot({ surface: "canonical-draft", revision: ordinal, root: id, layoutEpoch: 0n, nodes: [{ id, key: "cell", component: { type: "input", kind: "text", value, commit: "blur", draftTarget: "cell:canonical", publicationRevision: revision }, disabled: false, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, accessibility: { label: "Cell", description: null, live: "off", shortcut: null, hidden: false }, bindings: [{ trigger: "commit", action: { scope: "csv", name: "set-cell", version: 1 }, args: { row: 0, column: 0, revision: "0" } }] }] } as any);
+  const base = typed === "" ? "temporary" : "";
+  publish(base, "10", 1, 1);
+  const view = render(createElement(UiNodeView, { store, id: 1, context }));
+  const control = view.getByRole("textbox", { name: "Cell" }) as HTMLInputElement;
+  fireEvent.change(control, { target: { value: typed } });
+  fireEvent.blur(control);
+  expect(intents).toHaveLength(1);
+  if (mode === "moved-node") {
+    act(() => publish(base, "10", 2, 2));
+    view.rerender(createElement(UiNodeView, { store, id: 2, context }));
+  }
+  const id = mode === "moved-node" ? 2 : 1;
+  const current = view.getByRole("textbox", { name: "Cell" }) as HTMLInputElement;
+  act(() => publish(canonical, "11", 3, id));
+  await act(async () => complete({ kind: "applied", inputSeq: 1, commit: { operation: "1", revision: "11" } }));
+  expect(current.value).toBe(canonical);
+  expect(current.hasAttribute("data-draft-dirty")).toBe(false);
+});
+
+it("settles a no-op commit that publishes nothing without leaving the draft dirty", async () => {
+  const store = new UiDocumentStore("noop-draft");
+  let complete: (outcome: InputOutcomeV1) => void = () => {};
+  const context = { store, onAction: () => {}, onIntent: () => new Promise<InputOutcomeV1>((resolve) => { complete = resolve; }) };
+  store.loadSnapshot({ surface: "noop-draft", revision: 1, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: "cell", component: { type: "input", kind: "text", value: "", commit: "blur", draftTarget: "cell:noop", publicationRevision: "10" }, disabled: false, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, accessibility: { label: "Cell", description: null, live: "off", shortcut: null, hidden: false }, bindings: [{ trigger: "commit", action: { scope: "csv", name: "set-cell", version: 1 }, args: { row: 0, column: 0, revision: "0" } }] }] } as any);
+  const view = render(createElement(UiNodeView, { store, id: 1, context }));
+  const control = view.getByRole("textbox", { name: "Cell" }) as HTMLInputElement;
+  fireEvent.change(control, { target: { value: "x" } });
+  fireEvent.blur(control);
+  await act(async () => complete({ kind: "applied", inputSeq: 1 }));
+  expect(control.value).toBe("");
+  expect(control.hasAttribute("data-draft-dirty")).toBe(false);
+});

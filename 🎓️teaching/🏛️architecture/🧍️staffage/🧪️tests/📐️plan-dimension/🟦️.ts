@@ -16,7 +16,7 @@ const DENOMINATOR = 50;
 let hob: Asset;
 
 beforeAll(async () => {
-  hob = (await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets.find((a) => a.id === "gas-hob")!;
+  hob = (await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT, undefined, new Set(["gas-hob"]))).assets.find((a) => a.id === "gas-hob")!;
 });
 
 function dimensionOf(viewpoint: Viewpoint): { quantity: string; value: number; label: string; spanMm: number } {

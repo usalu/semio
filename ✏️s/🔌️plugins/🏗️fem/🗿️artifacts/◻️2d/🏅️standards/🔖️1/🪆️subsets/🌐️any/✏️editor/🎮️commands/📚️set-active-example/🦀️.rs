@@ -39,6 +39,9 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>
         semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()
     };
     let effect = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&document);
+    if let Some(operation) = _doc.operation_optional() {
+        semio_plugin::begin_supersede(operation.app_instance_id);
+    }
     <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(document);
     Ok(Emit { effects: vec![effect], ..Default::default() })
 }

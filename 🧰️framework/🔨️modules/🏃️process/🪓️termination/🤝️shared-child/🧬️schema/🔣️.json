@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:shared-child:v1",
+  "title": "A child that serves several requesters is stopped when the last requester leaves, and never before",
+  "description": "A shared child (one cargo build, one broker) runs in its own process group, outside the group of every requester, so stopping a requester's own task cannot reach it. The registry counts requesters per key: acquiring with a key that has a running child adds the requester (a requester counts once however often it acquires) and starts nothing; releasing removes the requester (a second release of the same lease does nothing); the release that leaves no requester takes the child out of the registry at once (a later acquire starts a fresh child) and stops its process tree gracefully through the termination law, with the signal recorded. A child that ended by itself is dropped at the next acquire. A requester that ends releases every key it holds with `releaseAll`.",
+  "definitions": {
+    "Policy": {"const": {"version": 1}},
+    "Texts": {
+      "const": {
+        "en": {"last-left": "the last requester {requester} left the shared child {key}"},
+        "de": {"last-left": "der letzte Anforderer {requester} hat das gemeinsame Kind {key} verlassen"}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

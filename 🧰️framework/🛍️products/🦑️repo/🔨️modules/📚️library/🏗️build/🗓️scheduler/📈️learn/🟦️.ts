@@ -38,16 +38,22 @@ export function hostSliceLineageV1(scope?:string):readonly string[]{
  return scope===undefined?[HOST_SLICE_CLASS_V1]:[HOST_SLICE_CLASS_V1,`${HOST_SLICE_CLASS_V1}/${createHash("sha256").update(scope).digest("hex").slice(0,12)}`];
 }
 
-/** 🕒️ How many of the newest runs of a scope speak for its peak: a scope books what it needed lately, so stale history of an older, larger shape never pins the booking at the cap. */
-export const HOST_SLICE_RECENT_RUNS_V1=5;
+/** 🎯️ The quantile of its recorded peaks a scope books (p95, linear between ranks): the measured peak without being pinned by the single largest run, to which the pool adds its booking margin. */
+export const HOST_SLICE_QUANTILE_BASIS_POINTS_V1=9500;
 
-/** 🍰 The peak, in megabytes, a slice load of this host was measured to need, never above `ceilingMegabytes` (what the gate can ever grant a slice on this machine) and 0 while nothing is measured or the store cannot be read: a stored history never makes the host unable to start. For a `scope` that has at least `estimates.minimumSamples` runs it is the largest peak of its newest {@link HOST_SLICE_RECENT_RUNS_V1} runs (recency-weighted: older runs no longer count); a scope with fewer runs reads the host-wide class (decayed quantile of the store). */
+/** 📐️ The linear-interpolated quantile of `values` (any order, at least one). */
+export function percentileV1(values:readonly number[],basisPoints:number):number{
+ const sorted=[...values].sort((left,right)=>left-right),rank=(sorted.length-1)*basisPoints/10000,low=Math.floor(rank);
+ return sorted[low]!+(sorted[Math.min(low+1,sorted.length-1)]!-sorted[low]!)*(rank-low);
+}
+
+/** 🍰 The peak, in megabytes, a slice load of this host was measured to need, never above `ceilingMegabytes` (what the gate can ever grant a slice on this machine) and 0 while nothing is measured or the store cannot be read: a stored history never makes the host unable to start. For a `scope` that has at least `estimates.minimumSamples` runs it is the {@link HOST_SLICE_QUANTILE_BASIS_POINTS_V1} quantile of its newest `estimates.maximumSamples` recorded peaks; a scope with fewer runs reads the host-wide class (decayed quantile of the store). */
 export function learnedHostSlicePeakV1(environment:NodeJS.ProcessEnv,ceilingMegabytes:number,now:()=>number=Date.now,scope?:string):number{
  try{
   const store=readHostEstimateStoreV1(hostCapacityDirectoryV1(environment));
   if(scope!==undefined){
-   const lineage=hostSliceLineageV1(scope),recent=(store.classes[lineage[lineage.length-1]!]?.samples??[]).filter(sample=>sample.peakMegabytes!==undefined).sort((left,right)=>right.atMs-left.atMs).slice(0,HOST_SLICE_RECENT_RUNS_V1);
-   if(recent.length>=BUILD_HOST_CAPACITY_POLICY_V1.estimates.minimumSamples)return Math.max(0,Math.min(Math.max(...recent.map(sample=>sample.peakMegabytes!)),ceilingMegabytes));
+   const lineage=hostSliceLineageV1(scope),recent=(store.classes[lineage[lineage.length-1]!]?.samples??[]).filter(sample=>sample.peakMegabytes!==undefined).sort((left,right)=>right.atMs-left.atMs).slice(0,BUILD_HOST_CAPACITY_POLICY_V1.estimates.maximumSamples);
+   if(recent.length>=BUILD_HOST_CAPACITY_POLICY_V1.estimates.minimumSamples)return Math.max(0,Math.min(Math.ceil(percentileV1(recent.map(sample=>sample.peakMegabytes!),HOST_SLICE_QUANTILE_BASIS_POINTS_V1)),ceilingMegabytes));
    return learnedHostSlicePeakV1(environment,ceilingMegabytes,now);
   }
   const bound=hostClassBoundV1(BUILD_HOST_CAPACITY_POLICY_V1,store,hostSliceLineageV1(),now());

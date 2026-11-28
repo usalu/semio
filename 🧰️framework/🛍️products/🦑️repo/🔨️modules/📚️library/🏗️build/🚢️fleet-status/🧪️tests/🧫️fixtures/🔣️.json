@@ -1006,7 +1006,7 @@
        "needMegabytes": 3500,
        "waitedSeconds": 20,
        "reason": "queue-order",
-       "reasonText": "an earlier request is still waiting",
+       "reasonText": "an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first",
        "position": 2
       },
       {
@@ -1016,7 +1016,7 @@
        "needMegabytes": 20000,
        "waitedSeconds": 10,
        "reason": "queue-order",
-       "reasonText": "an earlier request is still waiting",
+       "reasonText": "an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first",
        "position": 3
       }
      ]
@@ -1190,7 +1190,7 @@
         "needMegabytes": 3500,
         "waitedSeconds": 20,
         "reason": "queue-order",
-        "reasonText": "an earlier request is still waiting",
+        "reasonText": "an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first",
         "position": 2,
         "estimatedWaitSeconds": 500
        },
@@ -1201,7 +1201,7 @@
         "needMegabytes": 20000,
         "waitedSeconds": 10,
         "reason": "queue-order",
-        "reasonText": "an earlier request is still waiting",
+        "reasonText": "an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first",
         "position": 3,
         "estimatedWaitSeconds": null
        }

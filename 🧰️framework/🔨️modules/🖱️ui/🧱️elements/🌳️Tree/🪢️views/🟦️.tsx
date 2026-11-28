@@ -61,6 +61,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const paletteDragEnabled = Boolean(dragAndDropController?.pointerPaletteDrag);
   const dragRoles = reactHostPort.useMemo(() => reorderMime && item.dragData?.[reorderMime] ? ["sort"] as const : deriveTreeDragRoles(item, paletteDragEnabled), [item, paletteDragEnabled, reorderMime]);
   const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && dragRoles.includes("transfer") ? "touch-none" : undefined;
+  const surfaceTransferPointerDown = dragRoles.includes("transfer") && !dragRoles.includes("sort") ? palettePointerProps.onPointerDown : undefined;
 
   return (
     <TreeItem
@@ -88,6 +89,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       dragRoles={dragRoles}
       dragInitiation="handle"
       transferPointerDown={palettePointerProps.onPointerDown}
+      onPointerDown={surfaceTransferPointerDown}
       dragData={item.dragData}
       dropPlace={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop) && (!reorderMime || Boolean(item.dragData?.[reorderMime])) ? "available" : undefined}
       layoutKind={propertyLayout ? "property" : undefined}

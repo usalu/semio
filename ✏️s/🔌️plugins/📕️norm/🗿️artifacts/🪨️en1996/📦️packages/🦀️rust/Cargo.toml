@@ -48,5 +48,7 @@ semio-s-artifact-norm-en1996-mut-project = { workspace = true, features = ["test
 semio-s-artifact-norm-en1996-mut-walls = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-en1996-mutations = { workspace = true, features = ["test-support"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support"] }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-plugin-norm-app-surface = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

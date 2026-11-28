@@ -4,8 +4,8 @@
   "title": "Host warden: the one process per machine that acts on the memory of processes that already run (suspend, resume, cancel), from the same host sample and the same ladder the admission gates read.",
   "definitions": {
     "Policy": {
-      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. Headroom is the memory the host can still give out before the OS halts applications: the available memory plus the swap room, and the swap room is the free swap plus the swap that can still grow, which is the free space of the swap volume minus swapDiskReserveMegabytes (never below 0; 0 where the swap volume is unknown or cannot grow), the sum bounded by swapRoomMaximumBasisPoints of the physical memory; a host that reports no swap has no headroom and keeps the available-memory law. Headroom below the headroomGuard line is guard, below the headroomDanger line is danger. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again. heavySuspendMaximumSeconds is the longer suspend maximum of a declared final link (a compile unit of the final kind on the carving list of the admission policy): such a unit is also the dearest to lose among the compile units, so it is suspended last and kept running first; the danger-line cancel is unchanged. requeueMaximumAttempts, requeuePollMilliseconds and requeueCalmMaximumSeconds bound the automatic requeue of a build whose process the warden cancelled for memory: it waits for a calm host (polling the state) at most requeueCalmMaximumSeconds, is admitted again through capacity admission, and ends with the typed failure after requeueMaximumAttempts attempts.",
-      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. Die Reserve (headroom) ist der Speicher, den der Host noch vergeben kann, bevor das Betriebssystem Anwendungen anhaelt: der verfuegbare Speicher plus der Swap-Spielraum; der Spielraum ist der freie Swap plus der noch wachsende Swap, also der freie Platz des Swap-Volumes abzueglich swapDiskReserveMegabytes (nie unter 0; 0 wo das Swap-Volume unbekannt ist oder nicht wachsen kann), die Summe begrenzt auf swapRoomMaximumBasisPoints des physischen Speichers; ein Host ohne Swap hat keine Reserve und behaelt das Gesetz des verfuegbaren Speichers. Reserve unter der Linie headroomGuard ist guard, unter der Linie headroomDanger ist danger. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht. heavySuspendMaximumSeconds ist das längere Anhaltemaximum eines deklarierten Final-Links (eine Kompilationseinheit der Art final auf der Carving-Liste der Admission-Richtlinie): eine solche Einheit ist unter den Kompilationseinheiten auch die teuerste zu verlieren, wird also zuletzt angehalten und zuerst weiterlaufen gelassen; der Abbruch an der Gefahrenlinie bleibt unverändert. requeueMaximumAttempts, requeuePollMilliseconds und requeueCalmMaximumSeconds begrenzen das automatische erneute Einreihen eines Builds, dessen Prozess der Wächter wegen Speicher abgebrochen hat: er wartet höchstens requeueCalmMaximumSeconds auf einen ruhigen Host (Abfrage des Zustands), wird über die Kapazitätszulassung erneut zugelassen und endet nach requeueMaximumAttempts Versuchen mit dem typisierten Fehler.",
+      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. Headroom is the memory the host can still give out before the OS halts applications: the available memory plus the swap room, and the swap room is the free swap plus the swap that can still grow, which is the free space of the swap volume minus swapDiskReserveMegabytes (never below 0; 0 where the swap volume is unknown or cannot grow), the sum bounded by swapRoomMaximumBasisPoints of the physical memory; a host that reports no swap has no headroom and keeps the available-memory law. Headroom below the headroomGuard line is guard, below the headroomDanger line is danger. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again. heavySuspendMaximumSeconds is the longer suspend maximum of a declared final link (a compile unit of the final kind on the carving list of the admission policy): such a unit is also the dearest to lose among the compile units, so it is suspended last and kept running first; the danger-line cancel is unchanged. requeueMaximumAttempts, requeuePollMilliseconds and requeueCalmMaximumSeconds bound the automatic requeue of a build whose process the warden cancelled for memory: it waits for a calm host (polling the state) at most requeueCalmMaximumSeconds, is admitted again through capacity admission, and ends with the typed failure after requeueMaximumAttempts attempts. Swap traffic (pages swapped out plus swapped in per second) was measured on a 16 GB macOS host (240 one-second samples while builds ran, the kernel at normal, 2.7 to 6.1 GB available) at a median of 0, a 90th percentile of 2.9, a 99th percentile of 10.9 and a single 285 MB/s burst, so swapActiveMegabytesPerSecond (64) lies far above healthy paging and swapSustainedSeconds (10) ignores a burst; swapping counts as worked only when it is sustained, and it is acute (severe, cancels) only together with the OS pressure at least warn and the available memory below the resume line. The compressed memory is reclaimable: the same host held 3.2 to 7.9 GB compressed (20 to 48 percent, above 35 percent in 60 percent of the samples) while healthy, so compressedGuardBasisPoints (55 percent) and compressedDangerBasisPoints (70 percent) lie above it and compressed memory never decides a cancel alone.",
+      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. Die Reserve (headroom) ist der Speicher, den der Host noch vergeben kann, bevor das Betriebssystem Anwendungen anhaelt: der verfuegbare Speicher plus der Swap-Spielraum; der Spielraum ist der freie Swap plus der noch wachsende Swap, also der freie Platz des Swap-Volumes abzueglich swapDiskReserveMegabytes (nie unter 0; 0 wo das Swap-Volume unbekannt ist oder nicht wachsen kann), die Summe begrenzt auf swapRoomMaximumBasisPoints des physischen Speichers; ein Host ohne Swap hat keine Reserve und behaelt das Gesetz des verfuegbaren Speichers. Reserve unter der Linie headroomGuard ist guard, unter der Linie headroomDanger ist danger. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht. heavySuspendMaximumSeconds ist das längere Anhaltemaximum eines deklarierten Final-Links (eine Kompilationseinheit der Art final auf der Carving-Liste der Admission-Richtlinie): eine solche Einheit ist unter den Kompilationseinheiten auch die teuerste zu verlieren, wird also zuletzt angehalten und zuerst weiterlaufen gelassen; der Abbruch an der Gefahrenlinie bleibt unverändert. requeueMaximumAttempts, requeuePollMilliseconds und requeueCalmMaximumSeconds begrenzen das automatische erneute Einreihen eines Builds, dessen Prozess der Wächter wegen Speicher abgebrochen hat: er wartet höchstens requeueCalmMaximumSeconds auf einen ruhigen Host (Abfrage des Zustands), wird über die Kapazitätszulassung erneut zugelassen und endet nach requeueMaximumAttempts Versuchen mit dem typisierten Fehler. Der Swap-Verkehr (ausgelagerte plus eingelagerte Seiten je Sekunde) wurde auf einem 16-GB-macOS-Host gemessen (240 Ein-Sekunden-Proben während Builds liefen, Kernel normal, 2,7 bis 6,1 GB verfügbar) mit Median 0, 90. Perzentil 2,9, 99. Perzentil 10,9 und einem einzigen Stoß von 285 MB/s; swapActiveMegabytesPerSecond (64) liegt weit darüber und swapSustainedSeconds (10) überhört einen Stoß. Swapping zählt nur, wenn es anhält, und ist nur zusammen mit mindestens Druckwarnung und verfügbarem Speicher unter der Wiederaufnahmelinie akut (schwer, bricht ab). Der komprimierte Speicher ist rückgewinnbar: derselbe Host hielt gesund 3,2 bis 7,9 GB komprimiert (20 bis 48 Prozent, in 60 Prozent der Proben über 35 Prozent), die Linien compressedGuardBasisPoints (55 Prozent) und compressedDangerBasisPoints (70 Prozent) liegen darüber, und komprimierter Speicher entscheidet nie allein über einen Abbruch.",
       "const": {
         "guardBasisPoints": 1000,
         "guardMinimumMegabytes": 1024,
@@ -14,7 +14,8 @@
         "dangerMinimumMegabytes": 512,
         "dangerMaximumMegabytes": 2048,
         "resumeBasisPoints": 1500,
-        "swapActiveMegabytesPerSecond": 16,
+        "swapActiveMegabytesPerSecond": 64,
+        "swapSustainedSeconds": 10,
         "swapDiskReserveMegabytes": 4096,
         "swapRoomMaximumBasisPoints": 5000,
         "headroomGuardBasisPoints": 2500,
@@ -26,6 +27,7 @@
         "calmTicks": 3,
         "suspendMaximumSeconds": 120,
         "heavySuspendMaximumSeconds": 600,
+        "suspendHardMaximumSeconds": 1800,
         "pauseDeadlineSeconds": 10,
         "maximumSuspendsPerTick": 4,
         "maximumCancelsPerTick": 2,
@@ -56,8 +58,16 @@
         "swapUsedDangerBasisPoints": 5500,
         "swapShareGuardBasisPoints": 4500,
         "swapShareDangerBasisPoints": 6000,
-        "compressedGuardBasisPoints": 3500,
-        "compressedDangerBasisPoints": 5000,
+        "compressedGuardBasisPoints": 3000,
+        "compressedDangerBasisPoints": 3600,
+        "swapFileDefaultMegabytes": 1024,
+        "swapFreeGuardBasisPointsOfFile": 10000,
+        "swapFreeDangerBasisPointsOfFile": 5000,
+        "swapFreeMinimumUsedBasisPoints": 5000,
+        "grantOverMinimumMegabytes": 512,
+        "grantOverBasisPoints": 2500,
+        "foreignHeavyMegabytes": 1024,
+        "handoverWaitMilliseconds": 15000,
         "capMaximumBasisPoints": 6000,
         "capMilliseconds": 5000,
         "capProbeMaximum": 8,
@@ -69,6 +79,7 @@
         "flapWindowSeconds": 1800,
         "flapMaximumSuspensions": 2,
         "resumeHoldSeconds": 120,
+        "resumeSettleSeconds": 30,
         "requeueMaximumAttempts": 3,
         "requeuePollMilliseconds": 2000,
         "requeueCalmMaximumSeconds": 300,
@@ -88,7 +99,9 @@
         {"name": "browser", "rank": 45, "pattern": "^<browsers>/(?!.*(?:\\s--type=|crashpad))", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 4096, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
         {"name": "headless-browser", "rank": 46, "pattern": "^(?=.*(?:[Cc]hrom|[Ff]irefox|headless_shell))(?=.*\\s--?headless(?:\\s|=|$))(?!.*\\s--type=)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 4096, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
         {"name": "test", "rank": 50, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s+test(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
+        {"name": "vitest-worker", "rank": 52, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s.*vitest/dist/worke", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
         {"name": "test-binary", "rank": 55, "pattern": "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
+        {"name": "foreign-git-read", "rank": 56, "pattern": "^(?:\\S*/)?git\\s(?:.*\\s)?(?:diff|log|blame|show|status)(?:\\s|$)", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "capMegabytes": 1536, "source": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧬️schema/🔣️.json"},
         {"name": "slice-worker", "rank": 60, "pattern": "👷️slice-pool/👷️worker.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 6144, "capCritical": true, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"},
         {"name": "cargo", "rank": 65, "pattern": "^(?:\\S*/)?cargo(?:\\.exe)?(?:\\s|$)", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
         {"name": "stage", "rank": 90, "pattern": "🚦️ready/🏃️wrapper/🟦️.ts", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "lastResort": true, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts"}
@@ -116,6 +129,7 @@
         "^<workspace>/\\.cache/b/t/m/r/[^/]+/toolchains/[^/]+/bin/",
         "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)",
         "^<browsers>/",
+        "^(?:\\S*/)?git\\s(?:.*\\s)?(?:diff|log|blame|show|status)(?:\\s|$)",
         "^(?:\\S*/)?(?:cargo|rustc|rustdoc|clippy-driver)(?:\\.exe)?\\s.*<workspace>/"
       ]
     },
@@ -123,7 +137,7 @@
       "description": "How the host warden reads the swap of the machine, every intervalMilliseconds (the numbers change slowly and each read spawns a command): macOS prints the swap file occupancy with usage (total, used, free) and the free space of the swap volume with disk (the first volume that answers; the swap files live on the data volume and cannot grow when it is full), Linux reads SwapTotal and SwapFree from meminfo (a swap partition or file does not grow; a host without swap reports null), Windows reports null (observe only). The free swap and the free swap volume are reported in whole megabytes, null where unknown.",
       "const": {
         "intervalMilliseconds": 2000,
-        "darwin": {"usage": ["sysctl", "-n", "vm.swapusage"], "disk": ["df", "-k"], "volumes": ["/System/Volumes/VM", "/System/Volumes/Data", "/"]},
+        "darwin": {"usage": ["sysctl", "-n", "vm.swapusage"], "fileSize": ["sysctl", "-n", "vm.compressor.swapper.swapfile_size_max"], "disk": ["df", "-k"], "volumes": ["/System/Volumes/VM", "/System/Volumes/Data", "/"]},
         "linux": {"meminfo": "/proc/meminfo"}
       }
     },
@@ -158,7 +172,7 @@
     "Mode": {"enum": ["observe", "enforce"]},
     "Level": {"enum": ["calm", "guard", "danger"]},
     "Pressure": {"enum": ["normal", "warn", "critical"]},
-    "Trigger": {"enum": ["available", "headroom", "swap-used", "swap-share", "compressed", "pressure", "critical", "swap", "swapping", "cap"]},
+    "Trigger": {"enum": ["available", "headroom", "swap-used", "swap-share", "compressed", "pressure", "critical", "swap", "swapping", "cap", "swap-free", "grant"]},
     "Other": {
       "description": "One consumer the warden does not own: the topmost process of a tree outside every subject, with the resident megabytes of the whole tree. Reported, never touched.",
       "type": "object",
@@ -183,7 +197,9 @@
         "compressedMegabytes": {"type": ["integer", "null"], "minimum": 0},
         "pressure": {"$ref": "#/definitions/Pressure"},
         "swapFreeMegabytes": {"type": ["integer", "null"], "minimum": 0},
-        "swapVolumeFreeMegabytes": {"type": ["integer", "null"], "minimum": 0}
+        "swapVolumeFreeMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "swapFileMegabytes": {"type": "integer", "minimum": 1, "description": "The size of the largest swap file the kernel creates (macOS `vm.compressor.swapper.swapfile_size_max`): the swap that is still free is only safe while it holds more than one such file, because a burst of page-outs can outrun the creation of the next one. Absent: `swapFileDefaultMegabytes`."},
+        "intervalMilliseconds": {"type": "integer", "minimum": 1, "description": "The time since the previous sample, over which the swap traffic rate is averaged; it feeds the sustained swap timer. Absent: one tight tick."}
       }
     },
     "ProcessRow": {
@@ -229,6 +245,7 @@
         "capMegabytes": {"type": "integer", "minimum": 1},
         "capCritical": {"type": "boolean"},
         "lastResort": {"type": "boolean", "description": "The subject owns a whole build tree: the danger cancel takes it after every other candidate."},
+        "keepsProgress": {"type": "boolean", "description": "The subject is a foreground run of its owner that holds progress (a granted process tree): the warden may suspend and resume it, never cancel it, whatever the reason."},
         "ceiling": {"$ref": "#/definitions/Ceiling"},
         "suspensions": {"type": "integer", "minimum": 0, "description": "How often the loop suspended this subject within flapWindowSeconds (set by the loop, not by classification)."},
         "resumedSeconds": {"type": "integer", "minimum": 0, "description": "Seconds since the loop resumed this subject, within flapWindowSeconds."},
@@ -255,7 +272,9 @@
       "required": ["level", "calmTicks"],
       "properties": {
         "level": {"$ref": "#/definitions/Level"},
-        "calmTicks": {"type": "integer", "minimum": 0}
+        "calmTicks": {"type": "integer", "minimum": 0},
+        "swapMilliseconds": {"type": "integer", "minimum": 0, "description": "The leaky swap timer the previous tick left (absent: 0)."},
+        "resumedSeconds": {"type": "integer", "minimum": 0, "description": "Seconds since the warden last resumed a subject (absent: none yet); a recovered host resumes the next one only after resumeSettleSeconds."}
       }
     },
     "Action": {
@@ -265,17 +284,18 @@
       "properties": {
         "action": {"enum": ["suspend", "resume", "cancel", "report"]},
         "id": {"type": "string", "minLength": 1},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
+        "reason": {"enum": ["guard", "danger", "overdue", "limit", "calm", "cap", "ceiling"]},
         "capMegabytes": {"type": "integer", "minimum": 1}
       }
     },
     "Decision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "calmTicks", "hold", "trigger", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "actions"],
+      "required": ["level", "calmTicks", "swapMilliseconds", "hold", "trigger", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "actions"],
       "properties": {
         "level": {"$ref": "#/definitions/Level"},
         "calmTicks": {"type": "integer", "minimum": 0},
+        "swapMilliseconds": {"type": "integer", "minimum": 0, "description": "The leaky swap timer after this tick: it gains the sample interval while the swap traffic is at or above swapActiveMegabytesPerSecond and loses it otherwise, between 0 and twice swapSustainedSeconds; the swap counts as worked once it reaches swapSustainedSeconds."},
         "hold": {"type": "boolean"},
         "trigger": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Trigger"}]},
         "guardMegabytes": {"type": "integer", "minimum": 0},
@@ -298,7 +318,7 @@
         "observed": {"type": "boolean"},
         "level": {"$ref": "#/definitions/Level"},
         "action": {"enum": ["suspend", "resume", "cancel", "report"]},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
+        "reason": {"enum": ["guard", "danger", "overdue", "limit", "calm", "cap", "ceiling"]},
         "id": {"type": "string", "minLength": 1},
         "pid": {"type": "integer", "minimum": 1},
         "kind": {"type": "string", "minLength": 1},
@@ -346,7 +366,7 @@
         "buildScriptOutput": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Artifact directory of the cancelled build script, with the package, target and profile encoded by Cargo."},
         "megabytes": {"type": "integer", "minimum": 0},
         "atMs": {"type": "integer", "minimum": 0},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
+        "reason": {"enum": ["guard", "danger", "overdue", "limit", "calm", "cap", "ceiling"]},
         "ancestors": {"type": "array", "maxItems": 64, "items": {"type": "integer", "minimum": 1}, "description": "The pids of the processes above the cancelled one, nearest first: the owner of a build finds the cancels that hit its own process tree by its pid, whatever the command line says."},
         "capMegabytes": {"type": "integer", "minimum": 1},
         "ceiling": {"$ref": "#/definitions/Ceiling"},
@@ -390,6 +410,13 @@
         "sinceMs": {"type": "integer", "minimum": 0}
       }
     },
+    "TreeRow": {
+      "description": "One process of the repository tree: the heaviest by CPU time, then memory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "parent", "elapsedSeconds", "megabytes", "command"],
+      "properties": {"pid": {"type": "integer", "minimum": 1}, "parent": {"type": "integer", "minimum": 0}, "elapsedSeconds": {"type": "integer", "minimum": 0}, "cpuSeconds": {"type": "number", "minimum": 0}, "megabytes": {"type": "integer", "minimum": 0}, "command": {"type": "string", "maxLength": 240}}
+    },
     "KindTotal": {
       "type": "object",
       "additionalProperties": false,
@@ -429,6 +456,9 @@
         },
         "trigger": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Trigger"}]},
         "others": {"type": "array", "items": {"$ref": "#/definitions/Other"}},
+        "foreign": {"type": "object", "additionalProperties": false, "required": ["megabytes", "processes", "heavy"], "description": "What every process outside the subjects holds (footprint where readable, resident set otherwise): admission counts it against the floor. `heavy` is the number of such processes at or above `foreignHeavyMegabytes`; the warden does not end while one runs.", "properties": {"megabytes": {"type": "integer", "minimum": 0}, "processes": {"type": "integer", "minimum": 0}, "heavy": {"type": "integer", "minimum": 0}}},
+        "grants": {"type": "object", "additionalProperties": false, "required": ["count", "megabytes"], "description": "The live grants of the capacity gate the warden saw and the megabytes they reserve; the warden does not end while one is live.", "properties": {"count": {"type": "integer", "minimum": 0}, "megabytes": {"type": "integer", "minimum": 0}}},
+        "tree": {"type": "array", "maxItems": 16, "items": {"$ref": "#/definitions/TreeRow"}},
         "suspended": {"type": "array", "items": {"$ref": "#/definitions/Suspended"}},
         "counters": {
           "type": "object",
@@ -461,9 +491,9 @@
           "alarm": "[warden] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; host {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap}, pressure {pressure}{headroom}{observed}",
           "actions": {"suspend": "suspended", "resume": "resumed", "cancel": "cancelled", "report": "reported"},
           "headroom": ", headroom {headroom} MB (guard {headroomGuard} MB, danger {headroomDanger} MB)",
-          "triggers": {"guard": {"available": "available memory is below the guard line", "headroom": "available memory plus swap that can still grow is below the headroom guard line", "pressure": "memory pressure is warn", "critical": "memory pressure is critical and available memory is below the resume line", "swap": "swap-out rate is high and available memory is below the resume line", "swap-used": "swap in use is above its line and available memory is below the resume line", "swap-share": "the share of the swap in use is above its line and available memory is below the resume line", "compressed": "compressed memory is above its line", "cap": "a build-critical process crossed its memory cap"}, "danger": {"available": "available memory is below the danger line", "headroom": "available memory plus swap that can still grow is below the headroom danger line", "pressure": "memory pressure is critical", "swap-used": "swap in use is above its danger line and available memory is below the guard line", "swap-share": "the share of the swap in use is above its danger line and available memory is below the guard line", "compressed": "compressed memory is above its danger line",
+          "triggers": {"guard": {"available": "available memory is below the guard line", "headroom": "available memory plus swap that can still grow is below the headroom guard line", "pressure": "memory pressure is warn", "critical": "memory pressure is critical and available memory is below the resume line", "swap": "swap-out rate is high and available memory is below the resume line", "swap-used": "swap in use is above its line and available memory is below the resume line", "swap-share": "the share of the swap in use is above its line and available memory is below the resume line", "compressed": "compressed memory is above its line", "cap": "a build-critical process crossed its memory cap", "swap-free": "the swap that is still free is below one swap file, so a burst of page-outs can outrun the next swap file", "grant": "a process runs well above the memory its grant reserved while the host has no spare memory"}, "danger": {"available": "available memory is below the danger line", "headroom": "available memory plus swap that can still grow is below the headroom danger line", "pressure": "memory pressure is critical", "swap-used": "swap in use is above its danger line and available memory is below the guard line", "swap-share": "the share of the swap in use is above its danger line and available memory is below the guard line", "compressed": "compressed memory is above its danger line", "swap-free": "the swap that is still free is below half a swap file, so the kernel can run out of swap before the next file exists",
             "swapping": "the host is swapping memory out at a high rate while memory pressure is not critical yet"}},
-          "reasons": {"overdue": "suspended for too long", "calm": "memory is calm again", "cap": "its memory is over the cap of {cap} MB for {kind}", "capCrossed": "its memory crossed the cap of {cap} MB for {kind}; it is a build-critical kind, so other work is held first and it is only killed when the host is critical", "ceiling": "unit {unit} peaked at {peak} MB, above its {ceilingKind} ceiling of {ceiling} MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits", "ceilingListed": "unit {unit} peaked at {peak} MB, above its declared carving budget of {ceiling} MB (measured {measured} MB): carve it further, or measure it again and declare the new budget", "guard": "the host was short of memory (tight) and the process stayed suspended for too long", "danger": "the host was critically short of memory"},
+          "reasons": {"overdue": "suspended for too long", "limit": "it stayed suspended beyond the hard maximum without the host recovering; it is cancelled so its client can retry", "calm": "memory is calm again", "cap": "its memory is over the cap of {cap} MB for {kind}", "capCrossed": "its memory crossed the cap of {cap} MB for {kind}; it is a build-critical kind, so other work is held first and it is only killed when the host is critical", "ceiling": "unit {unit} peaked at {peak} MB, above its {ceilingKind} ceiling of {ceiling} MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits", "ceilingListed": "unit {unit} peaked at {peak} MB, above its declared carving budget of {ceiling} MB (measured {measured} MB): carve it further, or measure it again and declare the new budget", "guard": "the host was short of memory (tight) and the process stayed suspended for too long", "danger": "the host was critically short of memory"},
           "ceilingKinds": {"library": "library", "final": "final link"},
           "grant": {"within": "; it held {megabytes} MB, within its grant of {grant} MB, and was taken only because the host was in danger", "over": "; it held {megabytes} MB, {excess} MB above its grant of {grant} MB"},
           "cancelLine": "[warden] cancelled {kind} pid {pid} ({megabytes} MB): {reason}",
@@ -493,8 +523,8 @@
           "alarm": "[Wächter] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; Host {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap}, Druck {pressure}{headroom}{observed}",
           "actions": {"suspend": "angehalten", "resume": "fortgesetzt", "cancel": "abgebrochen", "report": "gemeldet"},
           "headroom": ", Reserve {headroom} MB (Wache {headroomGuard} MB, Gefahr {headroomDanger} MB)",
-          "triggers": {"guard": {"available": "der verfügbare Speicher liegt unter der Wachlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve", "pressure": "der Speicherdruck ist Warnung", "critical": "der Speicherdruck ist kritisch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap": "die Swap-Auslagerungsrate ist hoch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap-used": "der belegte Swap liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "compressed": "der komprimierte Speicher liegt über seiner Linie", "cap": "ein baukritischer Prozess hat seine Speicherobergrenze überschritten"}, "danger": {"available": "der verfügbare Speicher liegt unter der Gefahrenlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Gefahrenlinie der Reserve", "pressure": "der Speicherdruck ist kritisch", "swap-used": "der belegte Swap liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "compressed": "der komprimierte Speicher liegt über seiner Gefahrenlinie", "swapping": "der Host lagert Speicher mit hoher Rate aus, obwohl der Speicherdruck noch nicht kritisch ist"}},
-          "reasons": {"overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig", "cap": "sein Speicher liegt über der Obergrenze von {cap} MB für {kind}", "capCrossed": "sein Speicher hat die Obergrenze von {cap} MB für {kind} überschritten; die Art ist baukritisch, daher wird zuerst anderes angehalten und erst bei kritischem Host abgebrochen", "ceiling": "Einheit {unit} erreichte {peak} MB und liegt über ihrer Obergrenze {ceilingKind} von {ceiling} MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt", "ceilingListed": "Einheit {unit} erreichte {peak} MB und liegt über ihrem erklärten Carving-Budget von {ceiling} MB (gemessen {measured} MB): weiter schneiden oder neu messen und das neue Budget eintragen", "guard": "der Host hatte knappen Speicher (angespannt) und der Prozess blieb zu lange angehalten", "danger": "der Host hatte kritisch wenig Speicher"},
+          "triggers": {"guard": {"available": "der verfügbare Speicher liegt unter der Wachlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve", "pressure": "der Speicherdruck ist Warnung", "critical": "der Speicherdruck ist kritisch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap": "die Swap-Auslagerungsrate ist hoch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap-used": "der belegte Swap liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "compressed": "der komprimierte Speicher liegt über seiner Linie", "cap": "ein baukritischer Prozess hat seine Speicherobergrenze überschritten", "swap-free": "der noch freie Swap liegt unter einer Swap-Datei, ein Schub von Auslagerungen kann die nächste Swap-Datei überholen", "grant": "ein Prozess liegt weit über dem Speicher, den seine Zusage reserviert hat, während der Host keinen freien Speicher mehr hat"}, "danger": {"available": "der verfügbare Speicher liegt unter der Gefahrenlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Gefahrenlinie der Reserve", "pressure": "der Speicherdruck ist kritisch", "swap-used": "der belegte Swap liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "compressed": "der komprimierte Speicher liegt über seiner Gefahrenlinie", "swap-free": "der noch freie Swap liegt unter einer halben Swap-Datei, der Kernel kann ohne Swap dastehen, bevor die nächste Datei existiert", "swapping": "der Host lagert Speicher mit hoher Rate aus, obwohl der Speicherdruck noch nicht kritisch ist"}},
+          "reasons": {"overdue": "zu lange angehalten", "limit": "es blieb über das harte Maximum hinaus angehalten, ohne dass sich der Host erholte; es wird abgebrochen, damit sein Client es erneut versuchen kann", "calm": "der Speicher ist wieder ruhig", "cap": "sein Speicher liegt über der Obergrenze von {cap} MB für {kind}", "capCrossed": "sein Speicher hat die Obergrenze von {cap} MB für {kind} überschritten; die Art ist baukritisch, daher wird zuerst anderes angehalten und erst bei kritischem Host abgebrochen", "ceiling": "Einheit {unit} erreichte {peak} MB und liegt über ihrer Obergrenze {ceilingKind} von {ceiling} MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt", "ceilingListed": "Einheit {unit} erreichte {peak} MB und liegt über ihrem erklärten Carving-Budget von {ceiling} MB (gemessen {measured} MB): weiter schneiden oder neu messen und das neue Budget eintragen", "guard": "der Host hatte knappen Speicher (angespannt) und der Prozess blieb zu lange angehalten", "danger": "der Host hatte kritisch wenig Speicher"},
           "ceilingKinds": {"library": "Bibliothek", "final": "Final-Link"},
           "grant": {"within": "; er hielt {megabytes} MB, innerhalb seiner Zusage von {grant} MB, und wurde nur genommen, weil der Host in Gefahr war", "over": "; er hielt {megabytes} MB, {excess} MB über seiner Zusage von {grant} MB"},
           "cancelLine": "[Wächter] abgebrochen {kind} pid {pid} ({megabytes} MB): {reason}",

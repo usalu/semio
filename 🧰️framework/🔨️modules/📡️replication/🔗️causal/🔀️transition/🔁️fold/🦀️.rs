@@ -589,6 +589,150 @@ async fn owned_positions(ids: &[MutationId], owners: &HistoryFoldIndex<String, u
 }
 
 /// 🧮️ The shared semantic fold, cooperatively ordered and indexed without whole-history collect, sort or retain.
+async fn fold_edit_event(index:usize,edits:&[FoldEdit],excluded:&HistoryFoldIndex<String,()>,active:&mut HistoryFoldSet<usize>,redo:&mut HistoryFoldIndex<u64,usize>,redo_lookup:&mut HistoryFoldIndex<usize,u64>,redo_actors:&mut HistoryFoldIndex<Option<semio_framework_value::SharedUtf8>,HistoryFoldSet<u64>>,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let edit = &edits[index];
+    if control.get_text(excluded, &edit.id).await?.is_some() { return Ok(()); }
+    active.insert_original_copy(index, control).await?;
+    loop {
+        let Some(orders)=control.get_actor_mut(&mut *redo_actors,&edit.actor).await?else{break};
+        let Some(position)=orders.pop_first_original_copy(control).await?else{break};
+        control.pulse().await?;
+        if let Some(index)=control.remove_copy(&mut *redo,&position).await?{control.remove_copy(&mut *redo_lookup,&index).await?;}
+    }
+    Ok(())
+}
+
+async fn fold_revert(transition:&mut HistoryTransition,reinstate:bool,event:&semio_framework_replication_causal::MutationEnvelope,edits:&[FoldEdit],owners:&HistoryFoldIndex<String,usize>,active:&mut HistoryFoldSet<usize>,redo:&mut HistoryFoldIndex<u64,usize>,redo_lookup:&mut HistoryFoldIndex<usize,u64>,redo_actors:&mut HistoryFoldIndex<Option<semio_framework_value::SharedUtf8>,HistoryFoldSet<u64>>,fold:&mut HistoryFold,serial_out:&mut u64,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let (HistoryTransition::Revert{mutation_ids}|HistoryTransition::Reinstate{mutation_ids})=transition else{unreachable!("revert arm receives a revert or reinstate")};
+    let mut serial=*serial_out;
+    let positions = control.track(owned_positions(mutation_ids, &*owners, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    let mut foreign = false;
+    for position in positions.iter() { control.pulse().await?; foreign |= edits[*position].actor.as_deref().is_some_and(|actor| actor != event.actor.0.as_ref()); }
+    if foreign { fold.refused.push(copy_history_text(&event.mutation_id.0, control).await?); return Ok(()); }
+    for position in positions.iter().copied() {
+        control.pulse().await?;
+        if reinstate {
+            if let Some(order)=control.remove_copy(&mut *redo_lookup,&position).await?{
+                control.remove_copy(&mut *redo,&order).await?;
+                if let Some(orders)=control.get_actor_mut(&mut *redo_actors,&edits[position].actor).await?{orders.remove_original_copy(&order,control).await?;}
+                active.insert_original_copy(position,control).await?;
+            }
+        } else if active.remove_original_copy(&position,control).await? {
+            control.insert_copy(&mut *redo, serial, position).await?;
+            control.insert_copy(&mut *redo_lookup, position, serial).await?;
+            let actor = match &edits[position].actor { Some(actor) => Some(control.lease_actor(actor).await), None => None };
+            control.get_or_insert_actor(&mut *redo_actors, actor, HistoryFoldSet::new()).await?;
+            control.get_actor_mut(&mut *redo_actors,&edits[position].actor).await?.expect("original actor row was just admitted").insert_original_copy(serial, control).await?;
+            serial += 1;
+        }
+    }
+    *serial_out=serial;
+    Ok(())
+}
+
+async fn fold_commit(transition:&mut HistoryTransition,edits:&[FoldEdit],owners:&HistoryFoldIndex<String,usize>,checkpoint_lookup:&mut HistoryFoldIndex<String,usize>,change_lookup:&mut HistoryFoldIndex<String,usize>,alternative_lookup:&HistoryFoldIndex<String,usize>,fold:&mut HistoryFold,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let HistoryTransition::Commit(checkpoint)=transition else{unreachable!("commit arm receives a commit")};
+    let parent = match &checkpoint.parent_id { Some(parent) => Some(original_fold_required(control.get_text(&*checkpoint_lookup, parent).await?,&[FoldErrorPart::Text("checkpoint "),FoldErrorPart::Text(&checkpoint.checkpoint_id),FoldErrorPart::Text(" names unknown parent "),FoldErrorPart::Text(&parent)],control).await?), None => None };
+    let count = parent.map_or(0, |parent| fold.checkpoints[parent].change_ids.len());
+    let mut change_ids = control.vector(count+1).await?;
+    if let Some(parent) = parent { for change in &fold.checkpoints[parent].change_ids { change_ids.push(copy_history_text(change, control).await?); } }
+    change_ids.push(copy_history_text(&checkpoint.change_id, control).await?);
+    let positions = control.track(owned_positions(&checkpoint.mutation_ids, &*owners, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    let mut edit_ids = control.vector(positions.len()).await?;
+    for position in positions.iter() { edit_ids.push(copy_history_text(&edits[*position].id, control).await?); }
+    control.get_or_insert_text(&mut *change_lookup, copy_history_text(&checkpoint.change_id, control).await?, fold.changes.len()).await?;
+    control.get_or_insert_text(&mut *checkpoint_lookup, copy_history_text(&checkpoint.checkpoint_id, control).await?, fold.checkpoints.len()).await?;
+    let checkpoint_id = control.track(copy_history_text(&checkpoint.checkpoint_id, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    let line = checkpoint.line_id.as_ref().filter(|line| *line != &fold.trunk);
+    match line {
+        Some(line) => { let index = original_fold_required(control.get_text(&*alternative_lookup, line).await?,&[FoldErrorPart::Text("commit "),FoldErrorPart::Text(&checkpoint.checkpoint_id),FoldErrorPart::Text(" names unknown alternative "),FoldErrorPart::Text(&line)],control).await?; control.push_vec(&mut fold.alternatives[index].checkpoint_ids, copy_history_text(&checkpoint_id, control).await?).await?; }
+        None => fold.trunk_checkpoint_ids.push(copy_history_text(&checkpoint_id, control).await?),
+    }
+    fold.changes.push(FoldChange { id: std::mem::take(&mut checkpoint.change_id), edit_ids: edit_ids.take(), description: checkpoint.description.take(), saved_at: std::mem::take(&mut checkpoint.saved_at) });
+    fold.checkpoints.push(FoldCheckpoint { id: std::mem::take(&mut checkpoint.checkpoint_id), change_ids: change_ids.take(), parent_id: checkpoint.parent_id.take(), authors: std::mem::take(&mut checkpoint.authors), message: checkpoint.message.take(), timestamp: std::mem::take(&mut checkpoint.timestamp), pins: Vec::new() });
+    Ok(())
+}
+
+async fn fold_branch(transition:&mut HistoryTransition,checkpoint_lookup:&HistoryFoldIndex<String,usize>,alternative_lookup:&mut HistoryFoldIndex<String,usize>,fold:&mut HistoryFold,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let HistoryTransition::Branch{alternative_id,name,checkpoint_id}=transition else{unreachable!("branch arm receives a branch")};
+    if *alternative_id == fold.trunk { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("branch claims the trunk alternative "),FoldErrorPart::Text(&alternative_id)],control).await?); }
+    if control.get_text(&*checkpoint_lookup, checkpoint_id).await?.is_none() { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("branch names unknown checkpoint "),FoldErrorPart::Text(&checkpoint_id)],control).await?); }
+    control.get_or_insert_text(&mut *alternative_lookup, copy_history_text(alternative_id, control).await?, fold.alternatives.len()).await?;
+    let mut checkpoint_ids = control.vector(1).await?;
+    checkpoint_ids.push(std::mem::take(checkpoint_id));
+    fold.alternatives.push(FoldAlternative { id: std::mem::take(alternative_id), name: std::mem::take(name), checkpoint_ids: checkpoint_ids.take() });
+    Ok(())
+}
+
+async fn fold_repin(transition:&mut HistoryTransition,checkpoint_lookup:&mut HistoryFoldIndex<String,usize>,renamed:&mut HistoryFoldIndex<String,String>,fold:&mut HistoryFold,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let HistoryTransition::Repin{checkpoint_id,pinned_checkpoint_id,pins}=transition else{unreachable!("repin arm receives a repin")};
+    let index = original_fold_required(control.get_text(&*checkpoint_lookup, checkpoint_id).await?,&[FoldErrorPart::Text("repin names unknown checkpoint "),FoldErrorPart::Text(&checkpoint_id)],control).await?;
+    control.track(std::mem::replace(&mut fold.checkpoints[index].id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    control.track(std::mem::replace(&mut fold.checkpoints[index].pins, std::mem::take(pins))).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    control.remove_text(&mut *checkpoint_lookup,checkpoint_id).await?;
+    control.insert_text(&mut *checkpoint_lookup, copy_history_text(pinned_checkpoint_id, control).await?, index).await?;
+    for alternative in &mut fold.alternatives { for id in &mut alternative.checkpoint_ids { control.pulse().await?; if *id == *checkpoint_id { control.track(std::mem::replace(id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; } } }
+    for id in fold.trunk_checkpoint_ids.iter_mut() { control.pulse().await?; if *id == *checkpoint_id { control.track(std::mem::replace(id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; } }
+    control.insert_text(&mut *renamed, std::mem::take(checkpoint_id), std::mem::take(pinned_checkpoint_id)).await?;
+    Ok(())
+}
+
+async fn fold_supersede(transition:&mut HistoryTransition,event:&semio_framework_replication_causal::MutationEnvelope,head:&ViewerHead,owners:&HistoryFoldIndex<String,usize>,fold:&mut HistoryFold,control:&HistoryFoldControl)->Result<(),semio_framework_replication_error::ProtocolError>{
+    let HistoryTransition::Supersede(supersede)=transition else{unreachable!("supersede arm receives a supersede")};
+    for input in &supersede.inputs { control.pulse().await?; if control.get_text(&*owners, &input.target.0).await?.is_none() { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("transition references unknown operation "),FoldErrorPart::Text(&input.target.0)],control).await?); } }
+    if supersede.scope.as_ref().is_none_or(|scope| *scope == head.line_id) {
+        for input in &mut supersede.inputs {
+            control.pulse().await?;
+            let actor = control.track(control.lease_actor(&event.actor.0).await).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+            let transition_id = control.track(copy_history_text(&event.mutation_id.0, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+            let scope = match &supersede.scope { Some(scope) => Some(copy_history_text(scope, control).await?), None => None };
+            let target = MutationId(std::mem::take(&mut input.target.0));
+            let replacement = std::mem::replace(&mut input.replacement, InputReplacement::Withdrawn);
+            control.insert_mutation(&mut fold.supersessions, target, EffectiveSupersession { transition_id: transition_id.take(), actor: actor.take(), timestamp: event.timestamp, scope, replacement }).await?;
+        }
+    }
+    Ok(())
+}
+
+async fn fold_finish(mut fold:HistoryFoldOwned<HistoryFold>,head:&ViewerHead,edits:&[FoldEdit],active:&mut HistoryFoldSet<usize>,redo:&HistoryFoldIndex<u64,usize>,renamed:&HistoryFoldIndex<String,String>,checkpoint_lookup:&HistoryFoldIndex<String,usize>,change_lookup:&HistoryFoldIndex<String,usize>,alternative_lookup:&HistoryFoldIndex<String,usize>,edit_lookup:&HistoryFoldIndex<String,usize>,control:&HistoryFoldControl)->Result<HistoryFold,semio_framework_replication_error::ProtocolError>{
+    let on_trunk = head.line_id == fold.trunk;
+    let source = if on_trunk { &fold.trunk_checkpoint_ids } else { let index = original_fold_required(control.get_text(&*alternative_lookup, &head.line_id).await?,&[FoldErrorPart::Text("viewer head names unknown alternative "),FoldErrorPart::Text(&head.line_id)],control).await?; &fold.alternatives[index].checkpoint_ids };
+    let mut chain = control.vector(source.len()).await?;
+    for id in source { chain.push(copy_history_text(id, control).await?); }
+    let mut viewed = control.track(match &head.checkpoint_id { Some(id) => Some(copy_history_text(id, control).await?), None => None }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    if let Some(id) = viewed.as_mut() {
+        let mut guard = 0;
+        while let Some(next) = control.get_text(&*renamed, id).await? { control.pulse().await?; control.track(std::mem::replace(id, copy_history_text(next, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; guard += 1; if guard == 64 { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("repin cycle")],control).await?); } }
+        let mut known = false;
+        for candidate in chain.iter() { control.pulse().await?; known |= candidate == id; }
+        if !known { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("viewer head names unknown checkpoint "),FoldErrorPart::Text(&id)],control).await?); }
+    }
+    let at_tip = viewed.is_none();
+    let checkpoint = match viewed.take() { Some(id) => Some(id), None => match chain.last() { Some(id) => Some(copy_history_text(id, control).await?), None => None } };
+    let checkpoint = control.track(checkpoint).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    let mut visible = control.track(HistoryFoldSet::<usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    if let Some(id) = checkpoint.as_ref() {
+        let position = original_fold_required(control.get_text(&*checkpoint_lookup, id).await?,&[FoldErrorPart::Text("viewer head names unknown checkpoint "),FoldErrorPart::Text(&id)],control).await?;
+        for change_id in &fold.checkpoints[position].change_ids {
+            control.pulse().await?;
+            let change = original_fold_required(control.get_text(&*change_lookup, change_id).await?,&[FoldErrorPart::Text("checkpoint "),FoldErrorPart::Text(&id),FoldErrorPart::Text(" names unknown change "),FoldErrorPart::Text(&change_id)],control).await?;
+            for edit_id in &fold.changes[change].edit_ids { control.pulse().await?; if let Some(position) = control.get_text(&*edit_lookup, edit_id).await? { if active.contains_original_copy(position, control).await? { visible.insert_original_copy(*position, control).await?; } } }
+        }
+    }
+    if at_tip {
+        let mut committed = control.track(HistoryFoldSet::<usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+        for change in &fold.changes { for edit_id in &change.edit_ids { control.pulse().await?; if let Some(position) = control.get_text(&*edit_lookup, edit_id).await? { committed.insert_original_copy(*position, control).await?; } } }
+        for (position, edit) in edits.iter().enumerate() { control.pulse().await?; if !active.contains_original_copy(&position, control).await? || committed.contains_original_copy(&position, control).await? { continue; } let on_line = match &edit.line { Some(line) if line != &fold.trunk => line == &head.line_id, _ => on_trunk }; if on_line { visible.insert_original_copy(position, control).await?; } }
+    }
+    let mut ordered = control.track(HistoryFoldIndex::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    for position in visible.iter().copied() { let edit = &edits[position]; control.insert_ordered_text(&mut ordered, (edit.timestamp.cmp_key(), copy_history_text(&edit.id, control).await?), position).await?; }
+    loop {let row=control.pop_first(&mut ordered).await?;let Some((key,position))=row.take()else{break};control.track(key).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;fold.applied.push(copy_history_text(&edits[position].id,control).await?);}
+    for position in redo.values() { fold.redo.push(copy_history_text(&edits[*position].id, control).await?); }
+    fold.checkpoint = checkpoint.take();
+    fold.alternative = if on_trunk { None } else { Some(copy_history_text(&head.line_id, control).await?) };
+    Ok(fold.take())
+}
+
 pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &(impl HistoryTransitionEvents+?Sized), excluded: &HistoryFoldIndex<String, ()>, head: &ViewerHead, control: &HistoryFoldControl) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     let mut owners = control.track(HistoryFoldIndex::<String, usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let mut identities = control.track(HistoryFoldSet::<String>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -636,135 +780,22 @@ pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[Fold
         let _key = control.track(key).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
         control.pulse().await?;
         if !structural {
-            let edit = &edits[index];
-            if control.get_text(excluded, &edit.id).await?.is_some() { continue; }
-            active.insert_original_copy(index, control).await?;
-            loop {
-                let Some(orders)=control.get_actor_mut(&mut redo_actors,&edit.actor).await?else{break};
-                let Some(position)=orders.pop_first_original_copy(control).await?else{break};
-                control.pulse().await?;
-                if let Some(index)=control.remove_copy(&mut redo,&position).await?{control.remove_copy(&mut redo_lookup,&index).await?;}
-            }
+            fold_edit_event(index,edits,excluded,&mut active,&mut redo,&mut redo_lookup,&mut redo_actors,control).await?;
             continue;
         }
         let event = transitions.event_at(index).ok_or(semio_framework_replication_error::ProtocolError::Malformed{what:"original history transition index",offset:index as u64,detail:String::new()})?;
         let mut transition = control.track(decode_history_transition_controlled(&event.diff.payload, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
         let reinstate = matches!(&*transition, HistoryTransition::Reinstate { .. });
-        match &mut *transition {
-            HistoryTransition::Revert { mutation_ids } | HistoryTransition::Reinstate { mutation_ids } => {
-                let positions = control.track(owned_positions(mutation_ids, &owners, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                let mut foreign = false;
-                for position in positions.iter() { control.pulse().await?; foreign |= edits[*position].actor.as_deref().is_some_and(|actor| actor != event.actor.0.as_ref()); }
-                if foreign { fold.refused.push(copy_history_text(&event.mutation_id.0, control).await?); continue; }
-                for position in positions.iter().copied() {
-                    control.pulse().await?;
-                    if reinstate {
-                        if let Some(order)=control.remove_copy(&mut redo_lookup,&position).await?{
-                            control.remove_copy(&mut redo,&order).await?;
-                            if let Some(orders)=control.get_actor_mut(&mut redo_actors,&edits[position].actor).await?{orders.remove_original_copy(&order,control).await?;}
-                            active.insert_original_copy(position,control).await?;
-                        }
-                    } else if active.remove_original_copy(&position,control).await? {
-                        control.insert_copy(&mut redo, serial, position).await?;
-                        control.insert_copy(&mut redo_lookup, position, serial).await?;
-                        let actor = match &edits[position].actor { Some(actor) => Some(control.lease_actor(actor).await), None => None };
-                        control.get_or_insert_actor(&mut redo_actors, actor, HistoryFoldSet::new()).await?;
-                        control.get_actor_mut(&mut redo_actors,&edits[position].actor).await?.expect("original actor row was just admitted").insert_original_copy(serial, control).await?;
-                        serial += 1;
-                    }
-                }
-            }
-            HistoryTransition::Commit(checkpoint) => {
-                let parent = match &checkpoint.parent_id { Some(parent) => Some(original_fold_required(control.get_text(&checkpoint_lookup, parent).await?,&[FoldErrorPart::Text("checkpoint "),FoldErrorPart::Text(&checkpoint.checkpoint_id),FoldErrorPart::Text(" names unknown parent "),FoldErrorPart::Text(&parent)],control).await?), None => None };
-                let count = parent.map_or(0, |parent| fold.checkpoints[parent].change_ids.len());
-                let mut change_ids = control.vector(count+1).await?;
-                if let Some(parent) = parent { for change in &fold.checkpoints[parent].change_ids { change_ids.push(copy_history_text(change, control).await?); } }
-                change_ids.push(copy_history_text(&checkpoint.change_id, control).await?);
-                let positions = control.track(owned_positions(&checkpoint.mutation_ids, &owners, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                let mut edit_ids = control.vector(positions.len()).await?;
-                for position in positions.iter() { edit_ids.push(copy_history_text(&edits[*position].id, control).await?); }
-                control.get_or_insert_text(&mut change_lookup, copy_history_text(&checkpoint.change_id, control).await?, fold.changes.len()).await?;
-                control.get_or_insert_text(&mut checkpoint_lookup, copy_history_text(&checkpoint.checkpoint_id, control).await?, fold.checkpoints.len()).await?;
-                let checkpoint_id = control.track(copy_history_text(&checkpoint.checkpoint_id, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                let line = checkpoint.line_id.as_ref().filter(|line| *line != &fold.trunk);
-                match line {
-                    Some(line) => { let index = original_fold_required(control.get_text(&alternative_lookup, line).await?,&[FoldErrorPart::Text("commit "),FoldErrorPart::Text(&checkpoint.checkpoint_id),FoldErrorPart::Text(" names unknown alternative "),FoldErrorPart::Text(&line)],control).await?; control.push_vec(&mut fold.alternatives[index].checkpoint_ids, copy_history_text(&checkpoint_id, control).await?).await?; }
-                    None => fold.trunk_checkpoint_ids.push(copy_history_text(&checkpoint_id, control).await?),
-                }
-                fold.changes.push(FoldChange { id: std::mem::take(&mut checkpoint.change_id), edit_ids: edit_ids.take(), description: checkpoint.description.take(), saved_at: std::mem::take(&mut checkpoint.saved_at) });
-                fold.checkpoints.push(FoldCheckpoint { id: std::mem::take(&mut checkpoint.checkpoint_id), change_ids: change_ids.take(), parent_id: checkpoint.parent_id.take(), authors: std::mem::take(&mut checkpoint.authors), message: checkpoint.message.take(), timestamp: std::mem::take(&mut checkpoint.timestamp), pins: Vec::new() });
-            }
-            HistoryTransition::Branch { alternative_id, name, checkpoint_id } => {
-                if *alternative_id == fold.trunk { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("branch claims the trunk alternative "),FoldErrorPart::Text(&alternative_id)],control).await?); }
-                if control.get_text(&checkpoint_lookup, checkpoint_id).await?.is_none() { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("branch names unknown checkpoint "),FoldErrorPart::Text(&checkpoint_id)],control).await?); }
-                control.get_or_insert_text(&mut alternative_lookup, copy_history_text(alternative_id, control).await?, fold.alternatives.len()).await?;
-                let mut checkpoint_ids = control.vector(1).await?;
-                checkpoint_ids.push(std::mem::take(checkpoint_id));
-                fold.alternatives.push(FoldAlternative { id: std::mem::take(alternative_id), name: std::mem::take(name), checkpoint_ids: checkpoint_ids.take() });
-            }
+        match &*transition {
+            HistoryTransition::Revert { .. } | HistoryTransition::Reinstate { .. } => fold_revert(&mut transition,reinstate,event,edits,&owners,&mut active,&mut redo,&mut redo_lookup,&mut redo_actors,&mut fold,&mut serial,control).await?,
+            HistoryTransition::Commit(_) => fold_commit(&mut transition,edits,&owners,&mut checkpoint_lookup,&mut change_lookup,&alternative_lookup,&mut fold,control).await?,
+            HistoryTransition::Branch { .. } => fold_branch(&mut transition,&checkpoint_lookup,&mut alternative_lookup,&mut fold,control).await?,
             HistoryTransition::Checkout { checkpoint_id, .. } => { if control.get_text(&checkpoint_lookup, checkpoint_id).await?.is_none() { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("checkout names unknown checkpoint "),FoldErrorPart::Text(&checkpoint_id)],control).await?); } }
-            HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
-                let index = original_fold_required(control.get_text(&checkpoint_lookup, checkpoint_id).await?,&[FoldErrorPart::Text("repin names unknown checkpoint "),FoldErrorPart::Text(&checkpoint_id)],control).await?;
-                control.track(std::mem::replace(&mut fold.checkpoints[index].id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                control.track(std::mem::replace(&mut fold.checkpoints[index].pins, std::mem::take(pins))).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                control.remove_text(&mut checkpoint_lookup,checkpoint_id).await?;
-                control.insert_text(&mut checkpoint_lookup, copy_history_text(pinned_checkpoint_id, control).await?, index).await?;
-                for alternative in &mut fold.alternatives { for id in &mut alternative.checkpoint_ids { control.pulse().await?; if *id == *checkpoint_id { control.track(std::mem::replace(id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; } } }
-                for id in fold.trunk_checkpoint_ids.iter_mut() { control.pulse().await?; if *id == *checkpoint_id { control.track(std::mem::replace(id, copy_history_text(pinned_checkpoint_id, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; } }
-                control.insert_text(&mut renamed, std::mem::take(checkpoint_id), std::mem::take(pinned_checkpoint_id)).await?;
-            }
-            HistoryTransition::Supersede(supersede) => {
-                for input in &supersede.inputs { control.pulse().await?; if control.get_text(&owners, &input.target.0).await?.is_none() { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("transition references unknown operation "),FoldErrorPart::Text(&input.target.0)],control).await?); } }
-                if supersede.scope.as_ref().is_none_or(|scope| *scope == head.line_id) {
-                    for input in &mut supersede.inputs {
-                        control.pulse().await?;
-                        let actor = control.track(control.lease_actor(&event.actor.0).await).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                        let transition_id = control.track(copy_history_text(&event.mutation_id.0, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-                        let scope = match &supersede.scope { Some(scope) => Some(copy_history_text(scope, control).await?), None => None };
-                        let target = MutationId(std::mem::take(&mut input.target.0));
-                        let replacement = std::mem::replace(&mut input.replacement, InputReplacement::Withdrawn);
-                        control.insert_mutation(&mut fold.supersessions, target, EffectiveSupersession { transition_id: transition_id.take(), actor: actor.take(), timestamp: event.timestamp, scope, replacement }).await?;
-                    }
-                }
-            }
+            HistoryTransition::Repin { .. } => fold_repin(&mut transition,&mut checkpoint_lookup,&mut renamed,&mut fold,control).await?,
+            HistoryTransition::Supersede(_) => fold_supersede(&mut transition,event,head,&owners,&mut fold,control).await?,
         }
     }
-    let on_trunk = head.line_id == fold.trunk;
-    let source = if on_trunk { &fold.trunk_checkpoint_ids } else { let index = original_fold_required(control.get_text(&alternative_lookup, &head.line_id).await?,&[FoldErrorPart::Text("viewer head names unknown alternative "),FoldErrorPart::Text(&head.line_id)],control).await?; &fold.alternatives[index].checkpoint_ids };
-    let mut chain = control.vector(source.len()).await?;
-    for id in source { chain.push(copy_history_text(id, control).await?); }
-    let mut viewed = control.track(match &head.checkpoint_id { Some(id) => Some(copy_history_text(id, control).await?), None => None }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    if let Some(id) = viewed.as_mut() {
-        let mut guard = 0;
-        while let Some(next) = control.get_text(&renamed, id).await? { control.pulse().await?; control.track(std::mem::replace(id, copy_history_text(next, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; guard += 1; if guard == 64 { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("repin cycle")],control).await?); } }
-        let mut known = false;
-        for candidate in chain.iter() { control.pulse().await?; known |= candidate == id; }
-        if !known { return Err(original_fold_refusal("history fold",0,&[FoldErrorPart::Text("viewer head names unknown checkpoint "),FoldErrorPart::Text(&id)],control).await?); }
-    }
-    let at_tip = viewed.is_none();
-    let checkpoint = match viewed.take() { Some(id) => Some(id), None => match chain.last() { Some(id) => Some(copy_history_text(id, control).await?), None => None } };
-    let checkpoint = control.track(checkpoint).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    let mut visible = control.track(HistoryFoldSet::<usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    if let Some(id) = checkpoint.as_ref() {
-        let position = original_fold_required(control.get_text(&checkpoint_lookup, id).await?,&[FoldErrorPart::Text("viewer head names unknown checkpoint "),FoldErrorPart::Text(&id)],control).await?;
-        for change_id in &fold.checkpoints[position].change_ids {
-            control.pulse().await?;
-            let change = original_fold_required(control.get_text(&change_lookup, change_id).await?,&[FoldErrorPart::Text("checkpoint "),FoldErrorPart::Text(&id),FoldErrorPart::Text(" names unknown change "),FoldErrorPart::Text(&change_id)],control).await?;
-            for edit_id in &fold.changes[change].edit_ids { control.pulse().await?; if let Some(position) = control.get_text(&edit_lookup, edit_id).await? { if active.contains_original_copy(position, control).await? { visible.insert_original_copy(*position, control).await?; } } }
-        }
-    }
-    if at_tip {
-        let mut committed = control.track(HistoryFoldSet::<usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-        for change in &fold.changes { for edit_id in &change.edit_ids { control.pulse().await?; if let Some(position) = control.get_text(&edit_lookup, edit_id).await? { committed.insert_original_copy(*position, control).await?; } } }
-        for (position, edit) in edits.iter().enumerate() { control.pulse().await?; if !active.contains_original_copy(&position, control).await? || committed.contains_original_copy(&position, control).await? { continue; } let on_line = match &edit.line { Some(line) if line != &fold.trunk => line == &head.line_id, _ => on_trunk }; if on_line { visible.insert_original_copy(position, control).await?; } }
-    }
-    let mut ordered = control.track(HistoryFoldIndex::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    for position in visible.iter().copied() { let edit = &edits[position]; control.insert_ordered_text(&mut ordered, (edit.timestamp.cmp_key(), copy_history_text(&edit.id, control).await?), position).await?; }
-    loop {let row=control.pop_first(&mut ordered).await?;let Some((key,position))=row.take()else{break};control.track(key).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;fold.applied.push(copy_history_text(&edits[position].id,control).await?);}
-    for position in redo.values() { fold.redo.push(copy_history_text(&edits[*position].id, control).await?); }
-    fold.checkpoint = checkpoint.take();
-    fold.alternative = if on_trunk { None } else { Some(copy_history_text(&head.line_id, control).await?) };
-    Ok(fold.take())
+    fold_finish(fold,head,edits,&mut active,&redo,&renamed,&checkpoint_lookup,&change_lookup,&alternative_lookup,&edit_lookup,control).await
 }
 
 /// 📄️ Copies immutable protocol bytes through the same granted decoder pages.

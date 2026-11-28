@@ -24,13 +24,13 @@
   },
   "infrastructure": {
     "retained": {
-      "maximumItems": 131072,
-      "maximumCopyBytes": 33554432,
-      "maximumCapacityBytes": 67108864,
-      "maximumReleaseBytes": 67108864,
+      "maximumItems": 4194304,
+      "maximumCopyBytes": 536870912,
+      "maximumCapacityBytes": 536870912,
+      "maximumReleaseBytes": 536870912,
       "maximumDepth": 64
     },
-    "workFuel": 10000000,
+    "workFuel": 2000000000,
     "maximumCleanupMicroseconds": 100000
   }
 }

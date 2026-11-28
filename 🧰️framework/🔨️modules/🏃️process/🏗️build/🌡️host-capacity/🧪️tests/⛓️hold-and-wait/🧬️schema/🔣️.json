@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/HostCapacityHoldAndWaitScenariosV1",
+  "title": "Deterministic scheduler scenarios of the host capacity gate: jobs that hold a memory grant and ask for more, plain requests, and a memory stream that other applications hold",
+  "definitions": {
+    "Job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "priority", "arriveSecond", "grantMegabytes", "askAfterSeconds", "growthMegabytes", "workSeconds"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,32}$"},
+        "priority": {"enum": ["batch", "interactive"]},
+        "arriveSecond": {"type": "integer", "minimum": 0},
+        "grantMegabytes": {"type": "integer", "minimum": 1},
+        "askAfterSeconds": {"type": "integer", "minimum": 0, "description": "Seconds after the grant is admitted until the job asks to grow; a job that was preempted and queued again asks at once (its finished units are cached)."},
+        "growthMegabytes": {"type": "integer", "minimum": 1},
+        "floorMegabytes": {"type": "integer", "minimum": 1, "description": "The smallest growth the unit accepts when it runs under a lower memory budget."},
+        "workSeconds": {"type": "integer", "minimum": 1, "description": "Seconds the job runs once its growth was admitted."}
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "priority", "arriveSecond", "megabytes", "workSeconds"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,32}$"},
+        "priority": {"enum": ["batch", "interactive"]},
+        "arriveSecond": {"type": "integer", "minimum": 0},
+        "megabytes": {"type": "integer", "minimum": 1},
+        "minimum": {"type": "boolean", "description": "Declares `megabytes` as the least the request accepts (`repo capacity run --memory`)."},
+        "workSeconds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "Stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefix", "priority", "megabytes", "workSeconds", "firstSecond", "everySeconds", "count"],
+      "properties": {
+        "prefix": {"type": "string", "pattern": "^[A-Za-z0-9_-]{4,24}$"},
+        "priority": {"enum": ["batch", "interactive"]},
+        "megabytes": {"type": "integer", "minimum": 1},
+        "workSeconds": {"type": "integer", "minimum": 1},
+        "firstSecond": {"type": "integer", "minimum": 0},
+        "everySeconds": {"type": "integer", "minimum": 1},
+        "count": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "horizonSeconds", "preemptLatencySeconds", "totalMegabytes", "foreignMegabytes", "wait", "jobs", "requests", "streams"],
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "horizonSeconds": {"type": "integer", "minimum": 1},
+        "preemptLatencySeconds": {"type": "integer", "minimum": 0, "description": "Seconds from the preempt marker until the victim has released its grant."},
+        "totalMegabytes": {"type": "integer", "minimum": 1},
+        "foreignMegabytes": {"type": "integer", "minimum": 0},
+        "wait": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "jobs": {"type": "array", "items": {"$ref": "#/definitions/Job"}},
+        "requests": {"type": "array", "items": {"$ref": "#/definitions/Request"}},
+        "streams": {"type": "array", "items": {"$ref": "#/definitions/Stream"}}
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["memory", "scenarios"],
+      "properties": {
+        "_comment": {"type": "string"},
+        "memory": {"type": "object", "description": "The memory rules merged into the policy of the shared decision fixture."},
+        "scenarios": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Scenario"}}
+      }
+    }
+  }
+}

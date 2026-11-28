@@ -39,6 +39,28 @@ Server: `.mcp.json` → `semio` (`repo dev mcp stdio os --folder .🧬semio/🔗
 - 16 GB host: graph slice workers (3–6 GB) repeatedly suspended/cancelled by the memory warden; graph reads serialize all builds.
 - Published `semio-os-mcp` is still the 2026-11-25 18:06 binary: every rebuild so far failed on concurrent in-flight refactors of other agents (`StallWait`, `semio_framework_trace`, job-context crate split, build-owner identity collision mid-write).
 
+## Status 2026-11-27 ~01:30
+
+Native run of the freshly built `semio-os-mcp`: the Cargo-gate build, with the launcher environment rebuilt in `🗑️generated/native-env.json`.
+
+| Area | Result on fresh binary |
+| --- | --- |
+| capabilities_describe (framework target note), context_resolve, capabilities_search, conversation_reply, `semio://workspace` | ✅ |
+| inference_list / inference_get / inference_submit on probe kind | ✅ typed refusals |
+| artifact_create `s.stdio.txt` | ✅ typed `PLUGIN_UNAVAILABLE cause=model-missing` (native mode has no launcher model build) |
+| inference_run `s.gis.gismap.inference` | ❌ `publishes no payload contract`: descriptors not regenerated yet |
+| artifact_create `s.note.note` | ❌ hung: admission refusal `guest Core wire reserve exceeds its actual grant` (Infrastructure items 52–74 < 93), and the MCP request never answered → [🔎️guest-wire-reserve-grant.md](🔎️guest-wire-reserve-grant.md) (in progress) |
+| Everything after note create in the flow (actions, transactions, history, jobs, export) | ⏳ blocked behind note create |
+
+Open blockers:
+- `BUILD_OWNER_FAILED: closure.provider-generated-import` (`artifact-package` → `@semio-tech/ui-rs:generate`). It recurs and blocks `workspace:components` describe. The refusal now names the importing modules (`{importers}`), and a rerun is capturing them. See [🔎️workspace-build-owner.md](🔎️workspace-build-owner.md).
+- Calling `repo ./📜️script.ts components describe` directly is not a fallback: it needs `SEMIO_BUILD_MODE` and the composition `generate` outputs.
+- 2026-11-27 03:30:
+  - The guest wire reserve grant is fixed. `artifact_create s.note.note` now answers a typed `BUDGET_EXCEEDED` after 211 s, with 0 completed turns: the debug interpreter runs about 4 M instructions/s.
+  - The guest interpreter crates now build at `opt-level = 3` in `.cargo/config.toml`; a rebuild is running.
+- The `LocalizedLabel` refactor (`🖱️ui/🌐️locale/🏷️label/🦀️.rs`, 2026-11-27 00:35) made manifest `label` a terminology matrix. The checked-in `🌎️hub/🧩️compositions/*/🧩️component/🔣️.json` still hold plain strings, so the registry skips 73 plugins, stdio and gis included. Fix: `repo run workspace:components -- describe --all`.
+- Host: load is about 8, about 1 GB of pages are free, Rust builds get 3 of 10 cores, and builds take 20–60 min each.
+
 ## Work streams
 
 - [🔎️artifact-create-budget.md](🔎️artifact-create-budget.md) — guest poll budget fault.

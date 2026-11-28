@@ -25,8 +25,8 @@ import { catalog } from "../🧊️three-views/🧰️.ts";
 const VIEWPOINTS: readonly Viewpoint[] = ["elevation", "front", "plan"];
 const DENOMINATOR = 50;
 const select = { kind: "scale", scale: { denominator: DENOMINATOR } } as const;
-const assets = catalog();
-const assetOf = (id: string): Asset => assets.find((a) => a.id === id)!;
+const loaded = new Map<string, Asset>();
+const assetOf = (id: string): Asset => loaded.get(id) ?? loaded.set(id, catalog([id]).find((a) => a.id === id)!).get(id)!;
 const itemsOf = (scene: DrawingScene): DrawingItem[] => scene.layers.flatMap((l) => l.items);
 const modelOf = (scene: DrawingScene, x: number, y: number) => ({ u: (x - scene.metadata.origin.xMm) / scene.metadata.mmPerMetre, v: (scene.metadata.origin.yMm - y) / scene.metadata.mmPerMetre });
 const centre = (item: DrawingItem): { x: number; y: number } => {

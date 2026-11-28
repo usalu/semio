@@ -62,9 +62,9 @@
         0
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "Text",
       "annotRect": [
@@ -81,6 +81,34 @@
       "flags": 28
     },
     {
+      "kind": "note",
+      "text": "Black",
+      "rect": [
+        10,
+        20,
+        0,
+        0
+      ],
+      "color": [
+        0,
+        0,
+        0
+      ],
+      "subtype": "Text",
+      "annotRect": [
+        10,
+        20,
+        30,
+        40
+      ],
+      "colorOut": [
+        0,
+        0,
+        0
+      ],
+      "flags": 28
+    },
+    {
       "kind": "highlight",
       "text": "",
       "extra": "",
@@ -91,9 +119,9 @@
         12
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "Highlight",
       "annotRect": [
@@ -167,9 +195,9 @@
         12
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "StrikeOut",
       "annotRect": [
@@ -205,9 +233,9 @@
         0
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "Ink",
       "annotRect": [
@@ -247,9 +275,9 @@
         10
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "Link",
       "annotRect": [
@@ -270,9 +298,9 @@
         10
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "subtype": "Link",
       "annotRect": [
@@ -294,9 +322,9 @@
         12
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "error": true
     },
@@ -311,9 +339,9 @@
         0
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "error": true
     },
@@ -328,9 +356,9 @@
         10
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "error": true
     },
@@ -345,9 +373,9 @@
         12
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "error": true
     },
@@ -362,9 +390,9 @@
         12
       ],
       "color": [
-        0,
-        0,
-        0
+        -1,
+        -1,
+        -1
       ],
       "error": true
     }

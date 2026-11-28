@@ -1,15 +1,13 @@
 import {join} from "node:path";import {lstatSync,rmSync} from "node:fs";
 const root="/Users/ueli/Documents/semio",B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
 const {workspaceBuildFilesV1,buildGraphMembersV1,buildGraphMembershipV1}=await import(join(B,"🕸️graph/📁️workspace/🟦️.ts"));
-const {journalMembershipRecordsV1,linkedDirectoriesV1}=await import(join(B,"🕸️graph/📥️load/🗞️journal-clean/🟦️.ts"));
+const {journalMembershipRecordsV1}=await import(join(B,"🕸️graph/📥️load/🗞️journal-clean/🟦️.ts"));
 const {connectChangeJournalV1}=await import(join(B,"🏡️resident/📜️journal/🟦️.ts"));
 const files=buildGraphMembersV1(await workspaceBuildFilesV1(root));
 let t=performance.now();[...files].sort((a,b)=>a.localeCompare(b));console.log("localeCompare sort",Math.round(performance.now()-t));
-t=performance.now();for(const f of files)lstatSync(join(root,f));console.log("sync lstat all",Math.round(performance.now()-t));
-t=performance.now();const l=linkedDirectoriesV1(root,files);console.log("linked dirs",Math.round(performance.now()-t),l.length);
 const feed:any=connectChangeJournalV1(root),file="/private/tmp/claude-501/h21/mm.json";rmSync(file,{force:true});
 t=performance.now();const a=await journalMembershipRecordsV1({feed,root,file});console.log("setup1",Math.round(performance.now()-t));
-await buildGraphMembershipV1(root,files,undefined,new Set(),undefined,a);a.done();
+t=performance.now();await buildGraphMembershipV1(root,files,undefined,new Set(),undefined,a);await a.done();console.log("first hash+seal",Math.round(performance.now()-t));
 await Bun.sleep(2000);
 t=performance.now();const b=await journalMembershipRecordsV1({feed,root,file});console.log("setup2",Math.round(performance.now()-t));
 t=performance.now();await buildGraphMembershipV1(root,files,undefined,new Set(),undefined,b);console.log("hash2",Math.round(performance.now()-t),JSON.stringify(b.counts()));

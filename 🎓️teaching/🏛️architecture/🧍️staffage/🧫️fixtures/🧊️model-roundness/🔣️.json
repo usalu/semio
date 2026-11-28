@@ -1,9 +1,10 @@
 {
- "$comment": "The roundness rule of the 3D models, language-agnostic. feature(scale) = paperFeatureMm * scale / 1000 metres. chordM(asset, scale) = min(largestM / largestPerChord, chordPerFeature * feature(scale)). Segments of a full circle of radius r: n = min(maxSegments[scale], max(minSegments, ceil(pi / acos(1 - chordM / r)), roundSegments when r > feature(scale))). Every solid of `kinds` is built about the Y axis with the radius r and the length 4 r: cylinder = revolve of the profile [[0, r], [4 r, r]], sphere = ellipsoid of radii [r, r, r], capsule = p0 [0, 0, 0], p1 [0, 4 r, 0], r0 = r1 = r, loft = two capped circular sections at [0, 0, 0] and [0, 4 r, 0].",
+ "$comment": "The roundness rule of the 3D models, language-agnostic. feature(scale) = paperFeatureMm * scale / 1000 metres. chordM(asset, scale) = min(largestM * max(scale, referenceScale) / (referenceScale * largestPerChord), chordPerFeature * feature(scale)): both terms grow in proportion to the denominator from 1:referenceScale on, so a solid sized by the scale keeps its segments and the chord never falls towards a coarser scale. A marker of `markerFeatures` features in diameter at a scale is a sphere of radius markerFeatures * feature(scale) / 2; three's SphereGeometry(r, n, ceil(n / 2)) has the triangles of the kernel's ellipsoid of n segments. Segments of a full circle of radius r: n = min(maxSegments[scale], max(minSegments, ceil(pi / acos(1 - chordM / r)), roundSegments when r > feature(scale))). Every solid of `kinds` is built about the Y axis with the radius r and the length 4 r: cylinder = revolve of the profile [[0, r], [4 r, r]], sphere = ellipsoid of radii [r, r, r], capsule = p0 [0, 0, 0], p1 [0, 4 r, 0], r0 = r1 = r, loft = two capped circular sections at [0, 0, 0] and [0, 4 r, 0].",
  "rule": {
   "paperFeatureMm": 0.15,
   "chordPerFeature": 0.02,
   "largestPerChord": 3200,
+  "referenceScale": 50,
   "roundSegments": 24,
   "minSegments": 12,
   "maxSegments": { "20": 96, "50": 64, "100": 48, "200": 40, "500": 32 }
@@ -16,6 +17,7 @@
   { "name": "car", "largestM": 3.9 },
   { "name": "crane", "largestM": 45 }
  ],
+ "markers": { "markerFeatures": 1, "largestM": [0.01, 0.03, 0.1, 0.3, 0.6, 0.9, 1.7, 2.5, 4.8, 10], "scales": [50, 100, 200, 500] },
  "radiiM": [0.001, 0.004, 0.007, 0.008, 0.019, 0.045, 0.09, 0.3, 1.2],
  "kinds": ["cylinder", "sphere", "capsule", "loft"],
  "catalog": ["tealight", "thermostatic-radiator-valve", "standing-adult", "city-car"]

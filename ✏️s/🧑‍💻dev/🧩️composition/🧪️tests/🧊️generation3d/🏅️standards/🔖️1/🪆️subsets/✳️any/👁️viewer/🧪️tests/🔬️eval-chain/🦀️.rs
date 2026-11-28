@@ -79,7 +79,7 @@ async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached()
     for case in fixture.arming.iter().filter(|case| case.surface == "viewer") {
         let mut app = app().await;
         let view = roster(&fixture, &case.attached);
-        let owed = app.pending_effects(Some(&view)).await;
+        let owed = semio_plugin::artifact_app_laws::fixture_pending_effects(&mut app.0, Some(&view)).await.expect("the host pending-effects poll").unwrap_or_default();
         let started = context::run_actions(&owed);
         assert_eq!(started.is_empty(), case.armed_window_ids.is_empty(), "arming case {}: a run starts exactly when a preview window is attached, got {started:?}", case.id);
         let run = context::drive_preview_run(&mut app, &view, &owed).await;
@@ -127,7 +127,7 @@ async fn only_a_viewer_preview_addressed_tick_passes_the_retained_preflight() {
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
         let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
         let args = semio_s_artifact_procedural_3d_preview_eval::window_args(&case.payload_window_id, &kind);
-        let action_meta = ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") };
+        let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..semio_plugin::artifact_app_laws::meta("local") };
         let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
             Ok(()) => match semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
                 Ok(receipt) => receipt.lanes.contains(&TypedOperationResultLane::Fault).then(|| format!("retained publication faulted: {:?}", receipt.lanes)),
@@ -148,7 +148,7 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     let _serial = context::lock();
     let mut app = app().await;
     let view = context::view_shell_view("view-preview");
-    let action_meta = ActionMeta { view_state: Some(view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     let args = semio_s_artifact_procedural_3d_preview_eval::window_args("view-preview", preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("viewer preview tick");
     let tick = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication");
@@ -231,8 +231,8 @@ async fn the_abort_a_running_preview_offers_reaches_its_run_and_ends_it_as_abort
     let _serial = context::lock();
     let mut app = app().await;
     let view = context::view_shell_view("view-preview");
-    let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
-    let owed = app.pending_effects(Some(&view)).await;
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..meta("local") };
+    let owed = semio_plugin::artifact_app_laws::fixture_pending_effects(&mut app.0, Some(&view)).await.expect("the host pending-effects poll").unwrap_or_default();
     assert_eq!(context::run_actions(&owed), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "an attached preview owes exactly one run start");
     for effect in owed {
         if let semio_plugin::Effect::DispatchAction { action, args, .. } = effect {

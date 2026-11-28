@@ -11,7 +11,7 @@ export class CargoWindowsConditionalFailureV1 extends Error{readonly settlement:
 /** 🏪️ Applies the distinct Windows contract only inside the authenticated maintenance owner. */
 export async function retireWindowsCargoUnitsV1(options:Readonly<{root:string;backingRoot:string;units:readonly CacheUnit[];control:ResourceLeaseControl;output:string;targetAvailableBytes:number;maximumDeletionBytes:number;recensus:()=>Promise<readonly CacheUnit[]>;available:()=>Promise<number>}>):Promise<Readonly<{units:number;logicalBytes:number;availableBytes:number;conditional:CargoWindowsConditionalSummaryV1}>>{
  options=Object.freeze({...options,units:Object.freeze(options.units.map(unit=>Object.freeze({...unit})))});const{control}=options;checkResourceLeaseControl(control);requireCompilerWriterCustodyV1(options.backingRoot,control);const current=new Map((await options.recensus()).map(unit=>[unit.path,unit]));
- for(const unit of options.units){const row=current.get(unit.path);if(!row||row.bytes!==unit.bytes||row.recencyMs!==unit.recencyMs||row.lockHeld)throw Error("Conditional Cargo unit changed before kernel custody");}
+ options=Object.freeze({...options,units:Object.freeze(options.units.filter(unit=>{const row=current.get(unit.path);return row!==undefined&&row.bytes===unit.bytes&&row.recencyMs===unit.recencyMs&&!row.lockHeld;}))});
  let units=0,bytes=0,acceptedEntries=0,removedEntries=0,acceptedLogicalBytes=0,removedLogicalBytes=0,handlesSettled=true;
  const record=(receipt:ConditionalWindowsReceiptV1)=>{handlesSettled=handlesSettled&&receipt.handlesSettled;acceptedEntries+=receipt.acceptedEntries;removedEntries+=receipt.removedEntries;acceptedLogicalBytes+=receipt.acceptedLogicalBytes;removedLogicalBytes+=receipt.removedLogicalBytes;};
  try{

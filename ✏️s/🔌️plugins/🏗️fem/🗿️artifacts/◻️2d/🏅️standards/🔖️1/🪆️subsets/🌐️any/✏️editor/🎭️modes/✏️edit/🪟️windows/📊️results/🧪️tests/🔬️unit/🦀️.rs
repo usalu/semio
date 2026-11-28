@@ -44,8 +44,22 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canv
 /// the framework's own fixture close walks a one-item budget the demo-sized store does not fit. A
 /// render law needs neither — `render` is a pure function of the snapshot, the display, the window
 /// configuration and the interaction snapshot.
+fn results_node(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> BuiltNode {
+    render(doc, display, &Viewport2d::default(), window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, labels, semio_plugin::Locale::En).expect("fixture surface admission")
+}
+
+/// 🏷️ The DOM caption lines above the canvas, in reading order.
+fn results_captions(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Vec<String> {
+    let node = results_node(doc, display, window, labels);
+    node.children.iter().filter_map(|child| match &child.component {
+        semio_ui_contract::Component::Text(props) => Some(props.value.0.as_str().to_owned()),
+        _ => None,
+    }).collect()
+}
+
 fn results_scene(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig) -> Canvas2dScene {
-    let node = render(doc, display, &Viewport2d::default(), window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN, semio_plugin::Locale::En).expect("fixture surface admission");
+    let column = results_node(doc, display, window, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN);
+    let node = column.children.iter().last().and_then(|stack| stack.children.iter().next()).expect("caption column ends in the scene stack holding the canvas surface");
     let semio_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     assert_eq!(props.kind, semio_ui_contract::SurfaceKind::Canvas2d);
     let mut scene: Canvas2dScene = semio_ui_scene::decode(props).expect("decode canvas scene spine");
@@ -180,41 +194,57 @@ async fn place_reaction_label_stacks_then_avoids_overlap() {
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_modal_mode_shape_2d() {
     let scene = results_scene(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, &config::Fem2dResultsWindowConfig::default());
-    assert!(scene.layers_json.contains("modal-caption"), "expected the mode's frequency caption: {}", scene.layers_json);
+    let captions = results_captions(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN);
+    assert!(captions.iter().any(|caption| caption.starts_with("Mode 1:") && caption.ends_with(" Hz")), "expected the mode's frequency caption: {captions:?}");
     assert!(!scene.layers_json.contains("Modal analysis error"), "unexpected modal error: {}", scene.layers_json);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_buckling_mode_shape_2d() {
     let scene = results_scene(&demo(), &ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Buckling(0) }, &config::Fem2dResultsWindowConfig::default());
-    assert!(scene.layers_json.contains("buckling-caption"), "expected the mode's load-factor caption: {}", scene.layers_json);
+    let captions = results_captions(&demo(), &ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Buckling(0) }, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN);
+    assert!(captions.iter().any(|caption| caption.starts_with("Buckling mode 1: Factor ")), "expected the mode's load-factor caption: {captions:?}");
     assert!(!scene.layers_json.contains("Buckling analysis error"), "unexpected buckling error: {}", scene.layers_json);
 }
 
-/// 🏷️ LAW: every results caption sits above the model's scene bounds and the stress legend to its
-/// right, so neither covers the structure or its reaction read-outs.
+/// 🏷️ LAW: the solve caption is DOM text a screen reader and the matrix can read, never a canvas
+/// layer, and the stress legend still sits to the right of the model.
 #[semio_framework_async_macros::async_test]
-async fn results_captions_and_legend_sit_beside_the_model() {
+async fn results_captions_are_dom_text_and_legend_sits_beside_the_model() {
     let doc = demo();
-    let (left, top, right) = model_scene_bounds(&doc);
+    let (_, _, right) = model_scene_bounds(&doc);
     let dead = Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap());
-    let mut checked = 0;
+    let labels = &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN;
     for display in [ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, ResultDisplay { source_id: dead.clone(), mode: DisplayMode::Buckling(0) }, ResultDisplay { source_id: dead, mode: DisplayMode::Static }] {
-        let scene = results_scene(&doc, &display, &config::Fem2dResultsWindowConfig::default());
+        let window = config::Fem2dResultsWindowConfig::default();
+        let scene = results_scene(&doc, &display, &window);
         let layers: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).expect("layers json");
         for layer in &layers {
             let id = layer["id"].as_str().unwrap_or("");
-            let (x, y) = (layer["transform"][4].as_f64().unwrap_or(f64::NAN), layer["transform"][5].as_f64().unwrap_or(f64::NAN));
-            if ["analysis-progress", "modal-caption", "buckling-caption", "eigen-result", "playback-caption"].contains(&id) {
-                assert!(y < top && x >= left, "{id} at ({x}, {y}) must sit above the model top {top}");
-                checked += 1;
-            }
+            assert!(!["analysis-progress", "modal-caption", "buckling-caption", "eigen-result", "playback-caption"].contains(&id), "{id} is DOM text, not a canvas layer");
             if id.starts_with("legend-label") {
+                let x = layer["transform"][4].as_f64().unwrap_or(f64::NAN);
                 assert!(x > right, "{id} at x {x} must sit right of the model {right}");
             }
         }
     }
-    assert!(checked >= 2, "the modal and buckling captions were checked");
+    assert!(!results_captions(&doc, &ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, &config::Fem2dResultsWindowConfig::default(), labels).is_empty(), "the modal caption is DOM text");
+}
+
+/// 🌐️ LAW: the solve caption reaches the accessible tree in both languages and from one source: a
+/// frame without live fields reads the pending word of the requested label set.
+#[semio_framework_async_macros::async_test]
+async fn results_caption_is_localized_dom_text_2d() {
+    use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+    let doc = demo();
+    let playing = config::Fem2dResultsWindowConfig { animation: FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, ..config::Fem2dResultsWindowConfig::default() };
+    for labels in [&Fem2dLabels::NATIVE_EN, &Fem2dLabels::NATIVE_DE] {
+        let display = ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) };
+        let captions = results_captions(&doc, &display, &playing, labels);
+        assert!(captions.first().is_some_and(|caption| caption.starts_with(labels.mode_shape.as_str())), "{captions:?}");
+        assert_eq!(captions.last().map(String::as_str), playback_caption(&playing.animation, labels).as_deref());
+    }
+    assert_ne!(Fem2dLabels::NATIVE_EN.pending.as_str(), Fem2dLabels::NATIVE_DE.pending.as_str());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -267,7 +297,7 @@ async fn results_window_default_animation_draws_the_full_deformation() {
     let still = animated_scene(FemResultsAnimation::default(), DisplayMode::Static);
     let full = animated_scene(FemResultsAnimation { phase: 1.0, ..FemResultsAnimation::default() }, DisplayMode::Static);
     assert_eq!(still.layers_json, full.layers_json);
-    assert!(!still.layers_json.contains("playback-caption"), "a still window shows no transport read-out");
+    assert!(results_captions(&demo(), &ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Static }, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).is_empty(), "a still window shows no transport read-out");
 }
 
 /// 📐️ Two retained triangles paint their shared edge once and omit edges without solved endpoints.
@@ -290,10 +320,11 @@ fn mounted_region_deformation_uses_shared_edges_and_published_points() {
 /// ⏯️ LAW: a running window carries its own phase/speed read-out.
 #[semio_framework_async_macros::async_test]
 async fn results_window_running_scene_carries_a_transport_caption() {
-    let running = animated_scene(FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, DisplayMode::Static);
-    let layers: Vec<serde_json::Value> = serde_json::from_str(&running.layers_json).expect("layers json");
-    let caption = layers.iter().find(|layer| layer["id"] == "playback-caption").expect("playback caption");
-    assert_eq!(caption["text"]["content"], "Phase 0.42 · ▶ 0.5 Hz");
+    let animation = FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() };
+    let window = config::Fem2dResultsWindowConfig { animation, ..config::Fem2dResultsWindowConfig::default() };
+    let display = ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Static };
+    let captions = results_captions(&demo(), &display, &window, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN);
+    assert_eq!(captions, vec!["Phase 0.42 · ▶ 0.5 Hz".to_owned()]);
 }
 
 /// 🎵️ LAW: the mode-shape views read the SAME waveform amplitude the static view does — half the
@@ -315,9 +346,11 @@ async fn results_window_mode_shapes_follow_the_playback_phase() {
 /// ⏯️ LAW: a running mode-shape window carries the same transport read-out the static view does.
 #[semio_framework_async_macros::async_test]
 async fn results_window_mode_shapes_carry_the_transport_caption_while_playing() {
-    let running = animated_scene(FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, DisplayMode::Modal(0));
-    assert!(running.layers_json.contains("playback-caption"), "{}", running.layers_json);
-    assert!(running.layers_json.contains("modal-caption"), "{}", running.layers_json);
+    let window = config::Fem2dResultsWindowConfig { animation: FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, ..config::Fem2dResultsWindowConfig::default() };
+    let display = ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Modal(0) };
+    let captions = results_captions(&demo(), &display, &window, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN);
+    assert!(captions.iter().any(|caption| caption.starts_with("Phase ")), "{captions:?}");
+    assert!(captions.iter().any(|caption| caption.starts_with("Mode 1:")), "{captions:?}");
 }
 
 /// 🧠️ LAW: one revision is solved ONCE however many frames playback draws over it, and a new
@@ -362,4 +395,15 @@ async fn no_load_case_fault_follows_the_requested_locale_2d() {
         assert_eq!(result_placeholder(&node), labels.no_load_case.as_str());
     }
     assert_ne!(Fem2dLabels::NATIVE_EN.no_load_case.as_str(), Fem2dLabels::NATIVE_DE.no_load_case.as_str());
+}
+
+/// 🧪️ LAW: a frame drawn from a previous revision's generation names the pending update in both languages and a current frame stays unmarked.
+#[test]
+fn a_stale_generation_is_captioned_as_updating_in_both_languages() {
+    use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+    let en = stale_caption("Converged", true, &Fem2dLabels::NATIVE_EN);
+    let de = stale_caption("Konvergiert", true, &Fem2dLabels::NATIVE_DE);
+    assert_eq!(en, "Updating results… · Converged");
+    assert_eq!(de, "Ergebnisse werden aktualisiert… · Konvergiert");
+    assert_eq!(stale_caption("Converged", false, &Fem2dLabels::NATIVE_EN), "Converged");
 }

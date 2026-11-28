@@ -44,6 +44,9 @@ import { type TreeComponent, TreeDataSectionView } from "./🪢️views/🟦️.
 /** 👆️ The row height of a `touch` tree: 44 px (WCAG 2.5.5), the twin of the Rust `TREE_ROW_TOUCH_MIN_PX`; a theme whose workbench row is taller keeps it. */
 const TREE_TOUCH_ROW_LENGTH = "max(44px, var(--size-workbench))";
 
+/** 🚫 Row controls that keep their own pointer behaviour and never start a palette drag from the row surface. */
+const PALETTE_SURFACE_DRAG_EXCLUDED_SELECTOR = 'input, select, textarea, [data-slot="tree-header-actions"], [data-slot="tree-branch-nav"]';
+
 export const Tree = (({
   className = "",
   presentation = "standard",
@@ -323,7 +326,7 @@ export const Tree = (({
       };
       return {
         onPointerDown: (event) => {
-          if (event.button !== 0) {
+          if (event.button !== 0 || (event.target instanceof Element && event.target.closest(PALETTE_SURFACE_DRAG_EXCLUDED_SELECTOR))) {
             return;
           }
           const dragData = resolveItemDragData(item, section);

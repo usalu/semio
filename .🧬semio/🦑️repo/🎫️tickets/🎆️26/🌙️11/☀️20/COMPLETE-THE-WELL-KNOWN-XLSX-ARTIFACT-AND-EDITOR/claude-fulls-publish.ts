@@ -36,7 +36,7 @@ for (const pair of process.argv.slice(2)) {
   const entry = catalog.find(e => e.pluginId === pluginId);
   if (!entry || !existsSync(wasm)) throw new Error(`Unknown plugin or missing wasm: ${pair}`);
   const base = entry.packageName.replaceAll("-", "_"), stage = join(work, pluginId), module = join(stage, "module");
-  if (existsSync(join(module, ".semio-artifact.json"))) { console.log(`[DEBUG] ${pluginId}: reusing staged module`); }
+  if (existsSync(join(module, ".semio-artifact.json")) && statSync(join(module, ".semio-artifact.json")).mtimeMs > statSync(wasm).mtimeMs) { console.log(`[DEBUG] ${pluginId}: reusing staged module`); }
   else {
   rmSync(stage, {recursive: true, force: true});
   mkdirSync(stage, {recursive: true});

@@ -7,7 +7,8 @@ import {join} from "node:path";
 import {CAS_POLICY_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
 import {casReserveBytesV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
-import {casUsageHintPathV1,recordCasMeasurementV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
+import {casUsageHintPathV1,recordCasMeasurementV1,writeCasCensusV1,type CasCensusV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
+import {CasCapRefusalV1} from "../../../🗄️cas/🚦️guard/🟦️.ts";
 import {readCasPinsV1} from "../../../🗄️cas/📌️pins/🟦️.ts";
 import {slotIdV1} from "../../../🪢️slots/🟦️.ts";
 import {planRemoteCacheBlobBoundV1} from "../../🧹️collector/🟦️.ts";
@@ -84,6 +85,43 @@ test("the server bound shrinks as the free space nears the hard reserve and is j
  expect(tight).toBeLessThan(fresh!);
  expect(tight).toBeLessThanOrEqual(Math.floor((100*2**30+2*2**30)/2));
  expect(roomy).toBeGreaterThan(fresh!);
+});
+
+const censusOf=(held:number,atMs:number):CasCensusV1=>({version:1,atMs,objects:1,bytes:held,classes:{pinned:{objects:0,bytes:0},held:{objects:1,bytes:held},leased:{objects:0,bytes:0},linked:{objects:0,bytes:0},expired:{objects:0,bytes:0},young:{objects:0,bytes:0},unreferenced:{objects:0,bytes:0}},holders:[]});
+
+test("the server bound leaves room for what the unit caches hold: the share while they hold little, less as they hold more, never below the floor, and the share alone for a census that is missing or too old",async()=>{
+ const root=directory("room"),host={root,policy:{...CAS_POLICY_V1,capBytes:100*2**30}},room={headroomPercent:10,floorPercent:5,censusMaximumSeconds:3600},none=()=>undefined,GiB=2**30;
+ mkdirSync(join(root,"v1"),{recursive:true});
+ expect(await remoteCacheBlobBoundV1(host,50,none,room),"no census: the share alone").toBe(50*GiB);
+ await writeCasCensusV1(root,censusOf(20*GiB,Date.now()));
+ expect(await remoteCacheBlobBoundV1(host,50,none,room),"little held: the share").toBe(50*GiB);
+ await writeCasCensusV1(root,censusOf(60*GiB,Date.now()));
+ expect(await remoteCacheBlobBoundV1(host,50,none,room),"cap - held - headroom").toBe(30*GiB);
+ await writeCasCensusV1(root,censusOf(99*GiB,Date.now()));
+ expect(await remoteCacheBlobBoundV1(host,50,none,room),"the floor").toBe(5*GiB);
+ await writeCasCensusV1(root,censusOf(60*GiB,Date.now()-7200000));
+ expect(await remoteCacheBlobBoundV1(host,50,none,room),"a census older than the maximum is not believed").toBe(50*GiB);
+ await writeCasCensusV1(root,censusOf(60*GiB,Date.now()));
+ expect(await remoteCacheBlobBoundV1(host,50,none),"without room the share alone").toBe(50*GiB);
+ const python3=python;
+ if(python3){
+  const model=Bun.spawnSync([python3,"-I","-c","import json,sys\nr=json.load(sys.stdin)\nprint(min(r['share'],max(r['cap']*r['floor']//100,r['cap']-r['held']-r['cap']*r['headroom']//100)))"],{stdin:new TextEncoder().encode(JSON.stringify({share:50*GiB,cap:100*GiB,held:60*GiB,floor:5,headroom:10})),stdout:"pipe"});
+  expect(Number(model.stdout.toString().trim())).toBe(30*GiB);
+ }
+});
+
+test("a write the host store refuses at its cap makes room at once: the collection that the admitted-bytes trigger would only start later runs now, so the retry of the upload meets the room",async()=>{
+ const tree=directory("relief-tree"),folder=directory("relief-store"),cas=directory("relief-cas"),inner=createCasStoreV1({root:cas,policy:{...CAS_POLICY_V1,minAgeMs:0}}),refuse={value:false},bound={value:undefined as number|undefined};
+ const original=inner.putChecked.bind(inner),host={...inner,putChecked:(async(...rest:Parameters<typeof inner.putChecked>)=>{if(refuse.value)throw new CasCapRefusalV1(10,5);return original(...rest);}) as typeof inner.putChecked};
+ writeFileSync(join(tree,"a.rs"),"a v1");
+ const store=await RemoteCacheStoreV1.open({directory:folder,host,maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0,graceMilliseconds:60,blobBoundBytes:()=>bound.value,staleness:{mode:"enforce",tree:await openTreeDigestsV1(tree),examples:5,recheckMilliseconds:0,manifestNames:["unit.json"]}});
+ const put=async(key:string,size:number)=>{const bytes=bytesOf(key,size);return store.put("main","nx",key,body(bytes),{mode:"keep",declaredLength:bytes.length});};
+ expect(await put("old1",1000)).toBe("created");expect(await put("old2",1000)).toBe("created");
+ await sleep(150);bound.value=1200;refuse.value=true;
+ expect(await put("new",1000),"the refused write is answered as before").toBe("capacity");
+ let live=true;for(let waited=0;live&&waited<3000;waited+=50){await sleep(50);live=(await store.read("main","nx","old1"))!==undefined;}
+ expect(live,"the collection that follows the refusal took the oldest entry over the bound").toBe(false);
+ await store.close();
 });
 
 const bytesOf=(name:string,size:number)=>new TextEncoder().encode(name.repeat(Math.ceil(size/name.length)).slice(0,size));

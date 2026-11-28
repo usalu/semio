@@ -1,0 +1,17 @@
+import{readFileSync}from"node:fs";import assert from"node:assert";
+const dir=process.argv[2],w=readFileSync(dir+"/worker","utf8"),P=JSON.parse(readFileSync(dir+"/schema","utf8")).definitions.Protocol.const,T=JSON.parse(readFileSync(dir+"/texts","utf8"));
+const src=w.split("\n").find(l=>l.startsWith("function references("));
+const entry=Object.values(T).flatMap(x=>typeof x==="object"?Object.entries(x):[]).find(([k])=>k==="closure.reference-data-bound")?.[1]??JSON.parse(readFileSync(dir+"/texts","utf8")).messages?.["closure.reference-data-bound"];
+const find=(o)=>{if(o&&typeof o==="object"){if(o["closure.reference-data-bound"])return o["closure.reference-data-bound"];for(const v of Object.values(o)){const r=find(v);if(r)return r;}}};
+const msg=find(T);assert(msg?.en&&msg?.de,"bilingual text");
+const refuseCachingV1=(code,key,values)=>Object.assign(Error(msg.en.replace(/\{(\w+)\}/g,(_,k)=>values[k])),{code,key,values});
+const references=new Function("P","refuseCachingV1","return "+src)(P,refuseCachingV1);
+const hex=n=>"SEMIO_SOURCE_CLOSURE_"+n.toString(16).padStart(64,"0");
+const big=Array.from({length:1_800_000},()=>"x");
+assert(P.maximumNodes>=16777216);
+assert.deepEqual(references([hex(1),...big]),["source:"+hex(1).slice(-64)]);
+const huge=Array.from({length:P.maximumNodes/2+10},()=>"x");
+assert.throws(()=>references(huge),e=>e.key==="closure.reference-data-bound"&&e.values.nodes>P.maximumNodes&&e.message.length<=128);
+let deep=[];for(let i=0;i<70;i++)deep=[deep];
+assert.throws(()=>references(deep),e=>e.values.depth>P.maximumDepth);
+console.log("references-bound ok, bound",P.maximumNodes);

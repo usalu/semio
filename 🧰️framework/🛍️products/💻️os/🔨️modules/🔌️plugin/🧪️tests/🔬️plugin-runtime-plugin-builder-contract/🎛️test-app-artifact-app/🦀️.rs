@@ -1,5 +1,27 @@
 /// 🎛️ Test app artifact app: the full `ArtifactApp` implementation of the test app.
 
+/// 🧪️ The one-item preparation of the test app's ephemeral lanes: a mutation transfers its revision into the lane's snapshot, one fixed-footprint item per step.
+#[doc(hidden)]
+pub fn test_presence_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<PublicationPresence, PublicationPresenceMutation>> {
+    std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+        |_: &PublicationPresenceMutation| Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<PublicationPresenceMutation>())),
+        |mutation: PublicationPresenceMutation| { let PublicationPresenceMutation::ChangePublicationPresence(value) = mutation; PublicationPresence { revision: value.revision } },
+        std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationPresence>::default()),
+        std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationPresenceMutation>::default()),
+    ))
+}
+
+/// 🧪️ [`test_presence_preparation_factory`] for the transient lane.
+#[doc(hidden)]
+pub fn test_transient_preparation_factory() -> std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<PublicationTransient, PublicationTransientMutation>> {
+    std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+        |_: &PublicationTransientMutation| Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<PublicationTransientMutation>())),
+        |mutation: PublicationTransientMutation| { let PublicationTransientMutation::ChangePublicationTransient(value) = mutation; PublicationTransient { revision: value.revision } },
+        std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default()),
+        std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransientMutation>::default()),
+    ))
+}
+
     impl<const RETAINED: bool, const TOOLS: u8> ArtifactApp for TestApp<RETAINED, TOOLS> {
         fn owned_mutation_batch_birth_bytes() -> Option<usize> { Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<TestMutation>()) }
         fn admit_owned_mutation_batch(values: &mut Option<Vec<TestMutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::MemberStoreOwnedBatch::admit(values, grant) }
@@ -14,6 +36,10 @@
 
         fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{test_restart_build::<RETAINED,TOOLS>(request,output,construction,cx)}
 
+        fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+            Some(semio_plugin_store_lifecycle::store_lifecycle::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+        }
+
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {
                 return Some(store::cold_mutation_apply_preparation_factory::<TestSnapshot, TestMutation>());
@@ -26,11 +52,11 @@
         }
 
         fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
-            None
+            (TOOLS != TEST_APP_TOOLS_NONE).then(test_presence_preparation_factory)
         }
 
         fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-            None
+            (TOOLS != TEST_APP_TOOLS_NONE).then(test_transient_preparation_factory)
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -157,7 +183,15 @@
                     child_id: args.and_then(|value| value.get("childId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string(),
                 }),
                 "badView" => Ok(TestCommand::BadView),
-                _ => Err(Fault::from(format!("unknown test command: {action}"))),
+                _ => {
+                    let kebab: String = action.chars().flat_map(|character| if character.is_ascii_uppercase() { vec!['-', character.to_ascii_lowercase()] } else { vec![character] }).collect();
+                    let mut refusals = Vec::new();
+                    [action.chars().next().map(|first| first.to_ascii_uppercase().to_string() + &action[first.len_utf8()..]).unwrap_or_default(), action.to_string(), kebab].into_iter().flat_map(|tag| {
+                        let payload = args.cloned().unwrap_or_else(|| semio_framework_value::DslValue::Object(Vec::new()));
+                        [semio_framework_value::DslValue::Object(vec![(tag.clone(), payload)]), semio_framework_value::DslValue::String(tag)]
+                    }).find_map(|value| match <TestCommand as semio_framework_value::FromValue>::from_value(value.clone()) { Ok(command) => Some(command), Err(error) => { refusals.push(format!("{value:?}: {error:?}")); None } })
+                    .ok_or_else(|| Fault::from(format!("unknown test command: {action} ({})", refusals.join("; "))))
+                }
             }
         }
 

@@ -25,6 +25,7 @@ import {readGenerationExternalInputsV1,resolveGenerationExternalInputV1,canonica
 import {loadGenerationGraphV1,type GenerationLoadStatsV1} from "../🕰️generations/🔌️load/🟨️.mjs";
 import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,graphPinSchemaV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,loadedGraphAdmissionFormatV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
 import {openOwnerCheckpointV1} from "./💾️owner-checkpoint/🟦️.ts";
+import {openOwnerVouchV1,vouchedOwnerV1} from "./🪪️owner-vouch/🟦️.ts";
 import {forgetPersistedPathsV1,readForgottenPathsV1,rowsForgottenV1} from "./🪦️forgotten-paths/🟦️.ts";
 import {createPassReuseV1} from "./♻️pass-reuse/🟦️.ts";
 import type {TakenMemoV1} from "../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
@@ -36,6 +37,7 @@ import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1
 import {awaitPlannerQuietV1} from "./🔕️settle-quiet/🟦️.ts";
 import {observeOwnerWithRetryV1,ownerWithheldTextV1,stableOwnerFailureHoldsV1} from "./🛟️owner-isolation/🟦️.ts";
 import {readAdmissionMemoV1,writeAdmissionMemoV1,packAdmissionMemoV1,ownersOfAdmissionMemoV1} from "./🧠️admission-memo/🟦️.ts";
+import {seedFromSiblingMemosV1} from "./🌱️sibling-seed/🟦️.ts";
 import {createOwnerFactsPagesV1,ownerFactsResidentCharactersV1} from "./📚️owner-facts-pages/🟦️.ts";
 import {SLICE_RECYCLE_POLICY_V1} from "../../🧠️memory/♻️recycle/🟨️.mjs";
 import {describeCollectionV1,registerSliceCollectionsV1,sliceReadStepV1,sliceReadWaitStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
@@ -213,7 +215,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     const forgotten=selected&&scope&&!followUp?readForgottenPathsV1(forgottenFile):undefined,memoStoredAt=forgotten!==undefined&&forgotten.paths.size>0?await lstat(memoPath).then(status=>status.mtimeMs,()=>0):0;
     let lent=selected&&scope&&!followUp?await readAdmissionMemoV1(memoPath,scope,value=>value.format===loadedGraphAdmissionFormatV1):undefined;
     const storedAdmission=lent?.admission;
-    let journal:JournalCleanV1|undefined,journalMemo:string|undefined;
+    let journal:JournalCleanV1|undefined,journalMemo:string|undefined;const usedSuffixes=new Set<string>();
     if(selected&&scope&&!followUp){
       const feed=await feedOf();journalMemo=lent!==undefined?await memoKeyOf(lent.observations.length):undefined;
       if(feed!==undefined)journal=await journalCleanRowsV1({feed,root,read:()=>readJournalAttestationV1(attestationFile),write:value=>writeJournalAttestationV1(attestationFile,value),signal:invocation?.control.signal},journalMemo,(lent?.observations??[]) as readonly JournalRowV1[]);
@@ -227,9 +229,11 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     if(lent!==undefined)report.count({reused:remembered!==undefined});
     if(journal!==undefined&&lent!==undefined){const counts=journal.counts();process.stderr.write("[graph-journal] "+JSON.stringify({version:1,phase:"memo-check",reused:remembered!==undefined,skipped:counts.skipped,checked:counts.checked,changed:counts.changed??null})+"\n");if(remembered!==undefined&&journalMemo!==undefined)await journal.seal(journalMemo);}
     if(remembered===undefined)lent=undefined;
+    if(remembered===undefined&&selected&&scope&&!followUp){report.begin("memo-seed");try{const seeded=await seedFromSiblingMemosV1({directory:dirname(path),scope,format:loadedGraphAdmissionFormatV1,known:new Set(selectedAdmissionFactsV1.suffixes(scope)),seed:(suffix,facts,rows)=>selectedAdmissionFactsV1.seed(scope,suffix,facts,rows),signal:invocation?.control.signal});process.stderr.write("[graph-sibling-seed] "+JSON.stringify({version:1,...seeded})+"\n");}catch(error){if(invocation?.control.signal.aborted===true)throw error;}}
     if(selected)timing("admission-memo",started,{hit:remembered!==undefined});started=performance.now();
     if(remembered===undefined&&selected)report.begin("scoped-discovery",{completedOwners:0});
     const checkpoint=remembered===undefined&&selected&&scope?await checkpointForScope():undefined;
+    const vouch=checkpoint===undefined?undefined:await feedOf().then(feed=>feed===undefined?undefined:openOwnerVouchV1({feed:feed as never,root,file:join(dirname(path),scope+".vouched.json"),key:scope+"\0"+loadedGraphAdmissionFormatV1,signal:invocation?.control.signal}),()=>undefined);
     const captured=remembered!==undefined?{value:remembered.admission as unknown,observations:remembered.observations}:selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{
       const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(ownerRegistryDigestV1(current)!==registryDigest)return ownerRegistryInvalidationV1;askOwnerRegistryV1(root,registry!,["digest"]);
       const nativeCache=new Map(),nativeClosures=new Map();const sharing=createStringSharingV1();
@@ -245,15 +249,15 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       };
       const run=async({owner,targets,inputs}:OwnerObservationRequestV1)=>{
         if(invocation)checkScriptInvocation(invocation);
-        const suffix=owner.name+"\0"+JSON.stringify([targets,inputs]),key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,lookup=report.ownerLookup(owner.name,key);
+        const suffix=owner.name+"\0"+JSON.stringify([targets,inputs]),ownerId=createHash("sha256").update(suffix).digest("hex"),key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,lookup=report.ownerLookup(owner.name,key),vouched=vouchedOwnerV1(vouch,ownerId,(rows,clean)=>buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified,true,false,(clean??journal?.clean) as never));usedSuffixes.add(suffix);
         try{
           const facts=await observeOwnerFactsMemoizedV1({
             key,owner:owner.name,aborted:()=>invocation?.control.signal.aborted===true,foreign:error=>untoleratedFollowedPathsV1(root,error,volatile).length>0,onRetry:event=>{process.stderr.write("[graph-owner-retry] "+JSON.stringify({version:1,...event})+"\n");},
-            hold:rows=>{lookup.stage("memo-check");return buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified,true,false,journal?.clean as never);},
+            hold:rows=>{lookup.stage("memo-check");return vouched.hold(rows as never);},
             observation,
             recover:()=>checkpoint?.read(suffix)??Promise.resolve(undefined),
             persist:entry=>checkpoint?.save(suffix,entry),
-            outcome:kind=>report.outcome(kind),
+            outcome:kind=>{report.outcome(kind);vouched.outcome();},
             trust:{has:entry=>trust.current.has(entry),add:entry=>trust.current.add(entry)},
             boundary:error=>producer.ownerBoundaryFailureV1(error,{workspaceRoot:root,fallback:join(root,owner.manifest)}),
             observe:()=>{lookup.stage("discovery");return discoverThrough(owner,targets,inputs,lookup);},
@@ -274,8 +278,9 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       checkpoint?.flush();
       report.count({observations:captured.observations.length});report.begin("memo-publish",{observations:captured.observations.length});
       if(invocation)checkScriptInvocation(invocation);let published:boolean|undefined;
-      try{published=await writeAdmissionMemoV1(memoPath,packAdmissionMemoV1({format:loadedGraphAdmissionFormatV1,scope,admission:candidate as BuildOwnerAdmissionV1,observations:captured.observations,owners:selectedAdmissionFactsV1.entries(scope)}),graphSnapshotPolicyV1.maximumSnapshotBytes);}catch(error){if(invocation)checkScriptInvocation(invocation);}
+      try{published=await writeAdmissionMemoV1(memoPath,packAdmissionMemoV1({format:loadedGraphAdmissionFormatV1,scope,admission:candidate as BuildOwnerAdmissionV1,observations:captured.observations,owners:selectedAdmissionFactsV1.entries(scope).filter(entry=>usedSuffixes.has(entry.suffix))}),graphSnapshotPolicyV1.maximumSnapshotBytes);}catch(error){if(invocation)checkScriptInvocation(invocation);}
       if(published!==undefined)report.count({published});
+      if(published===true)vouch?.clear();
       if(published===true&&journal!==undefined){const key=await memoKeyOf(captured.observations.length);if(key!==undefined)await journal.seal(key,captured.observations as readonly JournalRowV1[]);}
       timing("admission-memo-write",started);
     }

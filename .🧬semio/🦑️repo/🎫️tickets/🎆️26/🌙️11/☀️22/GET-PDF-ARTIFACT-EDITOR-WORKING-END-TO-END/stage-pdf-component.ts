@@ -46,6 +46,7 @@ function firstDifference(left: unknown, right: unknown, path = "$"): string | nu
 
 await rm(work, { recursive: true, force: true });
 for (const name of await readdir(stage)) if (/\.core\d*\.wasm$/u.test(name) || (/_component\.(js|d\.ts)$/u.test(name))) await rm(join(stage, name));
+await writeFile(join(stage, "🟨️.js"), hostShimSource());
 const staged: { id: string; base: string; bytes: number; sha256: string }[] = [];
 for (const component of components) {
   const directory = join(work, component.id), stripped = join(directory, "component.wasm"), out = join(directory, "out");
@@ -67,7 +68,6 @@ for (const component of components) {
   staged.push({ id: component.id, base: component.base, bytes: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex") });
 }
 await writeFile(join(stage, "🌉️bridge.js"), pluginComponentBridgeSource(components[0]!.base, Object.fromEntries(components.map(component => [component.id, component.base]))));
-await writeFile(join(stage, "🟨️.js"), hostShimSource());
 const { MODULE_SHARD_DIRECTORY } = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"));
 const { SHARD_WORKER_FILE } = await import(join(materialization, "🧾️contract/🟦️.ts"));
 const { shardWorkerSource } = await import(join(materialization, "🧵️shard-worker-source/🟦️.ts"));

@@ -1,0 +1,19 @@
+{
+  "description": "🏔️ Language-neutral vectors of the mount fold: a plan, the observations of the phases that ran, and the expected statuses, passed flag and first failure (phase and code). A `done` observation longer than its budget is a deadline; a receipt passes only when every phase passed.",
+  "fold": [
+    {"name": "all phases pass", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 1000}, {"id": "shell", "budgetMs": 2000}]}, "observations": [{"kind": "done", "elapsedMs": 10}, {"kind": "done", "elapsedMs": 1999}], "passed": true, "statuses": ["passed", "passed"], "failure": null},
+    {"name": "first refusal skips the rest", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 1000}, {"id": "shell", "budgetMs": 2000}, {"id": "settle", "budgetMs": 500}]}, "observations": [{"kind": "done", "elapsedMs": 5}, {"kind": "refused", "elapsedMs": 40, "detail": "shell error"}], "passed": false, "statuses": ["passed", "failed", "skipped"], "failure": {"phase": "shell", "code": "refused"}},
+    {"name": "overrun done is a deadline", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 100}, {"id": "shell", "budgetMs": 200}]}, "observations": [{"kind": "done", "elapsedMs": 101}], "passed": false, "statuses": ["failed", "skipped"], "failure": {"phase": "navigate", "code": "deadline"}},
+    {"name": "deadline observation", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 100}]}, "observations": [{"kind": "deadline", "elapsedMs": 100}], "passed": false, "statuses": ["failed"], "failure": {"phase": "navigate", "code": "deadline"}},
+    {"name": "cancellation", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 100}, {"id": "shell", "budgetMs": 100}]}, "observations": [{"kind": "done", "elapsedMs": 1}, {"kind": "cancelled", "elapsedMs": 3}], "passed": false, "statuses": ["passed", "failed"], "failure": {"phase": "shell", "code": "cancelled"}},
+    {"name": "nothing ran", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 100}]}, "observations": [], "passed": false, "statuses": ["skipped"], "failure": null}
+  ],
+  "plans": [
+    {"name": "valid", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 30000}, {"id": "shell", "budgetMs": 30000}]}, "valid": true},
+    {"name": "over a minute in total", "plan": {"version": 1, "app": "forms", "phases": [{"id": "navigate", "budgetMs": 30000}, {"id": "shell", "budgetMs": 30001}]}, "valid": false},
+    {"name": "duplicate phase", "plan": {"version": 1, "app": "forms", "phases": [{"id": "shell", "budgetMs": 100}, {"id": "shell", "budgetMs": 100}]}, "valid": false},
+    {"name": "budget below the floor", "plan": {"version": 1, "app": "forms", "phases": [{"id": "shell", "budgetMs": 49}]}, "valid": false},
+    {"name": "unknown field", "plan": {"version": 1, "app": "forms", "phases": [{"id": "shell", "budgetMs": 100, "selector": "#x"}]}, "valid": false},
+    {"name": "no phases", "plan": {"version": 1, "app": "forms", "phases": []}, "valid": false}
+  ]
+}

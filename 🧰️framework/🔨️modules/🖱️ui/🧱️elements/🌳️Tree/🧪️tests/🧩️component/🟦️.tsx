@@ -13,6 +13,7 @@ import { TreeCheckbox } from "../../⚡️actions/🟦️.tsx";
 import { TreeItem } from "../../🍃️item/🟦️.tsx";
 import { TreeSection } from "../../🌱️section/🟦️.tsx";
 import { type TreeDataSection } from "../../📋️data/🟦️.ts";
+import { CATALOGUE_DRAG_MIME, type TreeDragAndDropController } from "../../🧲️drag-drop/🟦️.tsx";
 import { TreeContext, treeRowHeightPx } from "../../📏️row-alignment/🟦️.tsx";
 import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
@@ -1017,5 +1018,47 @@ describe("Tree shared-border consolidation", () => {
     expect(group.hasAttribute("data-shared-border-cells")).toBe(true);
     expect(group.className).not.toMatch(/\bgap-/);
     expect(group.querySelectorAll(":scope > [data-shared-border-frame]")).toHaveLength(2);
+  });
+});
+
+describe("the first palette drag from a row surface", () => {
+  const payload = JSON.stringify({ windowKindId: "results" });
+  const controllerWith = () => {
+    const begin = vi.fn();
+    const cancel = vi.fn();
+    const onDragEnd = vi.fn();
+    const controller: TreeDragAndDropController = { pointerPaletteDrag: { readEncodedDragPayload: (data) => data[CATALOGUE_DRAG_MIME], begin, cancel }, onDragEnd };
+    return { controller, begin, cancel, onDragEnd };
+  };
+  const renderTree = (controller: TreeDragAndDropController, onClick?: () => void) =>
+    render(<Tree dragAndDropController={controller} sections={[{ id: "windows", label: "Windows", defaultOpen: true, items: [{ id: "results", label: "Results", dragData: { [CATALOGUE_DRAG_MIME]: payload }, onClick }] }]} />);
+
+  it("starts from the label with the very first press (userEvent pointer, no handle)", async () => {
+    const { controller, begin, onDragEnd } = controllerWith();
+    const { getByText } = renderTree(controller);
+    const user = userEvent.setup();
+    await user.pointer([{ keys: "[MouseLeft>]", target: getByText("Results"), coords: { clientX: 10, clientY: 10 } }, { coords: { clientX: 80, clientY: 40 } }, { keys: "[/MouseLeft]", coords: { clientX: 80, clientY: 40 } }]);
+    expect(begin).toHaveBeenCalledTimes(1);
+    expect(begin).toHaveBeenCalledWith(payload, [CATALOGUE_DRAG_MIME]);
+    expect(onDragEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a press without movement a plain click", async () => {
+    const { controller, begin } = controllerWith();
+    const onClick = vi.fn();
+    const { getByText } = renderTree(controller, onClick);
+    await userEvent.setup().click(getByText("Results"));
+    expect(begin).not.toHaveBeenCalled();
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("still starts from the move handle exactly once", () => {
+    const { controller, begin } = controllerWith();
+    const { container } = renderTree(controller);
+    const handle = container.querySelector('[data-slot="drag-handle"][data-drag-role="transfer"]')!;
+    fireEvent.pointerDown(handle, { button: 0, clientX: 5, clientY: 5 });
+    fireEvent.pointerMove(window, { clientX: 60, clientY: 40 });
+    fireEvent.pointerUp(window, { clientX: 60, clientY: 40 });
+    expect(begin).toHaveBeenCalledTimes(1);
   });
 });

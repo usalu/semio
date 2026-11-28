@@ -418,7 +418,7 @@ const PanelTabInsertSlot: React.FC<{ readonly index: number; readonly excluded: 
  * ♿️ Which tab is open was carried by `data-active`/`data-state` alone — styling hooks a screen reader
  * cannot read — so every tab in a bar announced identically and the open one was indistinguishable from the
  * rest. It is a toggle (pressing the open tab folds it), so `aria-pressed` is its state, mirroring the
- * `data-state="on"` the active colour already keys off.
+ * `data-state="on"` the active colour already keys off: a folded panel's active tab is not pressed, nothing is showing.
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/button/#keyboardinteraction
  */
 const PanelTabButton: React.FC<{
@@ -463,7 +463,7 @@ const PanelTabButton: React.FC<{
         data-level={level}
         data-active={isActive ? "true" : undefined}
         data-state={isActive && showActiveColor ? "on" : undefined}
-        aria-pressed={isActive}
+        aria-pressed={isActive && showActiveColor}
         onClick={() => onSelect(tab.id)}
         onPointerDown={draggable && surfaceDrag ? (event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event) : undefined}
         onDragEnter={anchor && dock && tab.kind === "leaf" ? unitOver.bind.onDragEnter : undefined}

@@ -18663,15 +18663,15 @@
      },
      {
       "id": "joint-bend-rear-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18685,15 +18685,15 @@
      },
      {
       "id": "joint-bend-front-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18707,15 +18707,15 @@
      },
      {
       "id": "joint-seat-rear-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18729,15 +18729,15 @@
      },
      {
       "id": "joint-seat-front-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18751,15 +18751,15 @@
      },
      {
       "id": "joint-bend-rear-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18773,15 +18773,15 @@
      },
      {
       "id": "joint-bend-front-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18795,15 +18795,15 @@
      },
      {
       "id": "joint-seat-rear-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18817,15 +18817,15 @@
      },
      {
       "id": "joint-seat-front-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.25,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18839,15 +18839,15 @@
      },
      {
       "id": "mass-leg-rear-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leg-rear",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18861,15 +18861,15 @@
      },
      {
       "id": "mass-leg-rear-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leg-rear",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18883,15 +18883,15 @@
      },
      {
       "id": "mass-leg-front-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leg-front",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18905,15 +18905,15 @@
      },
      {
       "id": "mass-leg-front-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leg-front",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18927,15 +18927,15 @@
      },
      {
       "id": "mass-armrest-l",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18949,15 +18949,15 @@
      },
      {
       "id": "mass-armrest-r",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "armrest",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18971,15 +18971,15 @@
      },
      {
       "id": "mass-seat",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "seat",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -18993,15 +18993,15 @@
      },
      {
       "id": "mass-back",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "back",
       "material": "painted-steel",
       "role": "detail",
       "tone": 0.4,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -19020,8 +19020,8 @@
       "de": "1:500 ist das Stuhlzeichen: echte Rohre Ø25 über zweisehnige Bögen, in echter Breite gezeichnet, 75-mm-Sitz- und Rückenplatte; vordere Traverse und hintere Strebe entfallen (0,03-0,04 mm auf Papier)."
      },
      {
-      "en": "The rusted feet are thermal-only Ø75 x 3 mm rust discs under the legs (declared sheets, the region is below the size this scale shows); structure: the tubes and slabs, 75 mm joints at the bends and seat welds, 75 mm masses.",
-      "de": "Die verrosteten Füße sind rein thermische Rostscheiben Ø75 x 3 mm unter den Beinen (deklarierte Bleche, die Region liegt unter dem, was dieser Maßstab zeigt); Tragwerk: Rohre und Platten, 75-mm-Gelenke an Bögen und Sitzschweißungen, 75-mm-Massen."
+      "en": "The rusted feet are thermal-only Ø75 x 3 mm rust discs under the legs (declared sheets, the region is below the size this scale shows); structure: the tubes and slabs, 75 mm joints at the bends and seat welds, 75 mm masses. The joint and mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Die verrosteten Füße sind rein thermische Rostscheiben Ø75 x 3 mm unter den Beinen (deklarierte Bleche, die Region liegt unter dem, was dieser Maßstab zeigt); Tragwerk: Rohre und Platten, 75-mm-Gelenke an Bögen und Sitzschweißungen, 75-mm-Massen. Die Gelenk- und Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

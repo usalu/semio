@@ -221,7 +221,7 @@ test("a body-only edit of each closure file of the real providers re-infers noth
   expect(owned.length).toBeGreaterThanOrEqual(19);
   for(const file of owned){
    const original=readFileSync(join(target,file),"utf8");
-   writeFileSync(join(target,file),file.endsWith(".json")?JSON.stringify(JSON.parse(original),null,4)+"\n":"// [DEBUG] body-only edit\n"+original+"\n// trailing comment\n");
+   writeFileSync(join(target,file),file.endsWith(".json")?JSON.stringify(JSON.parse(original),null,4)+"\n":"// body-only edit\n"+original+"\n// trailing comment\n");
    const after=stamps();
    lines.push(`${JSON.stringify(after)===JSON.stringify(base)?"same":"MOVED"} ${file.split("/").slice(-3).join("/")}`);
    writeFileSync(join(target,file),original);

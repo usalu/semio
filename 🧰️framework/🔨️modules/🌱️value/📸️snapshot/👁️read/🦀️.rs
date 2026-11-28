@@ -9,6 +9,8 @@ pub use snapshot_read_registry_handle::SnapshotReadRegistryHandle;
 pub mod snapshot_read_registry_retirement;
 pub use snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_work_demand, snapshot_registry_alias_close_step};
 pub const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
+/// 🌡️ Returned reads awaiting their pump at which an issuer counts as under pressure: an eighth of its table.
+pub const SNAPSHOT_READ_RETURN_PRESSURE: usize = SNAPSHOT_READ_LEASE_CAPACITY / 8;
 const ORIGINAL_FREE_SLOTS:[u16;SNAPSHOT_READ_LEASE_CAPACITY]={let mut slots=[0;SNAPSHOT_READ_LEASE_CAPACITY];let mut index=0;while index<SNAPSHOT_READ_LEASE_CAPACITY{slots[index]=index as u16;index+=1}slots};
 /// 📏️ The largest physical release one snapshot registry close step performs: the registry frame or one backing page.
 pub const SNAPSHOT_READ_RELEASE_PAGE_BYTES: usize = 4096;
@@ -398,6 +400,19 @@ impl SnapshotReadLeaseRegistry {
         slot
     }
 
+    /// 🆓️ Vacates a returned slot whose owner already left it, exactly once: the occupancy bit, the free list, the returned count and the generation word move together, so a refused or faulted admission that consumed its original can never strand the slot.
+    fn vacate_returned_locked(&self, state: &mut SnapshotReadLeaseStateGuard<'_>, index: usize) {
+        state.occupied[index / 64] &= !(1 << (index % 64));
+        let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;
+        state.free[write] = index as u16;
+        state.free_len += 1;
+        self.returned.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        self.lease_generations[index].store(0, std::sync::atomic::Ordering::Release);
+    }
+
+    /// 🌡️ True once enough returned reads wait for their pump that the maintenance ladder drains them ahead of its fair rotation.
+    pub fn returned_under_pressure(&self) -> bool { self.returned_count() >= SNAPSHOT_READ_RETURN_PRESSURE }
+
     pub fn returned_admission_demands<T: Send + Sync + 'static>(&self, demand: impl FnOnce(&Arc<T>) -> semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, SnapshotReadLeaseRefusal> {
         let state = match self.state.try_lock() { Ok(state) => state, Err(std::sync::TryLockError::WouldBlock) => return Err(SnapshotReadLeaseRefusal::Busy), Err(std::sync::TryLockError::Poisoned(_)) => return Err(SnapshotReadLeaseRefusal::Poisoned) };
         let start = state.cleanup_cursor;
@@ -461,16 +476,11 @@ impl SnapshotReadLeaseRegistry {
             (Ok(Some(admitted)), None) => admitted,
             (Ok(Some(_)), Some(original)) => { state.slots[index].write(SnapshotReadLeaseSlot { generation, owner: original }); return Err(SnapshotReadLeaseRefusal::Admission(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission published without consuming its original")).into()); },
             (Ok(None), Some(original)) => { state.slots[index].write(SnapshotReadLeaseSlot { generation, owner: original }); return Ok((None, Default::default())); },
-            (Ok(None), None) => return Err(SnapshotReadLeaseRefusal::Admission(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission consumed its original without publishing")).into()),
+            (Ok(None), None) => { self.vacate_returned_locked(&mut state, index); return Err(SnapshotReadLeaseRefusal::Admission(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission consumed its original without publishing")).into()) },
             (Err(error), Some(original)) => { state.slots[index].write(SnapshotReadLeaseSlot { generation, owner: original }); return Err(SnapshotReadReturnedRefusal::Retirement(error)); },
-            (Err(error), None) => return Err(SnapshotReadReturnedRefusal::Retirement(error)),
+            (Err(error), None) => { self.vacate_returned_locked(&mut state, index); return Err(SnapshotReadReturnedRefusal::Retirement(error)) },
         };
-        state.occupied[index / 64] &= !mask;
-        let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;
-        state.free[write] = index as u16;
-        state.free_len += 1;
-        self.returned.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-        self.lease_generations[index].store(0, std::sync::atomic::Ordering::Release);
+        self.vacate_returned_locked(&mut state, index);
         Ok((Some(result), progress))
     }
 }
@@ -491,6 +501,7 @@ impl SnapshotReadLeaseRegistryOwner {
     /// 🧳️ Borrows the alias only while it still holds a registry, because a funded-closed alias has no registry left to read.
     fn live(&self)->Option<&SnapshotReadRegistryAliasRetirement>{self.0.as_ref().filter(|owner|!owner.closed())}
     pub fn returned_count(&self) -> usize { self.live().map_or(0, |owner| owner.returned_count()) }
+    pub fn returned_under_pressure(&self)->bool{self.live().is_some_and(|owner|owner.returned_under_pressure())}
     pub fn has_returned(&self)->bool{self.live().is_some_and(|owner|SnapshotReadLeaseRegistry::has_returned(owner))}
 
     pub fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
@@ -523,7 +534,18 @@ pub struct SnapshotReadLease {
     pub(crate) generation: u64,
 }
 
+/// 🎟️ A lease is a linear token: dropping it unreturned marks its slot returned for the registry's pump, so no terminal path (complete, cancel, refuse, fault, supersede) can leave a slot admitted without a vacancy owner.
+impl Drop for SnapshotReadLease {
+    fn drop(&mut self) { self.return_now(); }
+}
+
 impl SnapshotReadLease {
+    /// 🔓️ Hands the exact registry and slot witness to a settled holder without running the return a second time.
+    fn disarm(self) -> (SnapshotReadRegistryHandle, u16, u64) {
+        let lease = std::mem::ManuallyDrop::new(self);
+        (unsafe { std::ptr::read(&lease.registry) }, lease.index, lease.generation)
+    }
+
     pub fn return_now(&mut self) -> bool {
         let mark = &self.registry.lease_generations[self.index as usize];
         if mark.load(std::sync::atomic::Ordering::Acquire) != self.generation { return false; }
@@ -560,8 +582,8 @@ pub fn try_return_original_snapshot_read<T: ?Sized>(owner: &mut Option<Arc<T>>, 
     fields.registry.returned.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     drop(owner.take());
     drop(state);
-    let original = lease.take().expect("validated original read lease");
-    Ok(SnapshotReadReturn { registry: original.registry, index: original.index, generation: original.generation })
+    let (registry, index, generation) = lease.take().expect("validated original read lease").disarm();
+    Ok(SnapshotReadReturn { registry, index, generation })
 }
 
 pub struct SnapshotRead<T: ?Sized> {
@@ -584,7 +606,7 @@ impl SnapshotReadReturn {
 
 impl<T: ?Sized> SnapshotRead<T> {
     pub fn release_original_alias(&mut self) -> bool { self.owner.take().is_some() }
-    pub fn return_original_lease(&mut self) -> Option<SnapshotReadRegistryAliasRetirement> { let mut lease = self.lease.take()?; lease.return_now(); Some(SnapshotReadRegistryAliasRetirement::new(lease.registry)) }
+    pub fn return_original_lease(&mut self) -> Option<SnapshotReadRegistryAliasRetirement> { let mut lease = self.lease.take()?; lease.return_now(); Some(SnapshotReadRegistryAliasRetirement::new(lease.disarm().0)) }
 
     pub fn belongs_to(&self, registry: &SnapshotReadRegistryHandle) -> bool { self.lease.as_ref().is_some_and(|lease| lease.registry.ptr_eq(registry)) }
     pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.lease.is_none() }

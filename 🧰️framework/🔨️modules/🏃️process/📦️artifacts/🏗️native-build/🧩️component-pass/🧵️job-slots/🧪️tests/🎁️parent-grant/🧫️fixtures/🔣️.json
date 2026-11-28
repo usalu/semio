@@ -1,0 +1,86 @@
+{
+  "_comment": "Inputs hand-authored; the expected outcome of every case is computed by the independent Python oracle (python3 🐍️oracle/🐍️.py). The first four cases restate the failure of 2026-11-27: a pass that needs 3409 MB ran under an exact `repo capacity run --memory=3400` grant on a 16 GiB machine (floor 2048 MB, so at most 14336 MB can ever be given) beside a 750 MB controller and waited for ever.",
+  "cases": [
+    {
+      "name": "fits-in-grant",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 2000,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "none"
+    },
+    {
+      "name": "incident-exact-grant-no-growth-path",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 3409,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "exact"
+    },
+    {
+      "name": "incident-grows-by-supplementary-reservation",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 3409,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "exact-acquire-granted"
+    },
+    {
+      "name": "incident-supplementary-reservation-refused",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 3409,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "acquire-refused"
+    },
+    {
+      "name": "no-growth-at-all",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 3409,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "none"
+    },
+    {
+      "name": "footprint-counts",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 2600,
+      "footprintMegabytes": 300,
+      "ceilingMegabytes": 14336,
+      "growth": "acquire-granted"
+    },
+    {
+      "name": "never-beyond-what-the-machine-gives",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 14000,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "acquire-granted"
+    },
+    {
+      "name": "just-fits-after-controller",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 2650,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "exact"
+    },
+    {
+      "name": "one-megabyte-over",
+      "grantMegabytes": 3400,
+      "baselineMegabytes": 750,
+      "peakMegabytes": 2651,
+      "footprintMegabytes": 0,
+      "ceilingMegabytes": 14336,
+      "growth": "exact"
+    }
+  ]
+}

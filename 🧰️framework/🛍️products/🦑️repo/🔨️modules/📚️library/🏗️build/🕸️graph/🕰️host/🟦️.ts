@@ -39,9 +39,9 @@ import {wholeReadGateOfHostV1} from "../🕰️generations/🤝️whole-gate/�
 import {buildWalkDescendsV1,graphMemberPredicateV1,workspaceBuildFilesV1,buildGraphMembersV1,portableInputs} from "../📁️workspace/🟦️.ts";
 import {inventoryDirectoriesV1,releaseWaveStateV1} from "../🕊️release/🟦️.ts";
 import {graphDeclarationV1,graphFormatStampsV1,loadedGraphImplementationRowsV1,GRAPH_LIMITS_V1} from "../🔐️authority/🟦️.ts";
-import {setupSharesV1,type GenerationPrefetchRequestV1,builderIdleV1,builderLookV1,previousEnvironmentOwnersV1,prefetchStaleGenerationV1,fleetReadStaleGenerationV1,offerFreshPriorityV1,noteOfferedV1,prefetchBuildGraphProjectsV1,inferRunV1,type OwnerHooksV1} from "../🤝️prefetch/🟦️.ts";
+import {setupSharesV1,type GenerationPrefetchRequestV1,builderIdleV1,builderLookV1,wholeBuildBusyV1,previousEnvironmentOwnersV1,prefetchStaleGenerationV1,fleetReadStaleGenerationV1,offerFreshPriorityV1,noteOfferedV1,prefetchBuildGraphProjectsV1,inferRunV1,type OwnerHooksV1} from "../🤝️prefetch/🟦️.ts";
 import {closeProjectFarmsV1} from "../📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs";
-import {withGenerationCustodyV1,generationFilesV1} from "../🛑️custody/🟦️.ts";
+import {withGenerationCustodyV1,withGenerationOverlayV1,generationFilesV1} from "../🛑️custody/🟦️.ts";
 import {discoverBuildGraphPartV1} from "../🧭️discovery/🟦️.ts";
 import {readBuildGraphLeanV1,readBuildGraphV1} from "../📜️contract/🟦️.ts";
 import {recordSealedGenerationPinV1} from "../📍️pin/🟦️.ts";
@@ -178,6 +178,16 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     releaseCutoff:async()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();if(leanSliceV1({residentMegabytes:process.memoryUsage().rss/1048576}).lean)await settleGraphMemoryV1({force:true,report:()=>undefined});},
     carryClosures:(on:boolean)=>{state.carry=on;},
     builderIdle:(request:GenerationPrefetchRequestV1)=>builderIdleV1({root,invocation,phaseControl,request}),
+    wholeBusy:()=>wholeBuildBusyV1({root,invocation,phaseControl}),
+    withOverlay:async<T>(build:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>{
+      let releaseCapacity:(()=>void)|undefined;
+      try{
+        const prepared=await profilePhaseV1("graph.host.capacity",()=>prepareRebuild());releaseCapacity=prepared.release;
+        await markBuildCapacityPhaseV1("rebuild");
+        return await withOwnerRegistryCustodyV1<T>(phaseControl.signal,contain=>profilePhaseV1("graph.host.overlay",()=>withGenerationOverlayV1(root,invocation,phaseControl,(store,control)=>contain(()=>build(store,control)))));
+      }catch(error){if(isClosedOwnerRegistryInvalidationV1(error))await release();throw error;}
+      finally{try{releaseCapacity?.();}finally{await markBuildCapacityPhaseV1("plan");}}
+    },
     attach:<T>(request:GenerationPrefetchRequestV1,recheck:()=>Promise<T|undefined>)=>attachToBuilderV1<T>({look:()=>builderLookV1({root,invocation,phaseControl,request}),recheck,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de")+"\n");},signal:invocation.control.signal}),
     withShared:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withOwnerRegistryCustodyV1<T>(phaseControl.signal,contain=>withRepositoryCacheStoreV1(root,"graph",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return contain(()=>body(store,control));})),
     withBuilder:async<T>(build:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>,request?:{readonly dirty:readonly string[];readonly structural:boolean},peerWait?:(blocked:boolean)=>void,purpose:"build"|"restore"="build",published?:PublishedGenerationV1<T>,funded?:true)=>{

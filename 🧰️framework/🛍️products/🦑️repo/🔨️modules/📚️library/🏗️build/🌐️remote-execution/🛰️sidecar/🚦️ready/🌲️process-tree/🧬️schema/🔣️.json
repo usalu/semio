@@ -41,6 +41,15 @@
         "codeCheckMilliseconds": 60000,
         "staleStageMilliseconds": 1800000,
         "codeQuietMilliseconds": 300000,
+        "staleWaitingMilliseconds": 900000,
+        "senderMatchMilliseconds": 60000,
+        "senderRecordLines": 4000,
+        "senderRecordBytes": 524288,
+        "capacityWaitPatterns": ["^\\[capacity\\] waiting \\d+", "^\\[Kapazität\\] wartet \\d+", "Reading the project graph slice \\(\\d+ s\\): waiting for (?:a )?host capacity", "Lese den Projektgraph-Ausschnitt \\(\\d+ s\\): warte auf (?:die Kapazitätsentscheidung|Rechnerkapazität)", "waiting for memory headroom \\(\\d+ of \\d+ MB reserved\\)", "wartet auf Speicherreserve \\(\\d+ von \\d+ MB reserviert\\)", "waiting for the previous service generation", "warte, bis die vorherige Dienstgeneration"],
+        "capacityWaitLookbackLines": 4,
+        "capacityWaitFreshMilliseconds": 120000,
+        "capacityWaitMaximumMilliseconds": 10800000,
+        "waitPatterns": ["^\\[capacity\\] waiting \\d+", "^\\[Kapazität\\] wartet \\d+", "holds the dependency store since .*waiting for it \\(", "hält den Abhängigkeitsspeicher seit .*wird darauf gewartet \\("],
         "semanticsSources": [
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load/🤝️selected-exchange/🧬️schema/🔣️.json", "pointer": "/definitions/Policy/const/revision"},
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json", "pointer": "/$defs/record/const/stamp"}
@@ -119,6 +128,28 @@
       "additionalProperties": false,
       "required": ["name", "rows", "root", "extra", "tree", "before", "alive"],
       "properties": {"name": {"type": "string"}, "rows": {"type": "string"}, "root": {"type": "integer"}, "extra": {"type": "array", "items": {"type": "integer"}}, "tree": {"type": "object", "additionalProperties": {"type": "integer"}}, "before": {"type": "object", "additionalProperties": {"type": "integer"}}, "alive": {"type": "boolean"}}
+    },
+    "SenderTexts": {
+      "const": {
+        "en": {
+          "supervisorSelf": "Stopped by this readiness supervisor (process {supervisor}) at {time}: {reason}. The reason was recorded in the stage record before the signal was sent.",
+          "supervisorOther": "Stopped by another readiness supervisor (process {supervisor}, not the one that watched the end) at {time}: {reason}. The reason was recorded in the stage record before the signal was sent.",
+          "deadline": "Ended by the own deadline of the stage wrapper ({signal} at {time}); the wrapper recorded it before it sent the signal.",
+          "warden": "Ended by the host warden at {time}: it cancelled the {kind} ({reason}, {megabytes} MB).",
+          "runner": "Ended by a signal that the stage runner recorded in its kill record (runner process {killer}, {signal} at {time}).",
+          "outsideWrapper": "{signal} reached the stage wrapper at {time} and no record of this machine explains it: no supervisor stop in the stage record, no warden cancel, no wrapper deadline and no kill record of the stage runner ({rows} other signal(s) of the runner during the run). The sender is outside the stage runner (another program, the end of a session, the operating system). The platform does not tell its pid.",
+          "outsideChild": "The stage wrapper received no signal, but its command ended by {signal}: the process tree below the wrapper was signalled directly, either by code inside the stage (its own cancellation) or by a program outside the stage runner. No supervisor stop, warden cancel, wrapper deadline or kill record of the stage runner explains it ({rows} other signal(s) of the runner during the run). The platform does not tell the pid of the sender."
+        },
+        "de": {
+          "supervisorSelf": "Von diesem Bereitschafts-Aufseher (Prozess {supervisor}) um {time} gestoppt: {reason}. Der Grund wurde vor dem Senden des Signals im Stufenprotokoll vermerkt.",
+          "supervisorOther": "Von einem anderen Bereitschafts-Aufseher (Prozess {supervisor}, nicht der, der das Ende beobachtete) um {time} gestoppt: {reason}. Der Grund wurde vor dem Senden des Signals im Stufenprotokoll vermerkt.",
+          "deadline": "Durch die eigene Frist des Stufen-Wrappers beendet ({signal} um {time}); der Wrapper hat es vor dem Senden des Signals vermerkt.",
+          "warden": "Vom Host-Wächter um {time} beendet: er brach {kind} ab ({reason}, {megabytes} MB).",
+          "runner": "Durch ein Signal beendet, das der Stufenläufer in seinem Kill-Protokoll vermerkt hat (Läuferprozess {killer}, {signal} um {time}).",
+          "outsideWrapper": "{signal} erreichte den Stufen-Wrapper um {time}, und kein Protokoll dieser Maschine erklärt es: kein Aufseher-Stopp im Stufenprotokoll, kein Wächter-Abbruch, keine Wrapper-Frist und kein Kill-Protokoll des Stufenläufers ({rows} andere(s) Signal(e) des Läufers während des Laufs). Der Absender liegt außerhalb des Stufenläufers (anderes Programm, Ende einer Sitzung, Betriebssystem). Die Plattform nennt seine pid nicht.",
+          "outsideChild": "Der Stufen-Wrapper erhielt kein Signal, aber sein Befehl endete durch {signal}: der Prozessbaum unter dem Wrapper wurde direkt angesprochen, entweder von Code in der Stufe (die eigene Abbruchlogik) oder von einem Programm außerhalb des Stufenläufers. Kein Aufseher-Stopp, Wächter-Abbruch, keine Wrapper-Frist und kein Kill-Protokoll des Stufenläufers erklärt es ({rows} andere(s) Signal(e) des Läufers während des Laufs). Die Plattform nennt die pid des Absenders nicht."
+        }
+      }
     },
     "Fixture": {
       "type": "object",

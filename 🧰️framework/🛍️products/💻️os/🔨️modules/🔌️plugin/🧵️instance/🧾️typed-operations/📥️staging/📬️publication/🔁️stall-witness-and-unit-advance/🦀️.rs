@@ -115,7 +115,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             Ok(attempted) => attempted,
             Err(failure) => {
                 self.tools.tool_operations.insert_admitted(operation_id, mounted);
-                return Err(failure)
+                let Some(fault) = failure.plain_refusal().cloned() else { return Err(failure) };
+                if !self.tools.fault_typed_operation_publication_with(operation_id, &fault)? { return Err(failure) }
+                drop(failure);
+                return Ok(())
             }
         };
         let driver_result=self.revalidate_mounted_publication(&mut mounted,identity,cx).await;

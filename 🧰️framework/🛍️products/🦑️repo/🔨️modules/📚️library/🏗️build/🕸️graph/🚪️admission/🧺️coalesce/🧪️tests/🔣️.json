@@ -1,0 +1,424 @@
+{
+ "version": 1,
+ "unions": [
+  {
+   "name": "two tasks of one rule merge",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     },
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "name": "the same task twice is one task",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   }
+  },
+  {
+   "name": "the union is ordered whatever the arrival order",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     },
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   }
+  },
+  {
+   "name": "a configuration is part of the task",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "build",
+      "configuration": "production"
+     }
+    ]
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "build"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "build"
+     },
+     {
+      "project": "a",
+      "target": "build",
+      "configuration": "production"
+     }
+    ]
+   }
+  },
+  {
+   "name": "direct selections merge with direct selections",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   },
+   "maximumTasks": 16,
+   "union": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     },
+     {
+      "project": "b",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   }
+  },
+  {
+   "name": "a direct selection never merges with one that follows dependencies",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "test"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": null
+  },
+  {
+   "name": "the union is bounded",
+   "current": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "test"
+     }
+    ]
+   },
+   "maximumTasks": 1,
+   "union": null
+  },
+  {
+   "name": "the whole workspace never merges",
+   "current": {
+    "kind": "all"
+   },
+   "added": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "test"
+     }
+    ]
+   },
+   "maximumTasks": 16,
+   "union": null
+  },
+  {
+   "name": "owner selections never merge",
+   "current": {
+    "kind": "owners",
+    "projects": [
+     "a"
+    ],
+    "exclude": []
+   },
+   "added": {
+    "kind": "owners",
+    "projects": [
+     "b"
+    ],
+    "exclude": []
+   },
+   "maximumTasks": 16,
+   "union": null
+  }
+ ],
+ "covers": [
+  {
+   "name": "the whole workspace contains only itself",
+   "group": {
+    "kind": "all"
+   },
+   "one": {
+    "kind": "all"
+   },
+   "covers": true
+  },
+  {
+   "name": "a task list contains each of its tasks",
+   "group": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     },
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   },
+   "covers": true
+  },
+  {
+   "name": "a task list does not contain a task it lacks",
+   "group": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "b",
+      "target": "build"
+     }
+    ]
+   },
+   "covers": false
+  },
+  {
+   "name": "a read that follows dependencies contains the direct read of its tasks",
+   "group": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   },
+   "covers": true
+  },
+  {
+   "name": "a direct read does not contain the read that follows dependencies",
+   "group": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ],
+    "excludeDependencies": true
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "covers": false
+  },
+  {
+   "name": "an owners selection contains only itself",
+   "group": {
+    "kind": "owners",
+    "projects": [
+     "a"
+    ],
+    "exclude": []
+   },
+   "one": {
+    "kind": "owners",
+    "projects": [
+     "a"
+    ],
+    "exclude": []
+   },
+   "covers": true
+  },
+  {
+   "name": "an owners selection does not contain a task selection",
+   "group": {
+    "kind": "owners",
+    "projects": [
+     "a"
+    ],
+    "exclude": []
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "covers": false
+  },
+  {
+   "name": "the whole workspace is never waited for by a task",
+   "group": {
+    "kind": "all"
+   },
+   "one": {
+    "kind": "tasks",
+    "tasks": [
+     {
+      "project": "a",
+      "target": "test"
+     }
+    ]
+   },
+   "covers": false
+  }
+ ]
+}

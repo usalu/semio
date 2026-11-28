@@ -25,7 +25,7 @@ export async function claimHostGrantHandoverV1(ledger:HostLedgerPrimitivesV1,opt
   if(!verdict.adopt){write(formatHostCapacityV1(language,"handoverRefused",{reason:describeHostHandoverRefusalV1(language,verdict.reason)}));return undefined;}
   const{handover:_,...rest}=grant!,taken=requireHostCapacityV1<HostGrantV1>("Grant",{...rest,pid,bootAtMs:bootAt(directory,at)});
   if(!holdsLock(directory,pid))return undefined;
-  writeJson(path!,taken);
+  writeJson(`${path!.slice(0,-5)}${protocol.formatSuffix}`,{format:protocol.grantFormat});writeJson(path!,taken);
   write(formatHostCapacityV1(language,"adopted",{operation:taken.operation,jobs:taken.jobs,reserved:taken.reservedMegabytes}));
   return taken;
  }finally{releaseLock(directory,pid);}

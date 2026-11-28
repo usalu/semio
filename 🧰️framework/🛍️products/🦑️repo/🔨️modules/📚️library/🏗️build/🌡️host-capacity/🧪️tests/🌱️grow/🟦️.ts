@@ -8,7 +8,7 @@ import {planCompileUnitsV1,readCompileUnitsHostV1} from "../../../../../../../..
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {upgradeBuildCapacityV1,withBuildCapacityV1} from "../../🟦️.ts";
 
-/** 🌱️ Contract (g31-course): a run admitted with 1 of 8 jobs because fleet memory was short grows to more jobs once memory frees up, the plan of its processes follows the grant, and a planned compile inside it takes the cores the grant's memory carries at the measured unit footprint instead of one core. */
+/** 🌱️ Contract (g31-course): a run admitted with 1 of 8 jobs because fleet memory was short grows to more jobs once memory frees up, the plan of its processes follows the grant, and a planned compile inside it takes the units the grant's reservation carries at the worst case of the largest rustc classes. */
 const roots:string[]=[];afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const policy=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,memory:{...buildPolicy.hostCapacity.memory,rampMilliseconds:1000},estimates:{...buildPolicy.hostCapacity.estimates,defaultRampMilliseconds:1000},wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:40,sampleMaximumAgeMilliseconds:0,lendAfterMilliseconds:600000}});
 const floor=hostFloorMegabytesV1(policy,{totalMegabytes:32768});
@@ -25,7 +25,7 @@ test("g31 replay: the course run admitted with 1 of 8 jobs grows once memory fre
    expect(granted.args,"the tool is told the jobs it may grow into; its plan holds the granted job").toContain("--parallel=8");
    expect(JSON.parse(environment.SEMIO_HOST_CAPACITY_PLAN!).jobs).toBe(1);
    const before=planCompileUnitsV1(await readCompileUnitsHostV1({environment,probe,cores:10,history:measured}));
-   expect([before.preferred,before.reason,before.budgetMegabytes],"one granted job: its 2048 MB carry two compile units of the measured 900 MB, not one core").toEqual([2,"granted",2048]);
+   expect([before.preferred,before.reason,before.budgetMegabytes],"one granted job: its 2048 MB reservation holds the largest rustc unit (2150 MB class) at the worst case once, so the compile takes one unit, not two of the measured 900 MB").toEqual([1,"reservation",2048]);
    free=30000;
    let jobs=1;const end=Date.now()+4000;
    while(jobs===1&&Date.now()<end){await upgradeBuildCapacityV1(new AbortController().signal,environment);jobs=JSON.parse(environment.SEMIO_HOST_CAPACITY_PLAN!).jobs;if(jobs===1)await sleep(30);}

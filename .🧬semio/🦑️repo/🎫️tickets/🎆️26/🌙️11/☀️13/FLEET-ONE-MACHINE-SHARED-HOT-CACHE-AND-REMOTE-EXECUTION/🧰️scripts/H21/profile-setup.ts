@@ -1,0 +1,11 @@
+import {readFileSync} from "node:fs";import {join} from "node:path";
+const root="/Users/ueli/Documents/semio",B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
+const {provenUnchangedV1}=await import(join(root,"🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts"));
+const {connectChangeJournalV1}=await import(join(B,"🏡️resident/📜️journal/🟦️.ts"));
+const f=JSON.parse(readFileSync("/private/tmp/claude-501/h21/mm.json","utf8"));
+const feed:any=connectChangeJournalV1(root);
+let t=performance.now();const a=await feed.since({epoch:f.epoch,seq:f.seq},[""]);console.log("since",Math.round(performance.now()-t),"rows",a.rows?.length);
+t=performance.now();const names=f.records.map((r:string)=>JSON.parse(r)[0]);console.log("parse",Math.round(performance.now()-t));
+t=performance.now();const ex=feed.excluder();const k1=provenUnchangedV1(f.links.checked,a.rows,ex,true,[]);console.log("proven dirs",Math.round(performance.now()-t),f.links.checked.length,k1.size);
+t=performance.now();const k2=provenUnchangedV1(names,a.rows,ex,true,[]);console.log("proven names",Math.round(performance.now()-t),k2.size);
+process.exit(0);

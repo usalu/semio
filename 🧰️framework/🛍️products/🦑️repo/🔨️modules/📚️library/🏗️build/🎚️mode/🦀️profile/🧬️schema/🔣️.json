@@ -422,6 +422,11 @@
           "prototype": [
             "semio-hub-bim-component",
             "semio-hub-draw-component",
+            "semio-hub-norm-component",
+            "semio-hub-norm-energy-component",
+            "semio-hub-norm-eurocode-component",
+            "semio-hub-norm-eurocode-materials-component",
+            "semio-hub-norm-eurocode-structural-component",
             "semio-hub-procedural-component",
             "semio-hub-sourcing-component",
             "semio-s-plugin-sourcing-beams-component",
@@ -431,7 +436,6 @@
           "release": [
             "semio-hub-cad-component",
             "semio-hub-demonstrator-component",
-            "semio-hub-energy-component",
             "semio-hub-fem-component",
             "semio-hub-flow-component",
             "semio-hub-gis-component",

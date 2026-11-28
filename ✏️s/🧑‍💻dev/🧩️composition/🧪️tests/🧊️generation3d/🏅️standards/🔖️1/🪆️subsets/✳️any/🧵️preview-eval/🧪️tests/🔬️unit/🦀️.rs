@@ -136,7 +136,7 @@ fn replay_latch_steps(session: &mut FlowEvalSession, steps: &[serde_json::Value]
             "outcome" => session.note_window_tick_outcome(window, tick_is_unfinished(step["more"].as_bool().unwrap(), step["parked"].as_u64().unwrap() as usize), crate::preview_reply::TURN).map(drop).expect("original window latch turn"),
             "inFlight" => session.note_window_extensions_in_flight(window, step["count"].as_u64().unwrap() as usize, crate::preview_reply::TURN).map(drop).expect("original window latch turn"),
             "settle" => { session.settle_window_extension(window, crate::preview_reply::TURN).expect("original window settlement"); },
-            "owe" => owe_attached_previews(session, &mut link, &[(window, "procedural-view-preview")]),
+            "owe" => owe_attached_previews(session, &mut link, &[(window, "procedural-view-preview")], crate::preview_reply::TURN).expect("original window owe turn"),
             "abort" => {
                 crate::preview_reply::cancel(session, window);
             }
@@ -261,12 +261,12 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
         session.begin_window_tick("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         session.note_window_extensions_in_flight("preview-1", 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         frames.push(published(&session, run.as_ref()));
-        let more = if round + 1 == minimum { session.tick(&mut host, None) } else { true };
+        let more = if round + 1 == minimum { session.tick_cold(&mut host, None) } else { true };
         session.settle_window_extension("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         session.note_window_tick_outcome("preview-1", more, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         frames.push(published(&session, run.as_ref()));
     }
-    while session.tick(&mut host, None) {
+    while session.tick_cold(&mut host, None) {
         frames.push(published(&session, run.as_ref()));
     }
     session.note_window_tick_outcome("preview-1", false, crate::preview_reply::TURN).map(drop).expect("original window latch turn");

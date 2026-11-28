@@ -222,6 +222,9 @@ export function gumballResolveDragSnaps(config: GumballConfig, shiftKey: boolean
   };
 }
 
+/** 🛑️ Window events that end a gumball drag: a released or cancelled pointer and a window that loses focus mid-drag all leave no handle active, so the axis guide cannot outlive the gesture. */
+export const GUMBALL_DRAG_END_EVENTS = ["pointerup", "pointercancel", "blur"] as const;
+
 /** 🧹️ Pointer highlight state once a drag has ended: nothing stays active or hovered, because the handle's pointer-out is swallowed while it is dragged and the axis guide would otherwise stay drawn until the pointer next crosses a handle. */
 export function gumballDragEndPointerState(): { readonly active: null; readonly hovered: null } {
   return { active: null, hovered: null };

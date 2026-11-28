@@ -8,12 +8,28 @@ TypeScript implementation: the share, the limits and their order are written dow
 """
 import json
 import math
+import os
 import sys
 
 
 def load_policy(path):
     with open(path, encoding="utf8") as handle:
         return json.load(handle)["definitions"]["Policy"]["const"]
+
+
+def load_classes(path):
+    root = os.path.join(os.path.dirname(os.path.abspath(path)), "..", "..", "..", "🌡️host-capacity", "🦀️cargo-grant", "🧬️schema", "🔣️.json")
+    with open(root, encoding="utf8") as handle:
+        return json.load(handle)["definitions"]["Policy"]["const"]
+
+
+def units_fitting(classes, megabytes):
+    peaks, typical = classes["unitPeakClassesMegabytes"], classes["typicalUnitMegabytes"]
+    best = 1
+    for count in range(1, 4096):
+        if sum(peaks[:count]) + max(0, count - len(peaks)) * typical <= megabytes:
+            best = count
+    return best
 
 
 def plan(policy, host, intent):
@@ -25,6 +41,8 @@ def plan(policy, host, intent):
     if host["grantedJobs"] is not None:
         carried = 0 if host["grantedMegabytes"] is None else host["grantedMegabytes"] // host["unitMegabytes"]
         limits.append((max(host["grantedJobs"], carried), "granted"))
+    if host.get("reservedJobMegabytes") is not None:
+        limits.append((units_fitting(CLASSES, host["reservedJobMegabytes"]), "reservation"))
     if host["availableMegabytes"] is not None:
         spare = max(0, host["availableMegabytes"] - policy["reserveMegabytes"])
         limits.append((spare // host["unitMegabytes"], "memory"))
@@ -83,6 +101,7 @@ def simulate(cores, requests):
 
 if __name__ == "__main__":
     policy = load_policy(sys.argv[1])
+    CLASSES = load_classes(sys.argv[1])
     cases = json.load(sys.stdin)
     out = []
     for case in cases:

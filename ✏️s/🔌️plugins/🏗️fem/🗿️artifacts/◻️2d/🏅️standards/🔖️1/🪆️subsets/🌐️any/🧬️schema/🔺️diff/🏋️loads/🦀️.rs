@@ -11,13 +11,6 @@ pub struct Fem2dLoadCasePatch {
     pub loads: Option<Fem2dLoadsDelta>,
 }
 
-impl protocol::list_delta::Keyed for FemLoad {
-    type Key = String;
-    fn key(&self) -> String {
-        load_id(self).to_string()
-    }
-}
-
 /// 🏋️ One `loads` row removed, with the base index the inverse reinserts it at.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -122,6 +115,7 @@ protocol::list_delta! {
         modification: Fem2dCombinationsModification,
         row: FemCombination,
         patch: Fem2dCombinationPatch,
-        key: id
+        list: Vec<FemCombination>,
+        key: String = keyed
     }
 }

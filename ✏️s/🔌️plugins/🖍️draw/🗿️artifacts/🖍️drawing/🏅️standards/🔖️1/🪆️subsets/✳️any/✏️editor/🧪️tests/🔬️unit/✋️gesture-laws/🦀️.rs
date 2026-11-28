@@ -120,53 +120,6 @@ async fn canvas_escape_cancels_draft_without_committing() {
     assert_eq!(app.snapshot().unwrap().layers.len(), before);
 }
 
-/// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the `interactionSelect` a gesture emits as
-/// `Effect::ReplayShellCommand` is folded in-reactor by the typed-operation ladder, so these two
-/// selection tests witness the selection snapshot itself instead of the effect. They need what the
-/// plugin host supplies: the self-closing `drawing_app()` binds the live instance, while this helper
-/// adds a `ViewModel` naming the canvas window (`setCamera` addresses it) with the active utility and the host's
-/// settle protocol after every dispatch (`settle_registered_typed_operation`) — exactly
-/// `🎚️config/🧪️tests/🔬️window`'s recipe.
-pub(super) async fn inline_selection_app() -> (DrawingAppFixture, semio_plugin::ActionMeta) {
-    use semio_plugin::{ViewWindowInstance, WindowConfigOwner};
-    let app = drawing_app().await;
-    let view = ViewModel {
-        window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
-        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-    };
-    let meta = semio_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance").into()), ..artifact_laws::meta("local") };
-    (app, meta)
-}
-
-/// 🔁️ One dispatch settled the way the plugin host settles it; the receipt's `effects` are exactly
-/// what the host would have been handed.
-pub(super) async fn settled(app: &mut DrawingAppFixture, command: DrawingCommand, meta: &semio_plugin::ActionMeta) -> (semio_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
-    settle_drawing_geometry(app,meta.view_state.as_deref()).await;
-    let command_id = command.command_id();
-    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
-    let receipt = artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
-    (result, receipt)
-}
-
-/// 📸️ Loads test geometry through the same retained envelope owner as the host.
-pub(super) async fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &DrawingSnapshot) {
-    use semio_os_kernel::os_pack::snapshot::ArtifactPack;
-    let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let wire = serde_json::to_vec(&serde_json::json!({
-        "schema": DRAWING_DOCUMENT_SCHEMA, "id": snapshot.id,
-        "vcs": { "initialPack": pack, "edits": [], "changes": [], "checkpoints": [], "alternatives": [] },
-        "editMessages": [], "conflicts": []
-    })).unwrap();
-    let handle = admit_drawing_envelope(app, &wire);
-    assert_eq!(drive_drawing_load(app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "fixture admission: {:?}", app.artifact_store_replacement_refusal(handle));
-    assert!(app.acknowledge_artifact_store_replacement(handle).unwrap());
-    assert_eq!(app.snapshot().unwrap(), *snapshot);
-}
-
-pub(super) fn assert_one_artifact_publication(receipt: &artifact_laws::TypedOperationFixtureReceipt) {
-    assert_artifact_publication_units(receipt, 1);
-}
-
 #[semio_framework_async_macros::async_test]
 async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
     let surface_behavior: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json")).expect("shared surface behavior fixture");
@@ -226,15 +179,6 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
             assert!((transform.y-20.0).abs()<1e-10);
         }
     }
-}
-
-pub(super) fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOperationFixtureReceipt, expected_completions: usize) {
-    assert_eq!(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Artifact).count(), 1, "one retained artifact result page: {:?}", receipt.lanes);
-    assert_eq!(receipt.completions, expected_completions, "every retained component operation reaches one exact terminal witness");
-    assert_eq!(receipt.completion_operations.len(), expected_completions, "every terminal witness names its component operation");
-    assert_eq!(receipt.revisions.len(), expected_completions, "every terminal witness carries its committed revision");
-    let operations = receipt.completion_operations.iter().copied().collect::<std::collections::HashSet<_>>();
-    assert_eq!(operations.len(), expected_completions, "component operation terminal witnesses are distinct: {:?}", receipt.completion_operations);
 }
 
 fn drawing_composite_shape_meta() -> semio_plugin::ActionMeta {

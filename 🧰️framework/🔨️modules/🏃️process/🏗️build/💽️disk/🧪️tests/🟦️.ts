@@ -68,3 +68,16 @@ test("the CLI boundary reports a full disk as the typed refusal in both language
   expect(text).toContain(language==="en"?"The disk is full":"Der Datenträger ist voll");expect(status).toBe(1);
  }
 });
+
+test("a cache image that stayed full after every relief attempt is the typed refusal naming image, usable, inside and host bytes in both languages",()=>{
+ const{NativeImageFullErrorV1}=require("../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts");
+ const error=new NativeImageFullErrorV1({image:"sealed",partition:"/p",capacityBytes:26*2**30,availableBytes:0,innerFreeBytes:25*2**30,hostFreeBytes:3*2**30,reclaimedBytes:2**30,attempts:3});
+ const refusal=refuseDiskFullV1(error)!;
+ expect(renderRepoErrorV1(refusal,"en")).toContain("25 GiB free inside");expect(renderRepoErrorV1(refusal,"de")).toContain("25 GiB innen frei");expect(renderRepoErrorV1(refusal,"en")).toContain("repo cache cas gc");
+});
+
+test("a critical host volume is the typed bilingual refusal, not an internal error",()=>{
+ const{NativeImageHostCriticalErrorV1}=require("../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts");
+ const refusal=refuseDiskFullV1(new NativeImageHostCriticalErrorV1("/p",2*2**30))!;
+ expect(renderRepoErrorV1(refusal,"en")).toContain("only 2 GiB free (critical below 8 GiB)");expect(renderRepoErrorV1(refusal,"de")).toContain("kritisch unter 8 GiB");
+});

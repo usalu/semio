@@ -17,7 +17,7 @@ test("the admission and the receipt agree with the independent oracle",()=>{
  const oracle=JSON.parse(python.stdout.toString()) as {admission:string[];receipt:{size:number;maximumPhysicalBytes:number}[]};
  for(const[index,row]of vectors.admission.entries()){
   const actual=nativeImageGrowAdmissionV1({currentBytes:row.currentBytes,targetBytes:row.targetBytes,hostFreeBytes:row.hostFreeBytes??undefined});
-  expect(actual,row.name).toBe(row.expected);expect(oracle.admission[index],row.name).toBe(row.expected);
+  expect<unknown>(actual,row.name).toBe(row.expected);expect(oracle.admission[index],row.name).toBe(row.expected);
  }
  for(const[index,row]of vectors.receipt.entries()){
   const grown=nativeImageGrownReceiptV1({version:1,ino:7,filesystemBytes:1,size:1,maximumPhysicalBytes:1},row.filesystemBytes);

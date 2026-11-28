@@ -30,9 +30,9 @@ test("repository Cargo launch arguments agree with commander, Ajv and an indepen
  try{
   for(const row of fixture.arguments){
    if(row.request===null){expect(()=>readRepositoryCargoLaunchV1(row.argv,row.environment),row.name).toThrow();continue;}
-   const request=readRepositoryCargoLaunchV1(row.argv,row.environment),independent=new Command().exitOverride().option("--store <store>").option("--configuration <configuration>").option("--parallelism <cores>").argument("[cargo...]").parse([...row.argv],{from:"user"}),selected=independent.opts<{store:string;configuration:string;parallelism?:string}>();
+   const request=readRepositoryCargoLaunchV1(row.argv,row.environment),independent=new Command().exitOverride().option("--store <store>").option("--configuration <configuration>").option("--parallelism <cores>").option("--fresh-lane").argument("[cargo...]").parse([...row.argv],{from:"user"}),selected=independent.opts<{store:string;configuration:string;parallelism?:string}>();
    expect(request,row.name).toEqual(row.request as never);expect(ajv.validate("launch#/definitions/Request",request),row.name).toBe(true);
-   expect([selected.store,selected.configuration,independent.args],row.name).toEqual([request.store,request.configuration,[...request.cargo]]);expect(selected.parallelism===undefined?"planned":Number(selected.parallelism),row.name).toBe(request.parallelism);
+   expect([selected.store,selected.configuration,independent.args],row.name).toEqual([request.store,request.configuration,[...request.cargo]]);expect(selected.parallelism===undefined?"planned":Number(selected.parallelism),row.name).toBe(request.parallelism);expect(Boolean((independent.opts() as {freshLane?:boolean}).freshLane),row.name).toBe(request.freshLane===true);
    const kind=oracle.query("SELECT subcommands.key AS kind FROM json_each(json_extract(?, '$.subcommands')) AS subcommands, json_each(subcommands.value) AS names WHERE names.value = ?").get(JSON.stringify(REPOSITORY_CARGO_LAUNCH_POLICY_V1),request.cargo[0]!) as {kind:string};expect(kind.kind,row.name).toBe(request.kind);
   }
  }finally{oracle.close();}

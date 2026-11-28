@@ -1,5 +1,5 @@
 //! 🧩️ Typed load field intent shared by local edits, replay and collaboration.
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::MutationKind;
@@ -20,15 +20,15 @@ pub struct ChangeLoad {
     pub patch: Fem2dLoadPatch,
 }
 
-impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeLoad where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeLoad> {
+impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeLoad where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeLoad> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load", kind: "change-load", record: "ChangedLoad" };
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
         semio_ui_locale::LocalizedLabel::native(&format!("Change load \"{}\"", self.id), &format!("Last \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.case_id.clone(), self.id.clone()] }
 }
-impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeLoad where Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeLoad> {
-    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> { super::diff::diff(self, base) }
+impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeLoad where Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeLoad> {
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff> { super::diff::diff(self, base) }
 
     fn inverse(&self, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> { super::inverse::inverse(self, base) }
 }

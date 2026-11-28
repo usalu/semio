@@ -53,7 +53,7 @@ function capturePhysicalOnce(path,maximumBytes,retainText){
  const base=parse(path).root,parts=relative(base,path).split(sep).filter(Boolean),parents=[];let current=base;
  if(parts.length>maximumAncestors)throw Error("Source revision ancestry capacity exceeded");
  for(const part of["",...parts.slice(0,-1)]){if(part)current=join(current,part);const row=lstatSync(current,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw filesystemShapeErrorV1(row,current,"Physical Source revision ancestry required","ENOTDIR");parents.push({path:current,dev:row.dev,ino:row.ino,mode:row.mode});}
- const before=lstatSync(path,{bigint:true});
+ let before=lstatSync(path,{bigint:true});for(let again=0;again<3&&before.isFile()&&!before.isSymbolicLink()&&before.nlink!==1n;again++){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,25);before=lstatSync(path,{bigint:true});}
  if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<0n||before.size>BigInt(maximumBytes))throw filesystemShapeErrorV1(before,path,"Bounded physical Source revision required");
  const size=Number(before.size),identity=stamp(before),file=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));let failed=false,primary,value,window,retained;
  try{

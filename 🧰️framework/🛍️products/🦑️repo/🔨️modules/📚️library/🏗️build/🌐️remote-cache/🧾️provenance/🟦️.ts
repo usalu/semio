@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {appendFile,mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
 import {requireFleetIdentityShapeV1} from "../🛰️fleet/🪪️identity/🟦️.ts";
-import {openEvidenceV1,type EvidenceStoreV1} from "./🗂️evidence/🟦️.ts";
+import {divergenceKindV1,openEvidenceV1,type EvidenceStoreV1} from "./🗂️evidence/🟦️.ts";
 
 /** 🧬️ Who stored a cache entry and when, and for action results the fingerprint of what it names (the sorted output digests without the volatile manifests, which two honest machines produce identically for one content-derived unit key) and whether it was a compiled unit (it carried such a manifest). */
 export type ProvenanceRowV1=Readonly<{origin:string;atMs:number;fingerprint?:string;unit?:true}>;
@@ -12,6 +12,9 @@ export type DivergenceV1=Readonly<{namespace:string;kind:"ac"|"cas"|"nx";key:str
 
 /** 🪟️ The divergences of one window of time: how many and of which class; `since` is the start of the window (milliseconds), 0 when it is a sliding window. The lifetime `count` and `byClass` include every divergence ever recorded, among them those of code that has been fixed since; the windows say what still happens. */
 export type DivergenceWindowV1=Readonly<{since:number;count:number;byClass:Readonly<Record<string,number>>}>;
+
+/** 🕐️ The divergences of one clock hour (UTC, `hour` is its start in milliseconds): how many and of which kind of output (`stream`, `rmeta`, `rlib`, `rlib+rmeta`, … see `divergenceKindV1`), so a kind that keeps coming is seen per hour. */
+export type DivergenceHourV1=Readonly<{hour:number;count:number;byKind:Readonly<Record<string,number>>}>;
 
 /** 🔀️ What one producer-consumer pair of origins exchanged: action results read (`hits`) and, among them, compiled units (`units`). */
 export type ConsumptionPairV1=Readonly<{hits:number;units:number}>;
@@ -29,7 +32,7 @@ export interface ProvenanceV1{
  readonly evidence:EvidenceStoreV1;
  consume(namespace:string,kind:string,key:string,consumer:string):void;
  consumption():ConsumptionV1;
- summary():Readonly<{count:number;recent:readonly DivergenceV1[];since:number;byClass:Readonly<Record<string,number>>;current:DivergenceWindowV1;lastHour:DivergenceWindowV1;advisory:Readonly<Record<string,number>>;superseded:Readonly<Record<string,number>>;evidence:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;
+ summary():Readonly<{count:number;recent:readonly DivergenceV1[];since:number;byClass:Readonly<Record<string,number>>;current:DivergenceWindowV1;lastHour:DivergenceWindowV1;hourly:readonly DivergenceHourV1[];advisory:Readonly<Record<string,number>>;superseded:Readonly<Record<string,number>>;evidence:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;
  flush():Promise<void>;
 }
 
@@ -54,11 +57,39 @@ export function provenanceDifferingV1(kept:readonly Readonly<{path:string;hash:s
  return[...names].filter(name=>left.get(name)!==right.get(name)).sort().slice(0,16);
 }
 
+/** 🌊️ The identity of a captured compiler stream for the comparison of two results of one key: every JSON diagnostic line without its `rendered` texts (Cargo's message format, colour and terminal width pick the rendering, and the unit key leaves them out on purpose, so two honest machines store the same diagnostics in another rendering), the number of rustc's `long-type-<digits>.txt` file name set to 0, other lines without ANSI escapes, and the lines sorted (the parallel front end may emit independent diagnostics in another order). Two streams with the same identity carry the same diagnostics; the kept one is replayed. */
+export function provenanceStreamIdentityV1(text:string):string{
+ const strip=(value:unknown):unknown=>Array.isArray(value)?value.map(strip):value!==null&&typeof value==="object"?Object.fromEntries(Object.entries(value as Record<string,unknown>).filter(([name])=>name!=="rendered").map(([name,row])=>[name,strip(row)])):value;
+ return text.split("\n").filter(line=>line!=="").map(line=>{
+  let row:string;
+  try{row=JSON.stringify(strip(JSON.parse(line)));}catch{row=line.replace(/\u001b\[[0-9;]*m/gu,"");}
+  return row.replace(/long-type-[0-9]+\.txt/gu,"long-type-0.txt");
+ }).sort().join("\n");
+}
+
+/** 🌊️ Whether the differing outputs of two results are only captured streams (`⟨stdout⟩`, `⟨stderr⟩`) whose texts have the same identity (see {@link provenanceStreamIdentityV1}), so the later write is the same result in another rendering and is no divergence. `read` returns the bytes of a blob, `undefined` when it is gone (then the streams are not known to be equal). */
+export async function provenanceStreamsEquivalentV1(differing:readonly string[],kept:readonly Readonly<{path:string;hash:string}>[],refused:readonly Readonly<{path:string;hash:string}>[],read:(hash:string)=>Promise<Uint8Array|undefined>):Promise<boolean>{
+ if(differing.length===0||differing.some(path=>path!=="⟨stdout⟩"&&path!=="⟨stderr⟩"))return false;
+ const decoder=new TextDecoder();
+ for(const path of differing){
+  const left=kept.find(row=>row.path===path)?.hash,right=refused.find(row=>row.path===path)?.hash;
+  if(left===undefined||right===undefined)return false;
+  const [a,b]=await Promise.all([read(left).catch(()=>undefined),read(right).catch(()=>undefined)]);
+  if(a===undefined||b===undefined||provenanceStreamIdentityV1(decoder.decode(a))!==provenanceStreamIdentityV1(decoder.decode(b)))return false;
+ }
+ return true;
+}
+
 /** 🕰️ The output names that record when and how long a unit was built (`createdMs`, `costMs`), so two honest builds of one key differ in them. They are left out of the fingerprint, otherwise every duplicate build would count as a divergence and be refused; the unit-cache manifest name (`manifestName` of its fleet policy) is the one entry. */
 export const PROVENANCE_VOLATILE_OUTPUTS_V1:readonly string[]=Object.freeze(["unit.json"]);
 
 const MAXIMUM=500000,RECENT=20,ROWS=1000,PAIRS=1024,OVERFLOW="*>*",HOUR=3600000;
 const windowOf=(rows:readonly DivergenceV1[],from:number):DivergenceWindowV1=>{const byClass:Record<string,number>={};let count=0;for(const row of rows)if(row.atMs>=from){count++;byClass[row.sort]=(byClass[row.sort]??0)+1;}return{since:0,count,byClass:Object.fromEntries(Object.entries(byClass).sort(([a],[b])=>a<b?-1:1))};};
+const hourlyOf=(rows:readonly DivergenceV1[],now:number):DivergenceHourV1[]=>{
+ const buckets=new Map<number,{count:number;byKind:Record<string,number>}>();
+ for(const row of rows){if(row.atMs<now-24*HOUR)continue;const hour=Math.floor(row.atMs/HOUR)*HOUR,bucket=buckets.get(hour)??{count:0,byKind:{}},kind=divergenceKindV1(row.differing);bucket.count++;bucket.byKind[kind]=(bucket.byKind[kind]??0)+1;buckets.set(hour,bucket);}
+ return[...buckets].sort(([a],[b])=>a-b).map(([hour,bucket])=>({hour,count:bucket.count,byKind:Object.fromEntries(Object.entries(bucket.byKind).sort(([a],[b])=>a<b?-1:1))}));
+};
 const address=(namespace:string,kind:string,key:string):string=>`${namespace}\u0000${kind}\u0000${key}`;
 
 /** 📒️ Opens the provenance of a server directory: `<directory>/fleet/provenance.jsonl` (appended, compacted when it holds twice as many lines as entries), `<directory>/fleet/divergences.json` (the newest 1000 rows with the lifetime total and the lifetime count per class) and `<directory>/fleet/consumption.json` (at most 1024 pairs). Entries beyond 500 000 drop the oldest. Disk trouble never fails a request: the memory view keeps working. */
@@ -119,7 +150,7 @@ const evidence=await openEvidenceV1(directory,clock);
    total++;if(since===0)since=clock();dirty=true;
   },
   consumption:snapshot,
-  summary:()=>({count,recent:divergences.slice(-RECENT),since:opened,byClass:Object.fromEntries([...classes].sort(([a],[b])=>a<b?-1:1)),current:{since:run,count:runCount,byClass:Object.fromEntries([...runClasses].sort(([a],[b])=>a<b?-1:1))},lastHour:windowOf(divergences,clock()-HOUR),advisory:Object.fromEntries([...advice].sort(([a],[b])=>a<b?-1:1)),superseded:Object.fromEntries([...replaced].sort(([a],[b])=>a<b?-1:1)),evidence:evidence.summary()}),
+  summary:()=>({count,recent:divergences.slice(-RECENT),since:opened,byClass:Object.fromEntries([...classes].sort(([a],[b])=>a<b?-1:1)),current:{since:run,count:runCount,byClass:Object.fromEntries([...runClasses].sort(([a],[b])=>a<b?-1:1))},lastHour:windowOf(divergences,clock()-HOUR),hourly:hourlyOf(divergences,clock()),advisory:Object.fromEntries([...advice].sort(([a],[b])=>a<b?-1:1)),superseded:Object.fromEntries([...replaced].sort(([a],[b])=>a<b?-1:1)),evidence:evidence.summary()}),
   flush:async()=>{await flush();await persist();await writing;},
  });
 }

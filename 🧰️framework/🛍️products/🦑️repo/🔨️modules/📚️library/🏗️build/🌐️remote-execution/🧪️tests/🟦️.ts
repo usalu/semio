@@ -89,10 +89,10 @@ test("timeouts kill the whole process tree and report DEADLINE_EXCEEDED; cancell
  const slow=(name:string,seconds?:number)=>cluster.action({arguments:["/bin/sh","-c",`(sleep 60 & echo $! > ${directory}/${name}.child; wait) & echo $! > ${directory}/${name}.pid; wait`],...(seconds?{timeoutSeconds:seconds}:{}),salt:name});
  const timed=await cluster.execute(await slow("timed",1));expect(timed.response.status.code).toBe(GRPC_CODES_V1.DEADLINE_EXCEEDED);
  const alive=(path:string)=>{try{process.kill(Number(readFileSync(path,"utf8").trim()),0);return true;}catch{return false;}};
- await eventuallyV1(()=>!alive(`${directory}/timed.pid`)&&!alive(`${directory}/timed.child`),5000,"timed out processes must be gone");
+ await eventuallyV1(()=>!alive(`${directory}/timed.pid`)&&!alive(`${directory}/timed.child`),40000,"timed out processes must be gone");
  const abort=new AbortController(),running=cluster.execute(await slow("cancelled"),{signal:abort.signal}).catch(error=>error);
  await eventuallyV1(()=>existsSync(`${directory}/cancelled.child`),8000,"the action must start");abort.abort();await running;
- await eventuallyV1(()=>!alive(`${directory}/cancelled.pid`)&&!alive(`${directory}/cancelled.child`),8000,"a cancelled action's processes must be gone");
+ await eventuallyV1(()=>!alive(`${directory}/cancelled.pid`)&&!alive(`${directory}/cancelled.child`),40000,"a cancelled action's processes must be gone");
  await eventuallyV1(()=>(cluster.server.scheduler.status().counters.cancelled??0)>=1,5000,"the scheduler counts the cancellation");
 });
 

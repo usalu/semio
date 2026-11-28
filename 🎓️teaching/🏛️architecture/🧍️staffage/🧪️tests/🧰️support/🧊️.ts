@@ -5,26 +5,27 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import validator from "gltf-validator";
-import { Box3, Vector3, type Object3D } from "three";
+import { Box3, Vector3, type Mesh, type Object3D } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { Asset } from "../../🧬️schema/🟦️.ts";
 import { poseModel, tessellate, transformPoint, type ModelDocument } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
+import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { STAFFAGE_ROOT, fixture } from "./🧰️.ts";
 
 /** 🧍️ The hand-authored sample figure with its authored volumes. */
 export const sampleFigure = (): Asset => fixture<{ asset: Asset }>("👤️sample-figure").asset;
 
-/** 🗂️ Every catalog asset whose volume is authored at 1:50, read straight from the files (no catalog validation: that is another test's work); the assets that are not re-authored yet are the pending list of the catalog guard. */
-export function catalogAssetsWithVolume(): Asset[] {
+/** 🗂️ Every catalog asset (or only the folders named in `only`, the other documents stay unread) whose volume is authored at 1:50, read straight from the files (no catalog validation: that is another test's work); the assets that are not re-authored yet are the pending list of the catalog guard. */
+export function catalogAssetsWithVolume(only?: readonly string[]): Asset[] {
   const root = join(STAFFAGE_ROOT, "🗂️catalog");
   const out: Asset[] = [];
   for (const category of readdirSync(root, { withFileTypes: true })) {
     if (!category.isDirectory()) continue;
     for (const slug of readdirSync(join(root, category.name), { withFileTypes: true })) {
-      if (!slug.isDirectory()) continue;
+      if (!slug.isDirectory() || (only !== undefined && !only.includes(slug.name))) continue;
       let text: string;
       try {
         text = readFileSync(join(root, category.name, slug.name, "🔣️.json"), "utf8");
@@ -37,6 +38,15 @@ export function catalogAssetsWithVolume(): Asset[] {
     }
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** 🎯️ Exactly the named catalog assets, read alone: the other 150 documents (774 MB of JSON, parsed about 4 GB) are never opened, so a suite that needs three figures holds three; a name the catalog lacks is refused. */
+export async function catalogAssetsById(ids: readonly string[]): Promise<ReadonlyMap<string, Asset>> {
+  const { assets } = await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT, undefined, new Set(ids));
+  const found = new Map(assets.map((asset) => [asset.id, asset] as const));
+  const missing = ids.filter((id) => !found.has(id));
+  if (missing.length > 0) throw new Error(`the catalog lacks ${missing.join(", ")}`);
+  return found;
 }
 
 /** 🧪️ The assets the model tests run over: the sample figure and every catalog asset with a volume. */
@@ -65,14 +75,22 @@ export function isGlyph(object: Object3D): boolean {
 /** 📐️ A world extent in the staffage axes: ahead (x), up (y), left (z). */
 export type Extent = { readonly min: readonly [number, number, number]; readonly max: readonly [number, number, number] };
 
-/** 📦️ The extent of a loaded three scene (skinning applied, `precise`) converted from the neutral frame (X left, Y up, Z ahead) to the staffage axes (ahead, up, left). */
-export function sceneExtent(scene: Object3D, include: (object: Object3D) => boolean = (object) => !isGlyph(object)): Extent {
+/** 📦️ The extent of a loaded three scene (skinning applied, `precise`) converted from the neutral frame (X left, Y up, Z ahead) to the staffage axes (ahead, up, left). The solids named in `outside` are left out: a mesh that holds one of them is measured triangle by triangle through the solid ranges of its primitive (`extras.solids`), every other mesh as a whole. */
+export function sceneExtent(scene: Object3D, include: (object: Object3D) => boolean = (object) => !isGlyph(object), outside: ReadonlySet<string> = new Set()): Extent {
   scene.updateMatrixWorld(true);
   const box = new Box3();
+  const point = new Vector3();
   scene.traverse((object) => {
     if (!(object as { isMesh?: boolean }).isMesh && !(object as { isLineSegments?: boolean }).isLineSegments) return;
     if ((object as { isLineSegments?: boolean }).isLineSegments || !include(object)) return;
-    box.expandByObject(object, true);
+    const mesh = object as Mesh;
+    const ranges = mesh.geometry.userData?.solids as readonly { readonly id: string; readonly first: number; readonly count: number }[] | undefined;
+    if (ranges === undefined || !ranges.some((range) => outside.has(range.id))) return void box.expandByObject(object, true);
+    const index = mesh.geometry.getIndex();
+    for (const range of ranges) {
+      if (outside.has(range.id)) continue;
+      for (let i = range.first; i < range.first + range.count; i++) box.expandByPoint(mesh.getVertexPosition(index === null ? i : index.getX(i), point).applyMatrix4(mesh.matrixWorld));
+    }
   });
   const lo: Vector3 = box.min;
   const hi: Vector3 = box.max;

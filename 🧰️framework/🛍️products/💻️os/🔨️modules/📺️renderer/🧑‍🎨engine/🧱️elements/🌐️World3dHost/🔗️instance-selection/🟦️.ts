@@ -521,6 +521,13 @@ export function world3dLeftPressOrbits(press: { readonly shiftKey: boolean; read
   return !(state.activeUtility === "select" || state.activeUtility === "fill" || state.activeUtility === "worldRelocate" || worldInstancePickBlocked(state.activeUtility ?? undefined));
 }
 
+/** 🔲️ Whether a finished marquee owes a selection commit: its merged set differs from the current selection, so a subtractive or invertive marquee that empties the selection commits too, while a marquee that changes nothing stays silent. */
+export function world3dMarqueeCommitsMerge(merged: readonly (string | number)[] | null | undefined, current: readonly (string | number)[] | undefined): boolean {
+  if (!merged) return false;
+  const held = new Set(current ?? []);
+  return merged.length !== held.size || merged.some((id) => !held.has(id));
+}
+
 /** 🖱️ Whether a left press-and-release moved far enough to be an orbit drag rather than a pick. */
 export function world3dLeftReleaseIsDrag(startX: number, startY: number, endX: number, endY: number): boolean {
   return Math.hypot(endX - startX, endY - startY) > 4;

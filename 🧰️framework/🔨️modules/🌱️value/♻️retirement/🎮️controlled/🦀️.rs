@@ -91,6 +91,8 @@ impl<T: RetireOwned> crate::ErasedSnapshotRetirement for ControlledRetirement<T>
     fn requires_original_birth(&self)->bool{ControlledRetirement::requires_original_birth(self)}
     fn close_original_birth_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{ControlledRetirement::step_original_birth(self,original,grant)}
     fn requires_original_control(&self)->bool{ControlledRetirement::requires_original_control(self)}
+    fn cold_close_quote(&self)->Option<(usize,u64)>{if !self.core.original_is_untouched(&*self.value){return None}self.value.as_ref()?.retirement_cold_bytes().map(|bytes|(bytes,1))}
+    fn cold_close(&mut self)->Option<usize>{self.cold_close_quote()?;let value=self.value.take()?;match value.retirement_cold_release(){Ok(bytes)=>Some(bytes),Err(value)=>{*self.value=Some(value);None}}}
     fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementPoll{self.close_controlled(body,effect,control)}
     fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{self.close_original_loan(original,body,effect)}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{ControlledRetirement::next_computational_work(self,body)}
@@ -374,7 +376,8 @@ impl<T: RetireOwned> ControlledRetirement<T> {
 
 
 
-fn borrowed_child_step(cursor:&mut dyn RetirementCursor,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,slot:&mut Option<Result<RetirementStep,crate::OriginalRetirementFailure>>,original:Option<&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>>,recover:bool)->Result<Option<RetirementStep>,ValueError>{
+/// 📬️ Drives one borrowed child close and returns its recorded step, or `None` while its original action is pending.
+pub fn borrowed_child_step(cursor:&mut dyn RetirementCursor,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,slot:&mut Option<Result<RetirementStep,crate::OriginalRetirementFailure>>,original:Option<&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>>,recover:bool)->Result<Option<RetirementStep>,ValueError>{
  let start=effect.performed_boundary();
  if slot.is_none(){
   let token=semio_framework_value_control_contract::OriginalEffectReply::borrow(slot)?;

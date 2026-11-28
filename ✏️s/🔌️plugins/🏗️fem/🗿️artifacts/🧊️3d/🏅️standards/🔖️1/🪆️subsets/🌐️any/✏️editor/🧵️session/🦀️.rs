@@ -23,6 +23,7 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::rebinds_generation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::JobPlacement;

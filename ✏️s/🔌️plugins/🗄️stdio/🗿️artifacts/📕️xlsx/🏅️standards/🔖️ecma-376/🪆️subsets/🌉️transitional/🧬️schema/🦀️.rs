@@ -31,8 +31,16 @@ pub mod mutations;
 
 //#endregion 🧬️DerivedArtifactFacets
 
-#[path = "🏗️construction/🦀️.rs"]
-pub mod construction;
+/// 🖋️ Logical SpreadsheetML namespace stamping.
+pub mod construction {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::stamp_workbook_namespaces;
+
+    /// 🖋️ Stamps all SpreadsheetML namespace and relationship declarations as transitional.
+    pub fn stamp_transitional_namespace(snapshot: XlsxSnapshot) -> XlsxSnapshot {
+        stamp_workbook_namespaces(snapshot, false)
+    }
+}
 pub use construction::*;
 
 #[path = "💡️inferences/🛡️conformance/🦀️.rs"]

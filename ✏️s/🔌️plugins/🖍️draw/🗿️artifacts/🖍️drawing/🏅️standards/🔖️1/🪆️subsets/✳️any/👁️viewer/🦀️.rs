@@ -45,7 +45,10 @@ const DRAWING_VIEW_WORK_ITEMS: usize = 1;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum DrawingViewCommand {
     #[dsl(key = "setCamera")]
-    SetCamera { camera: String },
+    SetCamera {
+        #[dsl(block)]
+        camera: store::Viewport2d,
+    },
     #[dsl(key = "canvasPointerDown")]
     CanvasPointerDown,
     #[dsl(key = "canvasPointerMove")]
@@ -64,7 +67,7 @@ pub enum DrawingViewCommand {
 
 impl Default for DrawingViewCommand {
     fn default() -> Self {
-        Self::SetCamera { camera: String::new() }
+        Self::SetCamera { camera: store::Viewport2d::default() }
     }
 }
 
@@ -120,10 +123,9 @@ impl protocol::OpBinary for DrawingViewCommand {
 /// 📷️ Validates a viewer camera and publishes only the addressed local window configuration; every host pointer or drag verb is inert.
 fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_plugin::ViewModel>) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let DrawingViewCommand::SetCamera { camera } = command else { return Ok(Emit::default()) };
-    let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))?;
     camera.validate().map_err(|error| Fault::from(error.to_string()))?;
     let view = view.ok_or_else(|| Fault::from("drawing-viewer-window-required"))?;
-    let config = canvas::config::DrawingViewerCanvasWindowConfig { viewport: camera,framed: true };
+    let config = canvas::config::DrawingViewerCanvasWindowConfig { viewport: *camera,framed: true };
     Ok(Emit { window_config_mutations: vec![canvas::config::addressed(view,config)?],ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(),panel_bodies: Vec::new(),utilities: false,tools: false,engagements: false,measures: false,labels: false },..Default::default() })
 }
 
@@ -143,7 +145,7 @@ fn command_from_action(action: &str,args: Option<&semio_framework_value::DslValu
     let value = args.and_then(|args| args.get("camera")).ok_or_else(|| Fault::from("drawing-viewer-camera-required"))?;
     let pose = <store::Viewport2d as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
     pose.validate().map_err(|error| Fault::from(error.to_string()))?;
-    Ok(DrawingViewCommand::SetCamera { camera: semio_framework_pack_json::to_json_string(&pose) })
+    Ok(DrawingViewCommand::SetCamera { camera: pose })
 }
 
 fn drawing_view_contract() -> ToolExecutionContract {

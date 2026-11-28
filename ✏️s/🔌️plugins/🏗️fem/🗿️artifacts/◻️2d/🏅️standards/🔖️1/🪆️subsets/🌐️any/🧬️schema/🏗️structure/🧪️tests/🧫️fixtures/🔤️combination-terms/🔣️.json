@@ -1,0 +1,25 @@
+{
+  "why": "Language-agnostic vectors of the `addCombination` terms syntax shared by FEM 2D and FEM 3D: each text is read into ordered (case, factor) pairs, or refused as `unreadable` / `empty`. Case names are not resolved by the reader.",
+  "read": [
+    { "text": "dead:1.35, live:1.5", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "dead=1.35, live=1.5", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "1.35 dead + 1.5 live", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "dead 1.35; live 1.5", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "1.35*dead\n1.5*live", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "dead:1,live:1", "terms": [["dead", 1.0], ["live", 1.0]] },
+    { "text": "[[\"dead\",1.35],[\"live\",1.5]]", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "[{\"caseId\":\"dead\",\"factor\":1.35},{\"caseId\":\"live\",\"factor\":1.5}]", "terms": [["dead", 1.35], ["live", 1.5]] },
+    { "text": "{\"dead\":1.35,\"live\":1.5}", "terms": [["dead", 1.35], ["live", 1.5]] }
+  ],
+  "refuse": [
+    { "text": "dead", "reason": "unreadable" },
+    { "text": "7", "reason": "unreadable" },
+    { "text": "dead 1 2", "reason": "unreadable" },
+    { "text": "[[\"dead\"]]", "reason": "unreadable" },
+    { "text": "[[\"dead\",\"heavy\"]]", "reason": "unreadable" },
+    { "text": "", "reason": "empty" },
+    { "text": "  ", "reason": "empty" },
+    { "text": "[]", "reason": "empty" },
+    { "text": "{}", "reason": "empty" }
+  ]
+}

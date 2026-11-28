@@ -49,8 +49,8 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
             descendants(node, &mut nodes);
             let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).expect("materialized sheet table");
             let Component::Table(props) = &table.component else { unreachable!() };
-            assert_eq!(props.window.map(|window| window.total), Some(case["expectedRows"].as_u64().unwrap() as u32), "{} row extent", case["id"]);
-            assert_eq!(props.column_window.map(|window| window.total), Some(case["expectedColumns"].as_u64().unwrap() as u32), "{} column extent", case["id"]);
+            assert_eq!(props.window.map(|window| window.total), Some(case["expectedEditorRows"].as_u64().unwrap() as u32), "{} row extent", case["id"]);
+            assert_eq!(props.column_window.map(|window| window.total), Some(case["expectedEditorColumns"].as_u64().unwrap() as u32), "{} column extent", case["id"]);
             assert_eq!(props.columns[0].0.as_str(), "A");
             let vacancy = &case["vacancy"];
             let vacancy_input = nodes

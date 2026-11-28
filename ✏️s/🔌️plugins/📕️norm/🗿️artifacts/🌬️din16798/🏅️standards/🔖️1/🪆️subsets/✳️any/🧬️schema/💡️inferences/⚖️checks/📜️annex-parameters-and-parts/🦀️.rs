@@ -120,6 +120,11 @@ pub mod part_1 {
 
     /// 😌️ ISO 7730:2005 Annex D predicted mean vote: the fixed-point iteration of the clothing surface temperature, `t_a = t_r = t_op`, no external work; `rh_percent` in %, `air_speed_m_s` in m/s, `metabolic_rate_met` in met and `clothing_clo` in clo.
     pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
+        pmv_iso7730_converged(t_op_c, rh_percent, air_speed_m_s, metabolic_rate_met, clothing_clo, 0.00015, 150)
+    }
+
+    /// 🌡️ The ISO 7730 PMV with the clothing-temperature iteration run to `tolerance` (the published listing stops at 0.00015; the inversion needs the smooth, fully converged function so that its root does not depend on where the iteration happened to stop).
+    fn pmv_iso7730_converged(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64, tolerance: f64, iterations: usize) -> f64 {
         let (t_a, t_r) = (t_op_c, t_op_c);
         let p_a = rh_percent.clamp(0.0, 100.0) * 10.0 * (16.6536 - 4030.183 / (t_a + 235.0)).exp();
         let i_cl = 0.155 * clothing_clo.max(0.0);
@@ -133,8 +138,8 @@ pub mod part_1 {
         let mut x_n = (t_aa + (35.5 - t_a) / (3.5 * i_cl + 0.1)) / 100.0;
         let mut x_f = x_n * 2.0;
         let mut h_c = h_cf;
-        for _ in 0..150 {
-            if (x_n - x_f).abs() <= 0.00015 {
+        for _ in 0..iterations {
+            if (x_n - x_f).abs() <= tolerance {
                 break;
             }
             x_f = (x_f + x_n) / 2.0;
@@ -160,7 +165,7 @@ pub mod part_1 {
     /// 🔍 The operative temperature [°C] at which the ISO 7730 PMV equals `+limit` (`prefer_cool`) or `-limit`: the bracket [16, 30] °C is doubled outwards until the PMV crosses the target (within [-10, 60] °C), then bisected; `None` when no sign change exists.
     pub fn invert_t_op_for_pmv(rh: f64, v: f64, met: f64, clo: f64, limit: f64, prefer_cool: bool) -> Option<f64> {
         let target = if prefer_cool { limit } else { -limit };
-        let g = |t: f64| pmv_iso7730(t, rh, v, met, clo) - target;
+        let g = |t: f64| pmv_iso7730_converged(t, rh, v, met, clo, 1e-12, 500) - target;
         let (mut lo, mut hi) = (16.0_f64, 30.0_f64);
         let mut width = hi - lo;
         while g(lo) * g(hi) > 0.0 && (lo > -10.0 || hi < 60.0) {

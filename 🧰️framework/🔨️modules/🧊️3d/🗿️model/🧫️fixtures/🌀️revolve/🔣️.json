@@ -115,6 +115,116 @@
    "boundsTolerance": 0.002
   },
   {
+   "name": "explicit-segments",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "cyl8",
+    "title": {
+     "en": "cylinder",
+     "de": "cylinder"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "r",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0.2
+       ],
+       [
+        1,
+        0.2
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "segments": 8
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.11313708498984763,
+    "bounds": {
+     "min": [
+      -0.2,
+      0,
+      -0.2
+     ],
+     "max": [
+      0.2,
+      1,
+      0.2
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
    "name": "vase",
    "document": {
     "version": "semio.model/v1",

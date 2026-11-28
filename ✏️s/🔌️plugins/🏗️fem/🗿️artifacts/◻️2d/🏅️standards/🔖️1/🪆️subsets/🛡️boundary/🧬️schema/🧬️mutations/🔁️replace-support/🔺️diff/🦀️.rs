@@ -4,10 +4,10 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `node_id` resolution
 //! `create-support` runs (`mutation.target-missing`, Error), and finally `mutation.no-op`.
 use super::ReplaceSupport;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportsDelta;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportsDelta;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportsModification;
+use semio_s_artifact_fem_2d_guards::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
@@ -25,6 +25,6 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem2dSnapshotValue) -> protocol::Mu
     if *existing == payload.new_support {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { modified: vec![Fem2dSupportsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportPatch::replacement(&payload.new_support) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { modified: vec![Fem2dSupportsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dSupportPatch::replacement(&payload.new_support) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

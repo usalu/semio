@@ -1,0 +1,1 @@
+- 05:38 🛑 killed own stale hub loop 45081 (rebuilding pre-fix source); queued hub rebuilds (revert agent + 45043) proceed.

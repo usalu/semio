@@ -10,7 +10,7 @@
     "cargo": "🦀️cargo/🟦️.ts",
     "task": "🏃️task/🟦️.ts"
   },
-  "graph": {"kinds": ["runtime", "task"], "freeVerbs": ["tools", "reset", "remote-execution", "leases", "doctor", "capacity", "fleet", "scheduler", "test-file", "typecheck"]},
+  "graph": {"kinds": ["runtime", "task"], "freeVerbs": ["tools", "reset", "remote-execution", "leases", "doctor", "capacity", "fleet", "scheduler", "test-file", "typecheck", "land"]},
   "capped": {"kinds": ["cargo", "cache", "cache-ledger"]},
   "cases": [
     {"args": ["incremental", "list"], "kind": "utility"},

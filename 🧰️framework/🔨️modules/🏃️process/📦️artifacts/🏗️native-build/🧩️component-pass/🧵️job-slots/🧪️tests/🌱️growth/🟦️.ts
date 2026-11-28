@@ -38,3 +38,12 @@ test("Law: cancelling retires the wait for a growing grant",async()=>{
  await expect(work).rejects.toBe(reason);
  expect(routes).toEqual([]);
 });
+
+test("Law: a heavy pass waits for a worker slot instead of declaring a need that grows the local grant, and runs on the fleet once one frees up",async()=>{
+ let polls=0,declared=0;
+ const memory=new jobs.ParentComponentMemoryV1(1638,0,{ceilingMegabytes:8190,waitMilliseconds:600000,refresh:()=>1638,declare:megabytes=>{declared=Math.max(declared,megabytes);}});
+ const routes:jobs.PassJobSlotV1[]=[];let clock=0;
+ await jobs.runPassesInJobSlotsV1([pass],{jobs:2,check:()=>undefined,parentMemory:memory,local:{maximum:1,peak:()=>3757,floorMegabytes:0,sample,pollMilliseconds:1,now:()=>clock+=1000},fleet:{maximum:2,slots:async()=>++polls>3?1:0,footprintMegabytes:300,floorMegabytes:0,sample,waitForCompatibleSlot:true,pollMilliseconds:1,now:()=>clock},run:async(_pass,slot)=>{routes.push(slot);}});
+ expect(routes).toEqual(["fleet"]);
+ expect(declared).toBe(0);
+});

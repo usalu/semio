@@ -27,6 +27,7 @@ use semio_s_fem_sparse_pcg::PcgJob;
 use semio_s_fem_sparse_pcg::PcgJobConstruction;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::rebinds_generation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::JobPlacement;
@@ -99,17 +100,17 @@ mod mounted_state_close;
 #[path = "📍️snapshot-admission-and-registry/🦀️.rs"]
 mod snapshot_admission_and_registry;
 use snapshot_admission_and_registry::{
-    CurrentSession, RetiringShell, MountedRegistry, PendingAdmission, PendingSnapshotAdmission,
+    CurrentSession, RevisionBinding, RetiringShell, MountedRegistry, PendingAdmission, PendingSnapshotAdmission,
     PendingSnapshotFault, SnapshotAdmissionCursor,
 };
 
 #[path = "💼️job-bridge-and-live-mount/🦀️.rs"]
 mod job_bridge_and_live_mount;
 #[cfg(test)]
-use job_bridge_and_live_mount::{decode_input, encode_input};
+use job_bridge_and_live_mount::{decode_input, encode_input, prepare_result_demand};
 pub use job_bridge_and_live_mount::{
     close_demands, close_step, initialize, maintenance_demands, maintenance_pending, maintenance_step, prepare_snapshot_read, reconcile,
-    terminal_is_empty, with_live_visual, with_live_fields, MountedFieldsView, retain_result_windows, source_version,
+    terminal_is_empty, with_live_visual, with_live_fields, fields_generation, FieldsGeneration, MountedFieldsView, retain_result_windows, source_version,
 };
 #[cfg(test)]
 pub use job_bridge_and_live_mount::result_request_key;

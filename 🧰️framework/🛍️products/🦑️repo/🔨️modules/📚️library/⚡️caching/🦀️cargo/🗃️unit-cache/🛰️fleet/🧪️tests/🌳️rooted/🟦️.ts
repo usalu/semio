@@ -7,7 +7,8 @@ import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.ts";
-import {drainUploadsV1,spoolLengthV1} from "../../📤️uploader/🟦️.ts";
+import {drainUploadsV1} from "../../📤️uploader/🟦️.ts";
+import {spoolLengthV1} from "../../📏️spool-size/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
 import {readFallbacksV1} from "../../📊️counters/🟦️.ts";
 import {leakedRootKindsV1,parseRootHintV1,rootHintBytesV1,rootHintKeyV1,rootPathsV1,ROOT_KINDS_V1} from "../../🟦️.ts";
@@ -57,7 +58,7 @@ function workspace(root:string):void{
  const manifest=(name:string,dependencies:string,extra="")=>`[package]\nname = "${name}"\nversion = "0.1.0"\nedition = "2021"\n${extra}[dependencies]\n${dependencies}`;
  crate(root,"core",manifest("core",""),"pub fn id() -> u32 { 1 }\npub fn panics(x: Option<u32>) -> u32 { x.unwrap() }\n");
  crate(root,"mac",manifest("mac","","[lib]\nproc-macro = true\n"),"use proc_macro::TokenStream;\n#[proc_macro]\npub fn here(_: TokenStream) -> TokenStream { format!(\"{:?}\", std::env::var(\"CARGO_MANIFEST_DIR\").unwrap()).parse().unwrap() }\n");
- crate(root,"leafr",manifest("leafr","core = { path = \"../core\" }\nmac = { path = \"../mac\" }\n"),"pub fn id() -> u32 { core::id() }\npub fn dir() -> &'static str { mac::here!() }\n");
+ crate(root,"leafr",manifest("leafr","core = { path = \"../core\" }\nmac = { path = \"../mac\" }\n"),"pub fn id() -> u32 { core::id() }\n#[inline]\npub fn dir() -> &'static str { mac::here!() }\n");
  crate(root,"app",manifest("app","leafr = { path = \"../leafr\" }\ncore = { path = \"../core\" }\n"),"fn main() { println!(\"{} {}\", leafr::id() + core::id(), leafr::dir().len() > 0); }\n");
 }
 type Machine=Readonly<{name:string;checkout:string;cache:string;cas:string;log:string}>;
@@ -76,6 +77,10 @@ const compiled=(m:Machine)=>readFileSync(m.log,"utf8").split("\n").filter(Boolea
 const events=(m:Machine)=>{const dir=join(m.cache,"x");return existsSync(dir)?readdirSync(dir).filter(name=>name.endsWith(".jsonl")).flatMap(name=>readFileSync(join(dir,name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as {kind:string;crate:string;reason?:string})):[];};
 const hits=(m:Machine)=>events(m).filter(row=>row.kind==="remote-hit").map(row=>row.crate).sort();
 async function settle(m:Machine,environment:Record<string,string|undefined>):Promise<void>{
+ const before=process.env.SEMIO_CAS_ROOT;process.env.SEMIO_CAS_ROOT=m.cas;
+ try{await settleIn(m,environment);}finally{if(before===undefined)delete process.env.SEMIO_CAS_ROOT;else process.env.SEMIO_CAS_ROOT=before;}
+}
+async function settleIn(m:Machine,environment:Record<string,string|undefined>):Promise<void>{
  const deadline=Date.now()+60000;
  while(Date.now()<deadline){const result=await drainUploadsV1(m.cache,{...process.env,...environment,SEMIO_CAS_ROOT:m.cas},{idleMilliseconds:0,takeover:true});if(result!=="busy"&&spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,150));}
  throw Error("uploads did not settle");

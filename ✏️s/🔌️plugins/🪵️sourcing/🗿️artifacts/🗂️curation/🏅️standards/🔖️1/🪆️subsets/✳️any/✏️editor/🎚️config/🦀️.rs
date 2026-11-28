@@ -198,8 +198,8 @@ pub enum SourcingCurationConfigMutation {
 
     #[dsl(key = "filter-query")]
     SetFilterQuery(SetFilterQueryEdit),
-    #[dsl(key = "filter-modules")]
-    SetFilterModules(SetFilterModulesEdit),
+    #[dsl(key = "toggle-filter-module")]
+    ToggleFilterModule(ToggleFilterModuleEdit),
     #[dsl(key = "filter-typology")]
     SetFilterTypology(SetFilterTypologyEdit),
     #[dsl(key = "filter-min-availability")]
@@ -217,11 +217,22 @@ pub struct SetFilterQueryEdit {
     pub value: String,
 }
 
-/// 📛️ `SetFilterModules` payload record — wire-identical to the former named variant.
+/// 📛️ `ToggleFilterModule` payload record — one module switched on or off against the stored filter, never the whole list, so back-to-back toggles compose instead of overwriting each other.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-pub struct SetFilterModulesEdit {
-    pub module_ids: Vec<String>,
+pub struct ToggleFilterModuleEdit {
+    pub module_id: String,
+    pub enabled: bool,
+}
+
+impl ToggleFilterModuleEdit {
+    /// 🧩️ The stored module list after this toggle: `enabled` appends a missing id, otherwise the id is removed.
+    pub fn applied_to(&self, base: &[String]) -> Vec<String> {
+        let mut module_ids = base.to_vec();
+        if !self.enabled { module_ids.retain(|id| id != &self.module_id); }
+        else if !module_ids.contains(&self.module_id) { module_ids.push(self.module_id.clone()); }
+        module_ids
+    }
 }
 
 /// 🎭️ `SetFilterTypology` payload record — wire-identical to the former named variant.
@@ -310,7 +321,7 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
     /// `🖐️5d` and stdio's `🔊️wav`/`🏗️ifc` precedent for enums in the same situation.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔍️set-filter-query", semantic_kind: "set-filter-query", display_name: "Set Filter Query", emoji: "🔍️", aggregate_variant: "SetFilterQuery", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧩️set-filter-modules", semantic_kind: "set-filter-modules", display_name: "Set Filter Modules", emoji: "🧩️", aggregate_variant: "SetFilterModules", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧩️toggle-filter-module", semantic_kind: "toggle-filter-module", display_name: "Toggle Filter Module", emoji: "🧩️", aggregate_variant: "ToggleFilterModule", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌳️set-filter-typology", semantic_kind: "set-filter-typology", display_name: "Set Filter Typology", emoji: "🌳️", aggregate_variant: "SetFilterTypology", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️set-filter-min-availability", semantic_kind: "set-filter-min-availability", display_name: "Set Filter Min Availability", emoji: "📦️", aggregate_variant: "SetFilterMinAvailability", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/↕️set-sort", semantic_kind: "set-sort", display_name: "Set Sort", emoji: "↕️", aggregate_variant: "SetSort", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
@@ -320,7 +331,7 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             SourcingCurationConfigMutation::SetFilterQuery(_) => &Self::DESCRIPTORS[0],
-            SourcingCurationConfigMutation::SetFilterModules(_) => &Self::DESCRIPTORS[1],
+            SourcingCurationConfigMutation::ToggleFilterModule(_) => &Self::DESCRIPTORS[1],
             SourcingCurationConfigMutation::SetFilterTypology(_) => &Self::DESCRIPTORS[2],
             SourcingCurationConfigMutation::SetFilterMinAvailability(_) => &Self::DESCRIPTORS[3],
             SourcingCurationConfigMutation::SetSort(_) => &Self::DESCRIPTORS[4],
@@ -334,7 +345,7 @@ impl protocol::ColdMutation<SourcingCurationConfig> for SourcingCurationConfigMu
     fn diff(&self, base: &SourcingCurationConfig) -> protocol::MutationOutcome<SourcingCurationConfigDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetFilterQuery(SetFilterQueryEdit { value }) => SourcingCurationConfigDiff { filters_query: (base.filters.query != *value).then(|| value.clone()), ..Default::default() },
-            Self::SetFilterModules(SetFilterModulesEdit { module_ids }) => SourcingCurationConfigDiff { filters_module_ids: (base.filters.module_ids != *module_ids).then(|| module_ids.clone()), ..Default::default() },
+            Self::ToggleFilterModule(edit) => { let module_ids = edit.applied_to(&base.filters.module_ids); SourcingCurationConfigDiff { filters_module_ids: (base.filters.module_ids != module_ids).then_some(module_ids), ..Default::default() } }
             Self::SetFilterTypology(SetFilterTypologyEdit { path }) => SourcingCurationConfigDiff { filters_typology_path: (base.filters.typology_path != *path).then(|| path.clone()), ..Default::default() },
             Self::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value }) => SourcingCurationConfigDiff { filters_min_availability: (base.filters.min_availability != *value).then_some(*value), ..Default::default() },
             Self::SetSort(SetSortEdit { sort }) => SourcingCurationConfigDiff { filters_sort: (base.filters.sort != *sort).then(|| SourcingOptionalSort { value: sort.clone() }), ..Default::default() },
@@ -344,7 +355,7 @@ impl protocol::ColdMutation<SourcingCurationConfig> for SourcingCurationConfigMu
     fn inverse(&self, base: &SourcingCurationConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetFilterQuery(_) => Self::SetFilterQuery(SetFilterQueryEdit { value: base.filters.query.clone() }),
-            Self::SetFilterModules(_) => Self::SetFilterModules(SetFilterModulesEdit { module_ids: base.filters.module_ids.clone() }),
+            Self::ToggleFilterModule(edit) => Self::ToggleFilterModule(ToggleFilterModuleEdit { module_id: edit.module_id.clone(), enabled: base.filters.module_ids.contains(&edit.module_id) }),
             Self::SetFilterTypology(_) => Self::SetFilterTypology(SetFilterTypologyEdit { path: base.filters.typology_path.clone() }),
             Self::SetFilterMinAvailability(_) => Self::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: base.filters.min_availability }),
             Self::SetSort(_) => Self::SetSort(SetSortEdit { sort: base.filters.sort.clone() }),

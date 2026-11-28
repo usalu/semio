@@ -236,15 +236,21 @@ export function parseSheetViews(text: string): boolean {
 //#endregion 🔖️Options
 
 //#region 🔖️Pipeline
-const catalogs = new Map<string, ReturnType<typeof loadCatalogFromFiles>>();
+const KEPT_ASSETS = 2;
+const kept = new Map<string, Promise<Asset | undefined>>();
 
-/** 🧪️ The catalog of a folder, read once per process: a command that exports several files (or a test run of many commands) does not parse and validate the 149 assets again for each; a failed or cancelled read is forgotten. */
-function catalogOf(root: string, signal: AbortSignal | undefined): ReturnType<typeof loadCatalogFromFiles> {
-  let known = catalogs.get(root);
+/** 🧪️ One asset of a catalog folder, read alone (the other documents of the folder, up to 23 MB each, are never parsed) and kept for the next few commands of the process, so a run of many commands on one figure reads it once and the process holds at most {@link KEPT_ASSETS} figures; a failed or cancelled read is forgotten. */
+function assetOf(root: string, id: string, signal: AbortSignal | undefined): Promise<Asset | undefined> {
+  const key = `${root}\0${id}`;
+  let known = kept.get(key);
   if (known === undefined) {
-    known = loadCatalogFromFiles(root, signal);
-    catalogs.set(root, known);
-    known.catch(() => catalogs.delete(root));
+    known = loadCatalogFromFiles(root, signal, new Set([id])).then((catalog) => catalog.assets.find((candidate) => candidate.id === id));
+    known.catch(() => kept.delete(key));
+  } else kept.delete(key);
+  kept.set(key, known);
+  for (const [oldest] of kept) {
+    if (kept.size <= KEPT_ASSETS) break;
+    kept.delete(oldest);
   }
   return known;
 }
@@ -334,8 +340,7 @@ function figureOf(asset: Asset, query: EvaluationQuery, selector: DepictionOptio
 
 /** 🎛️ What a command solves and draws with: its asset and the depiction options every frame shares — the defaults of the view at the scale, the environment (`--environment`, else the asset's reference environment, else its own, with the single values of the environment flags laid over it) and, for a thermal drawing with flow layers, those layers with their development time, conditions and mark detail. */
 export async function drawingOf(options: CliOptions, signal?: AbortSignal) {
-  const catalog = await catalogOf(options.catalog, signal);
-  const asset = catalog.assets.find((candidate) => candidate.id === options.asset);
+  const asset = await assetOf(options.catalog, options.asset, signal);
   if (!asset) throw new Error(`asset ${options.asset} is not in the catalog ${options.catalog}`);
   const presets = new Map(((options.view === "thermal" ? await loadEnvironments(options.catalog, signal) : null)?.presets ?? []).map((preset) => [preset.id, preset]));
   const resolved = options.view === "thermal" ? resolveThermalEnvironment(asset, presets, options.environment) : undefined;

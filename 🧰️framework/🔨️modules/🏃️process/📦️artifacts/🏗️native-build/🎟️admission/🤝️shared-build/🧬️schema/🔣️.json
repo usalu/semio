@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:native-build:shared-build:v1",
+  "title": "One cargo build serves every requester that asks for the same build, and stops with the last of them",
+  "description": "Requesters that ask for the same build (same key: working directory, target directory, build directory, arguments and environment) share one cargo child instead of starting a second cargo that would only wait on the build-directory lock. The child runs in its own process group under the reaper, so no requester's task and no requester's stop reaches it. A requester that leaves (its signal aborts, its deadline passes) gets its own refusal at once and releases its place; the child keeps running while any other requester still waits for it; the release that leaves nobody stops the whole cargo and rustc tree through the termination law (SIGTERM, grace, SIGKILL, identity-checked by pid and creation time) and records the signal. A requester that arrives after the last one left starts a fresh build. The outcome of the build, however it ends, is delivered to every requester that still waits.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "label": "shared cargo build"}}
+  },
+  "oneOf": [{"$ref": "#/definitions/Policy"}]
+}

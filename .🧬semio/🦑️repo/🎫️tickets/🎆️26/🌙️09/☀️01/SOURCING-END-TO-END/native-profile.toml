@@ -1,0 +1,249 @@
+# 🧾️ The effective `prototype` cargo profile repo injects (from .cache/b/r/m/configuration/b6abe340.../view.json, wasm32-wasip2 component build), for plain cargo via `--config`.
+[profile.dev]
+[profile.dev.package."semio-framework-actor"]
+opt-level = 3
+[profile.dev.package."semio-framework-job"]
+opt-level = 3
+[profile.dev.package."semio-framework-job-clock"]
+opt-level = 3
+[profile.dev.package."semio-framework-job-context-step"]
+opt-level = 3
+[profile.dev.package."semio-framework-job-payload"]
+opt-level = 3
+[profile.dev.package."semio-framework-job-return-budget"]
+opt-level = 3
+[profile.dev.package."semio-framework-value"]
+opt-level = 3
+[profile.dev.package."semio-framework-value-control-physical"]
+opt-level = 3
+[profile.dev.package."semio-plugin-host-guest-runtime"]
+opt-level = 3
+[profile.dev.package."semio-plugin-host-poll"]
+opt-level = 3
+[profile.dev.package."semio-plugin-host-post-turn-relay"]
+opt-level = 3
+[profile.dev.package."semio-plugin-host-wake"]
+opt-level = 3
+[profile.dev.package."semio-plugin-interpreter"]
+opt-level = 3
+[profile.dev.package."semio-plugin-interpreter-imports"]
+opt-level = 3
+[profile.dev.package."semio-plugin-interpreter-numeric"]
+opt-level = 3
+[profile.dev.package."semio-plugin-interpreter-runtime"]
+opt-level = 3
+[profile.dev.package."semio-s-artifact-bim-model-geometry-values"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-issues-values"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-properties-values"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-values"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-window-plan"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-window-schedule"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-window-section"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-window-sheet"]
+codegen-units = 64
+opt-level = 1
+[profile.dev.package."semio-s-artifact-bim-model-window-world"]
+codegen-units = 64
+opt-level = 1
+[profile.prototype]
+codegen-units = 16
+debug = 0
+debug-assertions = true
+incremental = false
+inherits = "dev"
+lto = "off"
+opt-level = "s"
+overflow-checks = true
+strip = "symbols"
+trim-paths = "object"
+[profile.prototype.build-override]
+codegen-units = 256
+debug = 0
+incremental = false
+opt-level = 0
+[profile.prototype.package."cranelift-assembler-x64"]
+opt-level = 3
+[profile.prototype.package."cranelift-bforest"]
+opt-level = 3
+[profile.prototype.package."cranelift-bitset"]
+opt-level = 3
+[profile.prototype.package."cranelift-codegen"]
+opt-level = 3
+[profile.prototype.package."cranelift-codegen-shared"]
+opt-level = 3
+[profile.prototype.package."cranelift-control"]
+opt-level = 3
+[profile.prototype.package."cranelift-entity"]
+opt-level = 3
+[profile.prototype.package."cranelift-frontend"]
+opt-level = 3
+[profile.prototype.package."cranelift-native"]
+opt-level = 3
+[profile.prototype.package."gimli"]
+opt-level = 3
+[profile.prototype.package."object"]
+opt-level = 3
+[profile.prototype.package."pulley-interpreter"]
+opt-level = 3
+[profile.prototype.package."regalloc2"]
+opt-level = 3
+[profile.prototype.package."semio-framework-2d-compute"]
+opt-level = 3
+[profile.prototype.package."semio-framework-actor-retained-context"]
+opt-level = 3
+[profile.prototype.package."semio-framework-actor-retained-turn"]
+opt-level = 3
+[profile.prototype.package."semio-framework-hash"]
+opt-level = 3
+[profile.prototype.package."semio-framework-io-base64"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-clock"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-context"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-native-turn"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-payload"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-receiving"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-recorded-clock"]
+opt-level = 3
+[profile.prototype.package."semio-framework-job-return-budget"]
+opt-level = 3
+[profile.prototype.package."semio-framework-pack"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-causal"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-codec"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-command-ingress"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-conflict"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-edit"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-format"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-frames"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-history"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-history-index"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-ids"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-interaction"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-local-interaction"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-mutation"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-mutation-messages"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-presence"]
+opt-level = 2
+[profile.prototype.package."semio-framework-replication-wire-core"]
+opt-level = 2
+[profile.prototype.package."semio-framework-trace"]
+opt-level = 3
+[profile.prototype.package."semio-framework-value-control-contract"]
+opt-level = 3
+[profile.prototype.package."semio-framework-value-control-physical"]
+opt-level = 3
+[profile.prototype.package."semio-framework-value-retirement"]
+opt-level = 3
+[profile.prototype.package."semio-framework-value-source-turn"]
+opt-level = 3
+[profile.prototype.package."semio-os-flow"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-drawing"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-extensions"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-geometry"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-host"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-host-core"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-host-read"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-host-session"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-host-source"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-mesh"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-operators"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-vcs"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-wasm"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-wasm-actions-a"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-wasm-actions-b"]
+opt-level = 2
+[profile.prototype.package."semio-os-flow-wasm-domain"]
+opt-level = 2
+[profile.prototype.package."semio-os-kernel-neural-engine"]
+opt-level = 2
+[profile.prototype.package."semio-os-kernel-neural-engine-budgeted"]
+opt-level = 2
+[profile.prototype.package."semio-os-kernel-neural-engine-model"]
+opt-level = 2
+[profile.prototype.package."semio-os-kernel-neural-engine-registry"]
+opt-level = 2
+[profile.prototype.package."semio-plugin-host-poll"]
+opt-level = 3
+[profile.prototype.package."semio-plugin-host-wake"]
+opt-level = 3
+[profile.prototype.package."semio-plugin-interpreter"]
+opt-level = 3
+[profile.prototype.package."semio-plugin-interpreter-numeric"]
+opt-level = 3
+[profile.prototype.package."wasmparser"]
+opt-level = 3
+[profile.prototype.package."wasmtime"]
+opt-level = 3
+[profile.prototype.package."wasmtime-environ"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-cache"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-component-util"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-core"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-cranelift"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-fiber"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-jit-debug"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-jit-icache-coherence"]
+opt-level = 3
+[profile.prototype.package."wasmtime-internal-unwinder"]
+opt-level = 3
+[profile.prototype.package."wasmtime-wasi"]
+opt-level = 3
+[profile.prototype.package."wasmtime-wasi-io"]
+opt-level = 3
+[profile.prototype.package."wit-parser"]
+opt-level = 3

@@ -230,10 +230,10 @@ pub fn close_native(cx:&mut StepContext<'_>,d:RetirementDemand,work:u64,run:impl
  let (ceiling,ceiling_fuel)=cx.original_turn_ceiling();
  if maximum>ceiling_fuel||!semio_framework_value::retained_clone::retained_clone_grant_admits(ceiling,d){return Err(ValueError::new(ValueRefusalKind::WorkLimit,format!("native retirement close needs {d:?} and {maximum} work but no turn grants more than {ceiling:?} and {ceiling_fuel}")).into())}
  if cx.retirement_should_yield()||!fits(cx,d)||cx.fuel_remaining()<maximum&&!cx.fuel_turn_untouched(){return Ok(())}
- let mut source=None;let mut frame=NativeReceivingEffect::<ValueError>::default();let mut done=None;let mut invoked=false;
+ let fresh=cx.fuel_turn_untouched();let mut source=None;let mut frame=NativeReceivingEffect::<ValueError>::default();let mut done=None;let mut invoked=false;
  cx.with_native_retirement_receiving(&mut source,StepContext::native_retirement_quote(d,maximum),|native,_|{let poll=native.receive_effect(d,maximum,&mut frame,|control,effect|{invoked=true;match semio_framework_value::RetirementPollExit::settled(run(control,effect)){Ok(turn)=>semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),work:turn.work},Err(_)=>semio_framework_value::RetainedWorkOutcome{result:Err(invalid("synchronous native retirement stayed pending")),work:0}}})?;done=Some(poll);Ok(())})?;
  match done{
-  Some(NativeReceivingEffectPoll::Complete(_)) if !invoked=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native retirement work quote was refused by its original work scope").into()),
+  Some(NativeReceivingEffectPoll::Complete(_)) if !invoked=>if fresh{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native retirement work quote was refused by its original work scope").into())}else{Ok(())},
   Some(NativeReceivingEffectPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},
   None=>Ok(()),
   Some(_)=>Err(invalid("synchronous native retirement stayed pending").into()),

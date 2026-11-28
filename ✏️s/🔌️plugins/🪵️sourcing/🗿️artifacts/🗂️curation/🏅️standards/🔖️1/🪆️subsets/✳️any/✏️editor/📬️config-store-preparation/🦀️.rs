@@ -65,10 +65,7 @@ pub fn sourcing_curation_config_mutation_retained_bytes(mutation: &SourcingCurat
     let (items, retained_bytes) = match mutation {
         SourcingCurationConfigMutation::SetContributions(_) => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
         SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value }) => (1, value.len()),
-        SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids }) => {
-            if module_ids.len() > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config module filter exceeds its retained item envelope".into()); }
-            (module_ids.len().max(1), module_ids.iter().map(String::len).sum())
-        }
+        SourcingCurationConfigMutation::ToggleFilterModule(ToggleFilterModuleEdit { module_id, .. }) => (1, module_id.len()),
         SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path }) => {
             if path.len() > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config typology exceeds its retained item envelope".into()); }
             (path.len().max(1), path.iter().map(String::len).sum())
@@ -91,7 +88,7 @@ pub fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation:
     let inverse = match mutation {
         SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value }) => { post.filters.query = value.clone(); SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: base.filters.query.clone() }) }
         SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path }) => { post.filters.typology_path = path.clone(); SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path: base.filters.typology_path.clone() }) }
-        SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids }) => { post.filters.module_ids = module_ids.clone(); SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: base.filters.module_ids.clone() }) }
+        SourcingCurationConfigMutation::ToggleFilterModule(edit) => { post.filters.module_ids = edit.applied_to(&base.filters.module_ids); SourcingCurationConfigMutation::ToggleFilterModule(ToggleFilterModuleEdit { module_id: edit.module_id.clone(), enabled: base.filters.module_ids.contains(&edit.module_id) }) }
         SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value }) => { post.filters.min_availability = *value; SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: base.filters.min_availability }) }
         SourcingCurationConfigMutation::SetSort(SetSortEdit { sort }) => { post.filters.sort = sort.clone(); SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: base.filters.sort.clone() }) }
         SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json }) => { post.contributions_json = json.clone(); SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: base.contributions_json.clone() }) }
@@ -213,6 +210,7 @@ fn sourcing_curation_config_replay() -> SourcingCurationConfigReplay {
         maximum_bytes: SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES,
         mutation_bytes: |mutation| sourcing_curation_config_mutation_retained_bytes(mutation).unwrap_or(usize::MAX),
         snapshot_bytes: |config| sourcing_curation_config_bytes(config).unwrap_or(usize::MAX),
+        heap_quote: |config, mutation| store::ColdHeapQuote::reference(sourcing_curation_config_bytes(config).unwrap_or(usize::MAX), sourcing_curation_config_mutation_retained_bytes(mutation).unwrap_or(usize::MAX)),
     })
 }
 

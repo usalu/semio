@@ -18,14 +18,14 @@ const options=(directory:string,id:string,learn:(run:HostRunV1)=>void):HostCapac
 
 for(const row of fixtures.runs)test(`Law: ${row.name}`,()=>{
  const next=hostRunAfterNeedV1({peakMegabytes:row.peak,status:row.status as "ok"},row.need);
- expect({peakMegabytes:next.peakMegabytes,status:next.status,limited:(next as {limited?:boolean}).limited===true,learnable:learnableHostRunV1(next.status as "ok",{limited:(next as {limited?:boolean}).limited===true})}).toEqual(row.result);
+ expect<unknown>({peakMegabytes:next.peakMegabytes,status:next.status,limited:(next as {limited?:boolean}).limited===true,learnable:learnableHostRunV1(next.status as "ok",{limited:(next as {limited?:boolean}).limited===true})}).toEqual(row.result);
 });
 
 test("Law: a class that once ran small and then refused a known need is sized at that need or more on its next run",()=>{
  const lineage=hostEstimateLineageV1("run","component"),defaultMegabytes=8190;
  let store=recordHostOutcomeV1(policy,emptyHostEstimateStoreV1(),lineage,{operation:"run",jobs:1,peakMegabytes:1500,defaultMegabytes,activeMilliseconds:60000,peakAtMilliseconds:30000,endedAtMs:1000,keepPeak:true});
  const before=estimateHostRatioV1(policy,store,lineage,2000).ratioBasisPoints;
- const refused=hostRunAfterNeedV1({peakMegabytes:400,status:"failed"},3757);
+ const refused=hostRunAfterNeedV1({peakMegabytes:400,status:"failed" as const},3757);
  expect(learnableHostRunV1(refused.status,{limited:refused.limited})).toBe(true);
  for(let index=0;index<policy.estimates.minimumSamples;index++)store=recordHostOutcomeV1(policy,store,lineage,{operation:"run",jobs:1,peakMegabytes:refused.peakMegabytes,defaultMegabytes,activeMilliseconds:1000,peakAtMilliseconds:500,endedAtMs:2000+index,keepPeak:true});
  const after=estimateHostRatioV1(policy,store,lineage,3000).ratioBasisPoints;

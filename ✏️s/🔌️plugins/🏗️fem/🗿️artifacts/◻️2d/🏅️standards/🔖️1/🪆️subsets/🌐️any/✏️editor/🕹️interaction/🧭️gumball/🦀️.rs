@@ -1,8 +1,9 @@
 //! 📡️ effects are `ToolYield`s, driven by the `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one
 //! 🧭️ Fem2d transform gumball — config, pivot, meta layer, and the gumball TOOL: a `🔄️machine` statechart whose
-//! relative `move-selection` tick leaf; a one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture
-//! accumulates its ticks into the window's ONE open transaction (persisted in the FEM gumball transient, previewed by
-//! every window, never history) and commits the NET leaf once; an abort leaves zero trace
+//! relative `move-selection` tick leaf; a one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture's
+//! ticks are CUMULATIVE from the press and each replaces the window's ONE open leaf (persisted in the FEM gumball
+//! transient, previewed by every window, never history), so a tick dropped as stale costs nothing, and the commit
+//! publishes the NET leaf once; an abort leaves zero trace
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
@@ -38,12 +39,14 @@ use semio_framework_tool_machine::ToolRefusal;
 use semio_framework_tool_machine::ToolStep;
 use semio_framework_tool_machine::ToolTransaction;
 use semio_framework_tool_machine::ToolYield;
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::collections::HashSet;
 
 //#region 🔖️Config
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// 🧭️ Which handles the transform gumball of ONE model window draws: view state in that window's configuration,
+/// toggled from the Transform utility's options rail (`setTransformGumballFlag`), never a document field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Fem2dGumballConfig {
     pub move_axes: bool,
     pub rotate: bool,
@@ -57,27 +60,19 @@ impl Default for Fem2dGumballConfig {
     }
 }
 
-thread_local! {
-    static GUMBALL_CONFIG: RefCell<HashMap<String, Fem2dGumballConfig>> = RefCell::new(HashMap::new());
-}
-
-pub fn gumball_config_for_window(window_id: &str) -> Fem2dGumballConfig {
-    GUMBALL_CONFIG.with(|store| store.borrow().get(window_id).copied().unwrap_or_default())
-}
-
-pub fn set_gumball_flag(window_id: &str, flag: &str, pressed: Option<bool>) {
-    GUMBALL_CONFIG.with(|store| {
-        let mut map = store.borrow_mut();
-        let entry = map.entry(window_id.to_string()).or_default();
-        let toggle = |current: &mut bool| *current = pressed.unwrap_or(!*current);
-        match flag {
-            "move" | "moveAxes" => toggle(&mut entry.move_axes),
-            "rotate" => toggle(&mut entry.rotate),
-            "scaleAxes" => toggle(&mut entry.scale_axes),
-            "scaleUniform" => toggle(&mut entry.scale_uniform),
-            _ => {}
-        }
-    });
+impl Fem2dGumballConfig {
+    /// 🎚️ Sets, or with `pressed = None` toggles, one named handle flag; an unknown flag is refused.
+    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_plugin::Fault> {
+        let slot = match flag {
+            "move" | "moveAxes" => &mut self.move_axes,
+            "rotate" => &mut self.rotate,
+            "scaleAxes" => &mut self.scale_axes,
+            "scaleUniform" => &mut self.scale_uniform,
+            other => return Err(semio_plugin::Fault::from(format!("fem2d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
+        };
+        *slot = pressed.unwrap_or(!*slot);
+        Ok(())
+    }
 }
 //#endregion 🔖️Config
 
@@ -175,7 +170,7 @@ pub fn fem2d_transform_pivot(doc: &Fem2dSnapshot, targets: &Fem2dTransformTarget
 /// 🪪️ The editor app id every gumball transaction's `tool` is scoped by: `<appId>#<verb>`.
 pub const FEM2D_EDITOR_APP_ID: &str = "s.fem.fem2d@1/*#editor";
 
-/// 🔑️ The transaction key of a gesture's leaf — every tick upserts it, so an open transaction holds ONE net leaf.
+/// 🔑️ The transaction key of a gesture's leaf — every tick REPLACES it: a streamed tick carries the whole offset from the press, so an open transaction holds ONE net leaf and a tick the app dropped as stale costs nothing.
 pub const FEM2D_GUMBALL_LEAF_KEY: &str = "selection:0";
 
 /// 🎬️ How one gumball dispatch moves the selection — the parameters of the tick leaf it builds.
@@ -192,38 +187,28 @@ pub fn fem2d_gumball_tick(doc: &Fem2dSnapshot, selection_ids: &[String], motion:
     let targets = fem2d_transform_targets(doc, selection_ids);
     let (pivot_x, pivot_y) = fem2d_transform_pivot(doc, &targets)?;
     let identity = MoveSelection { node_ids: targets.node_ids, region_ids: targets.region_ids, pivot_x, pivot_y, dx: 0.0, dy: 0.0, angle: 0.0, sx: 1.0, sy: 1.0 };
-    Some(match motion {
-        Fem2dGumballMotion::Translate { dx, dy } => MoveSelection { dx, dy, ..identity },
-        Fem2dGumballMotion::Rotate { angle } => MoveSelection { angle, ..identity },
-        Fem2dGumballMotion::Scale { sx, sy } => MoveSelection { sx, sy, ..identity },
-    })
+    let tick = match motion {
+        Fem2dGumballMotion::Translate { dx, dy } => MoveSelection { dx, dy, ..identity.clone() },
+        Fem2dGumballMotion::Rotate { angle } => MoveSelection { angle, ..identity.clone() },
+        Fem2dGumballMotion::Scale { sx, sy } => MoveSelection { sx, sy, ..identity.clone() },
+    };
+    Some(if fem2d_gumball_moves_geometry(doc, &tick) { tick } else { identity })
 }
 
-/// ➕️ `net` followed by `tick` as ONE net leaf: offsets add, angles add, factors multiply — only for the same targets
-/// and pivot and the same kind of motion; an identity tick changes nothing; `None` otherwise.
-pub fn fem2d_gumball_then(net: &MoveSelection, tick: &MoveSelection) -> Option<MoveSelection> {
-    if (&net.node_ids, &net.region_ids, net.pivot_x, net.pivot_y) != (&tick.node_ids, &tick.region_ids, tick.pivot_x, tick.pivot_y) {
-        return None;
-    }
-    let translation = |leaf: &MoveSelection| (leaf.angle, leaf.sx, leaf.sy) == (0.0, 1.0, 1.0);
-    let rotation = |leaf: &MoveSelection| (leaf.dx, leaf.dy, leaf.sx, leaf.sy) == (0.0, 0.0, 1.0, 1.0);
-    let scaling = |leaf: &MoveSelection| (leaf.dx, leaf.dy, leaf.angle) == (0.0, 0.0, 0.0);
-    if tick.is_identity() {
-        Some(net.clone())
-    } else if translation(net) && translation(tick) {
-        Some(MoveSelection { dx: net.dx + tick.dx, dy: net.dy + tick.dy, ..net.clone() })
-    } else if rotation(net) && rotation(tick) {
-        Some(MoveSelection { angle: net.angle + tick.angle, ..net.clone() })
-    } else if scaling(net) && scaling(tick) {
-        Some(MoveSelection { sx: net.sx * tick.sx, sy: net.sy * tick.sy, ..net.clone() })
-    } else {
-        None
-    }
+/// 🫥️ Whether `tick` carries any target of `doc` to another place: a rotation or uniform scale of a lone node about its own centroid, or a zero-length drag, moves nothing and so resolves to the identity, which commits no command.
+fn fem2d_gumball_moves_geometry(doc: &Fem2dSnapshot, tick: &MoveSelection) -> bool {
+    let node_moves = tick.node_ids.iter().filter_map(|id| find_node_2d(&doc.nodes, id)).any(|node| tick.map(node.x, node.y) != (node.x, node.y));
+    node_moves || tick.region_ids.iter().filter_map(|id| doc.regions.iter().find(|region| region.id == *id)).any(|region| region.outline.iter().chain(region.holes.iter().flatten()).any(|point| tick.map(point[0], point[1]) != (point[0], point[1])))
 }
 
-/// 🎚️ Whether a tick is one the leaf admits and that moves: finite numbers, positive factors, not the identity.
+/// 🎚️ Whether a tick is one the leaf admits: finite numbers and positive factors.
+fn fem2d_gumball_admits(tick: &MoveSelection) -> bool {
+    [tick.dx, tick.dy, tick.angle, tick.sx, tick.sy].iter().all(|value| value.is_finite()) && tick.sx > 0.0 && tick.sy > 0.0
+}
+
+/// 🎚️ Whether a tick is one the leaf admits and that moves: not the identity.
 fn fem2d_gumball_moves(tick: &MoveSelection) -> bool {
-    [tick.dx, tick.dy, tick.angle, tick.sx, tick.sy].iter().all(|value| value.is_finite()) && tick.sx > 0.0 && tick.sy > 0.0 && !tick.is_identity()
+    fem2d_gumball_admits(tick) && !tick.is_identity()
 }
 
 /// 📨️ One gumball event: the tick leaf this dispatch built (`None` when the selection moves no geometry).
@@ -260,14 +245,14 @@ fn begin_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::
 
 fn continue_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Stream(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_moves(tick)).and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_admits(tick)).cloned().unwrap_or(stream);
     sink.push(Command::Effect(ToolYield::upsert(FEM2D_GUMBALL_LEAF_KEY, Fem2dMutation::MoveSelection(net.clone()))));
     context.stream = Some(net);
 }
 
 fn finish_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Finish(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_moves(tick)).and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_admits(tick)).cloned().unwrap_or(stream);
     if net.is_identity() {
         sink.push(Command::Effect(ToolYield::retract(FEM2D_GUMBALL_LEAF_KEY)));
     } else {
@@ -384,14 +369,13 @@ pub fn fem2d_gumball_active(active_utility: &str, selection_ids: &[String]) -> b
 /// 🧭️ The `meta:gumball` layer of the Transform utility (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`): handles at the
 /// selection pivot in layer units, the model→layer map of `screen_2d`, and `liveDispatch` — the hosts stream the gesture
 /// so every window previews the open transaction (the results window re-solves while the drag goes on).
-pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], active_utility: &str, window_id: Option<&str>) -> Option<semio_framework_pack_json::Value> {
+pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], active_utility: &str, config: &Fem2dGumballConfig) -> Option<semio_framework_pack_json::Value> {
     if !fem2d_gumball_active(active_utility, selection_ids) {
         return None;
     }
     let targets = fem2d_transform_targets(doc, selection_ids);
     let pivot = fem2d_transform_pivot(doc, &targets)?;
     let (layer_x, layer_y) = screen_2d(pivot.0, pivot.1);
-    let config = window_id.map(gumball_config_for_window).unwrap_or_default();
     Some(semio_framework_pack_json::json!({
         "id": "meta:gumball",
         "role": "meta",

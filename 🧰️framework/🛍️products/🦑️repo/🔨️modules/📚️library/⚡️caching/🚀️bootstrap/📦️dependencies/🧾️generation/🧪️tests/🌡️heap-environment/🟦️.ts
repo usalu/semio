@@ -28,3 +28,17 @@ test("two invocations granted different memory seal the same producer fingerprin
   expect(observe({BUN_CONFIG_REGISTRY:"https://example.invalid/"})).not.toBe(none);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("tool telemetry and crash reporting variables never seal a producer fingerprint; a registry variable still does",()=>{
+ const root=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"telemetry-env-")));
+ try{
+  const observe=(env:Record<string,string>)=>JSON.stringify(observeJavascriptDependencyGenerationProducerV1(root,join(root,"store"),["."],Object.freeze({env,home:join(root,"home"),config:join(root,"config")})).environment);
+  const none=observe({});
+  for(const name of["BUN_ENABLE_CRASH_REPORTING","BUN_CRASH_REPORT_URL","BUN_FEATURE_FLAG_DISABLE_TELEMETRY"]){
+   expect(bun.producerInputs.environmentIgnored.includes(name),name).toBe(true);
+   expect(observe({[name]:"0"}),name).toBe(none);
+   expect(observe({[name]:"1"}),name).toBe(none);
+  }
+  expect(observe({BUN_CONFIG_REGISTRY:"https://example.invalid/"})).not.toBe(none);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

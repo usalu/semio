@@ -4,7 +4,7 @@ import { SemioFaultError, type FaultNoticeDefinition } from "@semio-tech/framewo
 import { syncShellLabelLocale } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { settledFaultNoticeV1 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import fixture from "../🧪️tests/🧫️fixtures/🔔️typed-operation-fault-notices.json";
-import { consumeTypedOperationEffects, operationFaultFanouts, publishOperationFault, TYPED_OPERATION_UNDECODABLE_FAULT, TypedOperationRouter, typedOperationFaultError, withTypedOperationCall } from "./🟦️.ts";
+import { consumeTypedOperationEffects, operationFaultFanouts, operationFaultSettlers, publishOperationFault, TYPED_OPERATION_UNDECODABLE_FAULT, TypedOperationRouter, typedOperationFaultError, withTypedOperationCall } from "./🟦️.ts";
 import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
 import Ajv2020 from "ajv";
 import { diagnosticControlledSchema as faultSchema } from "@semio-tech/framework-diagnostic-ts/testing/fixtures";
@@ -112,6 +112,14 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
       expect(received).toEqual([fault.code]);
       call.close();
     }
+  });
+
+  test("a fault page whose owning call already returned also settles the waiter of its operation, so the input that started it never stays pending", () => {
+    const row = fixture.cases[0]!;
+    const settled: { readonly receiver: number; readonly operation: bigint; readonly code: string }[] = [];
+    const router = new TypedOperationRouter(() => {}, () => {}, () => true, (receiver, operation, error) => { settled.push({ receiver, operation, code: error.fault.code }); return true; });
+    expect(consumeTypedOperationEffects([page(fixture.faultLane, JSON.stringify(row.page), 0)] as never, router.open("drain", false))).toEqual([]);
+    expect(settled).toEqual([{ receiver: fixture.receiver, operation: BigInt(fixture.operation), code: row.page.code }]);
   });
 
   test("a successful operation raises and publishes nothing", () => {

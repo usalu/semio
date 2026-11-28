@@ -28,7 +28,7 @@ import { catalogAssetsWithVolume, sampleFigure } from "../🧰️support/🧊️
 beforeAll(loadAxonometric);
 
 const SCALE = 50;
-const pick = (id: string): Asset => catalogAssetsWithVolume().find((a) => a.id === id)!;
+const pick = (id: string): Asset => catalogAssetsWithVolume([id]).find((a) => a.id === id)!;
 const SUBJECTS: readonly [string, Asset][] = [["sample figure", sampleFigure()], ["human: elderly-with-cane", pick("elderly-with-cane")], ["vehicle: delivery-van", pick("delivery-van")], ["component: duct-fan", pick("duct-fan")]];
 const sceneOf = (asset: Asset, view: "light-solid" | "dark-line" = "light-solid"): { scene: DrawingScene; state: ReturnType<typeof evaluate> } => {
   const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: SCALE } });

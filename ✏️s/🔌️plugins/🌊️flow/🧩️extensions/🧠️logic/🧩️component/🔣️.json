@@ -4,7 +4,16 @@
   "role": "extension",
   "manifest": {
     "pluginId": "flow-extension-logic",
-    "label": "Logic",
+    "label": {
+      "native": {
+        "en": "Logic",
+        "de": "Logik"
+      },
+      "reuse": {
+        "en": "Logic",
+        "de": "Logik"
+      }
+    },
     "version": "0.1.0",
     "apps": [],
     "examples": [],

@@ -28,6 +28,9 @@ fn fem2d_window_config_model_matches_neutral_fixture_and_codecs() {
             "camera-null" => candidate["camera"] = serde_json::Value::Null,
             "camera-unknown" => candidate["camera"]["extra"] = serde_json::json!(true),
             "bad-mode" => candidate["resultMode"] = serde_json::json!("harmonic"),
+            "gumball-null" => candidate["gumball"] = serde_json::Value::Null,
+            "gumball-unknown" => candidate["gumball"]["extra"] = serde_json::json!(true),
+            "gumball-text" => candidate["gumball"]["rotate"] = serde_json::json!("yes"),
             _ => panic!("unknown neutral invalid case {kind}"),
         }
         if semio_framework_pack_json::from_json_str::<Fem2dModelWindowConfig>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok() {

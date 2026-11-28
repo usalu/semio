@@ -102,13 +102,6 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "typescript",
-      "package": "ajv",
-      "version": "8.20.0"
-    }
-  ],
   "probes": [],
   "comparisonProfiles": [],
   "comparisonPipelines": [],

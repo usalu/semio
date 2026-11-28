@@ -65,7 +65,7 @@ impl NormViewerFrame {
 
     /// 🎯️ The selected document owner, or the governing owner while nothing is selected.
     pub fn diagram_focus(&self) -> Option<String> {
-        self.selection.primary(&self.report).or_else(|| self.report.checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|check| check.subject.entity_id.clone())).map(|id| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned())
+        self.selection.primary(&self.report).or_else(|| worst_owner(&self.report)).map(|id| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned())
     }
 
     pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, host: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {

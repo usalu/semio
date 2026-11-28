@@ -2,13 +2,21 @@ import {createHash} from "node:crypto";
 import {existsSync,readFileSync,statSync} from "node:fs";
 import {dirname,resolve} from "node:path";
 
+/** 🩹️ The scan of the test runner answers the UTF-8 bytes of a non-ASCII specifier as Latin-1 characters; this restores the text when, and only when, the characters are valid UTF-8 bytes (a genuine Latin-1 name is left as it is). */
+const utf8OfV1=(path:string):string=>{
+ if(/^[\x00-\x7f]*$/u.test(path)||/[^\x00-\xff]/u.test(path))return path;
+ const fixed=Buffer.from(path,"latin1").toString("utf8");
+ return fixed.includes("\uFFFD")?path:fixed;
+};
+
 /** 🔎️ The relative module specifiers a TypeScript or JavaScript source imports (static, re-exported, and literal dynamic imports) with whether each is dynamic; bare and builtin specifiers are not returned. */
 export function sidecarImportsV1(source:string):readonly Readonly<{specifier:string;dynamic:boolean}>[]{
  const found=new Map<string,boolean>();
  for(const item of new Bun.Transpiler({loader:"ts"}).scan(source).imports){
-  if(!item.path.startsWith("./")&&!item.path.startsWith("../"))continue;
+  const path=utf8OfV1(item.path);
+  if(!path.startsWith("./")&&!path.startsWith("../"))continue;
   const dynamic=item.kind==="dynamic-import";
-  found.set(item.path,(found.get(item.path)??true)&&dynamic);
+  found.set(path,(found.get(path)??true)&&dynamic);
  }
  return [...found].map(([specifier,dynamic])=>({specifier,dynamic}));
 }
@@ -24,8 +32,8 @@ export type Known=Readonly<{stamp:string;sha256:string;imports:readonly Readonly
 /** 💾️ Where a watch keeps what it hashed and scanned between processes, keyed by absolute path and file stamp (size and modification time): a short-lived reader such as `repo fleet status` then hashes only the files that changed since the last look instead of the whole closure. A missing or damaged record is no record. */
 export type SidecarClosureMemoryV1=Readonly<{read():Readonly<Record<string,Known>>|undefined;write(records:Readonly<Record<string,Known>>):void}>;
 
-/** 🧬️ A watch over the code one sidecar actually runs: the closure of its entry modules over relative imports, hashed by content. `staticOnly` modules contribute their static imports only (the dispatcher of the roles names every role by a dynamic import, which must not make the other roles part of this one). `changed()` is true only when a byte of a file in the closure, or the set of files in it, differs from the closure at creation: a touched, rewritten-identically or unrelated file never counts. The digest names each file by its path below `root` with `/` separators, so the same files give the same digest on Windows, Linux and macOS and `repo fleet status` can compare the code of every worker with the tree's. Cheap: a file is re-read only when its size or modification time moved. */
-export function createSidecarClosureWatchV1(entries:readonly string[],staticOnly:readonly string[],root:string,memory?:SidecarClosureMemoryV1):Readonly<{baseline:string;closure():SidecarClosureV1;changed():boolean;changes():readonly string[]}>{
+/** 🧬️ A watch over the code one sidecar actually runs: the closure of its entry modules over relative imports, hashed by content. `staticOnly` modules contribute their static imports only (the dispatcher of the roles names every role by a dynamic import, which must not make the other roles part of this one). `options.exclude` names files that are neither read nor followed (a service around the code, not part of it). `changed()` is true only when a byte of a file in the closure, or the set of files in it, differs from the closure at creation: a touched, rewritten-identically or unrelated file never counts. The digest names each file by its path below `root` with `/` separators, so the same files give the same digest on Windows, Linux and macOS and `repo fleet status` can compare the code of every worker with the tree's. Cheap: a file is re-read only when its size or modification time moved. */
+export function createSidecarClosureWatchV1(entries:readonly string[],staticOnly:readonly string[],root:string,memory?:SidecarClosureMemoryV1,options:Readonly<{exclude?:(path:string)=>boolean}>={}):Readonly<{baseline:string;closure():SidecarClosureV1;changed():boolean;changes():readonly string[]}>{
  const known=new Map<string,Known>(),skip=new Set(staticOnly);let dirty=false;
  if(memory!==undefined)try{for(const [path,row] of Object.entries(memory.read()??{}))known.set(path,row);}catch{}
  const load=(path:string):Known|undefined=>{
@@ -41,7 +49,7 @@ export function createSidecarClosureWatchV1(entries:readonly string[],staticOnly
  const build=():SidecarClosureV1=>{
   const files=new Map<string,string>(),stack=[...entries];
   while(stack.length>0){
-   const path=stack.pop()!;if(files.has(path))continue;
+   const path=stack.pop()!;if(files.has(path)||options.exclude?.(path)===true)continue;
    const item=load(path);if(item===undefined)continue;
    files.set(path,item.sha256);
    for(const row of item.imports){if(row.dynamic&&skip.has(path))continue;const next=resolveOf(path,row.specifier);if(next!==undefined&&!files.has(next))stack.push(next);}

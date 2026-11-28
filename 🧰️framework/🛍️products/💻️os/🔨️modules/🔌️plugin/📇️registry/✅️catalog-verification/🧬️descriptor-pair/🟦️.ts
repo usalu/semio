@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import { APP_CHANNEL_VERSION } from "../../../../../../../🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts";
 import { readPackageComponents } from "../../../../../../../🔨️modules/🎠️kernel/🧩️package-components/🟦️.ts";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
+import { parseLocalizedLabelV1 } from "../../../../../../../🔨️modules/🛂️manifest/🏷️localized-labels/🟦️.ts";
 import { CATALOG_ID } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES, CATALOG_DESCRIPTOR_TOP_LEVEL, CATALOG_MANIFEST_FIELDS, CATALOG_PACKAGE_ID, CATALOG_PLACEHOLDER_PLUGIN_IDS, CATALOG_PLACEHOLDER_VERSION, type CatalogDescriptorIdentity, type OwnerDescriptorPairV1 } from "../🟦️.ts";
 import { boundedCatalogDiagnostic, isStrictJsonValue, normalizeCatalogDescriptorEnums, rejectDuplicateJsonObjectNames } from "../🛡️guards/🟦️.ts";
@@ -30,7 +31,8 @@ function validateCatalogDescriptorShape(entry: CatalogDescriptorIdentity, descri
   const unknownManifest = Object.keys(manifestRecord).filter((key) => !CATALOG_MANIFEST_FIELDS.has(key));
   if (unknownManifest.length > 0) throw new Error(`${entry.pluginId}: manifest has unknown fields ${unknownManifest.sort().join(", ")}`);
   if (manifestRecord.pluginId !== entry.pluginId || !CATALOG_ID.test(String(manifestRecord.pluginId))) throw new Error(`${entry.pluginId}: manifest.pluginId does not match the Cargo component identity`);
-  if (typeof manifestRecord.label !== "string" || typeof manifestRecord.version !== "string" || !Array.isArray(manifestRecord.apps) || !Array.isArray(manifestRecord.examples)) throw new Error(`${entry.pluginId}: manifest required fields do not decode`);
+  parseLocalizedLabelV1(manifestRecord.label, `${entry.pluginId}: manifest.label`);
+  if (typeof manifestRecord.version !== "string" || !Array.isArray(manifestRecord.apps) || !Array.isArray(manifestRecord.examples)) throw new Error(`${entry.pluginId}: manifest required fields do not decode`);
   for (const field of ["capabilities", "topicContributions", "commands", "artifactKinds", "hostedArtifactKinds", "dependencies", "contributions"] as const) if (manifestRecord[field] !== undefined && !Array.isArray(manifestRecord[field])) throw new Error(`${entry.pluginId}: manifest.${field} must be an array`);
   for (const field of ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] as const) if (record[field] !== undefined && !Array.isArray(record[field])) throw new Error(`${entry.pluginId}: descriptor.${field} must be an array`);
   if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);

@@ -418,6 +418,15 @@ pub const COMMAND_NO_EFFECT_REMEDY: (&str, &str) = (
     "Nichts geändert: Das Dokument ist nicht in einem Zustand, in dem diese Aktion wirkt; prüfe, was sie braucht, und den Hinweis der App.",
 );
 
+/// 🧱️ The fault a plugin guest answers when it refuses its own turn (a guest input, execution or output refusal): its `message` names the poll phase and the typed cause, so a refusal is never an unnamed internal error.
+pub const GUEST_REFUSED_FAULT_CODE: &str = "guest.refused";
+
+/// 🗣️ What the agent tells its human about a [`GUEST_REFUSED_FAULT_CODE`] refusal, `(en, de)`.
+pub const GUEST_REFUSED_REMEDY: (&str, &str) = (
+    "The plugin guest refused its turn; the message names the phase and the cause. Retry once, and report it to the plugin's maintainers if it repeats.",
+    "Der Plugin-Gast hat seinen Zug abgelehnt; die Meldung nennt Phase und Ursache. Versuche es einmal erneut und melde es den Betreuern des Plugins, falls es sich wiederholt.",
+);
+
 /// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
 pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
     "This action runs only in the semio shell; ask your human to run it there.",
@@ -441,6 +450,8 @@ pub fn map_fault(fault: &Fault) -> GatewayError {
             .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": COMMAND_NO_EFFECT_REMEDY.0, "de": COMMAND_NO_EFFECT_REMEDY.1 } })),
         AGENT_LANE_UNCARRIED_FAULT_CODE | AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
             .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
+        GUEST_REFUSED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": GUEST_REFUSED_REMEDY.0, "de": GUEST_REFUSED_REMEDY.1 } })),
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),

@@ -66,3 +66,16 @@ fn results_animation_start_rewinds_a_finished_once_run() {
     assert_eq!(looping.phase, 1.0, "a looping run keeps its phase when armed");
 }
 //#endregion 🔖️Playback
+
+#[test]
+fn viewer_case_caption_names_the_load_case_in_both_locales() {
+    assert_eq!(viewer_case_caption(Some("dead"), semio_plugin::Locale::En), "Case: dead");
+    assert_eq!(viewer_case_caption(Some("dead"), semio_plugin::Locale::De), "Lastfall: dead");
+    assert_eq!(viewer_case_caption(None, semio_plugin::Locale::En), "Case: ∅");
+}
+
+#[test]
+fn viewer_meta_layer_pans_with_primary_and_secondary_drag() {
+    let layer = canvas_2d_viewer_meta_layer();
+    assert_eq!((layer["role"].as_str(), layer["leftDragPans"].as_bool(), layer["rightDragPans"].as_bool()), (Some("meta"), Some(true), Some(true)));
+}

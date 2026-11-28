@@ -8,15 +8,22 @@ use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, reti
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub type Text = PagedUtf8<{usize::MAX}>;
+/// 🪆️ Holds only the field cursor or the edge retirement that is alive, so sequential phases share one slot.
+pub enum Puzzle2dEdgeStage { Idle, Text(<Text as RetainedClone>::Cursor), Optional(<Option<Text> as RetainedClone>::Cursor), Retire(ControlledRetirement<Puzzle2dEdge>) }
+impl Puzzle2dEdgeStage {
+    fn terminal_is_empty(&self)->bool { match self { Self::Idle => true, Self::Text(cursor) => cursor.terminal_is_empty(), Self::Optional(cursor) => cursor.terminal_is_empty(), Self::Retire(owner) => owner.terminal_is_empty() } }
+}
+impl Puzzle2dConnectEdgeState {
+    fn text(&mut self)->&mut <Text as RetainedClone>::Cursor { if matches!(self.stage, Puzzle2dEdgeStage::Idle) { self.stage = Puzzle2dEdgeStage::Text(Text::retained_clone_cursor()); } match &mut self.stage { Puzzle2dEdgeStage::Text(cursor) => cursor, _ => unreachable!("edge assembly field phases are sequential") } }
+    fn optional(&mut self)->&mut <Option<Text> as RetainedClone>::Cursor { if matches!(self.stage, Puzzle2dEdgeStage::Idle) { self.stage = Puzzle2dEdgeStage::Optional(Option::<Text>::retained_clone_cursor()); } match &mut self.stage { Puzzle2dEdgeStage::Optional(cursor) => cursor, _ => unreachable!("edge assembly field phases are sequential") } }
+}
 pub struct Puzzle2dConnectEdgeCursor { state: ManuallyDrop<Puzzle2dConnectEdgeState> }
 
 #[doc(hidden)]
 pub struct Puzzle2dConnectEdgeState {
     mutation: Option<RetainedCloneBinding>,
-    text: <Text as RetainedClone>::Cursor,
-    optional: <Option<Text> as RetainedClone>::Cursor,
+    stage: Puzzle2dEdgeStage,
     edge: Option<Puzzle2dEdge>,
-    retirement: Option<ControlledRetirement<Puzzle2dEdge>>,
     scalar: u8,
     field: u8,
     child: u8,
@@ -27,7 +34,7 @@ pub struct Puzzle2dConnectEdgeState {
 impl Deref for Puzzle2dConnectEdgeCursor { type Target = Puzzle2dConnectEdgeState; fn deref(&self) -> &Self::Target { &self.state } }
 impl DerefMut for Puzzle2dConnectEdgeCursor { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 impl Default for Puzzle2dConnectEdgeCursor {
-    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dConnectEdgeState { mutation: None, text: Text::retained_clone_cursor(), optional: Option::<Text>::retained_clone_cursor(), edge: None, retirement: None, scalar: 0, field: 0, child: 0, phase: 0, closing: false }) } }
+    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dConnectEdgeState { mutation: None, stage: Puzzle2dEdgeStage::Idle, edge: None, scalar: 0, field: 0, child: 0, phase: 0, closing: false }) } }
 }
 
 impl Puzzle2dConnectEdgeCursor {
@@ -55,8 +62,8 @@ impl Puzzle2dConnectEdgeCursor {
         if self.phase == 2 {
             let field = self.field;
             if self.child == 0 {
-                let step = if field < 3 { cursor_advance(&mut self.text,mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body,effect)? }
-                else { cursor_advance(&mut self.optional,mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body,effect)? };
+                let step = if field < 3 { cursor_advance(self.text(),mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body,effect)? }
+                else { cursor_advance(self.optional(),mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body,effect)? };
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.child = 1; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -64,12 +71,12 @@ impl Puzzle2dConnectEdgeCursor {
                 let bytes = if field < 3 { size_of::<Text>() } else { size_of::<Option<Text>>() };
                 if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 if field < 3 {
-                    let Some(value) = cursor_taken(&mut self.text, effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+                    let Some(value) = cursor_taken(self.text(), effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 0 => edge.id = value, 1 => edge.source = value, _ => edge.target = value }
                     
                 } else {
-                    let Some(value) = cursor_taken(&mut self.optional, effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+                    let Some(value) = cursor_taken(self.optional(), effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 3 => edge.edge_kind = value, 4 => edge.source_tip = value, _ => edge.target_tip = value }
                     
@@ -77,10 +84,9 @@ impl Puzzle2dConnectEdgeCursor {
                 self.child = 2;
                 return Ok(copy(bytes));
             }
-            let step = if field < 3 { cursor_retire(&mut self.text, effect)? } else { cursor_retire(&mut self.optional, effect)? };
-            let empty = if field < 3 { self.text.terminal_is_empty() } else { self.optional.terminal_is_empty() };
-            if empty {
-                if field < 3 { self.text = Text::retained_clone_cursor(); } else { self.optional = Option::<Text>::retained_clone_cursor(); }
+            let step = if field < 3 { cursor_retire(self.text(), effect)? } else { cursor_retire(self.optional(), effect)? };
+            if self.stage.terminal_is_empty() {
+                self.stage = Puzzle2dEdgeStage::Idle;
                 self.field += 1;
                 self.child = 0;
                 if self.field == 6 { self.phase = 3; }
@@ -98,30 +104,22 @@ impl Puzzle2dConnectEdgeCursor {
     pub fn take(&mut self) -> Option<Puzzle2dEdge> { if self.closing || self.phase != 4 { return None; } self.phase = 5; self.edge.take() }
     pub fn begin_close(&mut self) { self.closing = true;   }
     pub fn next_close_copy_byte_demand(&self) -> Result<usize,ValueError> {
-        if !self.text.terminal_is_empty(){return self.text.next_close_copy_byte_demand();}
-        if !self.optional.terminal_is_empty(){return self.optional.next_close_copy_byte_demand();}
-        if let Some(owner)=self.retirement.as_ref(){return owner.next_copy_byte_demand();}
+        match &self.stage{Puzzle2dEdgeStage::Text(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_copy_byte_demand(),Puzzle2dEdgeStage::Optional(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_copy_byte_demand(),Puzzle2dEdgeStage::Retire(owner)=>return owner.next_copy_byte_demand(),_=>{}}
         if self.edge.is_some(){return Ok(size_of::<Puzzle2dEdge>());}
         RetainedCloneBinding::copy_demand(&self.mutation)
     }
     pub fn next_close_capacity_byte_demand(&self,body:usize) -> Result<usize,ValueError> {
-        if !self.text.terminal_is_empty(){return self.text.next_close_capacity_byte_demand(body);}
-        if !self.optional.terminal_is_empty(){return self.optional.next_close_capacity_byte_demand(body);}
-        if let Some(owner)=self.retirement.as_ref(){return owner.next_capacity_byte_demand(body);}
+        match &self.stage{Puzzle2dEdgeStage::Text(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_capacity_byte_demand(body),Puzzle2dEdgeStage::Optional(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_capacity_byte_demand(body),Puzzle2dEdgeStage::Retire(owner)=>return owner.next_capacity_byte_demand(body),_=>{}}
         if self.edge.is_some(){return Ok(0);}
         RetainedCloneBinding::capacity_demand(&self.mutation,body)
     }
     pub fn next_close_release_byte_demand(&self) -> Result<usize,ValueError> {
-        if !self.text.terminal_is_empty(){return self.text.next_close_release_byte_demand();}
-        if !self.optional.terminal_is_empty(){return self.optional.next_close_release_byte_demand();}
-        if let Some(owner)=self.retirement.as_ref(){return owner.next_release_byte_demand();}
+        match &self.stage{Puzzle2dEdgeStage::Text(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_release_byte_demand(),Puzzle2dEdgeStage::Optional(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_release_byte_demand(),Puzzle2dEdgeStage::Retire(owner)=>return owner.next_release_byte_demand(),_=>{}}
         if self.edge.is_some(){return Ok(0);}
         RetainedCloneBinding::release_demand(&self.mutation)
     }
     pub fn next_close_depth_demand(&self) -> Result<usize,ValueError> {
-        if !self.text.terminal_is_empty(){return self.text.next_close_depth_demand();}
-        if !self.optional.terminal_is_empty(){return self.optional.next_close_depth_demand();}
-        if let Some(owner)=self.retirement.as_ref(){return owner.next_depth_demand();}
+        match &self.stage{Puzzle2dEdgeStage::Text(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_depth_demand(),Puzzle2dEdgeStage::Optional(cursor) if !cursor.terminal_is_empty()=>return cursor.next_close_depth_demand(),Puzzle2dEdgeStage::Retire(owner)=>return owner.next_depth_demand(),_=>{}}
         if self.edge.is_some(){return Ok(1);}
         RetainedCloneBinding::depth_demand(&self.mutation)
     }
@@ -130,18 +128,22 @@ impl Puzzle2dConnectEdgeCursor {
         let grant=effect.grant();
         if !self.closing { return Err(refusal("edge assembly closure was not started").into()); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.text.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.text,effect)?.progress())); }
-        if !self.optional.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.optional,effect)?.progress())); }
-        if let Some(owner) = self.retirement.as_mut() { let step = controlled_step(owner,effect)?; if owner.terminal_is_empty() { self.retirement = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        match &mut self.stage {
+            Puzzle2dEdgeStage::Text(cursor) if !cursor.terminal_is_empty() => return Ok(RetainedCloneStep::Progress(cursor_retire(cursor,effect)?.progress())),
+            Puzzle2dEdgeStage::Optional(cursor) if !cursor.terminal_is_empty() => return Ok(RetainedCloneStep::Progress(cursor_retire(cursor,effect)?.progress())),
+            Puzzle2dEdgeStage::Retire(owner) => { let step = controlled_step(owner,effect)?; if owner.terminal_is_empty() { self.stage = Puzzle2dEdgeStage::Idle; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+            _ => {}
+        }
+        if !matches!(self.stage, Puzzle2dEdgeStage::Idle) { self.stage = Puzzle2dEdgeStage::Idle; }
         if self.edge.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            match ControlledRetirement::new(self.edge.take().unwrap()) { Ok(owner) => self.retirement = Some(owner), Err((error, edge)) => { self.edge = Some(edge); return Err(error.into()); } }
+            match ControlledRetirement::new(self.edge.take().unwrap()) { Ok(owner) => self.stage = Puzzle2dEdgeStage::Retire(owner), Err((error, edge)) => { self.edge = Some(edge); return Err(error.into()); } }
             return Ok(copy(size_of::<Puzzle2dEdge>()));
         }
         let step = RetirementPollExit::resume(RetainedCloneBinding::close_one(&mut self.mutation,grant.maximum_copy_bytes,effect))?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.text.terminal_is_empty() && self.optional.terminal_is_empty() && self.edge.is_none() && self.retirement.is_none() && self.mutation.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.stage.terminal_is_empty() && self.edge.is_none() && self.mutation.is_none() }
 }
 
 impl Drop for Puzzle2dConnectEdgeCursor { fn drop(&mut self) { let empty = self.terminal_is_empty(); assert!(std::thread::panicking() || empty, "edge assembly abandoned before controlled closure"); if empty { unsafe { ManuallyDrop::drop(&mut self.state); } } } }

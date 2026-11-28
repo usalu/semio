@@ -11,7 +11,7 @@ use semio_framework_tool_run::ToolRunState;
 use semio_framework_tool_run::ToolRunStepRing;
 use std::sync::Arc;
 use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
-use semio_framework_value::retirement::{RetirementStep,record_retirement_work};
+use semio_framework_value::retirement::{RetirementStep,admit_retirement_cursor,record_retirement_work,retirement_cursor_birth_demand};
 use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
@@ -83,9 +83,10 @@ pub struct ToolRunJobPort {
     pub inner: Arc<ToolRunJobPortState>,
 }
 
+/// 🔒️ The queue sits behind a `RwLock` used only as a mutex: std's unix `Mutex` boxes a 64-byte pthread mutex on first use (macOS), a hidden allocation no quote covers, while the uncontended `RwLock` never allocates on any platform.
 #[derive(Default)]
 pub struct ToolRunJobPortState {
-    pub effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
+    pub effects: std::sync::RwLock<std::collections::VecDeque<Effect>>,
     waiting: std::sync::atomic::AtomicBool,
 }
 
@@ -101,8 +102,7 @@ impl ToolRunJobPort {
     /// 🎟️ Quotes the original lease capture before any caller slot is consumed.
     pub fn original_close_demands(&self)->Result<RetirementDemand,ValueError>{
         if Arc::weak_count(&self.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}
-        let effects=self.inner.effects.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
-        if Arc::strong_count(&self.inner)==1&&!effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port effects require native retirement"));}
+        self.inner.effects.try_write().map(drop).map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
         Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
 
@@ -110,19 +110,19 @@ impl ToolRunJobPort {
     pub fn admit_original_close(source:&mut Option<Self>,grant:RetainedCloneGrant)->Result<Option<(OriginalToolRunJobPortRetirement,RetainedCloneProgress)>,ValueError>{
         let Some(port)=source.as_ref()else{return Ok(None)};let demand=port.original_close_demands()?;
         if !tool_original_grant_funds(grant,demand){return Ok(None);}
-        Ok(Some((OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(source.take()),effects:ManuallyDrop::new(None)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+        Ok(Some((OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(source.take()),effects:ManuallyDrop::new(None),staged:ManuallyDrop::new(None)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
 
     /// 🎟️ Births the original native queue before moving the unchanged caller effect.
     pub fn admit_original_dispatch(&self,source:&mut Option<Effect>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=Default::default();if source.is_none(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty))}let mut effects=self.inner.effects.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
+        let empty=Default::default();if source.is_none(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty))}let mut effects=self.inner.effects.try_write().map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
         if effects.len()==effects.capacity(){let old=effects.capacity();let extent=old.checked_add(1).and_then(|capacity|capacity.checked_mul(size_of::<Effect>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?;let released=old.checked_mul(size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port prior queue extent overflow"))?;if grant.maximum_capacity_bytes<extent||grant.maximum_release_bytes<released{return Ok(RetainedCloneStep::Progress(empty))}effects.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue backing unavailable"))?;let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:effects.capacity()*size_of::<Effect>(),released_bytes:released,..empty};if effects.capacity()!=old+1{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool port native queue changed its quoted extent").with_retained_progress(progress))}return Ok(RetainedCloneStep::Progress(progress))}
         effects.push_back(source.take().unwrap());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))
     }
 
     /// 📨️ Queues one effect the driver hands the host on its next turn, in order.
     pub fn dispatch(&self, effect: Effect) {
-        if let Ok(mut effects) = self.inner.effects.lock() {
+        if let Ok(mut effects) = self.inner.effects.write() {
             effects.push_back(effect);
         }
     }
@@ -143,15 +143,15 @@ impl ToolRunJobPort {
     }
 
     pub fn has_effects(&self) -> bool {
-        self.inner.effects.lock().is_ok_and(|effects| !effects.is_empty())
+        self.inner.effects.write().is_ok_and(|effects| !effects.is_empty())
     }
 
     pub fn pop_effect(&self) -> Option<Effect> {
-        self.inner.effects.lock().ok()?.pop_front()
+        self.inner.effects.write().ok()?.pop_front()
     }
 
     pub fn restore_effect(&self, effect: Effect) {
-        if let Ok(mut effects) = self.inner.effects.lock() {
+        if let Ok(mut effects) = self.inner.effects.write() {
             effects.push_front(effect);
         }
     }
@@ -163,29 +163,36 @@ fn tool_original_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->
 pub struct OriginalToolRunJobPortRetirement{
     pub source:ManuallyDrop<Option<ToolRunJobPort>>,
     pub effects:ManuallyDrop<Option<std::collections::VecDeque<Effect>>>,
+    pub staged:ManuallyDrop<Option<Effect>>,
 }
 
 impl OriginalToolRunJobPortRetirement{
     /// 📏️ Borrows the exact original lease or captured native queue frontier.
     pub fn demands(&self)->Result<RetirementDemand,ValueError>{
         if let Some(port)=self.source.as_ref(){if Arc::weak_count(&port.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:if Arc::strong_count(&port.inner)==1{semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<ToolRunJobPortState>()}else{0},depth:1,..Default::default()});}
-        if let Some(effects)=self.effects.as_ref(){if !effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port final effects require native retirement"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:effects.capacity().checked_mul(size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?,depth:1,..Default::default()});}
+        if let Some(staged)=self.staged.as_ref(){return retirement_cursor_birth_demand(staged);}
+        if let Some(effects)=self.effects.as_ref(){if let Some(front)=effects.front(){return retirement_cursor_birth_demand(front);}return Ok(RetirementDemand{copy_bytes:0,release_bytes:effects.capacity().checked_mul(size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?,depth:1,..Default::default()});}
         Ok(Default::default())
     }
 
-    /// 🪙️ Retires one real original frontier without draining queued effects.
+    /// 🪙️ Retires one real original frontier: the lease, then each queued final effect as a separately funded child, then the empty queue backing.
     pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
         let _=body;let grant=effect.grant();
         if self.terminal_is_empty(){return RetirementStep::Complete(0);}
         let demand=match self.demands(){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
         if effect.maximum_work_units()==0||!tool_original_grant_funds(grant,demand){return RetirementStep::BudgetExhausted;}
         let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+        if self.staged.is_some()||self.effects.as_ref().is_some_and(|effects|!effects.is_empty()){
+            if self.staged.is_none(){*self.staged=self.effects.as_mut().and_then(std::collections::VecDeque::pop_front);}
+            let turn=admit_retirement_cursor(&mut self.staged,effect);
+            return match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)};
+        }
         if let Some(port)=self.source.take(){let state=Arc::into_inner(port.inner);let released_bytes=if let Some(state)=state{let effects=state.effects.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);*self.effects=Some(effects);demand.release_bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()},work);}
         drop(self.effects.take());RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()},work)
     }
 
-    /// 🏁️ Both original lease and final native queue must be gone.
-    pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.effects.is_none()}
+    /// 🏁️ The original lease, every staged effect and the final native queue must be gone.
+    pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.effects.is_none()&&self.staged.is_none()}
 }
 
 impl Drop for OriginalToolRunJobPortRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tool port retirement abandoned live lease or queue");}}
@@ -193,7 +200,7 @@ impl Drop for OriginalToolRunJobPortRetirement{fn drop(&mut self){assert!(std::t
 /// 🎟️ Erases the original port lease and its final native queue behind the typed retirement ladder of owning containers.
 impl semio_framework_value::retirement::RetireOwned for ToolRunJobPort {
     type RetirementCursor=OriginalToolRunJobPortRetirement;
-    fn retirement_seed(self)->Self::RetirementCursor{OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(Some(self)),effects:ManuallyDrop::new(None)}}
+    fn retirement_seed(self)->Self::RetirementCursor{OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(Some(self)),effects:ManuallyDrop::new(None),staged:ManuallyDrop::new(None)}}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalToolRunJobPortRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -206,7 +213,7 @@ impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobP
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.demands().ok().map(|demand|demand.release_bytes)}
-    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{self.demands().ok().map(|demand|demand.capacity_bytes).or(Some(0))}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 

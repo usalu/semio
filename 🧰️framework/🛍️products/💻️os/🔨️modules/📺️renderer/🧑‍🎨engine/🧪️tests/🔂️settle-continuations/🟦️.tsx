@@ -30,6 +30,24 @@ export async function registerSettleContinuationsTests(vitest: PluginRuntimeVite
         expect(settleYieldsToRefreshV1(results, 0, 60_000, false, true, true), "and neither is a REQUIRED surface that has not published").toBe(false);
       });
 
+      /** 🚏️ A draining settle never holds the command lane against a waiting host call: the whole-document archive load's
+       * `PollDocumentArchiveLoad` queued 34 to 84 s behind a refresh settle that spun on `more-work`. */
+      it("hands the command lane back to a waiting host call unless an acknowledgement is owed", async () => {
+        const { settleYieldsToQueuedCommandV1, commandIngressQueuedV1, serializeCommandIngressForActor } = dependencies;
+        expect(settleYieldsToQueuedCommandV1(false, 0), "nothing waits, the settle keeps going").toBe(false);
+        expect(settleYieldsToQueuedCommandV1(false, 1), "a waiting poll gets the lane").toBe(true);
+        expect(settleYieldsToQueuedCommandV1(true, 1), "an owed acknowledgement is never dropped").toBe(false);
+        let release: () => void = () => undefined;
+        const held = serializeCommandIngressForActor("law-actor#1", () => new Promise<void>((resolve) => { release = resolve; }));
+        expect(commandIngressQueuedV1("law-actor#1"), "the running call is not queued").toBe(0);
+        const waiting = serializeCommandIngressForActor("law-actor#1", async () => "poll");
+        expect(commandIngressQueuedV1("law-actor#1"), "the poll is queued behind the running settle").toBe(1);
+        release();
+        await held;
+        expect(await waiting).toBe("poll");
+        expect(commandIngressQueuedV1("law-actor#1")).toBe(0);
+      });
+
       /** 🎞️ …and the other half of the same defect: the frames that settle produced must still reach the
        * channel. `retainedUiRefreshEffects` decoded every non-`Error` shell frame and dropped it, so a
        * run's unsolicited `Invocation` progress frames died inside whichever refresh happened to own the

@@ -4,7 +4,16 @@
   "role": "extension",
   "manifest": {
     "pluginId": "flow-extension-text",
-    "label": "Text",
+    "label": {
+      "native": {
+        "en": "Text",
+        "de": "Text"
+      },
+      "reuse": {
+        "en": "Text",
+        "de": "Text"
+      }
+    },
     "version": "0.1.0",
     "apps": [],
     "examples": [],

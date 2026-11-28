@@ -26,4 +26,23 @@ export function budgetWorkbook(): Uint8Array {
   return zipSync(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, strToU8(head + v)])), {level: 6, mtime: new Date(1980, 0, 1)});
 }
 
+/** 🧮 A two-sheet Transitional workbook with a shared formula group (`B1:B3` = `A*2`), a shared string `Label` and a cross-sheet source `'Other'!A1` = 21. */
+export function formulaWorkbook(): Uint8Array {
+  const parts: Record<string, string> = {
+    "[Content_Types].xml": `<Types xmlns="${pkg}/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${ct}.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="${ct}.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="${ct}.worksheet+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="${ct}.sharedStrings+xml"/></Types>`,
+    "_rels/.rels": `<Relationships xmlns="${pkg}/relationships"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    "xl/workbook.xml": `<workbook xmlns="${main}" xmlns:r="${rel}"><sheets><sheet name="Calc" sheetId="1" r:id="rId1"/><sheet name="Other" sheetId="2" r:id="rId2"/></sheets></workbook>`,
+    "xl/_rels/workbook.xml.rels": `<Relationships xmlns="${pkg}/relationships"><Relationship Id="rId1" Type="${rel}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${rel}/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="${rel}/sharedStrings" Target="sharedStrings.xml"/></Relationships>`,
+    "xl/sharedStrings.xml": `<sst xmlns="${main}" count="1" uniqueCount="1"><si><t>Label</t></si></sst>`,
+    "xl/worksheets/sheet1.xml": `<worksheet xmlns="${main}"><sheetData><row r="1"><c r="A1"><v>2</v></c><c r="B1"><f t="shared" ref="B1:B3" si="0">A1*2</f><v>4</v></c><c r="E1" t="s"><v>0</v></c></row><row r="2"><c r="A2"><v>3</v></c><c r="B2"><f t="shared" si="0"/><v>6</v></c></row><row r="3"><c r="A3"><v>5</v></c><c r="B3"><f t="shared" si="0"/><v>10</v></c></row></sheetData></worksheet>`,
+    "xl/worksheets/sheet2.xml": `<worksheet xmlns="${main}"><sheetData><row r="1"><c r="A1"><v>21</v></c></row></sheetData></worksheet>`,
+  };
+  return zipSync(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, strToU8(head + v)])), {level: 6, mtime: new Date(1980, 0, 1)});
+}
+
+/** 🧳 A ZIP package named like a workbook that carries no SpreadsheetML part. */
+export function foreignZip(): Uint8Array {
+  return zipSync({"readme.txt": strToU8("not a workbook")}, {level: 6, mtime: new Date(1980, 0, 1)});
+}
+
 if (import.meta.main) await Bun.write(process.argv[2] ?? join(import.meta.dir, "🗑️generated/e2e/Budget.xlsx"), budgetWorkbook());

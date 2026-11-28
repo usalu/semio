@@ -44,6 +44,7 @@ use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn document_tree_lists_the_seeded_parts_section() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut app = app();
     assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-document.parts"));
 }
@@ -151,6 +152,7 @@ fn nested_key(section: &str, node_key: &str) -> String {
 /// than its slice, and the body carries neither a `.more` key nor a `+N` label.
 #[test]
 fn the_outliner_stamps_every_container_and_never_pages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_PARTS, SCALE_GRIPS, SCALE_FASTENERS);
     let windows = TreeWindows::unhosted();
@@ -174,6 +176,7 @@ fn the_outliner_stamps_every_container_and_never_pages() {
 /// (`fasteners`, every part's grip list) and an explicit host close (`parts`).
 #[test]
 fn a_closed_outliner_container_stamps_its_total_and_builds_no_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_PARTS, SCALE_GRIPS, SCALE_FASTENERS);
     let view = windows_for(vec![request(PARTS_SECTION, Some(false), 0, 32)]);
@@ -192,6 +195,7 @@ fn a_closed_outliner_container_stamps_its_total_and_builds_no_row() {
 /// for a section and for a nested grip list alike.
 #[test]
 fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_PARTS, SCALE_GRIPS, SCALE_FASTENERS);
     let (offset, rows) = (50u32, 6u32);
@@ -216,6 +220,7 @@ fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
 /// one `interactionSelect` binding for the whole domain.
 #[test]
 fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(8, 4, 3);
     let view = windows_for(vec![request(PARTS_SECTION, Some(true), 0, 8), request(&nested_key(PARTS_SECTION, "part-0"), Some(true), 0, 4), request(FASTENERS_SECTION, Some(true), 0, 3)]);
@@ -263,6 +268,7 @@ fn node_keys(node: &BuiltNode, keys: &mut Vec<String>) {
 /// reconcile inside `UI_DOCUMENT_NODES` records, and nothing may be closed off with a `+N`.
 #[test]
 fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let (parts_len, grips_len, fasteners_len) = (ui::UI_DOCUMENT_NODES + 72, 24, ui::UI_DOCUMENT_NODES + 16);
     let scene = scaled_scene(parts_len, grips_len, fasteners_len);
@@ -298,6 +304,7 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 /// 🏷️ A part row reads its AUTHORED label, not its kind id, and duplicate kinds get numbered roots.
 #[test]
 fn part_rows_read_authored_labels_and_numbered_peers() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = vec![
         Puzzle5dPart { id: "a".into(), part_kind: Some("capsule".into()), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule".into()), ..Default::default() }, grips: Vec::new() },
@@ -314,6 +321,7 @@ fn part_rows_read_authored_labels_and_numbered_peers() {
 /// state the row is in — the hardcoded-`true` defect puzzle 3d carried would re-apply the same state.
 #[test]
 fn part_rows_carry_inverting_hide_and_lock_toggles() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let mut scene = scaled_scene(2, 0, 0);
     scene.document.parts[0].part_2d.hidden = Some(true);

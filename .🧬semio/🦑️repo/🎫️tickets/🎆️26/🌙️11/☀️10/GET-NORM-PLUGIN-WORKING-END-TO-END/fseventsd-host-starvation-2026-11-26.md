@@ -13,3 +13,7 @@ sudo killall fseventsd
 ```
 
 `sudo -n` requires a password on this machine. No agent has administrator rights here, so the coordinator could not apply the fix. No user-level FSEvents client is listed by `lsof /dev/fsevents`. Moving high-churn build output out of the watched volume path would address the cause, but this is shared fleet infrastructure owned by other tickets.
+
+## Outcome, 2026-11-27 02:08 CET
+
+The administrator ran `sudo killall fseventsd`. launchd restarted the daemon, and within 30 s swap fell from 8,769 to 1,348 MB used. Available memory rose from 4,023 to 8,507 MB, and capacity pressure went from warn to normal.

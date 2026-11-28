@@ -24,7 +24,7 @@ afterAll(()=>{rmSync(sandbox,{recursive:true,force:true});});
 
 test("the policy is closed under its schema, speaks both languages with the same placeholders and exits with the restart code of the format stamp protocol",()=>{
  const validate=new Ajv({strict:false}).compile(schema);expect(validate(policy),JSON.stringify(validate.errors)).toBe(true);
- for(const key of ["waiting","resumed"] as const){
+ for(const key of ["waiting","resumed","holderGone"] as const){
   const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort().join();
   expect(placeholders(policy.texts[key]!.en!)).toBe(placeholders(policy.texts[key]!.de!));
  }

@@ -93,7 +93,7 @@ test("the mount boundary: a cache image directory that answers EPERM even for th
   expect((await run("EPERM",root+"/.cache/f/.reset.json")).value).toMatchObject({state:"denied",place:root+"/.cache/f/.reset.json"});
 });
 
-test("the refusal of the launchd route is remembered for this boot, for this checkout and these launcher bytes, bounded, and forgotten by new bytes, an older boot, another checkout or a day",()=>{
+test("the refusal of the launchd route is remembered for this boot, for this checkout and these launcher bytes, bounded, and forgotten by new bytes, an older boot, another checkout or ten minutes",()=>{
   const sandbox=mkdtempSync(join(tmpdir(),"consent-memory-")),root=join(sandbox,"Documents","semio"),options={platform:"darwin",home:sandbox,environment:{}},base=1_800_000_000_000;
   try{
     let sha="a".repeat(64);const digest=()=>sha;
@@ -105,9 +105,9 @@ test("the refusal of the launchd route is remembered for this boot, for this che
     expect(statSync(file).mode&0o077,"owner only").toBe(0);
     const at=(now:number,uptime=3600)=>launchdRefusalV1(root,{...options,digest,now:()=>now,uptimeSeconds:()=>uptime});
     expect(at(base+60_000)).toEqual({place:root+"/.cache/b/.reset.json",at:base});
-    expect(at(base+23*3600_000,24*3600),"booted before the record: still the same boot").toBeDefined();
+    expect(at(base+9*60_000,24*3600),"booted before the record: still the same boot").toBeDefined();
     expect(at(base+3600_000,600),"the machine booted after the record: another boot").toBeUndefined();
-    expect(at(base+25*3600_000,30*3600),"older than a day").toBeUndefined();
+    expect(at(base+11*60_000,30*3600),"older than the retry window: the route is probed again").toBeUndefined();
     expect(at(base-5*3600_000),"from the future").toBeUndefined();
     expect(launchdRefusalV1(join(sandbox,"Documents","other"),{...options,digest,now:()=>base,uptimeSeconds:()=>3600}),"another checkout").toBeUndefined();
     expect(launchdRefusalV1("/Users/Shared/semio",{...options,digest,now:()=>base,uptimeSeconds:()=>3600})).toBeUndefined();

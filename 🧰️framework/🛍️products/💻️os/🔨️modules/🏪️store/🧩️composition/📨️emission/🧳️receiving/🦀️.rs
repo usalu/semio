@@ -65,7 +65,7 @@ impl<M:Send+Sync+'static> OriginalMemberBatchReceiving<M>{
  fn advance_turn(&mut self,control:&mut NativeDecodeControl<'_>,maximum_work_units:u64,grant:RetainedCloneGrant,work:&mut u128)->Result<RetainedCloneStep,ValueError>{
   self.validate(control.ledger_identity(),control.retirement_recipient_identity())?;if self.closing{return Err(invalid())}if self.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   self.stage_wire()?;
-  let d=self.demands(self.body)?;if maximum_work_units==0||!retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let d=self.demands(self.body)?;if maximum_work_units==0||!retained_clone_grant_admits(grant,d){eprintln!("[DEBUG] member-batch zero progress: work={maximum_work_units} demand={d:?} grant={grant:?}");return Ok(RetainedCloneStep::Progress(Default::default()))}
   control.checkpoint()?;
   if self.source.is_some()&&self.wire.is_some()&&self.receiver.is_none(){
    *work=1;

@@ -167,7 +167,7 @@
         "source": "literature",
         "solarAbsorptivity": 0.6,
         "densityKgM3": 1800,
-        "conductivityWmK": 1.0,
+        "conductivityWmK": 1,
         "specificHeatJKgK": 1000,
         "reference": "en-iso-10456"
       },
@@ -242,7 +242,7 @@
         },
         "support": "fixed",
         "footprintLengthM": 0.365,
-        "footprintWidthM": 1.0
+        "footprintWidthM": 1
       }
     ],
     "representations": {
@@ -358,7 +358,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.0895], [0.38, 0.0895]],
+              "points": [
+                [
+                  0.015,
+                  0.0895
+                ],
+                [
+                  0.38,
+                  0.0895
+                ]
+              ],
               "closed": false
             },
             {
@@ -371,7 +380,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.17283], [0.38, 0.17283]],
+              "points": [
+                [
+                  0.015,
+                  0.17283
+                ],
+                [
+                  0.38,
+                  0.17283
+                ]
+              ],
               "closed": false
             },
             {
@@ -384,7 +402,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.25617], [0.38, 0.25617]],
+              "points": [
+                [
+                  0.015,
+                  0.25617
+                ],
+                [
+                  0.38,
+                  0.25617
+                ]
+              ],
               "closed": false
             },
             {
@@ -397,7 +424,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.3395], [0.38, 0.3395]],
+              "points": [
+                [
+                  0.015,
+                  0.3395
+                ],
+                [
+                  0.38,
+                  0.3395
+                ]
+              ],
               "closed": false
             },
             {
@@ -410,7 +446,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.42283], [0.38, 0.42283]],
+              "points": [
+                [
+                  0.015,
+                  0.42283
+                ],
+                [
+                  0.38,
+                  0.42283
+                ]
+              ],
               "closed": false
             },
             {
@@ -423,7 +468,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.50617], [0.38, 0.50617]],
+              "points": [
+                [
+                  0.015,
+                  0.50617
+                ],
+                [
+                  0.38,
+                  0.50617
+                ]
+              ],
               "closed": false
             },
             {
@@ -436,7 +490,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.5895], [0.38, 0.5895]],
+              "points": [
+                [
+                  0.015,
+                  0.5895
+                ],
+                [
+                  0.38,
+                  0.5895
+                ]
+              ],
               "closed": false
             },
             {
@@ -449,7 +512,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.67283], [0.38, 0.67283]],
+              "points": [
+                [
+                  0.015,
+                  0.67283
+                ],
+                [
+                  0.38,
+                  0.67283
+                ]
+              ],
               "closed": false
             },
             {
@@ -462,7 +534,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.75617], [0.38, 0.75617]],
+              "points": [
+                [
+                  0.015,
+                  0.75617
+                ],
+                [
+                  0.38,
+                  0.75617
+                ]
+              ],
               "closed": false
             },
             {
@@ -475,7 +556,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.8395], [0.38, 0.8395]],
+              "points": [
+                [
+                  0.015,
+                  0.8395
+                ],
+                [
+                  0.38,
+                  0.8395
+                ]
+              ],
               "closed": false
             },
             {
@@ -488,7 +578,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.92283], [0.38, 0.92283]],
+              "points": [
+                [
+                  0.015,
+                  0.92283
+                ],
+                [
+                  0.38,
+                  0.92283
+                ]
+              ],
               "closed": false
             },
             {
@@ -501,7 +600,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.01233], [0.135, 0.08333]],
+              "points": [
+                [
+                  0.135,
+                  0.01233
+                ],
+                [
+                  0.135,
+                  0.08333
+                ]
+              ],
               "closed": false
             },
             {
@@ -514,7 +622,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.09567], [0.26, 0.16667]],
+              "points": [
+                [
+                  0.26,
+                  0.09567
+                ],
+                [
+                  0.26,
+                  0.16667
+                ]
+              ],
               "closed": false
             },
             {
@@ -527,7 +644,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.179], [0.135, 0.25]],
+              "points": [
+                [
+                  0.135,
+                  0.179
+                ],
+                [
+                  0.135,
+                  0.25
+                ]
+              ],
               "closed": false
             },
             {
@@ -540,7 +666,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.26233], [0.26, 0.33333]],
+              "points": [
+                [
+                  0.26,
+                  0.26233
+                ],
+                [
+                  0.26,
+                  0.33333
+                ]
+              ],
               "closed": false
             },
             {
@@ -553,7 +688,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.34567], [0.135, 0.41667]],
+              "points": [
+                [
+                  0.135,
+                  0.34567
+                ],
+                [
+                  0.135,
+                  0.41667
+                ]
+              ],
               "closed": false
             },
             {
@@ -566,7 +710,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.429], [0.26, 0.5]],
+              "points": [
+                [
+                  0.26,
+                  0.429
+                ],
+                [
+                  0.26,
+                  0.5
+                ]
+              ],
               "closed": false
             },
             {
@@ -579,7 +732,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.51233], [0.135, 0.58333]],
+              "points": [
+                [
+                  0.135,
+                  0.51233
+                ],
+                [
+                  0.135,
+                  0.58333
+                ]
+              ],
               "closed": false
             },
             {
@@ -592,7 +754,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.59567], [0.26, 0.66667]],
+              "points": [
+                [
+                  0.26,
+                  0.59567
+                ],
+                [
+                  0.26,
+                  0.66667
+                ]
+              ],
               "closed": false
             },
             {
@@ -605,7 +776,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.679], [0.135, 0.75]],
+              "points": [
+                [
+                  0.135,
+                  0.679
+                ],
+                [
+                  0.135,
+                  0.75
+                ]
+              ],
               "closed": false
             },
             {
@@ -618,7 +798,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.76233], [0.26, 0.83333]],
+              "points": [
+                [
+                  0.26,
+                  0.76233
+                ],
+                [
+                  0.26,
+                  0.83333
+                ]
+              ],
               "closed": false
             },
             {
@@ -631,7 +820,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.135, 0.84567], [0.135, 0.91667]],
+              "points": [
+                [
+                  0.135,
+                  0.84567
+                ],
+                [
+                  0.135,
+                  0.91667
+                ]
+              ],
               "closed": false
             },
             {
@@ -644,7 +842,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, 0.929], [0.26, 0.9955]],
+              "points": [
+                [
+                  0.26,
+                  0.929
+                ],
+                [
+                  0.26,
+                  0.9955
+                ]
+              ],
               "closed": false
             },
             {
@@ -657,7 +864,16 @@
               "region": "wall-field",
               "material": "mineral-wool",
               "kind": "poly",
-              "points": [[0.39, 0.4], [0.51, 0.4]],
+              "points": [
+                [
+                  0.39,
+                  0.4
+                ],
+                [
+                  0.51,
+                  0.4
+                ]
+              ],
               "closed": false
             }
           ],
@@ -751,7 +967,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.26, -0.4955], [0.26, 0.4955]],
+              "points": [
+                [
+                  0.26,
+                  -0.4955
+                ],
+                [
+                  0.26,
+                  0.4955
+                ]
+              ],
               "closed": false
             },
             {
@@ -764,7 +989,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, -0.47], [0.255, -0.47]],
+              "points": [
+                [
+                  0.015,
+                  -0.47
+                ],
+                [
+                  0.255,
+                  -0.47
+                ]
+              ],
               "closed": false
             },
             {
@@ -777,7 +1011,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, -0.345], [0.255, -0.345]],
+              "points": [
+                [
+                  0.015,
+                  -0.345
+                ],
+                [
+                  0.255,
+                  -0.345
+                ]
+              ],
               "closed": false
             },
             {
@@ -790,7 +1033,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, -0.22], [0.255, -0.22]],
+              "points": [
+                [
+                  0.015,
+                  -0.22
+                ],
+                [
+                  0.255,
+                  -0.22
+                ]
+              ],
               "closed": false
             },
             {
@@ -803,7 +1055,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, -0.095], [0.255, -0.095]],
+              "points": [
+                [
+                  0.015,
+                  -0.095
+                ],
+                [
+                  0.255,
+                  -0.095
+                ]
+              ],
               "closed": false
             },
             {
@@ -816,7 +1077,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.03], [0.255, 0.03]],
+              "points": [
+                [
+                  0.015,
+                  0.03
+                ],
+                [
+                  0.255,
+                  0.03
+                ]
+              ],
               "closed": false
             },
             {
@@ -829,7 +1099,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.155], [0.255, 0.155]],
+              "points": [
+                [
+                  0.015,
+                  0.155
+                ],
+                [
+                  0.255,
+                  0.155
+                ]
+              ],
               "closed": false
             },
             {
@@ -842,7 +1121,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.28], [0.255, 0.28]],
+              "points": [
+                [
+                  0.015,
+                  0.28
+                ],
+                [
+                  0.255,
+                  0.28
+                ]
+              ],
               "closed": false
             },
             {
@@ -855,7 +1143,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.015, 0.405], [0.255, 0.405]],
+              "points": [
+                [
+                  0.015,
+                  0.405
+                ],
+                [
+                  0.255,
+                  0.405
+                ]
+              ],
               "closed": false
             },
             {
@@ -868,7 +1165,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.265, -0.2825], [0.38, -0.2825]],
+              "points": [
+                [
+                  0.265,
+                  -0.2825
+                ],
+                [
+                  0.38,
+                  -0.2825
+                ]
+              ],
               "closed": false
             },
             {
@@ -881,7 +1187,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.265, -0.0325], [0.38, -0.0325]],
+              "points": [
+                [
+                  0.265,
+                  -0.0325
+                ],
+                [
+                  0.38,
+                  -0.0325
+                ]
+              ],
               "closed": false
             },
             {
@@ -894,7 +1209,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.265, 0.2175], [0.38, 0.2175]],
+              "points": [
+                [
+                  0.265,
+                  0.2175
+                ],
+                [
+                  0.38,
+                  0.2175
+                ]
+              ],
               "closed": false
             },
             {
@@ -907,7 +1231,16 @@
               "region": "wall-field",
               "material": "masonry-mortar",
               "kind": "poly",
-              "points": [[0.265, 0.4675], [0.38, 0.4675]],
+              "points": [
+                [
+                  0.265,
+                  0.4675
+                ],
+                [
+                  0.38,
+                  0.4675
+                ]
+              ],
               "closed": false
             },
             {
@@ -920,7 +1253,16 @@
               "region": "wall-field",
               "material": "mineral-wool",
               "kind": "poly",
-              "points": [[0.39, -0.25], [0.51, -0.25]],
+              "points": [
+                [
+                  0.39,
+                  -0.25
+                ],
+                [
+                  0.51,
+                  -0.25
+                ]
+              ],
               "closed": false
             }
           ]
@@ -1059,7 +1401,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.083333
                 ],
                 [
@@ -1081,7 +1423,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.166667
                 ],
                 [
@@ -1103,7 +1445,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.25
                 ],
                 [
@@ -1125,7 +1467,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.333333
                 ],
                 [
@@ -1147,7 +1489,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.416667
                 ],
                 [
@@ -1169,7 +1511,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.5
                 ],
                 [
@@ -1191,7 +1533,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.583333
                 ],
                 [
@@ -1213,7 +1555,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.666667
                 ],
                 [
@@ -1235,7 +1577,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.75
                 ],
                 [
@@ -1257,7 +1599,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.833333
                 ],
                 [
@@ -1279,7 +1621,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.916667
                 ],
                 [
@@ -1451,7 +1793,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.166667
                 ],
                 [
@@ -1473,7 +1815,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.333333
                 ],
                 [
@@ -1495,7 +1837,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.5
                 ],
                 [
@@ -1517,7 +1859,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.666667
                 ],
                 [
@@ -1539,7 +1881,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.833333
                 ],
                 [
@@ -2129,7 +2471,9 @@
     "structure": {
       "gravityMS2": 9.81,
       "dynamics": "quasi-static",
-      "supports": ["base"],
+      "supports": [
+        "base"
+      ],
       "assumptions": [
         {
           "en": "The 1 m strip is one rigid body on a fixed base under the brick leaf; the self-weight of 734 kg acts at the centre of mass, 213 mm from the room face and so inside the leaf. No imposed load is applied.",
@@ -2154,11 +2498,24 @@
             "material": "lime-plaster",
             "role": "body",
             "tone": 0.9,
-            "size": [0.015, 1.0, 1.0],
+            "size": [
+              0.015,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.0075, 0.5, 0.0]
+              "translation": [
+                0.0075,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "bed-joint",
@@ -2167,14 +2524,30 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.365, 0.01233, 1.0],
+            "size": [
+              0.365,
+              0.01233,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.00617, 0.0]
+              "translation": [
+                0.1975,
+                0.00617,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "-w",
+              "+w"
+            ],
             "repeat": {
               "count": 12,
-              "translation": [0.0, 0.08333, 0.0]
+              "translation": [
+                0,
+                0.08333,
+                0
+              ]
             }
           },
           {
@@ -2184,14 +2557,29 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.01, 0.071, 1.0],
+            "size": [
+              0.01,
+              0.071,
+              1
+            ],
             "transform": {
-              "translation": [0.135, 0.04783, 0.0]
+              "translation": [
+                0.135,
+                0.04783,
+                0
+              ]
             },
-            "sectionFaces": ["-w", "+w"],
+            "sectionFaces": [
+              "-w",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2201,14 +2589,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.025],
+            "size": [
+              0.24,
+              0.071,
+              0.025
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.4875]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.4875
+              ]
             },
-            "sectionFaces": ["-w"],
+            "sectionFaces": [
+              "-w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2218,13 +2620,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.4075]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.4075
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2234,13 +2648,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.2825]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.2825
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2250,13 +2676,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.1575]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.1575
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2266,13 +2704,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.0325]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.0325
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2282,13 +2732,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.0925]
+              "translation": [
+                0.26,
+                0.04783,
+                0.0925
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2298,13 +2760,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.2175]
+              "translation": [
+                0.26,
+                0.04783,
+                0.2175
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2314,13 +2788,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.3425]
+              "translation": [
+                0.26,
+                0.04783,
+                0.3425
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2330,14 +2816,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.09],
+            "size": [
+              0.24,
+              0.071,
+              0.09
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.455]
+              "translation": [
+                0.26,
+                0.04783,
+                0.455
+              ]
             },
-            "sectionFaces": ["+w"],
+            "sectionFaces": [
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2347,13 +2847,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.47]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.47
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2363,13 +2875,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.345]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.345
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2379,13 +2903,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.22]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.22
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2395,13 +2931,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, -0.095]
+              "translation": [
+                0.26,
+                0.04783,
+                -0.095
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2411,13 +2959,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.03]
+              "translation": [
+                0.26,
+                0.04783,
+                0.03
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2427,13 +2987,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.155]
+              "translation": [
+                0.26,
+                0.04783,
+                0.155
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2443,13 +3015,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.28]
+              "translation": [
+                0.26,
+                0.04783,
+                0.28
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2459,13 +3043,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.26, 0.04783, 0.405]
+              "translation": [
+                0.26,
+                0.04783,
+                0.405
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2475,14 +3071,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.0875],
+            "size": [
+              0.115,
+              0.071,
+              0.0875
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, -0.45625]
+              "translation": [
+                0.0725,
+                0.04783,
+                -0.45625
+              ]
             },
-            "sectionFaces": ["-w"],
+            "sectionFaces": [
+              "-w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2492,13 +3102,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, -0.2825]
+              "translation": [
+                0.0725,
+                0.04783,
+                -0.2825
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2508,13 +3130,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, -0.0325]
+              "translation": [
+                0.0725,
+                0.04783,
+                -0.0325
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2524,13 +3158,25 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, 0.2175]
+              "translation": [
+                0.0725,
+                0.04783,
+                0.2175
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2540,14 +3186,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.1525],
+            "size": [
+              0.115,
+              0.071,
+              0.1525
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, 0.42375]
+              "translation": [
+                0.0725,
+                0.04783,
+                0.42375
+              ]
             },
-            "sectionFaces": ["+w"],
+            "sectionFaces": [
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2557,13 +3217,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, -0.4075]
+              "translation": [
+                0.0725,
+                0.04783,
+                -0.4075
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2573,13 +3245,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, -0.1575]
+              "translation": [
+                0.0725,
+                0.04783,
+                -0.1575
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2589,13 +3273,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, 0.0925]
+              "translation": [
+                0.0725,
+                0.04783,
+                0.0925
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2605,13 +3301,25 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.0725, 0.04783, 0.3425]
+              "translation": [
+                0.0725,
+                0.04783,
+                0.3425
+              ]
             },
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2621,14 +3329,30 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.01, 0.071, 1.0],
+            "size": [
+              0.01,
+              0.071,
+              1
+            ],
             "transform": {
-              "translation": [0.26, 0.13117, 0.0]
+              "translation": [
+                0.26,
+                0.13117,
+                0
+              ]
             },
-            "sectionFaces": ["+v", "-w", "+w"],
+            "sectionFaces": [
+              "+v",
+              "-w",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2638,14 +3362,29 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.025],
+            "size": [
+              0.24,
+              0.071,
+              0.025
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.4875]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.4875
+              ]
             },
-            "sectionFaces": ["+v", "-w"],
+            "sectionFaces": [
+              "+v",
+              "-w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2655,14 +3394,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.4075]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.4075
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2672,14 +3425,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.2825]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.2825
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2689,14 +3456,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.1575]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.1575
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2706,14 +3487,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.0325]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.0325
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2723,14 +3518,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.0925]
+              "translation": [
+                0.135,
+                0.13117,
+                0.0925
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2740,14 +3549,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.2175]
+              "translation": [
+                0.135,
+                0.13117,
+                0.2175
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2757,14 +3580,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.115],
+            "size": [
+              0.24,
+              0.071,
+              0.115
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.3425]
+              "translation": [
+                0.135,
+                0.13117,
+                0.3425
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2774,14 +3611,29 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.24, 0.071, 0.09],
+            "size": [
+              0.24,
+              0.071,
+              0.09
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.455]
+              "translation": [
+                0.135,
+                0.13117,
+                0.455
+              ]
             },
-            "sectionFaces": ["+v", "+w"],
+            "sectionFaces": [
+              "+v",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2791,14 +3643,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.47]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.47
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2808,14 +3674,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.345]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.345
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2825,14 +3705,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.22]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.22
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2842,14 +3736,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, -0.095]
+              "translation": [
+                0.135,
+                0.13117,
+                -0.095
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2859,14 +3767,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.03]
+              "translation": [
+                0.135,
+                0.13117,
+                0.03
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2876,14 +3798,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.155]
+              "translation": [
+                0.135,
+                0.13117,
+                0.155
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2893,14 +3829,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.28]
+              "translation": [
+                0.135,
+                0.13117,
+                0.28
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2910,14 +3860,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.24, 0.071, 0.01],
+            "size": [
+              0.24,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.135, 0.13117, 0.405]
+              "translation": [
+                0.135,
+                0.13117,
+                0.405
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2927,14 +3891,29 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.2125],
+            "size": [
+              0.115,
+              0.071,
+              0.2125
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, -0.39375]
+              "translation": [
+                0.3225,
+                0.13117,
+                -0.39375
+              ]
             },
-            "sectionFaces": ["+v", "-w"],
+            "sectionFaces": [
+              "+v",
+              "-w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2944,14 +3923,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, -0.1575]
+              "translation": [
+                0.3225,
+                0.13117,
+                -0.1575
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2961,14 +3954,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, 0.0925]
+              "translation": [
+                0.3225,
+                0.13117,
+                0.0925
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2978,14 +3985,28 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.24],
+            "size": [
+              0.115,
+              0.071,
+              0.24
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, 0.3425]
+              "translation": [
+                0.3225,
+                0.13117,
+                0.3425
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -2995,14 +4016,29 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.115, 0.071, 0.0275],
+            "size": [
+              0.115,
+              0.071,
+              0.0275
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, 0.48625]
+              "translation": [
+                0.3225,
+                0.13117,
+                0.48625
+              ]
             },
-            "sectionFaces": ["+v", "+w"],
+            "sectionFaces": [
+              "+v",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -3012,14 +4048,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, -0.2825]
+              "translation": [
+                0.3225,
+                0.13117,
+                -0.2825
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -3029,14 +4079,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, -0.0325]
+              "translation": [
+                0.3225,
+                0.13117,
+                -0.0325
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -3046,14 +4110,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, 0.2175]
+              "translation": [
+                0.3225,
+                0.13117,
+                0.2175
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -3063,14 +4141,28 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.78,
-            "size": [0.115, 0.071, 0.01],
+            "size": [
+              0.115,
+              0.071,
+              0.01
+            ],
             "transform": {
-              "translation": [0.3225, 0.13117, 0.4675]
+              "translation": [
+                0.3225,
+                0.13117,
+                0.4675
+              ]
             },
-            "sectionFaces": ["+v"],
+            "sectionFaces": [
+              "+v"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.16667, 0.0]
+              "translation": [
+                0,
+                0.16667,
+                0
+              ]
             }
           },
           {
@@ -3080,11 +4172,24 @@
             "material": "etics-adhesive",
             "role": "body",
             "tone": 0.6,
-            "size": [0.01, 1.0, 1.0],
+            "size": [
+              0.01,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.385, 0.5, 0.0]
+              "translation": [
+                0.385,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "wool-board-low-left",
@@ -3093,11 +4198,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.65],
+            "size": [
+              0.12,
+              0.4,
+              0.65
+            ],
             "transform": {
-              "translation": [0.45, 0.2, -0.175]
+              "translation": [
+                0.45,
+                0.2,
+                -0.175
+              ]
             },
-            "sectionFaces": ["-v", "-w"]
+            "sectionFaces": [
+              "-v",
+              "-w"
+            ]
           },
           {
             "id": "wool-board-low-right",
@@ -3106,11 +4222,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.35],
+            "size": [
+              0.12,
+              0.4,
+              0.35
+            ],
             "transform": {
-              "translation": [0.45, 0.2, 0.325]
+              "translation": [
+                0.45,
+                0.2,
+                0.325
+              ]
             },
-            "sectionFaces": ["-v", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+w"
+            ]
           },
           {
             "id": "wool-board-high-left",
@@ -3119,11 +4246,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 0.25],
+            "size": [
+              0.12,
+              0.6,
+              0.25
+            ],
             "transform": {
-              "translation": [0.45, 0.7, -0.375]
+              "translation": [
+                0.45,
+                0.7,
+                -0.375
+              ]
             },
-            "sectionFaces": ["+v", "-w"]
+            "sectionFaces": [
+              "+v",
+              "-w"
+            ]
           },
           {
             "id": "wool-board-high-right",
@@ -3132,11 +4270,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 0.75],
+            "size": [
+              0.12,
+              0.6,
+              0.75
+            ],
             "transform": {
-              "translation": [0.45, 0.7, 0.125]
+              "translation": [
+                0.45,
+                0.7,
+                0.125
+              ]
             },
-            "sectionFaces": ["+v", "+w"]
+            "sectionFaces": [
+              "+v",
+              "+w"
+            ]
           },
           {
             "id": "render-base-coat",
@@ -3145,11 +4294,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.72,
-            "size": [0.008, 1.0, 1.0],
+            "size": [
+              0.008,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.514, 0.5, 0.0]
+              "translation": [
+                0.514,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "render-finish",
@@ -3158,11 +4320,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.8,
-            "size": [0.012, 1.0, 1.0],
+            "size": [
+              0.012,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.524, 0.5, 0.0]
+              "translation": [
+                0.524,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "plate-anchor-1",
@@ -3171,9 +4346,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, 0.15]
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              0.15
+            ]
           },
           {
             "id": "plate-anchor-2",
@@ -3182,9 +4390,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, -0.25]
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              -0.25
+            ]
           },
           {
             "id": "plate-anchor-3",
@@ -3193,9 +4434,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0875, -0.25]
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.0875,
+              -0.25
+            ]
           },
           {
             "id": "plate-anchor-4",
@@ -3204,9 +4478,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.7125, 0.15]
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.7125,
+              0.15
+            ]
           }
         ],
         "thermal": [
@@ -3215,7 +4522,13 @@
             "of": "plaster",
             "region": "wall-field",
             "layer": "plaster",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-brick",
@@ -3224,11 +4537,24 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "brick"
           },
@@ -3237,7 +4563,12 @@
             "of": "adhesive",
             "region": "wall-field",
             "layer": "adhesive",
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-wool-board-low-left",
@@ -3246,11 +4577,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.65],
+            "size": [
+              0.12,
+              0.4,
+              0.65
+            ],
             "transform": {
-              "translation": [0.45, 0.2, -0.175]
+              "translation": [
+                0.45,
+                0.2,
+                -0.175
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3261,11 +4605,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.35],
+            "size": [
+              0.12,
+              0.4,
+              0.35
+            ],
             "transform": {
-              "translation": [0.45, 0.2, 0.325]
+              "translation": [
+                0.45,
+                0.2,
+                0.325
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3276,11 +4633,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 0.25],
+            "size": [
+              0.12,
+              0.6,
+              0.25
+            ],
             "transform": {
-              "translation": [0.45, 0.7, -0.375]
+              "translation": [
+                0.45,
+                0.7,
+                -0.375
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3291,11 +4661,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 0.75],
+            "size": [
+              0.12,
+              0.6,
+              0.75
+            ],
             "transform": {
-              "translation": [0.45, 0.7, 0.125]
+              "translation": [
+                0.45,
+                0.7,
+                0.125
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3304,14 +4687,25 @@
             "of": "render-base-coat",
             "region": "wall-field",
             "layer": "base-coat",
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-face-render",
             "of": "render-finish",
             "region": "wall-field",
             "layer": "render",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           }
         ],
         "structure": [
@@ -3322,9 +4716,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "member"
@@ -3336,9 +4738,17 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.2,
-            "size": [0.365, 0.0075, 1.0],
+            "size": [
+              0.365,
+              0.0075,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, -0.00375, 0.0]
+              "translation": [
+                0.1975,
+                -0.00375,
+                0
+              ]
             },
             "member": "root",
             "part": "support",
@@ -3351,9 +4761,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.3,
-            "radii": [0.04, 0.04, 0.04],
+            "radii": [
+              0.04,
+              0.04,
+              0.04
+            ],
             "transform": {
-              "translation": [0.2133, 0.5, 0.0]
+              "translation": [
+                0.2133,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "mass"
@@ -3365,9 +4783,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, 0.15],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              0.15
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3378,9 +4829,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, -0.25],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              -0.25
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3391,9 +4875,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0875, -0.25],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.0875,
+              -0.25
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3404,9 +4921,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.7125, 0.15],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.7125,
+              0.15
+            ],
             "member": "root",
             "part": "joint"
           }
@@ -3441,14 +4991,30 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 0.083333333, 1.0],
+            "size": [
+              0.38,
+              0.083333333,
+              1
+            ],
             "transform": {
-              "translation": [0.19, 0.041666666, 0.0]
+              "translation": [
+                0.19,
+                0.041666666,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "-w",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.166666667, 0.0]
+              "translation": [
+                0,
+                0.166666667,
+                0
+              ]
             }
           },
           {
@@ -3458,14 +5024,30 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 0.083333333, 1.0],
+            "size": [
+              0.38,
+              0.083333333,
+              1
+            ],
             "transform": {
-              "translation": [0.19, 0.124999999, 0.0]
+              "translation": [
+                0.19,
+                0.124999999,
+                0
+              ]
             },
-            "sectionFaces": ["+v", "-w", "+w"],
+            "sectionFaces": [
+              "+v",
+              "-w",
+              "+w"
+            ],
             "repeat": {
               "count": 6,
-              "translation": [0.0, 0.166666667, 0.0]
+              "translation": [
+                0,
+                0.166666667,
+                0
+              ]
             }
           },
           {
@@ -3475,11 +5057,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.13, 0.4, 0.65],
+            "size": [
+              0.13,
+              0.4,
+              0.65
+            ],
             "transform": {
-              "translation": [0.445, 0.2, -0.175]
+              "translation": [
+                0.445,
+                0.2,
+                -0.175
+              ]
             },
-            "sectionFaces": ["-v", "-w"]
+            "sectionFaces": [
+              "-v",
+              "-w"
+            ]
           },
           {
             "id": "wool-board-low-right",
@@ -3488,11 +5081,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.13, 0.4, 0.35],
+            "size": [
+              0.13,
+              0.4,
+              0.35
+            ],
             "transform": {
-              "translation": [0.445, 0.2, 0.325]
+              "translation": [
+                0.445,
+                0.2,
+                0.325
+              ]
             },
-            "sectionFaces": ["-v", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+w"
+            ]
           },
           {
             "id": "insulation-upper-course",
@@ -3501,11 +5105,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.13, 0.6, 1.0],
+            "size": [
+              0.13,
+              0.6,
+              1
+            ],
             "transform": {
-              "translation": [0.445, 0.7, 0]
+              "translation": [
+                0.445,
+                0.7,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "-w"]
+            "sectionFaces": [
+              "-v",
+              "-w"
+            ]
           },
           {
             "id": "render",
@@ -3514,11 +5129,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.8,
-            "size": [0.02, 1.0, 1.0],
+            "size": [
+              0.02,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.52, 0.5, 0.0]
+              "translation": [
+                0.52,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           }
         ],
         "thermal": [
@@ -3529,11 +5157,25 @@
             "material": "lime-plaster",
             "role": "body",
             "tone": 0.5,
-            "size": [0.015, 1.0, 1.0],
+            "size": [
+              0.015,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.0075, 0.5, 0.0]
+              "translation": [
+                0.0075,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "plaster"
           },
@@ -3544,11 +5186,24 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "brick"
           },
@@ -3559,11 +5214,24 @@
             "material": "etics-adhesive",
             "role": "body",
             "tone": 0.5,
-            "size": [0.01, 1.0, 1.0],
+            "size": [
+              0.01,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.385, 0.5, 0.0]
+              "translation": [
+                0.385,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "adhesive"
           },
@@ -3574,11 +5242,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.65],
+            "size": [
+              0.12,
+              0.4,
+              0.65
+            ],
             "transform": {
-              "translation": [0.45, 0.2, -0.175]
+              "translation": [
+                0.45,
+                0.2,
+                -0.175
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3589,11 +5270,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 0.35],
+            "size": [
+              0.12,
+              0.4,
+              0.35
+            ],
             "transform": {
-              "translation": [0.45, 0.2, 0.325]
+              "translation": [
+                0.45,
+                0.2,
+                0.325
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3604,11 +5298,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 1.0],
+            "size": [
+              0.12,
+              0.6,
+              1
+            ],
             "transform": {
-              "translation": [0.45, 0.7, 0]
+              "translation": [
+                0.45,
+                0.7,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3619,11 +5326,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.008, 1.0, 1.0],
+            "size": [
+              0.008,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.514, 0.5, 0.0]
+              "translation": [
+                0.514,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "base-coat"
           },
@@ -3634,11 +5354,25 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.012, 1.0, 1.0],
+            "size": [
+              0.012,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.524, 0.5, 0.0]
+              "translation": [
+                0.524,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "render"
           }
@@ -3651,9 +5385,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "member"
@@ -3665,9 +5407,17 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.2,
-            "size": [0.365, 0.015, 1.0],
+            "size": [
+              0.365,
+              0.015,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, -0.0075, 0.0]
+              "translation": [
+                0.1975,
+                -0.0075,
+                0
+              ]
             },
             "member": "root",
             "part": "support",
@@ -3680,9 +5430,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.3,
-            "radii": [0.05, 0.05, 0.05],
+            "radii": [
+              0.05,
+              0.05,
+              0.05
+            ],
             "transform": {
-              "translation": [0.2133, 0.5, 0.0]
+              "translation": [
+                0.2133,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "mass"
@@ -3694,9 +5452,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, 0.15],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              0.15
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3707,9 +5498,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.4, -0.25],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.4,
+              -0.25
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3720,9 +5544,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0875, -0.25],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.0875,
+              -0.25
+            ],
             "member": "root",
             "part": "joint"
           },
@@ -3733,9 +5590,42 @@
             "material": "etics-anchor",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.33, 0.0], [0.33, 0.004], [0.502, 0.004], [0.502, 0.03], [0.51, 0.03], [0.51, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.7125, 0.15],
+            "profile": [
+              [
+                0.33,
+                0
+              ],
+              [
+                0.33,
+                0.004
+              ],
+              [
+                0.502,
+                0.004
+              ],
+              [
+                0.502,
+                0.03
+              ],
+              [
+                0.51,
+                0.03
+              ],
+              [
+                0.51,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0.7125,
+              0.15
+            ],
             "member": "root",
             "part": "joint"
           }
@@ -3760,20 +5650,69 @@
         "denominator": 200,
         "body": [
           {
-            "id": "bond-band",
+            "id": "bond-band-a",
             "kind": "box",
             "bone": "root",
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.38, 0.166666667, 1.0],
+            "size": [
+              0.38,
+              0.166666667,
+              1
+            ],
             "transform": {
-              "translation": [0.19, 0.083333333, 0.0]
+              "translation": [
+                0.19,
+                0.083333333,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "-w",
+              "+w"
+            ],
             "repeat": {
-              "count": 6,
-              "translation": [0.0, 0.166666667, 0.0]
+              "count": 3,
+              "translation": [
+                0,
+                0.333333334,
+                0
+              ]
+            }
+          },
+          {
+            "id": "bond-band-b",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.38,
+              0.166666667,
+              1
+            ],
+            "transform": {
+              "translation": [
+                0.19,
+                0.25,
+                0
+              ]
+            },
+            "sectionFaces": [
+              "+v",
+              "-w",
+              "+w"
+            ],
+            "repeat": {
+              "count": 3,
+              "translation": [
+                0,
+                0.333333334,
+                0
+              ]
             }
           },
           {
@@ -3783,11 +5722,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.15, 0.4, 1.0],
+            "size": [
+              0.15,
+              0.4,
+              1
+            ],
             "transform": {
-              "translation": [0.455, 0.2, 0]
+              "translation": [
+                0.455,
+                0.2,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "-w"]
+            "sectionFaces": [
+              "-v",
+              "-w"
+            ]
           },
           {
             "id": "insulation-upper-course",
@@ -3796,11 +5746,22 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.15, 0.6, 1.0],
+            "size": [
+              0.15,
+              0.6,
+              1
+            ],
             "transform": {
-              "translation": [0.455, 0.7, 0]
+              "translation": [
+                0.455,
+                0.7,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "-w"]
+            "sectionFaces": [
+              "-v",
+              "-w"
+            ]
           }
         ],
         "thermal": [
@@ -3811,11 +5772,25 @@
             "material": "lime-plaster",
             "role": "body",
             "tone": 0.5,
-            "size": [0.015, 1.0, 1.0],
+            "size": [
+              0.015,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.0075, 0.5, 0.0]
+              "translation": [
+                0.0075,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "plaster"
           },
@@ -3826,11 +5801,24 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "brick"
           },
@@ -3841,11 +5829,24 @@
             "material": "etics-adhesive",
             "role": "body",
             "tone": 0.5,
-            "size": [0.01, 1.0, 1.0],
+            "size": [
+              0.01,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.385, 0.5, 0.0]
+              "translation": [
+                0.385,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "adhesive"
           },
@@ -3856,11 +5857,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.4, 1.0],
+            "size": [
+              0.12,
+              0.4,
+              1
+            ],
             "transform": {
-              "translation": [0.45, 0.2, 0]
+              "translation": [
+                0.45,
+                0.2,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3871,11 +5885,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 0.6, 1.0],
+            "size": [
+              0.12,
+              0.6,
+              1
+            ],
             "transform": {
-              "translation": [0.45, 0.7, 0]
+              "translation": [
+                0.45,
+                0.7,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -3886,11 +5913,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.008, 1.0, 1.0],
+            "size": [
+              0.008,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.514, 0.5, 0.0]
+              "translation": [
+                0.514,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "base-coat"
           },
@@ -3901,11 +5941,25 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.012, 1.0, 1.0],
+            "size": [
+              0.012,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.524, 0.5, 0.0]
+              "translation": [
+                0.524,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "render"
           }
@@ -3918,9 +5972,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "member"
@@ -3932,9 +5994,17 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.2,
-            "size": [0.365, 0.03, 1.0],
+            "size": [
+              0.365,
+              0.03,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, -0.015, 0.0]
+              "translation": [
+                0.1975,
+                -0.015,
+                0
+              ]
             },
             "member": "root",
             "part": "support",
@@ -3947,9 +6017,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.3,
-            "radii": [0.06, 0.06, 0.06],
+            "radii": [
+              0.06,
+              0.06,
+              0.06
+            ],
             "transform": {
-              "translation": [0.2133, 0.5, 0.0]
+              "translation": [
+                0.2133,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "mass"
@@ -3957,8 +6035,8 @@
         ],
         "decisions": [
           {
-            "en": "Smallest feature 30 mm: the masonry is six bond bands of 167 mm (one header and one stretcher course each) with the plaster in them; adhesive, wool and render are one 150 mm ETICS layer in its two board courses, as the drawing shows the two fields.",
-            "de": "Kleinstes Merkmal 30 mm: Das Mauerwerk besteht aus sechs Verbandsbändern von 167 mm (je eine Binder- und eine Läuferschicht) samt Innenputz; Kleber, Dämmung und Putz sind eine 150 mm starke WDVS-Schicht in ihren zwei Plattenreihen, wie die Zeichnung die zwei Felder zeigt."
+            "en": "Smallest feature 30 mm: the masonry is six bond bands of 167 mm (one header and one stretcher course each) with the plaster in them, alternating as two repeated bands that touch; adhesive, wool and render are one 150 mm ETICS layer in its two board courses, as the drawing shows the two fields.",
+            "de": "Kleinstes Merkmal 30 mm: Das Mauerwerk besteht aus sechs Verbandsbändern von 167 mm (je eine Binder- und eine Läuferschicht) samt Innenputz, abwechselnd als zwei wiederholte Bänder, die sich berühren; Kleber, Dämmung und Putz sind eine 150 mm starke WDVS-Schicht in ihren zwei Plattenreihen, wie die Zeichnung die zwei Felder zeigt."
           },
           {
             "en": "The structure list keeps the bearing 365 mm leaf on its support, without the anchors (8 mm shafts, 60 mm plates); the thermal list keeps every layer as a shell.",
@@ -3977,11 +6055,24 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.53, 1.0, 1.0],
+            "size": [
+              0.53,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.265, 0.5, 0.0]
+              "translation": [
+                0.265,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           }
         ],
         "thermal": [
@@ -3992,11 +6083,25 @@
             "material": "lime-plaster",
             "role": "body",
             "tone": 0.5,
-            "size": [0.015, 1.0, 1.0],
+            "size": [
+              0.015,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.0075, 0.5, 0.0]
+              "translation": [
+                0.0075,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "plaster"
           },
@@ -4007,11 +6112,24 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "brick"
           },
@@ -4022,11 +6140,24 @@
             "material": "etics-adhesive",
             "role": "body",
             "tone": 0.5,
-            "size": [0.01, 1.0, 1.0],
+            "size": [
+              0.01,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.385, 0.5, 0.0]
+              "translation": [
+                0.385,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "adhesive"
           },
@@ -4037,11 +6168,24 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.88,
-            "size": [0.12, 1, 1.0],
+            "size": [
+              0.12,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.45, 0.5, 0]
+              "translation": [
+                0.45,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "insulation"
           },
@@ -4052,11 +6196,24 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.008, 1.0, 1.0],
+            "size": [
+              0.008,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.514, 0.5, 0.0]
+              "translation": [
+                0.514,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "base-coat"
           },
@@ -4067,11 +6224,25 @@
             "material": "mineral-render",
             "role": "body",
             "tone": 0.5,
-            "size": [0.012, 1.0, 1.0],
+            "size": [
+              0.012,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.524, 0.5, 0.0]
+              "translation": [
+                0.524,
+                0.5,
+                0
+              ]
             },
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-field",
             "layer": "render"
           }
@@ -4084,9 +6255,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.5,
-            "size": [0.365, 1.0, 1.0],
+            "size": [
+              0.365,
+              1,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, 0.5, 0.0]
+              "translation": [
+                0.1975,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "member"
@@ -4098,9 +6277,17 @@
             "material": "masonry-mortar",
             "role": "body",
             "tone": 0.2,
-            "size": [0.365, 0.075, 1.0],
+            "size": [
+              0.365,
+              0.075,
+              1
+            ],
             "transform": {
-              "translation": [0.1975, -0.0375, 0.0]
+              "translation": [
+                0.1975,
+                -0.0375,
+                0
+              ]
             },
             "member": "root",
             "part": "support",
@@ -4113,9 +6300,17 @@
             "material": "solid-brick",
             "role": "body",
             "tone": 0.3,
-            "radii": [0.075, 0.075, 0.075],
+            "radii": [
+              0.075,
+              0.075,
+              0.075
+            ],
             "transform": {
-              "translation": [0.2133, 0.5, 0.0]
+              "translation": [
+                0.2133,
+                0.5,
+                0
+              ]
             },
             "member": "root",
             "part": "mass"

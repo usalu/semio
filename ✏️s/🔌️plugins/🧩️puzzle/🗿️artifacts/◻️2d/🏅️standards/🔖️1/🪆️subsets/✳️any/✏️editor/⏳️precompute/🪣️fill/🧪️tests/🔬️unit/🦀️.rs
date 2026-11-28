@@ -149,6 +149,18 @@ impl RunLog {
     }
 }
 
+/// 🪙️ The finite Source stock of a whole fill run: every funded turn copies about 55 KB of return-origin refresh (measured: 1 GiB of copy stock ends after 19,540 turns), so a run of up to 2^24 turns is funded with 2^10 times the per-turn fixture stock.
+fn long_run_stock() -> semio_framework_value::RetainedCloneGrant {
+    let per_turn = crate::puzzle_job::testing::fixture_stock();
+    semio_framework_value::RetainedCloneGrant {
+        maximum_items: per_turn.maximum_items.saturating_mul(1 << 10),
+        maximum_copy_bytes: per_turn.maximum_copy_bytes.saturating_mul(1 << 10),
+        maximum_capacity_bytes: per_turn.maximum_capacity_bytes.saturating_mul(1 << 10),
+        maximum_release_bytes: per_turn.maximum_release_bytes.saturating_mul(1 << 10),
+        ..per_turn
+    }
+}
+
 fn close_job(original: &mut crate::puzzle_job::testing::OriginalFixture, job: &mut dyn InteractiveJob) {
     original.close_job(job);
 }
@@ -175,7 +187,7 @@ fn step_job(original: &mut crate::puzzle_job::testing::OriginalFixture, job: &mu
 }
 
 fn run_to_complete(job: &mut dyn InteractiveJob, fuel: u64, log: &mut RunLog) {
-    let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), crate::puzzle_job::testing::fixture_stock(), fill_run_monotonic_zero, u64::MAX, 1 << 32);
+    let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), long_run_stock(), fill_run_monotonic_zero, u64::MAX, 1 << 32);
     for _ in 0..1 << 24 {
         if log.complete {
             close_job(&mut original, job);
@@ -411,7 +423,7 @@ fn fill_run_job_single_step_reaches_one_placement_checkpoint() {
     let document = example(&law["document"]);
     let (run_id, requested) = (number(&law["run"]), number(&law["requested"]));
     let placements_per_step = number(&law["placementsPerStep"]) as usize;
-    let stock = crate::puzzle_job::testing::fixture_stock();
+    let stock = long_run_stock();
     let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), stock, fill_run_monotonic_zero, u64::MAX, 1 << 32);
     let mut job = fresh(&document, run_id, requested);
     for _ in 0..128 {

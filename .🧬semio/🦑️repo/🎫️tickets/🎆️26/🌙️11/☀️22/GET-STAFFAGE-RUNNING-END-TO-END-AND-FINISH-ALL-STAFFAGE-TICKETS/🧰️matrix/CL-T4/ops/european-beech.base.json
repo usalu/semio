@@ -1,0 +1,9 @@
+[
+ { "facet": "lobe-.*", "list": "body", "kinds": ["ellipsoid"] },
+ { "facet": "em-.*", "list": "thermal", "kinds": ["ellipsoid"] },
+ { "facet": "tw-.*", "list": "body", "kinds": ["loft"], "segments": 6 },
+ { "facet": "br-.*", "list": "body", "kinds": ["loft"], "segments": 12 },
+ { "facet": "t\\d+-\\d+(-b)?", "list": "body", "kinds": ["loft"] },
+ { "facet": "joint-.*", "list": "structure", "kinds": ["ellipsoid"], "segments": 12 },
+ { "facet": "member-t.*", "list": "structure", "kinds": ["loft"], "segments": 12 }
+]

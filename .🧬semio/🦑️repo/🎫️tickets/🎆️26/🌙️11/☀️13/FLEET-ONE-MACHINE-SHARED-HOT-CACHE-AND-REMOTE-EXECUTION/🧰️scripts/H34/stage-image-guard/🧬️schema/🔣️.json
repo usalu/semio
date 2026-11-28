@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/ready-image-guard/v1",
+  "description": "EN: The free-space rule of the per-purpose cache images (`.cache/b/<partition>/m`) that a worker checks before and while a stage writes into them, so that a full image is a typed, retried refusal and never a stage that dies half an hour later with `No space left on device`. DE: Die Freiraum-Regel der Cache-Images je Zweck (`.cache/b/<Partition>/m`), die ein Worker vor und während einer Stufe prüft, damit ein volles Image eine typisierte, wiederholte Ablehnung ist und nie eine Stufe, die eine halbe Stunde später mit `No space left on device` stirbt.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": [
+          ".cache",
+          "b"
+        ],
+        "mount": "m",
+        "excluded": [
+          "c",
+          "l"
+        ],
+        "floorBasisPoints": 400,
+        "floorMinimumMegabytes": 128,
+        "floorMaximumMegabytes": 3072,
+        "floorShareBasisPoints": 2500,
+        "needBasisPoints": 1000,
+        "needMinimumMegabytes": 256,
+        "needMaximumMegabytes": 6144,
+        "minimumTotalMegabytes": 512,
+        "recheckMilliseconds": 300000,
+        "recheckGrowthMegabytes": 256,
+        "retainMinimumMegabytes": 512,
+        "stages": {
+          "dependencies": [
+            "d"
+          ],
+          "tools": [
+            "t"
+          ],
+          "workspace": [
+            "r",
+            "g",
+            "n"
+          ]
+        },
+        "purposes": {
+          "r": {
+            "en": "Rust build",
+            "de": "Rust-Build"
+          },
+          "d": {
+            "en": "dependencies",
+            "de": "Abhängigkeiten"
+          },
+          "g": {
+            "en": "project graph",
+            "de": "Projektgraph"
+          },
+          "p": {
+            "en": "products",
+            "de": "Produkte"
+          },
+          "t": {
+            "en": "tools",
+            "de": "Werkzeuge"
+          },
+          "n": {
+            "en": "Nx native data",
+            "de": "Nx-Nativdaten"
+          },
+          "o": {
+            "en": "diagnostics",
+            "de": "Diagnose"
+          }
+        },
+        "healStages": [
+          "dependencies",
+          "workspace"
+        ],
+        "hostLimitedBytes": 16777216,
+        "hostLimitedBasisPoints": 100,
+        "hostLimited": {
+          "en": "The free bytes of this image are those of the host volume (the sparse backing file cannot grow further), so the host volume is the limit and space freed on it helps too.",
+          "de": "Die freien Bytes dieses Images sind die des Wirtsvolumens (die dünn besetzte Sicherungsdatei kann nicht weiter wachsen), das Wirtsvolumen ist also die Grenze und dort freigegebener Platz hilft ebenfalls."
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "totalBytes",
+        "freeBytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "freeBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

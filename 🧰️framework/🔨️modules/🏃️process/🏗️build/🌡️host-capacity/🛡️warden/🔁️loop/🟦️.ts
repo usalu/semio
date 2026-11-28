@@ -3,21 +3,21 @@ import {createHash} from "node:crypto";
 import {processPidExistsV1,readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
 import {appendFileSync,closeSync,mkdirSync,openSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
-import {join} from "node:path";
+import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,readHostTextV1,readLinuxChargesV1,type HostSampleRecordV1,type HostTextReaderV1} from "../../📡️sampling/🟦️.ts";
 import {systemDarwinFootprintPortV1,type DarwinFootprintPortV1} from "../../🍏️native-footprint/🟦️.ts";
 import type {HostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import {readHostProcessRowsV1} from "../../🧺️unmanaged/🟦️.ts";
 import {buildScriptOutputDirectoryV1,type CompileBudgetPolicyV1} from "../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
-import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,applyWardenClaimsV1,formatHostWardenRequeueV1,hostWardenCancelRetryableV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenClaimV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,wardenTreeV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,applyWardenClaimsV1,formatHostWardenRequeueV1,hostWardenCancelRetryableV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,grantedWardenSubjectsV1,foreignWardenHoldersV1,type HostWardenGrantV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenClaimV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
 
 const MEGABYTE=1048576;
 
 /** 📡️ Everything the loop reaches the machine through, injectable: the host sample, the process table, the footprint of a process tree (what it holds including what the OS compressed or swapped out of it; absent: the resident set of the table is the measure), signals, the clock, the standard error line, the directory of the warden, the sleep and the mode. */
 export type HostWardenPortsV1=Readonly<{sample:()=>Promise<HostWardenHostV1>;table:()=>Promise<readonly HostWardenRowV1[]>;signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>void;now:()=>number;footprint?:(pid:number)=>Promise<number|null>;write:(line:string)=>void;directory:string;sleep:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;mode:()=>"observe"|"enforce"}>;
 /** 🎛️ What one run of the loop may be told besides its ports. */
-export type HostWardenLoopOptionsV1=Readonly<{ports:HostWardenPortsV1;policy?:HostWardenPolicyV1;tables?:HostWardenTablesV1;workspaces?:readonly string[];within?:number;prefixes?:readonly string[];maxTicks?:number;signal?:AbortSignal;code?:string;platform?:NodeJS.Platform;sources?:()=>string|Promise<string>;ceilings?:CompileBudgetPolicyV1}>;
+export type HostWardenLoopOptionsV1=Readonly<{ports:HostWardenPortsV1;policy?:HostWardenPolicyV1;tables?:HostWardenTablesV1;workspaces?:readonly string[];within?:number;prefixes?:readonly string[];maxTicks?:number;signal?:AbortSignal;code?:string;platform?:NodeJS.Platform;sources?:()=>string|Promise<string>;ceilings?:CompileBudgetPolicyV1;grants?:()=>readonly HostWardenGrantV1[];handover?:number;successor?:()=>void}>;
 /** 🏁️ How a run ended and what it did. */
 export type HostWardenLoopResultV1=Readonly<{reason:"idle"|"code"|"signal"|"locked"|"limit";ticks:number;counters:Readonly<{suspended:number;resumed:number;cancelled:number}>}>;
 
@@ -56,6 +56,22 @@ export function readHostWardenStateV1(directory?:string,nowMs:number=Date.now())
  if(value===undefined||!isHostWardenV1("State",value))return null;
  const state=value as HostWardenStateV1;
  return nowMs-state.atMs>POLICY.staleMilliseconds?null:state;
+}
+
+/** 🎟️ Reads the live grants of the capacity gate (`grants/<id>.json` beside the warden directory; the `.attached`, `.phases` and `.upgrade` files of a grant are no grants): the id, the pid that holds it, the megabytes reserved and the start of that process. A file that is not a grant is skipped. */
+export function readHostWardenGrantsV1(wardenDirectory:string):readonly HostWardenGrantV1[]{
+ const folder=join(dirname(wardenDirectory),"grants"),found:HostWardenGrantV1[]=[];
+ try{for(const name of readdirSync(folder)){
+  if(!name.endsWith(".json"))continue;
+  const value=readJson(join(folder,name)) as {id?:unknown;pid?:unknown;reservedMegabytes?:unknown;startMs?:unknown}|undefined;
+  if(value!==undefined&&value!==null&&typeof value.id==="string"&&Number.isInteger(value.pid)&&(value.pid as number)>1&&typeof value.reservedMegabytes==="number"&&value.reservedMegabytes>=0)found.push({id:value.id,pid:value.pid as number,reservedMegabytes:Math.floor(value.reservedMegabytes),...typeof value.startMs==="number"?{startMs:value.startMs}:{}});
+ }}catch{}
+ return found;
+}
+
+/** 🌐️ What the fresh state of the warden says every process outside the subjects holds (0 when no warden writes a fresh state): the memory admission counts against the floor besides its grants. */
+export function foreignHostMegabytesV1(directory?:string,nowMs:number=Date.now()):number{
+ return readHostWardenStateV1(directory,nowMs)?.foreign?.megabytes??0;
 }
 
 const listCancels=(directory:string|undefined,nowMs:number):HostWardenCancelV1[]=>{
@@ -198,18 +214,18 @@ export async function chargeWardenRowsV1(platform:NodeJS.Platform,rows:readonly 
 /** 🏭️ The default ports: the real machine. The host sample reads the counters through the authored host capacity policy (no `hdiutil`, no `footprint` tool: the loop must stay cheap), the table is one `ps` whose resident sets are replaced by what the kernel charges (`chargeWardenRowsV1`; the native process walk on Windows, which has no state, start or command line, carries the private usage), signals go through `process.kill`, the mode is the content of the `mode` file or forced by `observe`. */
 export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapacityPolicyV1;directory?:string;observe?:boolean;platform?:NodeJS.Platform}>):HostWardenPortsV1{
  const platform=options.platform??process.platform,directory=hostWardenDirectoryV1(options.directory);
- let previous:Readonly<{atMs:number;swappedOutMegabytes:number|null}>|undefined,swapRead:Readonly<{atMs:number;facts:Pick<HostWardenHostV1,"swapFreeMegabytes"|"swapVolumeFreeMegabytes">}>|undefined;const commands=new Map<string,string>();
+ let previous:Readonly<{atMs:number;swappedOutMegabytes:number|null}>|undefined,swapRead:Readonly<{atMs:number;facts:Pick<HostWardenHostV1,"swapFreeMegabytes"|"swapVolumeFreeMegabytes"|"swapFileMegabytes">}>|undefined;const commands=new Map<string,string>();
  const probe=currentHostProbeV1(),quick={...probe,run:(command:string,args:readonly string[],signal?:AbortSignal)=>command.endsWith("hdiutil")||args.includes("kern.num_files")?Promise.reject(Error("skipped")):probe.run(command,args,signal)};
  return Object.freeze({
   directory,now:Date.now,sleep:defaultSleep,footprint:pid=>observeTreeMegabytesV1(pid),write:(line:string)=>{process.stderr.write(line+"\n");},
   mode:()=>options.observe?"observe" as const:(()=>{try{const text=readFileSync(join(directory,POLICY.modeFile),"utf8").trim();if(text==="observe"||text==="enforce")return text;}catch{}return POLICY.defaultMode as "observe"|"enforce";})(),
   sample:async()=>{
-   const record:HostSampleRecordV1=await readHostSampleV1(options.hostPolicy,quick,previous);
+   const record:HostSampleRecordV1=await readHostSampleV1(options.hostPolicy,quick,previous),interval=previous===undefined?0:Math.round(record.host.atMs-previous.atMs);
    previous={atMs:record.host.atMs,swappedOutMegabytes:record.swappedOutMegabytes};
    const host=record.host as typeof record.host&{compressedMegabytes?:number|null};
    const now=Date.now();
    if(swapRead===undefined||now-swapRead.atMs>=HOST_WARDEN_SWAP_V1.intervalMilliseconds||now<swapRead.atMs)swapRead={atMs:now,facts:await readWardenSwapV1(platform,probe)};
-   return{totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,swapUsedMegabytes:host.swapUsedMegabytes,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,compressedMegabytes:host.compressedMegabytes??null,pressure:host.pressure,...swapRead.facts};
+   return{totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,swapUsedMegabytes:host.swapUsedMegabytes,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,compressedMegabytes:host.compressedMegabytes??null,pressure:host.pressure,...swapRead.facts,...interval>0?{intervalMilliseconds:interval}:{}};
   },
   table:async()=>{
    if(platform==="win32")return(await readHostProcessRowsV1(platform)).map(row=>({pid:row.pid,parent:row.ppid,group:row.pid,memoryKilobytes:row.kilobytes,stopped:false,elapsedSeconds:0,start:"",command:row.name}));
@@ -228,13 +244,14 @@ export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapaci
 }
 
 /** 💱️ Reads the free swap and the free space of the swap volume of this machine through the commands of schema `Swap`; a command that fails leaves its number null. */
-export async function readWardenSwapV1(platform:NodeJS.Platform,probe:Readonly<{run:(command:string,args:readonly string[])=>Promise<string>;read:(path:string)=>Promise<string|null>}>):Promise<Pick<HostWardenHostV1,"swapFreeMegabytes"|"swapVolumeFreeMegabytes">>{
+export async function readWardenSwapV1(platform:NodeJS.Platform,probe:Readonly<{run:(command:string,args:readonly string[])=>Promise<string>;read:(path:string)=>Promise<string|null>}>):Promise<Pick<HostWardenHostV1,"swapFreeMegabytes"|"swapVolumeFreeMegabytes"|"swapFileMegabytes">>{
  const swap=HOST_WARDEN_SWAP_V1;
  if(platform==="darwin"){
   const usage=await probe.run(swap.darwin.usage[0]!,swap.darwin.usage.slice(1)).catch(()=>null);
+  const fileSize=await probe.run(swap.darwin.fileSize[0]!,swap.darwin.fileSize.slice(1)).catch(()=>null);
   let disk:string|null=null;
   for(const volume of swap.darwin.volumes){disk=await probe.run(swap.darwin.disk[0]!,[...swap.darwin.disk.slice(1),volume]).catch(()=>null);if(disk!==null)break;}
-  return parseWardenSwapV1(platform,{usage,disk});
+  return parseWardenSwapV1(platform,{usage,disk,fileSize});
  }
  if(platform==="linux")return parseWardenSwapV1(platform,{meminfo:await probe.read(swap.linux.meminfo).catch(()=>null)});
  return parseWardenSwapV1(platform,{});
@@ -257,7 +274,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"stopped",{reason:formatHostWardenStopReasonV1(language,reason,{minutes:Math.round(policy.idleMilliseconds/60000)})}));
   return{reason,ticks,counters};
  };
- const locked=(():number|undefined=>{
+ const tryLock=():number|undefined=>{
   for(let attempt=0;attempt<3;attempt++){
    try{writeFileSync(lockFile,JSON.stringify({pid:process.pid,start:selfStart}),{flag:"wx"});return undefined;}catch{}
    const held=readJson(lockFile);
@@ -265,10 +282,13 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
    rmSync(lockFile,{force:true});
   }
   return 0;
- })();
+ };
+ const lockDeadline=ports.now()+(options.handover===undefined?0:policy.handoverWaitMilliseconds);
+ let locked=tryLock();
+ while(locked!==undefined&&options.handover!==undefined&&ports.now()<lockDeadline&&!options.signal?.aborted){await ports.sleep(100,options.signal);locked=tryLock();}
  if(locked!==undefined){for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"locked",{pid:locked}));return done("locked",0,{suspended:0,resumed:0,cancelled:0});}
  const reported=new Set<string>(),counters={suspended:0,resumed:0,cancelled:0,ticks:0},suspended=new Map<string,Record1>(),since=new Map<string,number>(),lastAlarms:HostWardenAlarmV1[]=[],durations:number[]=[],announced=new Set<string>(),marks:{wall:number;cpu:number}[]=[{wall:performance.now(),cpu:(process.cpuUsage().user+process.cpuUsage().system)/1000}];
- let previous:HostWardenPreviousV1={level:"calm",calmTicks:0},nearCeiling=false,level:"calm"|"guard"|"danger"="calm",lastSubjectAt=ports.now(),lastCodeCheck=ports.now(),stopReason:HostWardenLoopResultV1["reason"]|undefined;
+ let lastResumeMs:number|undefined,previous:HostWardenPreviousV1={level:"calm",calmTicks:0},nearCeiling=false,level:"calm"|"guard"|"danger"="calm",lastSubjectAt=ports.now(),lastCodeCheck=ports.now(),stopReason:HostWardenLoopResultV1["reason"]|undefined;
  const mode=():"observe"|"enforce"=>observeOnly?"observe":ports.mode();
  const exclusion=(rows:readonly HostWardenRowV1[]):Set<number>=>{const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found=new Set<number>([process.pid]);for(let row=byPid.get(process.pid);row!==undefined&&!found.has(row.parent)&&row.parent>0;row=byPid.get(row.parent))found.add(row.parent);return found;};
  const signalTree=(rows:readonly HostWardenRowV1[],subject:Readonly<{pid:number;scope?:"process"|"group"|"tree"}>,names:readonly("SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")[]):void=>{
@@ -283,8 +303,9 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   lastAlarms.push(alarm);if(lastAlarms.length>policy.lastAlarms)lastAlarms.splice(0,lastAlarms.length-policy.lastAlarms);
   ports.write(alarm.text.en);ports.write(alarm.text.de);
  };
- let others:readonly HostWardenOtherV1[]=[];
+ let others:readonly HostWardenOtherV1[]=[],foreign:Readonly<{megabytes:number;processes:number;heavy:number}>={megabytes:0,processes:0,heavy:0},booked:Readonly<{count:number;megabytes:number}>={count:0,megabytes:0};
  const repoCpu:{known:boolean;total:number;at?:number;seen:ReadonlyMap<string,number>}={known:false,total:0,seen:new Map()};
+ let lastTree:ReturnType<typeof wardenTreeV1>=[];
  let last:{host:HostWardenHostV1;decision:ReturnType<typeof decideHostWardenV1>;subjects:readonly HostWardenSubjectV1[]}|undefined;
  const accountCpu=(owned:ReadonlyMap<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>,now:number):void=>{
   if(owned.size>0)repoCpu.known=true;
@@ -298,9 +319,10 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
  };
  const writeState=(host:HostWardenHostV1,decision:Pick<ReturnType<typeof decideHostWardenV1>,"trigger"|"guardMegabytes"|"dangerMegabytes"|"resumeMegabytes"|"hold"|"swapRoomMegabytes"|"headroomMegabytes"|"headroomGuardMegabytes"|"headroomDangerMegabytes">,subjects:readonly HostWardenSubjectV1[]):void=>{
   const byKind:Record<string,{count:number;megabytes:number}>={};
-  for(const subject of subjects){const row=byKind[subject.kind]??={count:0,megabytes:0};row.count++;row.megabytes+=subject.megabytes;}
+  const own=subjects.filter(subject=>subject.kind!=="granted");
+  for(const subject of own){const row=byKind[subject.kind]??={count:0,megabytes:0};row.count++;row.megabytes+=subject.megabytes;}
   const wall=marks.length>1?marks.at(-1)!.wall-marks[0]!.wall:0,cpu=marks.length>1?marks.at(-1)!.cpu-marks[0]!.cpu:0;
-  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,trigger:decision.trigger,others,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),...repoCpu.known?{cpuSeconds:Math.round(repoCpu.total*100)/100}:{},byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
+  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,trigger:decision.trigger,others,foreign,grants:booked,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:own.length,megabytes:own.reduce((sum,subject)=>sum+subject.megabytes,0),...repoCpu.known?{cpuSeconds:Math.round(repoCpu.total*100)/100}:{},byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],...lastTree.length>0?{tree:lastTree}:{},overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
   if(!isHostWardenV1("State",state)){ports.write(`[warden] state invalid / Zustand ungültig: ${JSON.stringify(state).slice(0,200)}`);return;}
   try{writeAtomic(stateFile,JSON.stringify(state));}catch{}
  };
@@ -362,9 +384,10 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
    try{
     const[host,rows]=await Promise.all([ports.sample(),ports.table()]),now=ports.now();
     const owned=new Map<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>(),protect=protectList(),found=classifyWardenSubjectsV1(rows,tables,{owned,protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since,...options.ceilings===undefined?{}:{ceilings:options.ceilings}});
+    lastTree=wardenTreeV1(rows,discoverWardenWorkspacesV1(rows,workspaces),12,found.map(subject=>subject.pid));
     const stopped=new Map(rows.filter(row=>row.stopped).map(row=>[row.pid,row]));
     const excluded=stopped.size>0?exclusion(rows):undefined;
-    const claimed=applyWardenClaimsV1(found,readClaimsOfV1(directory,now),now,policy),subjects=withHistory(await measure(claimed,now),now).map(subject=>{
+    const live=new Set(rows.map(row=>row.pid)),listed=(options.grants??(()=>readHostWardenGrantsV1(directory)))().filter(grant=>live.has(grant.pid)),claimed=grantedWardenSubjectsV1(rows,applyWardenClaimsV1(found,readClaimsOfV1(directory,now),now,policy),listed,now,undefined,since),subjects=withHistory(await measure(claimed,now),now).map(subject=>{
      if(!subject.suspended||excluded===undefined)return subject;
      const members=planWardenSignalsV1(rows,{pid:subject.pid,scope:subject.scope??"tree"},tables,excluded).flatMap(pid=>stopped.get(pid)??[]);
      if(members.some(row=>row.nonresidentKilobytes===undefined)){
@@ -381,9 +404,10 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
     for(const id of[...since.keys()])if(!ids.has(id))since.delete(id);
     let dirty=false;
     for(const id of[...suspended.keys()]){const subject=subjects.find(candidate=>candidate.id===id);if(subject===undefined||!subject.suspended){suspended.delete(id);dirty=true;}}
-    if(subjects.length>0)lastSubjectAt=now;
-    const decision=decideHostWardenV1(policy,host,subjects,previous),effective=mode(),byId=new Map(subjects.map(subject=>[subject.id,subject] as const)),keys=new Set(decision.actions.map(action=>`${action.action}.${action.id}`));
-    level=decision.level;others=decision.level==="calm"?[]:topWardenOthersV1(rows,subjects,policy.othersMaximum,options.prefixes??[]);previous={level:decision.level,calmTicks:decision.calmTicks};last={host,decision,subjects:subjects};
+    booked={count:listed.length,megabytes:listed.reduce((sum,grant)=>sum+grant.reservedMegabytes,0)};foreign=foreignWardenHoldersV1(rows,subjects,policy.foreignHeavyMegabytes,exclusion(rows));
+    if(subjects.length>0||listed.length>0||foreign.heavy>0)lastSubjectAt=now;
+    const decision=decideHostWardenV1(policy,host,subjects,lastResumeMs===undefined?previous:{...previous,resumedSeconds:Math.max(0,Math.floor((now-lastResumeMs)/1000))}),effective=mode(),byId=new Map(subjects.map(subject=>[subject.id,subject] as const)),keys=new Set(decision.actions.map(action=>`${action.action}.${action.id}`));
+    level=decision.level;others=topWardenOthersV1(rows,subjects,policy.othersMaximum,options.prefixes??[]);previous={level:decision.level,calmTicks:decision.calmTicks,swapMilliseconds:decision.swapMilliseconds};last={host,decision,subjects:subjects};
     if(dirty)writeState(host,decision,subjects);
     for(const action of decision.actions){
      const subject=byId.get(action.id);if(subject===undefined)continue;
@@ -398,7 +422,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
        suspended.set(subject.id,{id:subject.id,pid:subject.pid,start,kind:subject.kind,sinceMs:now});since.set(subject.id,now);{const known=flaps.get(subject.id)??{suspends:[]};known.suspends.push(now);flaps.set(subject.id,known);}writeState(host,decision,subjects);
        signalTree(rows,{pid:subject.pid,scope},["SIGSTOP"]);counters.suspended++;
       }else if(action.action==="resume"){
-       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;{const known=flaps.get(subject.id)??{suspends:[]};known.resumedAtMs=now;flaps.set(subject.id,known);}writeState(host,decision,subjects);
+       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;{const known=flaps.get(subject.id)??{suspends:[]};known.resumedAtMs=now;flaps.set(subject.id,known);}lastResumeMs=now;writeState(host,decision,subjects);
       }else{
        const command=rows.find(row=>row.pid===subject.pid)?.command??"",buildScriptOutput=buildScriptOutputDirectoryV1(command);
        const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:command.slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...buildScriptOutput&&buildScriptOutput.length<=256?{buildScriptOutput}:{},...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...subject.grantMegabytes===undefined?{}:{grantMegabytes:subject.grantMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
@@ -420,7 +444,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
     if(ports.now()-lastCodeCheck>=policy.codeCheckMilliseconds){
      lastCodeCheck=ports.now();
      const current=options.sources===undefined?hostWardenCodeDigestV1():await options.sources();
-     if(current!==code){stopReason="code";break;}
+     if(current!==code){stopReason="code";try{options.successor?.();}catch{}break;}
      try{for(const name of readdirSync(cancelled)){const value=readJson(join(cancelled,name));if(!isHostWardenV1("Cancel",value)||ports.now()-(value as HostWardenCancelV1).atMs>policy.cancelRecordMaximumAgeMilliseconds)rmSync(join(cancelled,name),{force:true});}}catch{}
     }
    }catch(error){ports.write(`[warden] tick failed / Tick fehlgeschlagen: ${String((error as Error)?.message??error).split("\n")[0]}`);counters.ticks++;}
@@ -431,6 +455,19 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   try{const held=readJson(lockFile);if(isHostWardenV1("Lock",held)&&(held as {pid:number}).pid===process.pid)rmSync(lockFile,{force:true});}catch{}
  }
  return done(stopReason??"limit",counters.ticks,{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled});
+}
+
+/** 🤝️ Starts the successor of a warden whose sources changed before it ends, so the machine is never unguarded: the successor (`--handover <pid>`) waits up to `handoverWaitMilliseconds` for the lock of this process and takes over within one tick of its release; the successor reads the new sources, this process ends right after. Never throws. */
+export function spawnHostWardenSuccessorV1(options:Readonly<{directory?:string;observe?:boolean;main?:string;within?:number;spawn?:(command:string,args:readonly string[],log:number)=>void}>={}):void{
+ try{
+  const directory=hostWardenDirectoryV1(options.directory);
+  mkdirSync(directory,{recursive:true});
+  const log=openSync(join(directory,POLICY.logFile),"a"),main=options.main??fileURLToPath(new URL("../⌨️main/🟦️.ts",import.meta.url)),args=[main,"--handover",String(process.pid),...options.directory===undefined?[]:["--directory",options.directory],...options.observe?["--observe"]:[],...options.within===undefined?[]:["--within",String(options.within)]];
+  try{
+   if(options.spawn)options.spawn(process.execPath,args,log);
+   else spawn(process.execPath,args,{detached:true,stdio:["ignore",log,log],windowsHide:true}).unref();
+  }finally{closeSync(log);}
+ }catch{}
 }
 
 let digestMemory:string|undefined;

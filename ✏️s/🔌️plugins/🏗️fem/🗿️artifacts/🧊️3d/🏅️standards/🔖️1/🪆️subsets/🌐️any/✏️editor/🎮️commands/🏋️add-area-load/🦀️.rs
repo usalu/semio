@@ -47,6 +47,7 @@ pub struct AddAreaLoad {
 }
 
 pub fn handle(payload: &AddAreaLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    super::add_nodal_load::require(doc.snapshot.solids.iter().any(|solid| solid.id.as_str() == payload.solid_id), "fem3d.reference.solid-unknown", &payload.solid_id)?;
     let load_id = doc.operation()?.entity_id("l", "loads")?;
     let load = FemLoad::Area { id: load_id, solid_id: payload.solid_id.clone(), pressure: payload.pressure };
     Ok(Emit::mutations(vec![super::add_nodal_load::add_load_mutation(doc, payload.case_id.as_deref(), load)?]))

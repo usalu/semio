@@ -19,8 +19,19 @@ use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
+/// 🪪️ Refuses an id the document does not hold with a coded fault whose `id` param fills the editor's `reference` notice, so an action never silently drops a dangling reference.
+pub(super) fn require(known: bool, code: &'static str, id: &str) -> Result<(), Fault> {
+    match known {
+        true => Ok(()),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), format!("'{id}' is not in this document")).with_param("id", id)),
+    }
+}
+
 /// 🏋️ Resolves a named case exactly, or seeds one case from the admitted command authority.
 pub(super) fn add_load_mutation(doc: &ArtifactView<'_, Fem2dSnapshot>, case_id: Option<&str>, load: FemLoad) -> Result<Fem2dMutation, Fault> {
+    if let Some(id) = case_id {
+        require(doc.snapshot.load_cases.iter().any(|case| case.id == id), "fem2d.reference.load-case-unknown", id)?;
+    }
     let target = case_id.or_else(|| doc.snapshot.load_cases.first().map(|case| case.id.as_str()));
     Ok(match target {
         Some(id) => Fem2dMutation::AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: id.into(), load: Box::new(load), index: None }),
@@ -56,6 +67,7 @@ pub struct AddNodalLoad {
 }
 
 pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    require(doc.snapshot.nodes.iter().any(|node| node.id.as_str() == payload.node_id), "fem2d.reference.node-unknown", &payload.node_id)?;
     let load_id = doc.operation()?.entity_id("l", "loads")?;
     let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
     Ok(Emit::mutations(vec![add_load_mutation(doc, payload.case_id.as_deref(), load)?]))

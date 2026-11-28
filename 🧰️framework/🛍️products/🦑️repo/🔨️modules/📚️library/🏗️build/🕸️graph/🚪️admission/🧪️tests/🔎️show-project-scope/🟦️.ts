@@ -28,3 +28,12 @@ test("the runtime command reads show project over the selection and defaults a w
  expect(source).toContain('policy??(whole?"current":"fresh")');
  expect(source).not.toContain('selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH');
 });
+
+test("inputs <project:target> reads exactly that task without its dependencies, the same selection as run --exclude-dependencies",()=>{
+ const run=buildInvocationGraphSelectionV1(["run","app:build","--exclude-dependencies"]);
+ expect(run).toEqual({kind:"tasks",tasks:[{project:"app",target:"build"}],excludeDependencies:true});
+ expect(buildInvocationGraphSelectionV1(["inputs","app:build"])).toEqual(run);
+ expect(buildInvocationGraphSelectionV1(["inputs","app:build:production"])).toEqual({kind:"tasks",tasks:[{project:"app",target:"build",configuration:"production"}],excludeDependencies:true});
+ expect(buildGraphScopeKeyV1(buildInvocationGraphSelectionV1(["inputs","app:build"]))).toBe(buildGraphScopeKeyV1(run));
+ expect(()=>buildInvocationGraphSelectionV1(["inputs","app"])).toThrow();
+});

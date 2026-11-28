@@ -1,9 +1,10 @@
 /** 🐕️ Contract: the admission broker never lets one wedged client hold the build still. A running unit whose scheduler reports nothing is taken for lost and its booking is given back; a probe whose estimate never finishes is dropped at the estimate bound; a unit queued behind a running one while the driver's own memory grew is rescued by a bounded growth instead of waiting for the running unit to end.
  * @see ../../🟦️.ts (`startAdmissionBrokerV1`, `Policy.bounds.runningSilenceMilliseconds`, `rescueStalled`)
  * @see ../../🦀️.rs (the scheduler reports `rss` every second) */
+import {spawn} from "node:child_process";
 import {createConnection} from "node:net";
 import {expect,test} from "bun:test";
-import {ADMISSION_POLICY_V1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type GrantGrowthPortV1,type GrowthHostV1,type UnitObservationV1} from "../../🟦️.ts";
+import {ADMISSION_POLICY_V1,processStoppedV1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type GrantGrowthPortV1,type GrowthHostV1,type UnitObservationV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import requests from "../🧫️fixtures/🔣️.json" with {type:"json"};
 
@@ -55,15 +56,38 @@ test("a running unit whose scheduler goes silent is dropped at the bound, its bo
  }finally{lost.socket.destroy();await broker.close();}
 });
 
-test("a probe whose estimate never finishes is dropped at the estimate bound with a bilingual line, and the broker still answers the next unit",async()=>{
+test("a probe whose estimate never finishes is answered on a conservative forecast at the estimate bound, with a bilingual line naming the stuck stage, and the connection is never closed for it",async()=>{
  const lines:string[]=[],broker=await startAdmissionBrokerV1({physicalBytes:1024*MiB,reserveBytes:0,history:history({first:100}),available:()=>undefined,warden:()=>"calm",cancels:()=>new Promise(()=>undefined),log:line=>lines.push(line),waits:{publishMilliseconds:20,progressMilliseconds:60000},bounds:{predictMilliseconds:200}});
  broker.registerPass(pass);
  const probe=connect(broker.endpoint,{...unit("first"),op:"probe"});
  try{
-  expect(await eventually(()=>probe.closed())).toBe(true);
-  expect(probe.replies).toEqual([]);
-  expect(lines.some(line=>line.includes("unit first: the broker did not finish estimating")&&line.includes(" / Einheit first: der Broker"))).toBe(true);
+  expect(await eventually(()=>probe.replies.some(reply=>reply.op==="headroom"))).toBe(true);
+  expect(lines.some(line=>line.includes("unit first: the broker did not finish estimating")&&line.includes("stuck at warden")&&line.includes(" / Einheit first: der Broker")&&line.includes("hängt bei warden"))).toBe(true);
  }finally{probe.socket.destroy();await broker.close();}
+});
+
+test("units whose estimate stalls (the warden read never answers) are admitted on the conservative forecast: the connection stays open, the next unit is answered too and no unit sees a closed broker",async()=>{
+ const lines:string[]=[],broker=await startAdmissionBrokerV1({physicalBytes:8192*MiB,reserveBytes:0,history:history({first:100,second:100}),available:()=>undefined,warden:()=>"calm",cancels:()=>new Promise(()=>undefined),log:line=>lines.push(line),waits:{publishMilliseconds:20,progressMilliseconds:60000},bounds:{predictMilliseconds:150}});
+ broker.registerPass(pass);
+ const first=connect(broker.endpoint,unit("first")),second=connect(broker.endpoint,unit("second"));
+ try{
+  expect(await eventually(()=>first.replies.some(reply=>reply.admitted===true)&&second.replies.some(reply=>reply.admitted===true))).toBe(true);
+  expect(first.closed()||second.closed()).toBe(false);
+  expect(first.replies.some(reply=>reply.op==="refused")).toBe(false);
+  expect(broker.stats().running).toBe(2);
+  expect(lines.filter(line=>line.includes("did not finish estimating")).length).toBe(2);
+ }finally{first.socket.destroy();second.socket.destroy();await broker.close();}
+});
+
+test("concurrent estimates share one read of the warden cancels",async()=>{
+ let reads=0;
+ const broker=await startAdmissionBrokerV1({physicalBytes:8192*MiB,reserveBytes:0,history:history({a:10,b:10,c:10,d:10}),available:()=>undefined,warden:()=>"calm",cancels:()=>{reads++;return[];},waits:{publishMilliseconds:20,progressMilliseconds:60000}});
+ broker.registerPass(pass);
+ const all=["a","b","c","d"].map(crate=>connect(broker.endpoint,unit(crate)));
+ try{
+  expect(await eventually(()=>all.every(row=>row.replies.some(reply=>reply.admitted===true)))).toBe(true);
+  expect(reads).toBe(1);
+ }finally{for(const row of all)row.socket.destroy();await broker.close();}
 });
 
 test("a unit queued behind a running one while the driver's own memory grew is rescued by growth beside the running unit, not after it",async()=>{
@@ -96,4 +120,31 @@ test("a unit that waits behind running units for the grant itself (not for the d
   expect(asks).toEqual([]);
   expect(broker.stats()).toMatchObject({running:1,waiting:1});
  }finally{first.socket.destroy();second.socket.destroy();await broker.close();}
+});
+
+test("a running unit whose process the warden stopped is never taken for lost, and its silence counts again only once it runs",async()=>{
+ let stopped=true;const lines:string[]=[],broker=await startAdmissionBrokerV1({physicalBytes:1024*MiB,reserveBytes:0,history:history({frozen:600}),...common,stopped:()=>stopped,log:line=>lines.push(line),waits:{publishMilliseconds:20,progressMilliseconds:60000},bounds:{heartbeatMilliseconds:60000,runningSilenceMilliseconds:200}});
+ broker.registerPass(pass);
+ const frozen=connect(broker.endpoint,unit("frozen"));
+ try{
+  expect(await eventually(()=>frozen.replies.some(reply=>reply.admitted===true))).toBe(true);
+  await new Promise(done=>setTimeout(done,800));
+  expect(frozen.closed()).toBe(false);expect(broker.stats().running).toBe(1);
+  expect(lines.some(line=>line.includes("sent no report"))).toBe(false);
+  stopped=false;
+  expect(await eventually(()=>frozen.closed())).toBe(true);
+  expect(lines.some(line=>line.includes("unit frozen sent no report"))).toBe(true);
+ }finally{frozen.socket.destroy();await broker.close();}
+});
+
+test.skipIf(process.platform==="win32")("a process stopped by SIGSTOP reads as stopped and as running again after SIGCONT",async()=>{
+ const child=spawn(process.execPath,["-e","setInterval(()=>undefined,1000)"],{stdio:"ignore"});
+ try{
+  expect(processStoppedV1(child.pid!)).toBe(false);
+  child.kill("SIGSTOP");
+  expect(await eventually(()=>processStoppedV1(child.pid!))).toBe(true);
+  child.kill("SIGCONT");
+  expect(await eventually(()=>!processStoppedV1(child.pid!))).toBe(true);
+  expect(processStoppedV1(2147483646)).toBe(false);
+ }finally{child.kill("SIGKILL");}
 });

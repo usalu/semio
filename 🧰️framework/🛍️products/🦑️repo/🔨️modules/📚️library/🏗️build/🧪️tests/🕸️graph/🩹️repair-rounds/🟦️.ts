@@ -64,6 +64,7 @@ const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number
   createRequire:()=>(()=>observation),readBuildOwnerRegistryV1:(value:unknown)=>value,buildGraphScopeKeyV1:()=>"scope",ownerRegistryDigestV1:()=>"registry",askOwnerRegistryV1:()=>"registry",
   ownerRegistryInvalidationV1:{kind:"invalidated",reason:"owner-registry"},isOwnerRegistryInvalidationV1:(value:unknown)=>value===undefined?false:(value as{kind?:string})?.kind==="invalidated",
   buildGraphErrorCodeV1:(error:unknown)=>(error as{code?:string})?.code,
+  openOwnerVouchV1:async()=>undefined,vouchedOwnerV1:(_vouch:unknown,_owner:string,probe:(rows:readonly unknown[],clean:undefined)=>Promise<boolean>)=>({hold:(rows:readonly unknown[])=>probe(rows,undefined),outcome:()=>undefined}),
   readForgottenPathsV1:()=>({paths:new Map(),listings:new Map()}),rowsForgottenV1:()=>false,forgetPersistedPathsV1:async()=>true,readAdmissionMemoV1:async()=>{counts.memoReads++;return undefined;},writeAdmissionMemoV1:async()=>{counts.memoWrites++;},
   buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},loadedGraphAdmissionFormatV1:"same",selectedAdmissionFactsV1:{entries:()=>[],suffixes:()=>[],seed:()=>{}},packAdmissionMemoV1:(value:unknown)=>value,ownersOfAdmissionMemoV1:()=>[],
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{counts.closes++;for(const name of names)await inspect({name},[],[]);return admitted();},

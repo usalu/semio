@@ -1,4 +1,4 @@
-import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync,realpathSync,statSync} from "node:fs";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {parseDepInfoV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadCrateTypesOfV1,offloadLinkArgumentV1,offloadLinkLibraryRefusalV1,offloadSystemDirectoryV1,offloadWasmLinkArgumentV1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
@@ -141,16 +141,30 @@ export function offloadRealTextV1(text:string,mappings:readonly OffloadMappingV1
  return text.replace(pattern,found=>forms.get(found)!);
 }
 
-/** 🧭️ The compiler arguments of a unit that Cargo compiles in its package directory while its code lives in the module directory above the manifest (a one-line shim includes it), when no remap covers that directory: the directory gets a remap of its own, named by its path below the checkout, placed before Cargo's remaps (the last matching one wins, so the package directory keeps Cargo's name), and a relative source becomes absolute so that every name the compiler records is remapped. A local compile and an offloaded one then record the same names and give the same crate hash on every machine and at every checkout path. `undefined` when the unit needs nothing. */
-export function moduleRemapArgumentsV1(args:readonly string[],environment:Environment,cwd:string,workspace:string|undefined):readonly string[]|undefined{
+/** 🧭️ What the module remap of one unit comes to: its `arguments` (the unit's code lives above its manifest and a remap of its own was added), `needless` (the code lies inside the package directory, or an existing remap names it already, so every machine records the same names), or `declined` with the guard that stopped it (`no-workspace`, `reached-files`, `shallow`, `outside-workspace`). A declined unit records the raw package-relative spelling of its sources: another outcome than the one other machines reach, so it is never shared. */
+export type ModuleRemapV1=Readonly<{arguments:readonly string[]}|{needless:true}|{declined:"no-workspace"|"reached-files"|"shallow"|"outside-workspace"}>;
+
+/** 🧭️ The compiler arguments of a unit that Cargo compiles in its package directory while its code lives in the module directory above the manifest (a one-line shim includes it), when no remap covers that directory: the directory gets a remap of its own, named by its path below the checkout, placed before Cargo's remaps (the last matching one wins, so the package directory keeps Cargo's name), and a relative source becomes absolute so that every name the compiler records is remapped. A local compile and an offloaded one then record the same names and give the same crate hash on every machine and at every checkout path. A workspace spelled through a link (`/tmp` and `/private/tmp`) names the same directory as the manifest does. The outcome says why a unit got none, never silently. */
+export function moduleRemapV1(args:readonly string[],environment:Environment,cwd:string,workspace:string|undefined):ModuleRemapV1{
  const manifest=environment.CARGO_MANIFEST_DIR,pass=scan(args);
- if(workspace===undefined||manifest===undefined||!isAbsolute(manifest)||"declined" in pass||pass.source===undefined||!within(manifest,cwd))return undefined;
+ if(manifest===undefined||!isAbsolute(manifest)||"declined" in pass||pass.source===undefined||!within(manifest,cwd))return{needless:true};
  const sourceReal=resolve(cwd,pass.source),reached=reachedFilesV1(sourceReal,undefined,REACHED_FILES,manifest);
- if(reached===undefined)return undefined;
+ if(reached===undefined)return{declined:"reached-files"};
  const shipped=[sourceReal,...reached].reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest);
- if(within(cwd,shipped)||shipped===manifest||depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||!within(workspace,shipped)||remappedNameV1(remapsOfV1(args),shipped)!==shipped)return undefined;
+ if(within(cwd,shipped)||shipped===manifest)return{needless:true};
+ if(workspace===undefined)return{declined:"no-workspace"};
+ if(depthOf(shipped)<MINIMUM_SHIPPED_DEPTH)return{declined:"shallow"};
+ const base=within(workspace,shipped)?workspace:(()=>{try{const real=realpathSync(workspace);return within(real,shipped)?real:undefined;}catch{return undefined;}})();
+ if(base===undefined)return{declined:"outside-workspace"};
+ if(remappedNameV1(remapsOfV1(args),shipped)!==shipped)return{needless:true};
  const first=args.findIndex(argument=>argument==="--remap-path-prefix"||argument.startsWith("--remap-path-prefix=")),rewritten=args.map(argument=>argument===pass.source&&!isAbsolute(argument)?sourceReal:argument),at=first<0?rewritten.length:first;
- return Object.freeze([...rewritten.slice(0,at),`--remap-path-prefix=${shipped}=${shipped===workspace?".":relative(workspace,shipped).split(sep).join("/")}`,...rewritten.slice(at)]);
+ return{arguments:Object.freeze([...rewritten.slice(0,at),`--remap-path-prefix=${shipped}=${shipped===base?".":relative(base,shipped).split(sep).join("/")}`,...rewritten.slice(at)])};
+}
+
+/** 🧭️ The arguments of {@link moduleRemapV1}, `undefined` when the unit needs none or got none. */
+export function moduleRemapArgumentsV1(args:readonly string[],environment:Environment,cwd:string,workspace:string|undefined):readonly string[]|undefined{
+ const outcome=moduleRemapV1(args,environment,cwd,workspace);
+ return"arguments" in outcome?outcome.arguments:undefined;
 }
 
 const SEARCH_KINDS=OFFLOAD_POLICY_V1.link.searchKinds;

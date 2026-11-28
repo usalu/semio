@@ -1,0 +1,3 @@
+#!/bin/zsh
+cd /Users/ueli/Documents/semio
+env -u RUSTC_WRAPPER RUST_MIN_STACK=134217728 CARGO_TARGET_DIR=/Users/ueli/t/src-pt2 CARGO_BUILD_BUILD_DIR=/Users/ueli/t/src-pt2/b CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0 cargo "$@"

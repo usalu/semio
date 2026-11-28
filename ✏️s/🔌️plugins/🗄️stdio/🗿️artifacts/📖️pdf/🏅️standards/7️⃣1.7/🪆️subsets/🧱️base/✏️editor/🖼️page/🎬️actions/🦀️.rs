@@ -35,14 +35,14 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-outline" => (page_number()?, String::new(), text_value()?, String::new(), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-rotation" | "set-page-user-unit" => (page_number()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-box" => (page_number()?, text_value()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "set-language" | "set-page-layout" | "set-page-mode" | "set-metadata" => (None, String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-language" | "set-page-layout" | "set-page-mode" | "set-metadata" => (None, String::new(), text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-optional-content" => (None, object_id()?, text_value()?, String::new(), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-embedded-file" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "remove-embedded-file" | "remove-named-destination" => (None, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-named-destination" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-label" => (page_number()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-mark-info" => (None, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
-        "set-viewer-preferences" => (None, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-viewer-preferences" => (None, object_id()?, text_arg(args, "text"), String::new(), viewer_preference_value(args)?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-info-field" => (None, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-extra" => (page_number()?, text_arg(args, "object"), page_extra_text(args)?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-annotation-style" => (page_number()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
@@ -55,7 +55,7 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-resource-detail" => (None, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
         "set-encryption" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-output-intent" | "set-form-field" | "set-document-id" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-open-action" => (opt_page(args, "page"), text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-open-action" => (open_action_page(args)?, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-font-reference" => (None, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-graphics-state" => (None, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-pattern" => (None, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
@@ -70,15 +70,26 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-indirect-object" => (None, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-mesh-reference" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-entry" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "create-annotation" => (page_number()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "create-annotation" => (page_number()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", -1.0), opt_num(args, "green", -1.0), opt_num(args, "blue", -1.0)),
         "fill-form-field" => (None, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "replace-page" | "merge-document" => (page_number()?, String::new(), text_arg(args, "payload"), text_arg(args, "extra"), 0.0, 0.0, opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), 0.0, 0.0, 0.0),
         "replace-page-pick" | "merge-pick" => (page_number()?, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "extract-pages" => (None, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (None, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (None, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "worldX", opt_num(args, "x", 0.0)), opt_num(args, "worldY", opt_num(args, "y", 0.0)), 0.0, 0.0, 0.0, 0.0, 0.0),
         _ => return Err(fault(format!("unknown pdf page action '{action}'"))),
     };
     Ok(payload_edit(action, page, object, text, extra, x, y, width, height, red, green, blue))
+}
+
+/// 🎚️ The numeric reading of a viewer preference: flags and `numCopies` need it, the text keys (`direction`, `printPageRange`, areas, clips, scaling, duplex, `nonFullScreenPageMode`) take their value from `text` and read `x` as zero when it is absent.
+fn viewer_preference_value(args: Option<&semio_framework_value::DslValue>) -> Result<f64, Fault> {
+    const TEXT_KEYS: [&str; 9] = ["nonFullScreenPageMode", "printPageRange", "direction", "viewArea", "viewClip", "printArea", "printClip", "printScaling", "duplex"];
+    if TEXT_KEYS.contains(&text_arg(args, "object").as_str()) { Ok(opt_num(args, "x", 0.0)) } else { req_num(args, "x") }
+}
+
+/// 📄️ The one-based destination page of an open action: only the `page` kind carries one, and it must be given.
+fn open_action_page(args: Option<&semio_framework_value::DslValue>) -> Result<Option<u32>, Fault> {
+    if text_arg(args, "object") == "page" { req_page(args, "page").map(Some) } else { Ok(opt_page(args, "page")) }
 }
 
 fn page_extra_text(args: Option<&semio_framework_value::DslValue>) -> Result<String, Fault> {
@@ -156,9 +167,9 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-page-mode" => Ok(vec![PdfMutation::SetPageMode(SetPageMode { mode: page_mode(&text)? })]),
         "set-optional-content" => set_optional_content(snapshot, &object, &text, x),
         "set-embedded-file" => set_embedded_file(snapshot, &object, &text, &extra),
-        "remove-embedded-file" => remove_named(&object, "an embedded file needs an id").map(|id| vec![PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id })]),
+        "remove-embedded-file" => existing_named(snapshot.embedded_files.iter().any(|file| file.id == object), &object, "an embedded file needs an id").map(|id| vec![PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id })]),
         "set-named-destination" => set_named_destination(&object, page),
-        "remove-named-destination" => remove_named(&object, "a named destination needs a name").map(|name| vec![PdfMutation::RemoveNamedDestination(RemoveNamedDestination { name })]),
+        "remove-named-destination" => existing_named(snapshot.named_destinations.iter().any(|item| item.name == object), &object, "a named destination needs a name").map(|name| vec![PdfMutation::RemoveNamedDestination(RemoveNamedDestination { name })]),
         "set-page-label" => set_page_label(snapshot, page, &text, &extra, x),
         "set-mark-info" => Ok(set_mark_info(x, y, width)),
         "set-metadata" => Ok(vec![PdfMutation::SetMetadata(SetMetadata { xmp: none_if_empty(&text) })]),
@@ -187,8 +198,8 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-image-mask" => set_image_mask(snapshot, &object, &text, &extra),
         "set-form-content" => set_form_content(snapshot, &object, &text, x, y, width, height),
         "set-page-transition" => set_page_transition(snapshot, page, &text, &extra, x),
-        "set-catalog-entry" => set_named_object(&object, &text, "a catalog entry needs a key", |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |key, value| PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value, index: None })),
-        "set-trailer-entry" => set_named_object(&object, &text, "a trailer entry needs a key", |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |key, value| PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value, index: None })),
+        "set-catalog-entry" => free_entry_key("catalog", &object).and_then(|()| set_named_object(&object, &text, "a catalog entry needs a key", |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |key, value| PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value, index: None }))),
+        "set-trailer-entry" => free_entry_key("trailer", &object).and_then(|()| set_named_object(&object, &text, "a trailer entry needs a key", |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |key, value| PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value, index: None }))),
         "set-annotation-appearance" => set_annotation_appearance(snapshot, page, &object, &text),
         "set-glyph" => set_glyph(snapshot, &object, &text, x, y, width, height),
         "set-indirect-object" => set_indirect_object(snapshot, x, y, &text),
@@ -231,7 +242,7 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
     }
 }
 
-/// 🎯 Declares the page-object selection domain, points the page window at it and puts the framework's interaction verbs on the app roster, which the builder's own injection cannot do for a domain installed after the build: without `interactionSelect` on the roster, a keyboard pick on a thumbnail row is dropped as undeclared.
+/// 🎯 Declares the page-object selection domain, points the page window and the Object window at it (a selection verb repaints only the windows that declare its domain, so the Object pane follows a pick made in the text layer or a thumbnail) and puts the framework's interaction verbs on the app roster, which the builder's own injection cannot do for a domain installed after the build: without `interactionSelect` on the roster, a keyboard pick on a thumbnail row is dropped as undeclared.
 pub fn install_object_interaction(definition: &mut semio_plugin::AppDefinition) {
     definition.interactions.push(semio_plugin::InteractionDefinition {
         id: OBJECT_DOMAIN.into(),
@@ -248,7 +259,7 @@ pub fn install_object_interaction(definition: &mut semio_plugin::AppDefinition) 
         },
     });
     for window in definition.window_kinds.iter_mut() {
-        if window.id == WINDOW_KIND_ID {
+        if window.id == WINDOW_KIND_ID || window.id == INSPECTOR_WINDOW_KIND_ID {
             window.interactions = vec![semio_plugin::InteractionRef::new(OBJECT_DOMAIN)];
         }
     }

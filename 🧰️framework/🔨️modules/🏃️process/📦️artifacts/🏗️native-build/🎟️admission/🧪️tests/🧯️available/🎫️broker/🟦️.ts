@@ -254,3 +254,65 @@ test("a held-back unit is announced once in English and German with its numbers,
   client.close();
  }finally{await broker.close();}
 });
+
+const grantOpen=(ports:Partial<Parameters<typeof startAdmissionBrokerV1>[0]>,peaksMiB:Readonly<Record<string,number>>)=>{
+ const rows=Object.entries(peaksMiB).map(([crate,peak])=>[unitKeyV1(unit(crate),pass.profile),[{v:1,key:unitKeyV1(unit(crate),pass.profile),peakRssBytes:peak*MiB,outputBytes:0,wallMs:1000,cpuMs:1000,remainingMs:0,atMs:1,lines:0}]] as const);
+ return startAdmissionBrokerV1({physicalBytes:15*GiB,totalBytes:16*GiB,history:new Map<string,readonly UnitObservationV1[]>(rows),parentMemoryAllowanceBytes:2300*MiB,available:()=>0,warden:()=>"danger",cancels:()=>[],waits:{publishMilliseconds:20,progressMilliseconds:600000},...ports}).then(broker=>{broker.registerPass(pass);return broker;});
+};
+
+test("a unit that fits its grant starts at once when nothing runs, whatever the host spare and the warden level are, and the budget is the grant less what the driver holds",async()=>{
+ const broker=await grantOpen({},{memchr:200});
+ try{
+  broker.observe({nonRustcBytes:1772*MiB,swapOutBytesPerSecond:null});
+  expect(broker.stats().budgetBytes).toBe(528*MiB);
+  const client=await connect(broker.endpoint,unit("memchr"));
+  expect(await client.verdict(1)).toBe(true);
+  expect(broker.stats()).toMatchObject({running:1,waiting:0});
+  client.close();
+ }finally{await broker.close();}
+});
+
+test("the host spare still holds a second unit while the first runs, and active swap holds even the first",async()=>{
+ let swap:number|null=null;
+ const broker=await grantOpen({},{a:200,b:200});
+ try{
+  const first=await connect(broker.endpoint,unit("a"));
+  expect(await first.verdict(1)).toBe(true);
+  const second=await connect(broker.endpoint,unit("b"));
+  expect(await second.verdict(1)).toBe(false);
+  await settle();
+  expect(broker.stats()).toMatchObject({running:1,waiting:1});
+  first.close();second.close();
+ }finally{await broker.close();}
+ const swapping=await grantOpen({},{a:200});
+ try{
+  swap=ADMISSION_POLICY_V1.swapOutBytesPerSecond+1;swapping.observe({nonRustcBytes:0,swapOutBytesPerSecond:swap});
+  const client=await connect(swapping.endpoint,unit("a"));
+  expect(await client.verdict(1)).toBe(false);
+  await settle();
+  expect(swapping.stats().running).toBe(0);
+  client.close();
+ }finally{await swapping.close();}
+});
+
+test("a head unit bigger than the budget never blocks the smaller units behind it, and it starts alone once nothing else runs",async()=>{
+ const broker=await grantOpen({bounds:{stallMilliseconds:300}},{big:535,small_a:320,small_b:295});
+ try{
+  broker.observe({nonRustcBytes:1772*MiB,swapOutBytesPerSecond:null});
+  const head=await connect(broker.endpoint,unit("big"));
+  await settle();
+  const first=await connect(broker.endpoint,unit("small_a")),second=await connect(broker.endpoint,unit("small_b"));
+  expect(await first.verdict(1)).toBe(true);
+  await settle();
+  expect(head.rows.some(row=>row.admitted===true)).toBe(false);
+  expect(second.rows.some(row=>row.admitted===true)).toBe(false);
+  const admitted=async(client:Client)=>{for(let spin=0;spin<300&&!client.rows.some(row=>row.admitted===true);spin++)await new Promise(done=>setTimeout(done,10));return client.rows.some(row=>row.admitted===true);};
+  first.close();
+  expect(await admitted(second)).toBe(true);
+  expect(head.rows.some(row=>row.admitted===true)).toBe(false);
+  second.close();
+  expect(await admitted(head)).toBe(true);
+  expect(broker.stats()).toMatchObject({running:1,waiting:0});
+  head.close();
+ }finally{await broker.close();}
+});

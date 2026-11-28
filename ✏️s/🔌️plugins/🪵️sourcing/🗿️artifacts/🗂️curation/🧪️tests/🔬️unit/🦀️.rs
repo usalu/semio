@@ -96,7 +96,9 @@ async fn curated_state_round_trips_through_zip_2_0() {
     let mut control = semio_os_kernel::io::io_mechanism::IoRunControl::new(&mut decode, &mut encode, io_grant());
     let exported = export::zip::v2_0::any::CurationIntoZip::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty(), &mut control).await.expect("zip export");
     let IoPayload::Binary(bytes) = &exported.value else { panic!("zip is a binary payload") };
-    assert_eq!(&bytes[..4], b"PK\x03\x04", "a zip container starts with the local file header signature");
+    let real = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&<semio_s_artifact_stdio_zip::ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).expect("the payload is the zip artifact's pack"))
+        .expect("zip container");
+    assert_eq!(&real[..4], b"PK\x03\x04", "a zip container starts with the local file header signature");
     let back = import::zip::v2_0::any::ZipIntoCuration::deserialize(&exported.value, &mut control).await.expect("zip import");
     assert_eq!(back.value.curated, snapshot.curated);
 }
@@ -133,8 +135,10 @@ async fn io_fixture_zip_archive_members_match_and_restore_the_kit() {
     let mut control = semio_os_kernel::io::io_mechanism::IoRunControl::new(&mut decode, &mut encode, io_grant());
     let exported = export::zip::v2_0::any::CurationIntoZip::serialize(&kit, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty(), &mut control).await.expect("zip export");
     let IoPayload::Binary(bytes) = &exported.value else { panic!("zip is a binary payload") };
-    emit_io_output("archive.zip", bytes);
-    let archive = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(bytes).expect("a real zip 2.0 container");
+    let pack = <semio_s_artifact_stdio_zip::ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).expect("the payload is the zip artifact's pack");
+    let real = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&pack).expect("zip container");
+    emit_io_output("archive.zip", &real);
+    let archive = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&real).expect("a real zip 2.0 container");
     let names: Vec<&str> = archive.entries.iter().map(|entry| entry.name.as_str()).collect();
     let zip = &law["zip"]["archive"];
     let member = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::document_archive_member::<crate::CurationSnapshot>();

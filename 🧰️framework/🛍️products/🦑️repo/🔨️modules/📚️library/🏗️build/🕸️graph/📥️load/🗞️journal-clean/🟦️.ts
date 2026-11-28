@@ -1,5 +1,6 @@
 import {readFileSync,renameSync,writeFileSync} from "node:fs";
 import {lstat} from "node:fs/promises";
+import {resolveConsultedPathsV1} from "../🧭️resolve-consulted/🟦️.ts";
 import {provenUnchangedV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts";
 
 /** 🗞️ One recorded fact of an admission memo: the part the journal predicate reads. */
@@ -37,11 +38,17 @@ const linkStateOf=(value:unknown):LinkStateV1|undefined=>{
   return strings(checked)&&strings(linked)?{checked,linked}:undefined;
 };
 
-/** 🔗️ Which directories above paths are symbolic links: a change below a link target is reported at the target, never at the link path, so nothing under a link may be vouched for. Directories proven no link by an earlier state stay so unless a change touched them (a link is made by a change at its own path), directories that were links stay links; every other directory is probed once, in parallel batches, so the loop yields. */
-export function linkIndexV1(root:string,stored:LinkStateV1|undefined,changes?:Readonly<{rows:ChangeRowsV1;excluded:(path:string)=>boolean;insensitive:boolean}>){
+/** 🔗️ Which directories above paths are symbolic links: a change below a link target is reported at the target, never at the link path, so nothing under a link may be vouched for. Directories proven no link by an earlier state stay so unless a change is reported at them or above them (a path that the journal excludes is never vouched for by the caller, whatever its link state) (a link is made by a change at its own path), directories that were links stay links; every other directory is probed once, in parallel batches, so the loop yields. */
+export function linkIndexV1(root:string,stored:LinkStateV1|undefined,changes?:Readonly<{rows:ChangeRowsV1;excluded?:(path:string)=>boolean;insensitive:boolean}>){
   const known=new Map<string,boolean>(),queried=new Set<string>();
   if(stored!==undefined&&changes!==undefined){
-    for(const directory of provenUnchangedV1(stored.checked,changes.rows as never,changes.excluded,changes.insensitive,[]))known.set(directory,false);
+    const fold=changes.insensitive?(path:string)=>path.toLowerCase():(path:string)=>path,changed=new Set<string>(),structural=new Set<string>();
+    for(const [kind,directory,path] of changes.rows){const id=fold(path);changed.add(id);if(!(directory===1&&kind==="m"))structural.add(id);}
+    for(const directory of stored.checked){
+      const id=fold(directory);let touched=changed.has(id);
+      for(let cut=id.lastIndexOf("/");!touched&&cut>0;cut=id.lastIndexOf("/",cut-1))touched=structural.has(id.slice(0,cut));
+      if(!touched)known.set(directory,false);
+    }
     for(const directory of stored.linked)known.set(directory,true);
   }
   return {
@@ -82,7 +89,7 @@ const within=<T>(work:Promise<T>,milliseconds:number):Promise<T|undefined>=>new 
   work.then(value=>{clearTimeout(timer);resolve(value);},()=>{clearTimeout(timer);resolve(undefined);});
 });
 
-/** 🗞️ Which rows of a memo may skip their probe: a row that is a path fact under the workspace, outside the journal exclusions and outside symbolic-link directories, with no change reported at, above or below its path since the cursor of the memo's attestation, and equal to the memo's own row. The cursor is taken before any row is probed, so a change during the probe is reported by the next question. Without an exact feed, an attestation of another memo or a refusal, no row is clean (every row is probed as before). A directory row of kind `m` changes only its own entries; any other row stands for its subtree. `seal` stores the cursor with the link state, for the rows given (default: the rows of this call).
+/** 🗞️ Which rows of a memo may skip their probe: a `resolve` row of a relative, absolute or `node:` request whose consulted paths (the directory of its target and the target, see `../🧭️resolve-consulted`) no change touched, or a row that is a path fact under the workspace, outside the journal exclusions and outside symbolic-link directories, with no change reported at, above or below its path since the cursor of the memo's attestation, and equal to the memo's own row. The cursor is taken before any row is probed, so a change during the probe is reported by the next question. Without an exact feed, an attestation of another memo or a refusal, no row is clean (every row is probed as before). A directory row of kind `m` changes only its own entries; any other row stands for its subtree. `seal` stores the cursor with the link state, for the rows given (default: the rows of this call).
  * @see ./🧪️tests/🟦️.ts */
 export async function journalCleanRowsV1(ports:JournalCleanPortsV1,memo:string|undefined,rows:readonly JournalRowV1[]):Promise<JournalCleanV1>{
   const {feed,root,timeoutMilliseconds=5000,signal}=ports,insensitive=ports.insensitive??(process.platform==="darwin"||process.platform==="win32");
@@ -92,13 +99,20 @@ export async function journalCleanRowsV1(ports:JournalCleanPortsV1,memo:string|u
   const cursor=at as JournalCursorV1,state={skipped:0,checked:0,changed:undefined as number|undefined};
   const attested=memo===undefined?undefined:ports.read();
   const candidatesOf=(source:readonly JournalRowV1[])=>{
-    const found:{row:JournalRowV1;relative:string;folded:string}[]=[];
+    const found:{row:JournalRowV1;relative:string;relatives:readonly string[];folded:string}[]=[];
     for(const row of source){
+      if(row.kind==="resolve"){
+        const consulted=resolveConsultedPathsV1(row.path,row.fact);
+        if(consulted===undefined||!consulted.every(path=>fold(path).startsWith(prefix)&&path.length>prefix.length))continue;
+        const relatives=consulted.map(path=>path.slice(prefix.length));
+        found.push({row,relative:relatives[0]??"",relatives,folded:fold(row.path.replaceAll("\\","/"))});
+        continue;
+      }
       if(!PATH_KINDS_V1.has(row.kind))continue;
       const original=row.path.replaceAll("\\","/"),folded=fold(original);
       if(!folded.startsWith(prefix))continue;
       const relative=original.slice(prefix.length);
-      if(relative!=="")found.push({row,relative,folded});
+      if(relative!=="")found.push({row,relative,relatives:[relative],folded});
     }
     return found;
   };
@@ -106,14 +120,14 @@ export async function journalCleanRowsV1(ports:JournalCleanPortsV1,memo:string|u
   if(answer!==undefined&&answer.exact!==true)answer=undefined;
   const excluded=feed.excluder(),links=linkIndexV1(root,attested?.links,answer===undefined?undefined:{rows:answer.rows,excluded,insensitive});
   const seal=async(sealed:string,sealRows:readonly JournalRowV1[]=rows)=>{
-    try{await links.among(candidatesOf(sealRows).map(candidate=>candidate.relative));}catch{return;}
+    try{await links.among(candidatesOf(sealRows).flatMap(candidate=>candidate.relatives));}catch{return;}
     ports.write({version:1,memo:sealed,epoch:cursor.epoch,seq:cursor.seq,links:links.state()});
   };
   if(answer===undefined)return Object.freeze({clean:()=>false,seal,counts:()=>state});
   state.changed=answer.rows.length;
-  const candidates=candidatesOf(rows),linked=await links.among(candidates.map(candidate=>candidate.relative)),kept=provenUnchangedV1(candidates.map(candidate=>candidate.relative),answer.rows as never,excluded,insensitive,linked);
+  const candidates=candidatesOf(rows),everyPath=candidates.flatMap(candidate=>candidate.relatives),linked=await links.among(everyPath),kept=provenUnchangedV1(everyPath,answer.rows as never,excluded,insensitive,linked);
   const eligible=new Map<string,JournalRowV1>();
-  for(const {row,relative,folded} of candidates)if(kept.has(relative))eligible.set(row.kind+"\0"+folded,row);
+  for(const {row,relatives,folded} of candidates)if(relatives.every(relative=>kept.has(relative)))eligible.set(row.kind+"\0"+folded,row);
   const clean=(row:JournalRowV1):boolean=>{
     state.checked++;
     const known=eligible.get(row.kind+"\0"+fold(row.path.replaceAll("\\","/")));

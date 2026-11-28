@@ -336,6 +336,20 @@
       },
       "outputs": []
     },
+    "history-key-route-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts history-key-route-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
     "surface-retention-check": {
       "executor": "repo:script",
       "inputs": [
@@ -454,6 +468,29 @@
         "semio": {
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "settle-continuations-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts settle-continuations-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "settle-continuations-check"
           ]
         }
       }

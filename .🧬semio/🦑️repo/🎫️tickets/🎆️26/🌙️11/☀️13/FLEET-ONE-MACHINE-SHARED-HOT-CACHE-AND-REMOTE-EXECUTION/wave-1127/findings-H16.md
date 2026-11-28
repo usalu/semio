@@ -1,0 +1,5 @@
+# findings H16 (for other lanes)
+- H4 offload: a 4 s unit waited the 240 s deadline on another machine ("compiling on another machine") and then fell back (`offload-local-fallback`, `infrastructure`, 243908 ms, lane event 11-27 01:2x, key b6b3c20e...). Needs worker liveness/heartbeat check and a deadline proportional to the measured local compile time.
+- H14/H3 cache server: five `upload-capacity: the fleet cache is full` (507) refusals in a row, first publish landed after ~9 min (retry 15 s). Eviction should run before refusing a small result.
+- Tooling gap: no zero-touch way to force a redispatch of an unchanged unit (the ingress refuses `cargo clean`, refuses `--diagnostic-width`, and one client's sessions share one warm lane). Proposal: `repo cargo --fresh-lane` (private lane for one call, released after) so cold-target and fleet-fetch proofs need no file deletion.
+- Down simulation needs `SEMIO_REMOTE_CACHE_ENDPOINT_OVERRIDE=1` next to the closed endpoint; otherwise the fleet facts win and the build still uses the live fleet.

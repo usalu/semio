@@ -17,7 +17,7 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.from_port == "meshOut" && wire.to == id && wire.to_port == case["input"].as_str().unwrap()));
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == case["output"].as_str().unwrap() && wire.to == "analysis"));
             assert_eq!(semio_s_artifact_procedural_3d_transforms::ensure_gumball_node(host, &id, operation).unwrap(), id);
-        });
+        }).expect("the evaluation host binds its snapshot");
         snapshot.retire_cold();
     }
 }
@@ -30,7 +30,7 @@ fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
         host.add_widget(r#"{"kind":"neuron","id":"analysis","neuronKind":"brep.mesh.analyze"}"#, 220.0, 0.0).unwrap();
         host.connect_ports("extrude", "meshOut", "analysis", "mesh").unwrap();
         host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     let empty = std::mem::replace(&mut snapshot.host_snapshot, graph);
     empty.retire_cold();
     if operation == "dissolveVertices" {
@@ -66,7 +66,7 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
             let feeds_analysis = host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh");
             let evaluation = host.evaluate().map_err(|error| error.to_string())?;
             Ok::<_, String>((params, feeds_analysis, evaluation, semio_framework_pack_json::to_json_string(&host.host_snapshot.synapses)))
-        });
+        }).expect("the evaluation host binds its snapshot");
         landed.retire_cold();
         snapshot.retire_cold();
         let (params, feeds_analysis, evaluation, wires) = outcome.unwrap();
@@ -103,7 +103,7 @@ fn mesh_component_gumball_pins_the_complete_component_set() {
             selected = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
             assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &pinned, &selected).is_ok());
         }
-    });
+    }).expect("the evaluation host binds its snapshot");
     snapshot.retire_cold();
 }
 
@@ -140,7 +140,7 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.to == next && wire.from == id));
             assert!(transform_commands::ensure_component_node(host, &["extrude@meshOut#1.face.0".into()], operation).is_err());
         }
-    });
+    }).expect("the evaluation host binds its snapshot");
     snapshot.retire_cold();
 }
 
@@ -310,7 +310,7 @@ async fn mesh_quick_actions_execute_through_the_registered_preview_app() {
             assert_eq!(descriptor.action, "editMeshSelection");
             let args = descriptor.args.as_ref().unwrap();
             for key in case["payload"].as_object().unwrap().keys() { assert!(args.get(key).is_some(), "{operation}: quick action declares {key}"); }
-            let meta = semio_plugin::ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") };
+            let meta = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..semio_plugin::artifact_app_laws::meta("local") };
             semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &descriptor.action, descriptor.args.clone(), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
             let change = context::settle(&mut app).await;
             let snapshot = context::snapshot(&app);
@@ -430,7 +430,7 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
                 _ => params.get("factor").unwrap().get("x").unwrap().as_f64().unwrap(),
             };
             assert!((actual - if operation == "scale" { 1.21 } else { 0.2 }).abs() < 1e-9);
-        });
+        }).expect("the evaluation host binds its snapshot");
         context::drive_preview_run(&mut app, &view, &preview_effects).await;
         let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
         let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).unwrap();

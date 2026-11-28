@@ -11,10 +11,10 @@ semio_os_kernel::diff_text!(crate::En1998Diff);
 fn history_edit_en1998_empty_diff_records_agree_with_the_neutral_json_oracle() {
     use protocol::{DiffBinary, DiffText};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔺️diff/🔣️.json")).unwrap();
-    let expected: semio_s_artifact_norm_en1998_diff::En1998Diff = serde_json::from_value(corpus["empty"].clone()).unwrap();
+    let expected: crate::En1998Diff = serde_json::from_value(corpus["empty"].clone()).unwrap();
     let text = expected.print_diff();
-    let actual = semio_s_artifact_norm_en1998_diff::En1998Diff::parse_diff(&text).unwrap();
+    let actual = crate::En1998Diff::parse_diff(&text).unwrap();
     assert_eq!(actual, expected);
     let binary = expected.encode_diff().unwrap();
-    assert_eq!(semio_s_artifact_norm_en1998_diff::En1998Diff::decode_diff(&binary).unwrap(), expected);
+    assert_eq!(crate::En1998Diff::decode_diff(&binary).unwrap(), expected);
 }

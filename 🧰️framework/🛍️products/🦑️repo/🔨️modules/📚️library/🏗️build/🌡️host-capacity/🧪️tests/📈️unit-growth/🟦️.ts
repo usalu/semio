@@ -38,6 +38,24 @@ test("a wait the gate never answers ends at its time bound as a timeout and leav
  expect(await eventually(()=>queue(directory).length===0)).toBe(true);expect(grants(directory)).toEqual([]);
 },60000);
 
+test("a growth waits for room that appears later and is granted once it does, however long that takes",async()=>{
+ const directory=fresh(),started=Date.now(),sample=async()=>({host:host(Date.now()-started<400?{availableMegabytes:300,pressure:"critical"}:{}),swappedOutMegabytes:0}),lines:string[]=[];
+ const answer=await createGrantGrowthPortV1({environment:{LANG:"en_US.UTF-8"},directory,policy:fast,sample}).acquire(ask({waitMilliseconds:5000,write:line=>lines.push(line)}));
+ expect(answer.granted).toBe(true);expect(Date.now()-started).toBeGreaterThanOrEqual(350);
+ expect(lines.some(line=>line.includes("waiting"))).toBe(true);
+ if(answer.granted)answer.release();
+ expect(await eventually(()=>grants(directory).length===0&&queue(directory).length===0)).toBe(true);
+},60000);
+
+test("a gate that fails for a moment is asked again within the declared wait and never reported as cancelled",async()=>{
+ const directory=fresh(),lines:string[]=[];let failures=0;
+ const flaky=async()=>{if(failures<3){failures++;throw Error("gate sample unavailable");}return{host:host(),swappedOutMegabytes:0};};
+ const answer=await createGrantGrowthPortV1({environment:{LANG:"en_US.UTF-8"},directory,policy:fast,sample:flaky}).acquire(ask({waitMilliseconds:5000,write:line=>lines.push(line)}));
+ expect(answer,JSON.stringify(lines)).toMatchObject({granted:true});expect(failures).toBe(3);expect(lines.filter(line=>line.includes("gate sample unavailable")).length).toBeGreaterThan(0);
+ if(answer.granted)answer.release();
+ expect(await eventually(()=>grants(directory).length===0)).toBe(true);
+},60000);
+
 test("an aborted signal cancels the wait",async()=>{
  const directory=fresh(),controller=new AbortController(),sample=async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0}),waiting=createGrantGrowthPortV1({environment:{LANG:"en_US.UTF-8"},directory,policy:fast,sample}).acquire(ask({signal:controller.signal}));
  expect(await eventually(()=>queue(directory).length===1)).toBe(true);

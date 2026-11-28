@@ -6,6 +6,7 @@
       "const": {
         "minimumAgeMilliseconds": 1800000,
         "heldGraceMilliseconds": 10800000,
+        "activeBuildMilliseconds": 21600000,
         "idleMilliseconds": 86400000,
         "keepNewestPerCrate": 2,
         "bases": [
@@ -175,8 +176,8 @@
           "de": "[repo cache] Build-Einheit {path} behalten: ein laufender Compiler hält ihre Sperre"
         },
         "busyProfile": {
-          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: none of its units goes",
-          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: keine seiner Einheiten geht"
+          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: only the units they use stay",
+          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur die Einheiten, die sie verwenden, bleiben"
         },
         "summaryPlan": {
           "en": "[repo cache] build units: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
@@ -193,6 +194,99 @@
         "reason.pressure": {
           "en": "image below its free-space floor",
           "de": "Image unter der Freiraum-Untergrenze"
+        }
+      }
+    },
+    "Cover": {
+      "description": "Which units of a profile that compilers hold (its build lease is busy) stay: a build touches the fingerprint of every unit it plans, fresh ones included (Cargo `-Z mtime-on-use`, set in the repository's Cargo config), so a unit used within `activeBuildMilliseconds` or among the newest `keepNewestPerCrate` variants of its crate belongs to an active build and stays; every other unit of the profile may go like in a profile nobody holds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "nowMs", "units", "covered"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "nowMs": {"type": "integer", "minimum": 0},
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "lastUsedMs"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "lastUsedMs": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "covered": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "ImagePlan": {
+      "description": "The units of a split partition planned image by image: `mounts` name the image of a unit by the longest leading path (`home` when none leads it), `needs` and `budgets` are what each image must free and the most its units may hold; the removals equal the plan of the units of every image alone, oldest first.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "nowMs",
+        "units",
+        "mounts",
+        "needs",
+        "remove"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Unit"
+          }
+        },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "prefix",
+              "id"
+            ],
+            "properties": {
+              "prefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "needs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "budgets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Removal"
+          }
         }
       }
     },

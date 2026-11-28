@@ -173,7 +173,10 @@ export function invalidateLauncherMarkerV1(root,options){
  try{rmSync(launcherMarkerPathV1(root,options),{force:true});}catch{}
 }
 
-const REFUSAL_FILE_V1="launchd-refused.json",REFUSAL_MAXIMUM_AGE_V1=24*3600_000,BOOT_TOLERANCE_V1=60_000;
+const REFUSAL_FILE_V1="launchd-refused.json",BOOT_TOLERANCE_V1=60_000;
+
+/** ⏳️ How long a remembered refusal of the launchd route holds: afterwards the next service start probes the route again (a start that is refused again costs one failed start and is remembered for another window), so a consent granted later, a volume that came back or a launcher that was rebuilt is found without a reboot. */
+export const LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1=10*60_000;
 
 /** 🧠️ Remembers for this boot that the launchd route was refused for this checkout (`place`: the volume or entry it was refused at), bound to the launcher bytes: the next services start directly under the caller at once instead of paying a failed start each time. */
 export function rememberLaunchdRefusalV1(root,{place="",platform=process.platform,home=homedir(),environment=process.env,digest=launcherDigestV1,now=Date.now}={}){
@@ -181,13 +184,13 @@ export function rememberLaunchdRefusalV1(root,{place="",platform=process.platfor
  try{mkdirSync(directory,{recursive:true,mode:0o700});writeFileSync(temporary,JSON.stringify({version:1,root,place:String(place),at:now(),...sha256?{launcherSha256:sha256}:{}}),{mode:0o600});renameSync(temporary,file);}catch{rmSync(temporary,{force:true});}
 }
 
-/** 🧠️ The refusal of the launchd route remembered for this checkout, or `undefined`: only a record written after the machine booted, for the same checkout and the same launcher bytes, not older than a day. */
+/** 🧠️ The refusal of the launchd route remembered for this checkout, or `undefined`: only a record written after the machine booted, for the same checkout and the same launcher bytes, not older than `LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1` (then the route is probed again). */
 export function launchdRefusalV1(root,{platform=process.platform,home=homedir(),environment=process.env,digest=launcherDigestV1,now=Date.now,uptimeSeconds=uptime}={}){
  if(protectedFolderOfV1(root,{platform,home})===undefined)return undefined;
  try{
   const value=JSON.parse(readFileSync(join(accessDirectoryV1(root,{platform,home,environment}),REFUSAL_FILE_V1),"utf8")),identity=consentIdentityV1({platform,home,environment}),current=identity&&digest(identity.path),at=now();
   if(value?.version!==1||value.root!==root||!Number.isInteger(value.at)||typeof value.place!=="string")return undefined;
-  if(value.at<at-uptimeSeconds()*1000-BOOT_TOLERANCE_V1||at-value.at>REFUSAL_MAXIMUM_AGE_V1||value.at>at+BOOT_TOLERANCE_V1)return undefined;
+  if(value.at<at-uptimeSeconds()*1000-BOOT_TOLERANCE_V1||at-value.at>LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1||value.at>at+BOOT_TOLERANCE_V1)return undefined;
   if(value.launcherSha256!==current)return undefined;
   return{place:value.place,at:value.at};
  }catch{return undefined;}

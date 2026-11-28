@@ -198,6 +198,18 @@ pub mod context {
         settled.history_patches.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()).collect()
     }
 
+    /// 🚦️ Admits `command` from its window WITHOUT settling its publication, so a law can hold several typed operations in flight at once the way a fast pointer stream does.
+    pub async fn dispatch_unsettled(app: &mut Fem3dApp, command: Fem3dCommand) {
+        let mut action = meta("local");
+        action.view_state = Some(std::sync::Arc::new(view(window_kind_for(&command))));
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("admit the typed operation");
+    }
+
+    /// 🏁️ Settles every typed operation in flight and answers the debug text of the refusal the pump surfaces, if any.
+    pub async fn settle_pending(app: &mut Fem3dApp) -> Result<(), String> {
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map(|_| ()).map_err(|fault| format!("{fault:?}"))
+    }
+
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
     pub async fn history_verb(app: &mut Fem3dApp, verb: &str) {
         semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
@@ -239,3 +251,5 @@ mod patch_load;
 mod patch_load_case;
 #[path = "../../🎮️commands/🩹️patch-material/🧪️tests/🔬️unit/🦀️.rs"]
 mod patch_material;
+#[path = "../⚖️declared-verbs/🦀️.rs"]
+mod declared_verbs;

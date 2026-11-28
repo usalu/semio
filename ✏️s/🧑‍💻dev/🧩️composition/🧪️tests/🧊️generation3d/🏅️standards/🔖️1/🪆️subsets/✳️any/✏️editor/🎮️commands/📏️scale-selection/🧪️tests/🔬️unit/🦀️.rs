@@ -11,7 +11,7 @@ fn scale_factors(snapshot: &FlowHostSnapshot) -> [f64; 3] {
         let widget = gumball_widget_json(host, SCALE_ID).unwrap();
         let factor = widget.get("params").unwrap().get("factor").unwrap();
         ["x", "y", "z"].map(|key| factor.get(key).unwrap().as_f64().unwrap())
-    })
+    }).expect("the evaluation host binds its snapshot")
 }
 
 /// 📏️ Each axis scales independently and repeated gestures compose in the same widget.

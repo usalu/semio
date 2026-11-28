@@ -38,3 +38,22 @@ test("the capacity rules a waiting service decides with are part of its identity
  expect(files.filter(path=>path.includes("/\u{1F9EA}\uFE0Ftests/")||path.includes("/\u{1F4D6}\uFE0Ftexts/"))).toEqual([]);
  expect(new Set(files).size).toBe(files.length);
 });
+
+test("only plan-semantics inputs move the identity: an edit of a test, a text, a doc, an unrelated module or the client-side launchd start path keeps it, an edit of the plan code or of the schema moves it",()=>{
+ const {mkdtempSync,mkdirSync,writeFileSync,rmSync}=require("node:fs") as typeof import("node:fs"),{tmpdir}=require("node:os") as typeof import("node:os");
+ const base=mkdtempSync(join(tmpdir(),"rev-")),deep=join(base,"a","b","c","d","e","lib");
+ try{
+  const write=(path:string,text:string)=>{const full=join(deep,path);mkdirSync(join(full,".."),{recursive:true});writeFileSync(full,text);};
+  for(const path of HOST_POLICY_V1.serviceRevisionFiles as string[]){if(path.endsWith("/")){write(path+"\u{1F4CF}️decision/\u{1F7E6}️.ts","rule");}else write(path,"code of "+path);}
+  const before=hostServiceRevisionV1(deep);
+  write("\u{1F3E1}️resident/\u{1F9EA}️tests/x/\u{1F7E6}️.ts","a test");write("\u{1F3E1}️resident/README.md","a doc");write("\u{1F578}️graph/unrelated/\u{1F7E8}️.mjs","an unrelated module");
+  write("\u{1F3E1}️resident/\u{1F3D7}️composition/\u{1F310}️host/\u{1F34E}️launchd/\u{1F7E8}️.mjs","the client-side start path, edited");
+  write("\u{1F3E1}️resident/\u{1F9EA}️tests/\u{1F9EC}️generation-cap/\u{1F7E6}️.ts","another test");
+  expect(hostServiceRevisionV1(deep)).toBe(before);
+  expect(HOST_POLICY_V1.serviceRevisionFiles.some((path:string)=>path.includes("launchd"))).toBe(false);
+  write("\u{1F3E1}️resident/\u{1F50C}️ports/\u{1F9ED}️plan/\u{1F7E8}️.mjs","plan code, edited");
+  const planEdited=hostServiceRevisionV1(deep);expect(planEdited).not.toBe(before);
+  write("\u{1F3E1}️resident/\u{1F9EC}️schema/\u{1F523}️.json","{\"schema\":2}");
+  expect(hostServiceRevisionV1(deep)).not.toBe(planEdited);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});

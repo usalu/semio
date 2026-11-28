@@ -18,10 +18,10 @@ const learned=(total:number):HostRequestV1=>{
 test("The most one learned peak may count and the ratio a run of 6163 or 20000 MB is stored at equal the Python oracle on 8, 16 and 32 GB hosts",()=>{
  for(const row of fixture.ceilings){
   const ceiling=hostLearnCeilingV1(policy,row.capacityMegabytes,row.declared??undefined);
-  if("expect" in row)expect(ceiling,JSON.stringify(row)).toBe(row.expect);
+  if("expect" in row)expect<unknown>(ceiling,JSON.stringify(row)).toBe(row.expect);
   if("expectRatio" in row){
    const store=recordHostPhasesV1(policy,emptyHostEstimateStoreV1(),["command"],"command",row.default!,{jobs:1,peakMegabytes:row.peak!,activeMilliseconds:1000,peakAtMilliseconds:500,endedAtMs:now,ceilingMegabytes:ceiling,keepPeak:true});
-   expect(store.classes["command"]!.samples[0]!.ratioBasisPoints,JSON.stringify(row)).toBe(row.expectRatio);
+   expect<unknown>(store.classes["command"]!.samples[0]!.ratioBasisPoints,JSON.stringify(row)).toBe(row.expectRatio);
   }
  }
  expect(new Set(fixture.ceilings.filter(row=>"expect" in row).map(row=>row.expect)).size).toBeGreaterThan(3);
@@ -37,7 +37,7 @@ test("A learned 200 % request is shrunk to the room the host has when the room c
  for(const row of fixture.admissions){
   const request=learned(row.totalMegabytes),waiter={request,arrivedAtMs:now-row.waited,pid:2},holder:HostGrantV1={id:"bbbbbbbb1",operation:"command",jobs:1,cpu:1,reservedMegabytes:row.holder,admittedAtMs:now-3_600_000,observedMegabytes:row.holder,pid:3,bootAtMs:0};
   const decision=evaluateHostCapacityV1(policy,sample(row.totalMegabytes,row.available,row.hard?"critical":"normal"),[holder],[waiter as never],now).decisions[0]!;
-  expect([decision.verdict,decision.reservedMegabytes,decision.reason],JSON.stringify(row)).toEqual(row.expect);
+  expect<unknown>([decision.verdict,decision.reservedMegabytes,decision.reason],JSON.stringify(row)).toEqual(row.expect);
   reached.add(String(row.expect[2]));
  }
  expect(reached).toEqual(new Set(["fits","shrunk","memory","pressure-critical"]));

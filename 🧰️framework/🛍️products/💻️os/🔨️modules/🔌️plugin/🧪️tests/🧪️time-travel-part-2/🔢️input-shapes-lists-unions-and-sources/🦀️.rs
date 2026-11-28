@@ -232,9 +232,23 @@ async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() 
     app.time_travel_ref().resolve_time_travel_snaps(&mut panel, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let resolved = &panel.editor.as_ref().expect("the draft editor").rows[0].input.schema;
     assert!(matches!(resolved, semio_framework::ArgSchema::Number { snaps, snap_source: None, .. } if *snaps == vec![0.0, 5.0, 10.0, 15.0, 20.0]), "the previewed document's count is the grid: {resolved:?}");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
+/// 🧾️ A record-shaped item is shown as JSON text, so the host text typed back into it is parsed as JSON (a refused parse is no value); before, the verbatim string failed the payload validator (`expected exactly one matching oneOf branch`) and no content operator of a history-edited page could be changed.
+#[test]
+fn json_text_typed_into_an_object_or_array_input_is_parsed_as_that_shape() {
+    let record = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Object { fields: Vec::new() }, ..semio_framework::ActionArgDef::index("/content/0", LocalizedLabel::native("Content", "Inhalt")) };
+    let coerced = time_travel::time_travel_coerce(&record, false, &DslValue::String(r#"{"op":"setFont","name":"F1","size":20.0}"#.into()));
+    assert_eq!(coerced.as_ref().and_then(|value| time_travel::time_travel_pointer_get(value, "/op")).and_then(DslValue::as_str), Some("setFont"));
+    assert_eq!(coerced.as_ref().and_then(|value| time_travel::time_travel_pointer_get(value, "/size")).and_then(DslValue::as_f64), Some(20.0));
+    assert_eq!(time_travel::time_travel_coerce(&record, false, &DslValue::String("not json".into())), None);
+    let list = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::Any), min_items: None, max_items: None }, ..record.clone() };
+    assert_eq!(time_travel::time_travel_coerce(&list, false, &DslValue::String("[1,2]".into())), Some(DslValue::Array(vec![DslValue::uint(1), DslValue::uint(2)])));
+    let any = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Any, ..record };
+    assert_eq!(time_travel::time_travel_coerce(&any, false, &DslValue::String("plain".into())), Some(DslValue::String("plain".into())));
 }

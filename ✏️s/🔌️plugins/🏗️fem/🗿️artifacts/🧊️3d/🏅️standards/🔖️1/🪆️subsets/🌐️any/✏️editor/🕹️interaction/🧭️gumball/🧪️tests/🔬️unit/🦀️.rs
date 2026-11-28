@@ -88,34 +88,50 @@ fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
     assert!(fem3d_gumball_tick(&doc, &targets(&[("material", "steel")]), Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 }).is_none(), "a material moves no geometry");
 }
 
-/// ➕️ Ticks of one gesture compose into ONE net leaf: offsets add, angles about one axis add, factors multiply; an
-/// identity tick changes nothing, and another axis or another kind of motion does not compose.
-#[test]
-fn ticks_compose_into_one_net_leaf() {
-    let doc = demo();
-    let tick = |motion| fem3d_gumball_tick(&doc, &targets(&[("node", "n20_l1"), ("node", "n00_l1")]), motion).expect("tick");
-    let drag = fem3d_gumball_then(&tick(Fem3dGumballMotion::Translate { dx: 0.5, dy: 0.0, dz: 1.0 }), &tick(Fem3dGumballMotion::Translate { dx: 0.25, dy: 1.0, dz: 0.0 })).expect("translations add");
-    assert_eq!([drag.dx, drag.dy, drag.dz], [0.75, 1.0, 1.0]);
-    let about_z = |angle| tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 2.0], angle });
-    let turn = fem3d_gumball_then(&about_z(0.5), &about_z(0.25)).expect("rotations about one axis add");
-    assert_eq!(turn.angle, 0.75);
-    let tipped = fem3d_gumball_then(&turn, &tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 })).expect("another axis composes as the quaternion product");
-    let (about_x, about_z_net) = (tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 }), turn.clone());
-    let point = [1.0, 2.0, 3.0];
-    let stepwise = about_x.map(about_z_net.map(point));
-    let net = tipped.map(point);
-    assert!(stepwise.iter().zip(net).all(|(left, right)| (left - right).abs() < 1e-12), "the net leaf maps like its two steps: {stepwise:?} vs {net:?}");
-    let back = fem3d_gumball_then(&about_z(0.5), &tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, -1.0], angle: 0.25 })).expect("an anti-parallel axis subtracts");
-    assert!((back.angle - 0.25).abs() < 1e-12, "{back:?}");
-    let stretch = fem3d_gumball_then(&tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), &tick(Fem3dGumballMotion::Scale { sx: 1.5, sy: 0.5, sz: 2.0 })).expect("factors multiply");
-    assert_eq!([stretch.sx, stretch.sy, stretch.sz], [3.0, 0.5, 2.0]);
-    assert_eq!(fem3d_gumball_then(&drag, &tick(Fem3dGumballMotion::Translate { dx: 0.0, dy: 0.0, dz: 0.0 })), Some(drag.clone()), "an identity tick changes nothing");
-    assert!(fem3d_gumball_then(&drag, &about_z(0.5)).is_none(), "a rotation never folds into a drag");
-}
-
 /// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
 fn drive(transient: &FemGumballTransient, window: &str, verb: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> FemGumballDrive<Fem3dMutation> {
     fem_gumball_drive::<Fem3dGumballTool>(transient, window, verb, phase, tick, "seed", base).expect("the gumball tool accepts the dispatch")
+}
+
+/// 🛠️ The net leaf a gesture commits when the host sends `ticks` (`None` drops that tick as stale, so the guest never sees it).
+fn net_of(verb: &str, ticks: Vec<(GesturePhase, Option<Option<MoveSelection>>)>) -> Option<MoveSelection> {
+    let mut transient = FemGumballTransient::default();
+    for (phase, tick) in ticks {
+        let Some(tick) = tick else { continue };
+        let step = drive(&transient, "w", verb, phase, tick, "base");
+        if let Some((_, mutations)) = step.committed {
+            let [Fem3dMutation::MoveSelection(net)] = mutations.as_slice() else { panic!("one net leaf: {mutations:?}") };
+            return Some(net.clone());
+        }
+        transient = step.transient.unwrap_or_default();
+    }
+    None
+}
+
+/// 🎯️ LAW (T1 accuracy): the host sends every stream tick and the commit CUMULATIVE from the grab (`gumballCumulative`), so
+/// dropping any subset of the stream ticks as stale (a refused tick is never retried) still commits exactly the full
+/// gesture's net leaf — translate, turn (also when the reported axis flips) and scale alike; with every stream tick
+/// dropped the commit alone carries the whole gesture.
+#[test]
+fn a_stream_tick_dropped_as_stale_costs_the_committed_net_nothing() {
+    let doc = demo();
+    let selection = targets(&[("node", "n20_l1"), ("node", "n00_l1")]);
+    let motions: [(&str, Vec<Fem3dGumballMotion>); 3] = [
+        ("translateSelection", [0.25, 0.5, 0.875, 1.0].map(|dx| Fem3dGumballMotion::Translate { dx, dy: -dx / 2.0, dz: dx / 4.0 }).to_vec()),
+        ("rotateSelection", vec![Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.1 }, Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.4 }, Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, -1.0], angle: 0.3 }, Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.75 }]),
+        ("scaleSelection", [1.25, 1.5, 2.0, 1.75].map(|factor| Fem3dGumballMotion::Scale { sx: factor, sy: 1.0 / factor, sz: 1.0 }).to_vec()),
+    ];
+    for (verb, steps) in motions {
+        let ticks = |dropped: &[usize]| -> Vec<(GesturePhase, Option<Option<MoveSelection>>)> {
+            steps.iter().enumerate().map(|(index, motion)| (if index + 1 == steps.len() { GesturePhase::Commit } else { GesturePhase::Stream }, (!dropped.contains(&index)).then(|| fem3d_gumball_tick(&doc, &selection, *motion)))).collect()
+        };
+        let full = net_of(verb, ticks(&[])).unwrap_or_else(|| panic!("{verb}: the full gesture commits"));
+        let last = fem3d_gumball_tick(&doc, &selection, *steps.last().expect("steps")).expect("tick");
+        assert_eq!(full, last, "{verb}: the net is the cumulative total of the last tick");
+        for dropped in [&[1][..], &[0][..], &[2][..], &[0, 1][..], &[1, 2][..], &[0, 1, 2][..]] {
+            assert_eq!(net_of(verb, ticks(dropped)), Some(full.clone()), "{verb}: dropping stream ticks {dropped:?} loses nothing");
+        }
+    }
 }
 
 /// 💾️ LAW: a one-shot dispatch is ONE committed transaction holding the one leaf and leaves no transient behind; a
@@ -135,7 +151,7 @@ fn a_one_shot_tick_commits_one_transaction() {
     assert!(drive(&FemGumballTransient::default(), "w", "rotateSelection", GesturePhase::Once, axisless, "base").committed.is_none(), "a rotation about the zero axis commits nothing");
 }
 
-/// 🌊️ LAW: streamed ticks accumulate in ONE open transaction persisted for their window, previewed as the net
+/// 🌊️ LAW: cumulative streamed ticks replace ONE open leaf of ONE transaction persisted for their window, previewed as the net
 /// transform, and the commit publishes the NET leaf once under the ref minted at the first tick.
 #[test]
 fn streamed_ticks_commit_the_net_leaf_once() {
@@ -145,13 +161,13 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     assert!(first.committed.is_none(), "a stream tick commits nothing");
     let open = first.transient.expect("the first tick opens the window's gesture");
     let minted = open.gesture("w").expect("window w holds a gesture").transaction.clone();
-    let second = drive(&open, "w", "rotateSelection", GesturePhase::Stream, tick(std::f64::consts::FRAC_PI_2 - 0.5), "base");
+    let second = drive(&open, "w", "rotateSelection", GesturePhase::Stream, tick(std::f64::consts::FRAC_PI_2), "base");
     let open = second.transient.expect("the second tick advances it");
     assert_eq!(open.gesture("w").expect("window w holds a gesture").transaction, minted, "every tick rides the same transaction");
     let preview = open.preview::<Fem3dSnapshot, Fem3dSnapshotValue, Fem3dMutation>(&doc, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok()).map(Retiring::new).expect("an open gesture previews");
     let swung = node(&preview, "n20_g");
     assert!((swung[0] - 4.0).abs() < 1e-9 && (swung[1] - 4.0).abs() < 1e-9, "the preview is the net quarter turn: {swung:?}");
-    let done = drive(&open, "w", "rotateSelection", GesturePhase::Commit, tick(0.0), "base");
+    let done = drive(&open, "w", "rotateSelection", GesturePhase::Commit, tick(std::f64::consts::FRAC_PI_2), "base");
     let (reference, mutations) = done.committed.expect("the commit publishes");
     assert_eq!(reference, minted);
     let [Fem3dMutation::MoveSelection(net)] = mutations.as_slice() else { panic!("one net leaf: {mutations:?}") };
@@ -192,6 +208,7 @@ fn the_selection_record_arms_the_gumball_only_with_the_transform_utility() {
     assert!(!fem3d_gumball_active(&doc, &Fem3dInteractionSnapshot::selecting(targets(&[("material", "steel")])), true, &config));
     let json = fem3d_selection_json(&doc, &selected, true, &config);
     assert!(json.contains("\"gumballLiveDispatch\":true"), "{json}");
+    assert!(json.contains("\"gumballCumulative\":true"), "{json}");
     assert!(json.contains("\"gumballTarget\":[8"), "{json}");
     let off = Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
     assert!(!fem3d_gumball_active(&doc, &selected, true, &off));
@@ -243,28 +260,32 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }
 
-/// 🌀️ LAW (F2): the ~60 px drag of the Z ring on the slab `sol1` — a stream of small ticks whose reported axis carries
-/// sensor noise and flips sign when the pointer reverses — folds into ONE net leaf (no tick is dropped) that turns the
-/// slab into a valid, planar, same-area, same-height solid about its own centroid.
+/// 🌀️ LAW (F2): the ~60 px drag of the Z ring on the slab `sol1` — a stream of cumulative ticks whose reported axis carries
+/// sensor noise and flips sign when the pointer reverses — replaces ONE net leaf that turns the slab into a valid, planar,
+/// same-area, same-height solid about its own centroid.
 #[test]
 fn a_sixty_pixel_ring_drag_turns_the_slab_into_a_valid_solid() {
     let doc = demo();
     let target = targets(&[("solid", "sol1")]);
     let area = |solid: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid| solid.outline.iter().zip(solid.outline.iter().cycle().skip(1)).map(|(a, b)| a[0] * b[1] - b[0] * a[1]).sum::<f64>() / 2.0;
     let base = doc.solids.iter().find(|solid| solid.id == "sol1").expect("sol1").clone();
-    let steps: [f64; 12] = [0.12, 0.12, 0.11, 0.1, 0.1, -0.05, -0.04, 0.12, 0.13, 0.12, 0.1, 0.09];
+    let totals: [f64; 12] = [0.12, 0.24, 0.35, 0.45, 0.55, 0.5, 0.46, 0.58, 0.71, 0.83, 0.93, 1.02];
+    let mut transient = FemGumballTransient::default();
     let mut net: Option<MoveSelection> = None;
-    let mut sum = 0.0;
-    for (index, step) in steps.iter().enumerate() {
+    for (index, total) in totals.iter().enumerate() {
         let noise = 1e-7 * ((index as f64 * 2.3).sin());
-        let axis = if *step < 0.0 { [noise, -noise, -1.0] } else { [noise, noise * 0.5, 1.0] };
-        let tick = fem3d_gumball_tick(&doc, &target, Fem3dGumballMotion::Rotate { axis, angle: step.abs() }).expect("tick");
+        let axis = [noise, noise * 0.5, 1.0];
+        let tick = fem3d_gumball_tick(&doc, &target, Fem3dGumballMotion::Rotate { axis, angle: *total }).expect("tick");
         assert!(fem3d_gumball_moves(&tick), "step {index} moves");
-        net = Some(match net { None => tick, Some(net) => fem3d_gumball_then(&net, &tick).unwrap_or_else(|| panic!("step {index} composes")) });
-        sum += step;
+        let step = drive(&transient, "w", "rotateSelection", if index + 1 == totals.len() { GesturePhase::Commit } else { GesturePhase::Stream }, Some(tick), "base");
+        if let Some((_, mutations)) = step.committed {
+            let [Fem3dMutation::MoveSelection(leaf)] = mutations.as_slice() else { panic!("one net leaf: {mutations:?}") };
+            net = Some(leaf.clone());
+        }
+        transient = step.transient.unwrap_or_default();
     }
     let net = net.expect("net leaf");
-    assert!((net.angle - sum).abs() < 1e-9 && net.angle > 0.8, "the net angle is the signed sum: {}", net.angle);
+    assert!((net.angle - 1.02).abs() < 1e-12, "the net angle is the last cumulative total: {}", net.angle);
     let turned = moved(&doc, net);
     let solid = turned.solids.iter().find(|solid| solid.id == "sol1").expect("the slab is still there");
     assert_ne!(solid.outline, base.outline, "the slab turned");
@@ -288,4 +309,88 @@ fn degenerate_scale_ticks_never_reach_the_slab() {
     let scaled = moved(&doc, tick);
     let solid = scaled.solids.iter().find(|solid| solid.id == "sol1").expect("sol1");
     assert!(solid.height > 0.0 && solid.outline.iter().flatten().all(|value| value.is_finite()), "{solid:?}");
+}
+
+/// 🔄️ LAW: a large rotate or uniform scale of a multi-node selection keeps EVERY entity (counts, unselected geometry bit for bit) and maps each selected node EXACTLY by the Rodrigues rotation or the scale about the selection centroid, which itself stays put; a lone node is its own pivot and moves nothing.
+#[test]
+fn a_large_rotate_or_uniform_scale_keeps_every_entity_and_maps_positions_exactly() {
+    let doc = demo();
+    let picked = ["n00_g", "n20_g", "n20_l1"];
+    let selection = targets(&picked.map(|id| ("node", id)));
+    let before = doc.to_reference();
+    let at = |snapshot: &Fem3dSnapshotValue, id: &str| { let node = snapshot.nodes.iter().find(|node| node.id == id).expect("demo node"); [node.x, node.y, node.z] };
+    let centroid = |snapshot: &Fem3dSnapshotValue| { let points = picked.map(|id| at(snapshot, id)); [0, 1, 2].map(|axis| points.iter().map(|point| point[axis]).sum::<f64>() / points.len() as f64) };
+    let pivot = centroid(&before);
+    let rodrigues = |vector: [f64; 3], axis: [f64; 3], angle: f64| {
+        let length = axis.iter().map(|value| value * value).sum::<f64>().sqrt();
+        let k = axis.map(|value| value / length);
+        let (sin, cos) = angle.sin_cos();
+        let cross = [k[1] * vector[2] - k[2] * vector[1], k[2] * vector[0] - k[0] * vector[2], k[0] * vector[1] - k[1] * vector[0]];
+        let dot = k[0] * vector[0] + k[1] * vector[1] + k[2] * vector[2];
+        [0, 1, 2].map(|i| vector[i] * cos + cross[i] * sin + k[i] * dot * (1.0 - cos))
+    };
+    let motions = [([0.0, 0.0, 1.0], 1.0), ([0.0, 0.0, 1.0], 2.9), ([1.0, 0.0, 0.0], -2.0), ([1.0, 1.0, 1.0], 7.0), ([0.0, 1.0, 0.0], 3.1)];
+    for (axis, angle) in motions {
+        let tick = fem3d_gumball_tick(&doc, &selection, Fem3dGumballMotion::Rotate { axis, angle }).expect("a node selection moves geometry");
+        let after = moved(&doc, tick).to_reference();
+        assert_eq!((after.nodes.len(), after.elements.len(), after.solids.len(), after.supports.len(), after.load_cases.len()), (before.nodes.len(), before.elements.len(), before.solids.len(), before.supports.len(), before.load_cases.len()), "rotate {angle} about {axis:?}: no entity is lost or added");
+        for (old, new) in before.nodes.iter().zip(after.nodes.iter()) {
+            assert_eq!(old.id, new.id, "node order");
+            if picked.contains(&old.id.as_str()) {
+                let turned = rodrigues([old.x - pivot[0], old.y - pivot[1], old.z - pivot[2]], axis, angle);
+                let expected = [pivot[0] + turned[0], pivot[1] + turned[1], pivot[2] + turned[2]];
+                assert!([new.x, new.y, new.z].iter().zip(expected).all(|(got, want)| (got - want).abs() < 1e-9), "{} maps to {expected:?}, got {:?}", old.id, [new.x, new.y, new.z]);
+            } else {
+                assert_eq!([new.x, new.y, new.z], [old.x, old.y, old.z], "unselected {} stays bit for bit", old.id);
+            }
+        }
+        assert!(centroid(&after).iter().zip(pivot).all(|(got, want)| (got - want).abs() < 1e-9), "the centroid stays put");
+    }
+    let tick = fem3d_gumball_tick(&doc, &selection, Fem3dGumballMotion::Scale { sx: 3.0, sy: 3.0, sz: 3.0 }).expect("uniform scale");
+    let after = moved(&doc, tick).to_reference();
+    assert_eq!(after.nodes.len(), before.nodes.len());
+    for id in picked {
+        let (old, new) = (at(&before, id), at(&after, id));
+        assert!([0, 1, 2].iter().all(|&i| (new[i] - (pivot[i] + 3.0 * (old[i] - pivot[i]))).abs() < 1e-9), "{id} scales about the centroid");
+    }
+    assert!(centroid(&after).iter().zip(pivot).all(|(got, want)| (got - want).abs() < 1e-9), "the scale keeps the centroid");
+    let lone = targets(&[("node", "n20_l1")]);
+    for motion in [Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 2.9 }, Fem3dGumballMotion::Scale { sx: 3.0, sy: 3.0, sz: 3.0 }] {
+        let tick = fem3d_gumball_tick(&doc, &lone, motion).expect("a node selection resolves a tick");
+        assert!(tick.is_identity(), "a lone node moves nothing, so its tick is the identity");
+        let after = moved(&doc, tick).to_reference();
+        assert!(at(&after, "n20_l1").iter().zip(at(&before, "n20_l1")).all(|(got, want)| (got - want).abs() < 1e-12), "a lone node is its own pivot");
+    }
+}
+
+/// 🫥️ LAW: a gesture that moves nothing leaves the history length and the document unchanged: rotating or uniformly scaling a lone node about its own centroid, or a zero-length drag, resolves to the identity tick, so a one-shot commits no transaction and a streamed gesture (preview ticks included) retracts its leaf and commits nothing; a gesture that does move still commits exactly one.
+#[test]
+fn an_identity_gesture_leaves_the_history_length_and_the_document_unchanged() {
+    let doc = demo();
+    let lone = targets(&[("node", "n20_l1")]);
+    let pair = targets(&[("node", "n20_g"), ("node", "n00_g")]);
+    let z = [0.0, 0.0, 1.0];
+    let nothing = [(&lone, Fem3dGumballMotion::Rotate { axis: z, angle: 2.9 }), (&lone, Fem3dGumballMotion::Scale { sx: 3.0, sy: 3.0, sz: 3.0 }), (&lone, Fem3dGumballMotion::Translate { dx: 0.0, dy: 0.0, dz: 0.0 }), (&pair, Fem3dGumballMotion::Rotate { axis: z, angle: 0.0 }), (&pair, Fem3dGumballMotion::Scale { sx: 1.0, sy: 1.0, sz: 1.0 })];
+    for (selection, motion) in nothing {
+        let tick = fem3d_gumball_tick(&doc, selection, motion).expect("the selection resolves a tick");
+        assert!(tick.is_identity(), "{motion:?} moves nothing, so its tick is the identity");
+        assert!(drive(&FemGumballTransient::default(), "w", "rotateSelection", GesturePhase::Once, Some(tick.clone()), "base").committed.is_none(), "{motion:?}: a one-shot commits no command");
+        let mut transient = FemGumballTransient::default();
+        for (phase, at) in [(GesturePhase::Stream, 0), (GesturePhase::Stream, 1), (GesturePhase::Commit, 2)] {
+            let step = drive(&transient, "w", "rotateSelection", phase, Some(tick.clone()), "base");
+            assert!(step.committed.is_none(), "{motion:?}: tick {at} commits no command");
+            transient = step.transient.unwrap_or_default();
+        }
+        assert!(transient.gestures.is_empty(), "{motion:?}: nothing is left open");
+    }
+    let mut streamed = FemGumballTransient::default();
+    for angle in [0.4, 0.8] {
+        let step = drive(&streamed, "w", "rotateSelection", GesturePhase::Stream, fem3d_gumball_tick(&doc, &pair, Fem3dGumballMotion::Rotate { axis: z, angle }), "base");
+        streamed = step.transient.expect("the preview stays open");
+    }
+    let back = fem3d_gumball_tick(&doc, &lone, Fem3dGumballMotion::Rotate { axis: z, angle: 0.0 });
+    let done = drive(&streamed, "w", "rotateSelection", GesturePhase::Commit, back, "base");
+    assert!(done.committed.is_none(), "a gesture dragged back onto its press commits no command");
+    let real = drive(&FemGumballTransient::default(), "w", "rotateSelection", GesturePhase::Once, fem3d_gumball_tick(&doc, &pair, Fem3dGumballMotion::Rotate { axis: z, angle: 0.8 }), "base");
+    assert_eq!(real.committed.expect("a rotation that moves commits").1.len(), 1);
 }

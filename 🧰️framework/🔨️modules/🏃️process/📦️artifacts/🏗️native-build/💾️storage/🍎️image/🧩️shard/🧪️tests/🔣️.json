@@ -386,6 +386,145 @@
    }
   }
  ],
+ "commitment": [
+  {
+   "name": "the room the budget leaves is wide, the cap and the host share bound the capacity",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 107374182400,
+   "budgetBytes": 68719476736,
+   "live": [
+    {
+     "id": "pa11111",
+     "key": "pa11111",
+     "root": 0,
+     "capacityBytes": 10737418240
+    },
+    {
+     "id": "pa22222",
+     "key": "pa22222",
+     "root": 0,
+     "capacityBytes": 10737418240
+    }
+   ],
+   "decision": {
+    "kind": "birth",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "capacityBytes": 34359738368
+   }
+  },
+  {
+   "name": "the room the budget leaves shortens the capacity down to the working set with headroom",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 107374182400,
+   "budgetBytes": 53687091200,
+   "live": [
+    {
+     "id": "pa11111",
+     "key": "pa11111",
+     "root": 0,
+     "capacityBytes": 32212254720
+    },
+    {
+     "id": "pa22222",
+     "key": "pa22222",
+     "root": 0,
+     "capacityBytes": 10737418240
+    }
+   ],
+   "decision": {
+    "kind": "birth",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "capacityBytes": 10737418240
+   }
+  },
+  {
+   "name": "a budget room below the working set with headroom refuses the birth",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 107374182400,
+   "budgetBytes": 55834574848,
+   "live": [
+    {
+     "id": "pa11111",
+     "key": "pa11111",
+     "root": 0,
+     "capacityBytes": 32212254720
+    },
+    {
+     "id": "pa22222",
+     "key": "pa22222",
+     "root": 0,
+     "capacityBytes": 21474836480
+    }
+   ],
+   "decision": {
+    "kind": "refused",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "reason": "budget"
+   }
+  },
+  {
+   "name": "shards of other roots are not counted against the root of the key",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 107374182400,
+   "budgetBytes": 12884901888,
+   "live": [
+    {
+     "id": "pb11111",
+     "key": "pb11111",
+     "root": 1,
+     "capacityBytes": 42949672960
+    }
+   ],
+   "decision": {
+    "kind": "birth",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "capacityBytes": 12884901888
+   }
+  },
+  {
+   "name": "a host without room refuses before the budget is looked at",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 10737418240,
+   "budgetBytes": 214748364800,
+   "live": [],
+   "decision": {
+    "kind": "refused",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "reason": "host-free"
+   }
+  },
+  {
+   "name": "an existing image of the key is reused whatever the budget says",
+   "path": "u/l/pnew1/t",
+   "hostFreeBytes": 107374182400,
+   "budgetBytes": 8589934592,
+   "live": [
+    {
+     "id": "pnew1",
+     "key": "pnew1",
+     "root": 0,
+     "capacityBytes": 32212254720
+    }
+   ],
+   "decision": {
+    "kind": "existing",
+    "id": "pnew1",
+    "key": "pnew1",
+    "root": 0,
+    "capacityBytes": 32212254720
+   }
+  }
+ ],
  "aggregate": [
   {
    "name": "one image",
@@ -846,6 +985,146 @@
     true,
     false
    ]
+  }
+ ],
+ "sizing": [
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "measuredBytes": null,
+   "sizedBytes": 10737418240
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "measuredBytes": 3221225472,
+   "sizedBytes": 10737418240
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "measuredBytes": 21474836480,
+   "sizedBytes": 26843545600
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "measuredBytes": 42949672960,
+   "sizedBytes": 34359738368
+  },
+  {
+   "platform": "linux",
+   "need": 2147483648,
+   "measuredBytes": 107374182400,
+   "sizedBytes": 134217728000
+  },
+  {
+   "platform": "win32",
+   "need": 1073741824,
+   "measuredBytes": null,
+   "sizedBytes": 2147483648
+  }
+ ],
+ "growth": [
+  {
+   "name": "idle image stays",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 2147483648,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": null,
+   "targetBytes": null
+  },
+  {
+   "name": "85 percent used grows with headroom",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 9126805504,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": null,
+   "targetBytes": 11811160064
+  },
+  {
+   "name": "measured need alone triggers growth",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 1073741824,
+   "measuredBytes": 9663676416,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": null,
+   "targetBytes": 12884901888
+  },
+  {
+   "name": "tight host refuses growth",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 9663676416,
+   "measuredBytes": null,
+   "hostFreeBytes": 16106127360,
+   "budgetRoomBytes": null,
+   "targetBytes": null
+  },
+  {
+   "name": "host room limits the target",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 9663676416,
+   "measuredBytes": null,
+   "hostFreeBytes": 18253611008,
+   "budgetRoomBytes": null,
+   "targetBytes": 11811160064
+  },
+  {
+   "name": "commitment room limits the target",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 9663676416,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": 1610612736,
+   "targetBytes": 11811160064
+  },
+  {
+   "name": "no commitment room stays",
+   "platform": "darwin",
+   "capacityBytes": 10737418240,
+   "usedBytes": 9663676416,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": 0,
+   "targetBytes": null
+  },
+  {
+   "name": "cap limits the target",
+   "platform": "darwin",
+   "capacityBytes": 32212254720,
+   "usedBytes": 30064771072,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": null,
+   "targetBytes": 34359738368
+  },
+  {
+   "name": "image at the cap stays",
+   "platform": "darwin",
+   "capacityBytes": 34359738368,
+   "usedBytes": 33285996544,
+   "measuredBytes": null,
+   "hostFreeBytes": 214748364800,
+   "budgetRoomBytes": null,
+   "targetBytes": null
+  },
+  {
+   "name": "linux grows past the macOS cap",
+   "platform": "linux",
+   "capacityBytes": 32212254720,
+   "usedBytes": 30064771072,
+   "measuredBytes": null,
+   "hostFreeBytes": 429496729600,
+   "budgetRoomBytes": null,
+   "targetBytes": 37580963840
   }
  ]
 }

@@ -1,0 +1,201 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(window.__h&&window.__h.ready()))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "A1 open Actions panel, initial 4/4 steps and 0.1740 m3",
+  "js": "(async()=>{const h=window.__h;await h.actions();const s=await h.stepsNow(s=>s.n===4,150000,'demo steps loaded');h.ok(s&&s.k===4&&s.n===4&&Math.abs(s.vol-0.174)<1e-3,'initial '+h.json(s));window.__v0=s.vol;return h.json(s)})()",
+  "settleMs": 300,
+  "timeoutMs": 170000
+ },
+ {
+  "name": "A2 pointer-click stepper Decrease",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1500,
+  "pointer": "(async()=>{const b=window.__h.find('Decrease');const r=b.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "A2b stepper Decrease -> 3/4",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.k===3&&s.n===4,75000,'3/4');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A3 pointer-click stepper Increase",
+  "js": "(async()=>{const h=window.__h;return 'p'})()",
+  "settleMs": 1500,
+  "pointer": "(async()=>{const b=window.__h.find('Increase');const r=b.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "A3b stepper Increase -> 4/4",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.k===4&&s.n===4,75000,'4/4');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A4 Add Step (Execute) -> n=5, volume changes",
+  "js": "(async()=>{const h=window.__h;await h.form('Add Step…');await h.exec();const s=await h.stepsNow(s=>s.n===5,75000,'n=5');h.ok(Math.abs(s.vol-window.__v0)>1e-4,'volume unchanged '+s.vol);window.__v5=s;return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A5 Undo restores 4 steps and original volume",
+  "js": "(async()=>{const h=window.__h;h.click('Undo');const s=await h.stepsNow(s=>s.n===4,75000,'n=4');h.ok(Math.abs(s.vol-window.__v0)<1e-4,'volume after undo '+s.vol);return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A6 Redo re-applies 5 steps",
+  "js": "(async()=>{const h=window.__h;h.click('Redo');const s=await h.stepsNow(s=>s.n===5,75000,'n=5');h.ok(Math.abs(s.vol-window.__v5.vol)<1e-4,'volume after redo '+s.vol);return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A7 Undo back to 4",
+  "js": "(async()=>{const h=window.__h;h.click('Undo');const s=await h.stepsNow(s=>s.n===4,75000,'n=4');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A8 Artifact panel rows for the demo steps",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.until(()=>h.find('Cut Lap Joint'),75000,'rows');const l=h.labels();for(const e of ['Crosscut To Length','Cut Lap Joint','Drill Dowel Hole','Insert Dowel'])h.ok(l.includes(e),'row '+e+' in '+h.json(l));return h.json(l)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A9 eye toggle disables Cut Lap Joint -> volume changes",
+  "js": "(async()=>{const h=window.__h;const b=h.row('Cut Lap Joint').querySelector('button[data-slot=action]');b.click();await h.until(()=>{const s=h.steps();return s&&Math.abs(s.vol-window.__v0)>1e-4},75000,'volume change');const s=h.steps();window.__veye=s.vol;return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A10 eye toggle again restores volume",
+  "js": "(async()=>{const h=window.__h;const b=h.row('Cut Lap Joint').querySelector('button[data-slot=action]');b.click();const s=await h.stepsNow(s=>Math.abs(s.vol-window.__v0)<1e-4,75000,'volume restored');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A11 row context menu Remove deletes Insert Dowel",
+  "js": "(async()=>{const h=window.__h;await h.ctxmenu(h.find('Insert Dowel'),'Remove');const s=await h.stepsNow(s=>s.n===3,75000,'n=3');h.ok(!h.labels().includes('Insert Dowel'),'row still there');return h.json([s,h.labels()])})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A12 Undo restores removed step",
+  "js": "(async()=>{const h=window.__h;h.click('Undo');const s=await h.stepsNow(s=>s.n===4,75000,'n=4');await h.until(()=>h.labels().includes('Insert Dowel'),75000,'row back');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A13 select row then Remove Selected Step",
+  "js": "(async()=>{const h=window.__h;h.click('Drill Dowel Hole');await h.wait(800);await h.form('Remove Selected Step');const s=await h.stepsNow(s=>s.n===3,75000,'n=3');await h.until(()=>!h.labels().includes('Drill Dowel Hole'),30000,'row removed');return h.json([s,h.labels()])})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A14 Undo restores",
+  "js": "(async()=>{const h=window.__h;h.click('Undo');const s=await h.stepsNow(s=>s.n===4,75000,'n=4');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A15 Inspection shows the selected step",
+  "js": "(async()=>{const h=window.__h;h.click('Cut Lap Joint');await h.wait(800);h.click('Inspection');await h.until(()=>/ID: lap-joint-cut/.test(document.body.innerText),75000,'inspection');const w=[...document.querySelectorAll('input[aria-label=Width]')][0];h.ok(w&&Math.abs(+w.value-0.3)<1e-6,'width '+(w&&w.value));return 'ok'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A16 Inspection edit Width 0.3->0.1 changes volume",
+  "js": "(async()=>{const h=window.__h;const w=document.querySelector('input[aria-label=Width]');h.setInput(w,0.1);const s=await h.stepsNow(s=>Math.abs(s.vol-window.__v0)>1e-4,75000,'volume change after width edit');await h.until(()=>Math.abs(+document.querySelector('input[aria-label=Width]').value-0.1)<1e-6,75000,'width value kept');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A17 Inspection Move Later reorders steps",
+  "js": "(async()=>{const h=window.__h;const before=h.labels().join('|');h.click('Move Later');await h.until(()=>h.labels().join('|')!==before,75000,'order change');return before+' => '+h.labels().join('|')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A18 Inspection Move Earlier restores order",
+  "js": "(async()=>{const h=window.__h;const before=h.labels().join('|');h.click('Move Earlier');await h.until(()=>h.labels().join('|')!==before,75000,'order change');return before+' => '+h.labels().join('|')})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A19 Inspection label edit renames row",
+  "js": "(async()=>{const h=window.__h;const l=document.querySelector('input[aria-label=Label]');h.setInput(l,'Renamed Lap');await h.until(()=>h.labels().includes('Renamed Lap'),75000,'renamed row');return h.json(h.labels())})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A20 focus the viewport for key tests",
+  "js": "(async()=>{const h=window.__h;await h.actions();window.__k0=h.steps();return h.json(window.__k0)})()",
+  "settleMs": 800,
+  "pointer": "(async()=>{const c=document.querySelector('canvas');const r=c.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+ },
+ {
+  "name": "A21 [ key presses",
+  "js": "(async()=>{const h=window.__h;document.activeElement.blur();window.__k1=h.steps();return h.json(window.__k1)})()",
+  "settleMs": 2500,
+  "keys": [
+   "["
+  ]
+ },
+ {
+  "name": "A22 [ steps the cursor back",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.k===window.__k0.k-1,75000,'cursor back');return h.json([window.__k0,s])})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A23 ] key presses",
+  "js": "(async()=>{const h=window.__h;document.activeElement.blur();return 'k'})()",
+  "settleMs": 2500,
+  "keys": [
+   "]"
+  ]
+ },
+ {
+  "name": "A24 ] steps the cursor forward",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.k===window.__k0.k,75000,'cursor forward');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A25 select a row, then Delete key",
+  "js": "(async()=>{const h=window.__h;window.__d0=h.steps();h.click('Insert Dowel');await h.wait(800);document.activeElement.blur();return 'sel'})()",
+  "settleMs": 2500,
+  "keys": [
+   "Delete"
+  ]
+ },
+ {
+  "name": "A26 Delete removed the selected step",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.n===window.__d0.n-1,75000,'n-1 after Delete');await h.until(()=>!h.labels().includes('Insert Dowel'),30000,'row removed');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A27 Meta+z undo",
+  "js": "(async()=>{const h=window.__h;document.activeElement.blur();return 'u'})()",
+  "settleMs": 2500,
+  "keys": [
+   "Meta+z"
+  ]
+ },
+ {
+  "name": "A28 Meta+z restored the step",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.n===window.__d0.n,75000,'undo by key');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A29 Meta+Shift+z redo",
+  "js": "(async()=>{const h=window.__h;document.activeElement.blur();return 'r'})()",
+  "settleMs": 2500,
+  "keys": [
+   "Meta+Shift+Z"
+  ]
+ },
+ {
+  "name": "A30 Meta+Shift+z re-applied the removal",
+  "js": "(async()=>{const h=window.__h;const s=await h.stepsNow(s=>s.n===window.__d0.n-1,75000,'redo by key');return h.json(s)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "A31 Escape does not break the app",
+  "js": "(async()=>{const h=window.__h;return 'esc'})()",
+  "settleMs": 1500,
+  "keys": [
+   "Escape"
+  ]
+ },
+ {
+  "name": "A32 app still alive after Escape",
+  "js": "(async()=>{const h=window.__h;h.ok(document.querySelectorAll('canvas').length>=1,'canvas gone');return h.json(h.steps())})()",
+  "settleMs": 300
+ }
+]

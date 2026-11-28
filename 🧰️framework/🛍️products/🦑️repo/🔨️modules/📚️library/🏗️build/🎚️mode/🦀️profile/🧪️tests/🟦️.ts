@@ -69,6 +69,10 @@ test("neutral local LTO fixtures retain false as distinct from disabled LTO",asy
  for(const row of rows)for(const context of argumentCases.contexts){const fixture=createCargoProfileFixtureV1(row,context),files=new Map(fixture.files.map(file=>[file.path,file.content])),manifest=TOML.parse(files.get("Cargo.toml")!)as{profile:Record<string,{lto:unknown;"codegen-units":unknown}>};expect(manifest.profile[row.profile]?.lto).toBe(false);expect(manifest.profile[row.profile]?.["codegen-units"]).toBe(row.settings["codegen-units"]);expect(Bun.TOML.parse(files.get("Cargo.toml")!)).toEqual(TOML.parse(files.get("Cargo.toml")!));expect(Object.isFrozen(fixture.files)).toBe(true);}
 });
 
-
-
-
+test("every norm component final links under the lean prototype row: no thin LTO over its 800-unit closure, and a component off the list keeps the prototype row",async()=>{
+ const{planCargoProfilePolicyV1}=await import("../🟦️.ts"),request=(compositions:string[])=>({version:1,mode:"prototype",target:"wasm32-wasip2",producer:"wasm-component",operation:"build",compositions}),settings=schema.definitions.PolicyProtocol.const.settings,owner={kind:"repository",owner:"🌎️hub/Cargo.toml"} as const;
+ const norms=["semio-hub-norm-component","semio-hub-norm-energy-component","semio-hub-norm-eurocode-component","semio-hub-norm-eurocode-materials-component","semio-hub-norm-eurocode-structural-component"];
+ for(const name of norms){const plan=planCargoProfilePolicyV1(request([name]),owner);expect(plan.target).toEqual(settings["component-lean"]);expect(plan.target.lto).toBe("off");expect(schema.definitions.PolicyProtocol.const.leanCompositions.prototype).toContain(name);}
+ expect(planCargoProfilePolicyV1(request(["semio-hub-cad-component"]),owner).target).toEqual(settings["prototype-component"]);
+ expect(planCargoProfilePolicyV1(request(["semio-hub-norm-component","semio-hub-cad-component"]),owner).target).toEqual(settings["prototype-component"]);
+});

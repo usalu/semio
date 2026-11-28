@@ -27,7 +27,7 @@ use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![semio_s_artifact_fem_3d_io::examples::demo::source(), semio_s_artifact_fem_3d_io::examples::concrete_forest::source(), semio_s_artifact_fem_3d_io::examples::house::source()]).as_slice()
+    EXAMPLES.get_or_init(semio_s_artifact_fem_3d_io::examples::sources).as_slice()
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {

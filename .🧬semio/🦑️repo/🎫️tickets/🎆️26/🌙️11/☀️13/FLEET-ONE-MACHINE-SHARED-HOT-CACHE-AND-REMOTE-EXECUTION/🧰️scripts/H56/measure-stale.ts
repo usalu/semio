@@ -1,0 +1,16 @@
+import {join} from "node:path";
+const root="/Users/ueli/Documents/semio";
+const B=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
+const {readAdmissionMemoV1}=await import(join(B,"🕸️graph/📥️load/🧠️admission-memo/🟦️.ts"));
+const {buildGraphSourceFactsHoldV1}=await import(join(B,"🕸️graph/📁️workspace/🟦️.ts"));
+const file=process.argv[2],scope=file.replace(/\.admission\.json$/,"");
+const lent=await readAdmissionMemoV1(join(root,".cache/b/g/m/selected",file),scope,()=>true);
+const rows=lent!.observations as any[];await lent!.close();
+const stale:any[]=[];await buildGraphSourceFactsHoldV1(rows,undefined,(r:any)=>stale.push(r),undefined,false,true);
+const kinds:Record<string,number>={};for(const r of stale)kinds[r.kind]=(kinds[r.kind]??0)+1;
+console.log("stale by kind",JSON.stringify(kinds));
+const providers:Record<string,number>={};for(const r of rows)if(r.kind==="analysis")providers[String(r.fact?.provider).slice(0,60)]=(providers[String(r.fact?.provider).slice(0,60)]??0)+1;
+console.log("analysis providers in memo",JSON.stringify(providers));
+const sp:Record<string,number>={};for(const r of stale)if(r.kind==="analysis")sp[String(r.fact?.provider).slice(0,60)]=(sp[String(r.fact?.provider).slice(0,60)]??0)+1;
+console.log("stale analysis providers",JSON.stringify(sp));
+process.exit(0);

@@ -17,6 +17,7 @@ for(const fleet of[false,true])registerIsolatedBuildTestV1(import.meta.path,flee
   try{
    await runStub(directory,{version:1,passes:[pass]},cargo,{
     environment,
+    parentGrowth:async()=>undefined,
     localJobs:{maximum:1,peakMegabytes:()=>peak,sample:async()=>({availableMegabytes:16000,ownedMegabytes:0,pressure:"normal"})},
     ...fleet?{fleetJobs:async()=>({jobs:2,local:1,remote:1,reason:"fleet-all" as const}),fleetSlots:async()=>1}:{},
    },"fleet-fallback");

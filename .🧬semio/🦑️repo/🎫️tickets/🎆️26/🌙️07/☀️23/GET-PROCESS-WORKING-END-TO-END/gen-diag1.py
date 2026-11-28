@@ -1,0 +1,12 @@
+exec(open('actions-lib.py').read())
+wait()
+CANVAS="(async()=>{const c=document.querySelector('canvas');const r=c.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()"
+step("open actions","await h.actions();await h.stepsNow(s=>s.n===4,150000,'demo loaded');return h.json(h.steps())",timeoutMs=170000)
+step("pointer on Decrease","return 'p'",pointer="(async()=>{const b=window.__h.find('Decrease');const r=b.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",settleMs=3000)
+step("after pointer decrease","const t0=Date.now();while(Date.now()-t0<60000&&h.steps().k===4)await h.wait(500);return h.json([h.steps(),Date.now()-t0])")
+step("click canvas","return 'c'",pointer=CANVAS,settleMs=1000)
+step("key [","return 'k'",keys=["["],settleMs=1000)
+step("after [","const t0=Date.now();const k=h.steps().k;while(Date.now()-t0<60000&&h.steps().k===k)await h.wait(500);return h.json([h.steps(),Date.now()-t0,window.__keys])")
+step("key ] and Delete after selecting row","return 'k'",keys=["]","Delete"],settleMs=3000)
+step("after ]","return h.json([h.steps(),window.__keys])")
+save("process-diag1.json")

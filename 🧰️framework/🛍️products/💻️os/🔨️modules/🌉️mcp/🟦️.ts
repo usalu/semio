@@ -158,11 +158,15 @@ export async function servePublishedMcpStdioV1(repoRoot:string,extra:readonly st
   const targets=[...(env.SEMIO_OS_MCP_BIN?[]:[MCP_BINARY_TARGET]),...(catalogTarget?[catalogTarget]:[])];
   for(const[index,target]of targets.entries()){signal.throwIfAborted();const status=await stage(target,progress,signal);if(status!==0)return status;signal.throwIfAborted();if(before===undefined||index<targets.length-1)await serveUsable();}
   signal.throwIfAborted();
-  const held=await admit(closed);
+  let retireFinal=()=>{};
+  const finalComponents=new Promise<void>(resolve=>{retireFinal=resolve;});
+  void closed.then(()=>retireFinal());
+  const held=await admit(closed,finalComponents);
   selected=held.path;
   Object.assign(launchEnv,held.prepared);
   acquired=true;
   retireComponents();
+  retireComponents=retireFinal;
   refreshed=before===undefined||probe!.fingerprint(held.path)!==before||launchEnv[MCP_COMPONENT_MODELS_ENV]!==modelsBefore;
   return 0;
  };
@@ -173,11 +177,17 @@ export async function servePublishedMcpStdioV1(repoRoot:string,extra:readonly st
   const {buildMcpComponentModelV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
   await(buildModel??((pluginId,log,abort)=>buildMcpComponentModelV1(repoRoot,invocation,pluginId,log,abort)))(missing.pluginId,progress,signal);
   signal.throwIfAborted();
-  const before=launchEnv[MCP_COMPONENT_MODELS_ENV];
-  Object.assign(launchEnv,await hold<NodeJS.ProcessEnv>(async consume=>{
-   const {withMcpComponentEnvironmentV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
-   return withMcpComponentEnvironmentV1(repoRoot,invocation,phase(),env,consume);
-  }));
+  const before=launchEnv[MCP_COMPONENT_MODELS_ENV],retirePrevious=retireComponents;
+  let retireNext=()=>{};
+  const held=new Promise<void>(resolve=>{retireNext=resolve;});
+  try{
+   Object.assign(launchEnv,await hold<NodeJS.ProcessEnv>(async consume=>{
+    const {withMcpComponentEnvironmentV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
+    return withMcpComponentEnvironmentV1(repoRoot,invocation,phase(),env,consume);
+   },held,true));
+  }catch(error){retireNext();throw error;}
+  retireComponents=retireNext;
+  retirePrevious();
   return launchEnv[MCP_COMPONENT_MODELS_ENV]!==before;
  };
  try{return await serveWarmMcpGateway({expected,models,stage:(progress,signal,serving)=>{stageSignal=signal;preparing=prepare(progress,signal,serving);return preparing;},changed:()=>refreshed,command:()=>selected,args:withMcpHostDriverPolicy(["stdio",...extra]),cwd:repoRoot,env:launchEnv,input:process.stdin,output:process.stdout,onStop:()=>{if(!acquired)stopped.abort(stageSignal?.reason);onStop?.(stageSignal?.reason);}});}

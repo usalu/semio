@@ -1,0 +1,119 @@
+/** 🧩️ Contract: a Cargo lane gets an image of its own before its first byte is written when the rule, the platform and the host allow it, an existing image is mounted again after a reboot, a lane whose files live in the home image stays there, a refusal or a failure leaves the lane in the home image, and the image of a lane that is gone is retired whole.
+ * @see ../🟦️.ts */
+import{afterAll,expect,test}from"bun:test";
+import{spawnSync}from"node:child_process";
+import{mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{NATIVE_IMAGE_SHARD_V1,nativeImageShardFoldV1,nativeImageShardLayoutV1,nativeImageShardPathV1,readNativeImageShardLedgerV1,type NativeImageShardLifecycleV1,type NativeImageShardRuleV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+import{tryClaimV1}from"../../../../🔒️lock/🟦️.ts";
+import{UNIT_CACHE_POLICY_V1}from"../../../../🔏️key/🟦️.ts";
+import{lanePathsV1}from"../../../🟦️.ts";
+import{ensureLaneImageV1,laneImageDirectoryV1,laneImagePathV1,repairLaneImagesV1,retireIdleLaneImagesV1,type LaneImagePortsV1,type LaneImageWorldV1}from"../🟦️.ts";
+
+const GiB=1073741824,scratch:string[]=[];afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const rule:NativeImageShardRuleV1={enabled:true,headroomPercent:100,hostFreeReservePercent:66,roots:[{prefix:"u/l",pattern:"^[a-z0-9]{1,12}$",needBytes:8*GiB}]};
+function world(hostFreeGiB:number,options:Readonly<{enabled?:boolean}>={}){
+ const base=mkdtempSync(join(tmpdir(),"lane-image-"));scratch.push(base);
+ const directory=join(base,".cache","b","r"),root=join(directory,"m","u"),calls:string[]=[];
+ mkdirSync(join(root,"l"),{recursive:true});mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});writeFileSync(join(directory,"fixed.dmg"),"");
+ const mountedPaths=new Set<string>([join(directory,"m")]);
+ const lifecycle:NativeImageShardLifecycleV1={
+  async create(layout){calls.push("create:"+layout.id);},
+  async attach(layout){calls.push("attach:"+layout.id);mountedPaths.add(layout.mountPoint);},
+  async detach(layout){calls.push("detach:"+layout.id);mountedPaths.delete(layout.mountPoint);},
+  async retire(layout){calls.push("retire:"+layout.id);mountedPaths.delete(layout.mountPoint);}
+ };
+ let nowMs=1_000;
+ const ports:LaneImagePortsV1={directory,rule:{...rule,enabled:options.enabled??true},platform:"darwin",hostFreeBytes:()=>hostFreeGiB*GiB,now:()=>++nowMs,lifecycle,lock:async body=>body()};
+ const files=new Map<string,string[]>(),existing=new Set<string>();
+ const fake:LaneImageWorldV1={exists:path=>existing.has(path),entries:path=>files.get(path)??[],mounted:path=>mountedPaths.has(path)};
+ return{directory,root,calls,ports,fake,files,existing,mountedPaths};
+}
+
+test("a lane without files gets an image of its own, born once, logged at its path and aligned within the cap",async()=>{
+ const w=world(100);
+ const made=await ensureLaneImageV1(w.root,"q90be4b",w.ports,w.fake);
+ expect(made.kind).toBe("birth");
+ expect(w.calls).toEqual(["detach:q90be4b","create:q90be4b","attach:q90be4b"]);
+ const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(w.directory)),record=live.get("q90be4b")!;
+ expect(record.path).toBe(laneImagePathV1("q90be4b"));
+ expect(record.path).toBe("u/l/q90be4b");
+ expect(record.capacityBytes%GiB).toBe(0);
+ expect(record.capacityBytes).toBeLessThanOrEqual(NATIVE_IMAGE_SHARD_V1.maximumImageBytes.darwin);
+ expect(record.capacityBytes).toBeGreaterThanOrEqual(16*GiB);
+ const script=`
+import json,sys
+rows=[json.loads(line) for line in open(sys.argv[1]) if line.strip()]
+born=[row for row in rows if row["type"]=="born"]
+print(json.dumps([[row["id"],row["path"],row["capacityBytes"]%(1<<30)==0,row["capacityBytes"]<=int(sys.argv[2])] for row in born]))`;
+ const run=spawnSync("python3",["-I","-c",script,join(w.directory,NATIVE_IMAGE_SHARD_V1.ledgerFile),String(NATIVE_IMAGE_SHARD_V1.maximumImageBytes.darwin)],{encoding:"utf8"});
+ expect(run.status).toBe(0);
+ expect(JSON.parse(run.stdout)).toEqual([["q90be4b","u/l/q90be4b",true,true]]);
+ const again=await ensureLaneImageV1(w.root,"q90be4b",w.ports,w.fake);
+ expect(again.kind).toBe("existing");
+ expect(w.calls.filter(call=>call.startsWith("create"))).toHaveLength(1);
+});
+
+test("a lane whose files already live in the home image stays there, nothing is mounted over them",async()=>{
+ const w=world(100),base=lanePathsV1(w.root,"p1a2b3c").base;
+ w.existing.add(base);w.files.set(base,["target","live"]);
+ expect((await ensureLaneImageV1(w.root,"p1a2b3c",w.ports,w.fake)).kind).toBe("home");
+ expect(w.calls).toEqual([]);
+ expect(readNativeImageShardLedgerV1(w.directory)).toEqual([]);
+});
+
+test("a host that cannot hold the image, a rule that is off, a home image that is not mounted and a failing lifecycle all leave the lane in the home image",async()=>{
+ const tight=world(15);
+ const refused=await ensureLaneImageV1(tight.root,"p000001",tight.ports,tight.fake);
+ expect(refused).toEqual({kind:"refused",id:"p000001",detail:"host-free"});
+ expect(tight.calls).toEqual([]);
+ expect((await ensureLaneImageV1(tight.root,"p000001",undefined,tight.fake)).kind).toBe("off");
+ const off=world(100,{enabled:false});
+ expect((await ensureLaneImageV1(off.root,"p000001",off.ports,off.fake)).kind).toBe("off");
+ const unmounted=world(100);unmounted.mountedPaths.clear();
+ expect((await ensureLaneImageV1(unmounted.root,"p000001",unmounted.ports,unmounted.fake)).kind).toBe("home");
+ const broken=world(100);
+ const failing:LaneImagePortsV1={...broken.ports,lifecycle:{...broken.ports.lifecycle,async create(){throw Error("hdiutil: create failed");}}};
+ const failed=await ensureLaneImageV1(broken.root,"p000002",failing,broken.fake);
+ expect(failed.kind).toBe("failed");
+ expect(failed.detail).toContain("create failed");
+});
+
+test("after a reboot every live image is mounted again and an image without files is retired",async()=>{
+ const w=world(100);
+ await ensureLaneImageV1(w.root,"p000001",w.ports,w.fake);await ensureLaneImageV1(w.root,"p000002",w.ports,w.fake);
+ w.mountedPaths.clear();w.mountedPaths.add(join(w.directory,"m"));w.calls.length=0;
+ const kept=nativeImageShardLayoutV1(w.directory,{id:"p000001",key:"p000001",path:"u/l/p000001"});
+ mkdirSync(join(kept.image,".."),{recursive:true});writeFileSync(kept.image,"");
+ const done=await repairLaneImagesV1(w.ports,w.fake);
+ expect(done).toEqual({p000001:"mounted",p000002:"retired"});
+ expect(w.calls).toEqual(["attach:p000001","retire:p000002"]);
+ expect([...nativeImageShardFoldV1(readNativeImageShardLedgerV1(w.directory)).keys()]).toEqual(["p000001"]);
+});
+
+test("the image of a lane that is gone is retired whole, a claimed lane and a lane with a record keep theirs",async()=>{
+ const w=world(100);
+ for(const id of["p000001","p000002","p000003"])await ensureLaneImageV1(w.root,id,w.ports,w.fake);
+ w.calls.length=0;
+ const keep=lanePathsV1(w.root,"p000002"),claimed=lanePathsV1(w.root,"p000003");
+ w.existing.add(keep.base);w.existing.add(keep.metadata);
+ w.existing.add(claimed.base);
+ const claim=tryClaimV1(join(w.root,UNIT_CACHE_POLICY_V1.layout.locks),"lane-p000003")!;
+ try{
+  const retired=await retireIdleLaneImagesV1(w.root,w.ports,5_000,w.fake);
+  expect(retired).toEqual(["p000001"]);
+ }finally{claim.release();}
+ expect(w.calls).toEqual(["retire:p000001"]);
+ expect([...nativeImageShardFoldV1(readNativeImageShardLedgerV1(w.directory)).keys()].sort()).toEqual(["p000002","p000003"]);
+ const layout=nativeImageShardLayoutV1(w.directory,{id:"p000002",key:"p000002",path:nativeImageShardPathV1(rule,0,"p000002")});
+ expect(layout.mountPoint).toBe(join(w.directory,"m","u","l","p000002"));
+});
+
+test("the partition directory of a cache root is the one that holds the home image, nothing else qualifies",()=>{
+ const w=world(100);
+ expect(laneImageDirectoryV1(w.root)).toBe(w.directory);
+ expect(laneImageDirectoryV1(join(w.directory,"m"))).toBeUndefined();
+ expect(laneImageDirectoryV1(join(w.directory,"x","u"))).toBeUndefined();
+ expect(laneImageDirectoryV1(join(tmpdir(),"nowhere","m","u"))).toBeUndefined();
+});

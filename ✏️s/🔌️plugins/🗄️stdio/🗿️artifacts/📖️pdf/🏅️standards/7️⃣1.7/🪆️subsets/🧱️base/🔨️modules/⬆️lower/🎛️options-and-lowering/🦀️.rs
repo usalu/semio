@@ -317,10 +317,26 @@ impl Lowering<'_> {
             (Category::OptionalContent, snapshot.optional_content.iter().flat_map(|oc| oc.groups.iter().map(|g| g.id.clone())).collect()),
         ] {
             for id in ids {
+                if category == Category::Properties && self.property_group(&id).is_some() { continue; }
                 let reference = self.reserve();
                 self.refs.insert((category, id), reference);
             }
         }
+        for properties in &snapshot.properties {
+            if let Some(group) = self.property_group(&properties.name) {
+                if let Some(reference) = self.refs.get(&(Category::OptionalContent, group)).copied() {
+                    self.refs.insert((Category::Properties, properties.name.clone()), reference);
+                }
+            }
+        }
+    }
+
+    /// 🏷️ The optional content group a named property list only points at, so the resource names the group object itself instead of an object that holds a bare reference.
+    pub(crate) fn property_group(&self, name: &str) -> Option<String> {
+        let properties = self.snapshot.properties.iter().find(|properties| properties.name == name)?;
+        let [PdfDictEntry { key, value: PdfObject::Name(group) }] = properties.entries.as_slice() else { return None };
+        let known = self.snapshot.optional_content.as_ref()?.groups.iter().any(|candidate| &candidate.id == group);
+        (key == "OCG" && known).then(|| group.clone())
     }
 }
 

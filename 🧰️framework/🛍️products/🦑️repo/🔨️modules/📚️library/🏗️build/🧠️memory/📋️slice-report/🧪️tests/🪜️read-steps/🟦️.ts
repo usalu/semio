@@ -119,8 +119,8 @@ test("the inventory names its attempt and sub-phase in both languages, so a rest
  },{round:3},diagnostics);
  await sliceReadStepV1("inventory",async()=>{expect(describeSliceReadStepV1()!.phase).toContain("(attempt 4)");},{round:4});
  await sliceReadWaitStepV1("graph-state",async leave=>{
-  expect(describeSliceReadStepV1()!.phase).toContain("waiting for the graph state lease and checking the graph store");
-  expect(describeSliceReadStepV1()!.phase).toContain("Warte auf die Graphstatus-Leihe und prüfe den Graphspeicher");
+  expect(describeSliceReadStepV1()!.phase).toContain("opening the graph store and its quota ledger and taking the graph state lease");
+  expect(describeSliceReadStepV1()!.phase).toContain("Öffne den Graphspeicher samt Kontingentbuch und nehme die Graphstatus-Leihe");
   leave();leave();expect(describeSliceReadStepV1()).toBeUndefined();
  });
  expect(describeSliceReadStepV1()).toBeUndefined();

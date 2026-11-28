@@ -83,7 +83,7 @@
         }
         for word in &deleted {
             let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
-            let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta(), &mut identity).await.expect("the reserved job is admitted before its args are decoded");
+            let admitted = artifact_app_laws::dispatch_fixture_action(&mut app.0, INTERACTION_SELECT_ACTION_ID, Some(interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta(), &mut identity, cx, mounted_policy.maintenance).await.expect("the reserved job is admitted before its args are decoded");
             let fault = semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
             assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
             close_reserved_app(&mut app, mounted_policy,cx);

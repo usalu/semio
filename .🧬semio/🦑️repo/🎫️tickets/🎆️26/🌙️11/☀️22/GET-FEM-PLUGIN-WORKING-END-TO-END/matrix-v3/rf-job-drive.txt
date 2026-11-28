@@ -1,0 +1,14 @@
+        let step = await actor.api.stepJob(msg.job, msg.budget);
+        // 🚚️ The worker-owned job drive, the twin of the MoreWork drive above: a running step that reports no
+        // progress is not a message for the host, it is the guest asking for its next slice, and in the browser
+        // every host round trip costs a main-thread hop. One crossing therefore covers a quarter of the granted
+        // wall (one job selection measured 132 crossings, about 3 ms each idle and 15 ms under CPU load) and
+        // stops the instant the job is terminal, reports progress, the host posts anything for this actor (a
+        // cancel, an ingress message) or the actor goes away.
+        const jobDriveEndMs = performance.now() + Math.max(0, Number(msg.budget && msg.budget.deadlineMs) || 0) / 4;
+        while (step.status === "running" && !(step.progress && step.progress.byteLength > 0) && performance.now() < jobDriveEndMs) {
+          if (hostInputMoved(inputMark, actorId) || actors.get(actorId) !== actor || actor.disposeRequested) break;
+          await driveYield();
+          if (hostInputMoved(inputMark, actorId) || actors.get(actorId) !== actor || actor.disposeRequested) break;
+          step = await actor.api.stepJob(msg.job, msg.budget);
+        }

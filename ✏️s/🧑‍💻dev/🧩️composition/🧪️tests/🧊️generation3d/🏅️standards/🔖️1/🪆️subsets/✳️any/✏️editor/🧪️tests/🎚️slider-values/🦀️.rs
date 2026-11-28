@@ -104,7 +104,7 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
         }
         crate::flow_operators::retire_flow_eval_session(session);
         PreviewReading { mesh_ids: payload_mesh_ids(&payload.meshes_json), bounds: semio_s_artifact_procedural_3d_preview_eval::preview_payload_bounds(&payload.meshes_json), widget_errors }
-    })
+    }).expect("the evaluation host binds its snapshot")
 }
 
 /// 🩺️ Why an evaluation that named no error still put nothing on screen: the kernel's own refusal of

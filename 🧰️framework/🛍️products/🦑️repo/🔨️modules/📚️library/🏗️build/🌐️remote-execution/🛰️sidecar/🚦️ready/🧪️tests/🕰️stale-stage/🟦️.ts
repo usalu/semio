@@ -16,10 +16,10 @@ const executing=(reads:number,tasks:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${r
 const silent=(seconds:number)=>`#!/bin/sh\ni=0\nwhile [ $i -lt ${seconds} ]; do i=$((i+1)); echo "working on unit $i"; sleep 0.3; done\nexit 0\n`;
 const standing=(line:string)=>`#!/bin/sh\necho "${line}"\nsleep 60\n`;
 const policy={...TREE,staleStageMilliseconds:1500,codeQuietMilliseconds:900,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],holderWaitRestartMilliseconds:600000,stallStopMilliseconds:600000};
-const declare=(root:string,revision:number)=>{mkdirSync(join(root,"code"),{recursive:true});writeFileSync(join(root,"code","semantics.json"),JSON.stringify({revision}));};
-const bump=(root:string)=>declare(root,Math.floor(Math.random()*1e6)+2);
+const declareSemantics=(root:string,revision:number)=>{mkdirSync(join(root,"code"),{recursive:true});writeFileSync(join(root,"code","semantics.json"),JSON.stringify({revision}));};
+const bump=(root:string)=>declareSemantics(root,Math.floor(Math.random()*1e6)+2);
 const touch=(root:string,name:string,ahead:number)=>{mkdirSync(dirname(join(root,"code",name)),{recursive:true});const at=new Date(Date.now()+ahead);writeFileSync(join(root,"code",name),"y");utimesSync(join(root,"code",name),at,at);};
-const run=(home:string,root:string)=>{declare(root,1);return runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});};
+const run=(home:string,root:string)=>{declareSemantics(root,1);return runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});};
 
 test("a stage that shows progress is stopped for new code only when it has run long enough",()=>{
  expect(TREE.staleStageMilliseconds).toBe(1800000);

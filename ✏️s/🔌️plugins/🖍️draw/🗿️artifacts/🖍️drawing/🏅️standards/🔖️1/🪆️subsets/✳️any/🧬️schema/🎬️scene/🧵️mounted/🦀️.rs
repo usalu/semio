@@ -41,7 +41,7 @@ impl State{
    if !child.terminal_is_empty(){return plugin_settle_poll(child.step(body,effect));}
    plugin_pay_unit(effect)?;
    self.returned=None;
-  }else if let Some(read)=self.cleanup.as_mut().and_then(DocumentVectorRetirement::take_snapshot_read){
+  }else if let Some(read)=self.cleanup.as_mut().and_then(DocumentVectorRetirement::release_snapshot_read){
    plugin_pay_unit(effect)?;
    self.returned=Some(ControlledRetirement::retain(read));
   }else if let Some(child)=&mut self.paint_cleanup{
@@ -67,8 +67,9 @@ impl State{
  }
  fn demands(&self,body:usize)->Result<[usize;4],ValueError>{
   macro_rules! child{($child:expr)=>{if let Some(child)=$child{if child.terminal_is_empty(){return Ok([0,0,0,1]);}let demand=child.next_demand(body)?;return Ok([demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth]);}}}
-  child!(&self.paint_cleanup);child!(&self.discard);child!(&self.raw_discard);child!(&self.cleanup);
   child!(&self.returned);
+  if self.cleanup.as_ref().is_some_and(DocumentVectorRetirement::source_pending){return Ok([0,0,0,1]);}
+  child!(&self.paint_cleanup);child!(&self.discard);child!(&self.raw_discard);child!(&self.cleanup);
   Ok([0;4])
  }
  fn begin_close(&mut self){self.cancelled=true;self.transfer(false);if let Some(scene)=self.visual.take(){self.discard=Some(PreparedSceneCloseJob::new(scene));}}
@@ -139,6 +140,7 @@ impl BoundedJob for GeometryJob{
  fn retirement_demands(&self,_copy:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:self.input.as_ref().map_or_else(||self.restored.as_ref().map_or(0,Vec::capacity),Vec::capacity),depth:1,..Default::default()})}
  fn cancel(&mut self){if let Ok(mut shell)=self.shell.try_borrow_mut(){if let Some(state)=shell.as_mut().filter(|state|state.job_id==self.job&&state.identity.matches(self.identity)){state.cancelled=true;}}}
  fn checkpoint(&self)->Option<Vec<u8>>{Some(input(self.slot,self.identity,self.job))}
+ fn replay_input(&self)->Option<&[u8]>{self.input.as_deref()}
  fn terminal_drop_is_shallow(&self)->bool{self.input.is_none()&&self.restored.is_none()}
 }
 fn input(slot:usize,identity:SceneIdentity,job:u64)->Vec<u8>{let mut bytes=Vec::with_capacity(63);bytes.push(1);bytes.extend_from_slice(&(slot as u16).to_le_bytes());bytes.extend_from_slice(&identity.instance.to_le_bytes());bytes.extend_from_slice(&identity.base.to_le_bytes());bytes.extend_from_slice(&identity.generation.to_le_bytes());bytes.extend_from_slice(&identity.revision);bytes.extend_from_slice(&job.to_le_bytes());bytes}

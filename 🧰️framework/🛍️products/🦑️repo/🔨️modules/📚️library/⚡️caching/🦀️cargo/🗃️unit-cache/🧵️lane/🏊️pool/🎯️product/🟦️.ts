@@ -3,25 +3,29 @@ import {join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import {sleepV1,tryClaimV1} from "../../../🔒️lock/🟦️.ts";
 import {laneMessageV1} from "../../../🚪️launch/🟦️.ts";
-import {enterLaneV1,lanePathsV1,type LaneOwnerV1} from "../../🟦️.ts";
-import {boundedPoolV1,laneHoldersV1,poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1,type PoolTrimContextV1} from "../🟦️.ts";
+import {crateKeyV1,enterLaneV1,lanePathsV1,type LaneOwnerV1} from "../../🟦️.ts";
+import {admitNewLaneV1,boundedPoolV1,laneHoldersV1,poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1,type PoolTrimContextV1} from "../🟦️.ts";
+import {ensureLaneImageV1,laneImagePortsV1,repairLaneImagesV1,retireClampedLaneImagesV1,retireIdleLaneImagesV1} from "../🧩️image/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.pool,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🎯️ A stable product workspace remains exclusively held by its current caller, never by a waiter's authority. A retained product lane (idle, inside its retention window) is never a trim victim, so it is not counted against the live bound either (`boundedPoolV1`): counting it let thirty-two retained products fill the pool for twelve hours and every later product wait here for ever without a word (the artifact-plan receiver stalled its whole loan in `cargo.product.claim`); a pool full of lanes that are really live now says so once (`poolBusy`) and keeps waiting, cancellable. */
-export async function acquireProductLaneV1(root:string,request:Readonly<{key:string;crates:readonly string[];quotaBytes:number;owner:LaneOwnerV1;flavour?:string}>,options:Readonly<{signal:AbortSignal;report?:PoolReportV1;volume?:PoolTrimContextV1["volume"];onHeld?:"wait"|"refuse"}>):Promise<Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>>{
+export async function acquireProductLaneV1(root:string,request:Readonly<{key:string;crates:readonly string[];quotaBytes:number;commitmentBytes?:number;owner:LaneOwnerV1;flavour?:string}>,options:Readonly<{signal:AbortSignal;report?:PoolReportV1;volume?:PoolTrimContextV1["volume"];onHeld?:"wait"|"refuse"}>):Promise<Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>>{
  if(!/^[a-f0-9]{64}$/u.test(request.key))throw Error("Full Cargo product namespace identity required");
  const id=policy.product.prefix+request.key.slice(0,policy.product.digestDigits),paths=lanePathsV1(root,id),locks=join(root,layout.locks),bounds=poolBoundsV1(request.quotaBytes),trimContext:PoolTrimContextV1={requested:[id],...request.flavour===undefined?{}:{flavour:request.flavour},...options.volume===undefined?{}:{volume:options.volume}};let poll=policy.pollMilliseconds,reported=false;const started=Date.now();let noticed=started;
  mkdirSync(join(root,layout.lanes),{recursive:true});
+ const lanePorts=await laneImagePortsV1(root,options.signal,request.commitmentBytes,crateKeyV1(request.crates));
+ if(lanePorts!==undefined)try{await repairLaneImagesV1(lanePorts);await retireIdleLaneImagesV1(root,lanePorts,Date.now());await retireClampedLaneImagesV1(root,lanePorts,Date.now());}catch{}
  for(;;){
   options.signal.throwIfAborted();const catalog=tryClaimV1(locks,policy.catalogClaim);
   if(!catalog){await sleepV1(poll,options.signal);continue;}
-  const acquired=(()=>{try{
+  const acquired=await(async()=>{try{
   let lanes=readPoolV1(root,Date.now());
   if(!lanes.some(lane=>lane.id===id)&&boundedPoolV1(lanes).length>=bounds.maximumLiveLanes){trimPoolV1(root,bounds,Date.now(),options.report,trimContext);lanes=readPoolV1(root,Date.now());const bounded=boundedPoolV1(lanes);if(bounded.length>=bounds.maximumLiveLanes){if(!reported){reported=true;options.report?.("poolBusy",{live:bounded.length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,bounded.map(lane=>lane.id),Date.now())});}if(options.onHeld==="refuse")throw new ProductLaneBusyErrorV1(root,request.key,id,laneHoldersV1(root,bounded.map(lane=>lane.id),Date.now()));return undefined;}}
   const claim=tryClaimV1(locks,"lane-"+id);
   if(!claim){if(!reported){reported=true;options.report?.("productLaneHeld",{lane:id,live:lanes.filter(row=>row.claimed).length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,[id],Date.now())});}if(options.onHeld==="refuse")throw new ProductLaneBusyErrorV1(root,request.key,id,laneHoldersV1(root,[id],Date.now()));return undefined;}
   try{
-   options.signal.throwIfAborted();const receipt=join(paths.base,policy.product.receipt);
+   options.signal.throwIfAborted();{if(!existsSync(paths.base))await admitNewLaneV1(root,id,lanePorts,Date.now,{...options.report===undefined?{}:{report:options.report}});const image=await ensureLaneImageV1(root,id,lanePorts);if(image.kind==="birth"||image.kind==="failed"||image.kind==="refused")process.stderr.write(`[lane] image of lane ${id}: ${image.kind}${image.detail===undefined?"":" ("+image.detail+")"} / Image der Spur ${id}: ${image.kind}${image.detail===undefined?"":" ("+image.detail+")"}\n`);}
+   const receipt=join(paths.base,policy.product.receipt);
    if(existsSync(paths.base)&&!existsSync(receipt)){const directory=lstatSync(paths.base);if(!directory.isDirectory()||directory.isSymbolicLink())throw Error("Actual Cargo product namespace directory required");}
    if(existsSync(receipt)){
     const directory=lstatSync(paths.base),before=lstatSync(receipt);if(!directory.isDirectory()||directory.isSymbolicLink()||!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>policy.product.maximumReceiptBytes)throw Error("Actual Cargo product namespace receipt required");

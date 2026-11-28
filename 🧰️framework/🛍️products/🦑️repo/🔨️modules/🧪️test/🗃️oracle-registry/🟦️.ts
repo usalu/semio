@@ -21,6 +21,8 @@ export type OracleEntry = Readonly<{
   package: string;
   packages?: readonly OracleLinkedPackage[];
   version?: string;
+  /** 🏷️ The import name when it differs from the distribution name (`Pillow` → `PIL`), read by the host that provisions this reference. */
+  module?: string;
   lockDigest?: string;
   source?: { repository?: string; commit?: string; license?: string };
   /** ⚙️ The kernel this reference actually sits on. Independence is accounted per FAMILY: two wrappers around one kernel are one oracle. */
@@ -49,7 +51,7 @@ export type OracleEntry = Readonly<{
  * licensed in its own right. A secondary package that inherited the entry's version would be
  * recorded under a version it is not at, which is a worse record than none.
  */
-export type OracleLinkedPackage = Readonly<{ package: string; version: string; license: string; homepage?: string; role: string }>;
+export type OracleLinkedPackage = Readonly<{ package: string; version: string; module?: string; license: string; homepage?: string; role: string }>;
 
 /**
  * 📦️ Every third-party package one registered oracle actually links, each with its own pin. Most name
@@ -125,17 +127,17 @@ export function isJustifiedMutationDecision(decision: NoOracleDecision): boolean
 }
 
 /**
- * 🖥️ A package an owner contributes so its adapters can reach their reference libraries.
+ * 🖥️ A package a test host links for an owner's adapters.
  *
- * `path` is what separates the two kinds. WITH a path the entry names LOCAL source linked by path —
- * an in-repo crate, module or workspace package — which is not an external dependency and is
- * provisioned by generating a manifest that points at it. WITHOUT a path the entry names an EXTERNAL
- * distribution the generated host must obtain from that ecosystem's own registry, which is exactly
- * what `externalOracleHostPackages` hands to the dependency classification so a reference library
- * can never reach a host through a side door.
+ * An external distribution a reference links is never repeated here: registering the oracle (its `package`, its linked
+ * `packages`, `module` and `version`) is the declaration, and `oracleHostPackagesOf` derives the host
+ * row from it, so the registry stays the single source of truth for what a host provisions. The
+ * explicit manifest field exists only for what no oracle describes: LOCAL source linked by `path` — an
+ * in-repo crate, module or workspace package, provisioned by generating a manifest that points at it.
+ * A row without `path` exists only as a derived value of `oracleHostPackagesOf`.
  *
  * `module` is the import name when it differs from the distribution name (`Pillow` → `PIL`);
- * `version` pins the distribution.
+ * `version` pins the distribution (a bare release is exact, a leading comparator is a range).
  */
 export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; rationale?: string }>;
 

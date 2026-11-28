@@ -59,8 +59,8 @@ export function readPhysicalSource(path) {
 export const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
 /** 🗺️ Owns the workspace named inputs independently of cache and toolchain policy. */
 export const WORKSPACE_POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🏗️build/🔣️policy.json")).toString("utf8"));
-/** 🗂️ The one plugin-modules root every build driver materializes component modules into. */
-export const componentModelOutputV1=(cratePath,mode="{options.env.SEMIO_BUILD_MODE}")=>`{workspaceRoot}/.cache/b/p/m/browser/${mode}/components/${componentModelDirectoryKeyV1(cratePath)}`;
+/** 🗂️ The plugin's model directory: its atomically swapped head and every immutable generation. */
+export const componentModelOutputV1=(cratePath,mode="{options.env.SEMIO_BUILD_MODE}")=>`{workspaceRoot}/.cache/b/p/m/browser/${mode}/component-models/${componentModelDirectoryKeyV1(cratePath)}`;
 export const PLUGIN_MODULES_ROOT = ".cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules";
 export const WORKSPACE_OWNERSHIP = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🗂️workspaces/🔣️policy.json")).toString("utf8"));
 export const EXAMPLE_COLLECTIONS = WORKSPACE_OWNERSHIP.collections.names;

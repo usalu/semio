@@ -1,0 +1,10 @@
+{
+  "law": "every admitted snapshot read slot is vacated exactly once on every terminal path",
+  "capacity": 1024,
+  "returnPressure": 128,
+  "capacityMultiples": 3,
+  "pumpEvery": 64,
+  "terminals": ["complete", "cancel", "refuse", "fault", "supersede", "bare-lease"],
+  "aliasHeldEvery": 2,
+  "expected": { "occupiedAfterPump": 0, "returnedAfterPump": 0, "nextAdmissions": 1024, "doubleReturns": 0 }
+}

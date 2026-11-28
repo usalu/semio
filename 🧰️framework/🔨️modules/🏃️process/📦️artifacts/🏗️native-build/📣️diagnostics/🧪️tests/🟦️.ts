@@ -15,7 +15,7 @@ test("every native build diagnostic exists in English and German with the same p
         const lines = nativeBuildDiagnosticLinesV1(key, values, environment);
         expect(lines, key).toHaveLength(languages.length);
         languages.forEach((language, index) => {
-          const oracle = database.query("select replace(replace(replace(replace(replace(replace(json_extract(?1,'$.'||?2||'.'||?3),'{count}',?4),'{path}',?5),'{directory}',?6),'{tokens}',?7),'{cores}',?8),'{budget}',?9) line").get(JSON.stringify(labels), language, key, values.count ?? "", values.path ?? "", values.directory ?? "", values.tokens ?? "", values.cores ?? "", values.budget ?? "") as { line: string };
+          const oracle = database.query("select replace(replace(replace(replace(replace(replace(replace(json_extract(?1,'$.'||?2||'.'||?3),'{count}',?4),'{path}',?5),'{directory}',?6),'{tokens}',?7),'{cores}',?8),'{budget}',?9),'{reason}',?10) line").get(JSON.stringify(labels), language, key, values.count ?? "", values.path ?? "", values.directory ?? "", values.tokens ?? "", values.cores ?? "", values.budget ?? "", values.reason ?? "") as { line: string };
           const expected = oracle.line.replaceAll("{work}", "vwork").replaceAll("{bytes}", "vbytes").replaceAll("{totalBytes}", "vtotalBytes");
           expect(lines[index], `${key} ${language}`).toBe(expected);
         });

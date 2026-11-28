@@ -8,7 +8,7 @@ import {dirname,join} from "node:path";
 import {requirePinnedTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {ensureUnitCacheShimV1,unitCacheWrapperV1,sealedUnitCacheV1,UNIT_CACHE_SCRIPT_V1} from "../../🚪️launch/🟦️.ts";
-import {sealModulesV1} from "../🟦️.ts";
+import {leaseSealedV1,sealModulesV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 const policy=UNIT_CACHE_POLICY_V1.seal,python=requirePinnedTestToolV1("python"),instant={sleep:()=>undefined,runtime:process.execPath};
@@ -100,3 +100,64 @@ test("the real compiler-wrapper closure seals well below the declared file limit
   expect(readdirSync(sealed.directory,{recursive:true}).map(String).filter(path=>path.replaceAll("\\","/").endsWith("📚️library/🏗️build/📜️script.ts"))).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
+
+const snapshots=(cache:string):string[]=>readdirSync(join(cache,policy.directory)).filter(name=>/^[0-9a-f]{16}$/u.test(name));
+const sealAt=(live:string,cache:string,entry:string,step:number,nowMs:number,options:Record<string,unknown>={})=>{write(live,"set/lib/x.ts",`export const value=${step};\n`);return sealModulesV1(cache,[entry],{...instant,nowMs,...options});};
+
+test("a snapshot a running build leases is never retired, however old; the lease of a dead process or an expired one does not protect it; every retirement is named in both languages", () => sandbox((live,cache,entry) => {
+ const day=policy.retainMilliseconds+1,base=Date.now(),alive=(pid:number)=>pid===4242;
+ const first=sealAt(live,cache,entry,0,base,{alive,lease:{pid:4242}}),second=sealAt(live,cache,entry,1,base,{alive,lease:{pid:7}});
+ for(let step=2;step<9;step++){leaseSealedV1(cache,first.digest,{pid:4242,nowMs:base+step*day-1});sealAt(live,cache,entry,step,base+step*day,{alive});}
+ const kept=snapshots(cache);
+ expect(kept).toContain(first.digest);
+ expect(kept).not.toContain(second.digest);
+ expect(kept.length).toBe(policy.keepSnapshots+1);
+ const log=readFileSync(join(cache,policy.directory,policy.retiredLog),"utf8");
+ expect(log).toContain(`retired sealed snapshot ${second.digest}`);
+ expect(log).toContain("versiegelter Stand "+second.digest+" entfernt");
+ expect(log).toContain(`kept sealed snapshot ${first.digest}`);
+ expect(log).not.toContain(`retired sealed snapshot ${first.digest}`);
+ sealAt(live,cache,entry,20,base+30*day,{alive:()=>false});
+ expect(snapshots(cache)).not.toContain(first.digest);
+}));
+
+test("a lease older than the declared maximum expires even when its process lives, and the leases of one process are bounded to the newest few", () => sandbox((live,cache,entry) => {
+ const day=policy.retainMilliseconds+1,base=Date.now(),first=sealAt(live,cache,entry,0,base,{alive:()=>true,lease:{pid:4242}});
+ for(let step=1;step<8;step++)sealAt(live,cache,entry,step,base+step*day*0+step,{alive:()=>true});
+ sealAt(live,cache,entry,50,base+policy.leaseMaximumMilliseconds+2*day,{alive:()=>true});
+ expect(snapshots(cache)).not.toContain(first.digest);
+ const digests=Array.from({length:policy.leasesPerOwner+4},(_,index)=>`${index.toString(16).padStart(16,"0")}`);
+ digests.forEach((digest,index)=>leaseSealedV1(cache,digest,{pid:99,nowMs:base+index}));
+ const held=readdirSync(join(cache,policy.directory,policy.leaseDirectory)).filter(name=>existsSync(join(cache,policy.directory,policy.leaseDirectory,name,"99.json")));
+ expect(held.length).toBe(policy.leasesPerOwner);
+ expect(held).toContain(digests.at(-1)!);
+ expect(held).not.toContain(digests[0]!);
+}));
+
+test("the retention table with leases equals an independent Python replay over a seeded history", () => sandbox((live,cache,entry) => {
+ const day=policy.retainMilliseconds+1,base=Date.now(),alive=(pid:number)=>pid===1||pid===2;
+ const history:{step:number;gap:number;lease:number}[]=[];
+ for(let step=0;step<24;step++)history.push({step,gap:step%8===0?1:0,lease:[1,2,3,0,0,0,0,0][step%8]!});
+ let clock=base;const digests:string[]=[],times:number[]=[];
+ for(const row of history){clock+=row.gap*day;const sealed=sealAt(live,cache,entry,row.step,clock,{alive,...row.lease===0?{}:{lease:{pid:row.lease}}});digests.push(sealed.digest);times.push(clock);}
+ const script=`
+import json,sys
+p=json.loads(sys.argv[1]);rows=json.loads(sys.argv[2]);alive={1,2}
+def replay(use):
+    store={};leases={}
+    for i,row in enumerate(rows):
+        now=row["now"];store[i]=now
+        if row["lease"]: leases.setdefault(i,[]).append((row["lease"],now))
+        order=sorted(store,key=lambda k:-store[k])
+        for index,key in enumerate(order):
+            if key==i or index<p["keepSnapshots"] or now-store[key]<p["retainMilliseconds"]: continue
+            if use and any(now-at<p["leaseMaximumMilliseconds"] and pid in alive for pid,at in leases.get(key,[])): continue
+            del store[key]
+    return sorted(store)
+print(json.dumps([replay(True),replay(False)]))`;
+ const run=spawnSync(python,["-I","-c",script,JSON.stringify(policy),JSON.stringify(history.map((row,index)=>({now:times[index],lease:row.lease})))],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ const [withLeases,withoutLeases]=JSON.parse(run.stdout) as[number[],number[]];
+ expect(withLeases.length).toBeGreaterThan(withoutLeases.length);
+ expect(new Set(snapshots(cache))).toEqual(new Set(withLeases.map(index=>digests[index]!)));
+}));

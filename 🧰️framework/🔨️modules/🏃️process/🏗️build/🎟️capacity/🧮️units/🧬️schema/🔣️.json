@@ -43,6 +43,7 @@
         "share",
         "needed",
         "granted",
+        "reservation",
         "memory",
         "pressure-warn",
         "pressure-critical"
@@ -98,6 +99,15 @@
           ],
           "minimum": 0,
           "maximum": 16777216
+        },
+        "reservedJobMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 16777216,
+          "description": "The memory of the enclosing machine admission above its fixed block, as the ledger books it (not the larger envelope its jobs may use): the rustc units of the compile must fit it at the worst case of the largest unit classes. Absent or null: no reservation known."
         },
         "unitMegabytes": {
           "type": "integer",
@@ -167,6 +177,7 @@
             "share": "one compile may use half of the host so others run beside it",
             "needed": "the work cannot use more",
             "granted": "the machine admission granted fewer jobs and its memory carries no more compile units",
+            "reservation": "the memory the machine admission reserved carries only this many rustc units at the worst case of the largest ones",
             "memory": "the free memory carries fewer compile units",
             "pressure-warn": "memory pressure is raised",
             "pressure-critical": "memory pressure is critical",
@@ -192,6 +203,7 @@
             "share": "ein Kompilierlauf darf die Hälfte des Rechners nutzen, damit andere daneben laufen",
             "needed": "die Arbeit kann nicht mehr davon nutzen",
             "granted": "die Rechner-Zulassung hat weniger Jobs erteilt und ihr Speicher trägt nicht mehr Compile-Einheiten",
+            "reservation": "der von der Rechner-Zulassung reservierte Speicher trägt im ungünstigsten Fall der größten Einheiten nur so viele rustc-Einheiten",
             "memory": "der freie Speicher trägt weniger Compile-Einheiten",
             "pressure-warn": "der Speicherdruck ist erhöht",
             "pressure-critical": "der Speicherdruck ist kritisch",

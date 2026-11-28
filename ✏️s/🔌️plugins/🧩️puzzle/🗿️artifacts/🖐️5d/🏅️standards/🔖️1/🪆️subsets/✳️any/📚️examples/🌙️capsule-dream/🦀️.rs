@@ -36,15 +36,15 @@ pub fn dsl_bytes() -> &'static [u8] {
     let (name, ..) = dsl_bytes_digest();
     match semio_plugin::reactor::package_asset(name) {
         Some(bytes) => bytes,
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         None => repository_file(name),
-        #[cfg(not(test))]
+        #[cfg(not(any(test, feature = "testkit")))]
         None => panic!("package asset {name} was not delivered by the host"),
     }
 }
 
 /// 🧪️ Reads the authored capsule-dream DSL (3 035 200 B of `.puzzle5d` text) below the repository root once per process, for tests that have no host to deliver the asset.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn repository_file(name: &str) -> &'static [u8] {
     static BYTES: std::sync::OnceLock<&'static [u8]> = std::sync::OnceLock::new();
     BYTES.get_or_init(|| {

@@ -3,7 +3,7 @@ use semio_os_kernel as protocol;
 use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element::{PatchElement, handle};
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dElementPatch;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemElement, element_id};
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotRetiring, Fem2dSnapshotValue};
 use semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation;

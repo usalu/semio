@@ -204,3 +204,39 @@ fn contains_key(node: &BuiltNode, key: &str) -> bool {
 fn find_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
     (node.key.as_str() == key).then_some(node).or_else(|| node.children.iter().find_map(|child| find_key(child, key)))
 }
+
+/// 🗃️ Builds an XLSX-shaped snapshot: an `opc` object beside an `xmlParts` array of parts holding recursive XML element trees.
+fn xml_parts_value(parts: usize, elements: usize) -> DslValue {
+    let element = |index: usize| format!(r#"{{"kind":"element","name":"c","attributes":[{{"name":"r","value":"A{index}"}},{{"name":"s","value":"1"}}],"children":[{{"kind":"text","value":"{index}"}}]}}"#);
+    let children = (0..elements).map(element).collect::<Vec<_>>().join(",");
+    let part = |index: usize| format!(r#"{{"path":"xl/worksheets/sheet{index}.xml","document":{{"root":{{"kind":"element","name":"worksheet","attributes":[],"children":[{children}]}}}}}}"#);
+    let parts = (0..parts).map(part).collect::<Vec<_>>().join(",");
+    let json = format!(r#"{{"schema":"test","opc":{{"contentTypes":[{{"extension":"xml"}}],"relationships":[{{"id":"rId1"}}]}},"xmlParts":[{parts}]}}"#);
+    semio_framework_pack_json::from_json_str::<DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+}
+
+#[test]
+fn xml_parts_collection_renders_every_part_row_and_opens_each_node_tree_on_request() {
+    let _arena = ui_arena();
+    let part_path = |index: usize| [SnapshotDetailPathSegment::Key("xmlParts".into()), SnapshotDetailPathSegment::Index(index)];
+    for (parts, elements) in [(3usize, 4usize), (8, 300)] {
+        let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value(xml_parts_value(parts, elements));
+        let render = |windows: &TreeWindows<'_>| render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.xml-parts#editor", windows).expect("xml parts details");
+        let rendered = render(&TreeWindows::unhosted());
+        let collection = find_key(&rendered, &path_id(&part_path(0)[..1])).expect("xmlParts item");
+        let semio_ui_contract::Component::TreeItem(props) = &collection.component else { panic!("xmlParts tree item") };
+        assert_eq!(props.window.as_ref().map(|window| window.total), Some(parts as u32), "the window spans every part");
+        assert!(collection.children.iter().filter(|child| child.key.as_str() != path_id(&part_path(0)[..1]) && !child.key.as_str().ends_with("-controls") && !child.key.as_str().ends_with("-collection-controls")).count() >= 2, "first paint materialises part rows");
+        assert!(find_key(&rendered, &path_id(&part_path(0))).is_some() && find_key(&rendered, &path_id(&part_path(1))).is_some());
+        let last = format!("{}-children", path_id(&part_path(0)[..1]));
+        let last_view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key: [ROOT_SECTION_ID.to_string(), last].join(TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: parts as u32 - 1, rows: 1 }], ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native) };
+        assert!(find_key(&render(&TreeWindows::for_body(&last_view, SNAPSHOT_DETAILS_BODY_KEY)), &path_id(&part_path(parts - 1))).is_some(), "the last part is reachable by window offset");
+        let parts_children = format!("{}-children", path_id(&[SnapshotDetailPathSegment::Key("xmlParts".into())]));
+        let node_key = [ROOT_SECTION_ID.to_string(), parts_children, format!("{}-children", path_id(&part_path(0)))].join(TREE_WINDOW_PATH_SEPARATOR);
+        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 0, rows: 2 }], ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native) };
+        let opened = render(&TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY));
+        let path = [part_path(0)[0].clone(), part_path(0)[1].clone(), SnapshotDetailPathSegment::Key("path".into())];
+        let document = [part_path(0)[0].clone(), part_path(0)[1].clone(), SnapshotDetailPathSegment::Key("document".into())];
+        assert!(find_key(&opened, &path_id(&path)).is_some() && find_key(&opened, &path_id(&document)).is_some(), "parts={parts} elements={elements}: opened part must expose path and document");
+    }
+}

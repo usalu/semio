@@ -102,10 +102,6 @@
       "en": "The platform evidence rules of the test suites are invalid: they must satisfy their closed schema and every pattern must be a regular expression",
       "de": "Die Plattform-Nachweisregeln der Testsuites sind ungültig: sie müssen ihrem geschlossenen Schema genügen und jedes Muster muss ein regulärer Ausdruck sein"
     },
-    "capacity.empty-process-table": {
-      "en": "The process table is empty",
-      "de": "Die Prozesstabelle ist leer"
-    },
     "nativeBuild.metadata-incomplete": {
       "en": "Resolved Cargo metadata with a workspace root and packages required",
       "de": "Aufgelöste Cargo-Metadaten mit Workspace-Wurzel und Paketen sind erforderlich"
@@ -350,6 +346,14 @@
       "en": "The disk is full: partition {partition} has {free} free. Nothing was lost, but the write could not finish. Free space with `{command}` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition {partition} hat noch {free} frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
     },
+    "disk.image-full": {
+      "en": "The cache image {image} is full: {available} usable of {capacity} declared, {inner} free inside, {host} free on partition {partition}. {reclaimed} were reclaimed and the write was tried {attempts} times. Nothing was lost. Free space with `{command}` or wait for other builds to finish, then run the command again.",
+      "de": "Das Cache-Image {image} ist voll: {available} nutzbar von {capacity} deklariert, {inner} innen frei, {host} frei auf Partition {partition}. {reclaimed} wurden freigegeben und das Schreiben wurde {attempts} Mal versucht. Es ging nichts verloren. Schaffe Platz mit `{command}` oder warte, bis andere Builds enden, und führe den Befehl erneut aus."
+    },
+    "disk.host-critical": {
+      "en": "The host volume {partition} has only {free} free (critical below {critical}): no new lane or image growth is started until space is freed. Nothing was lost. Free space with `{command}`, then run the command again.",
+      "de": "Das Host-Volume {partition} hat nur noch {free} frei (kritisch unter {critical}): bis Platz frei ist, wird keine neue Lane und kein Image-Wachstum begonnen. Es ging nichts verloren. Schaffe Platz mit `{command}` und führe den Befehl erneut aus."
+    },
     "disk.full-unmeasured": {
       "en": "The disk is full: partition {partition} cannot take the write (its free space cannot be read). Free space with `{command}` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition {partition} kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
@@ -369,6 +373,18 @@
     "source.boundary-exceeded": {
       "en": "Rust crate {crate} exceeds its source boundary before the compiler: {files} of {maxFiles} files, {bytes} of {maxBytes} bytes",
       "de": "Rust-Crate {crate} überschreitet vor dem Compiler seine Quellgrenze: {files} von {maxFiles} Dateien, {bytes} von {maxBytes} Bytes"
+    },
+    "nx.run-stalled": {
+      "en": "The Nx run ({command}) was stopped by the liveness watchdog (exit status {status}): it printed nothing for the stall period and had no live child process, for example while it waited for another machine to finish the same task; running it again is safe",
+      "de": "Der Nx-Lauf ({command}) wurde vom Lebenszeichen-Wächter beendet (Exit-Status {status}): er gab während der Stillstandsfrist nichts aus und hatte keinen lebenden Kindprozess, zum Beispiel weil er auf eine andere Maschine für dieselbe Task wartete; ein erneuter Lauf ist unbedenklich"
+    },
+    "nx.run-failed": {
+      "en": "The Nx run ({command}) failed with exit status {status}",
+      "de": "Der Nx-Lauf ({command}) schlug mit Exit-Status {status} fehl"
+    },
+    "storage.root-capability-refused": {
+      "en": "Refused to {operation} below {root}: a test run may only destroy storage inside its own sandbox, never a live checkout, its .cache/b partitions or the fleet store ({reason}); create the storage in a temporary directory of the test and retry",
+      "de": "{operation} unterhalb von {root} verweigert: ein Testlauf darf nur Speicher in seiner eigenen Sandbox zerstören, nie einen Live-Checkout, dessen .cache/b-Partitionen oder den Flottenspeicher ({reason}); den Speicher in einem temporären Verzeichnis des Tests anlegen und erneut versuchen"
     }
   }
 }

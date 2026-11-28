@@ -5,6 +5,7 @@ import {GRAPH_MEMORY_POLICY_V1} from "../../../../🧠️memory/🟨️.mjs";
 import {GRAPH_CUT_POLICY_V1,graphCutAfterV1,graphCutEnvironmentV1,graphCutLearnedV1,graphCutStartLevelV1,graphCutV1} from "../../../../🧠️memory/✂️cut/🟨️.mjs";
 import {SLICE_RECYCLE_POLICY_V1,sliceRecycleEnvironmentV1} from "../../../../🧠️memory/♻️recycle/🟨️.mjs";
 import {graphChildEnvironmentV1} from "../../../../🧠️memory/🐏️child-environment/🟨️.mjs";
+import {LEASE_OWNER_ENVIRONMENT_V1} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import {READY_SLICE_REPORT_POLICY_V1,SLICE_REPORT_SAMPLE_MILLISECONDS_V1} from "../../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import {hostProfileV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 import {HOST_POLICY_V1,renderBothV1} from "../../../📨️protocol/🎚️policy/🟨️.mjs";
@@ -15,6 +16,8 @@ const UNSETTLED_PREFIX_V1=formatStampSchema.$defs.Protocol.const.loadFailure.uns
 /** 🧊️ The start of the cause of a worker whose source facts a repeated inference could not refresh; a load that ends this way the declared number of times in a row is started once more (the worker refreshes those facts in a targeted way) before it is refused.
  * @see ../../../../👁️observation/🟨️.mjs `staleSourceFactsErrorV1` */
 const STALE_FACTS_PREFIX_V1="Stale source facts that a repeated inference cannot refresh";
+import {buildInvocationGraphSelectionV1} from "../../../../🕸️graph/🚪️admission/🟦️.ts";
+import {buildGraphSelectionCoversV1,coalesceBuildGraphSelectionsV1} from "../../../../🕸️graph/🚪️admission/🧺️coalesce/🟦️.ts";
 import {planGuardVerdictV1,sliceAdmissionV1,sliceBookingV1,sliceCeilingMegabytesV1,sliceLeanMegabytesV1,sliceLimitPolicyV1,slicePlanCeilingMegabytesV1} from "./🧱️limit/🟨️.mjs";
 import {createPressureWatchV1,hostPressureLevelV1} from "./🌡️pressure/🟨️.mjs";
 import {awaitImplementationQuietV1,quietBudgetV1,implementationDriftPathsV1,implementationPathShownV1,implementationStampsV1} from "./🔕️quiet/🟨️.mjs";
@@ -25,14 +28,23 @@ import {SLICE_JOB_VARIABLE_V1,createReaperV1,deadServiceRowV1,listProcessesV1,sl
 /** 🚦 The urgency of a slice load (0 is most urgent, 5 when a client names none): the pool serves the most urgent waiter first, equal urgency in arrival order. */
 export const slicePriorityV1=priority=>Number.isInteger(priority)&&priority>=0&&priority<=9?priority:5;
 
-export const shareKeyV1=request=>JSON.stringify([String(request.root),request.arguments??null,request.tool??null,request.graphPolicy??null,request.grant??null]);
+export const shareKeyV1=request=>JSON.stringify([String(request.root),request.arguments??null,request.tool??null,request.graphPolicy??null,request.grant??null,request.owner??null]);
 
-export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,elasticity={},headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,learned={read:()=>0,write:()=>undefined},reserve,observe,unlearnedMegabytes=0,hostMegabytes=hostProfileV1().totalMegabytes,graceMilliseconds,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds}),planGuard=HOST_POLICY_V1.slicePlanGuard,restartPolicy={backoffMilliseconds:HOST_POLICY_V1.sliceRestartBackoffMilliseconds,settleMilliseconds:HOST_POLICY_V1.sliceRestartSettleMilliseconds,progressMilliseconds:HOST_POLICY_V1.sliceRestartProgressMilliseconds,totalMaximum:HOST_POLICY_V1.sliceRestartTotalMaximum,sameCauseMaximum:HOST_POLICY_V1.sliceRestartSameCauseMaximum},quietPolicy={milliseconds:HOST_POLICY_V1.sliceRestartQuietMilliseconds,maximumMilliseconds:HOST_POLICY_V1.sliceRestartQuietMaximumMilliseconds,totalMaximumMilliseconds:HOST_POLICY_V1.sliceRestartQuietTotalMaximumMilliseconds,floorMilliseconds:HOST_POLICY_V1.sliceRestartQuietFloorMilliseconds},implementationStamps=implementationStampsV1,wallNow=()=>Date.now(),cutPolicy=GRAPH_CUT_POLICY_V1,growth=HOST_POLICY_V1.sliceGrantGrowth,claims={claim:claimHostWardenSubjectV1,release:releaseHostWardenClaimV1},recycle=SLICE_RECYCLE_POLICY_V1,hostPressure=()=>hostPressureLevelV1(),report=line=>{try{process.stderr.write(line+"\n");}catch{}},now=()=>performance.now(),planLimitMegabytes=hostMegabytes>0&&hostMegabytes<GRAPH_MEMORY_POLICY_V1.serveHostMegabytes&&process.env.SEMIO_GRAPH_PLAN_LIMIT_MB!=="off"?sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}):Infinity}){
+/** 🪪️ The environment of the script process of one slice load: the environment of the service without any client grant or lease owner (the service is shared, so it never carries a token), and with the lease owner of the requesting client when the request names one, so whoever reaps by that token stops its own work and nothing else. A pure function.
+ * @see ../../../🧪️tests/🪪️request-owner/🟦️.ts */
+export function sliceWorkerEnvironmentV1(base,request){
+ const environment={...base};
+ delete environment[READY_SLICE_REPORT_POLICY_V1.grantEnvironment];delete environment[LEASE_OWNER_ENVIRONMENT_V1];
+ if(typeof request?.owner==="string"&&request.owner!=="")environment[LEASE_OWNER_ENVIRONMENT_V1]=request.owner;
+ return environment;
+}
+
+export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,elasticity={},headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,learned={read:()=>0,write:()=>undefined},predecessor=()=>undefined,predecessorBoundMilliseconds=Infinity,reserve,observe,unlearnedMegabytes=0,hostMegabytes=hostProfileV1().totalMegabytes,graceMilliseconds,claimRefreshMilliseconds=60000,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds}),planGuard=HOST_POLICY_V1.slicePlanGuard,restartPolicy={backoffMilliseconds:HOST_POLICY_V1.sliceRestartBackoffMilliseconds,settleMilliseconds:HOST_POLICY_V1.sliceRestartSettleMilliseconds,progressMilliseconds:HOST_POLICY_V1.sliceRestartProgressMilliseconds,totalMaximum:HOST_POLICY_V1.sliceRestartTotalMaximum,sameCauseMaximum:HOST_POLICY_V1.sliceRestartSameCauseMaximum},quietPolicy={milliseconds:HOST_POLICY_V1.sliceRestartQuietMilliseconds,maximumMilliseconds:HOST_POLICY_V1.sliceRestartQuietMaximumMilliseconds,totalMaximumMilliseconds:HOST_POLICY_V1.sliceRestartQuietTotalMaximumMilliseconds,floorMilliseconds:HOST_POLICY_V1.sliceRestartQuietFloorMilliseconds},implementationStamps=implementationStampsV1,wallNow=()=>Date.now(),cutPolicy=GRAPH_CUT_POLICY_V1,growth=HOST_POLICY_V1.sliceGrantGrowth,coalesce=HOST_POLICY_V1.sliceCoalesce,claims={claim:claimHostWardenSubjectV1,release:releaseHostWardenClaimV1},recycle=SLICE_RECYCLE_POLICY_V1,hostPressure=()=>hostPressureLevelV1(),report=line=>{try{process.stderr.write(line+"\n");}catch{}},now=()=>performance.now(),planLimitMegabytes=hostMegabytes>0&&hostMegabytes<GRAPH_MEMORY_POLICY_V1.serveHostMegabytes&&process.env.SEMIO_GRAPH_PLAN_LIMIT_MB!=="off"?sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}):Infinity}){
  if(!Number.isSafeInteger(maximum)||maximum<1)throw new Error("Positive worker maximum required");
  if(!Number.isFinite(marginMegabytes)||marginMegabytes<0||!(budgetMegabytes>=0))throw new Error("Finite memory margin and budget required");
- const waiting=[],counters={started:0,completed:0,failed:0,cancelled:0,overBudget:0,pressured:0,grown:0,bookedSmaller:0};
+ const waiting=[],counters={started:0,completed:0,failed:0,cancelled:0,overBudget:0,pressured:0,grown:0,bookedSmaller:0,joined:0,merged:0,split:0};
  const learnedPeak=scope=>Math.min(learned.read(scope),sliceCeilingMegabytesV1({hostMegabytes,hostCapBasisPoints:elasticity.hostCapBasisPoints,maximumMegabytes:elasticity.maximumMegabytes}));
- let active=0,sequence=0,recent=[],learnedLevel;const sharing=new Map();const running=new Map(),loads=new Map(),stale=deadServiceRowV1(),reaping=new Set();
+ let handing,active=0,sequence=0,recent=[],learnedLevel;const sharing=new Map();const running=new Map(),loads=new Map(),stale=deadServiceRowV1(),reaping=new Set();
  const scopeOf=load=>({pids:load.pids,match:row=>row.token===load.token||process.platform==="win32"&&running.size===0&&row.ppid===process.pid&&!load.baseline.has(row.pid)});
  const reaped=load=>{const task=reaper.reap(scopeOf(load)).catch(()=>0).finally(()=>reaping.delete(task));reaping.add(task);return task;};
  const sweepAtExit=()=>{for(const load of loads.values())reaper.killNow(scopeOf(load));reaper.killNow({match:stale});};
@@ -67,34 +79,36 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   return gate.finally(()=>clearInterval(beat));
  };
  const runWorker=(request,signal,onProgress,limit,reservation,waveBasisPoints=10000,cut=graphCutV1(0,cutPolicy),outcome={},wantsReport=()=>false,carried=undefined)=>new Promise((resolve,reject)=>{
-  const environment={...process.env};delete environment[READY_SLICE_REPORT_POLICY_V1.grantEnvironment];
+  const environment=sliceWorkerEnvironmentV1(process.env,request);
   if(reservation?.megabytes>0&&environment.SEMIO_HOST_CAPACITY!=="off"){
    const{budgetEnvironment,minimumBudgetMegabytes,grantShare}=GRAPH_MEMORY_POLICY_V1;
    const managed=Math.max(minimumBudgetMegabytes,Math.floor(reservation.megabytes*grantShare)),configured=Number(environment[budgetEnvironment]);
    if(environment[budgetEnvironment]===undefined||Number.isFinite(configured)&&configured>managed)environment[budgetEnvironment]=String(managed);
   }
-  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...recycle===null?{}:sliceRecycleEnvironmentV1(carried,recycle),...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;
+  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...recycle===null?{}:sliceRecycleEnvironmentV1(carried,recycle),...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;outcome.spawned?.();
   let settled=false;
   const finish=(done,value)=>{if(settled)return;settled=true;try{if(worker.pid!==undefined)claims.release(worker.pid);}catch{}outcome.peakMegabytes=entry.peakMegabytes??0;const learnedMegabytes=done===resolve||value?.code==='memory-budget'?entry.peakMegabytes:entry.treePeakMegabytes;if(learnedMegabytes)learned.write(Math.round(learnedMegabytes*(value?.code==='memory-budget'?(elasticity.learnedGrowthBasisPoints??10000)/10000:1)),String(request.root));running.delete(index);if(entry.sample!==undefined)recent=[{index,sample:entry.sample},...recent].slice(0,maximum);clearInterval(beat);clearInterval(guard);signal?.removeEventListener("abort",abort);const gone=Promise.resolve(worker.terminate?.()).catch(()=>undefined).then(()=>reaped(load)).then(()=>limit?.release()).catch(()=>undefined).finally(()=>{loads.delete(token);reservation?.release();});if(done===reject&&value!==null&&typeof value==="object"){try{Object.defineProperty(value,"gone",{value:gone,enumerable:false,configurable:true});}catch{}}done(value);};
   const abort=()=>{counters.cancelled++;finish(reject,signal.reason??new Error("cancelled"));};
   let settling;
   const ceilingMegabytes=hostMegabytes>0?Math.max(Math.floor(hostMegabytes*planGuard.ceilingBasisPoints/10000),planLimitMegabytes):Infinity;
-  let growing=false,grownMegabytes=0,growths=0;
+  let growing=false,grownMegabytes=0,growths=0,deniedAt;
   const granted=()=>(Number(reservation?.megabytes)||0)+grownMegabytes;
-  const claim=stopped=>{try{if(worker.pid!==undefined&&granted()>0&&environment.SEMIO_HOST_CAPACITY!=="off")claims.claim(worker.pid,{grantMegabytes:granted(),stopped,owner:"slice-pool"});}catch{}};
+  let claimedAt=now();
+  const claim=stopped=>{claimedAt=now();try{if(worker.pid!==undefined&&granted()>0&&environment.SEMIO_HOST_CAPACITY!=="off")claims.claim(worker.pid,{grantMegabytes:granted(),stopped,owner:"slice-pool"});}catch{}};
   claim(false);
   const pause=signalName=>{try{if(typeof worker.suspend==="function"&&signalName==="SIGSTOP")worker.suspend();else if(typeof worker.resume==="function"&&signalName==="SIGCONT")worker.resume();else if(worker.pid!==undefined)process.kill(process.platform==="win32"?worker.pid:-worker.pid,signalName);}catch{try{if(worker.pid!==undefined)process.kill(worker.pid,signalName);}catch{}}};
   const grow=megabytes=>{
    growing=true;growths++;counters.grown++;
-   const wanted=Math.max(growth.minimumMegabytes,Math.ceil(megabytes*growth.headroomBasisPoints/10000-granted())),ask=Math.min(wanted,Math.max(0,Math.floor(ceilingMegabytes-granted())));
+   const standing=Math.ceil(learnedPeak(String(request.root))*(growth.standingBasisPoints??0)/10000)-granted(),wanted=Math.max(growth.minimumMegabytes,Math.ceil(megabytes*growth.headroomBasisPoints/10000-granted()),standing),ask=Math.min(wanted,Math.max(0,Math.floor(ceilingMegabytes-granted())));
    if(!(ask>0)){growing=false;return;}
    claim(true);pause("SIGSTOP");
-   void reserving(ask,Math.min(growth.minimumMegabytes,ask),signal,onProgress,false,reservation?.queuedSinceMs===undefined?{}:{queuedSinceMs:reservation.queuedSinceMs},reservation.grow).then(added=>{if(!settled)grownMegabytes+=Number(added)||0;},()=>undefined).finally(()=>{pause("SIGCONT");claim(false);growing=false;});
+   const waiting=new AbortController(),follow=()=>waiting.abort(signal.reason),expire=setTimeout(()=>waiting.abort(new Error("growth wait expired")),growth.waitMilliseconds??Infinity);signal?.addEventListener("abort",follow,{once:true});
+   void reserving(ask,Math.min(growth.minimumMegabytes,ask),waiting.signal,onProgress,false,reservation?.queuedSinceMs===undefined?{}:{queuedSinceMs:reservation.queuedSinceMs},reservation.grow).then(added=>{if(!settled)grownMegabytes+=Number(added)||0;},()=>{if(!settled)deniedAt=now();}).finally(()=>{clearTimeout(expire);signal?.removeEventListener("abort",follow);pause("SIGCONT");claim(false);growing=false;});
   };
   const judge=megabytes=>{
    if(settled)return;
    if(growing)return;
-   if(reserve!==undefined&&reservation!==undefined&&Number.isFinite(Number(reservation.megabytes))&&typeof reservation.grow==="function"&&growths<growth.maximum&&megabytes>granted()*growth.triggerBasisPoints/10000&&megabytes<=ceilingMegabytes){grow(megabytes);return;}
+   if(reserve!==undefined&&reservation!==undefined&&Number.isFinite(Number(reservation.megabytes))&&typeof reservation.grow==="function"&&growths<growth.maximum&&(deniedAt===undefined||now()-deniedAt>=(growth.cooldownMilliseconds??0))&&megabytes>granted()*growth.triggerBasisPoints/10000&&megabytes<=ceilingMegabytes){grow(megabytes);return;}
    const answered=settling!==undefined&&(settling.answered||performance.now()-settling.at>=planGuard.settleWaitMilliseconds),stage=entry.stage??detail?.phase??"?";
    if(settling!==undefined&&!answered&&megabytes<=ceilingMegabytes)return;
    if(answered&&!settling.said){settling.said=true;const lines=renderBothV1("host-graph-plan-settled",{stage,from:settling.from,to:Math.round(megabytes)});for(const language of ["en","de"])report(lines[language]);}
@@ -117,7 +131,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   let detail,workerObserved=false,lastReportAt=-Infinity;const watch=pressure(),base=headroom().currentBytes,beat=setInterval(()=>{
    note();const observed=workerObserved;workerObserved=false;onProgress?.(Math.round(performance.now()-started),detail,observed);
    if(wantsReport()&&now()-lastReportAt>=SLICE_REPORT_SAMPLE_MILLISECONDS_V1)worker.send?.({type:"slice-report"});
-  },heartbeatMilliseconds),guard=setInterval(()=>{if(worker.pid!==undefined&&observe!==undefined&&!treeSamplePending)sampleTree(worker.pid);const verdict=watch.sample();if(verdict.tripped){counters.pressured++;finish(reject,Object.assign(new Error("Slice load stalled by memory pressure"),{code:"memory-pressure",kind:verdict.kind,value:verdict.value,limit:verdict.limit,seconds:verdict.seconds}));return;}const{limitBytes,currentBytes}=headroom(),grown=Math.round((currentBytes-base)/1048576),current=Math.round(currentBytes/1048576),peak=(entry.peakMegabytes=Math.max(entry.peakMegabytes??0,grown)),limit=limitBytes===Infinity?Infinity:Math.round(limitBytes/1048576);if(grown>budgetMegabytes||current+marginMegabytes>limit){counters.overBudget++;finish(reject,Object.assign(new Error("Slice load would cross the memory limit"),{code:"memory-budget",currentMegabytes:current,limitMegabytes:limit===Infinity?budgetMegabytes:limit,marginMegabytes,grownMegabytes:grown}));}},sampleMilliseconds);beat.unref?.();guard.unref?.();
+  },heartbeatMilliseconds),guard=setInterval(()=>{if(!settled&&now()-claimedAt>=claimRefreshMilliseconds)claim(growing);if(worker.pid!==undefined&&observe!==undefined&&!treeSamplePending)sampleTree(worker.pid);const verdict=watch.sample();if(verdict.tripped){counters.pressured++;finish(reject,Object.assign(new Error("Slice load stalled by memory pressure"),{code:"memory-pressure",kind:verdict.kind,value:verdict.value,limit:verdict.limit,seconds:verdict.seconds}));return;}const{limitBytes,currentBytes}=headroom(),grown=Math.round((currentBytes-base)/1048576),current=Math.round(currentBytes/1048576),peak=(entry.peakMegabytes=Math.max(entry.peakMegabytes??0,grown)),limit=limitBytes===Infinity?Infinity:Math.round(limitBytes/1048576);if(grown>budgetMegabytes||current+marginMegabytes>limit){counters.overBudget++;finish(reject,Object.assign(new Error("Slice load would cross the memory limit"),{code:"memory-budget",currentMegabytes:current,limitMegabytes:limit===Infinity?budgetMegabytes:limit,marginMegabytes,grownMegabytes:grown}));}},sampleMilliseconds);beat.unref?.();guard.unref?.();
   signal?.addEventListener("abort",abort,{once:true});
   if(reservation&&worker.pid!==undefined)reservation.attach(worker.pid);
   if(limit){void limit.attach(worker.pid).catch(()=>undefined);limit.onBreach(breach=>{counters.overBudget++;entry.peakMegabytes=Math.max(entry.peakMegabytes??0,breach.limitMegabytes);finish(reject,Object.assign(new Error("Slice load overran its memory limit"),{code:"memory-budget",currentMegabytes:breach.peakMegabytes,limitMegabytes:breach.limitMegabytes,marginMegabytes,grownMegabytes:breach.peakMegabytes}));});}
@@ -139,7 +153,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   worker.on("error",error=>{counters.failed++;finish(reject,error);});
   worker.on("exit",(code,signal)=>{if(!settled){counters.failed++;const killed=code===null&&typeof signal==="string"&&signal!=="",tail=typeof worker.stderrTail==="function"?worker.stderrTail():"";report("[slice-exit] "+JSON.stringify({pid:worker.pid,code,signal:signal??null,ranMilliseconds:Math.round(now()-started),treePeakMegabytes:Math.round(entry.treePeakMegabytes??0),grantedMegabytes:Math.round(granted()),tail:String(tail).slice(-600)}));finish(reject,Object.assign(new Error("Slice worker exited with code "+code+(killed?" (killed by "+signal+")":"")),{exit:code,...killed?{code:"slice-killed",signal,currentMegabytes:entry.treePeakMegabytes,limitMegabytes:granted()}:{},restart:killed||code===HOST_POLICY_V1.sliceRestartExitCode,ranMilliseconds:Math.round(now()-started),workerCause:killed?"killed by "+signal+" from outside (resource-transient)":tail===""?"":workerCauseV1(tail),drift:implementationDriftPathsV1(tail)}));}});
  });
- const execute=async(request,{signal,onProgress,wantsReport,rank}={})=>{
+ const execute=async(request,{signal,onProgress,wantsReport,rank,spawned}={})=>{
   const turn=(async()=>{
    let ownsSlot=false,cuts=0,readmitMegabytes=0,heavyHandoffs=0,recycles=0,carried,totalRestarts=0,quietSpent=0,churnSince,streak=0,lastCause="",sameCause=0;const drifted=new Set(),refreshed=new Set();
    let level=learnedLevel??Math.min(cutPolicy.levels,graphCutStartLevelV1({limitMegabytes:planLimitMegabytes},cutPolicy));
@@ -149,6 +163,13 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     ownsSlot=true;
    }
    signal?.throwIfAborted();
+   if(handing!==undefined)throw handing;
+   for(let older=predecessor(),waitedSince=Date.now();older!==undefined&&handing===undefined&&Date.now()-waitedSince<predecessorBoundMilliseconds;older=predecessor()){
+    note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"predecessor",used:older.pid,budget:older.busy,kind:String(older.pid),limit:older.busy}});
+    await new Promise(done=>{const finish=()=>{clearTimeout(timer);signal?.removeEventListener("abort",finish);done();},timer=setTimeout(finish,heartbeatMilliseconds);signal?.addEventListener("abort",finish,{once:true});});
+    signal?.throwIfAborted();
+   }
+   if(handing!==undefined)throw handing;
    let reservation,limit;
    const own=request.grant===undefined?{}:{parentGrant:request.grant},scope=String(request.root),measuredPeak=learnedPeak(scope),queuedSince=wallNow();
    try{
@@ -164,7 +185,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     limit=policy===undefined?undefined:await limiter.create(policy,"slice-"+(sequence+1)).catch(()=>undefined);
     signal?.throwIfAborted();
     const granted=Number(reservation?.megabytes),waveBasisPoints=Number.isFinite(granted)&&granted>0?Math.min(admission.waveBasisPoints,Math.max(500,Math.floor(granted*10000/booked))):admission.waveBasisPoints;
-    const cut=graphCutV1(level,cutPolicy),outcome={},work=runWorker(request,signal,onProgress,limit,reservation,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport,carried);
+    const cut=graphCutV1(level,cutPolicy),outcome={spawned},work=runWorker(request,signal,onProgress,limit,reservation,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport,carried);
     if(outcome.started){reservation=undefined;limit=undefined;}
     const answer=await work;
     learnedLevel=graphCutLearnedV1({level,peakMegabytes:outcome.peakMegabytes??0,limitMegabytes:planLimitMegabytes},cutPolicy);
@@ -177,7 +198,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     if(error?.code==="slice-recycle"&&recycle!==null&&!signal?.aborted&&recycles<recycle.maximumRecycles){recycles++;carried=error.recycle;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"recycled",used:recycles,budget:recycle.maximumRecycles,kind:String(carried?.heapMegabytes??""),limit:recycle.heapMegabytes}});continue;}
     if(error?.key==="build.graph.owner-too-heavy"&&!signal?.aborted&&Number(error.values?.producers)!==0&&heavyHandoffs<cutPolicy.heavyHandoffs){heavyHandoffs++;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"handoff",used:heavyHandoffs,budget:cutPolicy.heavyHandoffs,kind:String(error.values?.named??"")}});continue;}
     const squeezed=(error?.code==="memory-budget"||error?.code==="memory-pressure"||error?.code==="slice-killed")&&!signal?.aborted?graphCutAfterV1({level,treeMegabytes:Number(error.currentMegabytes),limitMegabytes:Number(error.limitMegabytes)},cutPolicy):undefined;
-    if(squeezed!==undefined){cuts++;if(cuts>=growth.cutsBeforeReadmit)readmitMegabytes=Math.max(readmitMegabytes,Math.ceil(Number(error.currentMegabytes||0)*growth.headroomBasisPoints/10000));level=squeezed;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes??""),limit:error.limitMegabytes??0}});continue;}
+    if(squeezed!==undefined){cuts++;if(cuts>=growth.cutsBeforeReadmit)readmitMegabytes=Math.max(readmitMegabytes,Math.ceil(Number(error.currentMegabytes||0)*growth.headroomBasisPoints/10000));level=squeezed;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:error.code==="slice-killed"&&!(Number(error.currentMegabytes)>Number(error.limitMegabytes))?"killed":"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes??""),limit:error.limitMegabytes??0}});continue;}
     if(error?.restart!==true||signal?.aborted)throw error;
     totalRestarts++;
     const lasted=error.ranMilliseconds>=restartPolicy.progressMilliseconds;
@@ -213,20 +234,36 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   return turn;
  };
 
- /** 🤝 Runs a slice load once for every client that asks for the same slice (root, arguments, tool, graph policy): a client that comes while that load is queued or running joins it, sees its progress (a late one gets the last row at once) and gets its answer, so nothing is computed twice. A client that leaves only leaves; the load is stopped, its processes reaped and its slot released (the leaving call settles after that) when the last client has left, so a load whose first asker was cut still finishes for the others and a restarted try never starts at zero. */
- const share=async(request,{signal,onProgress,wantsReport}={})=>{
+ /** 🤝 Runs a slice load once for every client that asks for the same slice: a client joins a load of its root, tool and graph policy whose selection already holds its own (the queued or running load, same tasks from any invocation, whatever its flags and capacity grant), and a client whose tasks differ joins a load that has not started its worker yet, which then reads the union of the tasks (the pool is the only place that sees four lanes ask at once: one worker and one booking serve all of them instead of one each). A load gathers for `gatherMilliseconds` before it asks for a slot so that lanes started together arrive together. A client sees the progress (a late one gets the last row at once) and the answer; one that leaves only leaves, the load is stopped (processes reaped, slot released) when the last client has left. A merged load that fails is read again per client, so one bad selection never refuses the others.
+  * @see ../../../../🕸️graph/🚪️admission/🧺️coalesce/🟦️.ts */
+ const selectionOf=request=>{if(!Array.isArray(request.arguments))return undefined;try{return buildInvocationGraphSelectionV1(request.arguments);}catch{return undefined;}};
+ const baseOf=request=>JSON.stringify([String(request.root),request.tool??null,request.graphPolicy??null,request.owner??null]);
+ const gather=(milliseconds,signal)=>milliseconds>0?new Promise(resolve=>{const timer=setTimeout(done,milliseconds);function done(){clearTimeout(timer);signal.removeEventListener("abort",done);resolve();}signal.addEventListener("abort",done,{once:true});}):Promise.resolve();
+ let groups=0;
+ const share=async(request,{signal,onProgress,wantsReport,solo=false}={})=>{
   signal?.throwIfAborted();
-  const key=shareKeyV1(request),root=String(request.root);
-  let load=sharing.get(key);
+  const selection=selectionOf(request),base=baseOf(request),key=shareKeyV1(request);
+  let load;
+  for(const group of sharing.values()){
+   if(selection===undefined?group.selection===undefined&&group.key===key:group.base===base&&group.selection!==undefined&&buildGraphSelectionCoversV1(group.selection,selection)){load=group;counters.joined++;break;}
+  }
+  if(load===undefined&&selection!==undefined&&!solo)for(const group of sharing.values()){
+   if(!group.open||group.base!==base||group.selection===undefined)continue;
+   const union=coalesceBuildGraphSelectionsV1(group.selection,selection,coalesce.maximumTasks);
+   if(union===undefined)continue;
+   group.selection=union;group.request.selection=union;group.merged=true;counters.merged++;
+   load=group;break;
+  }
+  if(load!==undefined){load.grants.add(request.grant);if(load.grants.size>1||request.grant===undefined)delete load.request.grant;}
   if(load===undefined){
-   const controller=new AbortController(),clients=new Set(),mine={clients,controller,last:undefined,priority:slicePriorityV1(request.priority)};
+   const controller=new AbortController(),clients=new Set(),id=++groups,mine={id,key,base,selection,request:{...request},grants:new Set([request.grant]),open:true,merged:false,clients,controller,last:undefined,priority:slicePriorityV1(request.priority)};
    const lead=(milliseconds,detail,observed)=>{
     if(detail?.sliceReport!==undefined){for(const client of clients)if(client.wantsReport?.())client.onProgress?.(milliseconds,detail);return;}
     mine.last=[milliseconds,detail];for(const client of[...clients])client.onProgress?.(milliseconds,detail,observed);
    };
-   mine.promise=execute(request,{rank:()=>mine.priority,signal:controller.signal,onProgress:lead,wantsReport:()=>[...clients].some(client=>client.wantsReport?.())});
-   const clear=()=>{if(sharing.get(key)===mine)sharing.delete(key);};
-   mine.promise.then(clear,clear);sharing.set(key,mine);load=mine;
+   mine.promise=gather(selection?.kind==="tasks"?coalesce.gatherMilliseconds:0,controller.signal).then(()=>execute(mine.request,{rank:()=>mine.priority,signal:controller.signal,onProgress:lead,wantsReport:()=>[...clients].some(client=>client.wantsReport?.()),spawned:()=>{mine.open=false;}}));
+   const clear=()=>{if(sharing.get(id)===mine)sharing.delete(id);};
+   mine.promise.then(clear,clear);sharing.set(id,mine);load=mine;
   }
   return new Promise((resolve,reject)=>{
    const client={onProgress,wantsReport};load.priority=Math.min(load.priority,slicePriorityV1(request.priority));
@@ -234,14 +271,17 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     load.clients.delete(client);
     const reason=signal.reason??new Error("cancelled");
     if(load.clients.size>0){reject(reason);return;}
-    if(sharing.get(key)===load)sharing.delete(key);
+    if(sharing.get(load.id)===load)sharing.delete(load.id);
     load.controller.abort(reason);
     load.promise.then(()=>reject(reason),()=>reject(reason));
    };
    load.clients.add(client);
    signal?.addEventListener("abort",leave,{once:true});
    if(load.last!==undefined)onProgress?.(...load.last,false);
-   load.promise.then(resolve,reject).finally(()=>signal?.removeEventListener("abort",leave));
+   load.promise.then(resolve,error=>{
+    if(load.merged&&!signal?.aborted&&!load.controller.signal.aborted){counters.split++;resolve(share(request,{signal,onProgress,wantsReport,solo:true}));return;}
+    reject(error);
+   }).finally(()=>signal?.removeEventListener("abort",leave));
   });
  };
  return Object.freeze({
@@ -249,6 +289,8 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   stats(){return{active,queued:waiting.length,...counters};},
   memory(now=Date.now()){const row=(index,sample,live)=>({index,heapMb:sample.heapMb,extraMb:sample.extraMb,objectCount:sample.objectCount,objectTypes:sample.objectTypes,ageMilliseconds:Math.max(0,now-sample.at),running:live}),live=[...running.values()].filter(entry=>entry.sample!==undefined).map(entry=>row(entry.index,entry.sample,true));return[...live,...recent.filter(entry=>!running.has(entry.index)).map(entry=>row(entry.index,entry.sample,false))].slice(0,maximum);},
   busy(){return active+waiting.length;},
+  /** 🥇 Hands the loads whose worker has not started over to the generation that follows (their clients get `error`) and stops this pool from starting another worker, a restart included; a running worker finishes. */
+  handover(error){handing=error;for(const group of sharing.values())if(group.open)group.controller.abort(error);},
   /** 🛑 Waits for the reaping of every finished load and kills what a load left behind. */
   async close(){await Promise.all([...reaping]);sweepAtExit();process.off("exit",sweepAtExit);},
  });

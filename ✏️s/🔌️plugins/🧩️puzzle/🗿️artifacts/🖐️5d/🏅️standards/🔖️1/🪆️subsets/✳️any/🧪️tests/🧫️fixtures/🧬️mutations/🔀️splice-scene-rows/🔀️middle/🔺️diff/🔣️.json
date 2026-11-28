@@ -1,32 +1,39 @@
 {
+  "artifact": null,
+  "schema": null,
+  "domain": null,
+  "meta": null,
+  "kindCompatibility": null,
   "parts": {
+    "removed": [
+      {
+        "id": "b",
+        "index": 1
+      }
+    ],
     "inserted": [
       {
         "index": 1,
         "row": {
           "id": "x",
           "2d": {
-            "x": 3,
-            "y": 0
+            "x": 3.0,
+            "y": 0.0
           },
           "3d": {
             "origin": [
-              3,
-              0,
-              0
+              3.0,
+              0.0,
+              0.0
             ]
           },
           "grips": []
         }
       }
     ],
-    "modified": [],
     "moved": [],
-    "removed": [
-      {
-        "id": "b",
-        "index": 1
-      }
-    ]
-  }
+    "modified": []
+  },
+  "fasteners": null,
+  "targetVolumes": null
 }

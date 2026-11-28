@@ -15,7 +15,7 @@ export function restWorldMatrices(nodes: readonly Node[]): Map<Slug, M4> {
   return worldMatrices(nodes, (n) => compose(n.translation, n.rotation, n.scale));
 }
 
-/** 🧊️ Geometry of one solid in its node frame after `transform` and `repeat`; triangles stay CCW outward. */
+/** 🧊️ Geometry of one solid in its node frame after `transform` and `repeat`, then carried by `extra` (the rest world matrix of the node for a weighted solid), so the repeat step is always a step in the node frame; triangles stay CCW outward. */
 export function tessellateSolid(solid: Solid, quality: Quality, extra: M4 = identity4(), operation: Operation = silentOperation): Geometry {
   const pace = new Pace(operation);
   const raw = ((): Geometry => {
@@ -30,7 +30,7 @@ export function tessellateSolid(solid: Solid, quality: Quality, extra: M4 = iden
     }
   })();
   const t = solid.transform;
-  const base = multiply4(extra, compose(t?.translation ?? [0, 0, 0], t?.rotation ?? [0, 0, 0, 1], t?.scale ?? [1, 1, 1]));
+  const base = compose(t?.translation ?? [0, 0, 0], t?.rotation ?? [0, 0, 0, 1], t?.scale ?? [1, 1, 1]);
   const repeat = solid.repeat;
   const count = repeat?.count ?? 1;
   const origin: V3 = (repeat?.origin as V3 | undefined) ?? [0, 0, 0];
@@ -40,7 +40,7 @@ export function tessellateSolid(solid: Solid, quality: Quality, extra: M4 = iden
   const out: Geometry = { positions: [], normals: [], indices: [] };
   let copy = identity4();
   for (let k = 0; k < count; k++) {
-    const m = multiply4(copy, base);
+    const m = multiply4(extra, multiply4(copy, base));
     const nm = normalMatrix(m);
     const flip = determinant3(m) < 0;
     const offset = out.positions.length / 3;

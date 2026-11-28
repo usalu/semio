@@ -27,7 +27,7 @@ import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresM
 import { useChromePanelSafeArea, chromePanelSafeAreaStyle, useShellChromePanelBoxes } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
-import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered, windowViewportCoverMinShare, windowViewportInsetV1, type WindowViewportInsetV1 } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
+import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered, windowViewportCoverMinShare, windowViewportInsetV1, windowBottomDockReservePx, type WindowViewportInsetV1 } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
 import { GhostRegionShell } from "../👻️PanelGhost/🟦️.tsx";
 import { WindowFrameHostContext } from "../🗂️WindowChrome/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -126,7 +126,7 @@ function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObje
   return maxHeightPx;
 }
 
-/** 🧱️ Block space the docked bottom chip row (the Utilities chip) owns: top-anchored panes stop above it so their footers (e.g. Execute/Reset) are never covered. */
+/** 🧱️ Block space the docked bottom chip row (the Utilities chip) owns: top-anchored panes stop above it, and above any shell dock over the window's bottom edge ({@link windowBottomDockReservePx}), so their last rows and footers (e.g. Execute/Reset) are never covered. */
 const windowBottomChipReserve = "var(--chip-row-height)";
 
 const windowQuickActionsWidthVar = "--window-quick-actions-width";
@@ -234,6 +234,7 @@ const Window: React.FC<WindowProps> = ({
   const quickActionsCovered = windowQuickActionsCovered(expanded, exclusive);
   const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(utilityExpanded, windowBodyRef);
   const [viewportInset, setViewportInset] = reactHostPort.useState<WindowViewportInsetV1>({ leftPx: 0, rightPx: 0 });
+  const [bottomDockPx, setBottomDockPx] = reactHostPort.useState(0);
   const chromePanels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
@@ -249,6 +250,7 @@ const Window: React.FC<WindowProps> = ({
       const spans = rects.filter((rect) => rect.right > rect.left && tall(rect.top, rect.bottom)).map((rect) => ({ leftPx: rect.left - bodyRect.left, rightPx: rect.right - bodyRect.left }));
       const next = windowViewportInsetV1(bodyRect.width, spans);
       setViewportInset((prev) => (prev.leftPx === next.leftPx && prev.rightPx === next.rightPx ? prev : next));
+      setBottomDockPx(windowBottomDockReservePx(bodyRect, chromePanels.map((panel) => panel.box)));
     };
     sync();
     const ro = new ResizeObserver(sync);
@@ -259,6 +261,7 @@ const Window: React.FC<WindowProps> = ({
     }
     return () => ro.disconnect();
   }, [chromePanels, engagementExpanded, measuresExpanded, measuresWidthPx, fill]);
+  const paneBlockEndReserve = bottomDockPx > 0 ? `calc(${windowBottomChipReserve} + ${bottomDockPx}px)` : windowBottomChipReserve;
   const togglePane = (pane: WindowPaneId, shown: boolean, setFolded: (folded: boolean) => void) => {
     if (shown) return setFolded(true);
     lastOpenedRef.current.last = pane;
@@ -391,7 +394,7 @@ const Window: React.FC<WindowProps> = ({
               overlayRef={measuresOverlayRef}
               hostRef={windowBodyRef}
               anchor="top-right"
-              blockEndReserve={windowBottomChipReserve}
+              blockEndReserve={paneBlockEndReserve}
               inlineEdgeReservePx={controlsWidthPx}
               icon={WINDOW_PANE_MEASURES_ICON}
               label={windowOptionsLabel}
@@ -435,7 +438,7 @@ const Window: React.FC<WindowProps> = ({
               overlaySlot="window-engagement-overlay"
               hostRef={windowBodyRef}
               anchor="top-left"
-              blockEndReserve={windowBottomChipReserve}
+              blockEndReserve={paneBlockEndReserve}
               icon={WINDOW_PANE_ACTIONS_ICON}
               label={actionLabel}
               folded={!engagementExpanded}
@@ -459,7 +462,7 @@ const Window: React.FC<WindowProps> = ({
               overlaySlot="window-search-overlay"
               hostRef={windowBodyRef}
               anchor="top-middle"
-              blockEndReserve={windowBottomChipReserve}
+              blockEndReserve={paneBlockEndReserve}
               icon={WINDOW_PANE_SEARCH_ICON}
               label={searchLabel}
               folded={!searchExpanded}

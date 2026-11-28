@@ -52,13 +52,13 @@
             ("captureLost", HostEvent::PointerCaptureLost { window_id: "main-2".into() }),
             ("retiring", HostEvent::Retiring { window_id: "main-2".into() }),
         ] {
-            app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-2", "kind": kind }))), &under, &mut identity).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
+            artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-2", "kind": kind }))), &under, &mut identity, cx, mounted_policy.maintenance).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
             assert_eq!(take_test_host_events(), vec![event], "{kind}");
         }
         let history = app.render_ctx().test_history().await;
         assert!(history.commands.is_empty(), "the answer to a blur is never a history row: {:?}", history.commands.iter().map(|entry| &entry.action_id).collect::<Vec<_>>());
-        let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under, &mut identity).await;
-        assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new("hostEvent.invalid")));
+        let refused = artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under, &mut identity, cx, mounted_policy.maintenance).await;
+        assert_eq!(refused.err().and_then(|failure| failure.primary_fault().map(|fault| fault.code.clone())), Some(FaultCode::new("hostEvent.invalid")));
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -134,7 +134,7 @@
             seq: 2,
         };
         let error = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect_err("a View-kind intent emitting operations must be rejected");
-        assert!(matches!(&error.primary,semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
+        assert!(error.primary_fault().is_some_and(|fault| fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -148,6 +148,31 @@
     /// growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
     ///
     /// The narrowed per-dispatch reporting must not affect the one-edit/undo semantics of the transaction.
+    /// 🏗️ An operation whose mounted preparation grant can never fund its producer build must end in a typed fault page, never wait in the `Worker` stage forever.
+    #[semio_framework_async_macros::async_test]
+    async fn an_unfundable_producer_build_ends_in_a_typed_fault_never_a_silent_stall() {
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let poor = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let poor_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: poor, maintenance: poor, close: poor };
+        let rich_policy = artifact_app_laws::fixture_mounted_policy();
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, store::NoMembers>::with_registry(TestApp::<false>::default(), semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), poor_policy, &mut identity)).await.expect("the reference snapshot births");
+        artifact_app_laws::settle_store_constructor(&mut app, poor_policy);
+        app.bind_instance_id(meta().instance_id).await;
+        let _ = artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::Increment, &meta(), rich_policy, &mut identity, cx).await.expect("the admission itself is funded");
+        let refusal = artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, rich_policy, &mut identity, cx).await.err().expect("an unfundable producer build must not settle");
+        let message = format!("{refusal:?}");
+        assert!(message.contains("interactive-job.producer-unfunded"), "the operation ends in its typed fault, not in a turn-limit refusal: {message}");
+        artifact_app_laws::close_registered_fixture_app(&mut app, rich_policy, cx).expect("original contract fixture paid terminal close");
+
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_tick_reports_only_its_own_new_operation() {
         let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
@@ -165,9 +190,9 @@
         app.dispatch_typed(TestCommand::StreamLabel { value: "ab".into(), commit: false }, &meta(), &mut identity,cx).await.expect("streamLabel ab");
         let result = app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: false }, &meta(), &mut identity,cx).await.expect("streamLabel abc");
         assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole open edit");
-        assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
+        assert_eq!(result.mutations[0].diff.payload.to_vec_owner(), ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
         assert_eq!(
-            result.mutations[0].inverse.inverse_diff.payload,
+            result.mutations[0].inverse.inverse_diff.payload.to_vec_owner(),
             protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "ab".into() })).unwrap()]),
             "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
         );

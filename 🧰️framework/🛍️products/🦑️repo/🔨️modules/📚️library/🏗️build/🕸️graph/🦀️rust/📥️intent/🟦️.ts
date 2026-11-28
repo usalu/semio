@@ -38,7 +38,7 @@ export interface RustBuildFallbackDecisionV1 {version:1;intentDigest:string;adap
 /** 🛂️ Grants an uncached finite Cargo route only for every expressly declared missing compiler adapter. */
 export function qualifyRustBuildFallbackV1(value:RustBuildIntentV1,unsupported:readonly {unit:string;adapters:readonly string[]}[]):RustBuildFallbackDecisionV1|undefined{
  if(!unsupported.length)return;
- if(!value.fallback)throw Error("Selected Rust bounded fallback was not declared");
+ if(!value.fallback)throw Error("Selected Rust bounded fallback was not declared for unsupported units: "+unsupported.map(row=>row.unit+" ("+row.adapters.join("+")+")").join(", ")+" / Begrenzter Rust-Ersatzweg für nicht unterstützte Einheiten nicht deklariert");
  const intent=readRustBuildIntentV1(value),allowed=intent.fallback!.adapters,adapters=new Set<RustBuildFallbackAdapterV1>();
  for(const row of unsupported){if(!row.unit||!Array.isArray(row.adapters)||row.adapters.length<1||row.adapters.length>fallbackAdapters.length||new Set(row.adapters).size!==row.adapters.length)throw Error("Typed Rust bounded fallback adapters required");for(const adapter of row.adapters){if(!allowed.includes(adapter as RustBuildFallbackAdapterV1))throw Error("Selected Rust bounded fallback adapter refused: "+adapter+" (unit "+row.unit+")");adapters.add(adapter as RustBuildFallbackAdapterV1);}}
  return {version:1,intentDigest:createHash("sha256").update(JSON.stringify(intent)).digest("hex"),adapters:[...adapters].sort()};

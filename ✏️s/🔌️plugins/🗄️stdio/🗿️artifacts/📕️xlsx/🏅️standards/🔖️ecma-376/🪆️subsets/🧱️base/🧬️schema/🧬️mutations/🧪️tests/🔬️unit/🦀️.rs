@@ -500,3 +500,169 @@ async fn inverses_restore_what_the_typed_value_cannot_express() {
     laws(&XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 1, value: "flat".into(), node: None }), &base).await;
     laws(&XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Middle".into() }), &base).await;
 }
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn formulas_and_values(snapshot: &XlsxSnapshot) -> (std::collections::BTreeMap<String, String>, std::collections::BTreeMap<String, XlsxCellValue>) {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::calculation::recalculate_workbook;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
+    let projected = workbook(snapshot);
+    let (mut formulas, mut values) = (std::collections::BTreeMap::new(), std::collections::BTreeMap::new());
+    for sheet in &projected.sheets {
+        for cell in &sheet.cells {
+            if let XlsxCellValue::Formula { expr, .. } = &cell.value {
+                formulas.insert(format!("{}!{}{}", sheet.name, column_letter(cell.col), cell.row), expr.clone());
+            }
+        }
+    }
+    for cell in recalculate_workbook(&projected) {
+        values.insert(format!("{}!{}{}", cell.sheet, column_letter(cell.col), cell.row), cell.cached);
+    }
+    (formulas, values)
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shared_formula_fixture_matches_openpyxl_and_formulas_through_every_edit_and_undo() {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📋️shared-formulas/🔣️.json")).unwrap();
+    let base = decode_xlsx(include_bytes!("../../../../🧪️tests/🧫️fixtures/📋️shared-formulas/📊️workbook.xlsx")).unwrap();
+    let check = |snapshot: &XlsxSnapshot, case: &serde_json::Value| {
+        let (formulas, values) = formulas_and_values(snapshot);
+        let expected: std::collections::BTreeMap<String, String> = case["formulas"].as_object().unwrap().iter().map(|(key, expr)| (key.clone(), expr.as_str().unwrap().to_string())).collect();
+        assert_eq!(formulas, expected, "{} formulas", case["id"]);
+        for (key, expected) in case["values"].as_object().unwrap() {
+            let actual = values.get(key);
+            let expected = expected.as_f64().unwrap();
+            match actual {
+                Some(XlsxCellValue::Number(actual)) => assert!((actual - expected).abs() < 1e-9, "{} {key}: {actual} != {expected}", case["id"]),
+                other => panic!("{} {key}: {other:?} != {expected}", case["id"]),
+            }
+        }
+    };
+    let cases = fixture["cases"].as_array().unwrap();
+    check(&base, &cases[0]);
+    for case in &cases[1..] {
+        let edit = &case["edit"];
+        let (sheet, reference) = edit["cell"].as_str().unwrap().split_once('!').unwrap();
+        let letters = reference.trim_end_matches(|c: char| c.is_ascii_digit());
+        let (row, col) = (reference[letters.len()..].parse::<u32>().unwrap(), column_index(letters).unwrap());
+        let value = match edit["formula"].as_str() {
+            Some(formula) => XlsxCellValue::Formula { expr: formula.trim_start_matches('=').into(), cached: None },
+            None => XlsxCellValue::Number(edit["number"].as_f64().unwrap()),
+        };
+        let mutation = set_cell_at(&base, sheet, row, col, value);
+        let mut after = base.clone();
+        let outcome = apply_xlsx_mutation(&mut after, &mutation);
+        assert!(outcome.diff().xml_parts.is_some(), "{} applies", case["id"]);
+        check(&after, case);
+        let mut undone = after.clone();
+        for inverse in ::semio_os_kernel::ColdMutation::inverse(&mutation, &base).expect("the edit has an inverse") {
+            apply_xlsx_mutation(&mut undone, &inverse);
+        }
+        assert_eq!(undone, base, "{} undo restores the shared group verbatim", case["id"]);
+        check(&undone, &cases[0]);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_cache_only_recalculation_keeps_the_shared_group_intact() {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    let base = decode_xlsx(include_bytes!("../../../../🧪️tests/🧫️fixtures/📋️shared-formulas/📊️workbook.xlsx")).unwrap();
+    let (formulas, _) = formulas_and_values(&base);
+    let mut after = base.clone();
+    let mutations = xlsx_with_recalculated_caches(&base, Vec::new());
+    assert!(!mutations.is_empty(), "uncalculated formulas get caches");
+    for mutation in &mutations {
+        assert!(apply_xlsx_mutation(&mut after, mutation).diff().xml_parts.is_some());
+    }
+    assert_eq!(formulas_and_values(&after).0, formulas);
+    let sheet_path = cell_address::xlsx_cell_address(&after, "Sheet1", 3, 1).unwrap().part_path;
+    let xml = format!("{:?}", after.xml_part(&sheet_path).unwrap().document);
+    assert_eq!(xml.matches("\"shared\"").count(), 5, "master and dependents stay a shared group");
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn rewrite_case_base(case: &serde_json::Value) -> XlsxSnapshot {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
+    let sheets = case["sheets"].as_array().unwrap().iter().map(|sheet| {
+        let cells = sheet["cells"].as_object().unwrap().iter().map(|(reference, raw)| {
+            let letters = reference.trim_end_matches(|c: char| c.is_ascii_digit());
+            let value = match (raw.as_f64(), raw.as_str()) {
+                (Some(number), _) => XlsxCellValue::Number(number),
+                (_, Some(text)) => XlsxCellValue::Formula { expr: text.trim_start_matches('=').into(), cached: None },
+                _ => panic!("unsupported fixture cell {raw}"),
+            };
+            XlsxCell { row: reference[letters.len()..].parse().unwrap(), col: column_index(letters).unwrap(), value }
+        });
+        XlsxSheet { name: sheet["name"].as_str().unwrap().into(), cells: cells.collect() }
+    });
+    let sheets = sheets.collect::<Vec<_>>();
+    let base = opc_layer::with_demo_entries(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: vec![] }));
+    let mut calculated = base.clone();
+    for mutation in xlsx_with_recalculated_caches(&base, Vec::new()) {
+        assert!(apply_xlsx_mutation(&mut calculated, &mutation).messages().is_empty());
+    }
+    calculated
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn formula_cells(snapshot: &XlsxSnapshot) -> std::collections::BTreeMap<String, (String, Option<XlsxCellValue>)> {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
+    let mut cells = std::collections::BTreeMap::new();
+    for sheet in workbook(snapshot).sheets {
+        for cell in sheet.cells {
+            if let XlsxCellValue::Formula { expr, cached } = cell.value {
+                cells.insert(format!("{}!{}{}", sheet.name, column_letter(cell.col), cell.row), (expr, cached.map(|cached| *cached)));
+            }
+        }
+    }
+    cells
+}
+
+#[test]
+fn sheet_rename_and_removal_rewrite_every_formula_like_excel_and_undo_restores_them() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏷️sheet-reference-rewrite/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let id = case["id"].as_str().unwrap();
+        let base = rewrite_case_base(case);
+        let before = formula_cells(&base);
+        let primary = match (case["op"]["rename"].as_array(), case["op"]["remove"].as_str()) {
+            (Some(pair), _) => xlsx_rename_sheet_mutations(&base, pair[0].as_str().unwrap(), pair[1].as_str().unwrap()),
+            (_, Some(name)) => xlsx_remove_sheet_mutations(&base, name),
+            _ => panic!("{id}: unknown op"),
+        };
+        let mutations = xlsx_with_recalculated_caches(&base, primary.unwrap_or_else(|error| panic!("{id}: {error}")));
+        let (mut after, mut inverses) = (base.clone(), Vec::new());
+        for mutation in &mutations {
+            inverses.push(::semio_os_kernel::ColdMutation::inverse(mutation, &after).expect("every step has an inverse"));
+            assert!(apply_xlsx_mutation(&mut after, mutation).messages().is_empty(), "{id}: {mutation:?} was refused");
+        }
+        let formulas = formula_cells(&after);
+        for (key, (expr, cached)) in &formulas {
+            let expected_expr = case["expected_formulas"][key].as_str().map(|text| text[1..].to_string()).or_else(|| before.get(key).map(|(expr, _)| expr.clone()));
+            assert_eq!(Some(expr.clone()), expected_expr, "{id}: {key} formula");
+            let expected = &case["expected"][key];
+            let actual = cached.clone().unwrap_or_else(|| panic!("{id}: {key} has no cache"));
+            match (&actual, expected) {
+                (XlsxCellValue::Number(left), serde_json::Value::Number(right)) => assert!((left - right.as_f64().unwrap()).abs() < 1e-9, "{id}: {key} {left}"),
+                (XlsxCellValue::InlineString(left), serde_json::Value::String(right)) => assert_eq!(left, right, "{id}: {key}"),
+                (XlsxCellValue::Error(left), serde_json::Value::Object(right)) => assert_eq!(left, right["error"].as_str().unwrap(), "{id}: {key}"),
+                other => panic!("{id}: {key} cache {other:?}"),
+            }
+        }
+        for inverse in inverses.iter().rev().flatten() {
+            assert!(apply_xlsx_mutation(&mut after, inverse).messages().is_empty(), "{id}: undo refused");
+        }
+        assert_eq!(formula_cells(&after).into_iter().map(|(key, (expr, _))| (key, expr)).collect::<Vec<_>>(), before.iter().map(|(key, (expr, _))| (key.clone(), expr.clone())).collect::<Vec<_>>(), "{id}: undo restores the formula text");
+    }
+}
+
+#[test]
+fn sheet_reference_text_rewrites_follow_excel_quoting_rules() {
+    use recalculation::rewrite_sheet_references as rewrite;
+    assert_eq!(rewrite("'Old Name'!A1:B2+Sheet1!A1", "Old Name", Some("Plain")), "Plain!A1:B2+Sheet1!A1");
+    assert_eq!(rewrite("Sheet2!A1", "Sheet2", Some("R1C1")), "'R1C1'!A1");
+    assert_eq!(rewrite("Sheet2!A1", "Sheet2", Some("TRUE")), "'TRUE'!A1");
+    assert_eq!(rewrite("Sheet2!$A$1:$C$3", "Sheet2", None), "#REF!");
+    assert_eq!(rewrite("Sheet2!A:C+1", "Sheet2", None), "#REF!+1");
+}

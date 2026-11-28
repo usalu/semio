@@ -122,7 +122,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
             .action_args("addCombination", vec![
                 ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
-                ActionArgDef::json_text("terms", LocalizedLabel::native("Terms", "Terme")).describe(LocalizedLabel::native("Load case ids with factors, for example dead:1.35, live:1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]]", "Lastfall-Kennungen mit Faktoren, zum Beispiel dead:1.35, live:1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]")).required(),
+                ActionArgDef::text("terms", LocalizedLabel::native("Terms", "Terme")).describe(LocalizedLabel::native("Load case ids with factors, for example dead:1.35, live:1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]]", "Lastfall-Kennungen mit Faktoren, zum Beispiel dead:1.35, live:1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]")).required(),
             ])
             .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
@@ -141,7 +141,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::concrete_forest::ID, semio_s_artifact_fem_3d_io::examples::concrete_forest::label()), ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::demo::ID, LocalizedLabel::native("Default", "Standard")), ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::house::ID, semio_s_artifact_fem_3d_io::examples::house::label())]).default_value(&semio_s_artifact_fem_3d_io::examples::concrete_forest::ID),
+                semio_s_fem_app_surface::set_active_example_arg(&semio_s_artifact_fem_3d_io::examples::sources(), semio_s_artifact_fem_3d_io::examples::concrete_forest::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())

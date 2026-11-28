@@ -539,6 +539,7 @@ exclude = [
     "**/🔮️oracles/**",
     "🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust",
     "🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust",
+    "🔨️modules/🏃️process/🏗️build/📈️metrics/📦️packages/🦀️rust",
     "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧱️elements/🔲️WindowFrame/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",

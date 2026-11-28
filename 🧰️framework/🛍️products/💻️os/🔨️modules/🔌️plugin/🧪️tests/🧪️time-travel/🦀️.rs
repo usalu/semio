@@ -203,7 +203,7 @@ thread_local!{static ORIGINAL_PREPARATION_RECEIPTS:std::cell::RefCell<Vec<(semio
 #[doc(hidden)]
 pub fn collect_original_history_command_receipt(app:&mut ToyApp){
  if let Some((operation,grant,receipt))=app.take_typed_operation_preparation_receipt(){assert_eq!(grant,app.mounted_policy.preparation);assert!(receipt.fits(grant));assert!(grant.maximum_depth>0||receipt==Default::default());ORIGINAL_PREPARATION_RECEIPTS.with(|receipts|receipts.borrow_mut().push((operation,grant,receipt)));}
- if let Some((grant,receipt))=app.take_history_command_receipt(){assert_eq!(grant,app.mounted_policy.maintenance);assert!(receipt.fits(grant));ORIGINAL_HISTORY_RECEIPTS.with(|receipts|receipts.borrow_mut().push((grant,receipt)));}
+ if let Some((grant,receipt))=app.take_history_command_receipt(){let policy=app.mounted_policy.maintenance;assert!(grant.maximum_items<=policy.maximum_items&&grant.maximum_copy_bytes<=policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=policy.maximum_release_bytes&&grant.maximum_depth<=policy.maximum_depth,"a staged history receipt is funded from the turn that stages it, never beyond the mounted maintenance policy");assert!(receipt.fits(grant));ORIGINAL_HISTORY_RECEIPTS.with(|receipts|receipts.borrow_mut().push((grant,receipt)));}
 }
 
 /// 🎟️ The interactive component embedding every hub composition grants per host turn, with the authored identity ceiling; it covers the history-replay preparation step the earlier one-item ceiling could never fund.

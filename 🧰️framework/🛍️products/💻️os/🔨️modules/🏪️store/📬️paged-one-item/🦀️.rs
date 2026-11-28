@@ -32,7 +32,7 @@ mod mutation_apply;
 pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit};
 #[path = "❄️cold-apply/🦀️.rs"]
 mod cold_apply;
-pub use cold_apply::{bounded_cold_mutation_apply_preparation_factory, cold_mutation_apply_preparation_factory, ColdMutationApplyFactory, ColdPreparationBounds, RetainedColdMutationApplyFactory};
+pub use cold_apply::{bounded_cold_mutation_apply_preparation_factory, cold_mutation_apply_preparation_factory, ColdHeapQuote, ColdMutationApplyFactory, ColdPreparationBounds, RetainedColdMutationApplyFactory};
 #[cfg(feature="test-support")]
 pub use cold_apply::cold_projection_metadata_owner;
 #[path = "📬️owners/🦀️.rs"]

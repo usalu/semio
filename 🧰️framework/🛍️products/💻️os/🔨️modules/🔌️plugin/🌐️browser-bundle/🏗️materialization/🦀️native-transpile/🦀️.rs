@@ -1,12 +1,17 @@
 //! 🦀️ Native twin of `jco transpile`: the same `js-component-bindgen` generator the vendored jco ships as a wasm32 component, run as a native
 //! process so a component beyond the 32-bit address space and shadow stack of that build still transpiles, with the option defaults of the jco CLI.
 //!
+//! `link`, `merge` and `image-exports` are the split link of a plugin component from a cached framework image and a thin plugin module (`🔗️link/🦀️.rs`).
+//!
 //! See <https://github.com/bytecodealliance/jco> and <https://docs.rs/js-component-bindgen/2.16.0>.
 
 use anyhow::{anyhow, bail, Context, Result};
 use js_component_bindgen::{transpile, InstantiationMode, TranspileOpts};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+#[path = "🔗️link/🦀️.rs"]
+mod link;
 
 const WASI_SHIMS: &[(&str, &str)] = &[
     ("wasi:cli/*", "@bytecodealliance/preview2-shim/cli#*"),
@@ -171,14 +176,23 @@ fn run(cli: Cli) -> Result<()> {
     Ok(())
 }
 
+fn dispatch(args: Vec<String>) -> Result<()> {
+    match args.first().map(String::as_str) {
+        Some("link") => link::run_link(&link::parse_link(args.into_iter().skip(1))?),
+        Some("merge") => link::run_merge(&link::parse_link(args.into_iter().skip(1))?),
+        Some("image-exports") => link::run_image_exports(&link::parse_link(args.into_iter().skip(1))?),
+        _ => parse(args).and_then(run),
+    }
+}
+
 fn main() {
     let outcome = std::thread::Builder::new()
         .stack_size(512 * 1024 * 1024)
-        .spawn(|| parse(std::env::args().skip(1).collect()).and_then(run))
+        .spawn(|| dispatch(std::env::args().skip(1).collect()))
         .map_err(anyhow::Error::from)
         .and_then(|handle| handle.join().map_err(|_| anyhow!("transpile thread panicked"))?);
     if let Err(error) = outcome {
         eprintln!("semio-native-transpile: {error:#}");
-        std::process::exit(1);
+        std::process::exit(if error.downcast_ref::<link::ImageLacksSymbols>().is_some() { link::EXIT_IMAGE_LACKS_SYMBOLS } else { 1 });
     }
 }

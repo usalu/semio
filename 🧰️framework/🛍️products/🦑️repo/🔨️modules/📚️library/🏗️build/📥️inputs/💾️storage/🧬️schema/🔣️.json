@@ -293,7 +293,8 @@
         },
         "Protocol": {
           "const": {
-            "retirementBatchEntries": 64
+            "retirementBatchEntries": 64,
+            "inlineEvictionMilliseconds": 5000
           }
         }
       }
@@ -437,6 +438,7 @@
             "cacheSpill": 0,
             "pageBytes": 4096,
             "inventoryEntryLimit": 1048576,
+            "remeasureMilliseconds": 86400000,
             "writerShards": 64
           }
         }

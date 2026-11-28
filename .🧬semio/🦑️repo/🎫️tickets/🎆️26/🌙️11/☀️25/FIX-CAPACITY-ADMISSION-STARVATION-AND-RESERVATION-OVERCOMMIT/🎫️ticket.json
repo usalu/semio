@@ -1,9 +1,9 @@
 {
   "title": "Fix Capacity Admission Starvation and Reservation Overcommit",
   "emoji": "🚦",
-  "status": "open",
+  "status": "closed",
   "description": "Fix host capacity admission at its cause: (1) starvation of large waiting requests (starving-first head-of-line ordering), (2) overcommit by full reservations of long-running grants that really hold a fraction (settled charge floor was rampIdleKeepMegabytes 3072 so no grant under 3072 MB was ever reduced), (3) session cap must be work-conserving (bind only while another session waits). Test-driven with python oracle; no row schema change so live grants and old processes stay valid.",
-  "summary": "Reclosed: the two red tests are not from the admission change (verified with the ordering and cap changes switched off). Fixed at cause: exactGrantRequired test value map gained the new placeholders; end-to-end envelope test now derives the expected memory from the real host sizing instead of assuming a 32 GB host. All 29 related test files pass. Details in result.md.",
+  "summary": "Seven graph-plan grants came from slice-pool grant growth opening a new unobserved graph-plan grant per growth (max 6). Growth now rewrites the one grant in place (handle.grow via upgrade path); new tests for one grant row. Findings in graph-plan-stacked-grants.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2800"
   },
@@ -98,6 +98,32 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Lane CAP-GP: one process held seven concurrent graph-plan grants (base + 6 stacked growth grants, 0 MB observed). Fix at the cause: slice-pool growth books into the same grant in place; add test."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-27 01:42:32",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "9c8a98ec2349cd952e1195429a42dc041a3a31d0",
+      "summary": "Seven graph-plan grants came from slice-pool grant growth opening a new unobserved graph-plan grant per growth (max 6). Growth now rewrites the one grant in place (handle.grow via upgrade path); new tests for one grant row. Findings in graph-plan-stacked-grants.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌡️hostcapacity🗃️🧪️tests🗃️🧮️graphplan💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🎫️gate💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌡️hostcapacity💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🏡️resident🗃️🏗️composition🗃️🌐️host🗃️👷️slicepool💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🏡️resident🗃️🧪️tests🗃️📈️grantgrowth💻🟦️"
+        }
+      ]
     }
   ]
 }

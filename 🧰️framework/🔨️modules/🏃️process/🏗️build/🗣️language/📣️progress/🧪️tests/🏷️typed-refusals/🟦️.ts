@@ -1,7 +1,7 @@
 /** 🏷️ Law: every typed refusal class of the boundary list renders as its own text, in the chosen language, with its exit status and no internal-error text, also inside aggregated faults and causes; only an unexpected fault is an internal error, and it carries a stable reference. */
 import {expect,test} from "bun:test";
 import {TYPED_REFUSAL_CLASSES_V1,faultReferenceV1,reportBoundaryErrorV1} from "../../🟦️.ts";
-import source from "../../🟦️.ts" with {type:"text"};
+import {readFileSync} from "node:fs";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {CargoLockRefusedV1} from "../../../../../🦀️cargo-workspace/🔒️lock/🟦️.ts";
 import {PhysicalLockErrorV1} from "../../../../../🔒️leases/📁️physical/🟦️.ts";
@@ -10,6 +10,7 @@ import {ToolHookTimeoutV1} from "../../../../../../../🛍️products/🦑️rep
 import {NxRecipeRefusedV1} from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts";
 import {refuseProcessV1} from "../../../../../📖️texts/🟦️.ts";
 import {ScriptProcessInterruptedV1} from "../../../../../🛑️interruption/🟦️.ts";
+const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");
 
 const INTERNAL=/Internal error|Interner Fehler|reference|Referenz/u;
 const windows=()=>Object.assign(new Error("The folder could not be moved"),{name:"WindowsRenameRefused",texts:{en:"The folder C:\\a could not be moved to C:\\b.",de:"Der Ordner C:\\a konnte nicht nach C:\\b verschoben werden."}});

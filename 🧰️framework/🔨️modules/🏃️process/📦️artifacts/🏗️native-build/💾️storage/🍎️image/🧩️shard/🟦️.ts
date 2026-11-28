@@ -1,3 +1,4 @@
+import{requireNativeStorageRootCapabilityV1}from"../../🛂️root-capability/🟦️.ts";
 import{createHash}from"node:crypto";
 import{appendFileSync,closeSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,rmSync,rmdirSync,statfsSync,writeFileSync}from"node:fs";
 import{basename,dirname,join,posix,win32}from"node:path";
@@ -22,8 +23,12 @@ export type NativeImageShardRecordV1=Readonly<{id:string;key:string;root:number;
 export type NativeImageShardStateV1=ReadonlyMap<string,NativeImageShardRecordV1>;
 /** 🐣️ The birth event of one shard. */
 export type NativeImageShardBornEventV1=Readonly<{type:"born";id:string;key:string;root:number;path:string;capacityBytes:number;atMs:number}>;
+/** 📈️ The growth event of one shard: its image was stretched to a larger capacity. */
+export type NativeImageShardGrownEventV1=Readonly<{type:"grown";id:string;capacityBytes:number;atMs:number}>;
+/** 📉️ A shard was shrunk in place to a smaller capacity, its content kept (the host backed only part of its declaration). */
+export type NativeImageShardShrunkEventV1=Readonly<{type:"shrunk";id:string;capacityBytes:number;atMs:number}>;
 /** 📜️ One event of the shard log. */
-export type NativeImageShardEventV1=NativeImageShardBornEventV1|Readonly<{type:"retired";id:string;atMs:number}>;
+export type NativeImageShardEventV1=NativeImageShardBornEventV1|NativeImageShardGrownEventV1|NativeImageShardShrunkEventV1|Readonly<{type:"retired";id:string;atMs:number}>;
 const platformKey=(platform:string):"darwin"|"linux"|"windows"|undefined=>platform==="win32"?"windows":platform==="darwin"||platform==="linux"?platform:undefined;
 const alignUp=(value:number,unit:number)=>Math.ceil(value/unit)*unit,alignDown=(value:number,unit:number)=>Math.floor(value/unit)*unit;
 const segmentsOf=(path:string):string[]|undefined=>{const parts=path===""?[]:path.split("/");return parts.some(part=>part===""||part==="."||part===".."||/[\\\0]/u.test(part))?undefined:parts;};
@@ -53,23 +58,43 @@ export function nativeImageShardKeyV1(rule:Pick<NativeImageShardRuleV1,"roots">,
  }
  return null;
 }
-/** 📏️ The capacity a shard is born with: as large as the cap and the share of free host space allow (the backing is sparse, so the declared size costs nothing until written), never below the key's working set plus headroom. `refused` names why nothing can be born. Pure and language-agnostic. */
-export function nativeImageShardCapacityV1(platform:string,rule:Pick<NativeImageShardRuleV1,"maximumImageBytes"|"headroomPercent"|"hostFreeReservePercent">,facts:Readonly<{needBytes:number;hostFreeBytes:number}>):Readonly<{capacityBytes:number}|{refused:"cap"|"host-free"}>{
- const cap=alignDown(nativeImageShardCapBytesV1(platform,rule),protocol.alignBytes),want=Math.max(protocol.minimumImageBytes,alignUp(Math.floor(facts.needBytes*(100+rule.headroomPercent)/100),protocol.alignBytes));
+/** 📏️ The smallest capacity a key's image is born with: its working set plus headroom, aligned up, never below the protocol minimum. Pure and language-agnostic. */
+export function nativeImageShardWantBytesV1(rule:Pick<NativeImageShardRuleV1,"headroomPercent">,needBytes:number):number{return Math.max(protocol.minimumImageBytes,alignUp(Math.floor(needBytes*(100+rule.headroomPercent)/100),protocol.alignBytes));}
+/** 📐️ The capacity a shard is born with when its working set is known: the larger of the root's declared need and the measured need (the largest lane recorded so far) plus headroom, aligned up, never above the cap. The declared capacity of a sparse image costs nothing until written, but every declaration counts against the commitment budget, so an image is only as large as its measured need asks and `nativeImageShardGrowTargetV1` stretches it once the need outgrows it. Pure and language-agnostic. */
+export function nativeImageShardSizedBytesV1(platform:string,rule:Pick<NativeImageShardRuleV1,"maximumImageBytes"|"headroomPercent">,facts:Readonly<{needBytes:number;measuredBytes?:number}>):number{
+ return Math.min(alignDown(nativeImageShardCapBytesV1(platform,rule),protocol.alignBytes),nativeImageShardWantBytesV1(rule,Math.max(facts.needBytes,facts.measuredBytes??0)));
+}
+/** 📈️ The capacity an image grows to, or `null` when it stays: the peak of its used and measured bytes reaches `growAtPercent` of its capacity, and the target is that peak plus headroom, never above the cap, the share of the free host bytes (a sparse image may be filled, so the host must be able to hold the whole declaration) or the room the commitment budget leaves. Pure and language-agnostic. */
+export function nativeImageShardGrowTargetV1(platform:string,rule:Pick<NativeImageShardRuleV1,"maximumImageBytes"|"headroomPercent"|"hostFreeReservePercent">,facts:Readonly<{capacityBytes:number;usedBytes:number;measuredBytes?:number;hostFreeBytes:number;budgetRoomBytes?:number}>):number|null{
+ const peak=Math.max(facts.usedBytes,facts.measuredBytes??0);
+ if(peak*100<facts.capacityBytes*protocol.growAtPercent)return null;
+ const room=alignDown(Math.floor(facts.hostFreeBytes*rule.hostFreeReservePercent/100),protocol.alignBytes),budget=facts.budgetRoomBytes===undefined?Infinity:facts.capacityBytes+alignDown(Math.max(0,facts.budgetRoomBytes),protocol.alignBytes);
+ const target=Math.min(alignDown(nativeImageShardCapBytesV1(platform,rule),protocol.alignBytes),nativeImageShardWantBytesV1(rule,peak),room,budget);
+ return target>facts.capacityBytes?target:null;
+}
+/** 🧮️ The bytes the live shards of one root declare in all: capacities of sparse images cost nothing until written, but every one may be filled, so their sum is what the host volume could be asked for. Pure and language-agnostic. */
+export function nativeImageShardCommittedBytesV1(live:NativeImageShardStateV1,root?:number):number{let sum=0;for(const record of live.values())if(root===undefined||record.root===root)sum+=record.capacityBytes;return sum;}
+/** 📏️ The capacity a shard is born with: as large as the cap, the share of free host space and the room the commitment budget leaves allow (the backing is sparse, so the declared size costs nothing until written, but the declared sizes of one root never add up to more than the budget), never below the key's working set plus headroom. `refused` names why nothing can be born. Pure and language-agnostic. */
+export function nativeImageShardCapacityV1(platform:string,rule:Pick<NativeImageShardRuleV1,"maximumImageBytes"|"headroomPercent"|"hostFreeReservePercent">,facts:Readonly<{needBytes:number;hostFreeBytes:number;budgetRoomBytes?:number;hostRoomBytes?:number}>):Readonly<{capacityBytes:number}|{refused:"cap"|"host-free"|"budget"|"commitment"}>{
+ const cap=alignDown(nativeImageShardCapBytesV1(platform,rule),protocol.alignBytes),want=nativeImageShardWantBytesV1(rule,facts.needBytes);
  if(want>cap)return{refused:"cap"};
  const room=alignDown(Math.floor(facts.hostFreeBytes*rule.hostFreeReservePercent/100),protocol.alignBytes);
- return room<want?{refused:"host-free"}:{capacityBytes:Math.min(cap,room)};
+ if(room<want)return{refused:"host-free"};
+ const budget=facts.budgetRoomBytes===undefined?Infinity:alignDown(Math.max(0,facts.budgetRoomBytes),protocol.alignBytes);
+ if(budget<want)return{refused:"budget"};
+ const host=facts.hostRoomBytes===undefined?Infinity:alignDown(Math.max(0,facts.hostRoomBytes),protocol.alignBytes);
+ return host<want?{refused:"commitment"}:{capacityBytes:Math.min(cap,room,budget,host)};
 }
-/** 🎯️ The decision for one logical path: the home image, an existing shard, a shard to birth at a capacity, or a refusal (`id-collision`, `shard-limit`, `cap`, `host-free`). */
-export type NativeImageShardDecisionV1=Readonly<{kind:"home"}|{kind:"existing";id:string;key:string;root:number;capacityBytes:number}|{kind:"birth";id:string;key:string;root:number;capacityBytes:number}|{kind:"refused";id:string;key:string;root:number;reason:"id-collision"|"shard-limit"|"cap"|"host-free"}>;
-/** 🎯️ Decides which image holds a logical path. Disabled rules and unsupported platforms always answer home, so the layout before the switchover is the layout of a disabled rule. Pure and language-agnostic. */
-export function nativeImageShardSelectV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;path:string;hostFreeBytes:number}>):NativeImageShardDecisionV1{
+/** 🎯️ The decision for one logical path: the home image, an existing shard, a shard to birth at a capacity, or a refusal (`id-collision`, `shard-limit`, `cap`, `host-free`, `budget`). */
+export type NativeImageShardDecisionV1=Readonly<{kind:"home"}|{kind:"existing";id:string;key:string;root:number;capacityBytes:number}|{kind:"birth";id:string;key:string;root:number;capacityBytes:number}|{kind:"refused";id:string;key:string;root:number;reason:"id-collision"|"shard-limit"|"cap"|"host-free"|"budget"|"commitment"}>;
+/** 🎯️ Decides which image holds a logical path. Disabled rules and unsupported platforms always answer home, so the layout before the switchover is the layout of a disabled rule. A `budgetBytes` bounds the declared capacities of the shards of the path's root: a birth that would exceed it is refused (`budget`); a `hostRoomBytes` is the room the host-wide commitment budget leaves over all images of all roots, a birth above it is refused (`commitment`). Pure and language-agnostic. */
+export function nativeImageShardSelectV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;path:string;hostFreeBytes:number;budgetBytes?:number;hostRoomBytes?:number}>):NativeImageShardDecisionV1{
  if(!input.rule.enabled||!nativeImageShardSupportedV1(input.platform))return{kind:"home"};
  const found=nativeImageShardKeyV1(input.rule,input.path);if(found===null)return{kind:"home"};
  const shard={id:found.id,key:found.key,root:found.root},record=input.live.get(found.id);
  if(record!==undefined)return record.key===found.key?{kind:"existing",...shard,capacityBytes:record.capacityBytes}:{kind:"refused",...shard,reason:"id-collision"};
  if(input.live.size>=protocol.maximumShards)return{kind:"refused",...shard,reason:"shard-limit"};
- const made=nativeImageShardCapacityV1(input.platform,input.rule,{needBytes:input.rule.roots[found.root]!.needBytes,hostFreeBytes:input.hostFreeBytes});
+ const made=nativeImageShardCapacityV1(input.platform,input.rule,{needBytes:input.rule.roots[found.root]!.needBytes,hostFreeBytes:input.hostFreeBytes,...input.budgetBytes===undefined?{}:{budgetRoomBytes:input.budgetBytes-nativeImageShardCommittedBytesV1(input.live,found.root)},...input.hostRoomBytes===undefined?{}:{hostRoomBytes:input.hostRoomBytes}});
  return"refused"in made?{kind:"refused",...shard,reason:made.refused}:{kind:"birth",...shard,capacityBytes:made.capacityBytes};
 }
 /** 🗂️ Where one image lives: its directory (`<partition>/s/<id>`), backing, receipt, the logical mount point inside the home mount and the lease resource that guards it alone. The home image is the partition directory itself, mounted at `<directory>/m`. */
@@ -104,17 +129,21 @@ export function nativeImageShardFoldV1(events:readonly NativeImageShardEventV1[]
  for(const event of events){
   if(validateJsonSchemaSubset(schema.definitions.Event,event,schema).length)throw Error("Closed image shard event required");
   if(event.type==="born"){const before=live.get(event.id);if(before!==undefined&&before.key!==event.key)throw Error("Image shard id "+event.id+" belongs to "+before.key);if(before===undefined)live.set(event.id,Object.freeze({id:event.id,key:event.key,root:event.root,path:event.path,capacityBytes:event.capacityBytes}));}
+  else if(event.type==="grown"){const before=live.get(event.id);if(before===undefined)throw Error("Live image shard required to grow "+event.id);if(event.capacityBytes>before.capacityBytes)live.set(event.id,Object.freeze({...before,capacityBytes:event.capacityBytes}));}
+  else if(event.type==="shrunk"){const before=live.get(event.id);if(before===undefined)throw Error("Live image shard required to shrink "+event.id);if(event.capacityBytes<before.capacityBytes)live.set(event.id,Object.freeze({...before,capacityBytes:event.capacityBytes}));}
   else if(!live.delete(event.id))throw Error("Live image shard required to retire "+event.id);
  }
  return live;
 }
-/** ✍️ Validates a birth against the live shards and the rule and answers the event: the id is the one of the key, the key matches its root, the capacity is aligned and lies within the minimum and the cap, the shard limit holds. */
-export function nativeImageShardBirthEventV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;key:string;root:number;capacityBytes:number;atMs:number}>):NativeImageShardBornEventV1{
+/** ✍️ Validates a birth against the live shards and the rule and answers the event: the id is the one of the key, the key matches its root, the capacity is aligned and lies within the minimum and the cap, the shard limit and the commitment budget of the root hold. */
+export function nativeImageShardBirthEventV1(input:Readonly<{rule:NativeImageShardRuleV1;platform:string;live:NativeImageShardStateV1;key:string;root:number;capacityBytes:number;atMs:number;budgetBytes?:number;hostRoomBytes?:number}>):NativeImageShardBornEventV1{
  const root=input.rule.roots[input.root],id=nativeImageShardIdV1(input.key);
  if(root===undefined||!new RegExp(root.pattern,"u").test(input.key))throw Error("Shard key of a declared root required: "+input.key);
  if(input.live.has(id))throw Error("Image shard "+id+" is live already");
  if(input.live.size>=protocol.maximumShards)throw Error("Image shard limit reached");
  if(input.capacityBytes%protocol.alignBytes!==0||input.capacityBytes<protocol.minimumImageBytes||input.capacityBytes>nativeImageShardCapBytesV1(input.platform,input.rule))throw Error("Image shard capacity within the cap required: "+input.capacityBytes);
+ if(input.budgetBytes!==undefined&&nativeImageShardCommittedBytesV1(input.live,input.root)+input.capacityBytes>input.budgetBytes)throw Error("Image shard capacity within the commitment budget required: "+input.capacityBytes);
+ if(input.hostRoomBytes!==undefined&&input.capacityBytes>input.hostRoomBytes)throw Error("Image shard capacity within the host commitment budget required: "+input.capacityBytes);
  return Object.freeze({type:"born",id,key:input.key,root:input.root,path:nativeImageShardPathV1(input.rule,input.root,input.key),capacityBytes:input.capacityBytes,atMs:input.atMs});
 }
 /** 📖️ Reads the event log of a partition; a torn last line (a crash during an append) is ignored, anything else invalid is an error. */
@@ -152,6 +181,8 @@ export function nativeImageShardAdmissionV1(rows:readonly NativeImageShardNeedV1
 }
 /** 💬️ The bilingual line of a key that cannot get an image. */
 export function nativeImageShardRefusedTextV1(language:"en"|"de",values:Readonly<{key:string;partition:string;free:string;need:string}>):string{return protocol.messages.refused[language].replace(/\{(\w+)\}/gu,(_,name:string)=>values[name as keyof typeof values]??"");}
+/** 💬️ The bilingual line of a key whose image would exceed the commitment budget of its root. */
+export function nativeImageShardOvercommittedTextV1(language:"en"|"de",values:Readonly<{key:string;partition:string;committed:string;budget:string;need:string}>):string{return protocol.messages.overcommitted[language].replace(/\{(\w+)\}/gu,(_,name:string)=>values[name as keyof typeof values]??"");}
 /** 💬️ The bilingual line of a reclaim pass in which some images failed. */
 export function nativeImageShardPartialTextV1(language:"en"|"de",values:Readonly<{failed:string;total:string;partition:string;ids:string}>):string{return protocol.messages.partial[language].replace(/\{(\w+)\}/gu,(_,name:string)=>values[name as keyof typeof values]??"");}
 /** 🧮️ Which images a reclaim pass kicks, by the same due rule as the single image. Pure and language-agnostic. */
@@ -220,6 +251,13 @@ export function createNativeImageShardDarwinLifecycleV1(given:Readonly<{run:Comm
   catch(error){if(stopped||nativeImageDetachBusyV1(error))throw error;await given.run(mechanism.detachProgram,fill(mechanism.forceDetachArguments,{mountPoint:layout.mountPoint})).catch(()=>{throw error;});}
   if(nativeImageShardMountedV1(layout.mountPoint))throw Error("Shard "+layout.id+" is still mounted at "+layout.mountPoint);
  };
+ const attach=async(layout:NativeImageShardLayoutV1,home:NativeImageShardLayoutV1):Promise<void>=>{
+  if(!nativeImageShardMountedV1(home.mountPoint))throw Error("Mounted home image required before a shard is mounted: "+home.mountPoint);
+  mkdirSync(layout.mountPoint,{recursive:true});
+  if(nativeImageShardMountedV1(layout.mountPoint))return;
+  await given.run(mechanism.attachProgram,fill(mechanism.attachArguments,{mountPoint:layout.mountPoint,image:layout.image}));
+  if(!nativeImageShardMountedV1(layout.mountPoint))throw Error("Shard "+layout.id+" is not mounted at "+layout.mountPoint);
+ };
  return Object.freeze({
   async create(layout:NativeImageShardLayoutV1,capacityBytes:number):Promise<void>{
    if(capacityBytes%1048576!==0)throw Error("Whole mebibytes required");
@@ -227,14 +265,14 @@ export function createNativeImageShardDarwinLifecycleV1(given:Readonly<{run:Comm
    try{await given.run(mechanism.createProgram,fill(mechanism.createArguments,{megabytes:String(capacityBytes/1048576),volumeName:protocol.volumeName,seed,image:layout.image}));}finally{rmSync(seed,{recursive:true,force:true});}
    writeFileSync(layout.receipt,JSON.stringify({version:1,id:layout.id,key:layout.key,capacityBytes})+"\n");
   },
-  async attach(layout:NativeImageShardLayoutV1,home:NativeImageShardLayoutV1):Promise<void>{
-   if(!nativeImageShardMountedV1(home.mountPoint))throw Error("Mounted home image required before a shard is mounted: "+home.mountPoint);
-   mkdirSync(layout.mountPoint,{recursive:true});
-   if(nativeImageShardMountedV1(layout.mountPoint))return;
-   await given.run(mechanism.attachProgram,fill(mechanism.attachArguments,{mountPoint:layout.mountPoint,image:layout.image}));
-   if(!nativeImageShardMountedV1(layout.mountPoint))throw Error("Shard "+layout.id+" is not mounted at "+layout.mountPoint);
-  },
+  attach,
   detach,
+  async resize(layout:NativeImageShardLayoutV1,capacityBytes:number,home:NativeImageShardLayoutV1):Promise<void>{
+   if(capacityBytes%1048576!==0)throw Error("Whole mebibytes required");
+   await detach(layout);
+   try{await given.run(mechanism.resizeProgram,fill(mechanism.resizeArguments,{megabytes:String(capacityBytes/1048576),image:layout.image}));writeFileSync(layout.receipt,JSON.stringify({version:1,id:layout.id,key:layout.key,capacityBytes})+"\n");}
+   finally{await attach(layout,home);}
+  },
   async retire(layout:NativeImageShardLayoutV1):Promise<void>{
    await detach(layout);rmSync(layout.directory,{recursive:true,force:true});
    try{rmdirSync(layout.mountPoint);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
@@ -245,9 +283,10 @@ export function createNativeImageShardDarwinLifecycleV1(given:Readonly<{run:Comm
 export type NativeImageShardLifecycleV1=ReturnType<typeof createNativeImageShardDarwinLifecycleV1>;
 type LockV1=<T>(body:()=>Promise<T>)=>Promise<T>;
 /** 🌱️ Makes the image of one logical path exist and be mounted, born lazily: `home` for a path no root claims, the existing shard (mounted again when it is not), or a new one created at its capacity, mounted and logged, all inside `lock` so two commands never birth the same key. The order (create, mount, log) leaves at most an unlogged image that the next birth replaces; `repairNativeImageShardsV1` retires a logged shard whose files are gone. */
-export async function ensureNativeImageShardV1(given:Readonly<{directory:string;rule:NativeImageShardRuleV1;platform:string;path:string;hostFreeBytes:()=>number;now:()=>number;lifecycle:NativeImageShardLifecycleV1;lock:LockV1;check?:()=>void}>):Promise<Readonly<{kind:"home"}|{kind:"existing"|"birth";layout:NativeImageShardLayoutV1;capacityBytes:number}|{kind:"refused";reason:string;key:string}>>{
- const check=given.check??(()=>{}),home=nativeImageShardHomeLayoutV1(given.directory);
- const choose=()=>nativeImageShardSelectV1({rule:given.rule,platform:given.platform,live:nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)),path:given.path,hostFreeBytes:given.hostFreeBytes()});
+export async function ensureNativeImageShardV1(given:Readonly<{directory:string;rule:NativeImageShardRuleV1;platform:string;path:string;hostFreeBytes:()=>number;budgetBytes?:()=>number|undefined;hostRoomBytes?:()=>number|undefined;measuredNeedBytes?:()=>number|undefined;now:()=>number;lifecycle:NativeImageShardLifecycleV1;lock:LockV1;check?:()=>void}>):Promise<Readonly<{kind:"home"}|{kind:"existing"|"birth";layout:NativeImageShardLayoutV1;capacityBytes:number}|{kind:"refused";reason:string;key:string}>>{
+ const check=given.check??(()=>{}),home=nativeImageShardHomeLayoutV1(given.directory),budget=given.budgetBytes?.();
+ const hostRoom=()=>given.hostRoomBytes?.();
+ const choose=()=>nativeImageShardSelectV1({rule:given.rule,platform:given.platform,live:nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)),path:given.path,hostFreeBytes:given.hostFreeBytes(),...budget===undefined?{}:{budgetBytes:budget},...hostRoom()===undefined?{}:{hostRoomBytes:hostRoom()!}});
  const first=choose();check();
  if(first.kind==="home")return{kind:"home"};
  if(first.kind==="refused")return{kind:"refused",reason:first.reason,key:first.key};
@@ -258,17 +297,44 @@ export async function ensureNativeImageShardV1(given:Readonly<{directory:string;
   if(again.kind==="refused")return{kind:"refused",reason:again.reason,key:again.key}as const;
   const layout=nativeImageShardLayoutV1(given.directory,{...again,path:nativeImageShardPathV1(given.rule,again.root,again.key)});
   if(again.kind==="existing"){await given.lifecycle.attach(layout,home);return{kind:"existing",layout,capacityBytes:again.capacityBytes}as const;}
-  const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)),event=nativeImageShardBirthEventV1({rule:given.rule,platform:given.platform,live,key:again.key,root:again.root,capacityBytes:again.capacityBytes,atMs:given.now()});
-  await given.lifecycle.detach(layout);await given.lifecycle.create(layout,again.capacityBytes);check();await given.lifecycle.attach(layout,home);check();
+  const capacityBytes=Math.min(again.capacityBytes,nativeImageShardSizedBytesV1(given.platform,given.rule,{needBytes:given.rule.roots[again.root]!.needBytes,...given.measuredNeedBytes?.()===undefined?{}:{measuredBytes:given.measuredNeedBytes()!}}));
+  const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)),event=nativeImageShardBirthEventV1({rule:given.rule,platform:given.platform,live,key:again.key,root:again.root,capacityBytes,atMs:given.now(),...budget===undefined?{}:{budgetBytes:budget},...hostRoom()===undefined?{}:{hostRoomBytes:hostRoom()!}});
+  await given.lifecycle.detach(layout);await given.lifecycle.create(layout,capacityBytes);check();await given.lifecycle.attach(layout,home);check();
   appendNativeImageShardEventV1(given.directory,event);
-  return{kind:"birth",layout,capacityBytes:again.capacityBytes}as const;
+  return{kind:"birth",layout,capacityBytes}as const;
+ });
+}
+/** 📈️ Stretches the image of one shard when its need has outgrown it, so a lane that ran out of room is bigger the next time it is taken: only an idle image is stretched (the caller holds the claim of the key; a busy detach refuses and nothing changes), the backing grows without a written byte, the image is mounted again whatever happens and the growth is logged. Answers the new capacity, or `null` when the image stays. */
+export async function growNativeImageShardV1(given:Readonly<{directory:string;rule:NativeImageShardRuleV1;platform:string;id:string;measure(layout:NativeImageShardLayoutV1):Readonly<{usedBytes:number;hostFreeBytes:number}>|undefined;measuredNeedBytes?:()=>number|undefined;budgetBytes?:()=>number|undefined;hostRoomBytes?:()=>number|undefined;now:()=>number;lifecycle:NativeImageShardLifecycleV1;lock:LockV1;check?:()=>void}>):Promise<number|null>{
+ return given.lock(async()=>{
+  const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)),record=live.get(given.id);if(record===undefined)return null;
+  const layout=nativeImageShardLayoutV1(given.directory,record),facts=given.measure(layout),measured=given.measuredNeedBytes?.(),budget=given.budgetBytes?.(),hostRoom=given.hostRoomBytes?.();if(facts===undefined)return null;
+  const room=budget===undefined&&hostRoom===undefined?undefined:Math.min(budget===undefined?Infinity:budget-nativeImageShardCommittedBytesV1(live,record.root),hostRoom??Infinity);
+  const target=nativeImageShardGrowTargetV1(given.platform,given.rule,{capacityBytes:record.capacityBytes,usedBytes:facts.usedBytes,hostFreeBytes:facts.hostFreeBytes,...measured===undefined?{}:{measuredBytes:measured},...room===undefined?{}:{budgetRoomBytes:room}});
+  if(target===null)return null;
+  given.check?.();await given.lifecycle.resize(layout,target,nativeImageShardHomeLayoutV1(given.directory));
+  appendNativeImageShardEventV1(given.directory,{type:"grown",id:given.id,capacityBytes:target,atMs:given.now()});return target;
  });
 }
 /** 🗑️ Retires one shard whole: detaches it, removes its files and logs the retirement. All blocks of the key return to the host at once, with no trim. Refuses while the image is busy (the detach fails) and is repeatable after a crash. */
 export async function retireNativeImageShardV1(given:Readonly<{directory:string;id:string;now:()=>number;lifecycle:NativeImageShardLifecycleV1;lock:LockV1}>):Promise<boolean>{
- return given.lock(async()=>{
+ requireNativeStorageRootCapabilityV1(given.directory,"retire-shard");return given.lock(async()=>{
   const record=nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory)).get(given.id);if(record===undefined)return false;
   await given.lifecycle.retire(nativeImageShardLayoutV1(given.directory,record));appendNativeImageShardEventV1(given.directory,{type:"retired",id:given.id,atMs:given.now()});return true;
+ });
+}
+/** 🧹️ Retires every live shard of a partition whole and leaves its capsule without shard bookkeeping (the shard directory and the ledger), so the home image can be retired whole in its turn: a partition with live shards or with their entries beside its image is no disposable capsule. Meant for the one moment nothing uses the partition (the caller holds its exclusive whole-partition lease without waiting, so no build runs); a shard that stays busy ends the pass, nothing is forced, and the shards retired so far stay retired. Answers the ids retired and whether the capsule is clean. */
+export async function dismantleNativeImageShardsV1(given:Readonly<{directory:string;now:()=>number;lifecycle:NativeImageShardLifecycleV1;lock:LockV1;check?:()=>void}>):Promise<Readonly<{retired:readonly string[];clean:boolean}>>{
+ requireNativeStorageRootCapabilityV1(given.directory,"retire-shards");return given.lock(async()=>{
+  const retired:string[]=[],live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(given.directory));
+  for(const record of[...live.values()].sort((a,b)=>a.id<b.id?-1:1)){
+   given.check?.();
+   try{await given.lifecycle.retire(nativeImageShardLayoutV1(given.directory,record));}catch{return Object.freeze({retired:Object.freeze(retired),clean:false});}
+   appendNativeImageShardEventV1(given.directory,{type:"retired",id:record.id,atMs:given.now()});retired.push(record.id);
+  }
+  try{rmdirSync(join(given.directory,protocol.directory));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")return Object.freeze({retired:Object.freeze(retired),clean:false});}
+  rmSync(join(given.directory,protocol.ledgerFile),{force:true});
+  return Object.freeze({retired:Object.freeze(retired),clean:true});
  });
 }
 /** 🩹️ After a restart or a reboot: mounts every live shard again and retires the ones whose files are gone (recomputable cache), answering what it did per id. */

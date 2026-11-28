@@ -321,11 +321,6 @@
       "tolerance": 1e-12
     }
   ],
-  "oracleHostPackages": [
-    { "implementation": "python", "package": "numpy", "version": "2.5.0", "module": "numpy", "rationale": "🌀️ MT19937 stream of the randomness oracle and of every Python reference that draws a sheet; pair matrices of the scoring cross-checks." },
-    { "implementation": "python", "package": "scipy", "version": "1.18.0", "module": "scipy", "rationale": "📊️ Kendall τ and Euclidean distances of the scoring cross-checks." },
-    { "implementation": "python", "package": "jsonschema", "version": "4.26.0", "module": "jsonschema", "rationale": "🧬️ Draft 7 validation of every quiz document against the normative schema." }
-  ],
   "subjectHostPackages": [
     {
       "implementation": "rust",

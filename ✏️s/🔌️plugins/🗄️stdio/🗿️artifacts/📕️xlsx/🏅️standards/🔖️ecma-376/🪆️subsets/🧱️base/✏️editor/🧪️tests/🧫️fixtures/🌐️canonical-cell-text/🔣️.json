@@ -11,6 +11,13 @@
     { "locale": "en", "text": "1.5", "canonical": "1.5" },
     { "locale": "en", "text": "1,5", "canonical": "1,5" },
     { "locale": "en", "text": "ID", "canonical": "ID" },
+    { "locale": "en", "text": "true", "canonical": "TRUE" },
+    { "locale": "en", "text": "False", "canonical": "FALSE" },
+    { "locale": "en", "text": "WAHR", "canonical": "WAHR" },
+    { "locale": "de", "text": "wahr", "canonical": "TRUE" },
+    { "locale": "de", "text": "Falsch", "canonical": "FALSE" },
+    { "locale": "de", "text": "True", "canonical": "TRUE" },
+    { "locale": "de", "text": "'WAHR", "canonical": "'WAHR" },
     { "locale": "", "text": "1.5", "canonical": "1.5" },
     { "locale": "", "text": "1,5", "canonical": "1,5" }
   ]

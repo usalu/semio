@@ -1,9 +1,9 @@
-import {existsSync,mkdtempSync,readFileSync,rmSync} from "node:fs";
+import {existsSync,mkdtempSync,readFileSync,readdirSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {expect,test} from "bun:test";
-import {compilerTemporaryArgumentsV1,lanePathsV1} from "../🟦️.ts";
+import {compilerTemporaryArgumentsV1,enterLaneV1,imageFaultV1,lanePathsV1,removeInImageV1} from "../🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import envelope from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📏️path-envelope/🧬️schema/🔣️.json" with {type:"json"};
 const layout=UNIT_CACHE_POLICY_V1.layout,budget=envelope.definitions.Budget.const,policy=envelope.definitions.Policy.const;
@@ -25,4 +25,22 @@ test("the layout the path envelope budgets for equals the layout the unit cache 
  expect(()=>lanePathsV1("/r","q"+"0".repeat(budget.laneCharacters-1))).not.toThrow();
  expect(budget.cacheDirectory.split("/").at(-1)).toBe("u");
  expect(readFileSync(join(workspace,".cargo","config.toml"),"utf8")).toContain("build-dir = \""+budget.cacheDirectory+"/"+budget.laneDirectory+"/");
+});
+test("an image that failed under a running command answers a fault the release and the removal survive, any other error is never swallowed",()=>{
+ const fault=(code:string)=>Object.assign(Error(code+": rm"),{code});
+ for(const code of["EFAULT","EIO","ENXIO","ENODEV","ENOTCONN","ESTALE"])expect(imageFaultV1(fault(code)),code).toBe(true);
+ for(const code of["ENOENT","EACCES","ENOSPC","EBUSY"])expect(imageFaultV1(fault(code)),code).toBe(false);
+ expect(imageFaultV1(undefined)).toBe(false);expect(imageFaultV1(Error("plain"))).toBe(false);
+ expect(removeInImageV1(()=>{})).toBe(true);
+ expect(removeInImageV1(()=>{throw fault("EFAULT");})).toBe(false);
+ expect(()=>removeInImageV1(()=>{throw fault("EACCES");})).toThrow("EACCES");
+});
+test("a command releases its lane once, its marker goes and a second release changes nothing",()=>{
+ const root=mkdtempSync(join(tmpdir(),"lane-release-"));
+ try{
+  const entered=enterLaneV1(root,"p000000"),before=existsSync(entered.paths.live)?readFileSync(join(entered.paths.metadata)).length:0;
+  expect(before).toBeGreaterThan(0);
+  entered.release();entered.release();
+  expect(readdirSync(entered.paths.live)).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

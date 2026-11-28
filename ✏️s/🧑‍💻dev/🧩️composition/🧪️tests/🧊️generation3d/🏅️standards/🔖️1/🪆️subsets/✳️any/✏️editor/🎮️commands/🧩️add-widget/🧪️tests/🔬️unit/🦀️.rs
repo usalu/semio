@@ -78,7 +78,7 @@ async fn repeated_automatic_additions_have_separated_rendered_rectangles() {
                 assert!((node.x - other.x).abs() >= (node.width + other.width) / 2.0 + AUTOMATIC_GAP || (node.y - other.y).abs() >= (node.height + other.height) / 2.0 + AUTOMATIC_GAP, "{} overlaps {}", node.id, other.id);
             }
         }
-    });
+    }).expect("the evaluation host binds its snapshot");
 }
 
 #[semio_framework_async_macros::async_test]

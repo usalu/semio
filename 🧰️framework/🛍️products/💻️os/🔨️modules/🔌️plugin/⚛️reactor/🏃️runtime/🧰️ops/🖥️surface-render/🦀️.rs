@@ -57,6 +57,19 @@ pub fn plugin_drive_displaced_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA
     }
     Ok(pending)
 }
+/// 🔒️ Whether the surface registry of one live instance is pinned by an open original view capture, which makes every mutating surface entry point refuse; an unknown or busy instance is not pinned.
+#[doc(hidden)]
+pub fn plugin_surface_capture_held<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> bool {
+    let Ok(instances) = runtime.instances.try_borrow() else { return false };
+    instances.get(instance_id).is_some_and(|cell| cell.host_instance().is_some_and(|instance| instance.surface_contexts.capture_held()))
+}
+/// ⏳️ Whether one event mutates the surface registry of an instance whose capture is still held, so the reactor must leave it in its slot and replay it, in order, once the capture is released instead of aborting the guest.
+#[doc(hidden)]
+pub fn surface_mutation_waits(event: &semio_framework::kernel::Event, capture_held: impl FnOnce(u32) -> bool) -> bool {
+    use semio_framework::kernel::Event;
+    let (Event::SurfaceVisible { surface, .. } | Event::SurfaceHidden { surface }) = event else { return false };
+    surface.split(':').next().and_then(|instance| instance.parse().ok()).is_some_and(capture_held)
+}
 #[doc(hidden)]
 pub async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(), Fault> {
     with_instances_mut(runtime, |list| {
@@ -383,3 +396,7 @@ pub async fn plugin_context_menu<PA: PluginApp>(runtime: &PluginRuntime<PA>, ins
     .await
     .map_err(|fault| fault.message)
 }
+
+#[cfg(test)]
+#[path="mutation-wait-tests.rs"]
+mod mutation_wait_tests;

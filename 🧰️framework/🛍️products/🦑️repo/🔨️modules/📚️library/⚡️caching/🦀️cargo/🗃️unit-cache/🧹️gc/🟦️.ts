@@ -1,21 +1,22 @@
 import {closeSync,openSync,readSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
-import {basename,dirname,join} from "node:path";
+import {basename,dirname,join,sep} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
-import {pruneEntriesV1,recordEvictionV1} from "../💾️store/🟦️.ts";
-import {listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
-import {ensureBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
+import {pruneEntriesV1,pruneSpillObjectsV1,recordEvictionV1} from "../💾️store/🟦️.ts";
+import {lanePathsV1,listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
+import {ensureBallastV1,releaseBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
 import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
 import {collectTemporariesV1} from "./🗑️temporaries/🟦️.ts";
-import {collectUnitsV1,measureUnitsV1,unitProfilesV1} from "./🧱️units/🟦️.ts";
+import {collectUnitsV1,measureUnitsV1,unitProfilesV1,type UnitImagesV1} from "./🧱️units/🟦️.ts";
+import {NATIVE_IMAGE_RELIEF_V1,nativeImagePressureV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts";
 import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
 import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
 import {retireLocalStaleUnitsV1} from "./🪢️supersession/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {measureNativeImageShardRootV1,nativeImageShardVolumeFactsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+import {measureNativeImageShardFreeV1,measureNativeImageShardRootV1,nativeImageShardFoldV1,nativeImageShardLayoutsV1,nativeImageShardPartitionOfV1,nativeImageShardVolumeFactsV1,readNativeImageShardLedgerV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🧮️ One measured lane. */
-export type GcLaneV1=Readonly<{id:string;bytes:number;incrementalBytes:number;temporariesBytes?:number;lastUsedMs:number;live:boolean;retained?:boolean}>;
+export type GcLaneV1=Readonly<{id:string;bytes:number;incrementalBytes:number;temporariesBytes?:number;lastUsedMs:number;live:boolean;retained?:boolean;own?:boolean}>;
 /** 📥️ The measured state of one cache root: `capacityBytes` is the share basis of its parts, `volumeBytes` and `freeBytes` are the image the root lives in, `demandBytes` is what waiting compiles still need freed whatever the water marks say (the headroom they were refused for). */
 export type GcInputV1=Readonly<{capacityBytes:number;volumeBytes:number;freeBytes:number;nowMs:number;lanes:readonly GcLaneV1[];demandBytes?:number}>;
 /** 🚦️ What a command that just looked at the image's free space does about the unit cache. */
@@ -49,19 +50,19 @@ export function gcPressureV1(input:Readonly<{volumeBytes:number;freeBytes:number
 export function gcOutOfSpaceV1(text:string,patterns:readonly string[]=policy.outOfSpacePatterns):boolean{return patterns.some(pattern=>new RegExp(pattern,"u").test(text));}
 
 /** 🧹️ Plans the bounded cleanup of one cache root. Pure and deterministic.
- * A retained lane (a product lane of an open release generation, see `laneRetainedV1`) is exempt from the idle age and the lane share and is removed only by free-space pressure, after every other idle lane.
+ * A retained lane (a product lane of an open release generation, see `laneRetainedV1`) is exempt from the idle age and the lane share and is removed only by free-space pressure, after every other idle lane. A retained lane that lives in an image of its own (`own`) is never removed by pressure at all: its own bytes are what filled that image, deleting them frees nothing the next build of the same lane does not need again at once (it would restart empty and fill the image the same way), so the pressure is answered by the temporaries, incremental sets and units collected before (and by the growth of the image when the lane is next taken).
  * Order: idle lanes; free-space pressure above the high-water mark down to the low-water mark of the image, or the demand of waiting compiles when that is more (incremental directories, then lanes, then objects, oldest first); the lane, incremental and object shares of the capacity. Live lanes are never touched and count against their share first. */
 export function planGcV1(input:GcInputV1,override:Partial<typeof policy>={}):GcPlanV1{
  const rules={...policy,...override},cap=(share:number)=>Math.floor(input.capacityBytes*share);
  const removeLanes=new Set<string>(),removeIncremental=new Set<string>();
- const lanes=[...input.lanes].sort(oldestFirst(row=>row.id)),idle=lanes.filter(row=>!row.live),pressure=[...idle.filter(row=>!row.retained),...idle.filter(row=>row.retained)];
+ const lanes=[...input.lanes].sort(oldestFirst(row=>row.id)),idle=lanes.filter(row=>!row.live),pressure=[...idle.filter(row=>!row.retained),...idle.filter(row=>row.retained)],whole=pressure.filter(row=>!(row.retained&&row.own===true));
  for(const lane of idle)if(!lane.retained&&input.nowMs-lane.lastUsedMs>rules.laneIdleMilliseconds)removeLanes.add(lane.id);
  const laneBytes=(lane:GcLaneV1)=>removeLanes.has(lane.id)?0:lane.bytes-(removeIncremental.has(lane.id)?lane.incrementalBytes:0);
  let need=Math.max(gcNeedBytesV1(input.volumeBytes,input.freeBytes,rules),input.demandBytes??0);
  const freed=()=>input.lanes.reduce((sum,lane)=>sum+lane.bytes-laneBytes(lane),0);
  if(need>0){
   for(const lane of pressure){if(freed()>=need)break;if(!removeLanes.has(lane.id)&&!removeIncremental.has(lane.id)&&lane.incrementalBytes>0)removeIncremental.add(lane.id);}
-  for(const lane of pressure){if(freed()>=need)break;removeLanes.add(lane.id);}
+  for(const lane of whole){if(freed()>=need)break;removeLanes.add(lane.id);}
  }
  const keepPrefix=<T extends {lastUsedMs:number}>(rows:readonly T[],bytes:(row:T)=>number,budget:number,key:(row:T)=>string):T[]=>{
   const removed:T[]=[];let sum=0,overflow=false;
@@ -77,19 +78,40 @@ export function planGcV1(input:GcInputV1,override:Partial<typeof policy>={}):GcP
 }
 
 /** 🔬️ The size and free bytes of the image a cache root lives in. */
-export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasured?:true}>;
+export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasured?:true;imageNeedBytes?:number}>;
+/** 🧩️ The images of a split cache root (the home image and one per shard, see `🧩️shard`) as the unit collector plans on them: the image of a path is the longest mount point that leads it, each image has its own need (bytes above its low-water mark once it crossed its high-water mark), unit budget (the unit share of its size) and target. `undefined` for a root that is one image. Every image is held below its own water marks, never only the sum of them: one full shard stops its compiles whatever the others still have. */
+export function measureUnitImagesV1(root:string):UnitImagesV1|undefined{
+ const directory=nativeImageShardPartitionOfV1(root);if(directory===undefined)return undefined;
+ let layouts:ReturnType<typeof nativeImageShardLayoutsV1>;try{const live=nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory));if(live.size===0)return undefined;layouts=nativeImageShardLayoutsV1(directory,live);}catch{return undefined;}
+ const read=(id:string)=>{const layout=layouts.find(row=>row.id===id),row=layout&&measureNativeImageShardFreeV1(layout);return row===undefined?undefined:{volumeBytes:row.capacityBytes,freeBytes:Math.max(0,Math.min(row.capacityBytes-row.usedBytes,row.hostFreeBytes))};};
+ return Object.freeze({
+  of:path=>layouts.filter(row=>row.id!=="home"&&(path===row.mountPoint||path.startsWith(row.mountPoint+sep))).sort((left,right)=>right.mountPoint.length-left.mountPoint.length)[0]?.id??"home",
+  needBytes:id=>{const facts=read(id);return facts===undefined?0:gcNeedBytesV1(facts.volumeBytes,facts.freeBytes);},
+  budgetBytes:id=>{const facts=read(id);return facts===undefined?undefined:Math.floor(facts.volumeBytes*policy.unitShare);},
+  satisfied:id=>{const facts=read(id);return facts===undefined||facts.volumeBytes-facts.freeBytes<=Math.floor(facts.volumeBytes*policy.lowWaterShare);}
+ });
+}
+/** 🌊️ The most any image of a split cache root must free (see `measureUnitImagesV1`), `0` for a root that is one image. */
+export function worstImageNeedBytesV1(root:string):number{
+ const directory=nativeImageShardPartitionOfV1(root),images=measureUnitImagesV1(root);if(directory===undefined||images===undefined)return 0;
+ try{return Math.max(0,...nativeImageShardLayoutsV1(directory,nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory))).map(layout=>images.needBytes(layout.id)));}catch{return 0;}
+}
+/** 📐️ The capacity the shares of a cache root are taken of: what the caller derived from its home image, and for a root split into shard images (see `🧩️shard`) at least the sum of the declared capacities of all its images. The home image alone (32 GiB, less one workspace) is not the capacity of a root whose lanes and temporaries live in images of their own: judged against it, one lane that legitimately holds half of it is permanent pressure, and every collection evicts the compiled units of the lane that is about to be reused. The pressure of one image is judged by that image (`imageNeedBytes`), what the host can give by the free bytes of the aggregate. */
+export function gcCapacityBytesV1(root:string,capacityBytes:number):number{const shards=measureNativeImageShardRootV1(root);return shards===undefined?capacityBytes:Math.max(capacityBytes,shards.capacityBytes);}
 /** 🔭️ The size of the image a cache root lives in and its free bytes. A root whose volume cannot be read is unknown: it is reported as `unmeasured:true` and, so that no collection starts on a guess, counts as empty and as large as its capacity. */
 export function measureVolumeV1(root:string,capacityBytes:number):VolumeFactsV1{
  const space=nativeFreeSpaceSyncV1(root);
  if(space?.totalBytes===undefined)return{volumeBytes:capacityBytes,freeBytes:capacityBytes,unmeasured:true};
  const shards=measureNativeImageShardRootV1(root);
- if(shards!==undefined)return nativeImageShardVolumeFactsV1(shards,capacityBytes);
+ if(shards!==undefined)return{...nativeImageShardVolumeFactsV1(shards,Math.max(capacityBytes,shards.capacityBytes)),imageNeedBytes:worstImageNeedBytesV1(root)};
  return{volumeBytes:Math.max(1,space.totalBytes),freeBytes:Math.min(space.totalBytes,space.availableBytes)};
 }
 
 /** 📏️ Measures a cache root on disk. `capacityBytes` is the share basis of its parts (the image minus one compile workspace), the pressure comes from the image itself. */
 export function measureGcV1(root:string,capacityBytes:number,nowMs:number,measure:(root:string,capacityBytes:number)=>VolumeFactsV1=measureVolumeV1):GcInputV1{
- return{capacityBytes,...measure(root,capacityBytes),nowMs,lanes:listLanesV1(root,nowMs)};
+ const images=measureUnitImagesV1(root);
+ capacityBytes=gcCapacityBytesV1(root,capacityBytes);
+ return{capacityBytes,...measure(root,capacityBytes),nowMs,lanes:listLanesV1(root,nowMs).map(lane=>images===undefined||images.of(lanePathsV1(root,lane.id).base)==="home"?lane:{...lane,own:true})};
 }
 
 /** 🗓️ Applies a plan. Live lanes are re-checked at removal time, so a lane that became live since measuring survives. Returns what was removed. */
@@ -118,17 +140,19 @@ export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:n
 export async function collectGarbageSingleFlightV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void;nowMs?:number;report?:IncrementalReportV1;volume?:(root:string,capacityBytes:number)=>VolumeFactsV1;demandBytes?:number}>={}):Promise<{running:true}|{running:false;plan:GcPlanV1;applied:GcAppliedV1}>{
  const measure=options.volume??measureVolumeV1,claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return{running:true};
  try{
-  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0,retired=0,temporaries=0;
+  capacityBytes=gcCapacityBytesV1(root,capacityBytes);
+  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes),images=measureUnitImagesV1(root);let sessions=0,units=0,retired=0,temporaries=0;
   if(basename(root)==="u")retired=await retireLocalStaleUnitsV1(root,nowMs,options.signal);
+  if(basename(root)==="u")pruneSpillObjectsV1(root,{nowMs});
   if(basename(root)==="u"){
-   const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),demand);
+   const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),before.imageNeedBytes??0,demand);
    if(need>0)temporaries=(await collectTemporariesV1(root,{dryRun:false,needBytes:()=>need,satisfied:()=>measure(root,capacityBytes).freeBytes-before.freeBytes>=need,signal:options.signal,progress:options.progress,report:options.report})).removedFiles;
    const result=await collectIncrementalV1(dirname(root),{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>Math.max(0,need-Math.max(0,measure(root,capacityBytes).freeBytes-before.freeBytes)),satisfied:()=>need>0&&measure(root,capacityBytes).freeBytes-before.freeBytes>=need,nowMs,signal:options.signal,report:options.report});
    sessions=result.removed.length;
-   const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
+   const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),middle.imageNeedBytes??0,demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
    if(remaining>0||nowMs-last>=policy.unitIntervalMilliseconds){
     writeFileSync(stamp,String(nowMs));
-    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,budgetBytes:unitBudgetBytesV1(capacityBytes),satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
+    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,budgetBytes:unitBudgetBytesV1(capacityBytes),satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,...images===undefined?{}:{images},nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
     units=result.removed.length;recordFillSampleV1(root,{atMs:nowMs,freeBytes:after.freeBytes,volumeBytes:after.volumeBytes,profiles:result.profiles});
    }
   }
@@ -138,21 +162,29 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
  }finally{claim.release();ensureBallastV1(root);}
 }
 
+/** 🌍️ The free bytes of the host volume that backs the images of a cache root (the partition directory next to the home image), unbounded (`Infinity`) for a root that is not in a sharded partition. */
+export function hostFreeBytesOfRootV1(root:string):number{
+ const partition=nativeImageShardPartitionOfV1(root);if(partition===undefined)return Infinity;return nativeFreeSpaceSyncV1(partition)?.availableBytes??Infinity;
+}
+
 /** 👁️ How a watch ended: another watcher owns the cache root, or this one saw the image quiet for the quiet period, ran out of its lifetime, or kept collecting without freeing anything. */
 export type GcWatchV1=Readonly<{state:"running"}|{state:"done";reason:"quiet"|"expired"|"stalled"|"cancelled";rounds:number;collections:number;freedBytes:number}>;
 
 /** ⌚️ Keeps the unit cache relieved while compiles run: one watcher per cache root (its claim), sensing the image every `watchSenseMilliseconds` (one cheap free-space read, so a burst of compiles is seen within a second, not within a collection interval) and recording a fill sample every `watchPollMilliseconds`; below the floor it collects (the same single-flight collection as the one-shot collector) at once, and after a collection that freed nothing (running compilers hold the space) retries only after `watchPollMilliseconds`, so a stuck image costs a scan per poll, not per second; between floor and target it maintains (the share-bounded collection) once at its start and then every maintenance interval, at or above the target for the quiet period it ends; it also ends after its maximum lifetime and after `watchStalledRounds` collections in a row that freed nothing, which the next compile launch restarts. Never throws except for cancellation. */
-export async function watchUnitCachePressureV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;measure?:typeof measureVolumeV1;collect?:typeof collectGarbageSingleFlightV1;profiles?:()=>Promise<Readonly<Record<string,number>>>;report?:IncrementalReportV1}>={}):Promise<GcWatchV1>{
+export async function watchUnitCachePressureV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;measure?:typeof measureVolumeV1;collect?:typeof collectGarbageSingleFlightV1;host?:()=>number;shrink?:()=>Promise<unknown>;profiles?:()=>Promise<Readonly<Record<string,number>>>;report?:IncrementalReportV1}>={}):Promise<GcWatchV1>{
  const claim=tryClaimWithBallastV1(join(root,layout.locks),policy.watchClaim);if(!claim)return{state:"running"};
+ capacityBytes=gcCapacityBytesV1(root,capacityBytes);
  const now=options.now??Date.now,sleep=options.sleep??((milliseconds:number,signal?:AbortSignal)=>new Promise<void>((done,fail)=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});})),measure=options.measure??measureVolumeV1,collect=options.collect??collectGarbageSingleFlightV1,started=now();
  const scan=options.profiles??(async()=>{const store=dirname(root),totals:Record<string,number>={};for(const unit of await measureUnitsV1(unitProfilesV1(store),{nowMs:now(),busy:()=>true,signal:options.signal}))totals[dirname(dirname(dirname(unit.path))).slice(store.length+1)]=(totals[dirname(dirname(dirname(unit.path))).slice(store.length+1)]??0)+unit.bytes;return totals;});
- let rounds=0,collections=0,freedBytes=0,idle=0,quietSince:number|null=null,scanned=-Infinity,sampled=-Infinity,maintained=-Infinity,retryAt=-Infinity;
+ const host=options.host??(()=>hostFreeBytesOfRootV1(root));let shrunk=-Infinity,rounds=0,collections=0,freedBytes=0,idle=0,quietSince:number|null=null,scanned=-Infinity,sampled=-Infinity,maintained=-Infinity,retryAt=-Infinity;
  try{
   for(;;){
    options.signal?.throwIfAborted();rounds++;
    const before=measure(root,capacityBytes),at=now(),sampling=at-sampled>=policy.watchPollMilliseconds,due=sampling&&at-scanned>=policy.watchScanMilliseconds,profiles=due?await scan().catch(()=>undefined):undefined;
    if(sampling){sampled=at;if(due)scanned=at;recordFillSampleV1(root,{atMs:at,freeBytes:before.freeBytes,volumeBytes:before.volumeBytes,...profiles?{profiles}:{}});}
-   const need=gcNeedBytesV1(before.volumeBytes,before.freeBytes),target=before.volumeBytes-Math.floor(before.volumeBytes*policy.lowWaterShare);
+   const hostFree=host(),pressure=nativeImagePressureV1({hostFreeBytes:hostFree,images:[]}),hostNeed=pressure.level==="hard"||pressure.level==="critical"?NATIVE_IMAGE_RELIEF_V1.hardHostFreeBytes-hostFree+NATIVE_IMAGE_RELIEF_V1.floorFreeBytes:0;
+   if(pressure.level!=="none"&&at-shrunk>=policy.watchPollMilliseconds){shrunk=at;if(pressure.level==="critical")releaseBallastV1(root);await options.shrink?.().catch(()=>undefined);}
+   const need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),before.imageNeedBytes??0,hostNeed),target=before.volumeBytes-Math.floor(before.volumeBytes*policy.lowWaterShare);
    if(need>0){
     quietSince=null;
     if(at>=retryAt){
@@ -178,6 +210,7 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
 export async function reclaimUnitStorageV1(store:string,needBytes:number,options:Readonly<{signal?:AbortSignal;report?:IncrementalReportV1;capacityBytes?:number}>={}):Promise<number>{
  const root=join(store,"u"),claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return 0;
  try{
+  pruneSpillObjectsV1(root);
   const before=measureVolumeV1(store,1),gained=()=>Math.max(0,measureVolumeV1(store,1).freeBytes-before.freeBytes);
   const temporaries=await collectTemporariesV1(root,{dryRun:false,needBytes:()=>needBytes,satisfied:()=>gained()>=needBytes,signal:options.signal,report:options.report});
   if(temporaries.removedFiles===0||gained()<needBytes)await collectIncrementalV1(store,{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>Math.max(0,needBytes-gained()),satisfied:()=>gained()>=needBytes,signal:options.signal,report:options.report});

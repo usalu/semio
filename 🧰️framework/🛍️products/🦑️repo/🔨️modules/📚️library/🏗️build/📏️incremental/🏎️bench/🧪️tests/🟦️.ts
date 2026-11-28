@@ -496,7 +496,7 @@ test("the option parser accepts every documented form, refuses every other and m
  expect([...entry.flags].sort()).toEqual([...names.valued,...names.plain].filter(name=>name!=="--lang").sort());
  for(const name of names.valued.filter(value=>value!=="--lang")){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("required");expect(flag.operations).toContain("bench");}
  for(const name of names.plain){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("none");expect(flag.operations).toContain("bench");}
- expect(entry.subcommands.map((row:any)=>row.name)).toEqual(["list","run","compare","acceptance"]);
+ expect(entry.subcommands.map((row:any)=>row.name)).toEqual(["list","run","compare","acceptance","latency"]);
  for(const sub of entry.subcommands){expect(sub.synopsis.startsWith("bench ")).toBe(true);for(const flag of sub.flags??[])expect(entry.flags).toContain(flag);expect(sub.summary.en).not.toBe(sub.summary.de);}
  expect(entry.summary.en).not.toBe(entry.summary.de);
  expect(entry.implementations).toBeUndefined();

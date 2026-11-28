@@ -411,6 +411,28 @@
       }
     },
     {
+      "id": "rust-tmp",
+      "root": "rust",
+      "kind": "nested",
+      "directory": "tmp",
+      "partition": "rust",
+      "budget": {
+        "bytes": 1073741824
+      },
+      "collect": {
+        "unusedAgeMs": 86400000,
+        "quietMs": 600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Temporary directory of the rust image (job-token pools, response files, tool scratch); entries unused for a day and quiet for ten minutes are removed, so leaked ones cannot fill the image unseen.",
+        "de": "Temp-Ordner des Rust-Images (Job-Token-Pools, Antwortdateien, Werkzeug-Scratch); seit einem Tag unbenutzte, seit zehn Minuten ruhige Einträge werden entfernt, damit durchgesickerte das Image nicht unbemerkt füllen."
+      }
+    },
+    {
       "id": "compile-cache-products",
       "root": "repository",
       "kind": "nested",

@@ -33,16 +33,17 @@ pub async fn poll_with_patch_output_fault<PA: semio_plugin_reactor_app::PluginAp
     late_clock: bool,
 ) -> (Result<(), semio_framework::Fault>, Option<ActorUiPatchReceipt>) {
     let mut receipt = None;
+    let mut event = events.into_iter().next();
     let result = turn::poll_kernel_output(
         runtime,
-        events,
+        &mut event,
         &mut None,
         None,
         budget,
         |result| {
             receipt = result.ui_patch_receipt;
             if late_clock {
-                turn::charge_turn_execution_us(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US);
+                std::thread::sleep(std::time::Duration::from_micros(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US + 1));
                 Ok(())
             } else {
                 Err(reactor_close_fault("injected output conversion failure"))
@@ -51,18 +52,19 @@ pub async fn poll_with_patch_output_fault<PA: semio_plugin_reactor_app::PluginAp
         |_, ()| (),
         &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context())
     .await;
-    (result, receipt)
+    (result.map_err(|failure| failure.primary_fault().cloned().expect("a refused output carries its primary fault")), receipt)
 }
 
 #[doc(hidden)]
 pub async fn poll_with_output_failure<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-    turn::poll_kernel_output(runtime, events, &mut None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await
+    let mut event = events.into_iter().next();
+    turn::poll_kernel_output(runtime, &mut event, &mut None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.map_err(|failure| failure.primary_fault().cloned().expect("a refused output carries its primary fault"))
 }
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
 #[doc(hidden)]
 pub async fn run_until_idle(max_iterations: u32) -> bool {
-    TASK_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
+    TASK_EXECUTOR.with(|executor| executor.run_until_deadline(max_iterations, std::time::Instant::now() + std::time::Duration::from_millis(8)))
 }
 
 /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed

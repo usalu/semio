@@ -92,20 +92,8 @@ impl Lifter<'_> {
                 self.snapshot.page_labels.push(label);
             }
         }
-        if let Some(PdfObject::Array(intents)) = dict_get(catalog, "OutputIntents").map(|o| self.source.deref(o)) {
-            for intent in intents {
-                let intent = self.source.deref(&intent);
-                let Some(dict) = intent.as_dict().map(<[PdfDictEntry]>::to_vec) else { continue };
-                let condition_identifier = self.text(dict_get(&dict, "OutputConditionIdentifier")).unwrap_or_default();
-                let condition = self.text(dict_get(&dict, "OutputCondition"));
-                let registry_name = self.text(dict_get(&dict, "RegistryName"));
-                let info = self.text(dict_get(&dict, "Info"));
-                let profile = dict_get(&dict, "DestOutputProfile").map(|p| self.source.deref(p)).and_then(|p| match p {
-                    stream @ PdfObject::Stream { .. } => { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort; let reference = NativePdfArtifactResources::default().admit("s.stdio.icc", stream).ok()?; if let Some(value) = dict_get(&dict, "DestOutputProfile") { self.source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() }); } Some(reference) },
-                    _ => None,
-                });
-                self.snapshot.output_intents.push(PdfOutputIntent { subtype: dict_name(&dict, "S").unwrap_or("GTS_PDFA1").to_string(), condition_identifier, condition, registry_name, info, profile });
-            }
+        if let Some(intents) = dict_get(catalog, "OutputIntents").cloned() {
+            self.snapshot.output_intents = self.lift_output_intents(&intents);
         }
         if let Some(form) = dict_get(catalog, "AcroForm").map(|f| self.source.deref(f)).and_then(|f| f.as_dict().map(<[PdfDictEntry]>::to_vec)) {
             self.snapshot.acro_form = Some(self.lift_acro_form(&form));
@@ -145,6 +133,26 @@ impl Lifter<'_> {
             prefix,
             start: dict_i64(&dict, "St").unwrap_or(1).max(1) as u32,
         }
+    }
+
+    /// 🎯️ Lifts the catalog `/OutputIntents` array (direct or referenced); an intent with a destination profile admits its stream as a reference body.
+    pub fn lift_output_intents(&mut self, intents: &PdfObject) -> Vec<PdfOutputIntent> {
+        let mut lifted = Vec::new();
+        let PdfObject::Array(intents) = self.source.deref(intents) else { return lifted };
+        for intent in intents {
+            let intent = self.source.deref(&intent);
+            let Some(dict) = intent.as_dict().map(<[PdfDictEntry]>::to_vec) else { continue };
+            let condition_identifier = self.text(dict_get(&dict, "OutputConditionIdentifier")).unwrap_or_default();
+            let condition = self.text(dict_get(&dict, "OutputCondition"));
+            let registry_name = self.text(dict_get(&dict, "RegistryName"));
+            let info = self.text(dict_get(&dict, "Info"));
+            let profile = dict_get(&dict, "DestOutputProfile").map(|p| self.source.deref(p)).and_then(|p| match p {
+                stream @ PdfObject::Stream { .. } => { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort; let reference = NativePdfArtifactResources::default().admit("s.stdio.icc", stream).ok()?; if let Some(value) = dict_get(&dict, "DestOutputProfile") { self.source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() }); } Some(reference) },
+                _ => None,
+            });
+            lifted.push(PdfOutputIntent { subtype: dict_name(&dict, "S").unwrap_or("GTS_PDFA1").to_string(), condition_identifier, condition, registry_name, info, profile });
+        }
+        lifted
     }
 
     /// 🎬️ Lifts the catalog `/OpenAction`: an explicit destination or an action dictionary.

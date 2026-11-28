@@ -2,8 +2,22 @@ import {createHash} from "node:crypto";
 import {mkdir,readdir,readFile,rm,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 
-/** 📐️ What the evidence of divergences may hold: the newest 64 per class of result, 256 MiB in all (the oldest go first), 16 MiB per kept blob (a larger blob is named by its digest only). */
-export const EVIDENCE_LIMITS_V1=Object.freeze({perClass:64,bytes:268435456,blob:16777216});
+/** 📐️ What the evidence of divergences may hold: the newest 64 per class of result and, for units, the newest 16 per kind of divergence (a flood of one kind never pushes out the evidence of the others), 256 MiB in all (the oldest go first), 16 MiB per kept blob (a larger blob is named by its digest only). */
+export const EVIDENCE_LIMITS_V1=Object.freeze({perClass:64,perKind:16,bytes:268435456,blob:16777216});
+
+/** 🏷️ The kind of a divergence from the output files that differ: `stream` (the captured stdout and stderr, named `⟨stdout⟩`, `⟨stderr⟩`), `rmeta`, `rlib`, `dep-info` (`.d`), `dylib`, `binary` (a name without extension), `other`; several kinds of one divergence are joined with `+` in sorted order, `none` when no file is named. */
+export function divergenceKindV1(differing:readonly string[]):string{
+ const kind=(path:string):string=>{
+  if(path.startsWith("⟨"))return "stream";
+  const name=path.split("/").at(-1)!;
+  if(/\.rmeta(\.|$)/u.test(name))return "rmeta";
+  if(name.endsWith(".rlib"))return "rlib";
+  if(name.endsWith(".d"))return "dep-info";
+  if(/\.(dylib|so|dll)$/u.test(name))return "dylib";
+  return name.includes(".")?"other":"binary";
+ };
+ return[...new Set(differing.map(kind))].sort().join("+")||"none";
+}
 
 /** 🗂️ One file of the evidence of a divergence: the action result of one side (`kept.ac`, `refused.ac`) or one output that differs (`kept.1`, `refused.1`, named by `path`); `stored` is false when the blob was gone or larger than the limit. */
 export type EvidenceFileV1=Readonly<{name:string;side:"kept"|"refused";path:string;sha256:string;bytes:number;stored:boolean}>;
@@ -38,6 +52,9 @@ export async function openEvidenceV1(directory:string,now:()=>number=Date.now):P
   const rows=[...index.values()].sort((a,b)=>a.atMs-b.atMs),perClass=new Map<string,EvidenceV1[]>();
   for(const row of rows)perClass.set(row.sort,[...(perClass.get(row.sort)??[]),row]);
   for(const list of perClass.values())for(const row of list.slice(0,Math.max(0,list.length-EVIDENCE_LIMITS_V1.perClass)))await drop(row.id);
+  const perKind=new Map<string,EvidenceV1[]>();
+  for(const row of [...index.values()].filter(entry=>entry.sort==="unit").sort((a,b)=>a.atMs-b.atMs)){const name=divergenceKindV1(row.differing);perKind.set(name,[...(perKind.get(name)??[]),row]);}
+  for(const list of perKind.values())for(const row of list.slice(0,Math.max(0,list.length-EVIDENCE_LIMITS_V1.perKind)))await drop(row.id);
   let total=[...index.values()].reduce((sum,row)=>sum+sizeOf(row),0);
   for(const row of [...index.values()].sort((a,b)=>a.atMs-b.atMs)){if(total<=EVIDENCE_LIMITS_V1.bytes)break;total-=sizeOf(row);await drop(row.id);}
  };

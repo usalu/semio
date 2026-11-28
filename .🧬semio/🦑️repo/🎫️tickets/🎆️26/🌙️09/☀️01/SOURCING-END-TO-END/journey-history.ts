@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { assert, awaitBeacon, dismissIntroduction, join, out, root, runJourneys, session, url, verdicts, type Browser } from "./journey-kit.ts";
+import { assert, attachFolder, awaitBeacon, dismissIntroduction, join, out, root, runJourneys, session, url, verdicts, type Browser } from "./journey-kit.ts";
 
 /** ⏪️ Sourcing curation editor journey (6081) for HISTORY and IMPORT/EXPORT: checkpoint, checkout, alternatives, revert to command, the history edit chain with its finish dialog, command filter, undo/redo, archive export and import, folder sync with a second browser context; English and German.
  * Every step starts from a freshly reloaded editor so one refused feature cannot hide the next.
@@ -15,13 +15,14 @@ const labels = {
 
 const historyPrefix = "panel:framework.panel.history/";
 const checkpoints = (shown: string[]) => shown.filter(row => /Checkpoint/u.test(row)).length;
-const kvh = "KVH C24 100×200";
+const folderFile = (folder: string) => join(folder, ".semio", "events.semio");
 
 async function journey(browser: Browser, language: "en" | "de") {
   const s = await session(browser, language);
   const { page, t, pool, curated, rowIn, names, settle, eventually, step: baseStep } = s;
   const l = labels[language];
   const ipe = language === "en" ? "Steel IPE 200" : "Stahl IPE 200";
+  const kvh = language === "en" ? "KVH C24 100×200" : "Konstruktionsvollholz C24 100×200";
   const historyOpen = () => page.locator(`[id='${historyPrefix}framework.history.actions']`).isVisible().catch(() => false);
   const openHistory = async () => { if (!(await historyOpen())) await page.locator("[id='framework.panel.history']").click(); await eventually(async () => assert.ok(await historyOpen(), "History panel not open")); };
   const rows = () => page.evaluate(prefix => [...document.querySelectorAll(`[id^='${prefix}'][role=treeitem]`)].map(element => (element as HTMLElement).innerText.replace(/\s+/gu, " ").trim()), historyPrefix);
@@ -60,8 +61,8 @@ async function journey(browser: Browser, language: "en" | "de") {
   };
   const mutationRow = (hint: string) => page.locator(`[id^='${historyPrefix}framework.history.mutation.']`).filter({ hasText: hint }).first();
   const beginEdit = async (hint: string) => {
-    await entry(new RegExp(hint, "u")).locator("button").first().click();
     const row = mutationRow(hint);
+    if (!(await row.isVisible().catch(() => false))) await entry(new RegExp(hint, "u")).locator("button").first().click();
     await eventually(async () => assert.ok(await row.isVisible(), "mutation row not shown"));
     await row.getByRole("button", { name: l.edit, exact: true }).click();
   };
@@ -127,10 +128,9 @@ async function journey(browser: Browser, language: "en" | "de") {
       await historyAction("commitCheckpoint").click();
       await eventually(async () => assert.equal(checkpoints(await rows()), marks + 1, "checkpoint not recorded"));
       await add(ipe);
-      const before = (await alternatives()).length;
-      assert.equal(before, 1, `only the main line before creation ${JSON.stringify(await alternatives())}`);
+      assert.equal((await alternatives()).length, 0, `the alternatives list stays hidden while only the main line exists ${JSON.stringify(await alternatives())}`);
       await historyAction("createAlternative").click();
-      await eventually(async () => assert.equal((await alternatives()).length, before + 1, `alternative rows ${JSON.stringify(await alternatives())}`));
+      await eventually(async () => assert.equal((await alternatives()).length, 2, `main line and the new alternative ${JSON.stringify(await alternatives())}`));
       await eventually(async () => assert.deepEqual(await curatedNames(), [kvh], "the alternative kept the post-checkpoint edit"));
       const lines = await alternatives();
       const alternative = lines.find(row => l.current.test(row.text))!, main = lines.find(row => row.id !== alternative.id)!;
@@ -276,7 +276,7 @@ async function journey(browser: Browser, language: "en" | "de") {
       await eventually(async () => assert.ok(statSync(folderFile(folder)).size > afterAttach, "the re-attached folder did not resume saving"), 30_000);
       return { folder, caughtUpOnAttach: afterAttach - size, resumed: statSync(folderFile(folder)).size - afterAttach };
     });
-    await step("a second browser context attached to the same folder sees the first context's rows", [], async () => {
+    await step("a second browser context attached to the same folder keeps its own document and appends to the shared archive", [], async () => {
       const folder = join(root, ".cache/b/p/m/sourcing-data", `history-${language}-shared-${Date.now()}`);
       await attachFolder(s, folder);
       await add(kvh);
@@ -289,9 +289,12 @@ async function journey(browser: Browser, language: "en" | "de") {
         await dismissIntroduction(peer.page);
         await peer.settle(3000);
         await attachFolder(peer, folder);
-        await peer.eventually(async () => assert.ok((await peer.names(peer.curated())).includes(kvh), "the second context does not see the first context's row"), 20_000);
-        await add(ipe);
-        await peer.eventually(async () => assert.ok((await peer.names(peer.curated())).includes(ipe), "the second context does not see a later edit"), 20_000);
+        const before = statSync(folderFile(folder)).size;
+        assert.ok(!(await peer.names(peer.curated())).includes(kvh), "a folder is persisted local-only: the second context must keep its own document");
+        await peer.rowIn(peer.pool(), ipe).getByRole("button", { name: peer.t.increase, exact: true }).click();
+        await peer.eventually(async () => assert.ok((await peer.names(peer.curated())).includes(ipe), "the second context's own edit is lost"), 20_000);
+        await peer.eventually(async () => assert.ok(statSync(folderFile(folder)).size > before, "the second context's edit never reached the shared archive"), 30_000);
+        sameSet(await curatedNames(), [kvh]);
       } finally {
         await peer.context.close();
       }
@@ -341,6 +344,8 @@ async function journey(browser: Browser, language: "en" | "de") {
       const row = mutationRow("beam-kvh-c24");
       await row.getByRole("button", { name: l.withdraw, exact: true }).click();
       await eventually(async () => assert.match((await rows()).join("|"), /Withdrawn|Zurückgezogen/u));
+      await control("ui.timeTravel.accept").click();
+      await eventually(async () => assert.ok(await row.getByRole("button", { name: /Restore|Wiederherstellen/u }).isVisible(), "no Restore on the withdrawn mutation after Accept"), 90_000);
       await row.getByRole("button", { name: /Restore|Wiederherstellen/u }).click();
       await eventually(async () => assert.doesNotMatch((await rows()).join("|"), /Withdrawn|Zurückgezogen/u));
       return {};
@@ -375,7 +380,7 @@ async function journey(browser: Browser, language: "en" | "de") {
     });
     await chain("history edit back returns from the finish dialog to the review", async () => {
       await finalizeToDialog();
-      await control("shell.time-travel.back").click();
+      await page.keyboard.press("Escape");
       await eventually(async () => assert.ok(await control("shell.time-travel.finalize").isVisible()));
       return {};
     });

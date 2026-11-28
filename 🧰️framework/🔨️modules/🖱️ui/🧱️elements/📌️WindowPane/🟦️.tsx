@@ -18,6 +18,7 @@ import { Icon } from "../🔣️Icons/🟦️.tsx";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { type Anchor, anchorHorizontal, anchorPlaces, anchorPositionStyle, flowFromAnchor, nearestAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { chromePanelSafeAreaStyle, useChromePanelSafeArea } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { windowViewportCoverMinShare } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
 
 interface PaneHostContextValue {
   /** 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
@@ -233,7 +234,7 @@ export const Pane: React.FC<PaneProps> = ({
   const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const fallbackHostRef = reactHostPort.useRef<HTMLElement | null>(null);
   const paneHostRef = hostRef ?? host?.containerRef ?? fallbackHostRef;
-  const safeArea = useChromePanelSafeArea({ hostRef: paneHostRef, affordanceRef: paneRootRef, anchor, yieldAxis: "either", gapPx: chromePanelGapPx, enabled: !expanded && !mobile, headPx: PANE_HEAD_PX });
+  const safeArea = useChromePanelSafeArea({ hostRef: paneHostRef, affordanceRef: paneRootRef, anchor, yieldAxis: "either", gapPx: chromePanelGapPx, enabled: !expanded && !mobile, headPx: PANE_HEAD_PX, openBodyShare: folded ? undefined : windowViewportCoverMinShare });
   const setPaneRootRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
       paneRootRef.current = element;

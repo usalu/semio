@@ -55,7 +55,7 @@ fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
             assert!((actual / expected - 1.0).abs() < 1e-6, "{field}: {actual} != {expected}");
         }
         Ok::<_, String>(())
-    });
+    }).expect("the evaluation host binds its snapshot");
     landed.retire_cold();
     snapshot.retire_cold();
     result.unwrap();

@@ -114,7 +114,7 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
         let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
         let args = flow_eval_tick::window_args(&case.payload_window_id, &kind);
-        let action_meta = ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") };
+        let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..semio_plugin::artifact_app_laws::meta("local") };
         let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
             Ok(()) => match semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
                 Ok(receipt) => receipt.lanes.contains(&TypedOperationResultLane::Fault).then(|| format!("retained publication faulted: {:?}", receipt.lanes)),
@@ -145,7 +145,7 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views("procedural-main", "procedural-preview");
-    let action_meta = ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(flow_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches from the flow window");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
@@ -177,7 +177,7 @@ async fn generate_preview_eval_is_the_run_addressed_at_the_generate_preview() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (generations_view, _preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
-    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(generations_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
@@ -207,7 +207,7 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (generations_view, preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
-    let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(generations_view.clone())), ..semio_plugin::artifact_app_laws::meta("local") };
 
     let entry = context::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
     let entry_scene: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");

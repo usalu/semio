@@ -70,7 +70,7 @@ type SurfaceSwitchFixture = {
   readonly note: string;
   readonly dialects: Readonly<Record<string, ArtifactDialect>>;
   readonly manifests: Readonly<Record<string, readonly { readonly id: string; readonly role: AppRole; readonly dialect?: string }[]>>;
-  readonly boot: readonly { readonly id: string; readonly manifest: string; readonly search: string; readonly envRole: AppRole; readonly defaultAppId: string | null; readonly pinnedAppId: string | null; readonly expectedRole: AppRole; readonly expectedAppId: string | null }[];
+  readonly boot: readonly { readonly id: string; readonly manifest: string; readonly search: string; readonly envRole: AppRole | null; readonly defaultAppId: string | null; readonly pinnedAppId: string | null; readonly expectedRole: AppRole | null; readonly expectedAppId: string | null }[];
   readonly group: readonly { readonly id: string; readonly manifest: string; readonly dialect: string | null; readonly expected: { readonly editor: string; readonly viewer: string } | null }[];
   readonly roleTargets: readonly { readonly id: string; readonly manifest: string; readonly dialect: string; readonly currentRole: AppRole; readonly requested: AppRole; readonly expected: string | null }[];
   readonly switch: readonly {
@@ -157,12 +157,13 @@ function appsOf(manifest: string): readonly RoleSurfaceAppV1[] {
 /** 🔮️ Independent oracle for the boot axes — rebuilds the wanted surface id from `<dialect>#<role>`
  * instead of scanning the manifest for a sibling, so it agrees with `resolveBootPrimaryAppV1` only if
  * the projection law itself is right. */
-function oracleBootApp(apps: readonly RoleSurfaceAppV1[], pinnedAppId: string | null, defaultAppId: string | null, role: AppRole): string | null {
+function oracleBootApp(apps: readonly RoleSurfaceAppV1[], pinnedAppId: string | null, defaultAppId: string | null, stated: AppRole | undefined): string | null {
+  const role = stated ?? "editor";
   const anchorId = pinnedAppId ?? defaultAppId;
   if (anchorId === null) return (apps.find((app) => app.role === role) ?? apps[0])?.id ?? null;
   const anchor = apps.find((app) => app.id === anchorId);
   if (anchor === undefined) return pinnedAppId !== null ? null : ((apps.find((app) => app.role === role) ?? apps[0])?.id ?? null);
-  if (anchor.role === role) return anchor.id;
+  if (stated === undefined || anchor.role === role) return anchor.id;
   const projected = anchor.id.replace(/#(editor|viewer)$/u, `#${role}`);
   return apps.some((app) => app.id === projected) ? projected : anchor.id;
 }
@@ -328,9 +329,9 @@ const appsOf = (name) => fixture.manifests[name].map((app) => ({ id: app.id, rol
 const rows = [];
 for (const row of fixture.boot) {
   const raw = new URLSearchParams(row.search).get("role");
-  const role = raw === "viewer" ? "viewer" : raw === "editor" ? "editor" : row.envRole;
+  const role = raw === "viewer" ? "viewer" : raw === "editor" ? "editor" : row.envRole ?? undefined;
   const app = exports.resolveBootPrimaryAppV1(appsOf(row.manifest), row.pinnedAppId ?? undefined, row.defaultAppId ?? undefined, role);
-  rows.push({ id: row.id, appId: app ? app.id : null, roles: [role] });
+  rows.push({ id: row.id, appId: app ? app.id : null, roles: [role ?? null] });
 }
 for (const row of fixture.group) {
   const pair = exports.surfaceRoleAppsV1(appsOf(row.manifest), dialectOf(row.dialect));
@@ -356,8 +357,8 @@ console.log(JSON.stringify(rows));`;
 export async function testSurfaceSwitch(): Promise<void> {
 
   for (const row of fixture.boot) {
-    const role = resolveBootQueryAppRole(row.search, row.envRole);
-    assert.equal(role, row.expectedRole, `${row.id}: role`);
+    const role = resolveBootQueryAppRole(row.search, row.envRole ?? undefined);
+    assert.equal(role ?? null, row.expectedRole, `${row.id}: role`);
     const apps = appsOf(row.manifest);
     assert.equal(resolveBootPrimaryAppV1(apps, row.pinnedAppId ?? undefined, row.defaultAppId ?? undefined, role)?.id ?? null, row.expectedAppId, `${row.id}: app`);
     assert.equal(oracleBootApp(apps, row.pinnedAppId, row.defaultAppId, role), row.expectedAppId, `${row.id}: oracle`);

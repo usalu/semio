@@ -12,7 +12,8 @@ use crate::standards::v1::subsets::any::schema::preparation::connect_handles_pre
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use semio_framework_test_fixtures::repo_text;
 
-fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
+
+fn advance_grant() -> RetainedCloneGrant { let (capacity, payload, release) = (RetainedCloneGrant::one_capacity_turn(4096, 64), RetainedCloneGrant::one_payload_turn(4096, 64), RetainedCloneGrant::one_release_turn(4096, 64)); RetainedCloneGrant { maximum_items: capacity.maximum_items.max(payload.maximum_items).max(release.maximum_items), maximum_copy_bytes: payload.maximum_copy_bytes, maximum_capacity_bytes: capacity.maximum_capacity_bytes, maximum_release_bytes: release.maximum_release_bytes, maximum_depth: 64 } }
 
 fn observed(grant: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(action);
@@ -34,6 +35,7 @@ fn close(cursor: &mut Puzzle2dConnectHandlesInverseCursor) {
         let release=cursor.next_close_release_byte_demand().unwrap();
         let depth=cursor.next_close_depth_demand().unwrap();
         assert!(copy+capacity+release<=4096);
+        assert!(depth>0, "a non-terminal inverse cursor quoted a zero-depth close step");
         let permit=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
         assert_eq!(observed(Default::default(),||test_source_custody::close_turn(Default::default(), |effect| cursor.close_step(effect))).progress(),RetainedCloneProgress::default());
         for axis in 0..4 {
@@ -56,7 +58,7 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
     let mut owner = match owner { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
     for turn in 0..1_000_000 {
         if owner.terminal_is_empty() { return; }
-        let permit = grant(turn);
+        let permit = advance_grant();
         observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("connect inverse returned owner did not retire");
@@ -78,7 +80,7 @@ fn history_edit_puzzle2d_owned_connect_inverse_preserves_unconditional_literal_i
         assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
         for turn in 0..1_000_000 {
-            let permit = grant(turn);
+            let permit = advance_grant();
             if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true; break; }
         }
         assert!(complete);
@@ -92,15 +94,15 @@ fn history_edit_puzzle2d_owned_connect_inverse_preserves_unconditional_literal_i
         assert_eq!(serde_json::to_value(&payload).unwrap(), original);
         assert_eq!(payload.gap.to_bits(), gap_bits);
         let mut swapped = Puzzle2dConnectHandlesInverseCursor::default();
-        observed(grant(0), || test_source_custody::run(grant(0), |effect| swapped.advance(mutation.borrow(&payload), 4096, effect)));
+        observed(advance_grant(), || test_source_custody::run(advance_grant(), |effect| swapped.advance(mutation.borrow(&payload), 4096, effect)));
         let other = payload.clone();
-        assert!(test_source_custody::run(grant(1), |effect| swapped.advance(mutation.borrow(&other), 4096, effect)).is_err());
+        assert!(test_source_custody::run(advance_grant(), |effect| swapped.advance(mutation.borrow(&other), 4096, effect)).is_err());
         close(&mut swapped);
         if case["name"] == "large-id" {
             let mut cancelled = Puzzle2dConnectHandlesInverseCursor::default();
             let mut copied = 0;
             for turn in 0..1_000_000 {
-                let permit = grant(turn);
+                let permit = advance_grant();
                 let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(mutation.borrow(&payload), 4096, effect)));
                 assert!(!matches!(step, RetainedCloneStep::Complete(_)));
                 copied += step.progress().copied_bytes;
@@ -128,8 +130,8 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
         };
     }
     for (before, mutation) in [
-    vector!("🪢️connect-handles", "🪢️adds-second-edge"),
-    vector!("🪢️connect-handles", "🪢️rewires"),
+    vector!("🔌️handle/🪢️connect-handles", "🪢️adds-second-edge"),
+    vector!("🔌️handle/🪢️connect-handles", "🪢️rewires"),
     ] {
         let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");

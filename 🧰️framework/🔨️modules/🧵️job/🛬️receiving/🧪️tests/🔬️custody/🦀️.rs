@@ -31,16 +31,16 @@ fn original_job_receiving_restores_continuation_and_construction_issuer(){
  let mut initial_work=Work{remaining:1000000,committed:0};let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||turn(&mut owner,grant,&mut callback,&mut construction,&mut initial_work,|control|->Result<(),ValueError>{identity=Some(control.ledger_identity());recipient=control.retirement_recipient_identity();panic!("original Job operation unwound")})));
  assert!(panic.is_err());assert!(owner.receiving_identity().is_some());assert_eq!(owner.owned_bytes(),0);
  let mut work=Work{remaining:fixture["expectedWork"].as_u64().unwrap(),committed:0};
- let mut frame=NativeReceivingEffect::<ValueError>::default();
+ let mut frame=NativeReceivingEffect::<ValueError>::default();let mut taken=None;
  turn(&mut owner,grant,&mut callback,&mut construction,&mut work,|control|{
   assert_eq!(Some(control.ledger_identity()),identity);assert_eq!(control.retirement_recipient_identity(),recipient);
   frame.quote(control,RetirementDemand{copy_bytes:1,depth:1,..Default::default()})?;
-  assert!(control.prepare_work(fixture["expectedWork"].as_u64().unwrap())?);
-  frame.effect(control,|actual,_|{*actual=Some(0);semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})),work:u128::from(fixture["expectedWork"].as_u64().unwrap())}})?;
-  frame.settle_original_work(control)?;Ok::<_,ValueError>(())
+  assert_eq!(frame.prepare_work(control,fixture["expectedWork"].as_u64().unwrap())?,Some(true));
+  frame.effect_unallocated(control,|actual,_|{*actual=Some(0);semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})),work:u128::from(fixture["expectedWork"].as_u64().unwrap())}})?;
+  assert!(frame.settle_original_work(control)?);frame.receipt(control)?;taken=Some(frame.take(control)?);Ok::<_,ValueError>(())
  }).unwrap();
  assert_eq!(work.committed,fixture["expectedWork"].as_u64().unwrap());
- let turn=turn(&mut owner,grant,&mut callback,&mut construction,&mut work,|control|{assert_eq!(Some(control.ledger_identity()),identity);frame.receipt(control)?;frame.take(control)}).unwrap();
+ turn(&mut owner,grant,&mut callback,&mut construction,&mut work,|control|{assert_eq!(Some(control.ledger_identity()),identity);Ok::<_,ValueError>(())}).unwrap();let turn=taken.expect("the first turn retained its outcome");
  assert_eq!(turn.work,u128::from(fixture["expectedWork"].as_u64().unwrap()));assert!(turn.result.is_ok());assert_eq!(serde_json::to_value(construction.spent).unwrap(),fixture["receipt"]);assert_eq!(serde_json::to_value(turn.result.as_ref().ok().unwrap().progress()).unwrap(),fixture["receipt"]);
  while !owner.terminal_is_empty(){close_once(&mut owner,grant);}
 }

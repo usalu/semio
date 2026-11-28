@@ -5,7 +5,7 @@ export interface RepoProfileRowV1{readonly seq:number;readonly id:number;readonl
 /** 🔚️ A finished profile: totals in milliseconds and the ordered rows. */
 export interface RepoProfileSummaryV1{readonly version:1;readonly unit:"ms";readonly total:number;readonly covered:number;readonly uncovered:number;readonly rows:readonly RepoProfileRowV1[]}
 export interface RepoProfileRecordV1{id:number;parent:number;depth:number;phase:string;start:number;end:number;detail?:string}
-export interface RepoProfileOptionsV1{mode?:RepoProfileModeV1;now?:()=>number;pid?:number;write?:(text:string)=>unknown}
+export interface RepoProfileOptionsV1{mode?:RepoProfileModeV1;now?:()=>number;pid?:number;write?:(text:string)=>unknown;onPhase?:(record:RepoProfileRecordV1)=>void}
 export interface RepoProfileV1{readonly enabled:boolean;readonly mode:RepoProfileModeV1;phase<T>(phase:string,body:()=>T,detail?:string):T;event(phase:string,durationMilliseconds:number,detail?:string):void;mark(phase:string,detail?:string):void;summary():RepoProfileSummaryV1;flush():void}
 export const REPO_PROFILE_VARIABLE_V1:"SEMIO_REPO_PROFILE";
 export const REPO_PROFILE_PHASE_PATTERN_V1:RegExp;
@@ -18,6 +18,7 @@ export function repoProfileV1():RepoProfileV1;
 export function resetRepoProfileV1():void;
 export function profilePhaseV1<T>(phase:string,body:()=>T,detail?:string):T;
 export function profileMarkV1(phase:string,detail?:string):void;
+export function profileRoundTripV1(kind:string):void;
 export function profileProgressV1(text:string|undefined):void;
 export function profileCurrentPhaseV1():string|undefined;
 export function installRepoProfileSpawnCensusV1(profile:RepoProfileV1):void;

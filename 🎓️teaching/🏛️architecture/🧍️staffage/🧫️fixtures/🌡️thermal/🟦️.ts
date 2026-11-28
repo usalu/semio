@@ -70,13 +70,17 @@ export function thermalState(fixture: { readonly asset: ThermalFixtureAsset; rea
   } satisfies EvaluatedState;
 }
 
-/** 🗂️ Reads one catalog asset document by id from `🗂️catalog/<category folder>/<id>/🔣️.json` (test support; the catalog loader of 🗂️catalog is async and validates). */
-export function catalogAsset(id: string): Asset {
+/** 🗂️ Reads one catalog asset document by id from `🗂️catalog/<category folder>/<id>/🔣️.json` (test support; the catalog loader of 🗂️catalog is async and validates). `withVolumes: false` drops the 3D volumes, about half of the 23 MB of the largest documents, for the suites that read thermal, structural or manifest facts of every asset and so hold all of them. */
+export function catalogAsset(id: string, withVolumes = true): Asset {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../🗂️catalog");
   for (const folder of readdirSync(root, { withFileTypes: true }))
     if (folder.isDirectory()) {
       const file = join(root, folder.name, id, "🔣️.json");
-      if (existsSync(file)) return (JSON.parse(readFileSync(file, "utf8")) as { asset: Asset }).asset;
+      if (existsSync(file)) {
+        const asset = (JSON.parse(readFileSync(file, "utf8")) as { asset: Omit<Asset, "volumes"> & { volumes?: unknown } }).asset;
+        if (!withVolumes) delete asset.volumes;
+        return asset as Asset;
+      }
     }
   throw new Error(`catalog asset ${id} not found`);
 }

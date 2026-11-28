@@ -1,0 +1,279 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 1,
+    "description": "What a cache image does when it cannot take a write. On macOS a mounted image reports the free bytes of its filesystem capped by the free bytes of the host volume less the part of its declared capacity the host does not back yet, so a nearly empty image declared far above the host's free space reports (almost) nothing free and answers every write with ENOSPC; and a sparse image never returns the blocks a collection frees while it is mounted. A writer therefore never fails on the first ENOSPC: it releases the image's reserve file, reclaims, waits for the host and writes again, `attempts` times, and only then fails with a typed refusal that names the image, what is usable, what is free inside, what the host holds and the command that frees space. `slackBytes` is the difference between inside and reported free that is no clamp yet; `floorFreeBytes` the usable free bytes below which an image with room inside is starved; `softHostFreeBytes` and `hardHostFreeBytes` the host watermarks at which collection starts on its own, early and urgently. Below `criticalHostFreeBytes` of host free space nothing new is written into an image: a lane birth or an image growth is refused with a typed refusal after one bounded collection, instead of writing until ENOSPC.",
+    "slackBytes": 536870912,
+    "floorFreeBytes": 2147483648,
+    "attempts": 3,
+    "backoffMilliseconds": [
+     0,
+     2000,
+     8000
+    ],
+    "softHostFreeBytes": 42949672960,
+    "hardHostFreeBytes": 21474836480,
+    "alignBytes": 1073741824,
+    "command": "repo cache gc",
+    "messages": {
+     "full": {
+      "en": "The cache image {image} is full: {available} usable of {capacity} declared, {inner} free inside, {host} free on the host volume. {reclaimed} were reclaimed and the write was tried {attempts} times. Nothing was lost. Free space with `{command}` or wait for other builds to finish, then run the command again.",
+      "de": "Das Cache-Image {image} ist voll: {available} nutzbar von {capacity} deklariert, {inner} innen frei, {host} frei auf dem Host-Volume. {reclaimed} wurden freigegeben und das Schreiben wurde {attempts} Mal versucht. Es ging nichts verloren. Schaffe Platz mit `{command}` oder warte, bis andere Builds enden, und f\u00fchre den Befehl erneut aus."
+     },
+     "clamped": {
+      "en": "The cache image {image} reports only {available} free although {inner} are free inside: the host volume has {host} free and the image declares {capacity}. It is re-created at {target} as soon as no build holds it.",
+      "de": "Das Cache-Image {image} meldet nur {available} frei, obwohl innen {inner} frei sind: das Host-Volume hat {host} frei und das Image deklariert {capacity}. Es wird mit {target} neu angelegt, sobald kein Build es h\u00e4lt."
+     },
+     "retrying": {
+      "en": "The cache image {image} is full ({available} usable): {reclaimed} reclaimed, writing again ({attempt} of {attempts}).",
+      "de": "Das Cache-Image {image} ist voll ({available} nutzbar): {reclaimed} freigegeben, es wird erneut geschrieben ({attempt} von {attempts})."
+     },
+     "critical": {
+      "en": "The host volume {partition} has only {free} free (critical below {critical}): no new lane or image growth is started until space is freed. Nothing was lost. Free space with `{command}`, then run the command again.",
+      "de": "Das Host-Volume {partition} hat nur noch {free} frei (kritisch unter {critical}): bis Platz frei ist, wird keine neue Lane und kein Image-Wachstum begonnen. Es ging nichts verloren. Schaffe Platz mit `{command}` und f\u00fchre den Befehl erneut aus."
+     },
+     "writesRefused": {
+      "en": "The cache image {image} refuses writes before the build ({reason}): {available} usable of {capacity} declared, {inner} free inside, {host} free on the host volume. The host backs only part of what the image declares, so it answers every write with ENOSPC although it is nearly empty. Nothing was lost. It is shrunk in place to {target} as soon as no build holds it: stop the builds that use it, then run the command again.",
+      "de": "Das Cache-Image {image} lehnt Schreibzugriffe vor dem Build ab ({reason}): {available} nutzbar von {capacity} deklariert, {inner} innen frei, {host} frei auf dem Host-Volume. Der Host deckt nur einen Teil dessen, was das Image deklariert, und beantwortet darum jeden Schreibzugriff mit ENOSPC, obwohl es fast leer ist. Es ging nichts verloren. Es wird an Ort und Stelle auf {target} verkleinert, sobald kein Build es hält: beende die Builds, die es nutzen, und führe den Befehl erneut aus."
+     },
+     "shrunk": {
+      "en": "The cache image {image} was shrunk in place from {capacity} to {target} because the host backed only part of its declaration; its {used} of content were kept.",
+      "de": "Das Cache-Image {image} wurde an Ort und Stelle von {capacity} auf {target} verkleinert, weil der Host nur einen Teil seiner Deklaration deckte; seine {used} Inhalt blieben erhalten."
+     }
+    },
+    "criticalHostFreeBytes": 8589934592
+   }
+  },
+  "Clamp": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "capacityBytes",
+    "usedBytes",
+    "availableBytes",
+    "innerFreeBytes",
+    "phantomBytes",
+    "clamped",
+    "starved"
+   ],
+   "properties": {
+    "capacityBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "usedBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "availableBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "innerFreeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "phantomBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "clamped": {
+     "type": "boolean"
+    },
+    "starved": {
+     "type": "boolean"
+    }
+   }
+  },
+  "RightSize": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "capacityBytes",
+    "sizedBytes",
+    "clamped",
+    "retire"
+   ],
+   "properties": {
+    "capacityBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "sizedBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "clamped": {
+     "type": "boolean"
+    },
+    "retire": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Shrink": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "capacityBytes",
+    "usedBytes",
+    "sizedBytes",
+    "clamped",
+    "shrink",
+    "targetBytes"
+   ],
+   "properties": {
+    "capacityBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "usedBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "sizedBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "clamped": {
+     "type": "boolean"
+    },
+    "shrink": {
+     "type": "boolean"
+    },
+    "targetBytes": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "Pressure": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hostFreeBytes",
+    "images",
+    "level",
+    "demandBytes",
+    "starved"
+   ],
+   "properties": {
+    "hostFreeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "images": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "capacityBytes",
+       "usedBytes",
+       "availableBytes"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "capacityBytes": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "usedBytes": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "availableBytes": {
+        "type": "integer",
+        "minimum": 0
+       }
+      }
+     }
+    },
+    "level": {
+     "enum": [
+      "none",
+      "soft",
+      "hard",
+      "critical"
+     ]
+    },
+    "demandBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "starved": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "Backoff": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "attempt",
+    "milliseconds"
+   ],
+   "properties": {
+    "attempt": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "milliseconds": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Corpus": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "clamp",
+    "rightSize",
+    "shrink",
+    "pressure",
+    "backoff"
+   ],
+   "properties": {
+    "clamp": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Clamp"
+     }
+    },
+    "rightSize": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RightSize"
+     }
+    },
+    "shrink": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Shrink"
+     }
+    },
+    "pressure": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Pressure"
+     }
+    },
+    "backoff": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Backoff"
+     }
+    }
+   }
+  }
+ }
+}

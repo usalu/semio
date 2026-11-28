@@ -12,6 +12,10 @@ use semio_s_fem_model::Dof;
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
+#[path = "🔏️physics-fingerprint/🦀️.rs"]
+mod physics_fingerprint;
+pub use physics_fingerprint::{rebinds_generation, AnalysisField, PhysicsHasher};
+
 
 
 /// 🔒️ A DOF tag mirroring `semio_s_fem_model::Dof`'s 6 variants, kept locally: the DSL engine's `DslField`
@@ -262,6 +266,32 @@ pub struct FemCombination {
     pub name: String,
     pub terms: Vec<FemCombinationTerm>,
 }
+
+impl protocol::list_delta::Keyed for FemElement {
+    type Key = String;
+    fn key(&self) -> String {
+        element_id(self).to_string()
+    }
+}
+
+impl protocol::list_delta::Keyed for FemLoad {
+    type Key = String;
+    fn key(&self) -> String {
+        load_id(self).to_string()
+    }
+}
+
+macro_rules! keyed_by {
+    ($($row:ty => $field:ident),*) => {$(
+        impl protocol::list_delta::Keyed for $row {
+            type Key = String;
+            fn key(&self) -> String {
+                self.$field.clone()
+            }
+        }
+    )*};
+}
+keyed_by!(FemSection => id, FemSupport => id, FemLoadCase => id, FemRegion => id, FemCombination => id, FemCombinationTerm => case_id);
 
 /// ⚙️ Analysis settings — modal/buckling mode counts and the viewport deformation scale factor.
 /// `deformation_scale` exaggerates the STATIC results view's real (meter-scale) displacements only;

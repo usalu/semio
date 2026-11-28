@@ -122,7 +122,7 @@ console.log(JSON.stringify(frames.filter(row=>row.phase==="slice")));`;
   const frames=JSON.parse(result.stdout.trim());
   expect(frames.map((row:{done:number;total:number})=>[row.done,row.total])).toEqual([[1000,0],[5000,0],[6000,0]]);
   expect(frames[0].message).toMatchObject({en:expect.stringContaining("waiting for a host capacity decision"),de:expect.stringContaining("Kapazitätsentscheidung")});
-  expect(frames[1].message).toMatchObject({en:expect.stringContaining("an earlier request is still waiting"),de:expect.stringContaining("eine frühere Anfrage wartet noch")});
+  expect(frames[1].message).toMatchObject({en:expect.stringContaining("an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first"),de:expect.stringContaining("eine frühere Anfrage wartet noch und hält die nächste Reservierung; kleinere Anfragen, die daneben passen, laufen zuerst")});
   expect(frames[2].message).toMatchObject({en:expect.stringContaining("granted 2891 MB"),de:expect.stringContaining("2891 MB")});
  }finally{rmSync(root,{recursive:true,force:true});}
 },20000);

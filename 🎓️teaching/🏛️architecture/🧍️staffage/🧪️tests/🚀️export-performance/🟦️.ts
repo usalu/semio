@@ -157,7 +157,7 @@ describe("🚀 feature width", () => {
 describe("🚀 thermal session", { timeout: 300_000 }, () => {
   const root = DEFAULT_CATALOG_ROOT;
   const setup = async (): Promise<{ readonly asset: (id: string) => Asset; readonly preset: (id: string) => Environment }> => {
-    const catalog = await loadCatalogFromFiles(root);
+    const catalog = await loadCatalogFromFiles(root, undefined, new Set(["panel-radiator", "walking-commuter"]));
     const presets = new Map(((await loadEnvironments(root))?.presets ?? []).map((p) => [p.id, p.environment]));
     return { asset: (id) => catalog.assets.find((a) => a.id === id)!, preset: (id) => presets.get(id)! };
   };

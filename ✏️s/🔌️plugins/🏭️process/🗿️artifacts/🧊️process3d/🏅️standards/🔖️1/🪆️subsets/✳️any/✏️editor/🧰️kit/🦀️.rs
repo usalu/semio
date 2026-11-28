@@ -78,7 +78,9 @@ pub fn process3d_interaction_definition() -> InteractionDefinition {
         selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
     }
 }
-pub const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
+/// 🎬️ Shares its id with `crate::examples::ID`, the registered demo example (the timber beam joinery
+/// document) the react shell's picker dispatches back through `setActiveExample`.
+pub const PROCESS3D_EXAMPLE_DEMO: &str = "demo";
 pub const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
 /// 🌲️ Shares its id with `crate::examples::concrete_forest::ID`, the registered example the react
 /// shell's picker dispatches back through `setActiveExample`.

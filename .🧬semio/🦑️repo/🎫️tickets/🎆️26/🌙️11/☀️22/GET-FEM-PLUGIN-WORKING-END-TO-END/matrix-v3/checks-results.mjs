@@ -17,11 +17,12 @@ export function resultsChecks(a) {
     return null;
   };
   const tbtn = async (x, name, key) => { await x.panel("Results", true); const b = x.page.getByRole("button", { name, exact: true }).first(); if (await b.count()) return b; const l = x.page.locator(`[id$="-play-results.transport.${key}"]`).first(); return (await l.count()) ? l : null; };
+  const ensurePaused = async x => { const p = await tbtn(x, /^Play$/, "play"); if (!p) return false; for (let i = 0; i < 3 && /▶/.test(await x.caption()); i++) { await p.click(); await sleep(1500); } return !/▶/.test(await x.caption()); };
   const frames = async (x, n = 8, dt = 600) => { const hs = []; for (let i = 0; i < n; i++) { await x.page.waitForTimeout(dt); hs.push(await x.hash(RC)); } return hs; };
   const pickOpt = async (x, label, key, want) => {
     const c = await ctl(x, label, key); if (!c) return { ok: false, why: `control ${label} missing` };
     const r = await x.chooseOption(c.loc, want instanceof RegExp || typeof want === "number" ? want : new RegExp(`^${want}`)); if (!r.ok) return { ok: false, why: `option ${want} not in [${r.options}]` };
-    await sleep(1200); const shown = await x.readField((await ctl(x, label, key)));
+    await sleep(1200); if (want instanceof RegExp) await x.until(async () => want.test(await x.readField(await ctl(x, label, key))), 20000, 500); const shown = await x.readField((await ctl(x, label, key)));
     return { ok: true, picked: r.picked, shown, options: r.options };
   };
   const display = (id, label, key, optRe, inv, extra) => add(`res.${id}`, "results", `Results panel ${label} > ${optRe}`, `${label} combobox shows ${optRe}; Results image or caption changes`, inv, async x => {
@@ -78,11 +79,13 @@ export function resultsChecks(a) {
   }, { timeout: 120000, fresh: true });
   add("res.readouts", "playback", "Play in Results window, read caption readouts", "Phase and Hz readouts update while playing and freeze on pause", { 2: [], 3: [145] }, async x => {
     const p = await tbtn(x, /^Play$/, "play"); if (!p) return { pass: false, observed: "Play missing" };
+    if (!(await ensurePaused(x))) return { pass: false, observed: "could not reach the paused precondition" };
     await p.click(); const caps = []; for (let i = 0; i < 6; i++) { await sleep(700); caps.push(await x.caption()); }
-    const pa = x.page.getByRole("button", { name: /^Pause$/ }).first(); if (await pa.count()) await pa.click(); await sleep(1200); const c1 = await x.caption(); await sleep(1500); const c2 = await x.caption();
+    await p.click(); await sleep(1200); const c1 = await x.caption(); await sleep(1500); const c2 = await x.caption();
     return { pass: new Set(caps).size >= 2 && c1 === c2, observed: `distinct captions=${new Set(caps).size} frozen=${c1 === c2} sample="${caps[2]}"` };
   }, { skipIf: d !== 3, timeout: 120000 });
   add("res.space-toggle", "playback", "Space over Results window", "Playback toggles on (frames change)", { 2: [130], 3: [141] }, async x => {
+    if (!(await ensurePaused(x))) return { pass: false, observed: "could not reach the paused precondition" };
     await x.page.evaluate(() => document.activeElement?.blur?.()); await x.page.mouse.move(...a.resultsHover); await sleep(500); await x.page.keyboard.press("Space");
     const hs = await frames(x); await x.page.keyboard.press("Space"); const hp = (await sleep(1500), await frames(x, 3));
     return { pass: new Set(hs).size >= 3 && new Set(hp).size === 1, observed: `distinct=${new Set(hs).size} frozenAfterSecondSpace=${new Set(hp).size === 1}` };
@@ -103,7 +106,7 @@ export function resultsChecks(a) {
     return { pass: ms >= 0 && v1 !== v0, observed: `phase ${v0} -> ${v1} imageChanged after ${ms} ms` };
   });
   add("res.caption-static", "results", "Results window caption", "Static caption present and not overlapping (non-empty, not Pending)", { 2: [136], 3: [149] }, async x => {
-    const c = await x.caption(); return { pass: a.bootCaption.test(c) && !a.pending.test(c), observed: JSON.stringify(c) };
+    await ensurePaused(x); const c = await x.caption(); return { pass: a.bootCaption.test(c) && !a.pending.test(c), observed: JSON.stringify(c) };
   });
   add("res.resolve-after-edit", "results", "Edit node X, then wait", "Caption goes Pending/Preparing, then back to a converged caption", { 2: [137], 3: [152] }, async x => {
     const e = await x.editField(a.rows.node, "X", { keys: ["node.x"], value: 6.5, group: "Nodes" });

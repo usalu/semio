@@ -73,51 +73,61 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// unit per rotation on the shared live-cleanup job, so a sustained action rate filled all
     /// [`ARTIFACT_LIVE_OUTPUT_SLOTS`] classes and every later action was refused
     /// `interactive-job.typed-operation-capacity`.
+    /// 🧾️ One publication window batches direct units while the turn grant funds and each call progresses, and ends with the granted run whose original receipt carries the window's direct progress; every unit is funded from what the same turn authority has left, so the receipt never exceeds it.
     pub(super) fn retire_typed_operation_run(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let started_us=cx.now_us();
-        for pump in 0..INTERACTIVE_TURN_WORKER_PUMPS {
+        let mut direct=RetainedCloneProgress::default();
+        for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
             if !self.tools.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
-                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 1 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
+                return Ok(());
             }
             if self.tools.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
-                // Earlier units settled directly on this recipient. Start the granted
-                // retirement receipt in its own publication window.
-                if pump != 0 { {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 2 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())}; }
-                return self.retire_granted_typed_operation_run(operation_id, cx, started_us);
+                self.retire_granted_typed_operation_run(operation_id, cx, started_us, direct)?;
+                return Ok(());
             }
-            let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+            let window = match self.tools.tool_operations.get(operation_id).and_then(|owner| owner.original_retirement_receipt) {
+                Some((receipt_grant, receipt)) => remaining_plugin_turn_grant(receipt_grant, receipt),
+                None => remaining_plugin_turn_grant(semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant()), direct),
+            };
+            let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(window, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand,grant) {
-                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 3 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
+                return Ok(());
             }
             match cx.with_retained_loan(grant,|same|self.retire_typed_operation_unit(operation_id,same).map_err(Into::into))? {
-                PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 4 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())},
+                PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => return Ok(()),
                 PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => {
                     if !progress.fits(grant) {
                         return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"typed operation retirement exceeded its issuer grant").with_retained_progress(progress).into());
                     }
+                    match self.tools.tool_operations.get_mut(operation_id).and_then(|owner| owner.original_retirement_receipt.as_mut()) {
+                        Some((_, receipt)) => *receipt = receipt.checked_add(progress)?,
+                        None => direct = direct.checked_add(progress)?,
+                    }
                     if progress == RetainedCloneProgress::default() {
-                                                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 5 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
+                                                return Ok(());
                     }
                 }
             }
             if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)) {
-                {if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] retire exit 6 pump={} items={} fuel={}",pump,cx.retained_grant().maximum_items,cx.fuel_remaining());}return Ok(())};
+                return Ok(());
             }
         }
         Ok(())
     }
 
-    /// 🧾️ Returns the consecutive granted retirement units of one Close turn in a single original receipt.
+    /// 🧾️ Returns the consecutive granted retirement units of one Close turn in a single original receipt, extending the receipt an earlier run of the same turn left unposted.
     fn retire_granted_typed_operation_run(
         &mut self,
         operation_id: u64,
         cx: &mut semio_framework_job::StepContext<'_>,
         started_us: Option<u64>,
-    ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-        let grant = original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+        direct: RetainedCloneProgress,
+    ) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let fresh = original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
         let owner = self.tools.tool_operations.get_mut(operation_id).expect("the selected retiring operation is mounted");
-        let mut spent = RetainedCloneProgress::default();
+        let (grant, mut spent) = owner.original_retirement_receipt.take().unwrap_or((fresh, direct));
+        let before = spent;
         let outcome = (|| -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
                 let remaining = remaining_plugin_turn_grant(grant, spent);
@@ -146,11 +156,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             failure.effects = spent.saturating_add(failure.effects);
             return Err(failure);
         }
-        if std::env::var_os("L3D_TRACE").is_some(){eprintln!("[DEBUG] granted retire spent items={} bytes={} grant items={} fuel={} ready={} pending={}",spent.copied_items,spent.copied_bytes,grant.maximum_items,cx.fuel_remaining(),owner.granted_retirement_ready(),owner.granted_retirement_pending());}
         if spent != RetainedCloneProgress::default() {
-            assert!(owner.original_retirement_receipt.is_none(), "original mounted Close receipt cannot be overwritten before acknowledgement");
             owner.original_retirement_receipt = Some((grant, spent));
         }
-        Ok(())
+        Ok(spent != before)
     }
 }

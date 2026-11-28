@@ -1,7 +1,7 @@
 /** 🧩️ Tests for the sharded images of a cache partition: selection against an independent oracle, aggregation, the ledger, per-image reclaim with lease isolation, the path budget and, on macOS, two real scratch shards whose freed blocks return one by one. */
 import{test,expect}from"bun:test";
 import{spawnSync}from"node:child_process";
-import{closeSync,existsSync,lstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync,writeSync}from"node:fs";
+import{closeSync,existsSync,lstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readdirSync,realpathSync,rmSync,statfsSync,writeFileSync,writeSync}from"node:fs";
 import{join,posix,win32}from"node:path";
 import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{testPythonV1}from"../../../../../../📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -10,7 +10,7 @@ import{acquireResourceLease}from"../../../../../../🔒️leases/🟦️.ts";
 import{createNativeImageDarwinKickPortV1,type NativeImageKickPortV1}from"../../👟️kick/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
-import{appendNativeImageShardEventV1,createNativeImageShardDarwinLifecycleV1,ensureNativeImageShardV1,measureNativeImageShardFreeV1,measureNativeImageShardRootV1,measureNativeImageShardV1,nativeImageShardPartitionOfV1,nativeImageShardPathV1,nativeImageShardVolumeFactsV1,nativeImageShardAdmissionV1,nativeImageShardAggregateV1,nativeImageShardBirthEventV1,nativeImageShardCapBytesV1,nativeImageShardCapacityV1,nativeImageShardFoldV1,nativeImageShardHomeLayoutV1,nativeImageShardIdV1,nativeImageShardKeyV1,nativeImageShardLayoutV1,nativeImageShardLayoutsV1,nativeImageShardMountedV1,nativeImageShardMountPointV1,nativeImageShardRowV1,nativeImageShardPathBudgetV1,nativeImageShardPartialTextV1,nativeImageShardReclaimDueV1,nativeImageShardRefusedTextV1,nativeImageShardSelectV1,nativeImageShardSupportedV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,repairNativeImageShardsV1,requireNativeImageShardRuleV1,retireNativeImageShardV1,NATIVE_IMAGE_SHARD_V1,type NativeImageShardBornEventV1,type NativeImageShardEventV1,type NativeImageShardLayoutV1,type NativeImageShardRuleV1,type NativeImageShardStateV1}from"../🟦️.ts";
+import{appendNativeImageShardEventV1,createNativeImageShardDarwinLifecycleV1,dismantleNativeImageShardsV1,ensureNativeImageShardV1,measureNativeImageShardFreeV1,measureNativeImageShardRootV1,measureNativeImageShardV1,nativeImageShardPartitionOfV1,nativeImageShardPathV1,nativeImageShardVolumeFactsV1,nativeImageShardAdmissionV1,nativeImageShardAggregateV1,nativeImageShardBirthEventV1,nativeImageShardCapBytesV1,nativeImageShardCapacityV1,nativeImageShardCommittedBytesV1,nativeImageShardWantBytesV1,nativeImageShardSizedBytesV1,nativeImageShardGrowTargetV1,growNativeImageShardV1,nativeImageShardOvercommittedTextV1,nativeImageShardFoldV1,nativeImageShardHomeLayoutV1,nativeImageShardIdV1,nativeImageShardKeyV1,nativeImageShardLayoutV1,nativeImageShardLayoutsV1,nativeImageShardMountedV1,nativeImageShardMountPointV1,nativeImageShardRowV1,nativeImageShardPathBudgetV1,nativeImageShardPartialTextV1,nativeImageShardReclaimDueV1,nativeImageShardRefusedTextV1,nativeImageShardSelectV1,nativeImageShardSupportedV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,repairNativeImageShardsV1,requireNativeImageShardRuleV1,retireNativeImageShardV1,NATIVE_IMAGE_SHARD_V1,type NativeImageShardBornEventV1,type NativeImageShardEventV1,type NativeImageShardLayoutV1,type NativeImageShardLifecycleV1,type NativeImageShardRuleV1,type NativeImageShardStateV1}from"../🟦️.ts";
 const MiB=1048576,GiB=1073741824,env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const rule=corpus.rule as NativeImageShardRuleV1;
 const same=(actual:unknown,expected:unknown)=>expect(actual).toEqual(expected);
@@ -41,6 +41,70 @@ test("the capacity at birth equals the oracle: the cap and the host share bound 
  expect(nativeImageShardCapacityV1("darwin",rule,{needBytes:8*GiB,hostFreeBytes:20*GiB})).toEqual({capacityBytes:13*GiB});
  expect(nativeImageShardCapacityV1("darwin",rule,{needBytes:40*GiB,hostFreeBytes:900*GiB})).toEqual({refused:"cap"});expect(nativeImageShardCapacityV1("darwin",rule,{needBytes:8*GiB,hostFreeBytes:10*GiB})).toEqual({refused:"host-free"});
 });
+test("the capacity a shard is born with follows the measured need and the growth target of a filling image equals the oracle, bounded by cap, host and commitment room",()=>{
+ expect(corpus.sizing.map(row=>nativeImageShardSizedBytesV1(row.platform,rule,{needBytes:row.need,...row.measuredBytes===null?{}:{measuredBytes:row.measuredBytes}}))).toEqual(answers.sizing);expect(answers.sizing).toEqual(corpus.sizing.map(row=>row.sizedBytes));
+ const ours=corpus.growth.map(row=>nativeImageShardGrowTargetV1(row.platform,rule,{capacityBytes:row.capacityBytes,usedBytes:row.usedBytes,hostFreeBytes:row.hostFreeBytes,...row.measuredBytes===null?{}:{measuredBytes:row.measuredBytes},...row.budgetRoomBytes===null?{}:{budgetRoomBytes:row.budgetRoomBytes}}));
+ expect(ours).toEqual(answers.growth);expect(answers.growth).toEqual(corpus.growth.map(row=>row.targetBytes));
+ expect(ours.filter(row=>row!==null).length).toBe(6);expect(ours.every(row=>row===null||row%GiB===0)).toBe(true);
+ for(const[index,row]of corpus.growth.entries())if(ours[index]!==null&&row.platform==="darwin")expect(ours[index]).toBeLessThanOrEqual(nativeImageShardCapBytesV1("darwin"));
+});
+test("a shard is born at its measured need, grows once its need outgrows it, logs the growth and is mounted again whatever the grow does",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("shard"),"grow-")),log:string[]=[],lock=serial();
+ let failGrow=false;
+ const lifecycle={create:async(layout:NativeImageShardLayoutV1,bytes:number)=>{log.push("create "+layout.id+" "+bytes/GiB);},attach:async(layout:NativeImageShardLayoutV1)=>{log.push("attach "+layout.id);},detach:async()=>{},retire:async()=>{},resize:async(layout:NativeImageShardLayoutV1,bytes:number)=>{log.push("grow "+layout.id+" "+bytes/GiB);if(failGrow)throw Error("busy");}}as unknown as NativeImageShardLifecycleV1;
+ try{
+  const born=await ensureNativeImageShardV1({directory,rule,platform:"darwin",path:"u/l/lanexx",hostFreeBytes:()=>400*GiB,measuredNeedBytes:()=>3*GiB,now:()=>1,lifecycle,lock});
+  expect(born).toMatchObject({kind:"birth",capacityBytes:10*GiB});
+  const wide=await ensureNativeImageShardV1({directory,rule,platform:"darwin",path:"u/l/laneyy",hostFreeBytes:()=>400*GiB,measuredNeedBytes:()=>20*GiB,now:()=>2,lifecycle,lock});
+  expect(wide).toMatchObject({kind:"birth",capacityBytes:25*GiB});
+  const base={directory,rule,platform:"darwin",now:()=>3,lifecycle,lock};
+  const idle=await growNativeImageShardV1({...base,id:"lanexx",measure:()=>({usedBytes:GiB,hostFreeBytes:400*GiB}),measuredNeedBytes:()=>3*GiB});expect(idle).toBeNull();
+  failGrow=true;await expect(growNativeImageShardV1({...base,id:"lanexx",measure:()=>({usedBytes:9*GiB,hostFreeBytes:400*GiB})})).rejects.toThrow("busy");
+  expect(nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory)).get("lanexx")?.capacityBytes).toBe(10*GiB);
+  failGrow=false;const grown=await growNativeImageShardV1({...base,id:"lanexx",measure:()=>({usedBytes:9*GiB,hostFreeBytes:400*GiB})});
+  expect(grown).toBe(12*GiB);expect(nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory)).get("lanexx")?.capacityBytes).toBe(12*GiB);
+  expect(await growNativeImageShardV1({...base,id:"lanexx",measure:()=>({usedBytes:9*GiB,hostFreeBytes:400*GiB})})).toBeNull();
+  expect(await growNativeImageShardV1({...base,id:"nobody",measure:()=>({usedBytes:9*GiB,hostFreeBytes:400*GiB})})).toBeNull();
+  expect(log).toEqual(["create lanexx 10","attach lanexx","create laneyy 25","attach laneyy","grow lanexx 12","grow lanexx 12"]);
+  const events=readNativeImageShardLedgerV1(directory);expect(events.map(row=>row.type)).toEqual(["born","born","grown"]);
+  expect(()=>nativeImageShardFoldV1([{type:"grown",id:"zz",capacityBytes:2*GiB,atMs:1}])).toThrow("Live image shard required to grow zz");
+  expect(()=>nativeImageShardFoldV1([{type:"grown",id:"zz",capacityBytes:GiB-1,atMs:1}as NativeImageShardEventV1])).toThrow("Closed image shard event required");
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test("the host-wide commitment room bounds every birth and growth over all roots: a birth above it is refused, one within it is cut to it, a growth stops at it",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("shard"),"host-room-")),log:string[]=[],lock=serial();
+ const lifecycle={create:async(layout:NativeImageShardLayoutV1,bytes:number)=>{log.push("create "+layout.id+" "+bytes/GiB);},attach:async()=>{},detach:async()=>{},retire:async()=>{},resize:async(layout:NativeImageShardLayoutV1,bytes:number)=>{log.push("grow "+layout.id+" "+bytes/GiB);}}as unknown as NativeImageShardLifecycleV1;
+ try{
+  const live=stateOf([]);
+  expect(nativeImageShardSelectV1({rule,platform:"darwin",live,path:"u/l/lanexx",hostFreeBytes:400*GiB,hostRoomBytes:4*GiB})).toMatchObject({kind:"refused",reason:"commitment"});
+  expect(nativeImageShardSelectV1({rule,platform:"darwin",live,path:"u/l/lanexx",hostFreeBytes:400*GiB,hostRoomBytes:40*GiB})).toMatchObject({kind:"birth",capacityBytes:32*GiB});
+  expect(nativeImageShardSelectV1({rule,platform:"darwin",live,path:"u/l/lanexx",hostFreeBytes:400*GiB,hostRoomBytes:20*GiB})).toMatchObject({kind:"birth",capacityBytes:20*GiB});
+  expect(()=>nativeImageShardBirthEventV1({rule,platform:"darwin",live,key:"lanexx",root:0,capacityBytes:20*GiB,atMs:1,hostRoomBytes:19*GiB})).toThrow("host commitment budget");
+  const refused=await ensureNativeImageShardV1({directory,rule,platform:"darwin",path:"u/l/lanexx",hostFreeBytes:()=>400*GiB,hostRoomBytes:()=>4*GiB,now:()=>1,lifecycle,lock});
+  expect(refused).toMatchObject({kind:"refused",reason:"commitment"});expect(log).toEqual([]);
+  const born=await ensureNativeImageShardV1({directory,rule,platform:"darwin",path:"u/l/lanexx",hostFreeBytes:()=>400*GiB,hostRoomBytes:()=>14*GiB,measuredNeedBytes:()=>3*GiB,now:()=>2,lifecycle,lock});
+  expect(born).toMatchObject({kind:"birth",capacityBytes:10*GiB});
+  const base={directory,rule,platform:"darwin",now:()=>3,lifecycle,lock,measure:()=>({usedBytes:9*GiB,hostFreeBytes:400*GiB})};
+  expect(await growNativeImageShardV1({...base,id:"lanexx",hostRoomBytes:()=>0})).toBeNull();
+  expect(await growNativeImageShardV1({...base,id:"lanexx",hostRoomBytes:()=>GiB})).toBe(11*GiB);
+  expect(await growNativeImageShardV1({...base,id:"lanexx",hostRoomBytes:()=>64*GiB,measure:()=>({usedBytes:30*GiB,hostFreeBytes:400*GiB})})).toBe(32*GiB);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test("dismantling retires every idle shard whole, stops at a busy one without forcing it, and leaves a capsule without shard entries once all are gone",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("shard"),"dismantle-")),log:string[]=[],lock=serial();
+ let busy="pb";
+ const lifecycle={retire:async(layout:NativeImageShardLayoutV1)=>{if(layout.id===busy)throw Error("busy");log.push("retire "+layout.id);}}as unknown as NativeImageShardLifecycleV1;
+ try{
+  mkdirSync(join(directory,"s"));
+  for(const id of["pc","pa","pb"])appendNativeImageShardEventV1(directory,{type:"born",id,key:id,root:0,path:"u/l/"+id,capacityBytes:GiB,atMs:1});
+  const first=await dismantleNativeImageShardsV1({directory,now:()=>2,lifecycle,lock});
+  expect(first).toEqual({retired:["pa"],clean:false});expect([...nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory)).keys()].sort()).toEqual(["pb","pc"]);expect(existsSync(join(directory,"s"))).toBe(true);
+  busy="";const second=await dismantleNativeImageShardsV1({directory,now:()=>3,lifecycle,lock});
+  expect(second).toEqual({retired:["pb","pc"],clean:true});expect(log).toEqual(["retire pa","retire pb","retire pc"]);
+  expect(existsSync(join(directory,"s"))).toBe(false);expect(existsSync(join(directory,NATIVE_IMAGE_SHARD_V1.ledgerFile))).toBe(false);
+  expect(await dismantleNativeImageShardsV1({directory,now:()=>4,lifecycle,lock})).toEqual({retired:[],clean:true});
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
 test("the macOS cap is the measured limit of the trim: no image of any declared platform and rule exceeds what its platform can return",()=>{
  const limit=NATIVE_IMAGE_SHARD_V1.maximumImageBytes;expect(limit.darwin).toBe(34359738368);
  for(const row of corpus.capacity){const made=nativeImageShardCapacityV1(row.platform,rule,{needBytes:row.need,hostFreeBytes:row.hostFreeBytes});if("capacityBytes"in made)expect(made.capacityBytes).toBeLessThanOrEqual(nativeImageShardCapBytesV1(row.platform));}
@@ -54,6 +118,20 @@ test("shard selection equals the oracle on every case: disabled rules and unsupp
  const full=stateOf(Array.from({length:256},(_,index)=>({id:"a"+index.toString(36).padStart(3,"0"),key:"a"+index.toString(36).padStart(3,"0"),root:0,capacityBytes:GiB})));
  expect(nativeImageShardSelectV1({rule,platform:"darwin",live:full,path:"u/l/zzzz",hostFreeBytes:900*GiB})).toMatchObject({kind:"refused",reason:"shard-limit"});
  expect(nativeImageShardSelectV1({rule,platform:"darwin",live:full,path:"u/l/a001/x",hostFreeBytes:900*GiB})).toMatchObject({kind:"existing"});
+});
+test("the commitment budget of a root equals the oracle: births shrink to the room the budget leaves, a root never declares more than its budget, other roots do not count",()=>{
+ const ours=corpus.commitment.map(row=>nativeImageShardSelectV1({rule,platform:"darwin",live:stateOf(row.live),path:row.path,hostFreeBytes:row.hostFreeBytes,budgetBytes:row.budgetBytes}));
+ expect(ours).toEqual(answers.commitment);same(ours,corpus.commitment.map(row=>row.decision));
+ expect(ours.map(row=>row.kind)).toEqual(["birth","birth","refused","birth","refused","existing"]);
+ for(const[index,row]of corpus.commitment.entries()){const decision=ours[index]!;if(decision.kind==="birth")expect(nativeImageShardCommittedBytesV1(stateOf(row.live),0)+decision.capacityBytes,row.name).toBeLessThanOrEqual(row.budgetBytes);}
+ const live=stateOf(corpus.commitment[0]!.live);
+ expect(nativeImageShardCommittedBytesV1(live)).toBe(20*GiB);expect(nativeImageShardCommittedBytesV1(live,1)).toBe(0);
+ expect(nativeImageShardWantBytesV1(rule,8*GiB)).toBe(10*GiB);expect(nativeImageShardWantBytesV1(rule,1)).toBe(GiB);
+ expect(nativeImageShardSelectV1({rule,platform:"darwin",live,path:"u/l/pnew1",hostFreeBytes:100*GiB})).toMatchObject({kind:"birth",capacityBytes:32*GiB});
+ expect(nativeImageShardCapacityV1("darwin",rule,{needBytes:8*GiB,hostFreeBytes:100*GiB,budgetRoomBytes:-5})).toEqual({refused:"budget"});
+ expect(()=>nativeImageShardBirthEventV1({rule,platform:"darwin",live,key:"pnew1",root:0,capacityBytes:32*GiB,atMs:1,budgetBytes:40*GiB})).toThrow("commitment budget");
+ expect(nativeImageShardBirthEventV1({rule,platform:"darwin",live,key:"pnew1",root:0,capacityBytes:20*GiB,atMs:1,budgetBytes:40*GiB})).toMatchObject({type:"born",id:"pnew1",capacityBytes:20*GiB});
+ for(const language of["en","de"]as const)expect(nativeImageShardOvercommittedTextV1(language,{key:"pnew1",partition:"rust",committed:"30 GiB",budget:"40 GiB",need:"10 GiB"})).toContain("30 GiB");
 });
 test("selection is stable: the same key always selects the same image whatever its path below, and different keys select different images",()=>{
  const keys=["pcab777","pec11e9","abc","a0b1c2d3e4f5"],ids=new Set<string>();
@@ -250,3 +328,21 @@ test.skipIf(process.platform!=="darwin")("two real shards are born lazily at the
   const refused=await ensureNativeImageShardV1({directory,rule:small,platform:"darwin",path:"u/l/lanecc/x",hostFreeBytes:()=>GiB,now:()=>1,lifecycle,lock});expect(refused).toEqual({kind:"refused",reason:"host-free",key:"lanecc"});
  }finally{for(const path of[join(home.mountPoint,"u/l/lanebbb"),join(home.mountPoint,"u/l/laneaaa"),home.mountPoint])spawnSync("/usr/bin/hdiutil",["detach",path,"-force"],{env});rmSync(directory,{recursive:true,force:true});}
 },600000);
+test.skipIf(process.platform!=="darwin")("a real shard grows in place: its volume takes the larger size, its files and its mount survive, and the growth is logged",async()=>{
+ const directory=realpathSync(mkdtempSync(join(testScratchRootV1("shard"),"grow-real-"))),home=nativeImageShardHomeLayoutV1(directory),lifecycle=createNativeImageShardDarwinLifecycleV1({run:async(program,args)=>run(program,args)}),lock=serial();
+ const small:NativeImageShardRuleV1={enabled:true,maximumImageBytes:4*GiB,headroomPercent:100,hostFreeReservePercent:90,roots:[{prefix:"u/l",pattern:"^[a-z0-9]{1,12}$",needBytes:256*MiB}]};
+ try{
+  mkdirSync(home.mountPoint,{recursive:true});
+  const seed=join(directory,"seed");mkdirSync(seed);run("/usr/bin/hdiutil",["create","-size","1280m","-format","UDRW","-nospotlight","-fs","Case-sensitive APFS","-volname","semio","-srcfolder",seed,home.image]);rmSync(seed,{recursive:true});
+  run("/usr/sbin/diskutil",["image","attach","--nobrowse","--mountOptions","owners","--mountPoint",home.mountPoint,home.image]);
+  const born=await ensureNativeImageShardV1({directory,rule:small,platform:"darwin",path:"u/l/lanegg",hostFreeBytes:()=>64*GiB,now:()=>1,lifecycle,lock});
+  if(born.kind!=="birth")throw Error("Birth required");
+  expect(born.capacityBytes).toBe(GiB);writeFileSync(join(born.layout.mountPoint,"stay"),Buffer.alloc(MiB,3));
+  const before=statfsSync(born.layout.mountPoint).blocks*statfsSync(born.layout.mountPoint).bsize;
+  const target=await growNativeImageShardV1({directory,rule:small,platform:"darwin",id:"lanegg",measure:layout=>{const row=measureNativeImageShardV1(layout);return row&&{usedBytes:row.usedBytes,hostFreeBytes:row.hostFreeBytes};},measuredNeedBytes:()=>GiB,now:()=>2,lifecycle,lock});
+  expect(target).toBe(2*GiB);expect(nativeImageShardMountedV1(born.layout.mountPoint)).toBe(true);
+  const after=statfsSync(born.layout.mountPoint).blocks*statfsSync(born.layout.mountPoint).bsize;expect(after).toBeGreaterThan(before+512*MiB);
+  expect(readFileSync(join(born.layout.mountPoint,"stay")).equals(Buffer.alloc(MiB,3))).toBe(true);
+  expect(JSON.parse(readFileSync(born.layout.receipt,"utf8")).capacityBytes).toBe(2*GiB);expect(nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory)).get("lanegg")?.capacityBytes).toBe(2*GiB);
+ }finally{for(const path of[join(home.mountPoint,"u/l/lanegg"),home.mountPoint])spawnSync("/usr/bin/hdiutil",["detach",path,"-force"],{env});rmSync(directory,{recursive:true,force:true});}
+},300000);

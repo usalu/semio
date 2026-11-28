@@ -1,5 +1,6 @@
 use super::*;
 use crate::context::dispatch;
+use crate::context::dispatch_refused;
 use crate::context::Retiring;
 use crate::context::fem3d_empty_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
@@ -10,7 +11,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_plugin::ConfigView;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection::{handle, RemoveSelection};
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::{fem3d_entity_target, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SOLID};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::{fem3d_entity_target, FEM3D_GRANULARITY_LOAD_CASE, FEM3D_GRANULARITY_MATERIAL, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SECTION, FEM3D_GRANULARITY_SOLID};
 #[cfg(test)] use semio_plugin::component::ArtifactView;
 #[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::{Fem3dSnapshot, Fem3dSnapshotValue};
@@ -156,4 +157,55 @@ fn remove_selection_without_ids_speaks_for_the_live_selection_3d() {
     let named = vec![fem3d_entity_target(FEM3D_GRANULARITY_SOLID, "slab").unwrap()];
     let routed = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::RemoveSelection(RemoveSelection { ids: named.clone() }), &doc, &cfg, || selection.clone(), None).expect("route");
     assert_eq!(routed.artifact_mutations, removal(&base, named), "named ids win over the live selection");
+}
+
+/// 🗑️ LAW: the mounted publication is atomic: a node cascades to its member and support in one transaction, and a material an unselected member still names refuses the whole transaction and leaves the snapshot untouched.
+#[semio_framework_async_macros::async_test]
+async fn remove_selection_mounted_publication_is_atomic_for_cascades_and_protected_referrers_3d() {
+    use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::{add_bar, add_material, add_node, add_section};
+    let mut app = fem3d_empty_app().await;
+    dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0, z: 0.0 })).await;
+    dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 4.0, y: 0.0, z: 0.0 })).await;
+    dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 210e9, g: 81e9 })).await;
+    dispatch(&mut app, Fem3dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.005, iy: 3.69e-5, iz: 1.34e-5, j: 2.1e-7 })).await;
+    let (start, end, material, section) = {
+        let snapshot = app.snapshot().expect("snapshot");
+        (snapshot.nodes[0].id.get().clone(), snapshot.nodes[1].id.get().clone(), snapshot.materials[0].id.get().clone(), snapshot.sections[0].id.clone())
+    };
+    dispatch(&mut app, Fem3dCommand::AddBar(add_bar::AddBar { start: start.clone(), end, material_id: material.clone(), section_id: section })).await;
+    let counts = |app: &crate::context::Fem3dApp| { let snapshot = app.snapshot().expect("snapshot"); (snapshot.nodes.len(), snapshot.elements.len(), snapshot.materials.len(), snapshot.sections.len()) };
+    let before = counts(&app);
+    let refusal = dispatch_refused(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![fem3d_entity_target(FEM3D_GRANULARITY_MATERIAL, &material).unwrap()] })).await;
+    assert!(refusal.contains("fem3d.remove-selection.material-referenced"), "{refusal}");
+    assert_eq!(counts(&app), before, "an unselected referrer blocks the complete transaction");
+    dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![fem3d_entity_target(FEM3D_GRANULARITY_NODE, &start).unwrap()] })).await;
+    let after = app.snapshot().expect("published snapshot");
+    assert!(after.nodes.len() == 1 && after.elements.is_empty(), "the member goes with its node in one publication");
+}
+
+/// 🗑️ LAW: removing a material, section or load case that something unselected still names is refused up front with a localized EN and DE notice naming it and its referrers, and the same removal together with those referrers is not refused.
+#[test]
+fn remove_selection_of_a_referenced_target_is_refused_with_a_localized_notice_3d() {
+    use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT as ELEMENT;
+    let (_, base) = base();
+    let history = semio_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&*base, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let table = semio_framework::fault_notice_definitions(<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp as semio_plugin::ArtifactEditor>::fault_notices());
+    assert!(semio_framework::validate_fault_notices(&table).is_empty());
+    for (kind, id, code, english, german) in [
+        (FEM3D_GRANULARITY_MATERIAL, "steel", "fem3d.remove-selection.material-referenced", "'steel' is still used by member, slab", "'steel' wird noch von member, slab verwendet"),
+        (FEM3D_GRANULARITY_SECTION, "section", "fem3d.remove-selection.section-referenced", "'section' is still used by member", "'section' wird noch von member verwendet"),
+        (FEM3D_GRANULARITY_LOAD_CASE, "case", "fem3d.remove-selection.load-case-referenced", "'case' is still used by the combinations combination", "'case' wird noch von den Kombinationen combination verwendet"),
+    ] {
+        let fault = handle(&RemoveSelection { ids: vec![fem3d_entity_target(kind, id).unwrap()] }, &doc, &cfg).err().expect("a referenced target is refused");
+        assert_eq!(fault.code.0.as_str(), code);
+        for (locale, expected) in [(semio_ui_locale::Locale::En, english), (semio_ui_locale::Locale::De, german)] {
+            let shown = semio_framework::fault_notice_text(&table, code, fault.params.as_deref(), semio_ui_locale::Terminology::Native, locale).expect("notice");
+            assert!(shown.contains(expected), "{locale:?}: {shown}");
+        }
+    }
+    let together = vec![fem3d_entity_target(FEM3D_GRANULARITY_MATERIAL, "steel").unwrap(), fem3d_entity_target(ELEMENT, "member").unwrap(), fem3d_entity_target(FEM3D_GRANULARITY_SOLID, "slab").unwrap()];
+    assert!(!handle(&RemoveSelection { ids: together }, &doc, &cfg).expect("removed with its referrers").artifact_mutations.is_empty());
 }

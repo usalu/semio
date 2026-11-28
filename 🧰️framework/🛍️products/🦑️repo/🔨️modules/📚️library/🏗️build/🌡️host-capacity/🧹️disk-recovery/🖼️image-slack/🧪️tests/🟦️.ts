@@ -31,7 +31,8 @@ describe("the policy is the product's own partition table",()=>{
   const slack=DISK_WRITERS_V1.find(item=>item.id==="image-slack")!,store=DISK_WRITERS_V1.find(item=>item.id==="replica-store")!;
   expect(slack.collector).toBe("image-reset");expect(store.collector).toBe("store-compaction");
   expect(slack.priority).toBeGreaterThan(store.priority);
-  for(const item of DISK_WRITERS_V1.filter(entry=>entry.class==="derivable"))expect(item.priority).toBeLessThan(store.priority);
+  for(const item of DISK_WRITERS_V1.filter(entry=>entry.class==="derivable"&&entry.id!=="bun-cache"))expect(item.priority).toBeLessThan(store.priority);
+  const bun=DISK_WRITERS_V1.find(item=>item.id==="bun-cache")!;expect(bun.class).toBe("derivable");expect(bun.priority).toBeGreaterThan(slack.priority);expect(bun.priority).toBe(Math.max(...DISK_WRITERS_V1.filter(entry=>entry.collector!=="manual").map(entry=>entry.priority)));
   expect(DISK_WRITERS_V1.find(item=>item.id==="cas-lru")!.priority).toBeLessThan(store.priority);
  });
 });

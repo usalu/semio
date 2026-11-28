@@ -6,13 +6,14 @@ import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../
 import {readRemoteCacheMetaV1} from "../../../../../🏗️build/🌐️remote-cache/🏷️retention/🟦️.ts";
 import {wrapRustcV1} from "../../📜️script.ts";
 import {newestEntryV1,readLookupsV1} from "../../💾️store/🟦️.ts";
-import {drainUploadsV1,spoolLengthV1} from "../../🛰️fleet/📤️uploader/🟦️.ts";
+import {drainUploadsV1} from "../../🛰️fleet/📤️uploader/🟦️.ts";
+import {spoolLengthV1} from "../../🛰️fleet/📏️spool-size/🟦️.ts";
 import {readBuildCountersV1} from "../../🛰️fleet/📊️counters/🟦️.ts";
 import {readManifestV1} from "../../🛰️fleet/📋️manifest/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
 process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
-/** 📋️ Contract: a unit is never compiled twice anywhere because of a file the compiler reads that the scan of its sources did not reach. The crate below reads `data.txt` through an `include_str!` that a macro expands (the stand-in of a derive that reads a data file at expansion: the compiler lists the file, the scan of the source text does not find it). Machine A compiles it and publishes the manifest and the unit; machine B, at another checkout path with an empty local store that never compiled it, hits the fleet with its first lookup; an edit of the data file misses, recompiles, publishes and then hits; an input set that grows (a second data file) is learned once and found by a third machine; the unit entry declares the full input set to retention. */
+/** 📋️ Contract: a unit is never compiled twice anywhere because of a file the compiler reads that the scan of its sources did not reach. The crate below reads `data.txt` through an `include_str!` that a macro expands (the stand-in of a derive that reads a data file at expansion: the compiler lists the file, the scan of the source text does not find it). Machine A compiles it and publishes the manifest and the unit; machine B, at another checkout path with an empty local store and the fleet's Cargo unit identity (the key carries it since determinism rule `cargo-identity-keyed`: the fixture machines share one `-C extra-filename`, only their paths and homes differ) that never compiled it, hits the fleet with its first lookup; an edit of the data file misses, recompiles, publishes and then hits; an input set that grows (a second data file) is learned once and found by a third machine; the unit entry declares the full input set to retention. */
 const scratch:string[]=[],servers:RemoteCacheServerV1[]=[];
 const directory=(label:string)=>{const path=realpathSync(mkdtempSync(join(tmpdir(),"k7-"+label+"-")));scratch.push(path);return path;};
 afterAll(async()=>{for(const server of servers)await server.stop().catch(()=>{});if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -28,15 +29,16 @@ function findRustc():string|undefined{
  return undefined;
 }
 const rustc=findRustc(),real=rustc===undefined?test.skip:test;
-type Machine=Readonly<{root:string;home:string;cache:string;cas:string;lane:string;hash:string}>;
-const machine=(label:string,depth:string,hash:string):Machine=>{const base=directory(label),root=join(base,depth,"ws");return{root,home:join(base,"h"),cache:join(root,".cache","b","r","m","u"),cas:join(base,"cas"),lane:join(root,".cache","b","r","m","u","lane","t-"+hash.slice(0,6)),hash};};
+type Machine=Readonly<{root:string;home:string;cache:string;cas:string;lane:string;hash:string;cargo:string}>;
+const CARGO_IDENTITY="9f8e7d6c5b4a3921";
+const machine=(label:string,depth:string,hash:string,cargo:string=CARGO_IDENTITY):Machine=>{const base=directory(label),root=join(base,depth,"ws");return{root,home:join(base,"h"),cache:join(root,".cache","b","r","m","u"),cas:join(base,"cas"),lane:join(root,".cache","b","r","m","u","lane","t-"+hash.slice(0,6)),hash,cargo};};
 const fleet=FLEET_POLICY_V1;
 
 async function compile(m:Machine,server:RemoteCacheServerV1,source:string,files:Record<string,string>){
  const package_=join(m.root,"crates","data"),out=join(m.root,"target","deps");
  mkdirSync(join(package_,"src"),{recursive:true});writeFileSync(join(package_,"src","lib.rs"),source);for(const [name,text] of Object.entries(files))writeFileSync(join(package_,"src",name),text);
  mkdirSync(out,{recursive:true});mkdirSync(m.lane,{recursive:true});mkdirSync(m.cache,{recursive:true});
- const argv=["--crate-name","data","--edition=2021",join(package_,"src","lib.rs"),"--error-format=json","--json=diagnostic-rendered-ansi,artifacts,future-incompat","--crate-type","lib","--emit=dep-info,metadata,link","-C","embed-bitcode=no","-C","metadata="+m.hash,"-C","extra-filename=-"+m.hash,"--out-dir",out,"-L","dependency="+out,"--remap-path-prefix="+m.root+"=."];
+ const argv=["--crate-name","data","--edition=2021",join(package_,"src","lib.rs"),"--error-format=json","--json=diagnostic-rendered-ansi,artifacts,future-incompat","--crate-type","lib","--emit=dep-info,metadata,link","-C","embed-bitcode=no","-C","metadata="+m.cargo,"-C","extra-filename=-"+m.cargo,"--out-dir",out,"-L","dependency="+out,"--remap-path-prefix="+m.root+"=."];
  const environment={...process.env,HOME:m.home,CARGO_HOME:join(m.home,".cargo"),RUSTUP_HOME:join(m.home,".rustup"),SEMIO_UNIT_CACHE_ROOT:m.cache,SEMIO_UNIT_CACHE_LANE:"k7",SEMIO_UNIT_CACHE_LANE_ROOT:m.lane,SEMIO_UNIT_CACHE_WORKSPACE_ROOT:m.root,SEMIO_UNIT_CACHE_INNER:JSON.stringify([rustc!]),SEMIO_UNIT_CACHE_TOOLCHAIN:"k7-test",CARGO_PKG_NAME:"data",CARGO_PKG_VERSION:"1.0.0",CARGO_MANIFEST_DIR:package_,PWD:m.root,RUSTC_BOOTSTRAP:"1",SEMIO_CAS_ROOT:m.cas,SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"5",SEMIO_OFFLOAD:"never"} as Record<string,string|undefined>;
  delete environment.SEMIO_MACHINE_STATE_DIRECTORY;process.env.SEMIO_CAS_ROOT=m.cas;
  const before=readLookupsV1(m.cache).length,write=process.stdout.write.bind(process.stdout),err=process.stderr.write.bind(process.stderr);
@@ -80,4 +82,6 @@ real("a data file the scan cannot reach is part of the unit key from the first c
  const stale=await compile(b,server,grown,both);
  expect(stale.map(row=>row.outcome),"a machine with the old manifest looks again before compiling and hits").toEqual(["fleet-hit"]);
  const changed=await compile(d,server,grown,{"data.txt":"second","more.txt":"changed"});expect(changed.map(row=>row.outcome),"the new file is keyed").toEqual(["miss"]);
+ const foreign=machine("e","h/i","3344556677889900","aaaabbbbccccdddd");
+ expect((await compile(foreign,server,one,data1)).map(row=>row.outcome),"another Cargo unit identity (its `-C extra-filename`) is its own key space and never a fleet hit").toEqual(["miss"]);
 },900000);

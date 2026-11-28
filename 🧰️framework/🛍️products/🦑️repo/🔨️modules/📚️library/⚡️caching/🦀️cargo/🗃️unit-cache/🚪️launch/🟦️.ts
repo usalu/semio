@@ -1,22 +1,25 @@
 import {availableParallelism,setPriority} from "node:os";
 import {spawn,spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
-import {sealModulesV1,type SealedModulesV1} from "../🏛️seal/🟦️.ts";
+import {leaseSealedV1,sealModulesV1,type SealedModulesV1} from "../🏛️seal/🟦️.ts";
 import {jobserverProbeShellV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
+import {retryOnImageFullV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {releaseBallastV1} from "../🧹️gc/🛟️ballast/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetCacheRootV1,readLocalFleetCacheFactsV1,resolveRemoteCacheV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 /** 📍️ The wrapper script Cargo runs in place of rustc. */
-export const UNIT_CACHE_SCRIPT_V1=fileURLToPath(new URL("../📜️script.ts",import.meta.url));
+export const UNIT_CACHE_SCRIPT_V1=fileURLToPath(new URL("../📜️script.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)));
 /** 🏁️ The module a native compiler wrapper is built from. */
-export const UNIT_CACHE_ENTRY_V1=fileURLToPath(new URL("../🏁️entry.ts",import.meta.url));
+export const UNIT_CACHE_ENTRY_V1=fileURLToPath(new URL("../🏁️entry.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)));
 
 /** 🎯️ The package names a Cargo command line selects with `-p` or `--package`; their units always compile incrementally in the lane and are never published, while every other unit is served from the shared cache first (a workspace unit that misses still compiles with its incremental session in the lane). */
 export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
@@ -30,8 +33,8 @@ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
  return[...new Set(names)].sort();
 }
 
-/** 🏛️ Seals the module set the compiler wrapper runs (script and native entry, with every file they import) into the cache root and answers the sealed copies: every process of one build session runs this snapshot, so a concurrent edit of the live tooling reaches the next session only, and a tree that is mid-edit is retried and never sealed (see {@link sealModulesV1}). */
-export function sealedUnitCacheV1(cacheRoot:string,runtime:string=process.execPath):SealedModulesV1{return sealModulesV1(cacheRoot,[UNIT_CACHE_SCRIPT_V1,UNIT_CACHE_ENTRY_V1],{checked:[UNIT_CACHE_SCRIPT_V1],runtime});}
+/** 🏛️ Seals the module set the compiler wrapper runs (script and native entry, with every file they import) into the cache root and answers the sealed copies: every process of one build session runs this snapshot, which this process leases for as long as it lives ({@link leaseSealedV1}: the collector of a peer never retires a snapshot a running build uses), so a concurrent edit of the live tooling reaches the next session only, and a tree that is mid-edit is retried and never sealed (see {@link sealModulesV1}). */
+export function sealedUnitCacheV1(cacheRoot:string,runtime:string=process.execPath):SealedModulesV1{return sealModulesV1(cacheRoot,[UNIT_CACHE_SCRIPT_V1,UNIT_CACHE_ENTRY_V1],{checked:[UNIT_CACHE_SCRIPT_V1],runtime,lease:{}});}
 
 /** 📜️ The executable compiler wrapper of a process that names it in its environment (`SEMIO_UNIT_CACHE_WRAPPER`, the one `RUSTC_WRAPPER` convention of {@link unitCacheEnvironmentV1}), or `undefined` after a bilingual notice when no wrapper could be made (the unit cache is then off for that process, never half-working). `RUSTC` is never the wrapper. */
 export function unitCacheWrapperV1(cacheRoot:string,report:(line:string)=>void=line=>{process.stderr.write(line+"\n");}):string|undefined{
@@ -157,8 +160,9 @@ export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacity
   try{if(statSync(log).size>UNIT_CACHE_POLICY_V1.gc.eventLogMaximumBytes)renameSync(log,log+".1");}catch{}
   const fd=openSync(log,"a");
   try{
-   const child=spawn(options.runtime??process.execPath,[options.script??sealedUnitCacheV1(options.root,options.runtime).entries[0]!,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
+   const sealed=options.script===undefined?sealedUnitCacheV1(options.root,options.runtime):undefined,child=spawn(options.runtime??process.execPath,[options.script??sealed!.entries[0]!,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
    child.on("error",error=>{try{appendFileSync(log,"launch failed: "+error.message+"\n");}catch{}});child.unref();
+   if(child.pid!==undefined&&sealed!==undefined)try{leaseSealedV1(options.root,sealed.digest,{pid:child.pid});}catch{}
    if(child.pid!==undefined)try{setPriority(child.pid,10);}catch(error){appendFileSync(log,"priority not lowered: "+String((error as Error).message)+"\n");}
   }finally{closeSync(fd);}
   return{state:"started"};
@@ -197,15 +201,11 @@ export async function withUnitPressureRecheckV1<T>(recheck:()=>Promise<unknown>,
 export type UnitRecheckTimerV1=(tick:()=>void,milliseconds:number)=>()=>void;
 const realRecheckTimerV1:UnitRecheckTimerV1=(tick,milliseconds)=>{const timer=setInterval(tick,milliseconds);timer.unref?.();return()=>clearInterval(timer);};
 
-/** 🪐️ Runs a build once more after it failed with the operating system's out-of-space error: the unit cache of the store is collected right now (single-flight) and the failure that came back from the first run is only rethrown when the second run fails too or the error was something else. */
-export async function retryAfterOutOfSpaceV1<T>(options:Readonly<{store:string;language:"en"|"de";report:(line:string)=>void}>,run:()=>Promise<T>):Promise<T>{
- try{return await run();}
- catch(error){
-  const text=[(error as Error)?.message,(error as {cause?:{message?:string}})?.cause?.message,String(error)].filter(Boolean).join("\n");
-  if(!gcOutOfSpaceV1(text))throw error;
-  const root=unitCacheRootV1(options.store);await collectAfterOutOfSpaceV1({root,capacityBytes:measureVolumeV1(root,1).volumeBytes,language:options.language,report:options.report});
-  return await run();
- }
+/** 🪐️ Runs a build again after it failed with the operating system's out-of-space error: the ballast of the cache root is given back, the unit cache of the store is collected right now (single-flight) and the build is retried with a backoff while the host recovers, `attempts` times; a failure that is no full disk is rethrown at once, and a build that stays refused ends in the typed refusal `NativeImageFullErrorV1` that names the image, its usable and inside free bytes and the host.
+ * @see ../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts */
+export async function retryAfterOutOfSpaceV1<T>(options:Readonly<{store:string;language:"en"|"de";report:(line:string)=>void;sleep?:(milliseconds:number)=>Promise<void>}>,run:()=>Promise<T>):Promise<T>{
+ const root=unitCacheRootV1(options.store),facts=()=>{const volume=measureVolumeV1(root,1),space=nativeFreeSpaceSyncV1(root);return{image:root,partition:options.store,capacityBytes:volume.volumeBytes,availableBytes:volume.freeBytes,innerFreeBytes:volume.freeBytes,hostFreeBytes:space?.availableBytes??0};};
+ return retryOnImageFullV1(run,{image:root,facts,release:()=>releaseBallastV1(root),reclaim:async()=>{const applied=await collectAfterOutOfSpaceV1({root,capacityBytes:measureVolumeV1(root,1).volumeBytes,language:options.language,report:options.report});return applied.units+applied.lanes+applied.sessions+applied.incremental;},sleep:options.sleep??(milliseconds=>new Promise<void>(done=>setTimeout(done,milliseconds)))});
 }
 
 /** 🛑️ After a compile ran out of space: collects once, right now, and says so in the selected language. The caller retries its command once and calls `reportUnitCacheStillFullV1` if that fails the same way. */
@@ -226,4 +226,21 @@ export async function retryWhenFullV1<E extends Readonly<{full:boolean}>>(run:()
 /** 🧾️ The retry failed the same way: the space is held by running lanes, not by anything collectable. */
 export function reportUnitCacheStillFullV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void}>):void{
  const volume=measureVolumeV1(options.root,options.capacityBytes);options.report(laneMessageV1("stillFull",{freeGib:gib(volume.freeBytes),volumeGib:gib(volume.volumeBytes)},options.language));
+}
+
+/** 🈵️ After a compile in a lane found its image full and nothing reclaimable (the retry failed the same way): records the capacity as the peak the crate set needs (so the next birth and the next growth aim above it), decides from the growth plan whether the image grows when no build holds it or is capped, and says which in the selected language: the typed refusal of a full lane, never a silent restart from an empty lane. Answers the verdict, `undefined` for a lane without an image of its own. Never throws. */
+export async function reportLaneFullV1(options:Readonly<{root:string;lane:string;language:"en"|"de";report:(line:string)=>void}>):Promise<{kind:"grows";targetBytes:number}|{kind:"capped";reason:string}|undefined>{
+ try{
+  const image=await import("../🧵️lane/🏊️pool/🧩️image/🟦️.ts"),lane=await import("../🧵️lane/🟦️.ts"),shard=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts");
+  const ports=await image.laneImagePortsV1(options.root);if(ports===undefined)return undefined;
+  const live=shard.nativeImageShardFoldV1(shard.readNativeImageShardLedgerV1(ports.directory)),record=[...live.values()].find(row=>row.path===image.laneImagePathV1(options.lane));if(record===undefined)return undefined;
+  const facts=ports.measure?.(shard.nativeImageShardLayoutV1(ports.directory,record));if(facts===undefined)return undefined;
+  const key=lane.readLaneV1(options.root,options.lane)?.crateKey,peak=Math.max(record.capacityBytes,facts.usedBytes,lane.readLaneSizeV1(options.root,options.lane)?.bytes??0);
+  if(key!==undefined)lane.recordLanePeakV1(options.root,key,peak);
+  const budget=ports.budgetBytes?.(),room=Math.min(budget===undefined?Infinity:budget-shard.nativeImageShardCommittedBytesV1(live,record.root),image.laneImageHostRoomBytesV1(ports)??Infinity),keep=ports.hostFreeFloorBytes?.();
+  const verdict=image.laneFullVerdictV1(ports.platform,ports.rule,{capacityBytes:record.capacityBytes,usedBytes:facts.usedBytes,peakBytes:peak,hostFreeBytes:facts.hostFreeBytes,...keep===undefined?{}:{hostKeepBytes:keep},...Number.isFinite(room)?{budgetRoomBytes:room}:{}});
+  const parameters={lane:options.lane,usedGib:gib(facts.usedBytes),capacityGib:gib(record.capacityBytes)};
+  options.report(verdict.kind==="grows"?laneMessageV1("laneFullGrows",{...parameters,targetGib:gib(verdict.targetBytes)},options.language):laneMessageV1("laneFullCapped",{...parameters,reason:verdict.reason},options.language));
+  return verdict;
+ }catch{return undefined;}
 }

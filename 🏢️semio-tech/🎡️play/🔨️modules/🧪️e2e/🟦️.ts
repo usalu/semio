@@ -1,5 +1,9 @@
 import { scriptInvocationEnvironment, withScriptInvocationSignalV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
+import { readdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { exposeServiceToFleetV1, FLEET_SERVICE_ENVIRONMENT_V1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🛰️fleet-service/🟦️.ts";
+import { readyRepoBinaryV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
 import { createRequire } from "node:module";
 import { BundleScript } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
@@ -30,13 +34,38 @@ export class TestScript extends BundleScript {
       const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
       const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(service.owner, progress, language)) });
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
-      console.log(`Testing play at ${baseURL}`);
-      const cli = resolve(createRequire(join(root, "package.json")).resolve("playwright/package.json"), "../cli.js");
-      const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(this.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
-      const status = await toolExitV1(child);
-      if (status !== 0 && !signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
+      await this.exercise(baseURL, signal, output, root);
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
+  /** 🎭️ Runs the Playwright acceptance suite against the ready service. */
+  protected async exercise(baseURL: string, signal: AbortSignal, output: string, root: string): Promise<void> {
+    console.log(`Testing play at ${baseURL}`);
+    const cli = resolve(createRequire(join(root, "package.json")).resolve("playwright/package.json"), "../cli.js");
+    const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(this.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
+    const status = await toolExitV1(child);
+    if (status !== 0 && !signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
+  }
+}
+
+/** 🧮️ Runs the accessible interaction matrix of one app (`🧪️tests/🧮️matrix/<matrix>/🧪️tests`, one file per row plus the mount file) through `repo test-file` against the same isolated service: the service is relayed to the fleet network for the run only and its origin forwarded, so the files spread over idle machines (`SEMIO_TEST_FILE_OFFLOAD`, default `always` while a relay exists, `never` without one) with results identical to a local run.
+ * @see ../../🧪️tests/🧮️matrix/🟦️.ts */
+export class TestMatrixScript extends TestScript {
+  protected matrix = "";
+  protected override async exercise(baseURL: string, signal: AbortSignal): Promise<void> {
+    const directory = join(resolve(this.root, "../.."), "🧪️tests/🧮️matrix", this.matrix, "🧪️tests");
+    const files = readdirSync(directory, { recursive: true, encoding: "utf8" }).filter(file => file.endsWith("🟦️.ts")).sort().map(file => relative(this.repoRoot, join(directory, file)));
+    if (files.length === 0) throw new Error(`Play matrix ${this.matrix} has no test files in ${directory}`);
+    const relay = await exposeServiceToFleetV1(baseURL, process.env), origin = relay?.origin ?? baseURL, offload = relay === undefined ? "never" : process.env.SEMIO_TEST_FILE_OFFLOAD ?? "always";
+    try {
+      console.log(`Testing the ${this.matrix} matrix at ${origin}: ${files.length} files, offload ${offload}`);
+      await runOwnedCommand(readyRepoBinaryV1(homedir(), process.env) ?? "repo", ["test-file", "--", ...files], this.repoRoot, "play:matrix", 0, { signal, env: { ...process.env, [FLEET_SERVICE_ENVIRONMENT_V1.origin]: origin, SEMIO_TEST_FILE_OFFLOAD: offload } });
+    } finally { await relay?.close(); }
+  }
+}
+
+/** 📋️ The Forms matrix. */
+export class TestMatrixFormsScript extends TestMatrixScript {
+  protected override matrix = "📋️forms";
 }
 
 /** 🧊️ Keeps the original build-tool service and a single browser for current Enduser workflows. */

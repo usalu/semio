@@ -1272,6 +1272,19 @@
       ]
     },
     {
+      "id": "build-checkout-snapshot",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🏗️build/📸️checkout-snapshot"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "module-basics",
       "budgetMs": 300000,
       "typecheck": "none",

@@ -109,9 +109,11 @@ codegen-units = 64
 opt-level = 1
 codegen-units = 64
 
-# 🚀️ The in-repo guest interpreter is the hot loop of every native guest turn: at `opt-level = 0` a cold `Event::InstanceOpen`
-# of a real plugin component executes ~4 M guest instructions per second and exhausts the 210 s open wall budget with
-# 838 M instructions spent and zero completed turns. Only the executing crates are optimised; the surrounding host stays unoptimised.
+# 🚀️ Native guest turns are metered per scalar by the original Source job crates and executed by the in-repo interpreter. At
+# `opt-level = 0` a cold `Event::InstanceOpen` of a real plugin component advances ~4 M fuel units per second (profiled: `CoreInstanceOpening::advance_scalars`
+# plus the return-budget, step-context, clock and escrow accounting) and exhausts the 210 s open wall budget at 838 M units with zero completed turns.
+# Only the metering and executing crates are optimised; the surrounding host stays unoptimised.
+
 [profile.dev.package.semio-plugin-interpreter]
 opt-level = 3
 
@@ -122,4 +124,40 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.semio-plugin-interpreter-imports]
+opt-level = 3
+
+[profile.dev.package.semio-framework-job-return-budget]
+opt-level = 3
+
+[profile.dev.package.semio-framework-job-payload]
+opt-level = 3
+
+[profile.dev.package.semio-framework-job-context-step]
+opt-level = 3
+
+[profile.dev.package.semio-framework-job-clock]
+opt-level = 3
+
+[profile.dev.package.semio-framework-value-control-physical]
+opt-level = 3
+
+[profile.dev.package.semio-framework-job]
+opt-level = 3
+
+[profile.dev.package.semio-framework-value]
+opt-level = 3
+
+[profile.dev.package.semio-framework-actor]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-host-post-turn-relay]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-host-wake]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-host-guest-runtime]
+opt-level = 3
+
+[profile.dev.package.semio-plugin-host-poll]
 opt-level = 3

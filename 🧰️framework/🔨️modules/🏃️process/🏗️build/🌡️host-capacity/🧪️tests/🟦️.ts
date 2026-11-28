@@ -131,6 +131,12 @@ test("Elastic waiters stay behind every other request but are served interactive
  expect(orderHostWaitersV1(waiters).map(row=>row.request.id)).toEqual(["hhhhhhhh1","ffffffff1","eeeeeeee1","gggggggg1"]);
 });
 
+test("The growth of a grant that retains its reservation is served by its priority and arrival, the growth of any other grant stays behind every request",()=>{
+ const base=fixture.cases[0]!.queue[0]!.request,make=(id:string,arrivedAtMs:number,extra:object,grow=false):HostWaiterV1=>({request:{...base,id,...extra} as never,arrivedAtMs,pid:1,...grow?{grow:true,upgrade:true}:{}});
+ const waiters=[make("newcome01",5,{priority:"interactive"}),make("growth001",9,{priority:"interactive",retainReservation:true},true),make("otherg001",1,{priority:"interactive",retainReservation:false},true),make("olderone1",2,{priority:"interactive"}),make("latecome1",12,{priority:"interactive"})];
+ expect(orderHostWaitersV1(waiters).map(row=>row.request.id)).toEqual(["olderone1","newcome01","growth001","latecome1","otherg001"]);
+});
+
 test("The floor follows the host between the authored bounds",()=>{
  expect([2048,8192,16384,32768,65536,262144].map(total=>hostFloorMegabytesV1(policy,{totalMegabytes:total}))).toEqual([2048,4096,4096,6553,8192,8192]);
 });
@@ -174,7 +180,7 @@ test("Every refusal has an English and a German message with the same placeholde
  const english=schema.definitions.Messages.const.en.errors,german=schema.definitions.Messages.const.de.errors,names=Object.keys(english) as (keyof typeof english)[];
  expect(Object.keys(german).sort()).toEqual([...names].sort());
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
- const values={id:"newerGrant1",definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)",minimum:2048,cores:4,reserved:1024,availablecores:2,held:3054,possible:2048,granted:3054,free:512};
+ const values={id:"newerGrant1",definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)",minimum:2048,cores:4,reserved:1024,availablecores:2,held:3054,possible:2048,granted:3054,free:512,foreign:4096,count:4,victim:"run",released:1536};
  for(const name of names){
   expect(placeholders(german[name]),name).toEqual(placeholders(english[name]));
   for(const language of ["en","de"] as const)expect(formatHostCapacityErrorV1(language,name,values),`${language} ${name}`).not.toMatch(/\{[a-z]+\}/u);
@@ -294,7 +300,7 @@ test("Property over 600 random queues: a lent request changes no other decision,
   const base=randomHostCaseV1(random,index),own=(id:string)=>({request:{id,operation:"exec",priority:"lent" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:512+Math.floor(random()*4)*512,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:0,pid:1});
   const lent=own(`lent${index}xxxxxx`),batch={...lent,request:{...lent.request,priority:"batch" as const}};
   const without=evaluateHostCapacityV1(policy,base.host,base.ledger,base.queue,base.nowMs),withLent=evaluateHostCapacityV1(policy,base.host,base.ledger,[...base.queue,lent],base.nowMs);
-  expect(withLent.decisions.filter(row=>row.id!==lent.request.id),String(index)).toEqual(without.decisions);
+  expect<unknown>(withLent.decisions.filter(row=>row.id!==lent.request.id),String(index)).toEqual(without.decisions);
   const verdict=withLent.decisions.find(row=>row.id===lent.request.id)!,othersWait=without.decisions.some(row=>row.verdict==="wait");
   if(verdict.verdict==="admit"){lentAdmitted++;expect(othersWait,String(index)).toBe(false);}
   if(othersWait){expect(verdict.verdict,String(index)).toBe("wait");const control=evaluateHostCapacityV1(policy,base.host,base.ledger,[...base.queue,batch],base.nowMs).decisions.find(row=>row.id===lent.request.id)!;if(control.verdict==="admit")overtook++;}

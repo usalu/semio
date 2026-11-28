@@ -183,7 +183,7 @@ describe("🧊️ a bone beside the symmetry plane (Bone.z)", () => {
 });
 
 describe("🧊️ the herring gull spreads its wings", () => {
-  const gull = catalog().find((candidate) => candidate.id === "herring-gull")!;
+  const gull = catalog(["herring-gull"]).find((candidate) => candidate.id === "herring-gull")!;
   const wing = (shoulder: string): ReadonlySet<string> => {
     const bones = new Set([shoulder]);
     for (let grown = true; grown; ) {

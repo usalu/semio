@@ -1,0 +1,22 @@
+  "policy": {"perCoreAlways": 1.5, "perCoreMeasured": 0.75, "remoteWorthRatio": 0.8, "maximumAgeSeconds": 3600, "maximumFiles": 256, "file": "offload-test-measure.json"},
+  "load": [
+    {"name": "at the always threshold the file leaves without any measure", "loadPerCore": 1.5, "local": null, "remote": null, "verdict": "offload"},
+    {"name": "far above the always threshold the file leaves even when the remote run is measured as worthless", "loadPerCore": 4.2, "local": {"seconds": 10, "ageSeconds": 10}, "remote": {"seconds": 30, "ageSeconds": 10}, "verdict": "offload"},
+    {"name": "below the measured threshold the file stays", "loadPerCore": 0.5, "local": {"seconds": 100, "ageSeconds": 10}, "remote": {"seconds": 1, "ageSeconds": 10}, "verdict": "keep"},
+    {"name": "between the thresholds an unmeasured file leaves to learn its remote duration", "loadPerCore": 1.0, "local": null, "remote": null, "verdict": "offload"},
+    {"name": "between the thresholds a file measured much faster remotely leaves", "loadPerCore": 1.0, "local": {"seconds": 100, "ageSeconds": 60}, "remote": {"seconds": 14, "ageSeconds": 60}, "verdict": "offload"},
+    {"name": "between the thresholds a file measured as fast remotely as here stays", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 9, "ageSeconds": 60}, "verdict": "keep"},
+    {"name": "the remote run must be shorter than the worth ratio of the local one", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 7.9, "ageSeconds": 60}, "verdict": "offload"},
+    {"name": "a remote duration exactly at the worth ratio does not pay", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 8, "ageSeconds": 60}, "verdict": "keep"},
+    {"name": "a stale measure is ignored", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 30, "ageSeconds": 4000}, "verdict": "offload"},
+    {"name": "only a local duration is no proof that the remote run is worthless", "loadPerCore": 1.0, "local": {"seconds": 10, "ageSeconds": 60}, "remote": null, "verdict": "offload"},
+    {"name": "exactly at the measured threshold the measures decide", "loadPerCore": 0.75, "local": {"seconds": 10, "ageSeconds": 60}, "remote": {"seconds": 20, "ageSeconds": 60}, "verdict": "keep"}
+  ],
+  "gateLoad": [
+    {"name": "a saturated host that admits offers the file when a machine is idle", "mode": "auto", "host": "admit", "load": "offload", "idle": 3, "offload": true, "reason": "host-load", "asked": ["host", "load", "idle"]},
+    {"name": "a host that admits and is not saturated keeps the file", "mode": "auto", "host": "admit", "load": "keep", "idle": 3, "offload": false, "reason": "local-slot", "asked": ["host", "load"]},
+    {"name": "a host that says wait never asks the load", "mode": "auto", "host": "wait", "load": "keep", "idle": 3, "offload": true, "reason": "host-wait", "asked": ["host", "idle"]},
+    {"name": "a saturated host with no idle machine keeps the file", "mode": "auto", "host": "admit", "load": "offload", "idle": 0, "offload": false, "reason": "no-idle-machine", "asked": ["host", "load", "idle"]},
+    {"name": "always never asks the load", "mode": "always", "host": "admit", "load": "keep", "idle": 1, "offload": true, "reason": "always", "asked": ["idle"]},
+    {"name": "never asks nothing", "mode": "never", "host": "wait", "load": "offload", "idle": 5, "offload": false, "reason": "never", "asked": []}
+  ],

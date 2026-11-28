@@ -1,0 +1,5390 @@
+{
+"rule": {
+"enabled": true,
+"headroomPercent": 100,
+"hostFreeReservePercent": 66,
+"roots": [
+{
+"prefix": "u/l",
+"pattern": "^[a-z0-9]{1,12}$",
+"needBytes": 8589934592
+},
+{
+"prefix": "u",
+"pattern": "^(sealed|w)$",
+"needBytes": 4294967296
+},
+{
+"prefix": "",
+"pattern": "^(cargo|components)$",
+"needBytes": 8589934592
+}
+]
+},
+"growth": [
+{
+"name": "below threshold",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 10737418240,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "m12 cargo shard full, host 15 GB",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 16106127360,
+"held": false
+}
+},
+{
+"name": "same but held by cargo",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 16106127360,
+"held": true
+}
+},
+{
+"name": "host keeps 3 GiB",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 4294967296,
+"held": false
+}
+},
+{
+"name": "at cap",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 34359738368,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "measured pushes growth",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 12884901888,
+"usedBytes": 3221225472,
+"measuredBytes": 11811160064,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "budget room only 2 GiB",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 16106127360,
+"hostFreeBytes": 107374182400,
+"budgetRoomBytes": 2147483648,
+"held": false
+}
+},
+{
+"name": "budget exhausted",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 16106127360,
+"hostFreeBytes": 107374182400,
+"budgetRoomBytes": 0,
+"held": false
+}
+},
+{
+"name": "linux online while held",
+"platform": "linux",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 107374182400,
+"held": true
+}
+},
+{
+"name": "windows detached",
+"platform": "win32",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "unknown platform",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "keep raised by machine floor, clamped",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 17179869184,
+"hostFreeBytes": 32212254720,
+"hostKeepBytes": 53687091200,
+"held": false
+}
+},
+{
+"name": "used 14 of 16 grows",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 15032385536,
+"hostFreeBytes": 107374182400,
+"held": false
+}
+},
+{
+"name": "random 0",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 17850497701,
+"hostFreeBytes": 17003756066,
+"held": true,
+"budgetRoomBytes": -130946248
+}
+},
+{
+"name": "random 1",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 30803555707,
+"hostFreeBytes": 127776244247,
+"held": false,
+"measuredBytes": 35033160082
+}
+},
+{
+"name": "random 2",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 5542668000,
+"hostFreeBytes": 34362660517,
+"held": true,
+"measuredBytes": 23095550629,
+"hostKeepBytes": 5875782990
+}
+},
+{
+"name": "random 3",
+"platform": "linux",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 36785024034,
+"hostFreeBytes": 38913208928,
+"held": false,
+"budgetRoomBytes": -328501708
+}
+},
+{
+"name": "random 4",
+"platform": "win32",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 11646229988,
+"hostFreeBytes": 47474439567,
+"held": false
+}
+},
+{
+"name": "random 5",
+"platform": "linux",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 16309181042,
+"hostFreeBytes": 19911925538,
+"held": false,
+"measuredBytes": 11851729065,
+"hostKeepBytes": 2876784643
+}
+},
+{
+"name": "random 6",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 2461462941,
+"hostFreeBytes": 15113755873,
+"held": true,
+"measuredBytes": 29238025566,
+"budgetRoomBytes": 18850277172
+}
+},
+{
+"name": "random 7",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 29872031790,
+"hostFreeBytes": 65321323742,
+"held": true,
+"measuredBytes": 6661866110
+}
+},
+{
+"name": "random 8",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 16106127360,
+"usedBytes": 12840382529,
+"hostFreeBytes": 96123522511,
+"held": true,
+"hostKeepBytes": 7292205141,
+"budgetRoomBytes": 22952595884
+}
+},
+{
+"name": "random 9",
+"platform": "linux",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 15615575729,
+"hostFreeBytes": 75209692977,
+"held": false,
+"measuredBytes": 7222453585
+}
+},
+{
+"name": "random 10",
+"platform": "linux",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 18453819981,
+"hostFreeBytes": 65683476648,
+"held": false,
+"measuredBytes": 45361343145
+}
+},
+{
+"name": "random 11",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 10036542535,
+"hostFreeBytes": 4680185440,
+"held": false,
+"measuredBytes": 24532116390,
+"budgetRoomBytes": 7862590125
+}
+},
+{
+"name": "random 12",
+"platform": "linux",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 17460123611,
+"hostFreeBytes": 12103858433,
+"held": false
+}
+},
+{
+"name": "random 13",
+"platform": "linux",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 6128266853,
+"hostFreeBytes": 94329355080,
+"held": true,
+"measuredBytes": 26968987900,
+"budgetRoomBytes": 14111173021
+}
+},
+{
+"name": "random 14",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 31987981461,
+"hostFreeBytes": 2219122322,
+"held": true,
+"measuredBytes": 29567548272
+}
+},
+{
+"name": "random 15",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 5447233384,
+"hostFreeBytes": 70082019978,
+"held": true,
+"measuredBytes": 19536762475,
+"budgetRoomBytes": 19881650425
+}
+},
+{
+"name": "random 16",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 25769803776,
+"usedBytes": 2236521814,
+"hostFreeBytes": 73979614697,
+"held": true,
+"budgetRoomBytes": 5575843533
+}
+},
+{
+"name": "random 17",
+"platform": "win32",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 2319449175,
+"hostFreeBytes": 71562552966,
+"held": true,
+"measuredBytes": 37474348378,
+"budgetRoomBytes": 22381700465
+}
+},
+{
+"name": "random 18",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 1039309696,
+"hostFreeBytes": 40787048925,
+"held": false
+}
+},
+{
+"name": "random 19",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 2150335891,
+"hostFreeBytes": 60332866512,
+"held": true,
+"measuredBytes": 35900894719
+}
+},
+{
+"name": "random 20",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 10739272969,
+"hostFreeBytes": 73824359762,
+"held": true,
+"hostKeepBytes": 4707112463,
+"budgetRoomBytes": 18173783168
+}
+},
+{
+"name": "random 21",
+"platform": "linux",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 32583500503,
+"hostFreeBytes": 62494253842,
+"held": false,
+"measuredBytes": 43505610811,
+"hostKeepBytes": 4962787329
+}
+},
+{
+"name": "random 22",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 20548970301,
+"hostFreeBytes": 128093832537,
+"held": true,
+"budgetRoomBytes": 28467242474
+}
+},
+{
+"name": "random 23",
+"platform": "linux",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 11130729682,
+"hostFreeBytes": 121454767228,
+"held": true,
+"budgetRoomBytes": 37727104169
+}
+},
+{
+"name": "random 24",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 1267606183,
+"hostFreeBytes": 56542492399,
+"held": false,
+"measuredBytes": 27361494883,
+"budgetRoomBytes": 38829250361
+}
+},
+{
+"name": "random 25",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 15358360306,
+"hostFreeBytes": 8790405859,
+"held": true,
+"measuredBytes": 47596121318,
+"budgetRoomBytes": 22758444379
+}
+},
+{
+"name": "random 26",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 588310615,
+"hostFreeBytes": 84374570073,
+"held": true,
+"measuredBytes": 26195143991
+}
+},
+{
+"name": "random 27",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 5442511951,
+"hostFreeBytes": 98850991783,
+"held": false,
+"hostKeepBytes": 6643711040
+}
+},
+{
+"name": "random 28",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 14012019661,
+"hostFreeBytes": 64952481489,
+"held": true
+}
+},
+{
+"name": "random 29",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 19297739764,
+"hostFreeBytes": 91258715398,
+"held": false
+}
+},
+{
+"name": "random 30",
+"platform": "linux",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 33442434946,
+"hostFreeBytes": 51488868873,
+"held": true,
+"measuredBytes": 31964539059
+}
+},
+{
+"name": "random 31",
+"platform": "linux",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 12336972171,
+"hostFreeBytes": 82550139160,
+"held": false
+}
+},
+{
+"name": "random 32",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 21675911094,
+"hostFreeBytes": 96034414061,
+"held": false,
+"measuredBytes": 1310190992
+}
+},
+{
+"name": "random 33",
+"platform": "win32",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 33414910869,
+"hostFreeBytes": 81051144532,
+"held": true,
+"measuredBytes": 1033108800
+}
+},
+{
+"name": "random 34",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 7995687094,
+"hostFreeBytes": 69370466243,
+"held": true,
+"hostKeepBytes": 3740790878
+}
+},
+{
+"name": "random 35",
+"platform": "linux",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 12144443464,
+"hostFreeBytes": 82655613321,
+"held": true,
+"measuredBytes": 6246532153,
+"budgetRoomBytes": 20864993428
+}
+},
+{
+"name": "random 36",
+"platform": "linux",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 6445926061,
+"hostFreeBytes": 58515642699,
+"held": false
+}
+},
+{
+"name": "random 37",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 23023024890,
+"hostFreeBytes": 65425338093,
+"held": false,
+"measuredBytes": 44143614657,
+"budgetRoomBytes": 34442145907
+}
+},
+{
+"name": "random 38",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 12396538299,
+"hostFreeBytes": 20824970776,
+"held": true
+}
+},
+{
+"name": "random 39",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 3891764750,
+"hostFreeBytes": 79069179682,
+"held": true,
+"measuredBytes": 26690120923
+}
+},
+{
+"name": "random 40",
+"platform": "linux",
+"facts": {
+"capacityBytes": 12884901888,
+"usedBytes": 697764788,
+"hostFreeBytes": 78401273768,
+"held": true,
+"budgetRoomBytes": 37118317854
+}
+},
+{
+"name": "random 41",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 16403553617,
+"hostFreeBytes": 51018828290,
+"held": false,
+"hostKeepBytes": 3747101004
+}
+},
+{
+"name": "random 42",
+"platform": "linux",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 5199432639,
+"hostFreeBytes": 15828442753,
+"held": false,
+"measuredBytes": 1592815404
+}
+},
+{
+"name": "random 43",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 5627468037,
+"hostFreeBytes": 69881324807,
+"held": false,
+"measuredBytes": 46110095086,
+"hostKeepBytes": 5926543153
+}
+},
+{
+"name": "random 44",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 22219361161,
+"hostFreeBytes": 102430565877,
+"held": true
+}
+},
+{
+"name": "random 45",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 30842728063,
+"hostFreeBytes": 22300170808,
+"held": false,
+"hostKeepBytes": 5053594549,
+"budgetRoomBytes": 29272291135
+}
+},
+{
+"name": "random 46",
+"platform": "linux",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 1209424695,
+"hostFreeBytes": 111590525455,
+"held": false,
+"hostKeepBytes": 11901656968
+}
+},
+{
+"name": "random 47",
+"platform": "win32",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 1785367443,
+"hostFreeBytes": 109735695277,
+"held": false
+}
+},
+{
+"name": "random 48",
+"platform": "win32",
+"facts": {
+"capacityBytes": 5368709120,
+"usedBytes": 2468371111,
+"hostFreeBytes": 96142227963,
+"held": true,
+"measuredBytes": 7573420992,
+"hostKeepBytes": 12118549847
+}
+},
+{
+"name": "random 49",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 7451394021,
+"hostFreeBytes": 72346892381,
+"held": false
+}
+},
+{
+"name": "random 50",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 12884901888,
+"usedBytes": 352818614,
+"hostFreeBytes": 28125045346,
+"held": true,
+"measuredBytes": 19940477774
+}
+},
+{
+"name": "random 51",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 6347823123,
+"hostFreeBytes": 58431596765,
+"held": true,
+"budgetRoomBytes": 21241301332
+}
+},
+{
+"name": "random 52",
+"platform": "linux",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 9261915108,
+"hostFreeBytes": 36328711792,
+"held": false,
+"hostKeepBytes": 10052071309
+}
+},
+{
+"name": "random 53",
+"platform": "win32",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 15291533363,
+"hostFreeBytes": 77931177261,
+"held": false,
+"hostKeepBytes": 8820976564
+}
+},
+{
+"name": "random 54",
+"platform": "linux",
+"facts": {
+"capacityBytes": 42949672960,
+"usedBytes": 38012120016,
+"hostFreeBytes": 9431161812,
+"held": true
+}
+},
+{
+"name": "random 55",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 1325920578,
+"hostFreeBytes": 11997352914,
+"held": false,
+"measuredBytes": 16716125814,
+"hostKeepBytes": 11669085638
+}
+},
+{
+"name": "random 56",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 1362665782,
+"hostFreeBytes": 55395390940,
+"held": true
+}
+},
+{
+"name": "random 57",
+"platform": "linux",
+"facts": {
+"capacityBytes": 31138512896,
+"usedBytes": 728434015,
+"hostFreeBytes": 18451579536,
+"held": true
+}
+},
+{
+"name": "random 58",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 26949521446,
+"hostFreeBytes": 118661089570,
+"held": true,
+"hostKeepBytes": 7865057822
+}
+},
+{
+"name": "random 59",
+"platform": "linux",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 6409565270,
+"hostFreeBytes": 50220534354,
+"held": true,
+"measuredBytes": 6110999229
+}
+},
+{
+"name": "random 60",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 8747958290,
+"hostFreeBytes": 8884717395,
+"held": false,
+"measuredBytes": 7664864187
+}
+},
+{
+"name": "random 61",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 11172682674,
+"hostFreeBytes": 75371790234,
+"held": true,
+"measuredBytes": 25008997608
+}
+},
+{
+"name": "random 62",
+"platform": "win32",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 36858264510,
+"hostFreeBytes": 71037477402,
+"held": false,
+"budgetRoomBytes": 38363415974
+}
+},
+{
+"name": "random 63",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 7009773641,
+"hostFreeBytes": 30466505874,
+"held": false
+}
+},
+{
+"name": "random 64",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 20102117166,
+"hostFreeBytes": 29232492211,
+"held": false,
+"measuredBytes": 20301072824,
+"budgetRoomBytes": 41199000639
+}
+},
+{
+"name": "random 65",
+"platform": "linux",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 2708002242,
+"hostFreeBytes": 116504247782,
+"held": false,
+"budgetRoomBytes": 8721488390
+}
+},
+{
+"name": "random 66",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 35433480192,
+"usedBytes": 7871705099,
+"hostFreeBytes": 36142451857,
+"held": false
+}
+},
+{
+"name": "random 67",
+"platform": "linux",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 28893773019,
+"hostFreeBytes": 127036314306,
+"held": true,
+"measuredBytes": 4428573006
+}
+},
+{
+"name": "random 68",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 1118037059,
+"hostFreeBytes": 102270090838,
+"held": false
+}
+},
+{
+"name": "random 69",
+"platform": "linux",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 3032532982,
+"hostFreeBytes": 111054860203,
+"held": false
+}
+},
+{
+"name": "random 70",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 13597521124,
+"hostFreeBytes": 84295399983,
+"held": false
+}
+},
+{
+"name": "random 71",
+"platform": "linux",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 14390231039,
+"hostFreeBytes": 122293034635,
+"held": true
+}
+},
+{
+"name": "random 72",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 5988032279,
+"hostFreeBytes": 59601838977,
+"held": false,
+"measuredBytes": 45221492940
+}
+},
+{
+"name": "random 73",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 16122944984,
+"hostFreeBytes": 18140035033,
+"held": true
+}
+},
+{
+"name": "random 74",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 21809812583,
+"hostFreeBytes": 46141725425,
+"held": false
+}
+},
+{
+"name": "random 75",
+"platform": "win32",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 130101724,
+"hostFreeBytes": 50836888169,
+"held": false
+}
+},
+{
+"name": "random 76",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 4776756157,
+"hostFreeBytes": 95752117694,
+"held": false,
+"measuredBytes": 36398155599
+}
+},
+{
+"name": "random 77",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 7137665967,
+"hostFreeBytes": 72905806684,
+"held": false
+}
+},
+{
+"name": "random 78",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 5057297857,
+"hostFreeBytes": 95886424419,
+"held": true,
+"measuredBytes": 733440666
+}
+},
+{
+"name": "random 79",
+"platform": "linux",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 6559072213,
+"hostFreeBytes": 61744212408,
+"held": false
+}
+},
+{
+"name": "random 80",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 625481702,
+"hostFreeBytes": 115931428279,
+"held": false
+}
+},
+{
+"name": "random 81",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 29747251615,
+"hostFreeBytes": 40892505108,
+"held": false
+}
+},
+{
+"name": "random 82",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 8168091139,
+"hostFreeBytes": 83405720117,
+"held": false,
+"measuredBytes": 43532722468
+}
+},
+{
+"name": "random 83",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 10737418240,
+"usedBytes": 8219633315,
+"hostFreeBytes": 1887450667,
+"held": true
+}
+},
+{
+"name": "random 84",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 2388988214,
+"hostFreeBytes": 39091568165,
+"held": true,
+"measuredBytes": 38291000056,
+"budgetRoomBytes": 35781064296
+}
+},
+{
+"name": "random 85",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 315004324,
+"hostFreeBytes": 125885502740,
+"held": false
+}
+},
+{
+"name": "random 86",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 1196201832,
+"hostFreeBytes": 100109965696,
+"held": false,
+"measuredBytes": 23492282053
+}
+},
+{
+"name": "random 87",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 13065224302,
+"hostFreeBytes": 41820941959,
+"held": false,
+"hostKeepBytes": 4566735175
+}
+},
+{
+"name": "random 88",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 22760489734,
+"hostFreeBytes": 18042023362,
+"held": false,
+"measuredBytes": 19216778134,
+"budgetRoomBytes": 15013249347
+}
+},
+{
+"name": "random 89",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 10776473924,
+"hostFreeBytes": 6222736910,
+"held": true
+}
+},
+{
+"name": "random 90",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 24661827788,
+"hostFreeBytes": 72504702481,
+"held": false,
+"hostKeepBytes": 10638947618
+}
+},
+{
+"name": "random 91",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 3787501284,
+"hostFreeBytes": 58804871869,
+"held": false,
+"measuredBytes": 6802290535
+}
+},
+{
+"name": "random 92",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 677012918,
+"hostFreeBytes": 80126081550,
+"held": false,
+"measuredBytes": 44048751847
+}
+},
+{
+"name": "random 93",
+"platform": "win32",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 6619199480,
+"hostFreeBytes": 84957657452,
+"held": false,
+"measuredBytes": 30137965838,
+"budgetRoomBytes": 33535097514
+}
+},
+{
+"name": "random 94",
+"platform": "win32",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 3385812319,
+"hostFreeBytes": 51893815889,
+"held": false,
+"measuredBytes": 38538575374,
+"budgetRoomBytes": -652068501
+}
+},
+{
+"name": "random 95",
+"platform": "win32",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 15388983964,
+"hostFreeBytes": 92004596537,
+"held": false,
+"measuredBytes": 17590116424,
+"budgetRoomBytes": 31928903266
+}
+},
+{
+"name": "random 96",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 4294967296,
+"usedBytes": 3666662452,
+"hostFreeBytes": 6219506188,
+"held": true,
+"measuredBytes": 12305378298,
+"hostKeepBytes": 9324942517
+}
+},
+{
+"name": "random 97",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 11158652009,
+"hostFreeBytes": 115319663073,
+"held": true,
+"budgetRoomBytes": 32701344617
+}
+},
+{
+"name": "random 98",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 8647278257,
+"hostFreeBytes": 46689968937,
+"held": false,
+"hostKeepBytes": 4959279756
+}
+},
+{
+"name": "random 99",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 20126244826,
+"hostFreeBytes": 36548214809,
+"held": true,
+"measuredBytes": 16380416588
+}
+},
+{
+"name": "random 100",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 2320247284,
+"hostFreeBytes": 67577827824,
+"held": false,
+"measuredBytes": 16799349434,
+"budgetRoomBytes": 35661084940
+}
+},
+{
+"name": "random 101",
+"platform": "win32",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 24613609321,
+"hostFreeBytes": 100994227437,
+"held": true,
+"hostKeepBytes": 3014846057
+}
+},
+{
+"name": "random 102",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 8045682986,
+"hostFreeBytes": 27240432478,
+"held": false
+}
+},
+{
+"name": "random 103",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 11152993900,
+"hostFreeBytes": 96399671382,
+"held": false,
+"measuredBytes": 22224315292
+}
+},
+{
+"name": "random 104",
+"platform": "linux",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 13675310634,
+"hostFreeBytes": 39251117243,
+"held": false
+}
+},
+{
+"name": "random 105",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 34205482862,
+"hostFreeBytes": 112229126102,
+"held": true,
+"hostKeepBytes": 901069446,
+"budgetRoomBytes": 10695639174
+}
+},
+{
+"name": "random 106",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 9467044858,
+"hostFreeBytes": 99404281840,
+"held": true,
+"measuredBytes": 11738380190
+}
+},
+{
+"name": "random 107",
+"platform": "win32",
+"facts": {
+"capacityBytes": 31138512896,
+"usedBytes": 10654601048,
+"hostFreeBytes": 108823755832,
+"held": false,
+"measuredBytes": 44285134922,
+"hostKeepBytes": 10964413537
+}
+},
+{
+"name": "random 108",
+"platform": "linux",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 4955289008,
+"hostFreeBytes": 94746031542,
+"held": false,
+"measuredBytes": 25088904088,
+"hostKeepBytes": 4219284190
+}
+},
+{
+"name": "random 109",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 17816555630,
+"hostFreeBytes": 100147993430,
+"held": true,
+"hostKeepBytes": 8827580434
+}
+},
+{
+"name": "random 110",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 28321822401,
+"hostFreeBytes": 104787162086,
+"held": false,
+"measuredBytes": 17394448978,
+"budgetRoomBytes": 22397312633
+}
+},
+{
+"name": "random 111",
+"platform": "win32",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 645217840,
+"hostFreeBytes": 121681980172,
+"held": false,
+"measuredBytes": 22456570856
+}
+},
+{
+"name": "random 112",
+"platform": "win32",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 758260975,
+"hostFreeBytes": 82255008206,
+"held": true,
+"measuredBytes": 8106765026
+}
+},
+{
+"name": "random 113",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 2813026375,
+"hostFreeBytes": 36510189114,
+"held": false
+}
+},
+{
+"name": "random 114",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 4984946313,
+"hostFreeBytes": 7141199427,
+"held": true,
+"measuredBytes": 4999667873,
+"hostKeepBytes": 10889611014
+}
+},
+{
+"name": "random 115",
+"platform": "win32",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 20391504425,
+"hostFreeBytes": 39564293249,
+"held": false,
+"hostKeepBytes": 2482720006,
+"budgetRoomBytes": 20643621394
+}
+},
+{
+"name": "random 116",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 7240739039,
+"hostFreeBytes": 688495395,
+"held": true
+}
+},
+{
+"name": "random 117",
+"platform": "linux",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 24278261093,
+"hostFreeBytes": 42517254361,
+"held": false,
+"measuredBytes": 31054021955
+}
+},
+{
+"name": "random 118",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 24211720648,
+"hostFreeBytes": 12283651841,
+"held": false,
+"budgetRoomBytes": 38421626853
+}
+},
+{
+"name": "random 119",
+"platform": "win32",
+"facts": {
+"capacityBytes": 12884901888,
+"usedBytes": 3435398070,
+"hostFreeBytes": 114129267941,
+"held": true,
+"hostKeepBytes": 3772064684
+}
+},
+{
+"name": "random 120",
+"platform": "linux",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 6514267498,
+"hostFreeBytes": 104607117860,
+"held": true,
+"hostKeepBytes": 3020474814
+}
+},
+{
+"name": "random 121",
+"platform": "win32",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 10854738985,
+"hostFreeBytes": 13547329543,
+"held": false,
+"measuredBytes": 45934466420,
+"hostKeepBytes": 12735728604
+}
+},
+{
+"name": "random 122",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 2977816469,
+"hostFreeBytes": 87122910650,
+"held": false
+}
+},
+{
+"name": "random 123",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 5324048798,
+"hostFreeBytes": 53886315942,
+"held": true
+}
+},
+{
+"name": "random 124",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 36507222016,
+"usedBytes": 24247129928,
+"hostFreeBytes": 96311515297,
+"held": true,
+"hostKeepBytes": 7232169325,
+"budgetRoomBytes": 7010343809
+}
+},
+{
+"name": "random 125",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 11280218850,
+"hostFreeBytes": 66601512235,
+"held": false,
+"measuredBytes": 30016092690,
+"hostKeepBytes": 10925653917,
+"budgetRoomBytes": 30360618348
+}
+},
+{
+"name": "random 126",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 16371076254,
+"hostFreeBytes": 80188491731,
+"held": false,
+"measuredBytes": 12202983470
+}
+},
+{
+"name": "random 127",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 20417685583,
+"hostFreeBytes": 106162446359,
+"held": true,
+"budgetRoomBytes": 20988888535
+}
+},
+{
+"name": "random 128",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 21523283495,
+"hostFreeBytes": 50978401775,
+"held": true,
+"hostKeepBytes": 3868083217
+}
+},
+{
+"name": "random 129",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 826490595,
+"hostFreeBytes": 91409975069,
+"held": false,
+"measuredBytes": 40517433309,
+"budgetRoomBytes": 4690820091
+}
+},
+{
+"name": "random 130",
+"platform": "win32",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 4181013821,
+"hostFreeBytes": 38553297778,
+"held": true,
+"budgetRoomBytes": 5146899232
+}
+},
+{
+"name": "random 131",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 8589934592,
+"usedBytes": 4636893139,
+"hostFreeBytes": 103956581992,
+"held": false,
+"measuredBytes": 40000434938
+}
+},
+{
+"name": "random 132",
+"platform": "linux",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 3737190888,
+"hostFreeBytes": 108976279868,
+"held": true,
+"measuredBytes": 29192120748,
+"budgetRoomBytes": 26398844322
+}
+},
+{
+"name": "random 133",
+"platform": "linux",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 11513379764,
+"hostFreeBytes": 2397906609,
+"held": false,
+"measuredBytes": 43909286611,
+"budgetRoomBytes": 38502483583
+}
+},
+{
+"name": "random 134",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 12661665249,
+"hostFreeBytes": 23149882019,
+"held": true,
+"budgetRoomBytes": 23044134380
+}
+},
+{
+"name": "random 135",
+"platform": "linux",
+"facts": {
+"capacityBytes": 35433480192,
+"usedBytes": 1232376781,
+"hostFreeBytes": 7571512305,
+"held": false
+}
+},
+{
+"name": "random 136",
+"platform": "linux",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 2250577588,
+"hostFreeBytes": 9655484042,
+"held": false
+}
+},
+{
+"name": "random 137",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 2621023818,
+"hostFreeBytes": 85475811273,
+"held": true
+}
+},
+{
+"name": "random 138",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 10737418240,
+"usedBytes": 4831723595,
+"hostFreeBytes": 96880332056,
+"held": false
+}
+},
+{
+"name": "random 139",
+"platform": "win32",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 6573315013,
+"hostFreeBytes": 1045145883,
+"held": true
+}
+},
+{
+"name": "random 140",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 2747857085,
+"hostFreeBytes": 51892606498,
+"held": false,
+"hostKeepBytes": 8976824484
+}
+},
+{
+"name": "random 141",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 34359738368,
+"usedBytes": 11928887794,
+"hostFreeBytes": 90736189543,
+"held": false
+}
+},
+{
+"name": "random 142",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 2118158351,
+"hostFreeBytes": 13308932019,
+"held": true,
+"hostKeepBytes": 7674287812
+}
+},
+{
+"name": "random 143",
+"platform": "linux",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 10350269300,
+"hostFreeBytes": 10924566430,
+"held": true,
+"measuredBytes": 23668372457
+}
+},
+{
+"name": "random 144",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 4959399311,
+"hostFreeBytes": 125800183761,
+"held": true,
+"budgetRoomBytes": 38657204852
+}
+},
+{
+"name": "random 145",
+"platform": "win32",
+"facts": {
+"capacityBytes": 36507222016,
+"usedBytes": 18714181568,
+"hostFreeBytes": 43401965932,
+"held": false,
+"measuredBytes": 13177287189
+}
+},
+{
+"name": "random 146",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 9517717509,
+"hostFreeBytes": 86481031443,
+"held": true,
+"hostKeepBytes": 5401512596
+}
+},
+{
+"name": "random 147",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 5060292041,
+"hostFreeBytes": 11102518561,
+"held": false,
+"measuredBytes": 14588301490,
+"hostKeepBytes": 10156143163,
+"budgetRoomBytes": 17551706304
+}
+},
+{
+"name": "random 148",
+"platform": "win32",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 5374985982,
+"hostFreeBytes": 96227078906,
+"held": true
+}
+},
+{
+"name": "random 149",
+"platform": "linux",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 294094803,
+"hostFreeBytes": 61014962676,
+"held": true,
+"measuredBytes": 4900797981,
+"hostKeepBytes": 3880666316
+}
+},
+{
+"name": "random 150",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 35433480192,
+"usedBytes": 1070923164,
+"hostFreeBytes": 32592210572,
+"held": true,
+"measuredBytes": 18221045281,
+"hostKeepBytes": 11996351385
+}
+},
+{
+"name": "random 151",
+"platform": "win32",
+"facts": {
+"capacityBytes": 35433480192,
+"usedBytes": 11977073739,
+"hostFreeBytes": 116309048046,
+"held": false
+}
+},
+{
+"name": "random 152",
+"platform": "linux",
+"facts": {
+"capacityBytes": 42949672960,
+"usedBytes": 5215895448,
+"hostFreeBytes": 95629969718,
+"held": false,
+"budgetRoomBytes": 42256967104
+}
+},
+{
+"name": "random 153",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 17758730,
+"hostFreeBytes": 81718919845,
+"held": false,
+"measuredBytes": 24245799055,
+"budgetRoomBytes": 4195135256
+}
+},
+{
+"name": "random 154",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 13245283715,
+"hostFreeBytes": 13649381291,
+"held": true
+}
+},
+{
+"name": "random 155",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 9230488937,
+"hostFreeBytes": 97785623025,
+"held": false,
+"hostKeepBytes": 2022769903
+}
+},
+{
+"name": "random 156",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 23170734828,
+"hostFreeBytes": 6963649631,
+"held": false,
+"hostKeepBytes": 11008111515
+}
+},
+{
+"name": "random 157",
+"platform": "win32",
+"facts": {
+"capacityBytes": 31138512896,
+"usedBytes": 23512993338,
+"hostFreeBytes": 63245058177,
+"held": true,
+"measuredBytes": 31918283691,
+"hostKeepBytes": 3077594314
+}
+},
+{
+"name": "random 158",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 11866423081,
+"hostFreeBytes": 122052218185,
+"held": true,
+"measuredBytes": 10196451858,
+"hostKeepBytes": 8244725742
+}
+},
+{
+"name": "random 159",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 9059976410,
+"hostFreeBytes": 125660226654,
+"held": true,
+"hostKeepBytes": 9075994267,
+"budgetRoomBytes": 41889531753
+}
+},
+{
+"name": "random 160",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 8492581639,
+"hostFreeBytes": 63211197273,
+"held": true,
+"measuredBytes": 24440183855,
+"hostKeepBytes": 1797143719
+}
+},
+{
+"name": "random 161",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 4627733024,
+"hostFreeBytes": 39927255209,
+"held": true
+}
+},
+{
+"name": "random 162",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 4217555229,
+"hostFreeBytes": 121925056983,
+"held": false,
+"hostKeepBytes": 9192512262
+}
+},
+{
+"name": "random 163",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 17208568370,
+"hostFreeBytes": 95627894966,
+"held": true,
+"measuredBytes": 43058166271,
+"hostKeepBytes": 11334997117,
+"budgetRoomBytes": 18937186692
+}
+},
+{
+"name": "random 164",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 8589934592,
+"usedBytes": 4530934658,
+"hostFreeBytes": 37642318360,
+"held": false,
+"measuredBytes": 13345732382,
+"hostKeepBytes": 9949325745,
+"budgetRoomBytes": 3435886953
+}
+},
+{
+"name": "random 165",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 2172511648,
+"hostFreeBytes": 106708260695,
+"held": false,
+"measuredBytes": 14114658488,
+"budgetRoomBytes": 42050423768
+}
+},
+{
+"name": "random 166",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 21066118298,
+"hostFreeBytes": 36354391456,
+"held": true,
+"measuredBytes": 16585457518,
+"hostKeepBytes": 12769067668
+}
+},
+{
+"name": "random 167",
+"platform": "linux",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 28355202856,
+"hostFreeBytes": 123699994978,
+"held": false,
+"measuredBytes": 15886246807,
+"budgetRoomBytes": 36331083992
+}
+},
+{
+"name": "random 168",
+"platform": "linux",
+"facts": {
+"capacityBytes": 4294967296,
+"usedBytes": 1095794032,
+"hostFreeBytes": 124667380884,
+"held": false,
+"hostKeepBytes": 1772161096
+}
+},
+{
+"name": "random 169",
+"platform": "win32",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 2876580785,
+"hostFreeBytes": 108329180795,
+"held": false,
+"measuredBytes": 36401392405
+}
+},
+{
+"name": "random 170",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 14743765701,
+"hostFreeBytes": 83584249961,
+"held": false
+}
+},
+{
+"name": "random 171",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 3013756268,
+"hostFreeBytes": 118367639850,
+"held": true,
+"budgetRoomBytes": 11262827615
+}
+},
+{
+"name": "random 172",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 5368709120,
+"usedBytes": 3803300762,
+"hostFreeBytes": 31902703361,
+"held": true,
+"hostKeepBytes": 4176081607,
+"budgetRoomBytes": 8003478290
+}
+},
+{
+"name": "random 173",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 36507222016,
+"usedBytes": 25714817343,
+"hostFreeBytes": 127168120622,
+"held": false,
+"measuredBytes": 14530132613
+}
+},
+{
+"name": "random 174",
+"platform": "win32",
+"facts": {
+"capacityBytes": 36507222016,
+"usedBytes": 10087534606,
+"hostFreeBytes": 79751013080,
+"held": true
+}
+},
+{
+"name": "random 175",
+"platform": "linux",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 476582410,
+"hostFreeBytes": 124846727188,
+"held": false,
+"measuredBytes": 30527874149,
+"hostKeepBytes": 6988310499,
+"budgetRoomBytes": 38299530901
+}
+},
+{
+"name": "random 176",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 25769803776,
+"usedBytes": 23543247978,
+"hostFreeBytes": 123161138623,
+"held": false,
+"measuredBytes": 29312435264,
+"budgetRoomBytes": 27087370769
+}
+},
+{
+"name": "random 177",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 1591715274,
+"hostFreeBytes": 116956788653,
+"held": true,
+"hostKeepBytes": 3938266941
+}
+},
+{
+"name": "random 178",
+"platform": "linux",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 2205368159,
+"hostFreeBytes": 106358025873,
+"held": true,
+"hostKeepBytes": 4991850722
+}
+},
+{
+"name": "random 179",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 7987598859,
+"hostFreeBytes": 23335066224,
+"held": false,
+"measuredBytes": 28230365924
+}
+},
+{
+"name": "random 180",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 19511162703,
+"hostFreeBytes": 104947771361,
+"held": false,
+"measuredBytes": 21457610097,
+"budgetRoomBytes": 22015794491
+}
+},
+{
+"name": "random 181",
+"platform": "linux",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 2231334256,
+"hostFreeBytes": 113837308003,
+"held": false,
+"measuredBytes": 20329418620,
+"hostKeepBytes": 7463933314
+}
+},
+{
+"name": "random 182",
+"platform": "linux",
+"facts": {
+"capacityBytes": 5368709120,
+"usedBytes": 1754677048,
+"hostFreeBytes": 47052280540,
+"held": true
+}
+},
+{
+"name": "random 183",
+"platform": "linux",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 7996702608,
+"hostFreeBytes": 31425277886,
+"held": false,
+"hostKeepBytes": 8885936634
+}
+},
+{
+"name": "random 184",
+"platform": "linux",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 13585648616,
+"hostFreeBytes": 83412212669,
+"held": false,
+"measuredBytes": 39276108839,
+"hostKeepBytes": 967563340
+}
+},
+{
+"name": "random 185",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 25660560043,
+"hostFreeBytes": 36458041162,
+"held": false
+}
+},
+{
+"name": "random 186",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 26972477087,
+"hostFreeBytes": 114865879403,
+"held": false,
+"measuredBytes": 35938875299,
+"hostKeepBytes": 9622355006
+}
+},
+{
+"name": "random 187",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 7765709056,
+"hostFreeBytes": 18318253120,
+"held": true,
+"hostKeepBytes": 8359735260
+}
+},
+{
+"name": "random 188",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 14424308203,
+"hostFreeBytes": 55987281373,
+"held": false,
+"measuredBytes": 3842161584,
+"budgetRoomBytes": 26163285807
+}
+},
+{
+"name": "random 189",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 468240396,
+"hostFreeBytes": 122197705829,
+"held": true,
+"measuredBytes": 19055371101
+}
+},
+{
+"name": "random 190",
+"platform": "win32",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 4414781713,
+"hostFreeBytes": 47509698383,
+"held": true
+}
+},
+{
+"name": "random 191",
+"platform": "linux",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 37296617804,
+"hostFreeBytes": 114760602883,
+"held": true,
+"budgetRoomBytes": -1066826004
+}
+},
+{
+"name": "random 192",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 12884901888,
+"usedBytes": 2553143978,
+"hostFreeBytes": 63543292268,
+"held": true,
+"hostKeepBytes": 10388621501
+}
+},
+{
+"name": "random 193",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 32212254720,
+"usedBytes": 22207777863,
+"hostFreeBytes": 41059166016,
+"held": false
+}
+},
+{
+"name": "random 194",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 5368709120,
+"usedBytes": 5358033938,
+"hostFreeBytes": 19530753613,
+"held": true,
+"measuredBytes": 6568438854
+}
+},
+{
+"name": "random 195",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 12600835190,
+"hostFreeBytes": 32880191321,
+"held": false,
+"measuredBytes": 36838317981
+}
+},
+{
+"name": "random 196",
+"platform": "linux",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 5489506370,
+"hostFreeBytes": 47345698642,
+"held": true,
+"measuredBytes": 20729743152
+}
+},
+{
+"name": "random 197",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 11947925295,
+"hostFreeBytes": 36067126875,
+"held": true,
+"measuredBytes": 41811564370
+}
+},
+{
+"name": "random 198",
+"platform": "linux",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 37613037556,
+"hostFreeBytes": 64061994370,
+"held": false,
+"budgetRoomBytes": 18591416782
+}
+},
+{
+"name": "random 199",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 780310061,
+"hostFreeBytes": 15447148681,
+"held": false,
+"budgetRoomBytes": 38518043393
+}
+},
+{
+"name": "random 200",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 37961210800,
+"hostFreeBytes": 63342958561,
+"held": false,
+"hostKeepBytes": 360771922
+}
+},
+{
+"name": "random 201",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 34222868735,
+"hostFreeBytes": 89009983715,
+"held": false,
+"measuredBytes": 6751210342
+}
+},
+{
+"name": "random 202",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 9361128883,
+"hostFreeBytes": 126034349816,
+"held": false,
+"measuredBytes": 38789802976,
+"hostKeepBytes": 10544899744,
+"budgetRoomBytes": 33715034395
+}
+},
+{
+"name": "random 203",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 6635408976,
+"hostFreeBytes": 64530507529,
+"held": true,
+"measuredBytes": 35229219264
+}
+},
+{
+"name": "random 204",
+"platform": "linux",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 6256930834,
+"hostFreeBytes": 90552659993,
+"held": false,
+"budgetRoomBytes": 31842875185
+}
+},
+{
+"name": "random 205",
+"platform": "win32",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 18878569699,
+"hostFreeBytes": 42850636749,
+"held": true,
+"hostKeepBytes": 4107921606
+}
+},
+{
+"name": "random 206",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 6972729888,
+"hostFreeBytes": 39219781355,
+"held": true,
+"hostKeepBytes": 11029149928
+}
+},
+{
+"name": "random 207",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 25769803776,
+"usedBytes": 24732422065,
+"hostFreeBytes": 123639285966,
+"held": true,
+"measuredBytes": 5584793384
+}
+},
+{
+"name": "random 208",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 8639928819,
+"hostFreeBytes": 121391390734,
+"held": true,
+"hostKeepBytes": 7600027570,
+"budgetRoomBytes": 25180824795
+}
+},
+{
+"name": "random 209",
+"platform": "win32",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 17660310897,
+"hostFreeBytes": 102762698559,
+"held": false,
+"hostKeepBytes": 2261590007,
+"budgetRoomBytes": 10757068515
+}
+},
+{
+"name": "random 210",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 20901038159,
+"hostFreeBytes": 87269257934,
+"held": false,
+"measuredBytes": 24335405680,
+"hostKeepBytes": 4743037243
+}
+},
+{
+"name": "random 211",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 5018543187,
+"hostFreeBytes": 37303978353,
+"held": true
+}
+},
+{
+"name": "random 212",
+"platform": "linux",
+"facts": {
+"capacityBytes": 16106127360,
+"usedBytes": 11250004171,
+"hostFreeBytes": 58943947353,
+"held": false
+}
+},
+{
+"name": "random 213",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 10737418240,
+"usedBytes": 1600540853,
+"hostFreeBytes": 56070882243,
+"held": false,
+"measuredBytes": 26429285510,
+"hostKeepBytes": 11512652054,
+"budgetRoomBytes": 20543989589
+}
+},
+{
+"name": "random 214",
+"platform": "win32",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 13677088340,
+"hostFreeBytes": 19576119553,
+"held": false,
+"measuredBytes": 43349196696,
+"hostKeepBytes": 12863991704,
+"budgetRoomBytes": 33311208532
+}
+},
+{
+"name": "random 215",
+"platform": "linux",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 32631778216,
+"hostFreeBytes": 34544415256,
+"held": true,
+"budgetRoomBytes": 4188465301
+}
+},
+{
+"name": "random 216",
+"platform": "linux",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 23083764318,
+"hostFreeBytes": 112654487817,
+"held": false,
+"measuredBytes": 17836363852
+}
+},
+{
+"name": "random 217",
+"platform": "linux",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 16939236462,
+"hostFreeBytes": 55079636827,
+"held": false
+}
+},
+{
+"name": "random 218",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 16233394913,
+"hostFreeBytes": 29857124886,
+"held": true
+}
+},
+{
+"name": "random 219",
+"platform": "win32",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 3020106189,
+"hostFreeBytes": 107662849636,
+"held": false,
+"measuredBytes": 6330727143,
+"budgetRoomBytes": 4686990268
+}
+},
+{
+"name": "random 220",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 16106127360,
+"usedBytes": 13741517858,
+"hostFreeBytes": 66267844241,
+"held": false,
+"hostKeepBytes": 5752277874,
+"budgetRoomBytes": -306947909
+}
+},
+{
+"name": "random 221",
+"platform": "linux",
+"facts": {
+"capacityBytes": 31138512896,
+"usedBytes": 26704059082,
+"hostFreeBytes": 109965223045,
+"held": false,
+"measuredBytes": 14990685813
+}
+},
+{
+"name": "random 222",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 32842073821,
+"hostFreeBytes": 21211101831,
+"held": false,
+"measuredBytes": 33447430515,
+"budgetRoomBytes": -455168722
+}
+},
+{
+"name": "random 223",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 25769803776,
+"usedBytes": 12818734861,
+"hostFreeBytes": 49758452082,
+"held": true
+}
+},
+{
+"name": "random 224",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 17726459886,
+"hostFreeBytes": 50956688463,
+"held": false
+}
+},
+{
+"name": "random 225",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 8589934592,
+"usedBytes": 5291662044,
+"hostFreeBytes": 12301707622,
+"held": false
+}
+},
+{
+"name": "random 226",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 26309715431,
+"hostFreeBytes": 98790362317,
+"held": false,
+"measuredBytes": 35787218707
+}
+},
+{
+"name": "random 227",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 6332523898,
+"hostFreeBytes": 115138661783,
+"held": true,
+"measuredBytes": 39744401627,
+"budgetRoomBytes": 4592523323
+}
+},
+{
+"name": "random 228",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 309657670,
+"hostFreeBytes": 92417591745,
+"held": false,
+"measuredBytes": 45786191199
+}
+},
+{
+"name": "random 229",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 514477619,
+"hostFreeBytes": 18828237962,
+"held": true,
+"measuredBytes": 46449310675,
+"hostKeepBytes": 9133492818
+}
+},
+{
+"name": "random 230",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 3120981026,
+"hostFreeBytes": 18511867684,
+"held": false
+}
+},
+{
+"name": "random 231",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 22548578304,
+"usedBytes": 11147863040,
+"hostFreeBytes": 28395623873,
+"held": true,
+"measuredBytes": 15168080348,
+"hostKeepBytes": 2028606825
+}
+},
+{
+"name": "random 232",
+"platform": "linux",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 495230293,
+"hostFreeBytes": 22831149107,
+"held": true,
+"hostKeepBytes": 10575468702
+}
+},
+{
+"name": "random 233",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 35433480192,
+"usedBytes": 33499511749,
+"hostFreeBytes": 96917053967,
+"held": true,
+"budgetRoomBytes": 31848354573
+}
+},
+{
+"name": "random 234",
+"platform": "win32",
+"facts": {
+"capacityBytes": 20401094656,
+"usedBytes": 12184134304,
+"hostFreeBytes": 84276132552,
+"held": false,
+"budgetRoomBytes": 3211485107
+}
+},
+{
+"name": "random 235",
+"platform": "linux",
+"facts": {
+"capacityBytes": 25769803776,
+"usedBytes": 4518709720,
+"hostFreeBytes": 30572360534,
+"held": false,
+"measuredBytes": 21610099639,
+"hostKeepBytes": 4216856193,
+"budgetRoomBytes": 6853046041
+}
+},
+{
+"name": "random 236",
+"platform": "linux",
+"facts": {
+"capacityBytes": 4294967296,
+"usedBytes": 2567856190,
+"hostFreeBytes": 88207253411,
+"held": true
+}
+},
+{
+"name": "random 237",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 27917287424,
+"usedBytes": 6026552563,
+"hostFreeBytes": 14092816081,
+"held": true,
+"measuredBytes": 44452086760
+}
+},
+{
+"name": "random 238",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 8435964915,
+"hostFreeBytes": 59879449392,
+"held": false,
+"hostKeepBytes": 5409170245,
+"budgetRoomBytes": 23188991983
+}
+},
+{
+"name": "random 239",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 20862912627,
+"hostFreeBytes": 59981359220,
+"held": false,
+"budgetRoomBytes": 19639037693
+}
+},
+{
+"name": "random 240",
+"platform": "linux",
+"facts": {
+"capacityBytes": 16106127360,
+"usedBytes": 9693490801,
+"hostFreeBytes": 58874710839,
+"held": true
+}
+},
+{
+"name": "random 241",
+"platform": "linux",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 22433143019,
+"hostFreeBytes": 120254042681,
+"held": false,
+"measuredBytes": 39393448217,
+"hostKeepBytes": 2748665736,
+"budgetRoomBytes": -788923896
+}
+},
+{
+"name": "random 242",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 5368709120,
+"usedBytes": 3088501850,
+"hostFreeBytes": 105137738918,
+"held": false,
+"budgetRoomBytes": 6925806411
+}
+},
+{
+"name": "random 243",
+"platform": "linux",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 7606076739,
+"hostFreeBytes": 21936401252,
+"held": true,
+"measuredBytes": 26728225370
+}
+},
+{
+"name": "random 244",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 23622320128,
+"usedBytes": 13983923818,
+"hostFreeBytes": 56818165271,
+"held": true,
+"hostKeepBytes": 11696670635,
+"budgetRoomBytes": 40075266161
+}
+},
+{
+"name": "random 245",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 19091222124,
+"hostFreeBytes": 9900045331,
+"held": true
+}
+},
+{
+"name": "random 246",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 34454778266,
+"hostFreeBytes": 37496048504,
+"held": true,
+"measuredBytes": 28214119152,
+"budgetRoomBytes": 39504502537
+}
+},
+{
+"name": "random 247",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 26843545600,
+"usedBytes": 16386408951,
+"hostFreeBytes": 77266593838,
+"held": true,
+"measuredBytes": 23618035692
+}
+},
+{
+"name": "random 248",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 13577183407,
+"hostFreeBytes": 27627314817,
+"held": true,
+"measuredBytes": 42700648648
+}
+},
+{
+"name": "random 249",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 10435576666,
+"hostFreeBytes": 43207961134,
+"held": false,
+"measuredBytes": 21518141241,
+"budgetRoomBytes": 12912956884
+}
+},
+{
+"name": "random 250",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 2132371319,
+"hostFreeBytes": 96149862629,
+"held": false,
+"measuredBytes": 11610099923
+}
+},
+{
+"name": "random 251",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 936670018,
+"hostFreeBytes": 93422577849,
+"held": true,
+"hostKeepBytes": 783834842
+}
+},
+{
+"name": "random 252",
+"platform": "win32",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 10951684838,
+"hostFreeBytes": 14424472424,
+"held": false,
+"measuredBytes": 16909784772
+}
+},
+{
+"name": "random 253",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 354664358,
+"hostFreeBytes": 250117620,
+"held": false,
+"budgetRoomBytes": 23987522657
+}
+},
+{
+"name": "random 254",
+"platform": "win32",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 38632911525,
+"hostFreeBytes": 28006174098,
+"held": true,
+"measuredBytes": 40056149491
+}
+},
+{
+"name": "random 255",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 306608741,
+"hostFreeBytes": 12132884525,
+"held": true,
+"measuredBytes": 41790626180
+}
+},
+{
+"name": "random 256",
+"platform": "linux",
+"facts": {
+"capacityBytes": 1073741824,
+"usedBytes": 802609074,
+"hostFreeBytes": 48649998786,
+"held": true,
+"measuredBytes": 20092562183
+}
+},
+{
+"name": "random 257",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 683135655,
+"hostFreeBytes": 71227863557,
+"held": false
+}
+},
+{
+"name": "random 258",
+"platform": "win32",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 5310167096,
+"hostFreeBytes": 25848410547,
+"held": false
+}
+},
+{
+"name": "random 259",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 42949672960,
+"usedBytes": 7176368529,
+"hostFreeBytes": 11993830211,
+"held": false,
+"measuredBytes": 31909329076,
+"budgetRoomBytes": 32585226694
+}
+},
+{
+"name": "random 260",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 21962488579,
+"hostFreeBytes": 89039082891,
+"held": true,
+"budgetRoomBytes": 39756616153
+}
+},
+{
+"name": "random 261",
+"platform": "win32",
+"facts": {
+"capacityBytes": 9663676416,
+"usedBytes": 610426386,
+"hostFreeBytes": 86278408359,
+"held": true,
+"measuredBytes": 33812496419,
+"budgetRoomBytes": 36128387400
+}
+},
+{
+"name": "random 262",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 9971003953,
+"hostFreeBytes": 44565217417,
+"held": false
+}
+},
+{
+"name": "random 263",
+"platform": "linux",
+"facts": {
+"capacityBytes": 2147483648,
+"usedBytes": 643678214,
+"hostFreeBytes": 123322793824,
+"held": true,
+"hostKeepBytes": 6871650278
+}
+},
+{
+"name": "random 264",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 30494039033,
+"hostFreeBytes": 123673942177,
+"held": false,
+"measuredBytes": 38051351984
+}
+},
+{
+"name": "random 265",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 3107549047,
+"hostFreeBytes": 56418977730,
+"held": false,
+"measuredBytes": 33294857197
+}
+},
+{
+"name": "random 266",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 27943736690,
+"hostFreeBytes": 5672944837,
+"held": false,
+"hostKeepBytes": 6409444671
+}
+},
+{
+"name": "random 267",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 15032385536,
+"usedBytes": 770958321,
+"hostFreeBytes": 57571860492,
+"held": true,
+"measuredBytes": 2319718132,
+"hostKeepBytes": 2539069231,
+"budgetRoomBytes": 15843390875
+}
+},
+{
+"name": "random 268",
+"platform": "linux",
+"facts": {
+"capacityBytes": 10737418240,
+"usedBytes": 10130287175,
+"hostFreeBytes": 116865797833,
+"held": false,
+"measuredBytes": 7416509051,
+"budgetRoomBytes": 34476494771
+}
+},
+{
+"name": "random 269",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 10416017882,
+"hostFreeBytes": 77482616433,
+"held": true,
+"measuredBytes": 24887982842,
+"hostKeepBytes": 264406197
+}
+},
+{
+"name": "random 270",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 42949672960,
+"usedBytes": 1942105767,
+"hostFreeBytes": 56810850219,
+"held": false,
+"measuredBytes": 2360428059,
+"budgetRoomBytes": 19586075188
+}
+},
+{
+"name": "random 271",
+"platform": "win32",
+"facts": {
+"capacityBytes": 37580963840,
+"usedBytes": 4659469366,
+"hostFreeBytes": 37829022217,
+"held": true,
+"hostKeepBytes": 3864295365
+}
+},
+{
+"name": "random 272",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 20616852394,
+"hostFreeBytes": 119112598161,
+"held": true,
+"measuredBytes": 9094355081
+}
+},
+{
+"name": "random 273",
+"platform": "win32",
+"facts": {
+"capacityBytes": 18253611008,
+"usedBytes": 3247742309,
+"hostFreeBytes": 102894913105,
+"held": true,
+"measuredBytes": 44844738137
+}
+},
+{
+"name": "random 274",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 30064771072,
+"usedBytes": 18197297254,
+"hostFreeBytes": 42328360068,
+"held": false
+}
+},
+{
+"name": "random 275",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 6442450944,
+"usedBytes": 6381856237,
+"hostFreeBytes": 19587269686,
+"held": true,
+"hostKeepBytes": 4038939205
+}
+},
+{
+"name": "random 276",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 40802189312,
+"usedBytes": 2559884749,
+"hostFreeBytes": 126491311972,
+"held": false,
+"hostKeepBytes": 3283988166
+}
+},
+{
+"name": "random 277",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 17179869184,
+"usedBytes": 9506436049,
+"hostFreeBytes": 88563249554,
+"held": true,
+"measuredBytes": 922450600
+}
+},
+{
+"name": "random 278",
+"platform": "linux",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 14943714169,
+"hostFreeBytes": 127400285810,
+"held": true,
+"hostKeepBytes": 10071748371
+}
+},
+{
+"name": "random 279",
+"platform": "win32",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 4446658613,
+"hostFreeBytes": 41205618656,
+"held": false,
+"measuredBytes": 23792312333,
+"hostKeepBytes": 9279187772
+}
+},
+{
+"name": "random 280",
+"platform": "linux",
+"facts": {
+"capacityBytes": 38654705664,
+"usedBytes": 36203350965,
+"hostFreeBytes": 92737947018,
+"held": true,
+"hostKeepBytes": 1057581423
+}
+},
+{
+"name": "random 281",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 18317072421,
+"hostFreeBytes": 98020136946,
+"held": true,
+"budgetRoomBytes": 28294343316
+}
+},
+{
+"name": "random 282",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 41875931136,
+"usedBytes": 2000471250,
+"hostFreeBytes": 114081907219,
+"held": false,
+"measuredBytes": 23470359338
+}
+},
+{
+"name": "random 283",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 2684460382,
+"hostFreeBytes": 10980324790,
+"held": true,
+"measuredBytes": 40443114616,
+"hostKeepBytes": 692683413,
+"budgetRoomBytes": 28587009869
+}
+},
+{
+"name": "random 284",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 33285996544,
+"usedBytes": 19018324280,
+"hostFreeBytes": 56168768688,
+"held": true
+}
+},
+{
+"name": "random 285",
+"platform": "win32",
+"facts": {
+"capacityBytes": 24696061952,
+"usedBytes": 764744424,
+"hostFreeBytes": 110904175226,
+"held": true
+}
+},
+{
+"name": "random 286",
+"platform": "linux",
+"facts": {
+"capacityBytes": 3221225472,
+"usedBytes": 1232687454,
+"hostFreeBytes": 54828434279,
+"held": true,
+"measuredBytes": 28613003437,
+"budgetRoomBytes": 36671785411
+}
+},
+{
+"name": "random 287",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 1606220188,
+"hostFreeBytes": 12091657207,
+"held": false,
+"hostKeepBytes": 11219851566
+}
+},
+{
+"name": "random 288",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 6547466177,
+"hostFreeBytes": 49591557598,
+"held": true,
+"measuredBytes": 17399745513,
+"hostKeepBytes": 11573787482
+}
+},
+{
+"name": "random 289",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 4294967296,
+"usedBytes": 1531788923,
+"hostFreeBytes": 1981009527,
+"held": true,
+"hostKeepBytes": 6810897508
+}
+},
+{
+"name": "random 290",
+"platform": "win32",
+"facts": {
+"capacityBytes": 21474836480,
+"usedBytes": 8562319072,
+"hostFreeBytes": 102715064392,
+"held": false,
+"hostKeepBytes": 9950130489
+}
+},
+{
+"name": "random 291",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 10737418240,
+"usedBytes": 1579558687,
+"hostFreeBytes": 112951388420,
+"held": false,
+"hostKeepBytes": 4711330833
+}
+},
+{
+"name": "random 292",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 28991029248,
+"usedBytes": 18675445355,
+"hostFreeBytes": 70363600434,
+"held": false,
+"measuredBytes": 6966331109,
+"hostKeepBytes": 2614122754
+}
+},
+{
+"name": "random 293",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 7516192768,
+"usedBytes": 127555044,
+"hostFreeBytes": 18836540990,
+"held": false,
+"measuredBytes": 36946654006
+}
+},
+{
+"name": "random 294",
+"platform": "win32",
+"facts": {
+"capacityBytes": 13958643712,
+"usedBytes": 3982503268,
+"hostFreeBytes": 18145692691,
+"held": true,
+"measuredBytes": 7584967448
+}
+},
+{
+"name": "random 295",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 11811160064,
+"usedBytes": 494203634,
+"hostFreeBytes": 83837711672,
+"held": true,
+"measuredBytes": 12997616165,
+"hostKeepBytes": 4524280548
+}
+},
+{
+"name": "random 296",
+"platform": "freebsd",
+"facts": {
+"capacityBytes": 42949672960,
+"usedBytes": 12062651671,
+"hostFreeBytes": 7738709194,
+"held": true,
+"budgetRoomBytes": 14625813676
+}
+},
+{
+"name": "random 297",
+"platform": "darwin",
+"facts": {
+"capacityBytes": 39728447488,
+"usedBytes": 31244868624,
+"hostFreeBytes": 42236650198,
+"held": true,
+"measuredBytes": 20051969139,
+"budgetRoomBytes": 34432086086
+}
+},
+{
+"name": "random 298",
+"platform": "win32",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 16627303041,
+"hostFreeBytes": 42337158558,
+"held": true
+}
+},
+{
+"name": "random 299",
+"platform": "linux",
+"facts": {
+"capacityBytes": 19327352832,
+"usedBytes": 10292124062,
+"hostFreeBytes": 88792342364,
+"held": false,
+"measuredBytes": 23603327755
+}
+}
+],
+"lane": [
+{
+"name": "nothing measured",
+"root": 0,
+"samples": []
+},
+{
+"name": "one lane",
+"root": 0,
+"samples": [
+6442450944
+]
+},
+{
+"name": "tiny lanes",
+"root": 0,
+"samples": [
+1073741824,
+2147483648
+]
+},
+{
+"name": "large max",
+"root": 0,
+"samples": [
+3221225472,
+5368709120,
+6442450944,
+7516192768,
+9663676416,
+21474836480,
+31138512896
+]
+},
+{
+"name": "unknown root",
+"root": 9,
+"samples": [
+5368709120
+]
+},
+{
+"name": "zeros dropped",
+"root": 0,
+"samples": [
+0,
+0,
+7516192768
+]
+},
+{
+"name": "random 0",
+"root": 1,
+"samples": [
+9352623741,
+14706341004,
+32795658991,
+29128610978,
+4183929847,
+8121773342,
+18606152077,
+39428556864,
+26802417584,
+22129365302,
+22354712713,
+32067689413,
+40601941025,
+28833915916,
+34211697960,
+39978986149
+]
+},
+{
+"name": "random 1",
+"root": 2,
+"samples": [
+3976584211,
+19205322036,
+21546912089,
+8740056695,
+31751783344,
+1624229708,
+7775325083,
+36749509363,
+3864360630,
+818594688
+]
+},
+{
+"name": "random 2",
+"root": 0,
+"samples": [
+25116033056,
+27707855388,
+39830663490,
+17968534133,
+31114548397,
+15286598504,
+36897718339,
+34128747211,
+114723134,
+15259812559,
+958936515,
+24450170668
+]
+},
+{
+"name": "random 3",
+"root": 0,
+"samples": []
+},
+{
+"name": "random 4",
+"root": 1,
+"samples": [
+17418064924,
+8653909568,
+27961342462,
+23736744842,
+27721258959,
+38152020439,
+41605302441,
+41531294046,
+22092536079,
+28482929247,
+36502305652,
+14230784022,
+2152817520,
+4946210516,
+38617680509,
+3274746413,
+7320319958,
+42787399553,
+40162341065,
+14348338187,
+8303262047
+]
+},
+{
+"name": "random 5",
+"root": 2,
+"samples": [
+7766323773,
+7909477503
+]
+},
+{
+"name": "random 6",
+"root": 2,
+"samples": [
+7997621402,
+38101553931,
+20541281418,
+1066383883,
+13804532776,
+38440055879,
+29098163034,
+9540175300,
+38505067407,
+14514628760,
+12157527885,
+39837609017,
+12969850099,
+7786835647,
+3186449270,
+32225538460,
+22186333183
+]
+},
+{
+"name": "random 7",
+"root": 0,
+"samples": [
+27638061700,
+36468097480,
+17626296442,
+11371683568,
+14608939922,
+1299619283,
+3936570720,
+29299292333,
+17420501897
+]
+},
+{
+"name": "random 8",
+"root": 2,
+"samples": [
+24830148595,
+36295960540,
+31545714373,
+17392544870,
+7767751545,
+4622237623,
+38715817777,
+22652195291,
+16179603861,
+39712369624,
+2708842231,
+8078191623,
+15659175518,
+33161921101,
+28795726452
+]
+},
+{
+"name": "random 9",
+"root": 2,
+"samples": [
+24501636962,
+21091425658,
+32611816430,
+30692422863,
+16862085242,
+351429886,
+4833748549,
+16622872223,
+1105487982
+]
+},
+{
+"name": "random 10",
+"root": 2,
+"samples": [
+18993723997,
+11671907364,
+40438078686,
+29584194454,
+14554165026,
+12018243290,
+36497063789,
+25459570949,
+4467253062,
+2892097369,
+30619785590,
+41887689206,
+42487347448,
+9201502890,
+28954125453,
+13497845223,
+28396182989,
+20410879531,
+24903813344,
+20095826931
+]
+},
+{
+"name": "random 11",
+"root": 1,
+"samples": [
+31612692690,
+23766740651,
+5234865267,
+16625147016,
+42009171587,
+29284661140,
+15004916033,
+25295083409,
+19799674753,
+37495939188
+]
+},
+{
+"name": "random 12",
+"root": 1,
+"samples": [
+2442489243,
+40671912881
+]
+},
+{
+"name": "random 13",
+"root": 1,
+"samples": [
+41275572602
+]
+},
+{
+"name": "random 14",
+"root": 1,
+"samples": [
+40219609611,
+37136862492,
+41573769886,
+16271947070,
+13565421767,
+31235301522,
+24355031858,
+41223774475,
+8584462159,
+13299944146,
+40007415601,
+21350359986,
+32834993331,
+7682595119,
+18863431418,
+31393614147,
+26878093769,
+18370157408,
+31720791391,
+17078895975,
+8501036491
+]
+},
+{
+"name": "random 15",
+"root": 2,
+"samples": [
+24729329003
+]
+},
+{
+"name": "random 16",
+"root": 2,
+"samples": [
+37794924398,
+19047252826,
+5907507845,
+4449123154,
+41642177635,
+8330935517,
+30170971516,
+24461956894,
+28223399977,
+41926813544,
+752639835,
+41512806982,
+12094155841,
+30871312167,
+26058010750,
+36233719038,
+16123756028,
+41500438289
+]
+},
+{
+"name": "random 17",
+"root": 1,
+"samples": [
+26948007791,
+4959883494,
+25351761263
+]
+},
+{
+"name": "random 18",
+"root": 1,
+"samples": [
+31127556417,
+24110503009,
+22684166105
+]
+},
+{
+"name": "random 19",
+"root": 0,
+"samples": [
+34759384300,
+28284120876,
+599229461,
+26344332980,
+12120503367,
+35571173102,
+42192068540,
+3278226635,
+36662106560,
+7723380397,
+11258770473,
+27643125577,
+2767284802,
+6224067893,
+22375775809,
+18499231704,
+25639478537,
+8192790687,
+19423488593,
+38080515675,
+1906988420,
+42308679288,
+25200898423,
+36067201340
+]
+},
+{
+"name": "random 20",
+"root": 2,
+"samples": [
+21287907906,
+15905572819,
+42638835586,
+14175511374,
+33519966628,
+35520663261,
+18416857485,
+11052627973,
+36520641029,
+38760018120,
+40945949469,
+31822298888,
+4392540939,
+38996196404,
+19862471061,
+27362649883,
+31170325961
+]
+},
+{
+"name": "random 21",
+"root": 0,
+"samples": [
+39388176835,
+33895362482,
+22963322600,
+42259509185,
+26773823464,
+20188259640,
+31224117325,
+27439300192,
+29211390903,
+31640800531,
+9278478742,
+16756004953
+]
+},
+{
+"name": "random 22",
+"root": 1,
+"samples": [
+5414386164,
+40428417870,
+19580168433,
+24099066746,
+18412744186,
+6390595420,
+18328085303,
+21849261754,
+23625119581,
+30175439383,
+29560858342,
+27337511254,
+10489752259,
+26252944005,
+11151640805,
+42555737835,
+24994024785,
+3512026166,
+35673810635,
+13326618047,
+20877160643,
+37508213328,
+5073374745,
+33497832888,
+30664536024
+]
+},
+{
+"name": "random 23",
+"root": 0,
+"samples": [
+1227534463,
+21496750495,
+21281157223,
+35704475578,
+18611850855,
+5728758552,
+10088794584
+]
+},
+{
+"name": "random 24",
+"root": 0,
+"samples": [
+13975017966,
+20653712252,
+42888252182,
+26365943930,
+18664592631,
+16119889413,
+27169250717,
+20279601605,
+39119434080,
+27281247307,
+34915635788,
+30193558349,
+23041981854
+]
+},
+{
+"name": "random 25",
+"root": 1,
+"samples": [
+38818118068,
+41924273228,
+666146361,
+27022745553,
+12739270093,
+39147959643,
+38484097700,
+16477125856,
+26733165023,
+35054831963
+]
+},
+{
+"name": "random 26",
+"root": 1,
+"samples": [
+40461388181,
+41943947907,
+14613807751,
+6716237220,
+8414797683,
+42858192275,
+23399459272,
+18562071424
+]
+},
+{
+"name": "random 27",
+"root": 1,
+"samples": [
+39683077661,
+28702368114,
+26553383804,
+11740489232
+]
+},
+{
+"name": "random 28",
+"root": 1,
+"samples": [
+32208267255,
+17273841574,
+3568070530,
+33250496187,
+6552834341,
+29904174415,
+32412917722,
+39536856352,
+18081938596,
+37947086931,
+8603651444,
+21527720317,
+19432768215,
+17545660310,
+32207329782,
+1844765115,
+251887816,
+12964526002
+]
+},
+{
+"name": "random 29",
+"root": 2,
+"samples": [
+35183941645,
+41191871534,
+14423306913,
+934203186,
+33169541342,
+29161151943,
+22349459940,
+37406337515,
+19153708912,
+25908517270,
+10896383120,
+7535559621,
+1279509114,
+5108135829,
+31415472782
+]
+},
+{
+"name": "random 30",
+"root": 0,
+"samples": [
+40865742365,
+24680330250,
+30513637023,
+16137412588,
+24126486574,
+38274820955,
+30594816851,
+13541591435,
+6020014021,
+7609580790,
+7364435604,
+22764859942,
+25731805527,
+31436195081,
+24168931360
+]
+},
+{
+"name": "random 31",
+"root": 2,
+"samples": [
+38096285085,
+7946837245,
+29334814606,
+13556396361,
+4478536686,
+41168174852,
+24094867626,
+13067154047,
+3208105220,
+5151059514
+]
+},
+{
+"name": "random 32",
+"root": 2,
+"samples": [
+36620805982,
+34221021783,
+32071011016,
+16188766687,
+21842198678
+]
+},
+{
+"name": "random 33",
+"root": 2,
+"samples": [
+12549433190,
+25590046278,
+42475381542,
+13749944237,
+36629049317,
+9465001272,
+4397688153,
+41800533161,
+12023712011,
+42706490296,
+25669399760,
+25168327490,
+6724608776,
+6566082669,
+8449461361,
+16055457291,
+1188706931,
+4763746784,
+8431658388,
+6419265016
+]
+},
+{
+"name": "random 34",
+"root": 2,
+"samples": [
+19149961947,
+37851524938,
+42365285543,
+35051274086,
+2255207522,
+17590202724,
+1939842668,
+5210461109
+]
+},
+{
+"name": "random 35",
+"root": 1,
+"samples": [
+37381962610,
+30301602920,
+10852008925,
+36815638446,
+26180616109,
+17070975404,
+7421363128,
+35480855215,
+24223534312,
+18757747923,
+35946078526,
+40101457489,
+32590491094,
+5151562940,
+29616379551,
+525464001,
+26633310787,
+6486669114,
+26310084667,
+11133696630,
+20259766458,
+39149797239,
+15462903399
+]
+},
+{
+"name": "random 36",
+"root": 1,
+"samples": [
+29528616715,
+8323125863,
+8513999069,
+20721841939,
+20524263623,
+41769713330
+]
+},
+{
+"name": "random 37",
+"root": 0,
+"samples": [
+13011554572,
+31460384059,
+18048384386
+]
+},
+{
+"name": "random 38",
+"root": 1,
+"samples": [
+5907651383,
+28946264794,
+34675289046,
+15682745188,
+36630804201,
+38191076940,
+19211113691,
+7997647145,
+30687888839,
+32003834087,
+29508095255,
+19178772574,
+22590417931,
+35306524846,
+32156208343
+]
+},
+{
+"name": "random 39",
+"root": 2,
+"samples": [
+2620032539,
+2601161924,
+16955960324,
+13041927592,
+16632698073,
+27386493523,
+35971334692,
+19340777241,
+11364202343,
+27759608518,
+17666820290,
+40692260791
+]
+},
+{
+"name": "random 40",
+"root": 0,
+"samples": [
+26446523784,
+36201063779,
+39592912479,
+16844969494,
+34380617946,
+40725836519,
+24924539757,
+36985395564,
+1192256848,
+660271745,
+30785752349,
+35639801179,
+1163202991,
+30979353426,
+4995918929,
+13956292072,
+1762807477,
+1128398793
+]
+},
+{
+"name": "random 41",
+"root": 0,
+"samples": [
+35892120119,
+26622637201,
+37024497552,
+20672571864,
+38426307735
+]
+},
+{
+"name": "random 42",
+"root": 2,
+"samples": [
+5099800602,
+7263734532,
+14439445336,
+31218322643,
+16496117802,
+41648829048,
+13962175642,
+20023305100,
+19809173024,
+4324558519,
+28601624110
+]
+},
+{
+"name": "random 43",
+"root": 2,
+"samples": [
+10891634148,
+28710300270,
+33587386523,
+26895084370,
+8541312445,
+36144138733,
+38212836338,
+7140836289,
+14567326441,
+24371827945,
+3323895349,
+25349227537,
+41204767893,
+9058149784
+]
+},
+{
+"name": "random 44",
+"root": 0,
+"samples": [
+23773831988,
+18870602799,
+42621220557,
+26419548369,
+8737983820,
+10723726809
+]
+},
+{
+"name": "random 45",
+"root": 0,
+"samples": [
+29566065239,
+1441464414,
+28296917306,
+20946579985,
+8732265621,
+38972960062,
+29885556333,
+17796170140,
+488186122,
+13340801995,
+25050162613,
+9348972145,
+26157182920,
+38781026936,
+27591504262,
+27719187957,
+40085924874,
+833241103,
+800610912
+]
+},
+{
+"name": "random 46",
+"root": 1,
+"samples": [
+16986111796,
+30036746792,
+35015292738
+]
+},
+{
+"name": "random 47",
+"root": 1,
+"samples": [
+37690664502,
+20861896696,
+9357107718,
+34175402854,
+35720911115,
+23883879358,
+5400487688,
+16143002068,
+33257832386,
+11180450751,
+23747692659,
+23344104429,
+19180667412,
+20663531423
+]
+},
+{
+"name": "random 48",
+"root": 0,
+"samples": [
+6866251487,
+32576096016,
+41412028605,
+25135809612,
+6025969748,
+35240672072
+]
+},
+{
+"name": "random 49",
+"root": 0,
+"samples": [
+17703549093,
+16764848106,
+35675660286,
+1618872159,
+26120792773,
+1094206743
+]
+},
+{
+"name": "random 50",
+"root": 2,
+"samples": [
+7475762437,
+33963779673,
+26846802545,
+20561251464,
+21538622688,
+16968926017,
+40079117273,
+5116741245,
+4378514617,
+6702661804,
+14769342424,
+15079310867,
+33640999009,
+10681790128,
+40071657298,
+4471852508,
+37552021300,
+1849292805,
+28229813475,
+11181975937,
+17561414878,
+18380383938,
+21685899982,
+10455830945,
+34977032757
+]
+},
+{
+"name": "random 51",
+"root": 1,
+"samples": [
+6749501102,
+15895917377,
+25684596288,
+33473438465,
+750828321,
+20665079084
+]
+},
+{
+"name": "random 52",
+"root": 1,
+"samples": [
+5331807965,
+36992158274,
+15816468309,
+2339174823,
+593255668,
+5354136775,
+9378127361,
+27024790237,
+39621123718,
+20809895807,
+36709515351,
+24677471151,
+18863022811,
+20391193863,
+7838416505,
+6644483486
+]
+},
+{
+"name": "random 53",
+"root": 1,
+"samples": [
+21757818725,
+23319392643,
+11657399747,
+3324277054,
+27088327906,
+10589460279,
+15890389894,
+40272266065,
+34409179015,
+17236087143
+]
+},
+{
+"name": "random 54",
+"root": 1,
+"samples": [
+1795275970,
+10022666202,
+160808252,
+31253086290,
+350805617,
+9204208438
+]
+},
+{
+"name": "random 55",
+"root": 0,
+"samples": [
+41644907675,
+18045344135,
+25728427723,
+36943205313,
+16586235908,
+14205189610,
+2147063479,
+28050801194,
+32835660607,
+16802264779,
+25262677874,
+42609116248,
+8041432271,
+36554199728,
+34816339741,
+5377196021,
+26852564789,
+22642264712,
+20536729384,
+19104239544
+]
+},
+{
+"name": "random 56",
+"root": 0,
+"samples": [
+11542018555,
+28751637699,
+35829686080,
+19032439848,
+28668600105,
+21289992648,
+20276939439,
+13616808551,
+5851065748,
+36019218114,
+42247758358,
+20008053705,
+28422634574,
+14530475446,
+17518501264,
+1602965512,
+7349377085,
+15575824329
+]
+},
+{
+"name": "random 57",
+"root": 2,
+"samples": [
+28744728848,
+42528451990,
+2250327227,
+9583653888,
+28295061374,
+11544683950,
+40705365547,
+29594738757,
+20070158504,
+29362584110,
+6184655857,
+4888496111,
+28402418861,
+22326108752,
+23934231276,
+21792478832,
+8853552525,
+14428926753,
+3426838833,
+3610178499,
+8040955906,
+14181172863,
+16811129898,
+28509736457,
+14194017673
+]
+},
+{
+"name": "random 58",
+"root": 2,
+"samples": [
+26183323085,
+37652245421,
+34863768752,
+14286853242,
+9585252037,
+39237613053,
+5280211586,
+28512961175,
+20670376956,
+17937991596,
+12014678234,
+26772361594,
+35862636899,
+40748088424,
+17019553746,
+4340239567,
+29854795696,
+33904055812,
+41732184344,
+15550629776,
+16376973435,
+15863123671
+]
+},
+{
+"name": "random 59",
+"root": 1,
+"samples": [
+22861369672,
+18036640865,
+34191919198,
+27548249005,
+196894474,
+17776565311,
+31125611108,
+4927472572,
+35634304894,
+26633592649,
+34125632902,
+28631138230,
+24254615730,
+19015053781
+]
+},
+{
+"name": "random 60",
+"root": 2,
+"samples": [
+35775759805,
+21393407619,
+26629796709,
+2317534670,
+21767382425,
+17484752939,
+19811721844,
+3184520988,
+37324096096,
+5103746977,
+14831304578,
+11605405139,
+20603092458,
+33453304158,
+34613099895,
+22531146362,
+25850362365,
+14464173567,
+19195157205,
+23847129158,
+2272238417,
+35840925815,
+34639989611,
+31595864476
+]
+},
+{
+"name": "random 61",
+"root": 2,
+"samples": [
+931696148,
+29057680473,
+26173227716,
+35877469090,
+36096546557,
+33001538061,
+23728272155
+]
+},
+{
+"name": "random 62",
+"root": 2,
+"samples": [
+42176855133,
+8825447649,
+5902797732,
+23041760468,
+32173951912,
+29896847551,
+41709778698,
+17349907934,
+3496714747,
+15762717529,
+224495205,
+18715921573,
+28676757706,
+21957553822,
+19622342953,
+2195539634,
+27137808574,
+29527218955,
+22297627717,
+17424655154
+]
+},
+{
+"name": "random 63",
+"root": 2,
+"samples": [
+23974243833,
+31108835931,
+40913792454,
+29695485890,
+7017091230,
+26256131013,
+38178098304,
+39191599849,
+23228396828,
+40848327326,
+39486120596,
+11502230676,
+17802003163,
+29999884437,
+8510197013,
+9432150032,
+21584087780,
+4385239677,
+22074313863
+]
+},
+{
+"name": "random 64",
+"root": 0,
+"samples": [
+3501529250,
+15763818265,
+24480602360,
+40757900197,
+14782038467,
+27366589024,
+33969184414,
+32561817071,
+6321402844,
+36620969653,
+12442547077,
+37861261171,
+33783269381,
+23511779527,
+6280151353,
+32164766192,
+11868854844,
+2272908147,
+35295486290,
+16474277841,
+39053091081
+]
+},
+{
+"name": "random 65",
+"root": 0,
+"samples": [
+6756201480,
+13058986735,
+29963538775,
+12515669196,
+22862759482,
+5682234515,
+5895146886,
+41107064135
+]
+},
+{
+"name": "random 66",
+"root": 0,
+"samples": [
+39499582504
+]
+},
+{
+"name": "random 67",
+"root": 1,
+"samples": [
+7344091633,
+36946745820,
+20887228303,
+9135519197,
+38251492667,
+8513013017,
+9321448235,
+15341247739,
+27505515074,
+20208263166,
+5000890202,
+19544807229,
+38283787073,
+20814727474,
+4061171133
+]
+},
+{
+"name": "random 68",
+"root": 2,
+"samples": [
+38565636720,
+34160043227,
+10990324048,
+22926520272,
+36449212116
+]
+},
+{
+"name": "random 69",
+"root": 1,
+"samples": [
+4040906518,
+6182193706,
+9243227595,
+33968010217,
+35451375357,
+13018507001,
+29383802538,
+42780229998,
+19010491613,
+9095109671,
+7489320618,
+7714930473,
+40936512110,
+24308436965,
+41110652755,
+18517510533,
+12570932676,
+20274038822,
+18951687310,
+35512506976,
+7628928277,
+15788705221,
+4588872034
+]
+},
+{
+"name": "random 70",
+"root": 0,
+"samples": [
+29712373769,
+20656796026,
+17433233784,
+36857179614,
+31537912997
+]
+},
+{
+"name": "random 71",
+"root": 0,
+"samples": [
+39144787296,
+32821554700,
+15248074748,
+11063046076,
+14000293629,
+25650400964,
+36562648204,
+20260753108,
+20001896613,
+26336920879,
+35275447841,
+2994314848,
+17112056371,
+5546488924,
+9515560799,
+19024306635,
+8919130856,
+1934256730,
+8794393993,
+36975394078
+]
+},
+{
+"name": "random 72",
+"root": 1,
+"samples": [
+12249522098,
+35864340700
+]
+},
+{
+"name": "random 73",
+"root": 0,
+"samples": [
+11211318524,
+17991670389,
+35113060317
+]
+},
+{
+"name": "random 74",
+"root": 2,
+"samples": [
+4310284316,
+18269991687,
+36530293487,
+7727998145,
+4436833255,
+27335600670,
+37124820184,
+18290252968,
+6510056978,
+27934996630,
+31910436865,
+21843608941,
+12837422504,
+28169668489,
+9965994020,
+4096582762,
+8937832176,
+31546754602,
+13560679024,
+18154729367,
+17654997680,
+26244008527,
+18473103621
+]
+},
+{
+"name": "random 75",
+"root": 0,
+"samples": [
+9083661109,
+41638494505,
+27760414850
+]
+},
+{
+"name": "random 76",
+"root": 1,
+"samples": [
+27270015895,
+39455572344,
+34713627119,
+31068637453,
+37671740368,
+4648312827,
+27391257216,
+32183167840,
+31974322851,
+18899874586,
+38929827435,
+9507710896,
+2925673819,
+21065744946,
+13016573741,
+10028081477,
+15269713540,
+8225134131,
+41015029537,
+23082455096,
+24559006547
+]
+},
+{
+"name": "random 77",
+"root": 0,
+"samples": [
+5917620958,
+16036253717,
+582457349,
+29101877158,
+8522807571,
+29945279466,
+6340469646,
+25737640473,
+9941078750,
+24648019132,
+10382146284,
+17961247393,
+3371299213,
+15081074395,
+8453194777,
+23607517836,
+15352033570
+]
+},
+{
+"name": "random 78",
+"root": 0,
+"samples": []
+},
+{
+"name": "random 79",
+"root": 0,
+"samples": [
+23616408790,
+16946513316,
+24455810063,
+10553403255,
+21377410636,
+15325324053,
+22738668711,
+13179806273,
+42551898884,
+21598780731,
+34497271762,
+5900895274,
+21226788633,
+29883970237,
+34163469899,
+20652593100,
+796428290,
+27482982624,
+33821242908,
+20047167068
+]
+},
+{
+"name": "random 80",
+"root": 1,
+"samples": [
+24623151873,
+33021628748,
+8837888972,
+28605803682,
+33338860708,
+197654788,
+6382106765,
+42751841804,
+8496366034,
+14222150752,
+11513334628,
+41660835134,
+11208175830,
+9995694656,
+39625247754,
+32142074038,
+42575214768,
+35522233158,
+15419848628,
+28862892501,
+6913553720,
+34150750376,
+15666944415
+]
+},
+{
+"name": "random 81",
+"root": 1,
+"samples": [
+2892021785,
+38746312850,
+7591614991,
+3773024595,
+38937427141,
+19392463064,
+23076349542,
+30060534857,
+20544315641,
+2633988578,
+33708926765,
+29768856994,
+26819980589,
+1385623741,
+31509977766,
+5117544207,
+21717611311,
+13886709857,
+23137132358,
+26042577885,
+38232746330,
+33718334278,
+21836291577
+]
+},
+{
+"name": "random 82",
+"root": 2,
+"samples": [
+28440069371,
+25228647277,
+29680527380,
+18389535548,
+8904994520,
+42289350599,
+34489056235,
+4658054368,
+27089280941
+]
+},
+{
+"name": "random 83",
+"root": 1,
+"samples": [
+2331598964,
+24589583712,
+41528323139,
+4835269539,
+7394023787,
+31616601613,
+24014469867,
+11352043043,
+3161861763,
+37244434363,
+4737064523,
+37398336364,
+12063755483,
+2857725971,
+32047054685
+]
+},
+{
+"name": "random 84",
+"root": 1,
+"samples": [
+7201557898,
+11834066666,
+37683996555,
+42645719424,
+30647579673,
+16166506330,
+28856553446,
+19966631671,
+8845719370,
+12731126993,
+30162621277,
+20240662824
+]
+},
+{
+"name": "random 85",
+"root": 0,
+"samples": [
+38187508276,
+25334576174,
+7018488464,
+19344429748,
+28951294353,
+40037513687,
+3339393568,
+2206308582,
+34242825097,
+13900059354,
+7573509818
+]
+},
+{
+"name": "random 86",
+"root": 1,
+"samples": [
+41153062341,
+42760458008,
+29781942833,
+34630309884,
+37989377848,
+10444089146,
+6891317874,
+26135275811,
+7476332582,
+15061722097,
+18699422578,
+35483578981,
+33588877616,
+5334320193
+]
+},
+{
+"name": "random 87",
+"root": 0,
+"samples": [
+3904703256,
+33737714110,
+15734486195,
+13831326699,
+37337064010,
+6660388857,
+12515757875,
+31454564873,
+41408184479,
+9067929903,
+1867469909,
+18824249444,
+27682070578,
+3285265934,
+39730139261,
+7142924324,
+35915444930,
+35692055846,
+37936506732
+]
+},
+{
+"name": "random 88",
+"root": 1,
+"samples": [
+10676230182,
+16150699608,
+4614609188,
+13564225764,
+16413985359,
+27931810050,
+6204916628,
+13807503569,
+24448103260
+]
+},
+{
+"name": "random 89",
+"root": 1,
+"samples": [
+762153270,
+12430966285,
+36060062381,
+40591813634,
+19223024782,
+42749938129,
+6408825288,
+30739512116,
+13398772516,
+12975883681,
+36575194951,
+13689048022,
+32300645445,
+25726559017,
+34652127386,
+11232753190,
+21093620741,
+33878990928,
+25566706651,
+38945610514,
+10640812996,
+21719133114
+]
+},
+{
+"name": "random 90",
+"root": 2,
+"samples": [
+39131448368,
+3717372407
+]
+},
+{
+"name": "random 91",
+"root": 0,
+"samples": [
+36688418558,
+14821690691,
+22376837698,
+25261833728,
+24327309102,
+14244205031,
+36079602051,
+3271167360,
+7112307786,
+23179880248,
+15289440703,
+30020754988
+]
+},
+{
+"name": "random 92",
+"root": 1,
+"samples": [
+24320673164
+]
+},
+{
+"name": "random 93",
+"root": 0,
+"samples": [
+23476550524,
+31800697899,
+4207227901,
+31584140276,
+32228628950
+]
+},
+{
+"name": "random 94",
+"root": 2,
+"samples": [
+28003676311,
+33925205604,
+368402057,
+24554534738,
+6602836447
+]
+},
+{
+"name": "random 95",
+"root": 0,
+"samples": [
+2422086280,
+24752064006,
+26314490768,
+29571860904,
+12669034705,
+23391904739,
+3970202723,
+11115391139,
+17332949180,
+21920081311,
+8314883324
+]
+},
+{
+"name": "random 96",
+"root": 0,
+"samples": [
+11123735141,
+33024572775,
+26312567800,
+5135760415,
+13698817962,
+41055221868,
+24948914845,
+12497187583,
+4290775520,
+6212734615,
+13229440756
+]
+},
+{
+"name": "random 97",
+"root": 2,
+"samples": [
+30817328880,
+10285317896,
+42542935661,
+3357405294,
+28711337724,
+12094304368,
+8348985492,
+19172279619,
+1473138050,
+1215049189,
+11040804918,
+19155825724,
+16595635768,
+40495488627,
+18844178464
+]
+},
+{
+"name": "random 98",
+"root": 2,
+"samples": [
+15389060622,
+2806319563,
+19364850097,
+30768472645,
+36248926417,
+10518469337,
+29192093672,
+11592183522,
+11241102023,
+39302957216,
+8510991411,
+33099825942,
+32192001262,
+7526801545,
+36267663079,
+39443548209,
+28397826203,
+35075387750,
+2490781986,
+36778232257,
+26900803526,
+23748854740,
+990166464,
+30186955764,
+30532240402
+]
+},
+{
+"name": "random 99",
+"root": 1,
+"samples": [
+25742528064,
+5089892711,
+41557915107,
+11519709025,
+34454374270,
+38240298886,
+28535990041,
+13331955868,
+22547883191,
+4305687359,
+37051438137,
+8678924075,
+23246948122,
+27554254317,
+24712065048,
+7942692907,
+42525916164,
+12319663493,
+22952776485,
+9811075023,
+42713015467,
+1670482082,
+2077196097,
+32921214330
+]
+}
+]
+}

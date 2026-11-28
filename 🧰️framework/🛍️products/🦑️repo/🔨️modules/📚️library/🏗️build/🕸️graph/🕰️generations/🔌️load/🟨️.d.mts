@@ -1,5 +1,5 @@
 import type {GenerationStaleReasonV1,GenerationComputeResultV1,GenerationComputeSpecV1,GenerationGraphPolicyV1,GenerationMembershipV1,GenerationRowV1,GenerationRowSourceV1,GenerationStoreOptionsV1,FrontierV1,GenerationManifestV1} from "../🟨️.mjs";
-export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"covered"|"pinned"|"building"|"published"|"indexed"|"swept"|"closure"|"cold"|"stale"|"planned"|"summary"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonDerived"|"cutoff"|"reasonMembership"|"reasonMore"|"pendingCrate"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged"|"merged"|"restored"|"restoredHead"|"uploaded"|"uploadedHead"|"exchangeFailed"|"storing"|"healing"|"indexing"|"sealing"|"resumed"|"resumedWaves"|"sealedAge"|"neverSealed"|"projectNeverSealed"|"fleetHolds"|"progressRunning"|"progressIdle",string>>>>;
+export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"covered"|"pinned"|"building"|"published"|"indexed"|"swept"|"closure"|"cold"|"stale"|"planned"|"summary"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonDerived"|"cutoff"|"reasonMembership"|"reasonMore"|"pendingCrate"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged"|"merged"|"restored"|"restoredHead"|"uploaded"|"uploadedHead"|"exchangeFailed"|"storing"|"healing"|"indexing"|"sealing"|"resumed"|"resumedWaves"|"sealedAge"|"neverSealed"|"projectNeverSealed"|"fleetHolds"|"progressRunning"|"progressIdle"|"overlay"|"overlayFailed",string>>>>;
 /** 🔭️ Words how far the whole read of this machine is; `builder` is the graph builder custody holder or null. */
 export function renderWholeReadProgressV1(builder:{readonly phase?:string;readonly done?:number;readonly total?:number;readonly heldSeconds?:number}|null|undefined,language:"en"|"de"):string;
 /** ⏳️ Words an age in seconds as days, hours and minutes. */
@@ -40,6 +40,10 @@ export interface GenerationHostV1{
  externalDependencies?():Promise<readonly string[]>;
  preflight?():Promise<void>;
  withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>):Promise<T>;
+ /** 🫧️ Whether a live claim of the builder custody rebuilds the whole workspace; optional. */
+ wholeBusy?():Promise<boolean>|boolean;
+ /** 🫧️ Runs a private, unpublished refresh of the stale owners of a narrow read beside a whole read: no custody claim, the store as a shared cohort; optional. */
+ withOverlay?<T>(body:(store:unknown,control:unknown)=>Promise<T>):Promise<T>;
  withBuilder<T>(body:(store:unknown,control:unknown,claim?:import("../🔐️custody/🟨️.mjs").SliceClaimV1)=>Promise<T>,request?:import("../🟨️.mjs").GenerationPendingV1,peerWait?:(blocked:boolean)=>void,purpose?:"build"|"restore"):Promise<T>;
  /** 🤝️ Prepares the stale projects of a pending refresh together with the commands waiting for the same graph before the exclusive build; optional, never fails the command. */
  prefetch?(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;structural:boolean;implementation:string}):Promise<void>;

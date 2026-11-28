@@ -1,0 +1,277 @@
+{
+  "clamp": [
+    {
+      "capacityBytes": 27917287424,
+      "usedBytes": 858993459,
+      "availableBytes": 5798205849,
+      "innerFreeBytes": 27058293965,
+      "phantomBytes": 21260088116,
+      "clamped": true,
+      "starved": false
+    },
+    {
+      "capacityBytes": 28991029248,
+      "usedBytes": 966367641,
+      "availableBytes": 5046586572,
+      "innerFreeBytes": 28024661607,
+      "phantomBytes": 22978075035,
+      "clamped": true,
+      "starved": false
+    },
+    {
+      "capacityBytes": 11811160064,
+      "usedBytes": 322122547,
+      "availableBytes": 11274289152,
+      "innerFreeBytes": 11489037517,
+      "phantomBytes": 214748365,
+      "clamped": false,
+      "starved": false
+    },
+    {
+      "capacityBytes": 18253611008,
+      "usedBytes": 2576980377,
+      "availableBytes": 15461882265,
+      "innerFreeBytes": 15676630631,
+      "phantomBytes": 214748366,
+      "clamped": false,
+      "starved": false
+    },
+    {
+      "capacityBytes": 27917287424,
+      "usedBytes": 1073741824,
+      "availableBytes": 0,
+      "innerFreeBytes": 26843545600,
+      "phantomBytes": 26843545600,
+      "clamped": true,
+      "starved": true
+    },
+    {
+      "capacityBytes": 8589934592,
+      "usedBytes": 7516192768,
+      "availableBytes": 536870912,
+      "innerFreeBytes": 1073741824,
+      "phantomBytes": 536870912,
+      "clamped": false,
+      "starved": false
+    },
+    {
+      "capacityBytes": 103079215104,
+      "usedBytes": 45097156608,
+      "availableBytes": 33285996544,
+      "innerFreeBytes": 57982058496,
+      "phantomBytes": 24696061952,
+      "clamped": true,
+      "starved": false
+    }
+  ],
+  "rightSize": [
+    {
+      "capacityBytes": 27917287424,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "retire": true
+    },
+    {
+      "capacityBytes": 27917287424,
+      "sizedBytes": 8589934592,
+      "clamped": false,
+      "retire": false
+    },
+    {
+      "capacityBytes": 9663676416,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "retire": true
+    },
+    {
+      "capacityBytes": 8589934592,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "retire": false
+    },
+    {
+      "capacityBytes": 28991029248,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "retire": true
+    }
+  ],
+  "shrink": [
+    {
+      "capacityBytes": 32212254720,
+      "usedBytes": 3972844748,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 8589934592
+    },
+    {
+      "capacityBytes": 34359738368,
+      "usedBytes": 2040109465,
+      "sizedBytes": 17179869184,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 17179869184
+    },
+    {
+      "capacityBytes": 27917287424,
+      "usedBytes": 858993459,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 8589934592
+    },
+    {
+      "capacityBytes": 34359738368,
+      "usedBytes": 15032385536,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 30064771072
+    },
+    {
+      "capacityBytes": 10737418240,
+      "usedBytes": 1073741824,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 8589934592
+    },
+    {
+      "capacityBytes": 28991029248,
+      "usedBytes": 1073741824,
+      "sizedBytes": 8589934592,
+      "clamped": false,
+      "shrink": false,
+      "targetBytes": 8589934592
+    },
+    {
+      "capacityBytes": 12884901888,
+      "usedBytes": 5368709120,
+      "sizedBytes": 8589934592,
+      "clamped": true,
+      "shrink": true,
+      "targetBytes": 10737418240
+    }
+  ],
+  "pressure": [
+    {
+      "hostFreeBytes": 64424509440,
+      "images": [
+        {
+          "id": "sealed",
+          "capacityBytes": 27917287424,
+          "usedBytes": 1073741824,
+          "availableBytes": 25769803776
+        }
+      ],
+      "level": "none",
+      "demandBytes": 0,
+      "starved": []
+    },
+    {
+      "hostFreeBytes": 37580963840,
+      "images": [
+        {
+          "id": "sealed",
+          "capacityBytes": 27917287424,
+          "usedBytes": 1073741824,
+          "availableBytes": 25769803776
+        }
+      ],
+      "level": "soft",
+      "demandBytes": 5368709120,
+      "starved": []
+    },
+    {
+      "hostFreeBytes": 16106127360,
+      "images": [
+        {
+          "id": "sealed",
+          "capacityBytes": 27917287424,
+          "usedBytes": 1073741824,
+          "availableBytes": 0
+        }
+      ],
+      "level": "hard",
+      "demandBytes": 26843545600,
+      "starved": [
+        "sealed"
+      ]
+    },
+    {
+      "hostFreeBytes": 37580963840,
+      "images": [
+        {
+          "id": "sealed",
+          "capacityBytes": 27917287424,
+          "usedBytes": 1073741824,
+          "availableBytes": 0
+        },
+        {
+          "id": "w",
+          "capacityBytes": 28991029248,
+          "usedBytes": 1073741824,
+          "availableBytes": 5368709120
+        }
+      ],
+      "level": "hard",
+      "demandBytes": 5368709120,
+      "starved": [
+        "sealed"
+      ]
+    },
+    {
+      "hostFreeBytes": 26843545600,
+      "images": [],
+      "level": "soft",
+      "demandBytes": 16106127360,
+      "starved": []
+    },
+    {
+      "hostFreeBytes": 5368709120,
+      "images": [],
+      "level": "critical",
+      "demandBytes": 37580963840,
+      "starved": []
+    },
+    {
+      "hostFreeBytes": 7516192768,
+      "images": [
+        {
+          "id": "w",
+          "capacityBytes": 28991029248,
+          "usedBytes": 1073741824,
+          "availableBytes": 0
+        }
+      ],
+      "level": "critical",
+      "demandBytes": 35433480192,
+      "starved": [
+        "w"
+      ]
+    }
+  ],
+  "backoff": [
+    {
+      "attempt": 1,
+      "milliseconds": 0
+    },
+    {
+      "attempt": 2,
+      "milliseconds": 2000
+    },
+    {
+      "attempt": 3,
+      "milliseconds": 8000
+    },
+    {
+      "attempt": 4,
+      "milliseconds": 8000
+    },
+    {
+      "attempt": 9,
+      "milliseconds": 8000
+    }
+  ]
+}

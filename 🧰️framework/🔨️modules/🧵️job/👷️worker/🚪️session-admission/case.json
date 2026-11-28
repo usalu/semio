@@ -9,7 +9,7 @@
   },
   "maximumCpu": 20000,
   "maximumTurns": 65536,
-  "quantum": 1,
+  "quantum": 4,
   "nullFrontiers": [
     "frame",
     "node"

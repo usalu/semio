@@ -1,0 +1,11 @@
+{
+  "intent": { "version": 1, "mode": "prototype", "pluginId": "fixture", "cratePath": "components/fixture" },
+  "owner": "components/fixture/Cargo.toml:component-model",
+  "generations": {
+    "n": { "receipt": "{\"generation\":\"n\"}\n", "files": { "📦️component.wasm": "alpha", "🧾️receipt.json": "{\"generation\":\"n\"}\n" } },
+    "m": { "receipt": "{\"generation\":\"m\"}\n", "files": { "📦️component.wasm": "bravo", "🧾️receipt.json": "{\"generation\":\"m\"}\n" } },
+    "o": { "receipt": "{\"generation\":\"o\"}\n", "files": { "📦️component.wasm": "charlie", "🧾️receipt.json": "{\"generation\":\"o\"}\n" } }
+  },
+  "publicationMilliseconds": 5000,
+  "blockedMilliseconds": 1500
+}

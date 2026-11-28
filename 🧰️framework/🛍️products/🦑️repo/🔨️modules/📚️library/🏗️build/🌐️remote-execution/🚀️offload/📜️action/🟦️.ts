@@ -31,9 +31,8 @@ export function parseRustcIdentityV1(text:string):Readonly<{commit:string;host:s
  return commit&&host?{commit,host,digest:sha(text).slice(0,16)}:undefined;
 }
 
-/** 🪶️ The arguments of a `cdylib` final the way the build scheduler runs one locally: one front-end thread (`-Z threads=<n>` becomes `threads=1`). The LLVM back end is not decided here: the worker that runs the unit grants it code generation threads from its own free cores and memory (the schema's `worker.codegen`) and runs it serially (`-Z no-parallel-backend`) only when it grants one, so a final sent to an idle machine uses its cores. Output bytes do not depend on the thread count. Every other unit is returned unchanged. */
+/** 🪶️ The arguments of every offloaded unit the way a shared unit is compiled locally: one front-end thread (`-Z threads=<n>` becomes `threads=1`). The LLVM back end is not decided here: the worker that runs the unit grants it code generation threads from its own free cores and memory (the schema's `worker.codegen`) and runs it serially (`-Z no-parallel-backend`) only when it grants one, so a final sent to an idle machine uses its cores. A parallel front end orders the definitions it creates while lowering by whichever thread is first, so only one thread gives the same bytes on every machine (see `deterministicFrontEndArgumentsV1`), and the requester shares an offloaded unit through the fleet like a local one. */
 export function offloadFrontEndArgumentsV1(args:readonly string[]):readonly string[]{
- if(!offloadCrateTypesOfV1(args).includes("cdylib"))return args;
  const threads=(argument:string):string=>/^threads=[0-9]{1,3}$/u.test(argument)?"threads=1":argument;
  return args.map((argument,index)=>args[index-1]==="-Z"?threads(argument):argument.startsWith("-Zthreads=")?"-Z"+threads(argument.slice(2)):argument);
 }

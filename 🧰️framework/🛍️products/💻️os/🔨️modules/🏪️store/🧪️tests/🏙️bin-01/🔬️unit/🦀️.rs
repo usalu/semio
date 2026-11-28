@@ -10,4 +10,5 @@ include!("🥇️one-item-publication-fixture-and-snapshot-read-lease-laws/🦀�
 include!("📜️edit-retirement-message-ledger-and-displaced-owner-laws/🦀️.rs");
 include!("🎫️completed-record-registry-and-envelope-decode-laws/🦀️.rs");
 include!("🔭️envelope-close-field-registry-and-snapshot-read-laws/🦀️.rs");
+include!("🎟️terminal-vacancy-of-snapshot-read-slots-laws/🦀️.rs");
 

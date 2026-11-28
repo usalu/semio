@@ -76,13 +76,6 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "typescript",
-      "package": "graphql",
-      "version": "16.14.0"
-    }
-  ],
   "probes": [],
   "comparisonProfiles": [],
   "comparisonPipelines": [],

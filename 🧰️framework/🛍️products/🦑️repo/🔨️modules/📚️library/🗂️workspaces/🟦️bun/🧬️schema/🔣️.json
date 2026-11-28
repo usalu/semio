@@ -348,7 +348,8 @@
         "readChunkBytes": 65536,
         "directoryReadBatch": 256,
         "listingSettleMilliseconds": 2000,
-        "maximumListingCacheDirectories": 1048576
+        "maximumListingCacheDirectories": 1048576,
+        "maximumScopes": 64
       }
     },
     "PhysicalObservationProtocol": {

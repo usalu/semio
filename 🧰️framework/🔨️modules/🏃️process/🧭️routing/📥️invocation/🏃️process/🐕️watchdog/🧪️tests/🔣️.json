@@ -102,6 +102,51 @@
         "waiting": 3
       },
       "decision": "healthy"
+    },
+    {
+      "name": "wedged tree with an unreaped child after the defunct period",
+      "state": {
+        "idleMilliseconds": 5000000,
+        "liveChildren": 4,
+        "treeIdleMilliseconds": 300000,
+        "waiting": 0,
+        "defunct": 1
+      },
+      "decision": "tree-stalled"
+    },
+    {
+      "name": "unreaped child, tree idle one millisecond short of the defunct period",
+      "state": {
+        "idleMilliseconds": 5000000,
+        "liveChildren": 4,
+        "treeIdleMilliseconds": 299999,
+        "waiting": 0,
+        "defunct": 1
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "same idle tree without an unreaped child waits for the full idle-tree period",
+      "state": {
+        "idleMilliseconds": 5000000,
+        "liveChildren": 4,
+        "treeIdleMilliseconds": 300000,
+        "waiting": 0,
+        "defunct": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "unreaped child in a declared wait",
+      "state": {
+        "idleMilliseconds": 5000000,
+        "liveChildren": 4,
+        "treeIdleMilliseconds": 900000,
+        "waiting": 1,
+        "defunct": 3
+      },
+      "decision": "healthy"
     }
-  ]
+  ],
+  "defunctIdle": 300000
 }

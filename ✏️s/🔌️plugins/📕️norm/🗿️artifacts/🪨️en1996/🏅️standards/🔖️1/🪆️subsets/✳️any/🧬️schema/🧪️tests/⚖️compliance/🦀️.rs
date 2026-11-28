@@ -8,6 +8,10 @@ use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus, Desi
 use semio_s_artifact_norm_en1996_model::{En1996Snapshot, MasonryClass, UnitMaterial};
 use semio_s_artifact_norm_en1996_editor::field_meta::en1996_field_meta;
 
+fn family_any_dir() -> std::path::PathBuf {
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+}
+
 #[test]
 fn de_na_fk_clay_group1_m10() {
     let doc = En1996Snapshot::compliant_clay_wall();
@@ -361,7 +365,7 @@ fn set_json_at_path(root: &mut serde_json::Value, path: &str, value: serde_json:
 #[test]
 fn committed_dsl_pack_assets_parse_and_assert_verdicts() {
     use std::path::PathBuf;
-    let root = fixture_path!("../../../../../🖼️assets");
+    let root = family_any_dir().join("🖼️assets");
     for (folder, expect_pass) in [("🧱️loadbearing-wall", true), ("❌️multi-fail-masonry", false)] {
         let dir = root.join(folder).join(folder);
         let dsl = std::fs::read_to_string(dir.join("🗣️.dsl.semio"))
@@ -395,7 +399,7 @@ fn mutation_and_check_labels_differ_en_de() {
             panic!("identical en/de for {ctx}: {en:?}");
         }
     }
-    let mut_root = fixture_path!("../../../../🧬️mutations");
+    let mut_root = family_any_dir().join("🧬️schema/🧬️mutations");
     let needle = "LocalizedLabel::native(";
     for entry in std::fs::read_dir(&mut_root).expect("mutations dir") {
         let entry = entry.expect("entry");
@@ -435,7 +439,7 @@ fn mutation_and_check_labels_differ_en_de() {
 #[test]
 fn typed_diff_and_snapshot_facets_have_no_unknown() {
     use std::path::PathBuf;
-    let schema = fixture_path!("../../../..");
+    let schema = family_any_dir().join("🧬️schema");
     let files = [
         "🔺️diff/🟦️.ts",
         "📸️snapshot/🟦️.ts",

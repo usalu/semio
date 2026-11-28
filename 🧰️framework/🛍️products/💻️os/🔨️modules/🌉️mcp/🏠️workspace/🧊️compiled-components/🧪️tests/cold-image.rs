@@ -88,7 +88,7 @@ fn cold_retained_image_initializes_then_publishes() {
     let crate_path = row["cratePath"].as_str().unwrap();
     let digest = framework_hash::sha256_hex(crate_path.as_bytes());
     let root = Scratch(std::env::temp_dir().join(format!("semio-cold-image-{}", std::process::id())));
-    let model = root.0.join("browser").join(mode).join("components").join(&digest[..24]);
+    let model = root.0.join("browser").join(mode).join("component-models").join(&digest[..24]).join("0123456789abcdef01234567");
     std::fs::create_dir_all(&model).unwrap();
     let component = model.join("📦️component.wasm");
     std::fs::write(&component, &bytes).unwrap();

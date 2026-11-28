@@ -708,6 +708,7 @@ pub mod part_1_2 {
 pub mod part_2 {
     use crate::*;
     use semio_s_artifact_norm_en1994_model::FatigueDetail;
+    use semio_s_artifact_norm_en1994_checks_catalogue_fatigue as fatigue;
 
     pub const STUD_DELTA_TAU_C_PA: f64 = 90e6;
     pub const STUD_N_REF: f64 = 2.0e6;
@@ -723,13 +724,13 @@ pub mod part_2 {
     }
 
     /// 🌉️ S–N curve of the steel detail category `detail` (m = 3 from 2×10⁶ cycles) with the annex γ_Mf.
-    pub fn steel_curve(detail: FatigueDetail, annex: AnnexChoice) -> catalogue::fatigue::Curve {
-        catalogue::fatigue::Curve { delta_c_pa: steel_detail_category_pa(detail), n_ref: STUD_N_REF, m: 3.0, gamma: AnnexParams::for_annex(annex).gamma_mf }
+    pub fn steel_curve(detail: FatigueDetail, annex: AnnexChoice) -> fatigue::Curve {
+        fatigue::Curve { delta_c_pa: steel_detail_category_pa(detail), n_ref: STUD_N_REF, m: 3.0, gamma: AnnexParams::for_annex(annex).gamma_mf }
     }
 
     /// 🌉️ S–N curve of the headed stud in shear (Δτ_c = 90 MPa, m = 8) with the annex γ_Mf,s.
-    pub fn stud_curve(annex: AnnexChoice) -> catalogue::fatigue::Curve {
-        catalogue::fatigue::Curve { delta_c_pa: STUD_DELTA_TAU_C_PA, n_ref: STUD_N_REF, m: STUD_FATIGUE_SLOPE_M, gamma: AnnexParams::for_annex(annex).gamma_mf }
+    pub fn stud_curve(annex: AnnexChoice) -> fatigue::Curve {
+        fatigue::Curve { delta_c_pa: STUD_DELTA_TAU_C_PA, n_ref: STUD_N_REF, m: STUD_FATIGUE_SLOPE_M, gamma: AnnexParams::for_annex(annex).gamma_mf }
     }
 
     pub fn steel_fatigue_resistance_pa(detail: FatigueDetail, n_cycles: f64, annex: AnnexChoice) -> f64 {

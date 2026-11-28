@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:read-identity:v1",
+  "title": "The code identity of a graph read",
+  "description": "A graph read hands over to a waiting reader when the code it runs is not the code the tree wants. Its identity is the content digest of the import closure of the entries below, without the folders listed in `excluded` (the services around the read: the resident host, caches, leases, the process runtime, reporting). A landing in an excluded folder, or in a file no entry imports, never hands over a read; the inference environment is judged by the generation's own implementation rows. Paths are relative to the build library, a folder ends with a slash.",
+  "definitions": {
+    "Scope": {
+      "type": "object",
+      "const": {
+        "entries": ["🕸️graph/🕰️host/🟦️.ts", "🕸️graph/🛑️custody/🟦️.ts", "🕸️graph/📥️inference/🟨️.mjs"],
+        "excluded": [
+          "🏡️resident/", "🧭️invocation/", "🧠️memory/", "🌡️host-capacity/", "🌐️remote-cache/", "🌐️remote-execution/", "🗄️cas/", "🧱️job-limits/", "🪢️slots/", "🔒️leases/", "🩺️diagnostics/", "🩺️doctor/", "🚢️fleet-status/", "🧹️cache-gc/", "🏛️sealed/", "🏃️execution/", "📊️reporting/", "🧾️ci-report/", "⏱️profile/", "📈️counter-ledger/", "🧾️store-receipt/",
+          "../⚡️caching/", "../../../../../🔨️modules/🏃️process/"
+        ]
+      }
+    }
+  }
+}

@@ -405,6 +405,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "js-component-bindgen",
+ "serde_json",
+ "wasm-encoder 0.259.0",
+ "wasmparser 0.259.0",
+ "wat",
+ "wit-component",
 ]
 
 [[package]]
@@ -621,6 +626,7 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap",
  "semver",
+ "serde",
 ]
 
 [[package]]
@@ -631,6 +637,7 @@ checksum = "4f5fa0a054ae153606df820eb0a84213e28cda41bbe04ba2628e71b6ba100fcb"
 dependencies = [
  "bitflags",
  "indexmap",
+ "semver",
 ]
 
 [[package]]

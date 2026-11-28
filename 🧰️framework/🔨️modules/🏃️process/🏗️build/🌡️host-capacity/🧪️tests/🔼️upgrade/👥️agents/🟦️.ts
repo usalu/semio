@@ -72,7 +72,7 @@ test("A nested invocation that inherits a quiet grant works with the jobs of the
  const directory=fresh(),id="inheritedaaaaa01",now=Date.now();
  mkdirSync(join(directory,"grants"),{recursive:true});mkdirSync(join(directory,"queue"),{recursive:true});
  const request=full(id,300,400),plan=planHostCapacityV1(policy,{totalMegabytes:16384},request,8),row:HostGrantV1={id,operation:"run",jobs:1,cpu:1,reservedMegabytes:2048,admittedAtMs:now,observedMegabytes:null,pid:process.pid,bootAtMs:hostBootAtV1(directory,now),quiet:true,arrivedAtMs:now};
- writeFileSync(join(directory,"grants",id+".json"),JSON.stringify(row));
+ writeFileSync(join(directory,"grants",id+".format"),'{"format":1}');writeFileSync(join(directory,"grants",id+".json"),JSON.stringify(row));
  const grown=()=>{const{quiet:_,...rest}=row;writeFileSync(join(directory,"grants",id+".json"),JSON.stringify({...rest,jobs:6,cpu:6,reservedMegabytes:3500,upgradedAtMs:Date.now(),resumedAtMs:Date.now()}));};
  const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
  const nested=()=>withHostCapacityV1({directory,policy,request:quietHostRequestV1(request,{quiet:true,megabytes:2048,rampMilliseconds:60_000,samples:1,shareBasisPoints:10000}),upgrade:request,control,environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(plan)},write:()=>undefined},async handle=>({inherited:handle.inherited,jobs:handle.jobs,cpu:handle.cpu,plan:handle.plan.jobs,quiet:JSON.parse(readFileSync(join(directory,"grants",id+".json"),"utf8")).quiet}));
@@ -129,4 +129,14 @@ test("An upgrade that waited for all its jobs past the bypass window takes the j
   expect([state.jobs,state.reservedMegabytes,state.quiet],`${language}: the jobs that fit and the memory of those jobs`).toEqual([expected,reserved,undefined]);
   expect(lines.at(-1),language).toMatch(language==="en"?new RegExp("from 1502 MB to "+reserved+" MB with "+expected+" of 8 job\\(s\\) after \\d+s"):new RegExp("von 1502 MB auf "+reserved+" MB mit "+expected+" von 8 Job\\(s\\) vergrößert"));
  }
+});
+
+test("An upgrade whose size is a guess (an unmeasured class, `rampSlot`) asks for the jobs that fit at once instead of holding the queue head with its whole preferred size for the bypass window",async()=>{
+ const floor=hostFloorMegabytesV1(fast,{totalMegabytes:16384}),peerUnrealized=5486-3600,available=floor+peerUnrealized+4000,request={...full("courseaaa9",404,700),rampSlot:true},held=200;
+ const peer={...running("printaaaa1",2,5486,3600),rampMilliseconds:10_000_000},other=quiet("dashaaaaa1",3,500_000),mine:HostGrantV1={...quiet("courseaaa9",1,500_000),reservedMegabytes:1502,observedMegabytes:held},lines:string[]=[],grants=[peer,other,mine];let state=mine,polls=0,clock=905_000;
+ const ledger={takeLock:()=>true,releaseLock:()=>undefined,holdsLock:()=>true,writeJson:()=>undefined,remove:()=>undefined,queuePath:()=>join(fresh(),"waiter.json"),readGrants:()=>grants.map(grant=>grant.id===state.id?state:grant),readWaiters:()=>[] as HostWaiterV1[],sample:async()=>({...machine({availableMegabytes:available,load:2}),atMs:clock})};
+ const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
+ const tuned=readHostCapacityPolicyV1({...decisionFixture.policy,wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:10,bypassMilliseconds:3_600_000}});
+ const outcome=await upgradeHostGrantV1({ledger:ledger as never,directory:fresh(),policy:tuned,request:{...request,minimumJobs:request.preferredJobs},control,state:()=>state,publish:next=>{state=next;},requested:()=>++polls<40,stopped:()=>false,now:()=>(clock+=1000),pid:mine.pid,language:"en",write:line=>lines.push(line),session:{address:mine.session!,weight:1}});
+ expect([outcome,state.jobs,state.quiet]).toEqual(["upgraded",4,undefined]);
 });

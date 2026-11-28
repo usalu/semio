@@ -154,6 +154,10 @@ pub fn editor_controller_id(owner: &str, variant: &str) -> String {
 pub fn norm_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
     static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
         [
+            ("mutation.no-op", "The edit changed nothing.", "Die Änderung hat nichts geändert."),
+            ("mutation.clamped", "The value was limited to its allowed range.", "Der Wert wurde auf den zulässigen Bereich begrenzt."),
+            ("mutation.invariant", "The edit would break a rule of the document, so it was refused.", "Die Änderung würde eine Regel des Dokuments verletzen und wurde abgelehnt."),
+            ("mutation.duplicate-id", "A row with this identifier already exists.", "Eine Zeile mit dieser Kennung existiert bereits."),
             ("norm.editor.unhandled-action", "The norm editor does not handle this action.", "Der Norm-Editor verarbeitet diese Aktion nicht."),
             ("norm.editor.value-path", "The field path is not valid.", "Der Feldpfad ist ungültig."),
             ("norm.editor.set-field-value", "The value does not fit this field.", "Der Wert passt nicht zu diesem Feld."),

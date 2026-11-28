@@ -14,21 +14,28 @@ use crate::standards::v1::subsets::any::schema::preparation::native_preparation_
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct Puzzle2dConnectHandlesCandidate { pub plan: Puzzle2dConnectHandlesPlan, pub snapshot: Option<Puzzle2dSnapshot> }
+/// 🪆️ Holds only the sequential child or retirement that is alive, so preparation, snapshot copy, edge assembly and the two retirements share one slot.
+pub enum Puzzle2dCandidateStage { Idle, Prepare(Puzzle2dPreparationChild<Puzzle2dConnectHandlesPreparationCursor>), Clone(RetainedFieldCursor<Puzzle2dSnapshot>), Edge(Puzzle2dPreparationChild<Puzzle2dConnectEdgeCursor>), CloseEdge(ControlledRetirement<Puzzle2dEdge>), CloseSnapshot(ControlledRetirement<Puzzle2dSnapshot>) }
+impl Puzzle2dCandidateStage {
+    fn terminal_is_empty(&self)->bool { match self { Self::Idle => true, Self::Prepare(child) => child.terminal_is_empty(), Self::Clone(cursor) => cursor.terminal_is_empty(), Self::Edge(child) => child.terminal_is_empty(), Self::CloseEdge(owner) => owner.terminal_is_empty(), Self::CloseSnapshot(owner) => owner.terminal_is_empty() } }
+}
+impl Puzzle2dConnectHandlesCandidateState {
+    fn prep(&mut self)->&mut Puzzle2dPreparationChild<Puzzle2dConnectHandlesPreparationCursor> { if matches!(self.stage, Puzzle2dCandidateStage::Idle) { self.stage = Puzzle2dCandidateStage::Prepare(Default::default()); } match &mut self.stage { Puzzle2dCandidateStage::Prepare(child) => child, _ => unreachable!("connect candidate phases are sequential") } }
+    fn clone_cursor(&mut self)->&mut RetainedFieldCursor<Puzzle2dSnapshot> { if matches!(self.stage, Puzzle2dCandidateStage::Idle) { self.stage = Puzzle2dCandidateStage::Clone(Default::default()); } match &mut self.stage { Puzzle2dCandidateStage::Clone(cursor) => cursor, _ => unreachable!("connect candidate phases are sequential") } }
+    fn edge(&mut self)->&mut Puzzle2dPreparationChild<Puzzle2dConnectEdgeCursor> { if matches!(self.stage, Puzzle2dCandidateStage::Idle) { self.stage = Puzzle2dCandidateStage::Edge(Default::default()); } match &mut self.stage { Puzzle2dCandidateStage::Edge(child) => child, _ => unreachable!("connect candidate phases are sequential") } }
+}
+
 pub struct Puzzle2dConnectHandlesCandidateCursor { state: ManuallyDrop<Puzzle2dConnectHandlesCandidateState> }
 
 #[doc(hidden)]
 pub struct Puzzle2dConnectHandlesCandidateState {
     source: Option<RetainedCloneBinding>,
     mutation: Option<RetainedCloneBinding>,
-    preparation: Puzzle2dPreparationChild<Puzzle2dConnectHandlesPreparationCursor>,
-    snapshot_clone: RetainedFieldCursor<Puzzle2dSnapshot>,
-    edge_assembly: Puzzle2dPreparationChild<Puzzle2dConnectEdgeCursor>,
+    stage: Puzzle2dCandidateStage,
     plan: Option<Puzzle2dConnectHandlesPlan>,
     candidate: Option<Puzzle2dSnapshot>,
     pub pending: Option<Puzzle2dEdge>,
     insertion: Option<PagedListEditCursor>,
-    candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
-    pending_close: Option<ControlledRetirement<Puzzle2dEdge>>,
     pub phase: u8,
     closing: bool,
 }
@@ -37,7 +44,7 @@ impl Deref for Puzzle2dConnectHandlesCandidateCursor { type Target = Puzzle2dCon
 impl DerefMut for Puzzle2dConnectHandlesCandidateCursor { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 
 impl Default for Puzzle2dConnectHandlesCandidateCursor {
-    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dConnectHandlesCandidateState { source: None, mutation: None, preparation: Default::default(), snapshot_clone: RetainedFieldCursor::<Puzzle2dSnapshot>::default(), edge_assembly: Default::default(), plan: None, candidate: None, pending: None, insertion: None, candidate_close: None, pending_close: None, phase: 0, closing: false }) } }
+    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dConnectHandlesCandidateState { source: None, mutation: None, stage: Puzzle2dCandidateStage::Idle, plan: None, candidate: None, pending: None, insertion: None, phase: 0, closing: false }) } }
 }
 
 impl Puzzle2dConnectHandlesCandidateCursor {
@@ -49,47 +56,47 @@ impl Puzzle2dConnectHandlesCandidateCursor {
         if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
-                if let Some(step)=self.preparation.ensure(effect)? {return Ok(step);}
-                let step = self.preparation.owner_mut().advance(source, mutation,effect)?;
-                let progress = match step { Puzzle2dConnectHandlesPreparationStep::Pending(progress) => progress, Puzzle2dConnectHandlesPreparationStep::Complete { plan, progress } => { self.plan = self.preparation.owner_mut().take(); self.preparation.begin_close(); self.phase = 1; if self.plan != Some(plan) { return Err(refusal("connect candidate lost its scalar plan")); } progress } };
+                if let Some(step)=self.prep().ensure(effect)? {return Ok(step);}
+                let step = self.prep().owner_mut().advance(source, mutation,effect)?;
+                let progress = match step { Puzzle2dConnectHandlesPreparationStep::Pending(progress) => progress, Puzzle2dConnectHandlesPreparationStep::Complete { plan, progress } => { self.plan = self.prep().owner_mut().take(); self.prep().begin_close(); self.phase = 1; if self.plan != Some(plan) { return Err(refusal("connect candidate lost its scalar plan")); } progress } };
                 Ok(RetainedCloneStep::Progress(progress))
             }
             1 => {
-                let step = settled_step(self.preparation.close_step(effect))?;
-                if matches!(step,RetainedCloneStep::Complete(_)) { self.phase = if self.plan.is_some_and(|plan| plan.disposition == Puzzle2dConnectHandlesDisposition::Changed) { 2 } else { 11 }; }
+                let step = settled_step(self.prep().close_step(effect))?;
+                if matches!(step,RetainedCloneStep::Complete(_)) { self.stage = Puzzle2dCandidateStage::Idle; self.phase = if self.plan.is_some_and(|plan| plan.disposition == Puzzle2dConnectHandlesDisposition::Changed) { 2 } else { 11 }; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
-                let step = cursor_advance(&mut self.snapshot_clone,source,body,effect)?;
+                let step = cursor_advance(self.clone_cursor(),source,body,effect)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
                 if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                let Some(owner)=cursor_taken(&mut self.snapshot_clone,effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); }; self.candidate = Some(owner);
+                let Some(owner)=cursor_taken(self.clone_cursor(),effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); }; self.candidate = Some(owner);
                 self.phase = 4;
                 Ok(payload_progress(size_of::<Puzzle2dSnapshot>()))
             }
             4 => {
-                let step=cursor_retire(&mut self.snapshot_clone,effect)?;
-                if self.snapshot_clone.terminal_is_empty() { self.phase = 5; }
+                let step=cursor_retire(self.clone_cursor(),effect)?;
+                if self.clone_cursor().terminal_is_empty() { self.stage = Puzzle2dCandidateStage::Idle; self.phase = 5; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             5 => {
-                if let Some(step)=self.edge_assembly.ensure(effect)? {return Ok(step);}
-                let step = self.edge_assembly.owner_mut().advance(mutation, body,effect)?;
+                if let Some(step)=self.edge().ensure(effect)? {return Ok(step);}
+                let step = self.edge().owner_mut().advance(mutation, body,effect)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 6; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             6 => {
                 if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                self.pending = Some(self.edge_assembly.owner_mut().take().ok_or_else(|| refusal("connect candidate edge completed without its owner"))?);
-                self.edge_assembly.begin_close();self.phase = 7;
+                let taken = self.edge().owner_mut().take().ok_or_else(|| refusal("connect candidate edge completed without its owner"))?;self.pending = Some(taken);
+                self.edge().begin_close();self.phase = 7;
                 Ok(payload_progress(size_of::<Puzzle2dEdge>()))
             }
             7 => {
-                let step = settled_step(self.edge_assembly.close_step(effect))?;
-                if self.edge_assembly.terminal_is_empty() { self.phase = 8; }
+                let step = settled_step(self.edge().close_step(effect))?;
+                if self.edge().terminal_is_empty() { self.stage = Puzzle2dCandidateStage::Idle; self.phase = 8; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             8 => {
@@ -119,15 +126,18 @@ impl Puzzle2dConnectHandlesCandidateCursor {
     }
 
     pub fn take(&mut self) -> Option<Puzzle2dConnectHandlesCandidate> { if self.closing || self.phase != 12 { return None; } self.phase = 13;Some(Puzzle2dConnectHandlesCandidate { plan: self.plan.take()?, snapshot: self.candidate.take() }) }
-    pub fn begin_close(&mut self) { self.closing = true;self.preparation.begin_close();self.edge_assembly.begin_close(); }
+    pub fn begin_close(&mut self) { self.closing = true;match &mut self.stage { Puzzle2dCandidateStage::Prepare(child) => child.begin_close(), Puzzle2dCandidateStage::Edge(child) => child.begin_close(), _ => {} } }
 
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
-        if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
-        if !self.snapshot_clone.terminal_is_empty(){return axis.retained::<Puzzle2dSnapshot,_>(&self.snapshot_clone)}
-        if !self.edge_assembly.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.edge_assembly.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.edge_assembly.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.edge_assembly.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.edge_assembly.next_close_depth_demand()}}
-        if let Some(owner)=self.pending_close.as_ref(){return axis.retirement(owner)}
+        match &self.stage {
+            Puzzle2dCandidateStage::Prepare(child) if !child.terminal_is_empty() => return match axis {Puzzle2dCloseAxis::Copy=>child.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>child.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>child.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>child.next_close_depth_demand()},
+            Puzzle2dCandidateStage::Clone(cursor) if !cursor.terminal_is_empty() => return axis.retained::<Puzzle2dSnapshot,_>(cursor),
+            Puzzle2dCandidateStage::Edge(child) if !child.terminal_is_empty() => return match axis {Puzzle2dCloseAxis::Copy=>child.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>child.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>child.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>child.next_close_depth_demand()},
+            Puzzle2dCandidateStage::CloseEdge(owner) => return axis.retirement(owner),
+            _ => {}
+        }
         if self.pending.is_some(){return axis.inline::<Puzzle2dEdge>()}
-        if let Some(owner)=self.candidate_close.as_ref(){return axis.retirement(owner)}
+        if let Puzzle2dCandidateStage::CloseSnapshot(owner)=&self.stage{return axis.retirement(owner)}
         if self.candidate.is_some(){return axis.inline::<Puzzle2dSnapshot>()}
         if self.insertion.is_some(){return axis.inline::<Option<PagedListEditCursor>>()}
         if self.plan.is_some(){return axis.inline::<Option<Puzzle2dConnectHandlesPlan>>()}
@@ -144,19 +154,23 @@ impl Puzzle2dConnectHandlesCandidateCursor {
         let grant=effect.grant();
         if !self.closing { return Err(refusal("connect candidate closure was not started").into()); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.preparation.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.preparation.close_step(effect))?.progress())); }
-        if !self.snapshot_clone.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.snapshot_clone,effect)?.progress())); }
-        if !self.edge_assembly.terminal_is_empty() { return RetirementPollExit::resume(self.edge_assembly.close_step(effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(owner) = self.pending_close.as_mut() { let step = controlled_step(owner,effect)?;if owner.terminal_is_empty() { self.pending_close = None; }return Ok(RetainedCloneStep::Progress(step.progress())); }
+        match &mut self.stage {
+            Puzzle2dCandidateStage::Prepare(child) if !child.terminal_is_empty() => return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(child.close_step(effect))?.progress())),
+            Puzzle2dCandidateStage::Clone(cursor) if !cursor.terminal_is_empty() => return Ok(RetainedCloneStep::Progress(cursor_retire(cursor,effect)?.progress())),
+            Puzzle2dCandidateStage::Edge(child) if !child.terminal_is_empty() => return RetirementPollExit::resume(child.close_step(effect)).map(|step| RetainedCloneStep::Progress(step.progress())),
+            Puzzle2dCandidateStage::CloseEdge(owner) => { let step = controlled_step(owner,effect)?; if owner.terminal_is_empty() { self.stage = Puzzle2dCandidateStage::Idle; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+            Puzzle2dCandidateStage::CloseSnapshot(owner) => { let step = controlled_step(owner,effect)?; if owner.terminal_is_empty() { self.stage = Puzzle2dCandidateStage::Idle; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+            _ => {}
+        }
         if self.pending.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            match ControlledRetirement::new(self.pending.take().unwrap()) { Ok(owner) => self.pending_close = Some(owner), Err((error, owner)) => { self.pending = Some(owner);return Err(error.into()); } }
+            match ControlledRetirement::new(self.pending.take().unwrap()) { Ok(owner) => self.stage = Puzzle2dCandidateStage::CloseEdge(owner), Err((error, owner)) => { self.pending = Some(owner);return Err(error.into()); } }
             return Ok(payload_progress(size_of::<Puzzle2dEdge>()));
         }
-        if let Some(owner) = self.candidate_close.as_mut() { let step = controlled_step(owner,effect)?;if owner.terminal_is_empty() { self.candidate_close = None; }return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if !matches!(self.stage, Puzzle2dCandidateStage::Idle|Puzzle2dCandidateStage::CloseSnapshot(_)) { self.stage = Puzzle2dCandidateStage::Idle; }
         if self.candidate.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            match ControlledRetirement::new(self.candidate.take().unwrap()) { Ok(owner) => self.candidate_close = Some(owner), Err((error, owner)) => { self.candidate = Some(owner);return Err(error.into()); } }
+            match ControlledRetirement::new(self.candidate.take().unwrap()) { Ok(owner) => self.stage = Puzzle2dCandidateStage::CloseSnapshot(owner), Err((error, owner)) => { self.candidate = Some(owner);return Err(error.into()); } }
             return Ok(payload_progress(size_of::<Puzzle2dSnapshot>()));
         }
         if self.insertion.is_some() { let bytes=size_of::<Option<PagedListEditCursor>>();if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()));}self.insertion=None;return Ok(payload_progress(bytes)); }
@@ -165,7 +179,7 @@ impl Puzzle2dConnectHandlesCandidateCursor {
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { close_progress(step) })
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.preparation.terminal_is_empty() && self.snapshot_clone.terminal_is_empty() && self.edge_assembly.terminal_is_empty() && self.plan.is_none() && self.candidate.is_none() && self.pending.is_none() && self.insertion.is_none() && self.candidate_close.is_none() && self.pending_close.is_none() && self.source.is_none() && self.mutation.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.stage.terminal_is_empty() && self.plan.is_none() && self.candidate.is_none() && self.pending.is_none() && self.insertion.is_none() && self.source.is_none() && self.mutation.is_none() }
 }
 
 impl Drop for Puzzle2dConnectHandlesCandidateCursor { fn drop(&mut self) { let empty = self.terminal_is_empty();assert!(std::thread::panicking() || empty, "connect candidate abandoned before controlled closure");if empty { unsafe { ManuallyDrop::drop(&mut self.state); } } } }

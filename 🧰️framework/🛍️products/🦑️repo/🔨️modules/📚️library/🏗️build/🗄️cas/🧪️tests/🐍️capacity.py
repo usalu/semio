@@ -17,9 +17,10 @@ def cap(v,row):
     claim=0 if store is None else room*r["freePercent"]//100
     wanted=max(total*r["sharePercent"]//100,floor,claim)
     w=max(v["minimumCapBytes"],min(wanted,room));step=v["machine"]["alignBytes"]
-    proportional=min(v["capBytes"],max(v["minimumCapBytes"],int(w//step)*step))
+    m=v["machine"];share=m.get("hostSharePercent");host_cap=float("inf") if share is None else max(step,(total*share//100//step)*step)
+    proportional=min(v["capBytes"],host_cap,max(v["minimumCapBytes"],int(w//step)*step))
     if store is None:return proportional
-    reserve_bytes=min(total//2,max(total*r["reservePercent"]//100,r["reserveFloorBytes"]))
+    reserve_bytes=min(total//2,max(total*r["reservePercent"]//100,min(r["reserveFloorBytes"],total*sz["reserveFloorMaxPercent"]//100),host_floor(v["machine"],total)))
     hard=store+free-reserve_bytes
     return min(proportional,max(v["minimumCapBytes"],(hard//step)*step))
 

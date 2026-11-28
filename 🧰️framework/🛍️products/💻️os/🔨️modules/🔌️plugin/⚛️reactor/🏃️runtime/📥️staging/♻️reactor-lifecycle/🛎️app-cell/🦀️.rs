@@ -133,6 +133,8 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     pub maintenance_fault_us: AtomicU64,
     pub maintenance_generation: AtomicU64,
     pub maintenance_stalled_steps: AtomicU32,
+    /// 🪦️ Consecutive live cleanup jobs that ended faulted or cancelled; one normal terminal each, only a run past `RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT` is a fault.
+    pub maintenance_prior_outcomes: AtomicU32,
     /// ⏱️ Monotonic instant the current zero-progress run of the live pump began (`0` = the pump is moving).
     pub maintenance_stall_since_us: AtomicU64,
     /// 🌫️ Whether the last live reading was starved of funding, so the reactor stops repeating the pressure pump for a stock that cannot fund a unit.
@@ -179,6 +181,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             maintenance_fault_us: AtomicU64::new(0),
             maintenance_generation: AtomicU64::new(0),
             maintenance_stalled_steps: AtomicU32::new(0),
+            maintenance_prior_outcomes: AtomicU32::new(0),
             maintenance_stall_since_us: AtomicU64::new(0),
             maintenance_starved: AtomicBool::new(false),
             maintenance_repeat: AtomicBool::new(false),

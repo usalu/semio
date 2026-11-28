@@ -1,0 +1,74 @@
+{
+ "$comment": "Handcrafted inputs; every expected value is the answer of the independent Python oracle (🐍️.py), not of the TypeScript code. Lanes are [id, claimed, lastUsedMs, crateKey, owner, flavour, held, product].",
+ "gib": 1073741824,
+ "acquire": [
+  {"id": "a lane of the same owner, crate set and flavour held by a live process is waited for, never copied", "request": {"crateKey": "*", "owner": "s1|a1"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": null, "owner": "s1|a1"}], "expect": {"kind": "busy", "id": "p000001"}},
+  {"id": "the same crate set of another session or agent gets a lane of its own", "request": {"crateKey": "*", "owner": "s1|a2"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": null, "owner": "s1|a1"}], "expect": {"kind": "new"}},
+  {"id": "another build flavour is another build and gets a lane of its own", "request": {"crateKey": "*", "owner": "s1|a1", "flavour": "release"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": null, "owner": "s1|a1", "flavour": "prototype"}], "expect": {"kind": "new"}},
+  {"id": "a free lane of the same crate set is taken warm before anything else", "request": {"crateKey": "*", "owner": "s1|a1"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": null, "owner": "s1|a1"}, {"id": "p000002", "claimed": false, "lastUsedMs": 4, "crateKey": "*", "bytes": null, "owner": "s1|a1"}], "expect": {"kind": "warm", "id": "p000002"}},
+  {"id": "a request without an owner is never held back by a twin", "request": {"crateKey": "*"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": null, "owner": "s1|a1"}], "expect": {"kind": "new"}},
+  {"id": "an unknown crate set is never a twin", "request": {"crateKey": "", "owner": "s1|a1"}, "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [{"id": "p000001", "claimed": true, "lastUsedMs": 5, "crateKey": "", "bytes": null, "owner": "s1|a1"}], "expect": {"kind": "new"}}
+ ],
+ "duplicates": [
+  {"id": "of two idle copies the older goes", "requested": [], "lanes": [
+   {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 13, "owner": "s1|a1"},
+   {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 9, "owner": "s1|a1"}], "expect": ["p000001"]},
+  {"id": "the lane a live process holds is kept and every idle copy goes, oldest first", "requested": [], "lanes": [
+   {"id": "p000001", "claimed": false, "lastUsedMs": 30, "crateKey": "*", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000002", "claimed": true, "lastUsedMs": 5, "crateKey": "*", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000003", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 1, "owner": "s1|a1"}], "expect": ["p000003", "p000001"]},
+  {"id": "the requested lane is kept although a newer idle copy exists", "requested": ["p000001"], "lanes": [
+   {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 1, "owner": "s1|a1"}], "expect": ["p000002"]},
+  {"id": "other owners, other crate sets and other flavours are no copies", "requested": [], "lanes": [
+   {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 1, "owner": "s2|a1"},
+   {"id": "p000003", "claimed": false, "lastUsedMs": 30, "crateKey": "ab12", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000004", "claimed": false, "lastUsedMs": 40, "crateKey": "*", "bytes": 1, "owner": "s1|a1", "flavour": "release"}], "expect": []},
+  {"id": "ownerless lanes, unknown crate sets, held lanes and product lanes are never copies", "requested": [], "lanes": [
+   {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 1},
+   {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 1},
+   {"id": "p000003", "claimed": false, "lastUsedMs": 10, "crateKey": "", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000004", "claimed": false, "lastUsedMs": 20, "crateKey": "", "bytes": 1, "owner": "s1|a1"},
+   {"id": "p000005", "claimed": false, "lastUsedMs": 10, "crateKey": "x", "bytes": 1, "owner": "s1|a1", "held": true},
+   {"id": "p000006", "claimed": false, "lastUsedMs": 20, "crateKey": "x", "bytes": 1, "owner": "s1|a1"},
+   {"id": "q000007", "claimed": false, "lastUsedMs": 10, "crateKey": "y", "bytes": 1, "owner": "s1|a1", "product": true},
+   {"id": "q000008", "claimed": false, "lastUsedMs": 20, "crateKey": "y", "bytes": 1, "owner": "s1|a1", "product": true}], "expect": []}
+ ],
+ "trim": [
+  {"id": "a copy goes although the pool is far inside its bounds, a recent copy included, and the rest stays", "pressure": false, "requested": [],
+   "bounds": {"maximumLanes": 16, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 13, "owner": "s1|a1", "recent": true, "flavour": "r"},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 9, "owner": "s1|a1", "recent": true, "flavour": "r"},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 5, "crateKey": "ab", "bytes": 9, "owner": "s1|a1"}], "expect": ["p000001"]},
+  {"id": "copies go first, then the least recently used lanes until the bounds hold", "pressure": false, "requested": [],
+   "bounds": {"maximumLanes": 2, "maximumLiveLanes": 32, "quotaBytes": 1000},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "*", "bytes": 13, "owner": "s1|a1"},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "*", "bytes": 9, "owner": "s1|a1"},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 5, "crateKey": "ab", "bytes": 9, "owner": "s1|a1"},
+    {"id": "p000004", "claimed": false, "lastUsedMs": 6, "crateKey": "cd", "bytes": 9, "owner": "s1|a1"}], "expect": ["p000001", "p000003"]}
+ ],
+ "admission": [
+  {"id": "no shortage retires nothing", "shortage": {"hostBytes": 0, "commitmentBytes": 0}, "candidates": [{"id": "p000001", "lastUsedMs": 1, "bytes": 5, "capacityBytes": 16}], "expect": []},
+  {"id": "the host shortage is covered by the least recently used lanes", "shortage": {"hostBytes": 11, "commitmentBytes": 0}, "candidates": [
+   {"id": "p000003", "lastUsedMs": 30, "bytes": 6, "capacityBytes": 16}, {"id": "p000001", "lastUsedMs": 10, "bytes": 6, "capacityBytes": 16}, {"id": "p000002", "lastUsedMs": 20, "bytes": 6, "capacityBytes": 16}], "expect": ["p000001", "p000002"]},
+  {"id": "the commitment shortage is covered by the declared capacities", "shortage": {"hostBytes": 0, "commitmentBytes": 28}, "candidates": [
+   {"id": "p000001", "lastUsedMs": 10, "bytes": 2, "capacityBytes": 30}, {"id": "p000002", "lastUsedMs": 20, "bytes": 2, "capacityBytes": 16}], "expect": ["p000001"]},
+  {"id": "both shortages are covered by one prefix of the order", "shortage": {"hostBytes": 9, "commitmentBytes": 40}, "candidates": [
+   {"id": "p000001", "lastUsedMs": 10, "bytes": 5, "capacityBytes": 16}, {"id": "p000002", "lastUsedMs": 20, "bytes": 5, "capacityBytes": 16}, {"id": "p000003", "lastUsedMs": 30, "bytes": 5, "capacityBytes": 16}], "expect": ["p000001", "p000002", "p000003"]},
+  {"id": "a host shortage that all lanes together cannot cover is not worked on", "shortage": {"hostBytes": 11, "commitmentBytes": 0}, "candidates": [
+   {"id": "p000001", "lastUsedMs": 10, "bytes": 1, "capacityBytes": 16}, {"id": "p000002", "lastUsedMs": 20, "bytes": null, "capacityBytes": 16}], "expect": []},
+  {"id": "a commitment shortage that all capacities together cannot cover is not worked on, the host shortage still is", "shortage": {"hostBytes": 4, "commitmentBytes": 99}, "candidates": [
+   {"id": "p000001", "lastUsedMs": 10, "bytes": 5, "capacityBytes": 16}, {"id": "p000002", "lastUsedMs": 20, "bytes": 5, "capacityBytes": 16}], "expect": ["p000001"]},
+  {"id": "equal use stamps are retired in id order", "shortage": {"hostBytes": 1, "commitmentBytes": 0}, "candidates": [
+   {"id": "p000002", "lastUsedMs": 10, "bytes": 5, "capacityBytes": 0}, {"id": "p000001", "lastUsedMs": 10, "bytes": 5, "capacityBytes": 0}], "expect": ["p000001"]}
+ ]
+}

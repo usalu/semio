@@ -189,26 +189,6 @@ export function canvas2dGumballTotal(gesture: Canvas2dGumballGesture, view: Canv
   return { action: "scaleSelection", args: { ids, sx, sy, sz: 1 } };
 }
 
-/** ➖️ The increment from `previous` to `current` (offsets subtract, angles subtract, factors divide); `null` when it
- * moves nothing. */
-export function canvas2dGumballIncrement(previous: Canvas2dGumballTransformPayload | null, current: Canvas2dGumballTransformPayload): Canvas2dGumballTransformPayload | null {
-  if (!previous || previous.action !== current.action) return current;
-  const before = previous.args;
-  const after = current.args;
-  if (current.action === "translateSelection") {
-    const dx = (after.dx as number) - (before.dx as number);
-    const dy = (after.dy as number) - (before.dy as number);
-    return Math.abs(dx) < MOVE_EPSILON && Math.abs(dy) < MOVE_EPSILON ? null : { action: current.action, args: { ...after, dx, dy } };
-  }
-  if (current.action === "rotateSelection") {
-    const angle = (after.angle as number) - (before.angle as number);
-    return Math.abs(angle) < TURN_EPSILON ? null : { action: current.action, args: { ...after, angle } };
-  }
-  const sx = (after.sx as number) / (before.sx as number);
-  const sy = (after.sy as number) / (before.sy as number);
-  return Math.abs(sx - 1) < TURN_EPSILON && Math.abs(sy - 1) < TURN_EPSILON ? null : { action: current.action, args: { ...after, sx, sy } };
-}
-
 /** 🛑️ The pose delta that moves nothing for a handle — a commit whose tail moved nothing carries it. */
 export function canvas2dGumballIdentity(kind: Canvas2dGumballHandleKind, ids: readonly string[]): Canvas2dGumballTransformPayload {
   const action = canvas2dGumballVerb(kind);
@@ -222,25 +202,25 @@ function phased(payload: Canvas2dGumballTransformPayload, phase: "stream" | "com
   return { action: payload.action, args: { ...payload.args, phase } };
 }
 
-/** 🌊️ A pointer move: a live gesture streams the increment since its last tick (`phase: stream`); a non-live one only
- * records its total for the local preview. */
+/** 🌊️ A pointer move: a live gesture streams its CUMULATIVE pose delta from the press (`phase: stream`) — every tick is
+ * idempotent, so a tick the app drops as stale costs the gesture nothing — and the identity while the pointer is back on
+ * the press point once a tick went out; a non-live one only records its total for the local preview. */
 export function canvas2dGumballDrag(gesture: Canvas2dGumballGesture, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballDragStep {
   const total = canvas2dGumballTotal(gesture, view, x, y);
-  if (!total) return { gesture, dispatch: null };
-  if (!gesture.live) return { gesture: { ...gesture, total }, dispatch: null };
-  const step = canvas2dGumballIncrement(gesture.total, total);
-  if (!step) return { gesture, dispatch: null };
-  return { gesture: { ...gesture, total, streamed: true }, dispatch: phased(step, "stream") };
+  if (!gesture.live) return { gesture: total ? { ...gesture, total } : gesture, dispatch: null };
+  if (!total && !gesture.total) return { gesture, dispatch: null };
+  if (total && gesture.total && gesture.total.action === total.action && JSON.stringify(gesture.total.args) === JSON.stringify(total.args)) return { gesture, dispatch: null };
+  return { gesture: { ...gesture, total, streamed: true }, dispatch: phased(total ?? canvas2dGumballIdentity(gesture.kind, gesture.ids), "stream") };
 }
 
-/** 💾️ The release at screen `(x, y)`: a live gesture commits its ONE transaction with the remaining tail (the identity
- * when nothing is left; nothing when it never moved); a non-live one dispatches its whole pose delta as ONE one-shot. */
+/** 💾️ The release at screen `(x, y)`: a live gesture commits its ONE transaction with the whole cumulative pose delta (the
+ * identity when the pointer is back on the press point; nothing when it never moved); a non-live one dispatches its whole
+ * pose delta as ONE one-shot. */
 export function canvas2dGumballRelease(gesture: Canvas2dGumballGesture, view: Canvas2dGumballView, x: number, y: number): Canvas2dGumballTransformPayload | null {
   const total = canvas2dGumballTotal(gesture, view, x, y);
   if (!gesture.live) return total;
-  const tail = total ? canvas2dGumballIncrement(gesture.total, total) : null;
-  if (!gesture.streamed && !tail) return null;
-  return phased(tail ?? canvas2dGumballIdentity(gesture.kind, gesture.ids), "commit");
+  if (!gesture.streamed && !total) return null;
+  return phased(total ?? canvas2dGumballIdentity(gesture.kind, gesture.ids), "commit");
 }
 
 /** 🧯️ A host cancel: a live gesture that streamed drops its open transaction with zero trace (`phase: abort`); anything

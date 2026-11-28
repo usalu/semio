@@ -14,7 +14,7 @@ import {checkScriptInvocation,requireIssuedResourceControlV1,requireIssuedResour
 import {openBuildGraphOptionalLedgerV1} from "./📒️ledger/🟨️.mjs";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { acquireQueuedResourceLease, acquireResourceLease, checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { repositoryCachePartitionNativeImageV1, repositoryLeaseDirectoryV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
+import { repositoryCachePartitionNativeImageV1, repositoryLeaseDirectoryV1, withRepositoryCommandCustodyV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import { requireNativeStoragePathV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { schema, policy, requireCurrentRepositoryBuildGraphConsumerV1, stagings, writers, datasets, selections, backings, graphReadScopes, graphFixtureSchema } from "./🔧️custody/🟨️.mjs";
 const ledgerSchema=schema.definitions.OptionalLedger,quotaSchema=schema.definitions.OptionalQuota,datasetSchema=schema.definitions.InferenceDataset;
@@ -171,12 +171,15 @@ export function requireRepositoryBuildGraphObservationPathV1(path,mode){
 export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}
 
 /** 🪫️ Brings the optional cache down to its low-water mark before a writer inserts, instead of declining every later record: least recently written groups first, each under its own non-blocking writer lease, never the writer's own namespace or lease shard; when the other groups cannot bring it down, the least recently written units of the writer's own group (whose lease it holds) go too; returns whether anything was retired. */
+/** ⏱️ The cancellation of one inline eviction: it ends with the lease control or after the declared budget, so a reader that opens the graph store never waits minutes for a cleanup; what it retired stays retired and the next writer goes on (the ledger declines records only while it is full). */
+export function optionalEvictionCancelV1(control,{budgetMilliseconds=quotaSchema.definitions.Protocol.const.inlineEvictionMilliseconds,now=Date.now}={}){const deadline=now()+budgetMilliseconds;return()=>control.signal.aborted||now()>deadline;}
 async function evictOptionalGraphLruV1(workspace,root,own,namespace,control){
+ const cancelled=optionalEvictionCancelV1(control);
  const{retireBuildGraphOptionalGroupsLruV1,retireBuildGraphOptionalEntriesLruV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=repositoryLeaseDirectoryV1(workspace),[kind,identity]=namespace?namespace.split(":"):["canonical",""],ownGroup=kind==="selection"?"selections/"+identity:kind==="dataset"?"contexts/"+identity:"canonical";
  const lease=async(group,id)=>{const resource=group==="canonical"?"repository-graph-facts:"+resolve(workspace):buildGraphWriterResourceV1(workspace,group,id);if(resource===own)return undefined;try{return await acquireResourceLease({directory,resource,mode:"exclusive",timeoutMs:0,signal:control.signal,control});}catch(error){checkResourceLeaseControl(control);if(error instanceof Error&&error.message==="Resource lease timed out: "+resource)return undefined;throw error;}};
- const report=await retireBuildGraphOptionalGroupsLruV1(root,{lease},{cancelled:()=>control.signal.aborted,progress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"repository:graph-optional-lru",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}},{exclude:[ownGroup]});
+ const report=await retireBuildGraphOptionalGroupsLruV1(root,{lease},{cancelled,progress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"repository:graph-optional-lru",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}},{exclude:[ownGroup]});
  checkResourceLeaseControl(control);
- const lowWater=quotaSchema.definitions.DefaultPolicy.const.lowWaterBytes,entries=report.remainingBytes>lowWater?await retireBuildGraphOptionalEntriesLruV1(root,ownGroup,{cancelled:()=>control.signal.aborted,progress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"repository:graph-optional-lru",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}},{targetBytes:lowWater,otherBytes:Math.max(0,report.remainingBytes-report.excludedBytes)}):undefined;
+ const lowWater=quotaSchema.definitions.DefaultPolicy.const.lowWaterBytes,entries=report.remainingBytes>lowWater?await retireBuildGraphOptionalEntriesLruV1(root,ownGroup,{cancelled,progress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"repository:graph-optional-lru",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}},{targetBytes:lowWater,otherBytes:Math.max(0,report.remainingBytes-report.excludedBytes)}):undefined;
  checkResourceLeaseControl(control);return report.retiredFiles>0||(entries?.retiredFiles??0)>0;
 }
 
@@ -187,7 +190,7 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
  if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);requireIssuedResourceControlRefinementV1(current.phaseControl,phaseControl);const nested={...current,live:true,phaseControl};try{return await writers.run(nested,async()=>{checkResourceLeaseControl(phaseControl);const value=await body(current.store,phaseControl);requireRepositoryBuildGraphWriterV1(workspace);return value;});}finally{nested.live=false;}}
  if(datasets.getStore()||current?.workspace===owner&&current.store.invocation!==invocation)throw Error("Original graph writer invocation identity changed");
  const leasePhase=phaseControl,leases=await openRepositoryCachePartitionV1(workspace,schema.definitions.GraphWriterLeaseProtocol.const.partition,leasePhase);let leaseFailed=false;
- try{
+ try{return await withRepositoryCommandCustodyV1(workspace,leases,async()=>{
   await leases.recheck();const check=()=>{checkResourceLeaseControl(phaseControl);checkResourceLeaseControl(leasePhase);};check();let maintained=false;
   const maintain=async force=>{for(let again=true;again;force=false){again=false;const image=await openRepositoryCachePartitionV1(workspace,"graph",leasePhase);let failed=false;try{await image.recheck();check();const space=nativeStatfsSyncV1(image.root);if(force||space.bavail*space.bsize<quotaSchema.definitions.DefaultPolicy.const.minimumAvailableBytes){maintained=true;again=await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();if(!force){const{launchGraphOptionalCollectorV1}=await import("../../🧹️cache-gc/🚀️launch/🟦️.ts");await launchGraphOptionalCollectorV1(workspace,nativeStatfsSyncV1(image.root).bavail*nativeStatfsSyncV1(image.root).bsize);}}else{{const{launchGraphOptionalCollectorV1}=await import("../../🧹️cache-gc/🚀️launch/🟦️.ts");await launchGraphOptionalCollectorV1(workspace,space.bavail*space.bsize);}await image.recheck();check();}}catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}}};
   if(!current&&optional)await maintain(false);
@@ -213,7 +216,7 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
    if(result.again){await maintain(true);continue;}
    return result.value;
   }
- }catch(error){leaseFailed=true;throw error;}finally{try{await leases.close();}catch(error){if(!leaseFailed)throw error;}}
+  });}catch(error){leaseFailed=true;throw error;}finally{try{await leases.close();}catch(error){if(!leaseFailed)throw error;}}
 }
 
 /** 🔒️ Refuses graph fact publication outside live original fixed-volume custody. */

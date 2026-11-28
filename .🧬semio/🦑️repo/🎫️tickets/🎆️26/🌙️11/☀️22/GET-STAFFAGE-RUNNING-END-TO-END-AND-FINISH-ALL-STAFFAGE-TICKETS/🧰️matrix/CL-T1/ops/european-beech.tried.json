@@ -1,0 +1,39 @@
+[
+ {
+  "facet": ".*",
+  "list": "body",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 20
+ },
+ {
+  "facet": ".*",
+  "list": "thermal",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "segments": 20
+ },
+ {
+  "facet": "br-.*|t\\d+-\\d+(-b)?",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "segments": 24
+ },
+ {
+  "facet": ".*",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ]
+ },
+ {
+  "decision": {
+   "en": "Budget: every foliage lobe and transpiration outlet is a faceted lobe, a polyhedron with the facets of its ellipsoid at 20 segments around and 10 rings (360 triangles), sized so that its outline straddles the outline the checks of the volumes measure the ellipsoid at (24 facets), within 0.2 % of its radius; the limbs and side branches are tubes of 24 facets around their stations instead of up to 64, the twigs keep their 12, and the joint spheres of the structure are faceted spheres of 24 segments. With smooth ellipsoids and 64 segments the 425 lobes and 130 limbs of 1:50 were 1.8 million triangles.",
+   "de": "Budget: Jeder Laubballen und jeder Transpirationsauslass ist ein facettierter Ballen, ein Polyeder mit den Facetten seines Ellipsoids bei 20 Segmenten im Umfang und 10 Ringen (360 Dreiecke), so bemessen, dass sein Umriss den Umriss umspielt, mit dem die Prüfungen der Volumen das Ellipsoid messen (24 Facetten), auf 0,2 % seines Radius genau; die Äste und Seitenäste sind Rohre mit 24 Facetten um ihre Stationen statt bis zu 64, die Zweige behalten ihre 12, und die Gelenkkugeln des Tragwerks sind facettierte Kugeln mit 24 Segmenten. Mit glatten Ellipsoiden und 64 Segmenten waren die 425 Ballen und 130 Äste von 1:50 1,8 Millionen Dreiecke."
+  }
+ }
+]

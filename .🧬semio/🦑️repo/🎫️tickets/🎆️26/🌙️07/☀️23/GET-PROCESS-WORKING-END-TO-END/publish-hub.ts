@@ -1,6 +1,6 @@
 /** Native stand-in for the repo's browser publication of the Process hub component: transpile the built wasm and publish it beside the other prototype modules. */
 import { createHash } from "node:crypto";
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 const R = "/Users/ueli/Documents/semio";
@@ -26,7 +26,7 @@ const base = hub.packageName.replaceAll("-", "_"), work = `${T}/🗑️generated
 mkdirSync(join(root, PREVIEW2_VENDOR_RELATIVE), { recursive: true }); ensurePreview2ShimVendorAt(join(root, PREVIEW2_VENDOR_RELATIVE), R);
 rmSync(work, { recursive: true, force: true }); mkdirSync(work, { recursive: true });
 await transpilePluginComponentModulesAsync(wasm, out, base, { repoRoot: R, mode: "prototype", preview2VendorDir: join(root, PREVIEW2_VENDOR_RELATIVE), environment: process.env });
-const dest = join(root, hub.directoryName); rmSync(dest, { recursive: true, force: true }); mkdirSync(dest, { recursive: true });
+const live = join(root, hub.directoryName), dest = join(root, `${hub.directoryName}.staging`); rmSync(dest, { recursive: true, force: true }); mkdirSync(dest, { recursive: true });
 cpSync(out, dest, { recursive: true });
 writeFileSync(join(dest, PLUGIN_HOST_SHIM_FILE), hostShimSource());
 rewritePreview2ShimImports(join(dest, `${base}.js`), join(root, PREVIEW2_VENDOR_RELATIVE));
@@ -38,6 +38,7 @@ const receipt = { schema: "semio.plugin.component-receipt/v1", pluginId: hub.plu
 writeFileSync(join(dest, "🛂️.descriptor.semio"), d.pack); writeFileSync(join(dest, "🔣️.json"), d.json);
 writeFileSync(join(dest, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, hub.wasmOut));
 writeFileSync(join(dest, "🧾️component.json"), encodeComponentReceiptV1(receipt as never));
-console.log("published", hub.pluginId, dest, readdirSync(dest).length, "files");
+rmSync(live, { recursive: true, force: true }); renameSync(dest, live);
+console.log("published", hub.pluginId, live, readdirSync(live).length, "files");
 writeFileSync(join(root, "🧵️shard", SHARD_WORKER_FILE), shardWorkerSource());
 console.log("published shard worker");

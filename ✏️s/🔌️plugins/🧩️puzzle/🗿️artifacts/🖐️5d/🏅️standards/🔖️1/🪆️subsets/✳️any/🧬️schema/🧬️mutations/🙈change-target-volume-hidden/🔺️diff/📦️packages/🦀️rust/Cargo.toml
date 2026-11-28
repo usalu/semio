@@ -80,8 +80,10 @@ semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
+
 [features]
-testkit = []
+testkit = ["dep:semio-framework-test-fixtures"]
 
 [dev-dependencies]
 semio-os-store-test-support = { path = "../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }

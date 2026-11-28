@@ -61,6 +61,7 @@ pub use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,Plugi
 pub use semio_plugin_ownership::bounded_ownership::{plugin_self_funded_grant,PLUGIN_SELF_FUNDED_BODY_BYTES};
 //#region 🏛️OwnershipFacet
 pub use semio_framework_job::StepContext;
+pub use semio_framework_job::{begin_supersede, supersede_epoch};
 // 🧭️ Mount hubs: the module mounts that used to follow live in one file per work package of PLAN-PLUGIN-CRATES.md,
 // spliced into this crate root, so every `crate::<module>` path is unchanged.
 include!("🪝️mounts/🌱️wp1-foundation/🦀️.rs");
@@ -253,7 +254,7 @@ pub mod artifact_app_laws {
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub mod reactor_turn_laws {
     pub use semio_plugin_reactor_lifecycle::command_stall::{command_idle_turn_limit, command_stalled, note_command_turn, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
-    pub use semio_plugin_reactor_turn::{poll_kernel, retained_command_ingress_occupancy};
+    pub use semio_plugin_reactor_turn::{last_turn_more_work_sources, poll_kernel, retained_command_ingress_occupancy};
 }
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::authoring_law;
@@ -336,6 +337,8 @@ pub use app::{
     SnapshotBuilder,
     ArtifactCapability,
     NaturalFileCodec,
+    admit_buffered_natural_decode,
+    build_buffered_natural_decode,
     NaturalFileDecodeCursor,
     NaturalFileDecodeOwner,
     NaturalFileDecodeProgress,

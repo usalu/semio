@@ -3,6 +3,7 @@ import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️proce
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
 import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { provisionedPythonV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import { runProbe } from "@semio-tech/repo-lib/process";
 import { writeCanonicalGoWorkspaceOverlay } from "@semio-tech/repo-lib/testing";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
@@ -176,13 +177,11 @@ export function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, 
   return { command: "go", args: ["run", `-overlay=${overlay}`, ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
 }
 
-/** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the repository's own
- * `.venv` (the only interpreter guaranteed to satisfy `pyproject.toml`'s `requires-python`), else the
- * `python3` on `PATH`. */
+/** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the interpreter of the locked workspace
+ * environment `repo dependencies ensure` synchronizes (the only one guaranteed to satisfy `pyproject.toml`'s
+ * `requires-python`), else the `python3` on `PATH`. */
 export function oracleHostPython(repoRoot: string): string {
-  if (process.env.SEMIO_PYTHON) return process.env.SEMIO_PYTHON;
-  const venv = join(repoRoot, ".venv", process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python3");
-  return existsSync(venv) ? venv : "python3";
+  return process.env.SEMIO_PYTHON || provisionedPythonV1(repoRoot) || "python3";
 }
 
 /**
@@ -197,17 +196,50 @@ export function pythonSiteDirectories(repoRoot: string, interpreter: string): st
   return Array.isArray(sites) && sites.length > 0 && sites.every((site) => typeof site === "string") ? (sites as string[]) : null;
 }
 
+/** 🔖️ The pip requirement one declared distribution installs as: a bare version is an exact pin, a range stays a range. */
+export function pythonRequirement(entry: Pick<OracleHostPackage, "package" | "version">): string {
+  return entry.version === undefined ? entry.package : `${entry.package}${/^\d/.test(entry.version) ? "==" : ""}${entry.version}`;
+}
+
+/** 🔢️ Whether an installed release satisfies a declared pin: exact string equality for a bare version, numeric segment order for `>=`, `>`, `<=`, `<`, `==`, `~=` and `!=`. */
+export function pythonVersionSatisfies(actual: string, pin: string | undefined): boolean {
+  if (pin === undefined) return true;
+  if (/^\d/.test(pin)) return actual === pin;
+  const [, operator, wanted] = /^([<>=!~]=?)\s*(.+)$/.exec(pin) ?? [];
+  if (operator === undefined || wanted === undefined) return true;
+  const segments = (version: string): number[] => version.split(".").map((part) => Number.parseInt(part, 10)).filter((part) => !Number.isNaN(part));
+  const left = segments(actual);
+  const right = segments(wanted);
+  const order = (() => {
+    for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+      const difference = (left[index] ?? 0) - (right[index] ?? 0);
+      if (difference !== 0) return Math.sign(difference);
+    }
+    return 0;
+  })();
+  switch (operator) {
+    case ">=": return order >= 0;
+    case ">": return order > 0;
+    case "<=": return order <= 0;
+    case "<": return order < 0;
+    case "==": return order === 0;
+    case "!=": return order !== 0;
+    case "~=": return order >= 0 && right.slice(0, -1).every((part, index) => left[index] === part);
+    default: return true;
+  }
+}
+
 /**
  * 🫙️ The cache-local interpreter the Python host runs under, carrying exactly the external
- * distributions the owners declared.
+ * distributions the owners' registered oracles declare (plus any explicit host-only package).
  *
  * A virtual environment, never the system interpreter: a test host may not mutate the machine it
  * runs on. Every distribution the base interpreter already provides is REUSED rather than
  * downloaded, which is what keeps a zero-touch checkout working offline: the environment's own site
  * directory carries `semio-base-interpreter.pth`, which adds the base interpreter's site directories
  * (with their own `.pth` files) behind the environment's. `--system-site-packages` cannot do this —
- * when the base is itself a virtual environment (the repository's `.venv`) it exposes the base's
- * BASE installation and hides every package of the `.venv`. Anything still missing — or provided by
+ * when the base is itself a virtual environment (the locked workspace environment) it exposes the base's
+ * BASE installation and hides every package of that environment. Anything still missing — or provided by
  * the base but not importable at the declared version, like a platform-less wheel — is installed INTO
  * the environment with `--ignore-installed` (so the base's copy cannot satisfy pip's own check),
  * where it stays isolated and shadows the base. The environment is keyed by the
@@ -219,7 +251,7 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   const external = declared.filter((entry) => entry.path === undefined);
   if (external.length === 0) return { interpreter: base, problems: [] };
   const specs = [...external]
-    .map((entry) => ({ spec: entry.version === undefined ? entry.package : `${entry.package}==${entry.version}`, module: oracleHostModule(entry), package: entry.package, version: entry.version }))
+    .map((entry) => ({ spec: pythonRequirement(entry), module: oracleHostModule(entry), package: entry.package, version: entry.version }))
     .sort((a, b) => a.spec.localeCompare(b.spec));
   const signature = specs.map((entry) => entry.spec).join(" ");
   const dir = join(testCacheDir(repoRoot, "hosts"), `python-env-${digest(`${base}\n${signature}`)}`);
@@ -247,7 +279,7 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   writeFileSync(join(ownSites[0]!, "semio-base-interpreter.pth"), baseSites.map((site) => `import site; site.addsitedir(${JSON.stringify(site)})\n`).join(""));
   const present = (entry: { spec: string; module: string; package: string; version?: string }): boolean => {
     const probe = runProbe(interpreter, ["-c", `import ${entry.module}, importlib.metadata as meta; print(meta.version(${JSON.stringify(entry.package)}))`], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("quick") });
-    return (probe.status ?? 1) === 0 && (entry.version === undefined || probe.stdout.trim() === entry.version);
+    return (probe.status ?? 1) === 0 && pythonVersionSatisfies(probe.stdout.trim(), entry.version);
   };
   for (const entry of specs) {
     if (present(entry)) continue;

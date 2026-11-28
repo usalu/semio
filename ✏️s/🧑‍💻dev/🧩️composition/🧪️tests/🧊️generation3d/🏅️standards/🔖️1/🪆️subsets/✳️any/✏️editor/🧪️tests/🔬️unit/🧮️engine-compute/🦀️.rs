@@ -12,7 +12,7 @@ use ui_scene::math::{aabb_intersects_frustum, frustum_planes, transform_aabb, Ca
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> (String, String) {
-    let eval_json = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default());
+    let eval_json = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default()).expect("the evaluation host binds its snapshot");
     let mut session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     crate::flow_operators::resolve_preview_geometry(&eval_json, host_snapshot, &cfg.lod_mode, &mut session);
     let payload = preview_payload(&PreviewEvaluation::from_json(&eval_json), host_snapshot, cfg, Some(&session), &Default::default());
@@ -35,7 +35,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
     let document = generation3d_document_from_mesh(&source).expect("an imported tetrahedron document");
     let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).expect("the actual imported graph");
     let owner = context::instance_operation_owner();
-    let eval_json = semio_s_artifact_procedural_3d_model::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates"));
+    let eval_json = semio_s_artifact_procedural_3d_model::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates")).expect("the evaluation host binds its snapshot");
     owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
         owner.with_session_waking(|session| {
             let previous = std::mem::replace(session, FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port()));

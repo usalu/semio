@@ -1,0 +1,2435 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts
+@@ -1,8 +1,18 @@
+ import { requireNativeStorageRootCapabilityV1 } from "../../../📦️artifacts/🏗️native-build/💾️storage/🛂️root-capability/🟦️.ts";
++import { parseNativeImageHoldersV1 } from "../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🔁️detach/🟦️.ts";
+ import { spawnSync } from "node:child_process";
+ import { readdirSync, realpathSync } from "node:fs";
+ import { join, resolve, sep } from "node:path";
+ 
++/** 🛟️ Detaches a disk image politely and forces it only when nothing holds a file open on it: a busy image is looked at with `lsof` on its mount point and is never force-detached while a process still has open files there (its writers would lose data); when the holders cannot be read the answer is `false` as well. `device` is what `hdiutil` detaches (a device or the mount point), `mount` is what `lsof` looks at. */
++export function detachDiskImageGuardedV1(device: string, mount: string = device, run: (program: string, args: readonly string[]) => Readonly<{ status: number | null; stdout?: string | null; error?: Error }> = (program, args) => spawnSync(program, [...args], { encoding: "utf8" })): boolean {
++  if (run("/usr/bin/hdiutil", ["detach", device]).status === 0) return true;
++  const listing = run("lsof", ["-F", "pc", "+f", "--", mount]);
++  if (listing.error !== undefined || (listing.status !== 0 && listing.status !== 1)) return false;
++  if (parseNativeImageHoldersV1(listing.status === 0 ? listing.stdout ?? "" : "").length > 0) return false;
++  return run("/usr/bin/hdiutil", ["detach", "-force", device]).status === 0;
++}
++
+ /** 🧲️ Lists the attached macOS disk images through the system tool, deepest backing file first. */
+ export function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string; device: string }>[] {
+   if (process.platform !== "darwin") return [];
+@@ -47,8 +57,7 @@
+   const prefix = real + sep, detached: string[] = [];
+   for (const { image, target } of attachedDiskImagesV1()) {
+     if (!image.startsWith(prefix)) continue;
+-    const plain = spawnSync("/usr/bin/hdiutil", ["detach", target], { encoding: "utf8" });
+-    if (plain.status === 0 || spawnSync("/usr/bin/hdiutil", ["detach", "-force", target], { encoding: "utf8" }).status === 0) detached.push(image);
++    if (detachDiskImageGuardedV1(target)) detached.push(image);
+   }
+   return detached;
+ }
+--- a/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts
+@@ -4,7 +4,7 @@
+ import { dirname, join, resolve } from "node:path";
+ import { fileURLToPath } from "node:url";
+ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+-import { attachedDiskImagesV1 } from "../🖼️images/🟦️.ts";
++import { attachedDiskImagesV1, detachDiskImageGuardedV1 } from "../🖼️images/🟦️.ts";
+ 
+ const protocol = schema.definitions.Protocol.const;
+ 
+@@ -101,7 +101,7 @@
+ /** 🧹️ Detaches the images of dead test sandboxes, nested ones first, and removes the dead sandbox directories below the given parents; images of live sandboxes, of the checkout and foreign ones are never touched. */
+ export function sweepLeakedSandboxImagesV1(options: Readonly<{ parents?: readonly string[]; images?: () => readonly Readonly<{ image: string; target: string; device: string }>[]; detach?: (target: string) => boolean; under?: string; alive?: (root: string) => boolean; remove?: boolean }> = {}): ImageSweepReportV1 {
+   const all = options.images ?? attachedDiskImagesV1, list = () => all().filter(row => options.under === undefined || row.image.startsWith(options.under + "/")), alive = options.alive ?? (root => { const owner = readSandboxOwnerV1(root); return owner !== undefined && sandboxOwnerAliveV1(owner); });
+-  const detach = options.detach ?? (target => spawnSync("/usr/bin/hdiutil", ["detach", target], { encoding: "utf8" }).status === 0 || spawnSync("/usr/bin/hdiutil", ["detach", "-force", target], { encoding: "utf8" }).status === 0);
++  const detach = options.detach ?? (target => detachDiskImageGuardedV1(target, list().find(row => row.device === target || row.target === target)?.target ?? target));
+   const before = classifyAttachedImagesV1(list(), alive);
+   let detached = 0, failed = 0;
+   for (const row of [...before].filter(item => item.kind === "leaked").sort((left, right) => right.image.length - left.image.length)) {
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts
+@@ -3,6 +3,7 @@
+ import {nativeImageReclaimDueV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+ import {nativeImageShardCapBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+ import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
++import {writeDurableSyncV1} from "../../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ 
+ /** 🔄️ The partitions whose image is sized elastically when it is created (`elastic` of the policy). */
+ export type ElasticPartitionIdV1="graph"|"products"|"rust";
+@@ -101,7 +102,7 @@
+ export function writeElasticGrowthV1(directory:string,bytes:number):void{
+  const file=elasticGrowthFileV1(directory);let rows:Record<string,unknown>={};
+  try{rows=JSON.parse(readFileSync(file,"utf8"));}catch{}
+- mkdirSync(dirname(file),{recursive:true});writeFileSync(file,JSON.stringify({...rows,[basename(directory)]:bytes}));
++ mkdirSync(dirname(file),{recursive:true});writeDurableSyncV1(file,JSON.stringify({...rows,[basename(directory)]:bytes}));
+ }
+ let pinnedHostFreeBytesV1:number|undefined;
+ /** 📌️ Pins the host free bytes every image still to be born is sized from (`undefined` restores the live host volume), so a deterministic caller such as a private test repository sizes images independently of the disk and load of the host it runs on; images already born keep their receipt. */
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📤️publisher/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📤️publisher/🟦️.ts
+@@ -9,6 +9,7 @@
+ import {graphEnvironmentIdentityV1} from "../../../../🚀️bootstrap/🔌️nx-plugin/🌍️environment/🟦️.ts";
+ import {observationsHold} from "../../../../../🏗️build/👁️observation/🟨️.mjs";
+ import {sweepDeadProducerPublicationsV1} from "../../../../../🏗️build/👁️observation/🪦️producer-publications/🟨️.mjs";
++import {machineQuarantineRootV1,quarantineRecordSyncV1,writeDurableV1} from "../../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ 
+ /** 🔏️ The graph producer binds its native file map and inference authorities to the live observer. */
+ export interface SelectedGraphPublisherReceiptV1 {readonly version:1;readonly root:string;readonly rootDirectory:Readonly<{device:string;inode:string}>;readonly pid:number;readonly startedAt:number;readonly toolingIdentity:string;readonly environmentIdentity:string;readonly journal:SelectedGraphJournalWitnessV1;readonly graph:Readonly<Record<string,readonly string[]>>;readonly receipts:Readonly<Record<string,string>>;}
+@@ -27,7 +28,10 @@
+ }
+ async function archivePublication(directory:string,bytes:Buffer,check:()=>void,root:string,environment:Readonly<Record<string,string|undefined>>):Promise<string>{
+  check();await mkdir(join(directory,"pa"),{recursive:true});const digest=hash(bytes),file=await publicationArchive(directory,digest);check();
+- await withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:Math.ceil(bytes.length/4096)*4096},async()=>{check();try{await writeFile(file,bytes,{flag:"wx"});}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}check();});
++ await withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:Math.ceil(bytes.length/4096)*4096},async()=>{
++  check();let intact=false;try{intact=hash(await readPublication(file))===digest;}catch{}
++  if(!intact){quarantineRecordSyncV1({root:machineQuarantineRootV1(),mode:"remove",kind:"graph-record",path:file,reason:"digest-mismatch",detail:"graph publication archive"});await writeDurableV1(file,bytes);}
++  check();});
+  check();if(hash(await readPublication(file))!==digest)throw Error("Original graph publication archive changed");check();return digest;
+ }
+ async function graphStamps(directory:string):Promise<Record<string,readonly string[]>>{
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json
+@@ -727,7 +727,8 @@
+       "files": [
+         "🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts",
+         "🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts",
+-        "🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts"
++        "🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts",
++        "🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/🩹️self-repair/🟦️.ts"
+       ],
+       "platforms": [
+         "darwin",
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏛️seal/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏛️seal/🟦️.ts
+@@ -6,6 +6,7 @@
+ import {TranspilerV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
+ import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+ import {requireNativeStorageRootCapabilityV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🛂️root-capability/🟦️.ts";
++import {writeDurableSyncV1} from "../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ 
+ const policy=UNIT_CACHE_POLICY_V1.seal,digestPattern=new RegExp(`^[0-9a-f]{${policy.digestCharacters}}$`,"u");
+ const loaders:Readonly<Record<string,"ts"|"tsx"|"js"|"jsx">>=Object.freeze({".ts":"ts",".mts":"ts",".cts":"ts",".tsx":"tsx",".js":"js",".mjs":"js",".cjs":"js",".jsx":"jsx"});
+@@ -101,7 +102,7 @@
+ function noteV1(store:string,text:string):void{
+  try{
+   const file=join(store,policy.retiredLog);let size=0;try{size=statSync(file).size;}catch{}
+-  if(size>policy.retiredLogBytes)writeFileSync(file,readFileSync(file,"utf8").slice(-Math.floor(policy.retiredLogBytes/2)));
++  if(size>policy.retiredLogBytes)writeDurableSyncV1(file,readFileSync(file,"utf8").slice(-Math.floor(policy.retiredLogBytes/2)));
+   appendFileSync(file,text+"\n");
+  }catch{}
+ }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🟦️.ts
+@@ -5,7 +5,8 @@
+ import {compilerWrittenV1} from "../🔏️key/🔗️sources/🟦️.ts";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
+-import {hasCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
++import {intactCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
++import {buildRunShapeV1,quarantineRecordSyncV1,readSealedRecordSyncV1,sealRecordV1,unitEntryShapeV1,writeDurableSyncV1} from "../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ import {casHolderIdV1,keepCasObjectsSyncV1,registerCasHolderSyncV1} from "../../../../🏗️build/🗄️cas/🫂️holders/🟦️.ts";
+ import {CAS_POLICY_V1} from "../../../../🏗️build/🗄️cas/🧬️schema/🟦️.ts";
+ import {claimUnitV1} from "../🧹️gc/🪢️supersession/🙋️claim/🟦️.ts";
+@@ -30,7 +31,10 @@
+ const objectPath=(sha:string)=>casObjectPathV1(casRootV1(),sha);
+ 
+ /** 🕳️ Whether a recorded entry lost an object it replays: an output or, for a build script run, one of its two streams. */
+-const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):boolean=>[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!hasCasObjectSyncV1(casRootV1(),sha));
++const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string;bytes?:number}[];stdout?:string|null;stderr?:string|null}>,hashed:boolean=true):boolean=>entry.outputs.some(row=>!intactCasObjectSyncV1(casRootV1(),row.sha256,row.bytes,hashed))||[entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!intactCasObjectSyncV1(casRootV1(),sha,undefined,hashed));
++/** 🛡️ Reads one entry file of a cache root: a torn, empty, flipped or misshapen file is a miss and is moved into the quarantine of the root with its typed reason, never an error; an entry written before sealing is accepted by its shape alone.
++ * @see ../../../../🏗️build/🩹️cache-repair/🟦️.ts */
++const readRecordV1=<T>(root:string,kind:"unit-entry"|"build-run",path:string):T|undefined=>readSealedRecordSyncV1<T>({root,kind,path,shape:kind==="unit-entry"?unitEntryShapeV1:buildRunShapeV1});
+ const entryDirectory=(root:string,key:string)=>join(root,layout.entries,key.slice(0,2),key);
+ 
+ /** 🫂️ The paths inside an entry file whose values are host-store digests: the outputs and, for a build script run, its two streams. */
+@@ -166,7 +170,7 @@
+ }
+ /** 💧️ The entry of a unit whose objects wait in the spill folder (written beside them, outside the entry index the host store's holders read: its objects are not in the host store, so a collector would take it for dead and a lookup can never serve it); `undefined` when there is none. */
+ export function readSpilledEntryV1(root:string,key:string):UnitEntryV1|undefined{
+- try{const entry=JSON.parse(readFileSync(spilledEntryPath(root,key),"utf8")) as UnitEntryV1;return entry.version===1&&entry.key===key?entry:undefined;}catch{return undefined;}
++ const entry=readRecordV1<UnitEntryV1>(root,"unit-entry",spilledEntryPath(root,key));return entry!==undefined&&entry.key===key?entry:undefined;
+ }
+ 
+ /** 🔎️ Returns the newest entry of `key` whose recorded files and environment still hold, `undefined` on a miss. A missing object, an unreadable entry or an entry that lacks one of the `expected` output names (a hit must leave every file a dependant names) is a miss, never an error. */
+@@ -174,8 +178,8 @@
+  const directory=entryDirectory(root,key);let names:string[];
+  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+  for(const name of names.slice(0,policy.key.maximumVariants)){
+-  let entry:UnitEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
+-  if(entry.version!==1||entry.key!==key)continue;
++  const entry=readRecordV1<UnitEntryV1>(root,"unit-entry",join(directory,name));
++  if(entry===undefined||entry.key!==key)continue;
+   if(context.expected&&uncoveredOutputsV1(entry.outputs.map(row=>row.name),context.expected).length>0)continue;
+   if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,generatedRestoreV1(laneRestoreV1(row.path,context.laneRoot),context.environment["OUT_DIR"])),context.stampDirectory)!==row.sha256))continue;
+   if(entry.environment.some(row=>{const value=context.environment[row.name];return(value===undefined?null:laneNeutralV1(value,context.laneRoot))!==row.value;}))continue;
+@@ -247,7 +251,7 @@
+  const dependencies=info.dependencies.filter(path=>!compilerWrittenV1(path)).map(path=>({path:laneNeutralV1(generatedNeutralV1(path,input.generated),input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
+  const retention=input.retention===undefined?undefined:declareV1({kind:"rust-unit",toolchain:input.retention.toolchain,sources:workspaceRowsV1({dependencies,cwd:input.cwd,workspace:input.retention.workspace,generatedRoots:buildPolicy.remoteCache.server.staleness.generatedRoots}),externs:input.retention.externs,self:input.key,units:input.retention.units});
+  const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),...(input.session===true?{session:true as const}:{}),...(retention===undefined?{}:{retention}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
+- if(input.spill===true){const path=spilledEntryPath(root,entry.key),temporary=path+"."+randomBytes(4).toString("hex")+".tmp";ensure(dirname(path));writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,path);}
++ if(input.spill===true){const path=spilledEntryPath(root,entry.key);ensure(dirname(path));writeDurableSyncV1(path,sealRecordV1(entry));}
+  else writeEntryV1(root,entry);
+  return entry;
+ }
+@@ -255,8 +259,8 @@
+ /** 📝️ Writes one entry as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a compile that publishes and by a unit installed from the fleet cache. */
+ export function writeEntryV1(root:string,entry:UnitEntryV1):void{
+  holdHostObjectsV1(root);
+- const directory=ensure(entryDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
+- writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
++ const directory=ensure(entryDirectory(root,entry.key)),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
++ writeDurableSyncV1(join(directory,name),sealRecordV1(entry));
+  keepHostObjectsV1(root,entry);
+  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
+ }
+@@ -265,7 +269,7 @@
+ export function newestEntryV1(root:string,key:string):UnitEntryV1|undefined{
+  const directory=entryDirectory(root,key);let names:string[];
+  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+- for(const name of names){try{const entry=JSON.parse(readFileSync(join(directory,name),"utf8")) as UnitEntryV1;if(entry.version===1&&entry.key===key)return entry;}catch{}}
++ for(const name of names){const entry=readRecordV1<UnitEntryV1>(root,"unit-entry",join(directory,name));if(entry!==undefined&&entry.key===key)return entry;}
+  return undefined;
+ }
+ 
+@@ -294,7 +298,7 @@
+   const base=join(root,kind);let shards:string[];try{shards=readdirSync(base);}catch{shards=[];}
+   for(const shard of shards)for(const key of readdirSync(join(base,shard))){
+    const directory=join(base,shard,key);let files:string[];try{files=readdirSync(directory);}catch{continue;}
+-   for(const file of files){try{const entry=JSON.parse(readFileSync(join(directory,file),"utf8")) as {outputs:{sha256:string}[];stdout?:string|null;stderr?:string|null};if(lostObjectV1(root,entry)){rmSync(join(directory,file),{force:true});entries++;}}catch{rmSync(join(directory,file),{force:true});entries++;}}
++   for(const file of files){const path=join(directory,file),entry=readRecordV1<{outputs:{sha256:string;bytes?:number}[];stdout?:string|null;stderr?:string|null}>(root,kind===layout.entries?"unit-entry":"build-run",path);if(entry===undefined){if(!existsSync(path))entries++;else{quarantineRecordSyncV1({root,kind:kind===layout.entries?"unit-entry":"build-run",path,reason:"structure"});entries++;}}else if(lostObjectV1(root,entry,false)){rmSync(path,{force:true});entries++;}}
+    try{if(readdirSync(directory).length===0)rmSync(directory,{recursive:true,force:true});}catch{}
+   }
+  }
+@@ -347,8 +351,8 @@
+  const directory=runDirectory(root,key);let names:string[];
+  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+  for(const name of names.slice(0,policy.key.maximumVariants)){
+-  let entry:BuildEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
+-  if(entry.version!==1||entry.key!==key)continue;
++  const entry=readRecordV1<BuildEntryV1>(root,"build-run",join(directory,name));
++  if(entry===undefined||entry.key!==key)continue;
+   if(lostObjectV1(root,entry))continue;
+   holdHostObjectsV1(root);keepHostObjectsV1(root,entry);
+   const directives={files:entry.facts.filter(row=>row.kind!=="package").map(row=>laneRestoreV1(row.path,context.laneRoot)),variables:entry.environment.map(row=>row.name)};
+@@ -396,8 +400,8 @@
+ /** 📝️ Writes one build script run as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a run that publishes and by a run installed from the fleet cache. */
+ export function writeBuildRunV1(root:string,entry:BuildEntryV1):void{
+  holdHostObjectsV1(root);
+- const directory=ensure(runDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
+- writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
++ const directory=ensure(runDirectory(root,entry.key)),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
++ writeDurableSyncV1(join(directory,name),sealRecordV1(entry));
+  keepHostObjectsV1(root,entry);
+  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
+ }
+@@ -406,7 +410,7 @@
+ export function newestBuildRunV1(root:string,key:string):BuildEntryV1|undefined{
+  const directory=runDirectory(root,key);let names:string[];
+  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+- for(const name of names){try{const entry=JSON.parse(readFileSync(join(directory,name),"utf8")) as BuildEntryV1;if(entry.version===1&&entry.key===key)return entry;}catch{}}
++ for(const name of names){const entry=readRecordV1<BuildEntryV1>(root,"build-run",join(directory,name));if(entry!==undefined&&entry.key===key)return entry;}
+  return undefined;
+ }
+ 
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts
+@@ -4,6 +4,7 @@
+ import {basename,isAbsolute,join,resolve} from "node:path";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import {machineNeutralRemapV1} from "../🧭️remap/🟦️.ts";
++import {writeDurableSyncV1} from "../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ 
+ /** 📐️ The authored unit-cache policy.
+  * @see ../🧬️schema/🔣️.json */
+@@ -276,7 +277,7 @@
+  try{if(Date.now()-statSync(memo).mtimeMs<60000)return readFileSync(memo,"utf8");}catch{}
+  const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+  if(result.status!==0)throw Error("Compiler identity probe failed");
+- mkdirSync(root,{recursive:true});writeFileSync(memo,result.stdout);return result.stdout;
++ mkdirSync(root,{recursive:true});writeDurableSyncV1(memo,result.stdout);return result.stdout;
+ }
+ 
+ /** 📍️ The sysroot of the compiler behind `inner` (`--print sysroot`), memoised for one minute like {@link toolchainIdentityV1}; undefined when the probe fails. */
+@@ -285,7 +286,7 @@
+  try{if(Date.now()-statSync(memo).mtimeMs<60000)return readFileSync(memo,"utf8")||undefined;}catch{}
+  const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+  if(result.status!==0)return undefined;
+- const sysroot=result.stdout.trim();mkdirSync(root,{recursive:true});writeFileSync(memo,sysroot);return sysroot||undefined;
++ const sysroot=result.stdout.trim();mkdirSync(root,{recursive:true});writeDurableSyncV1(memo,sysroot);return sysroot||undefined;
+ }
+ 
+ /** 📨️ What the build broker is told about a unit: exactly the fields of the scheduler's `AdmitRequestV1` (the Rust `parse_unit` is the reference), `undefined` for probes. */
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🟦️.ts
+@@ -14,6 +14,7 @@
+ import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
+ import {recordSeedSlotV1,seededClientV1,seedDirectoryV1} from "./🌱️seed/🟦️.ts";
+ import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
++import {writeDurableSyncV1} from "../../../../🏗️build/🩹️cache-repair/🟦️.ts";
+ 
+ const fleet=FLEET_POLICY_V1;
+ const pause=(milliseconds:number):Promise<void>=>new Promise(done=>{setTimeout(done,milliseconds);});
+@@ -107,7 +108,7 @@
+ /** ⏱️ How long this unit's slot took to compile the last time on this machine, `undefined` when never. */
+ export function knownCostV1(unit:FleetUnitV1):number|undefined{try{const value=Number(readFileSync(costFile(unit),"utf8"));return Number.isFinite(value)&&value>=0?value:undefined;}catch{return undefined;}}
+ /** ⏱️ Remembers what a compile of the unit's slot cost. */
+-export function rememberCostV1(unit:FleetUnitV1,milliseconds:number):void{try{const path=costFile(unit);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,String(Math.round(milliseconds)));}catch{}}
++export function rememberCostV1(unit:FleetUnitV1,milliseconds:number):void{try{const path=costFile(unit);mkdirSync(dirname(path),{recursive:true});writeDurableSyncV1(path,String(Math.round(milliseconds)));}catch{}}
+ 
+ /** 📥️ Fetches the unit from the fleet cache and installs it into the local store, as if it had been compiled here (see `installFleetUnitV1`), then settles it: it is not offered again and the fleet is told it is current for its slot. */
+ export async function fetchFleetUnitV1(unit:FleetUnitV1):Promise<"hit"|"miss"|"fault">{
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json
+@@ -607,6 +607,10 @@
+         "createdMs"
+       ],
+       "properties": {
++        "seal": {
++          "type": "string",
++          "pattern": "^[0-9a-f]{64}$"
++        },
+         "version": {
+           "const": 1
+         },
+@@ -679,6 +683,10 @@
+         "createdMs"
+       ],
+       "properties": {
++        "seal": {
++          "type": "string",
++          "pattern": "^[0-9a-f]{64}$"
++        },
+         "version": {
+           "const": 1
+         },
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json
+@@ -717,6 +717,12 @@
+       "value": "none",
+       "operations": ["doctor"],
+       "description": { "en": "doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove.", "de": "doctor: wendet die deklarierten sicheren Reparaturen für die Befunde an (Veröffentlichungen toter Prozesse, veraltete Lease-Registerzeilen, beendete Agent-Sitzungen); mit --dry-run wird aufgelistet, was sie entfernen würden." }
++    },
++    {
++      "name": "--repair",
++      "value": "none",
++      "operations": ["doctor"],
++      "description": { "en": "doctor: --fix plus the verification of every cache record (units, host store objects, remote cache values, graph generations, closures, receipts, task archives); corrupt records are quarantined and counted as misses; with --dry-run only counted.", "de": "doctor: --fix plus die Prüfung jedes Cache-Eintrags (Einheiten, Host-Speicher-Objekte, Remote-Cache-Werte, Graph-Generationen, Abschlüsse, Quittungen, Task-Archive); beschädigte Einträge kommen in Quarantäne und zählen als Fehltreffer; mit --dry-run nur gezählt." }
+     },
+     {
+       "name": "--only",
+@@ -2063,22 +2069,25 @@
+     {
+       "name": "doctor",
+       "requires": "none",
+-      "synopsis": "doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]",
++      "synopsis": "doctor [--json] [--fix|--repair [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]",
+       "summary": { "en": "Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.", "de": "Beantwortet auf einmal, warum Arbeit wartet, langsam ist oder scheitert: Werkzeug-Pins, Speicher-Images, Leases, Kapazitätszusagen, Agent-Sitzungen, Graph- und Abhängigkeits-Generationen, Caches, laufende repo-Prozesse und der Rechner, jedes Problem mit seinem Eigentümer und dem Befehl, der es löst." },
+       "dryRun": false,
+       "progress": true,
+       "cancellable": true,
+-      "flags": ["--json", "--fix", "--dry-run", "--only", "--strict", "--facts"],
++      "flags": ["--json", "--fix", "--repair", "--dry-run", "--only", "--strict", "--facts"],
+       "examples": [
+         { "command": "repo doctor", "description": { "en": "See who waits for whom, what is slow and what is broken, with the command that fixes each finding.", "de": "Zeigt, wer auf wen wartet, was langsam und was kaputt ist, mit dem Befehl, der jeden Befund behebt." } },
+         { "command": "repo doctor --only=leases,capacity", "description": { "en": "Look only at leases, capacity and the processes behind them.", "de": "Betrachtet nur Leases, Kapazität und die Prozesse dahinter." } },
+         { "command": "repo doctor --fix --dry-run", "description": { "en": "List what the safe repairs would remove.", "de": "Listet auf, was die sicheren Reparaturen entfernen würden." } },
+         { "command": "repo doctor --fix", "description": { "en": "Remove dead-process publications, stale lease registry rows and gone agent sessions, then read the state again.", "de": "Entfernt Veröffentlichungen toter Prozesse, veraltete Lease-Registerzeilen und beendete Agent-Sitzungen und liest danach den Zustand erneut." } },
++        { "command": "repo doctor --repair", "description": { "en": "Read every cache record of the machine (units, host store objects, remote cache values, graph generations, closures, receipts, task archives), move each corrupt one into the bounded quarantine of its cache, run the safe repairs and report in both languages; with progress and cancellation, never touches a healthy record.", "de": "Liest jeden Cache-Eintrag des Rechners (Einheiten, Host-Speicher-Objekte, Remote-Cache-Werte, Graph-Generationen, Abschlüsse, Quittungen, Task-Archive), verschiebt jeden beschädigten in die begrenzte Quarantäne seines Caches, führt die sicheren Reparaturen aus und berichtet zweisprachig; mit Fortschritt und Abbruch, ein gesunder Eintrag bleibt unberührt." } },
++        { "command": "repo doctor --repair --dry-run", "description": { "en": "Count the corrupt cache records without moving any.", "de": "Zählt die beschädigten Cache-Einträge, ohne einen zu verschieben." } },
+         { "command": "repo doctor --json", "description": { "en": "The report as JSON for tools and agents.", "de": "Der Bericht als JSON für Werkzeuge und Agenten." } }
+       ],
+       "notes": [
+         { "en": "doctor reads state only: it takes no lease and no capacity grant, so it answers even while a build holds everything, and it never starts a heavy command.", "de": "doctor liest nur Zustand: Es nimmt weder eine Lease noch eine Kapazitätszusage und antwortet daher auch dann, wenn ein Build alles hält; es startet nie einen schweren Befehl." },
+         { "en": "Areas: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host. Exit status 1 when an error remains (a warning too with --strict), 130 when cancelled.", "de": "Bereiche: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host. Exit-Status 1, wenn ein Fehler bleibt (mit --strict auch eine Warnung), 130 bei Abbruch." },
++        { "en": "--repair is --fix plus a verification of every cache record: a record whose digest, seal or structure does not verify is a miss for every build (never a failure) and is quarantined, bounded and logged with a typed reason; the word `repair` is the same flag.", "de": "--repair ist --fix plus eine Prüfung jedes Cache-Eintrags: Ein Eintrag, dessen Digest, Siegel oder Struktur nicht stimmt, ist für jeden Build ein Fehltreffer (nie ein Fehler) und wird begrenzt in Quarantäne verschoben und mit typisiertem Grund protokolliert; das Wort `repair` ist dasselbe Flag." },
+         { "en": "--fix applies only repairs that are declared safe in the doctor policy; every other finding names the command to run or whom to ask.", "de": "--fix wendet nur Reparaturen an, die in der doctor-Richtlinie als sicher deklariert sind; jeder andere Befund nennt den Befehl oder wen man fragen soll." }
+       ]
+     },
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🏷️retention/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🏷️retention/🟦️.ts
+@@ -1,4 +1,5 @@
+ import {createHash} from "node:crypto";
++import {writeDurableV1} from "../../🩹️cache-repair/🟦️.ts";
+ import {mkdir,open,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
+ import {dirname,join} from "node:path";
+ import {requireSlotShapeV1,type DeclarationV1} from "../../🪢️slots/🟦️.ts";
+@@ -22,9 +23,8 @@
+ 
+ /** ✍️ Publishes a sidecar atomically: written beside the staging area and renamed into place, so a reader sees the old or the new document, never a part of one; the entry must be in place first, so a crash leaves a value without a sidecar (kept by the age and size rules) and never a sidecar that condemns a value. */
+ export async function writeRemoteCacheMetaV1(root:string,staging:string,relative:string,meta:RemoteCacheMetaV1):Promise<void>{
+- const target=remoteCacheMetaPathV1(root,relative),temporary=join(staging,`meta-${process.pid}-${Math.random().toString(36).slice(2)}`);
+- await mkdir(dirname(target),{recursive:true});await writeFile(temporary,JSON.stringify(meta));
+- try{await rename(temporary,target);}catch(error){await unlink(temporary).catch(()=>undefined);throw error;}
++ const target=remoteCacheMetaPathV1(root,relative);void staging;
++ await mkdir(dirname(target),{recursive:true});await writeDurableV1(target,JSON.stringify(meta));
+ }
+ 
+ /** 📖️ Reads one sidecar; a missing or malformed one reads as `undefined` (a malformed one is removed, so the entry falls back to the age and size rules). */
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts
+@@ -12,6 +12,9 @@
+ import {reclaimCasObjectsV1} from "../../🗄️cas/🪦️reclaim/🟦️.ts";
+ import {CasCapRefusalV1} from "../../🗄️cas/🚦️guard/🟦️.ts";
+ import {remoteCacheFileBudgetOfMachineV1,remoteCacheWidthV1} from "../📏️fd-budget/🟦️.ts";
++import {cacheWatermarkV1} from "../../🩹️cache-repair/🌊️watermark/🟦️.ts";
++import {statfsSync} from "node:fs";
++import {quarantineRecordSyncV1,verifyCacheRecordFileSyncV1,verifyFileDigestV1,writeDurableV1,type CacheRecordKindV1,type CacheRecordVerdictV1} from "../../🩹️cache-repair/🟦️.ts";
+ import {ownProcessIdentityV1,processHolderAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+ 
+ /** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives; the only place that spells them, so every other module reads them from here. */
+@@ -35,7 +38,7 @@
+ export type RemoteCacheStalenessOptionsV1=Readonly<{mode:StalenessModeV1;tree:TreeDigestsV1;toolchains?:()=>ReadonlySet<string>|undefined;examples:number;recheckMilliseconds:number;manifestNames:readonly string[]}>;
+ 
+ /** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry without a slot is dropped (0 keeps entries until space is needed), the grace in milliseconds that protects entries of builds in flight (default ten minutes), the staleness policy (absent judges nothing), the predicate of entries an active claim holds and a hook that tests use to simulate a crash between the steps of a removal. */
+-export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;blobBoundBytes?():Promise<number|undefined>|number|undefined;graph?:Readonly<{sharePercent:number;supersedeGraceMilliseconds:number}>;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;staleness?:RemoteCacheStalenessOptionsV1;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
++export type RemoteCacheStoreOptionsV1=Readonly<{volume?:()=>Readonly<{totalBytes:number;freeBytes:number}>|undefined;fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;blobBoundBytes?():Promise<number|undefined>|number|undefined;graph?:Readonly<{sharePercent:number;supersedeGraceMilliseconds:number}>;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;staleness?:RemoteCacheStalenessOptionsV1;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
+ 
+ /** 📏️ Describes the current fill of one store. */
+ export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;slotted:number;evictedEntries:number;evictedBytes:number;blobs:Readonly<{referencedBytes:number|null;boundBytes:number|null;evictedBytes:number;graph:Readonly<{protectedEntries:number;protectedBytes:number;reservedBytes:number|null;evictedEntries:number;supersededBytes:number}>}>}>;
+@@ -71,6 +74,7 @@
+  private evictedBytes=0;
+  private evictedBlobBytes=0;
+  private relievedAt=0;
++ private relievedVolumeAt=0;
+  private referencedBlobBytes:number|null=null;
+  private lastBound:number|null=null;
+  private graphProtected:Readonly<{keys:ReadonlySet<string>;bytes:number}>={keys:new Set(),bytes:0};
+@@ -165,7 +169,32 @@
+  private supersededBytes():number{let bytes=0;const now=Date.now();for(const [hash,until] of this.superseded)if(until>now)bytes+=this.blobSizes.get(hash)??0;return bytes;}
+  private isGraph(relative:string):boolean{return protectedKindV1(this.slots.get(relative)?.declaration?.kind);}
+ 
+- /** 🔍️ Looks one value up on disk and marks it recently used; a value another process removed is forgotten. */
++ private volumeFacts():Readonly<{totalBytes:number;freeBytes:number}>|undefined{
++  if(this.options.volume!==undefined)return this.options.volume();
++  try{const row=statfsSync(this.options.directory);return {totalBytes:row.blocks*row.bsize,freeBytes:row.bavail*row.bsize};}catch{return undefined;}
++ }
++ /** 🌊️ Starts the collection at the low-water mark of the volume (the same floor and relief rule as the ready sidecar, see `cacheWatermarkV1`) instead of at the full disk: below the mark a collection that frees the shortfall runs now (at most every two minutes, at once below the floor); a write still below the floor after it is refused with the typed `capacity` outcome, so no value is ever written into a full disk. A volume that cannot be measured is never a reason to refuse. */
++ private async relieveVolume(extra:number):Promise<boolean>{
++  const facts=this.volumeFacts();if(facts===undefined)return true;
++  const mark=cacheWatermarkV1(facts.totalBytes,facts.freeBytes,extra);if(mark.level==="ok")return true;
++  const now=Date.now();
++  if(mark.level==="floor"||now-this.relievedVolumeAt>=120000){this.relievedVolumeAt=now;await this.collect(Math.max(extra,mark.reliefBytes-facts.freeBytes)).catch(()=>undefined);}
++  const after=this.volumeFacts();return after===undefined||cacheWatermarkV1(after.totalBytes,after.freeBytes,extra).level!=="floor";
++ }
++
++ /** 🛡️ Whether a stored value is whole: a blob hashes to its key (once per (size, mtime, inode)), an action result parses, a task archive is not empty and a reference has its shape. A damaged value is moved into the quarantine of the store with its typed reason, forgotten and answers a miss, so the client builds and uploads a good one.
++  * @see ../../🩹️cache-repair/🟦️.ts */
++ private async intact(kind:RemoteCacheKindV1,key:string,relative:string,path:string,size:number):Promise<boolean>{
++  const verdict:CacheRecordVerdictV1=kind==="cas"?await verifyFileDigestV1({path,digest:key,size,stampDirectory:join(this.root,".verified")}):kind==="nx"?size>0?{ok:true}:{ok:false,reason:"empty",detail:""}:size>16*1048576?{ok:true}:verifyCacheRecordFileSyncV1("remote-ac",path,{structure:(_,bytes)=>{try{parseRemoteCacheActionResultV1(bytes);return undefined;}catch(error){return String((error as Error).message);}}});
++  if(verdict.ok)return true;
++  if(verdict.reason==="missing"||verdict.reason==="unreadable")return false;
++  quarantineRecordSyncV1({root:this.root,kind:(kind==="ac"?"remote-ac":kind==="cas"?"remote-cas":"remote-nx") as CacheRecordKindV1,path,reason:verdict.reason,detail:verdict.detail});
++  const gone=this.index.get(relative);if(gone){this.index.delete(relative);this.bytes-=gone.size;}
++  this.refCache.delete(relative);this.slots.delete(relative);
++  return false;
++ }
++
++ /** 🔍️ Looks one value up on disk and marks it recently used; a value another process removed is forgotten, a damaged one is quarantined and answers a miss. */
+  async read(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<RemoteCacheEntryV1|undefined>{
+   requireRemoteCacheAddressV1(namespace,kind,key);
+   if(kind==="cas"&&this.options.host)return this.options.host.get(key);
+@@ -177,6 +206,7 @@
+    if(gone){this.index.delete(relative);this.bytes-=gone.size;}
+    return undefined;
+   }
++  if(!await this.intact(kind,key,relative,path,info.size))return undefined;
+   const now=this.tick(),row=this.index.get(relative);
+   if(row){this.bytes+=info.size-row.size;row.size=info.size;row.accessed=now;}else{this.index.set(relative,{size:info.size,accessed:now});this.bytes+=info.size;}
+   void utimes(path,now/1000,now/1000).catch(()=>{});
+@@ -335,7 +365,7 @@
+   this.report=report;
+   try{
+    const directory=join(this.root,".retention");await mkdir(directory,{recursive:true});
+-   if(tombstones.size>0){for(const hash of tombstones.keys())this.retired.delete(hash);this.retired=new Map([...this.retired,...tombstones].slice(-200000));const temporary=join(directory,`retired-${process.pid}.tmp`);await writeFile(temporary,JSON.stringify([...this.retired].map(([blob,cause])=>({blob,...cause}))));await rename(temporary,join(directory,"retired.json"));}
++   if(tombstones.size>0){for(const hash of tombstones.keys())this.retired.delete(hash);this.retired=new Map([...this.retired,...tombstones].slice(-200000));await writeDurableV1(join(directory,"retired.json"),JSON.stringify([...this.retired].map(([blob,cause])=>({blob,...cause}))));}
+    const log=join(directory,"sweeps.jsonl");
+    if((await stat(log).catch(()=>undefined))?.size!>5*1048576)await rename(log,log+".1");
+    await appendFile(log,JSON.stringify(report)+"\n");
+@@ -421,16 +451,17 @@
+    catch(error){if(this.options.signal?.aborted)throw error;if(error instanceof CasCapRefusalV1)this.relieve();return hostPutFailureV1(error);}
+    if(!result.digest)return result.outcome as RemoteCachePutOutcomeV1;
+    if(result.outcome==="created"){this.admitted+=result.digest.size;this.sizeTrigger();}
+-   const target=this.path(relative),temporary=join(this.temporary,randomUUID());
++   const target=this.path(relative);
+    await mkdir(this.path(`${namespace}/${kind}/${key.slice(0,2)}`),{recursive:true});
+    const reference=JSON.stringify({version:1,hash:result.digest.hash,size:result.digest.size});
+-   await writeFile(temporary,reference);await rename(temporary,target);
++   await writeDurableV1(target,reference);
+    const earlier=this.index.get(relative);if(earlier)this.bytes-=earlier.size;
+    this.index.set(relative,{size:reference.length,accessed:this.tick()});this.bytes+=reference.length;
+    return "created";
+   }
+   if(input.mode!=="replace"&&await this.has(namespace,kind,key))return "exists";
+   if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
++  if(!await this.relieveVolume(declared??0))return "capacity";
+   const temporary=join(this.temporary,randomUUID()),hash=input.verify?createHash("sha256"):undefined;let held=0,written=0,handle;
+   const reserve=async(extra:number):Promise<boolean>=>{
+    if(this.bytes+this.reserved+extra>this.options.maximumBytes){await this.collect(extra);if(this.bytes+this.reserved+extra>this.options.maximumBytes)return false;}
+@@ -451,7 +482,7 @@
+     }catch(error){if((error as NodeJS.ErrnoException).syscall!==undefined)throw error;outcome="aborted";}
+     if(outcome)return outcome;
+    }
+-   await handle.close();handle=undefined;
++   await handle.sync();await handle.close();handle=undefined;
+    if(declared!==undefined&&written!==declared)return "length-mismatch";
+    if(hash&&hash.digest("hex")!==key)return "digest-mismatch";
+    await mkdir(this.path(`${namespace}/${kind}/${key.slice(0,2)}`),{recursive:true});
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts
+@@ -181,13 +181,13 @@
+  for(const row of bounds.cases){
+   const store=await RemoteCacheStoreV1.open({directory:directory("bound"),maximumBytes:row.maximumBytes,maximumEntryBytes:row.maximumEntryBytes,maximumAgeMilliseconds:0}),keys=bounds.keys as Record<string,string>;
+   for(const op of row.ops as {put?:string;size?:number;read?:string}[]){
+-   if(op.read!==undefined){await store.read("default","ac",keys[op.read]!);continue;}
++   if(op.read!==undefined){await store.read("default","nx",keys[op.read]!);continue;}
+    const body=new Uint8Array(op.size!).fill(97);
+-   expect(await store.put("default","ac",keys[op.put!]!,(async function*(){yield body;})(),{mode:"replace",declaredLength:op.size}),row.name).toMatch(/created|replaced/u);
++   expect(await store.put("default","nx",keys[op.put!]!,(async function*(){yield body;})(),{mode:"replace",declaredLength:op.size}),row.name).toMatch(/created|replaced/u);
+    expect(store.usage().bytes,row.name).toBeLessThanOrEqual(row.maximumBytes);
+   }
+   await store.collect();
+-  const present=await Promise.all(Object.keys(keys).map(name=>store.has("default","ac",keys[name]!))),survivors=Object.keys(keys).filter((_,index)=>present[index]).sort();
++  const present=await Promise.all(Object.keys(keys).map(name=>store.has("default","nx",keys[name]!))),survivors=Object.keys(keys).filter((_,index)=>present[index]).sort();
+   expect(survivors,row.name).toEqual(row.survivors);expect(survivors,row.name+" against the model").toEqual(modelSurvivors(row.maximumBytes,row.ops as {put?:string;size?:number;read?:string}[]));
+   await store.close();
+  }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏃️runner/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏃️runner/🟦️.ts
+@@ -3,6 +3,8 @@
+ import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
++import {parseNativeImageHoldersV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🔁️detach/🟦️.ts";
++import {mayForceDetachV1,refuseForceDetachLineV1} from "../../🩹️cache-repair/🟦️.ts";
+ import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
+ import {incrementalExpectedV1,incrementalMutateV1,incrementalQuiescentV1,incrementalSliceV1,incrementalVerdictV1,type IncrementalExpectedV1,type IncrementalFamilyV1,type IncrementalObservationV1,type IncrementalPhaseV1,type IncrementalRowV1,type IncrementalScenarioSetV1,type IncrementalScenarioV1,type IncrementalSliceV1,type IncrementalSliceTaskV1,type IncrementalToolV1} from "../🟦️.ts";
+ 
+@@ -179,7 +181,15 @@
+  const real=await realpath(root).catch(()=>undefined);
+  if(!real)return 0;
+  const rows=incrementalMountsInsideV1(await run("mount",[]),real);
+- for(const row of rows){if(signal.aborted)throw Error("Cancelled\nAbgebrochen");if(platform==="darwin")await run("hdiutil",["detach","-force",row.device.replace(/s\d+$/u,"")]);else await run("umount",[row.path]);}
++ for(const row of rows){if(signal.aborted)throw Error("Cancelled\nAbgebrochen");if(platform==="darwin"){
++  const device=row.device.replace(/s\d+$/u,"");
++  try{await run("hdiutil",["detach",device]);}
++  catch(error){
++   const holders=parseNativeImageHoldersV1(await run("lsof",["-F","pc","+f","--",row.path]).catch((failure:unknown)=>String((failure as Error)?.message).includes(" exited with status 1 ")?"":"p1\nc(holders unreadable)\n"));
++   if(!mayForceDetachV1(holders))throw Error(refuseForceDetachLineV1(row.path,holders),{cause:error});
++   await run("hdiutil",["detach","-force",device]);
++  }
++ }else await run("umount",[row.path]);}
+  return rows.length;
+ }
+ 
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🗃️file-ports/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🗃️file-ports/🟨️.mjs
+@@ -1,18 +1,33 @@
+ import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
+ import{randomBytes}from"node:crypto";
+ import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
+-import{dirname,join}from"node:path";
++import{basename,dirname,join}from"node:path";
+ import{P,aborted,fail,sha256}from"../🧱️guards/🟨️.mjs";
++import{machineQuarantineRootV1,quarantineRecordSyncV1}from"../../../🩹️cache-repair/🟦️.ts";
+ 
+-/** 🗂️ The filesystem port on real files: a missing file reads undefined, writes are atomic by rename, a content addressed write that finds its file does nothing. */
++const named=/^[0-9a-f]{64}(?:\.|$)/u,verified=new Map();
++
++/** 🗂️ The filesystem port on real files: a missing file reads undefined, writes are atomic (temporary file, fsync, rename), a content addressed write that finds its file does nothing only when the file still holds exactly those bytes: a file under a digest name that is cut, empty or flipped (a write that never reached a full disk) is quarantined with its typed reason and written again, so a store heals the next time it stores the same content. */
+ export function createNodeFilePortV1(){
+  return Object.freeze({
+   async read(path){try{return await readFile(path);}catch(error){if(error?.code==="ENOENT"||error?.code==="ENOTDIR")return undefined;throw error;}},
+   async write(path,bytes,{ifAbsent=false}={}){
+-   if(ifAbsent){try{await lstat(path);return false;}catch(error){if(error?.code!=="ENOENT")throw error;}}
++   if(ifAbsent){
++    let info;try{info=await lstat(path);}catch(error){if(error?.code!=="ENOENT")throw error;}
++    if(info){
++     if(!named.test(basename(path)))return false;
++     const mark=path+"\0"+info.size+"\0"+info.mtimeMs;
++     if(verified.has(mark))return false;
++     if(info.isFile()&&info.size===bytes.length){
++      let held;try{held=await readFile(path);}catch{}
++      if(held&&Buffer.compare(held,Buffer.from(bytes))===0){if(verified.size>=65536)verified.clear();verified.set(mark,1);return false;}
++     }
++     quarantineRecordSyncV1({root:machineQuarantineRootV1(),mode:"remove",kind:"graph-record",path,reason:info.size===0?"empty":info.size<bytes.length?"truncated":"digest-mismatch",detail:"content differs from the bytes stored under its name"});
++    }
++   }
+    await mkdir(dirname(path),{recursive:true});
+    const temporary=path+"."+randomBytes(8).toString("hex")+".tmp";
+-   try{const file=await open(temporary,"wx");try{await file.writeFile(bytes);}finally{await file.close();}await rename(temporary,path);}finally{await rm(temporary,{force:true});}
++   try{const file=await open(temporary,"wx");try{await file.writeFile(bytes);await file.sync();}finally{await file.close();}await rename(temporary,path);}finally{await rm(temporary,{force:true});}
+    return true;
+   },
+   async names(directory){try{return await readdir(directory);}catch(error){if(error?.code==="ENOENT")return[];throw error;}},
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json
+@@ -256,7 +256,8 @@
+       "budgetMs": 300000,
+       "typecheck": "none",
+       "trees": [
+-        "🗄️cas"
++        "🗄️cas",
++        "🩹️cache-repair"
+       ],
+       "platforms": [
+         "darwin",
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts
+@@ -5,10 +5,21 @@
+ import {createCasGuardV1,type CasGuardV1} from "../../🚦️guard/🟦️.ts";
+ import {CAS_POLICY_V1} from "../../🧬️schema/🟦️.ts";
+ import {casObjectPathV1} from "../🟦️.ts";
++import {quarantineRecordSyncV1,readVerifiedRecordSyncV1,verifyDigestNamedV1,verifyFileDigestSyncV1,verifySizeSyncV1,writeSyncedSyncV1} from "../../../🩹️cache-repair/🟦️.ts";
+ 
+ const touched=new Map<string,number>(),writer=`${process.pid}-${randomUUID().slice(0,8)}`;
+ const fan=CAS_POLICY_V1.fanOutHexLength;
++const stampsOf=(root:string):string=>join(root,"v1",".verified");
+ 
++/** 🛡️ Whether an object of the host store is whole: with `hashed` (the default) it hashes to its name (once per machine and (size, mtime, inode), see the stamp) and, when the caller knows it, has the recorded size. A damaged object (cut by a full disk, flipped bytes, empty) is moved into the quarantine of the store with its typed reason and the answer is `false`, so the caller treats it as a miss and the next writer puts a good copy; an absent object is `false` without a quarantine row.
++ * @see ../../../🩹️cache-repair/🟦️.ts */
++export function intactCasObjectSyncV1(root:string,hash:string,size?:number,hashed:boolean=true):boolean{
++ const path=casObjectPathV1(root,hash,fan),verdict=hashed?verifyFileDigestSyncV1({path,digest:hash,stampDirectory:stampsOf(root),...size===undefined?{}:{size}}):verifySizeSyncV1(path,size);
++ if(verdict.ok)return true;
++ if(verdict.reason!=="missing"&&verdict.reason!=="unreadable")quarantineRecordSyncV1({root:join(root,"v1"),kind:"cas-object",path,reason:verdict.reason,detail:verdict.detail});
++ return false;
++}
++
+ /** ✋ Records an access of an object with the same throttle as the asynchronous store; the table is bounded. */
+ export function touchCasObjectSyncV1(root:string,hash:string,nowMs:number=Date.now()):void{
+  const key=root+"\0"+hash,last=touched.get(key);
+@@ -21,20 +32,22 @@
+ /** 📥️ Stores bytes under their sha256 in the host store (atomic rename, read-only, one copy per host) and returns the digest; an existing object is only touched. For callers that cannot await. A new object is admitted first: a partition at its critical share refuses the write with the typed low-space refusal, a store or partition above its high watermark starts the collection in the background, and a write that fails on a full disk starts it too. */
+ export function putCasObjectSyncV1(root:string,bytes:Uint8Array|string,guard:CasGuardV1=createCasGuardV1({root})):string{
+  const hash=createHash("sha256").update(bytes).digest("hex"),target=casObjectPathV1(root,hash,fan);
+- if(existsSync(target)){touchCasObjectSyncV1(root,hash);return hash;}
+  const size=typeof bytes==="string"?Buffer.byteLength(bytes):bytes.byteLength;
++ if(existsSync(target)&&intactCasObjectSyncV1(root,hash,size)){touchCasObjectSyncV1(root,hash);return hash;}
+  guard.admitSync(size);
+  const directory=join(root,"v1","t");mkdirSync(directory,{recursive:true});mkdirSync(dirname(target),{recursive:true});
+  const temporary=join(directory,`${writer}-${randomUUID().slice(0,12)}`);
+- try{writeFileSync(temporary,bytes);}catch(error){rmSync(temporary,{force:true});guard.relieve(error);throw error;}
++ try{writeSyncedSyncV1(temporary,bytes);}catch(error){rmSync(temporary,{force:true});guard.relieve(error);throw error;}
+  try{renameSync(temporary,target);}catch(error){rmSync(temporary,{force:true});if(!existsSync(target))throw error;}
+  try{chmodSync(target,0o444);}catch{}
+  guard.account(size);touchCasObjectSyncV1(root,hash);return hash;
+ }
+ 
+-/** 📖️ Reads an object completely; absent (never stored, or collected by the host policy) is `undefined`, a plain miss. */
++/** 📖️ Reads an object completely and verifies it against its name; absent (never stored, or collected by the host policy) is `undefined`, a plain miss, and so is a damaged object (quarantined with its reason, never returned). */
+ export function readCasObjectSyncV1(root:string,hash:string):Buffer|undefined{
+- try{const bytes=readFileSync(casObjectPathV1(root,hash,fan));touchCasObjectSyncV1(root,hash);return bytes;}catch{return undefined;}
++ const bytes=readVerifiedRecordSyncV1({root:join(root,"v1"),kind:"cas-object",path:casObjectPathV1(root,hash,fan),verify:data=>verifyDigestNamedV1(data,hash)});
++ if(bytes===undefined)return undefined;
++ touchCasObjectSyncV1(root,hash);return bytes;
+ }
+ 
+ /** 🔎️ Whether an object is in the host store. */
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🗃️store/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🗃️store/🟦️.ts
+@@ -8,6 +8,7 @@
+ import {createCasGuardV1,type CasGuardV1} from "../🚦️guard/🟦️.ts";
+ import {leaseCasTransientV1,pinCasV1,releaseCasPinsV1,releaseCasTransientV1} from "../📌️pins/🟦️.ts";
+ import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
++import {quarantineRecordSyncV1,verifyDigestNamedV1,verifyFileDigestV1} from "../../🩹️cache-repair/🟦️.ts";
+ 
+ /** 🧾️ A content address: lowercase sha256 hex and the byte length. */
+ export type CasDigestV1=Readonly<{hash:string;size:number}>;
+@@ -60,6 +61,13 @@
+ export const casCensusPathV1=(root:string):string=>join(root,"v1","census.json");
+ 
+ const allocated=(info:{size:number;blocks?:number}):number=>info.size;
++/** 🛡️ Whether an object is whole (hashes to its name, once per machine and (size, mtime, inode)); a damaged one is quarantined with its typed reason and the answer is `false`: the caller reports a miss and the next writer stores a good copy. An absent object is `false` without a row. */
++async function intactAsyncV1(root:string,hash:string,path:string):Promise<boolean>{
++ const verdict=await verifyFileDigestV1({path,digest:hash,stampDirectory:join(root,"v1",".verified")});
++ if(verdict.ok)return true;
++ if(verdict.reason!=="missing"&&verdict.reason!=="unreadable")quarantineRecordSyncV1({root:join(root,"v1"),kind:"cas-object",path,reason:verdict.reason,detail:verdict.detail});
++ return false;
++}
+ 
+ /** 🗄️ Opens a store; no state is held beyond the throttle of access events, so any number of processes and workspaces share one root. */
+ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
+@@ -76,7 +84,11 @@
+  const exists=(path:string):Promise<boolean>=>lstat(path).then(()=>true,()=>false);
+  const place=async(temporary:string,hash:string):Promise<void>=>{
+   const target=objectPath(hash);await mkdir(dirname(target),{recursive:true});
+-  if(await exists(target)){await unlink(temporary).catch(()=>undefined);return;}
++  if(await exists(target)){
++   const same=(await lstat(target).then(info=>info.size,()=>-1))===(await lstat(temporary).then(info=>info.size,()=>-2));
++   if(same){await unlink(temporary).catch(()=>undefined);return;}
++   quarantineRecordSyncV1({root:join(root,"v1"),kind:"cas-object",path:target,reason:"truncated",detail:"size differs from the stored copy"});
++  }
+   try{await rename(temporary,target);}catch(error){if(await exists(target)){await unlink(temporary).catch(()=>undefined);return;}throw error;}
+   await chmod(target,0o444).catch(()=>undefined);
+  };
+@@ -95,7 +107,7 @@
+      hash.update(chunk);await handle.write(chunk);
+     }
+    }catch(error){if((error as NodeJS.ErrnoException).syscall!==undefined||signal?.aborted)throw error;outcome="aborted";}
+-   await handle.close();
++   await handle.sync();await handle.close();
+   }catch(error){await handle.close().catch(()=>undefined);await unlink(temporary).catch(()=>undefined);guard.relieve(error);throw error;}
+   const digest=hash.digest("hex");
+   if(!outcome&&expect.size!==undefined&&size!==expect.size)outcome="length-mismatch";
+@@ -115,15 +127,19 @@
+   putChecked:(source,expect,signal)=>ingest(source,expect,signal),
+   async get(hash){
+    sha(hash);
+-   try{const info=await lstat(objectPath(hash));await touch(hash);hit();return{path:objectPath(hash),size:allocated(info)};}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
++   try{const info=await lstat(objectPath(hash));if(!await intactAsyncV1(root,hash,objectPath(hash))){miss();return undefined;}await touch(hash);hit();return{path:objectPath(hash),size:allocated(info)};}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
+   },
+   async read(hash){
+    sha(hash);
+-   try{const bytes=await readFile(objectPath(hash));await touch(hash);hit();return bytes;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
++   try{
++    const bytes=await readFile(objectPath(hash)),verdict=verifyDigestNamedV1(bytes,hash);
++    if(!verdict.ok){quarantineRecordSyncV1({root:join(root,"v1"),kind:"cas-object",path:objectPath(hash),reason:verdict.reason,detail:verdict.detail});miss();return undefined;}
++    await touch(hash);hit();return bytes;
++   }catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
+   },
+   async has(hashes){for(const hash of hashes)sha(hash);return Promise.all(hashes.map(hash=>exists(objectPath(hash))));},
+   async link(hash,destination,mode="auto"){
+-   sha(hash);const source=objectPath(hash);if(!await exists(source)){miss();return undefined;}
++   sha(hash);const source=objectPath(hash);if(!await exists(source)||!await intactAsyncV1(root,hash,source)){miss();return undefined;}
+    await mkdir(dirname(destination),{recursive:true});await rm(destination,{force:true});
+    const order:CasLinkModeV1[]=mode==="auto"?["reflink","copy"]:[mode];
+    for(const attempt of order){
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/README.md
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/README.md
+@@ -5,7 +5,7 @@
+ `repo doctor` answers in one shot why work is waiting, slow or failing when many agents share one worktree. It only reads state: it takes no lease and no capacity grant, so it answers even while a build holds everything; only the image repair of `--fix` tries one image lease once without waiting, so it never races a reclaim.
+ 
+ ```
+-repo doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts] [--lang=en|de]
++repo doctor [--json] [--fix|--repair [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts] [--lang=en|de]
+ ```
+ 
+ - Areas: `tools` (registry pins against what is installed), `storage` (images: attached, free space against budget and floor, unsettled publications), `leases` (holders, waiters, who blocks whom, cycles, order violations, stale registry rows, dead queue tickets), `capacity` and `host` (grants, waiters and their reason, memory, swap, load, open files, attached images), `sessions` (live, idle and gone agents), `graph` (published generation, damaged store, implementation newer than the generation), `dependencies` (pointers, ready generations, newer scope inputs, superseded and unfinished generations), `caches` (dead-process publications, retired and undeclared roots) `processes` (running repo processes with their phase) and `typecheck` (the type errors of the whole library per area, product and test code apart: the stored measurement is read, `--only=typecheck` measures again, which takes minutes; it informs and never blocks).
+@@ -13,6 +13,8 @@
+ - Exit status: 0 when no error remains (`--strict`: no warning either), 1 otherwise, 130 when cancelled. Progress goes to standard error; `--json` prints exactly one report, `--facts` the raw facts the findings are derived from.
+ - `--fix` applies only the repairs declared safe in `🔣️policy.json`: publications of dead processes in the graph image, lease registry rows of dead processes and folders of vanished lease directories, images that are detached behind dangling dependency links or attached at a stray mount point (macOS, under the exclusive image lease), gone agent sessions. Each repair re-derives its targets from the live state and never follows links. `--fix --dry-run` lists what would go.
+ 
++- `--repair` is `--fix` plus a verification of every cache record of the machine (unit entries, host store objects, remote cache values, graph generations, closures, dependency receipts, Nx task entries), with progress on standard error and cancellation (130). A record whose digest, seal or structure does not verify is a miss for every build, never a failure: `--repair` moves it into the bounded quarantine of its cache (`.quarantine/<kind>/`, newest 256 records, `log.jsonl` with a typed reason in English and German) and counts it; `--repair --dry-run` only counts. The word `repair` is the same flag (`repo doctor repair`); the MCP tool is `doctor_repair`.
++
+ Design: schema first. `🧬️schema/🔣️.json` defines policy, rule catalogue, facts and report; `📖️rules` holds the rules with their EN/DE texts, owner and fix; `🔣️policy.json` the thresholds. A probe reads one area through ports and returns facts; `🧮️analysis` is a pure function from facts to findings; `🖨️report` renders. Add a rule: add it to the catalogue, emit it in the analysis, add a hand-stated case to `🧪️tests/🧫️fixtures/🔣️.json`; the tests enforce that every rule is exercised, that EN and DE texts use the same data, and that an independent Python implementation (`🧪️tests/🐍️.py`) reaches the same findings.
+ 
+ ## Deutsch
+@@ -24,4 +26,6 @@
+ - Exit-Status: 0, wenn kein Fehler bleibt (`--strict`: auch keine Warnung), sonst 1, 130 bei Abbruch. Der Fortschritt geht auf die Fehlerausgabe; `--json` gibt genau einen Bericht aus, `--facts` die rohen Fakten, aus denen die Befunde abgeleitet sind.
+ - `--fix` wendet nur Reparaturen an, die in `🔣️policy.json` als sicher deklariert sind: Veröffentlichungen toter Prozesse im Graph-Image, Lease-Registerzeilen toter Prozesse und Ordner verschwundener Lease-Verzeichnisse, ausgehängte Images hinter ins Leere zeigenden Abhängigkeits-Links oder an einem verirrten Einhängepunkt eingehängte Images (macOS, unter der exklusiven Image-Lease), beendete Agent-Sitzungen. Jede Reparatur leitet ihre Ziele neu aus dem lebenden Zustand ab und folgt nie Verknüpfungen. `--fix --dry-run` listet auf, was verschwinden würde.
+ 
++- `--repair` ist `--fix` plus eine Prüfung jedes Cache-Eintrags des Rechners (Einheiten-Einträge, Host-Speicher-Objekte, Remote-Cache-Werte, Graph-Generationen, Abschlüsse, Abhängigkeits-Quittungen, Nx-Task-Einträge), mit Fortschritt auf der Fehlerausgabe und Abbruch (130). Ein Eintrag, dessen Digest, Siegel oder Struktur nicht stimmt, ist für jeden Build ein Fehltreffer, nie ein Fehler: `--repair` verschiebt ihn in die begrenzte Quarantäne seines Caches (`.quarantine/<Art>/`, die neuesten 256 Einträge, `log.jsonl` mit typisiertem Grund auf Englisch und Deutsch) und zählt ihn; `--repair --dry-run` zählt nur. Das Wort `repair` ist dasselbe Flag (`repo doctor repair`); das MCP-Werkzeug heißt `doctor_repair`.
++
+ Aufbau: Schema zuerst. `🧬️schema/🔣️.json` definiert Richtlinie, Regelkatalog, Fakten und Bericht; `📖️rules` enthält die Regeln mit ihren EN/DE-Texten, Eigentümer und Behebung; `🔣️policy.json` die Schwellen. Eine Sonde liest einen Bereich über Ports und liefert Fakten; `🧮️analysis` ist eine reine Funktion von Fakten zu Befunden; `🖨️report` stellt dar. Eine Regel ergänzen: in den Katalog aufnehmen, in der Analyse auslösen und einen von Hand formulierten Fall in `🧪️tests/🧫️fixtures/🔣️.json` aufnehmen; die Tests erzwingen, dass jede Regel geprüft wird, dass EN- und DE-Texte dieselben Daten benutzen und dass eine unabhängige Python-Implementierung (`🧪️tests/🐍️.py`) zu denselben Befunden kommt.
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/⌨️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/⌨️command/🟦️.ts
+@@ -5,9 +5,9 @@
+ import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+ 
+ /** 📝️ The closed arguments of `repo doctor`. */
+-export type DoctorArgumentsV1=Readonly<{json:boolean;fix:boolean;dryRun:boolean;strict:boolean;facts:boolean;only:ReadonlySet<DoctorAreaV1>|undefined;language:string|undefined}>;
++export type DoctorArgumentsV1=Readonly<{json:boolean;fix:boolean;repair:boolean;dryRun:boolean;strict:boolean;facts:boolean;only:ReadonlySet<DoctorAreaV1>|undefined;language:string|undefined}>;
+ const both=(key:string,values:Readonly<Record<string,string|number>>={}):string=>doctorTextV1("en",key,values)+"\n"+doctorTextV1("de",key,values);
+-const valued=new Set(["--only","--lang"]),plain=new Set(["--json","--fix","--dry-run","--strict","--facts"]);
++const valued=new Set(["--only","--lang"]),plain=new Set(["--json","--fix","--repair","--dry-run","--strict","--facts"]);
+ 
+ /** 🧷️ Reads the options of `repo doctor`; every unknown or repeated option and every unknown area is refused in both languages. */
+ export function doctorArgumentsV1(args:readonly string[]):DoctorArgumentsV1{
+@@ -18,9 +18,10 @@
+   seen.add(name);
+   if(valued.has(name)){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both("errorValue",{option:name}));values[name]=value;}
+   else if(plain.has(name)&&cut<0)flags.add(name);
++  else if(argument==="repair"&&index===0)flags.add("--repair");
+   else throw Error(both("errorOption",{option:argument}));
+  }
+- if(flags.has("--dry-run")&&!flags.has("--fix"))throw Error(both("errorDryRun"));
++ if(flags.has("--dry-run")&&!flags.has("--fix")&&!flags.has("--repair"))throw Error(both("errorDryRun"));
+  let only:Set<DoctorAreaV1>|undefined;
+  if(values["--only"]!==undefined){
+   only=new Set();
+@@ -29,7 +30,7 @@
+    only.add(area as DoctorAreaV1);
+   }
+  }
+- return Object.freeze({json:flags.has("--json"),fix:flags.has("--fix"),dryRun:flags.has("--dry-run"),strict:flags.has("--strict"),facts:flags.has("--facts"),only,language:values["--lang"]});
++ return Object.freeze({json:flags.has("--json"),fix:flags.has("--fix")||flags.has("--repair"),repair:flags.has("--repair"),dryRun:flags.has("--dry-run"),strict:flags.has("--strict"),facts:flags.has("--facts"),only,language:values["--lang"]});
+ }
+ 
+ /** 🎛️ What the command touches: output, environment, checkout and the ports of the probes; tests replace them. */
+@@ -40,10 +41,11 @@
+  const [kind,first,second]=stage.split(":");
+  if(kind==="probe"){const [done,total]=(second??"0/0").split("/");return doctorTextV1(language,"progressProbe",{area:first,done:Number(done)+1,total});}
+  if(kind==="repair")return doctorTextV1(language,"progressRepair",{id:first});
++ if(kind==="integrity")return stage.slice("integrity:".length).split(" / ")[language==="en"?0:1];
+  return undefined;
+ }
+ 
+-/** 🩺️ Runs `repo doctor [--json] [--fix [--dry-run]] [--only=<area>,…] [--strict] [--facts] [--lang=<en|de>]`: exit 0 when nothing blocks, 1 when an error remains (or a warning with --strict), 130 when cancelled. */
++/** 🩺️ Runs `repo doctor [--json] [--fix|--repair [--dry-run]] [--only=<area>,…] [--strict] [--facts] [--lang=<en|de>]`: exit 0 when nothing blocks, 1 when an error remains (or a warning with --strict), 130 when cancelled. */
+ export async function runDoctorCommandV1(args:readonly string[],context:DoctorCommandContextV1):Promise<number>{
+  const parsed=doctorArgumentsV1(args),languages=resolveDoctorLanguagesV1(parsed.language,context.environment),controller=new AbortController();
+  const stop=():void=>controller.abort(new DoctorCancelledV1()),outer=context.signal;
+@@ -52,7 +54,7 @@
+  try{
+   const ports=doctorPortsV1(context.root,{environment:context.environment,signal:controller.signal,progress:stage=>{const line=quiet?undefined:progressLine(languages[0]!,stage);if(line)say(line);},...context.ports});
+   const {runDoctorV1}=await import("../🏃️runner/🟦️.ts");
+-  const {facts,report}=await runDoctorV1(ports,{...parsed.only?{only:parsed.only}:{},fix:parsed.fix,dryRun:parsed.dryRun,...context.options});
++  const {facts,report}=await runDoctorV1(ports,{...parsed.only?{only:parsed.only}:{},fix:parsed.fix,repair:parsed.repair,dryRun:parsed.dryRun,...context.options});
+   if(parsed.facts)context.write(JSON.stringify(facts,null,2));
+   else if(parsed.json)context.write(JSON.stringify(report,null,2));
+   else for(const line of formatDoctorReportV1(report,languages))context.write(line);
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🏃️runner/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🏃️runner/🟦️.ts
+@@ -2,12 +2,12 @@
+ import {DoctorCancelledV1,DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,type DoctorAreaV1,type DoctorFactsV1,type DoctorPolicyV1,type DoctorProbeRowV1,type DoctorReportV1,type DoctorRepairResultV1,type DoctorRuleV1} from "../🟦️.ts";
+ import {analyzeDoctorV1,buildDoctorReportV1} from "../🧮️analysis/🟦️.ts";
+ import type {DoctorPortsV1} from "../🔌️ports/🟦️.ts";
+-import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1} from "../🔎️probes/🟦️.ts";
++import {DOCTOR_DEEP_REPAIRS_V1,DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1} from "../🔎️probes/🟦️.ts";
+ import type {DoctorProbeContextV1,DoctorProbeV1,DoctorRepairV1,DoctorSectionsV1} from "../🔎️probes/📋️contract/🟦️.ts";
+ 
+ /** 🎛️ What one doctor run is asked to do. */
+ export type DoctorRunOptionsV1=Readonly<{
+- only?:ReadonlySet<DoctorAreaV1>;fix?:boolean;dryRun?:boolean;
++ only?:ReadonlySet<DoctorAreaV1>;fix?:boolean;dryRun?:boolean;repair?:boolean;deepRepairs?:readonly DoctorRepairV1[];
+  policy?:DoctorPolicyV1;rules?:Readonly<Record<string,DoctorRuleV1>>;probes?:readonly DoctorProbeV1[];repairs?:ReadonlyMap<string,DoctorRepairV1>;libraryRoot?:string;
+ }>;
+ /** 📦️ The facts a run read and the report derived from them. */
+@@ -90,22 +90,23 @@
+  };
+  let facts=await collectDoctorFactsV1(ports,options),analysis=analyze(facts);
+  const results:DoctorRepairResultV1[]=[];
+- if(options.fix){
++ if(options.fix||options.repair){
+   const dryRun=options.dryRun??false,registry=options.repairs??DOCTOR_REPAIRS_V1,policy=options.policy??DOCTOR_POLICY_V1;
+-  const ids=[...new Set(analysis.findings.filter(row=>row.fix.kind==="automatic"&&row.fix.repair!==undefined).map(row=>row.fix.repair!))];
++  const ids=options.fix||options.repair?[...new Set(analysis.findings.filter(row=>row.fix.kind==="automatic"&&row.fix.repair!==undefined).map(row=>row.fix.repair!))]:[];
+   const context:DoctorProbeContextV1={policy,known:new Set(),libraryRoot:options.libraryRoot??LIBRARY_ROOT,deadlineMs:0};
+-  for(const id of ids){
+-   const repair=registry.get(id);if(!repair)continue;
++  const queue:DoctorRepairV1[]=[...ids.flatMap(id=>registry.get(id)??[]),...options.repair?options.deepRepairs??DOCTOR_DEEP_REPAIRS_V1:[]];
++  for(const repair of queue){
++   const id=repair.id;
+    ports.progress(`repair:${id}`);
+    try{
+     const done=await repair.run(ports,context,dryRun);
+-    results.push({id,area:repair.area,dryRun,status:done.status??"done",removed:done.removed,bytes:done.bytes,...done.reason===undefined?{}:{reason:done.reason}});
++    results.push({id,area:repair.area,dryRun,status:done.status??"done",removed:done.removed,bytes:done.bytes,...done.reason===undefined?{}:{reason:done.reason},...done.facts===undefined?{}:{facts:done.facts}});
+    }catch(error){
+     if(ports.signal.aborted){results.push({id,area:repair.area,dryRun,status:"cancelled",removed:0,bytes:0});break;}
+     results.push({id,area:repair.area,dryRun,status:"failed",removed:0,bytes:0,reason:firstLine(error)});
+    }
+   }
+-  if(!dryRun&&results.some(row=>row.status==="done")){facts=await collectDoctorFactsV1(ports,options);analysis=analyze(facts);}
++  if(!dryRun&&results.some(row=>row.status==="done"&&row.id!=="caches-integrity")){facts=await collectDoctorFactsV1(ports,options);analysis=analyze(facts);}
+  }
+  return {facts,report:buildDoctorReportV1(facts,analysis,results)};
+ }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/📖️texts/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/📖️texts/🔣️.json
+@@ -210,7 +210,19 @@
+   "repairFailed": {
+     "en": "repair {id} failed: {reason}",
+     "de": "Reparatur {id} fehlgeschlagen: {reason}"
++  },
++  "repairIntegrity": {
++    "en": "verified the caches ({id}): {records} record(s) read, {corrupt} corrupt, {removed} moved to quarantine, {failed} could not be moved; every corrupt record counts as a miss and is rebuilt on demand{partial}",
++    "de": "Caches geprüft ({id}): {records} Eintrag/Einträge gelesen, {corrupt} beschädigt, {removed} in Quarantäne verschoben, {failed} nicht verschiebbar; jeder beschädigte Eintrag zählt als Fehltreffer und wird bei Bedarf neu erzeugt{partial}"
++  },
++  "repairIntegrityDry": {
++    "en": "would verify the caches ({id}): {records} record(s) read, {corrupt} corrupt (they would move to quarantine){partial}",
++    "de": "würde die Caches prüfen ({id}): {records} Eintrag/Einträge gelesen, {corrupt} beschädigt (sie kämen in Quarantäne){partial}"
+   },
++  "integrityPartial": {
++    "en": "; the walk stopped at its entry bound",
++    "de": "; der Durchlauf endete an seiner Eintragsgrenze"
++  },
+   "repairCancelled": {
+     "en": "repair {id} cancelled",
+     "de": "Reparatur {id} abgebrochen"
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/📋️contract/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/📋️contract/🟦️.ts
+@@ -8,7 +8,7 @@
+ /** 📥️ What a probe returns: facts, or the reason there is nothing to read here. */
+ export type DoctorProbeResultV1=Readonly<{sections:DoctorSectionsV1}>|Readonly<{unavailable:string}>;
+ /** 🛠️ What a safe repair did, or would do in a dry run. */
+-export type DoctorRepairRunV1=Readonly<{removed:number;bytes:number;status?:"nothing"|"unavailable";reason?:string}>;
++export type DoctorRepairRunV1=Readonly<{removed:number;bytes:number;status?:"nothing"|"unavailable";reason?:string;facts?:Readonly<Record<string,number>>}>;
+ /** 🔧️ One declared safe repair; it re-derives its targets from the live state and never trusts an earlier report. */
+ export type DoctorRepairV1=Readonly<{id:string;area:DoctorAreaV1;run(ports:DoctorPortsV1,context:DoctorProbeContextV1,dryRun:boolean):Promise<DoctorRepairRunV1>}>;
+ /** 🔎️ One probe: it reads the live state of one area through the ports and never changes it. */
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/🟦️.ts
+@@ -9,8 +9,11 @@
+ import {dependenciesProbeV1} from "./📦️dependencies/🟦️.ts";
+ import {cachesProbeV1} from "./⚡️caches/🟦️.ts";
+ import {processesProbeV1} from "./🏃️processes/🟦️.ts";
++import {integrityRepairV1} from "./⚡️caches/🩹️integrity/🟦️.ts";
+ 
+ /** 🗂️ Every probe in the order the report lists them; phase 2 needs the pids phase 1 found. */
+ export const DOCTOR_PROBES_V1:readonly DoctorProbeV1[]=Object.freeze([toolsProbeV1,storageProbeV1,leasesProbeV1,capacityProbeV1,sessionsProbeV1,graphProbeV1,dependenciesProbeV1,cachesProbeV1,processesProbeV1,typecheckProbeV1]);
++/** 🩹️ The repairs that `repo doctor --repair` runs whatever the findings say: they verify instead of reacting to a finding. */
++export const DOCTOR_DEEP_REPAIRS_V1:readonly DoctorRepairV1[]=Object.freeze([integrityRepairV1]);
+ /** 🧰️ Every declared repair by id. */
+ export const DOCTOR_REPAIRS_V1:ReadonlyMap<string,DoctorRepairV1>=new Map(DOCTOR_PROBES_V1.flatMap(probe=>(probe.repairs??[]).map(repair=>[repair.id,repair] as const)));
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🖨️report/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🖨️report/🟦️.ts
+@@ -48,6 +48,7 @@
+  if(report.repairs.length){
+   lines.push("","## "+text("headingRepairs"));
+   for(const row of report.repairs){
++   if(row.id==="caches-integrity"&&row.facts!==undefined&&(row.status==="done"||row.status==="nothing")){lines.push(text(row.dryRun?"repairIntegrityDry":"repairIntegrity",{id:row.id,records:row.facts.records??0,corrupt:row.facts.corrupt??0,removed:row.removed,failed:row.facts.failed??0,partial:row.facts.partial?text("integrityPartial"):""}));continue;}
+    const key=row.status==="done"?(row.dryRun?"repairDry":"repairDone"):row.status==="nothing"?"repairNothing":row.status==="unavailable"?"repairUnavailable":row.status==="cancelled"?"repairCancelled":"repairFailed";
+    lines.push(text(key,{id:row.id,removed:row.removed,bytes:row.bytes,reason:row.reason}));
+   }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🟦️.ts
+@@ -77,7 +77,7 @@
+ }>;
+ export type DoctorPhaseV1="waiting-lease"|"waiting-capacity"|"holding"|"admitted"|"running"|"orphan";
+ export type DoctorProcessRowV1=Readonly<{pid:number;parent:number;ageSeconds:number;rssMegabytes:number;cpuPercent:number;phase:DoctorPhaseV1;via:number|null;command:string}>;
+-export type DoctorRepairResultV1=Readonly<{id:string;area:DoctorAreaV1;dryRun:boolean;status:"done"|"nothing"|"unavailable"|"failed"|"cancelled";removed:number;bytes:number;reason?:string}>;
++export type DoctorRepairResultV1=Readonly<{id:string;area:DoctorAreaV1;dryRun:boolean;status:"done"|"nothing"|"unavailable"|"failed"|"cancelled";removed:number;bytes:number;reason?:string;facts?:Readonly<Record<string,number>>}>;
+ export type DoctorVerdictV1="ok"|"degraded"|"blocked";
+ export type DoctorReportV1=Readonly<{
+  version:1;atMs:number;platform:"darwin"|"linux"|"win32";verdict:DoctorVerdictV1;counts:Readonly<{error:number;warn:number;info:number}>;
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧬️schema/🔣️.json
+@@ -1959,6 +1959,13 @@
+         "reason": {
+           "type": "string",
+           "maxLength": 300
++        },
++        "facts": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "integer",
++            "minimum": 0
++          }
+         }
+       }
+     },
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json
+@@ -224,6 +224,10 @@
+     },
+     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
+     { "operation": "doctor", "kind": "query", "flags": ["--only", "--strict", "--json"], "bind": { "--json": true } },
++    {
++      "operation": "doctor", "name": "doctor_repair", "kind": "maintain", "flags": ["--dry-run", "--json"], "bind": { "--repair": true, "--json": true },
++      "summary": { "en": "Verify every cache record of the machine, quarantine the corrupt ones (a corrupt record is a miss, never a build failure), run the safe repairs and report in English and German; dry_run only counts.", "de": "Prüft jeden Cache-Eintrag des Rechners, verschiebt die beschädigten in Quarantäne (ein beschädigter Eintrag ist ein Fehltreffer, nie ein Build-Fehler), führt die sicheren Reparaturen aus und berichtet auf Englisch und Deutsch; dry_run zählt nur." }
++    },
+     {
+       "operation": "service", "subcommand": "host", "kind": "query", "flags": [],
+       "summary": { "en": "Show the host graph service status.", "de": "Zeigt den Status des Graph-Dienstes dieses Rechners." },
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json
+@@ -20,6 +20,7 @@
+     "dependencies_lock",
+     "dependencies_sync",
+     "doctor",
++    "doctor_repair",
+     "exec",
+     "fleet_status",
+     "graph",
+--- /dev/null
++++ b/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🛟️guarded-detach/🟦️.ts
+@@ -0,0 +1,28 @@
++/** 🧪️ An image with open writers is never force-detached. */
++import { expect, test } from "bun:test";
++import { detachDiskImageGuardedV1 } from "../../🖼️images/🟦️.ts";
++
++const script = (rows: Record<string, { status: number | null; stdout?: string; error?: Error }>) => {
++  const calls: string[] = [];
++  return { calls, run: (program: string, args: readonly string[]) => { const key = program.split("/").pop() + " " + args.join(" "); calls.push(key); return rows[key] ?? { status: 99 }; } };
++};
++
++test("a polite detach that works never looks at holders", () => {
++  const { calls, run } = script({ "hdiutil detach /dev/disk9": { status: 0 } });
++  expect(detachDiskImageGuardedV1("/dev/disk9", "/Volumes/x", run)).toBe(true);
++  expect(calls).toEqual(["hdiutil detach /dev/disk9"]);
++});
++test("a busy image with an open writer is not forced", () => {
++  const { calls, run } = script({ "hdiutil detach /dev/disk9": { status: 16 }, "lsof -F pc +f -- /Volumes/x": { status: 0, stdout: "p4242\ncrustc\n" } });
++  expect(detachDiskImageGuardedV1("/dev/disk9", "/Volumes/x", run)).toBe(false);
++  expect(calls.some(call => call.includes("-force"))).toBe(false);
++});
++test("a busy image nobody holds (lsof answers 1: nothing found) is forced", () => {
++  const { calls, run } = script({ "hdiutil detach /dev/disk9": { status: 16 }, "lsof -F pc +f -- /Volumes/x": { status: 1, stdout: "" }, "hdiutil detach -force /dev/disk9": { status: 0 } });
++  expect(detachDiskImageGuardedV1("/dev/disk9", "/Volumes/x", run)).toBe(true);
++  expect(calls).toContain("hdiutil detach -force /dev/disk9");
++});
++test("holders that cannot be read are not a licence to force", () => {
++  expect(detachDiskImageGuardedV1("/dev/disk9", "/Volumes/x", script({ "hdiutil detach /dev/disk9": { status: 16 }, "lsof -F pc +f -- /Volumes/x": { status: null, error: new Error("ENOENT") } }).run)).toBe(false);
++  expect(detachDiskImageGuardedV1("/dev/disk9", "/Volumes/x", script({ "hdiutil detach /dev/disk9": { status: 16 }, "lsof -F pc +f -- /Volumes/x": { status: 2 } }).run)).toBe(false);
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/🩹️self-repair/🟦️.ts
+@@ -0,0 +1,110 @@
++/** 🧪️ A damaged unit cache record (entry file, build script run, cached object) is a miss, is quarantined with its typed reason and heals on the next publish; a compile after the damage is never a failure. */
++import {afterAll,beforeAll,describe,expect,test} from "bun:test";
++import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {casObjectPathV1,casRootV1} from "../../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
++import {readQuarantineLogV1,sealRecordV1} from "../../../../../../🏗️build/🩹️cache-repair/🟦️.ts";
++import {lookupUnitV1,newestBuildRunV1,newestEntryV1,pruneEntriesV1,publishUnitV1,writeBuildRunV1,writeEntryV1} from "../../🟦️.ts";
++
++let base:string,previous:string|undefined;
++beforeAll(()=>{base=mkdtempSync(join(tmpdir(),"semio-unit-repair-"));previous=process.env.SEMIO_CAS_ROOT;process.env.SEMIO_CAS_ROOT=join(base,"cas");});
++afterAll(()=>{if(previous===undefined)delete process.env.SEMIO_CAS_ROOT;else process.env.SEMIO_CAS_ROOT=previous;rmSync(base,{recursive:true,force:true});});
++let count=0;
++const key="a".repeat(64);
++function publish():{root:string;cwd:string;context:Parameters<typeof lookupUnitV1>[2];entry:NonNullable<ReturnType<typeof publishUnitV1>>}{
++ const directory=join(base,"u"+count++),root=join(directory,"cache"),cwd=join(directory,"work"),out=join(cwd,"out");
++ mkdirSync(join(cwd,"src"),{recursive:true});mkdirSync(out,{recursive:true});
++ writeFileSync(join(cwd,"src","lib.rs"),"pub fn f(){}\n");writeFileSync(join(out,"libdemo.rlib"),"rlib bytes ".repeat(40));writeFileSync(join(out,"libdemo.d"),"libdemo.rlib: src/lib.rs\n");
++ const entry=publishUnitV1(root,{key,crate:"demo",cwd,outDir:out,laneRoot:undefined,outputs:[join(out,"libdemo.rlib"),join(out,"libdemo.d")],stdout:"",stderr:"warning: x\n",stampDirectory:undefined});
++ expect(entry).toBeDefined();
++ return{root,cwd,entry:entry!,context:{cwd,laneRoot:undefined,environment:{},stampDirectory:undefined}};
++}
++const entryFile=(root:string):string=>{const directory=join(root,"e",key.slice(0,2),key);return join(directory,readdirSync(directory).filter(name=>name.endsWith(".json"))[0]!);};
++const damage=(path:string,how:"truncate"|"flip"|"empty"):void=>{
++ chmodSync(path,0o644);const bytes=readFileSync(path);
++ if(how==="empty")writeFileSync(path,"");
++ else if(how==="truncate")writeFileSync(path,bytes.subarray(0,bytes.length>>1));
++ else{const copy=Buffer.from(bytes);const at=Math.floor(copy.length/2);copy[at]=copy[at]!^0x01;writeFileSync(path,copy);}
++};
++
++describe("entry files",()=>{
++ test("a published entry is sealed and a lookup hits",()=>{
++  const {root,context}=publish();
++  expect(JSON.parse(readFileSync(entryFile(root),"utf8")).seal).toMatch(/^[0-9a-f]{64}$/u);
++  expect(lookupUnitV1(root,key,context)?.crate).toBe("demo");
++  expect("seal" in lookupUnitV1(root,key,context)!).toBe(false);
++ });
++ for(const how of ["truncate","flip","empty"] as const){
++  test(`${how}: the lookup is a miss, the entry is quarantined once with a typed bilingual reason, a republish heals`,()=>{
++   const {root,context,cwd,entry}=publish();
++   damage(entryFile(root),how);
++   expect(lookupUnitV1(root,key,context)).toBeUndefined();
++   expect(newestEntryV1(root,key)).toBeUndefined();
++   const rows=readQuarantineLogV1(root);
++   expect(rows.length).toBe(1);expect(rows[0]!.kind).toBe("unit-entry");expect(rows[0]!.en).not.toBe(rows[0]!.de);
++   expect(existsSync(join(root,"e",key.slice(0,2),key,"x"))).toBe(false);
++   writeEntryV1(root,entry);
++   expect(lookupUnitV1(root,key,context)?.crate).toBe("demo");
++   void cwd;
++  });
++ }
++ test("an entry whose seal was flipped but whose content is fine is still a miss (a flipped field cannot pass)",()=>{
++  const {root,context}=publish(),path=entryFile(root),value=JSON.parse(readFileSync(path,"utf8"));
++  value.crate="other";writeFileSync(path,JSON.stringify(value));
++  expect(lookupUnitV1(root,key,context)).toBeUndefined();
++  expect(readQuarantineLogV1(root)[0]?.reason).toBe("seal-mismatch");
++ });
++ test("an entry from before sealing is accepted by its shape, and one with a wrong shape is not",()=>{
++  const {root,context,entry}=publish(),path=entryFile(root);
++  writeFileSync(path,JSON.stringify(entry));expect(lookupUnitV1(root,key,context)?.crate).toBe("demo");
++  writeFileSync(path,JSON.stringify({...entry,outputs:"nope"}));expect(lookupUnitV1(root,key,context)).toBeUndefined();
++  expect(readQuarantineLogV1(root)[0]?.reason).toBe("structure");
++ });
++ test("prune drops and quarantines damaged entries instead of throwing",()=>{
++  const {root}=publish();damage(entryFile(root),"truncate");
++  expect(pruneEntriesV1(root,Date.now()).entries).toBe(1);
++  expect(readQuarantineLogV1(root).length).toBe(1);
++ });
++});
++
++describe("cached objects",()=>{
++ for(const how of ["truncate","flip","empty"] as const){
++  test(`${how}: an entry replaying a damaged object is a miss, the object is quarantined in the host store, a republish restores both`,()=>{
++   const {root,context,entry}=publish(),sha=entry.outputs[0]!.sha256;
++   expect(lookupUnitV1(root,key,context)?.crate).toBe("demo");
++   damage(casObjectPathV1(casRootV1(),sha),how);
++   expect(lookupUnitV1(root,key,context)).toBeUndefined();
++   expect(existsSync(casObjectPathV1(casRootV1(),sha))).toBe(false);
++   expect(readQuarantineLogV1(join(casRootV1(),"v1")).some(row=>row.kind==="cas-object")).toBe(true);
++   const again=publish();
++   expect(again.entry.outputs[0]!.sha256).toBe(sha);
++   expect(lookupUnitV1(again.root,key,again.context)?.crate).toBe("demo");
++  });
++ }
++ test("an object replayed by a compile is whole: the restored file equals the published bytes",()=>{
++  const {root,context,entry}=publish();
++  expect(entry.outputs[0]!.bytes).toBe(readFileSync(casObjectPathV1(casRootV1(),entry.outputs[0]!.sha256)).length);
++  expect(lookupUnitV1(root,key,context)).toBeDefined();
++ });
++});
++
++describe("build script runs",()=>{
++ const run=(extra:object={})=>({version:1 as const,key:"b".repeat(64),package:"p",facts:[],environment:[],outputs:[],stdout:null,stderr:null,createdMs:Date.now(),...extra});
++ for(const how of ["truncate","flip","empty"] as const){
++  test(`${how}: a damaged run record is a miss and is quarantined`,()=>{
++   const root=join(base,"runs"+count++);writeBuildRunV1(root,run());
++   const directory=join(root,"r","bb","b".repeat(64)),file=join(directory,readdirSync(directory)[0]!);
++   expect(newestBuildRunV1(root,"b".repeat(64))).toBeDefined();
++   damage(file,how);
++   expect(newestBuildRunV1(root,"b".repeat(64))).toBeUndefined();
++   expect(readQuarantineLogV1(root)[0]?.kind).toBe("build-run");
++  });
++ }
++});
++
++test("sealed text written by the cache equals the contract's seal of the record",()=>{
++ const {root,entry}=publish();
++ const stored=JSON.parse(readFileSync(entryFile(root),"utf8"));
++ expect(stored.seal).toBe(JSON.parse(sealRecordV1(entry)).seal);
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🩹️self-repair/🟦️.ts
+@@ -0,0 +1,100 @@
++/** 🧪️ A damaged remote cache value (blob, action result, task archive) is a miss, is quarantined with its typed reason and the next upload stores a good one. */
++import {afterAll,describe,expect,test} from "bun:test";
++import {createHash} from "node:crypto";
++import {chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {RemoteCacheStoreV1} from "../../💾️store/🟦️.ts";
++import {readQuarantineLogV1} from "../../../🩹️cache-repair/🟦️.ts";
++
++const scratch:string[]=[];
++const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-repair-${label}-`));scratch.push(path);return path;};
++afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
++const body=(bytes:Uint8Array)=>(async function*(){yield bytes;})();
++const sha=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
++const open=(folder:string)=>RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0});
++const pathOf=(store:RemoteCacheStoreV1,kind:string,key:string)=>join(store.root,"main",kind,key.slice(0,2),key);
++const damage=(path:string,how:"truncate"|"flip"|"empty")=>{
++ chmodSync(path,0o644);const bytes=readFileSync(path);
++ if(how==="empty")writeFileSync(path,"");
++ else if(how==="truncate")writeFileSync(path,bytes.subarray(0,bytes.length>>1));
++ else{const copy=Buffer.from(bytes);copy[3]=copy[3]!^0x10;writeFileSync(path,copy);}
++};
++const blob=new TextEncoder().encode("a content addressed blob of a remote cache, long enough to be cut in half");
++const result=(()=>{const text=new TextEncoder().encode("hello world, a stdout stream of the action");return Uint8Array.from([0x20,0x01,0x2a,text.length,...text]);})();
++
++describe("blobs",()=>{
++ for(const how of ["truncate","flip","empty"] as const){
++  test(`${how}: a read is a miss, the blob is quarantined, the next upload stores a good one`,async()=>{
++   const store=await open(directory("blob")),key=sha(blob);
++   expect(await store.put("main","cas",key,body(blob),{mode:"content",verify:true,declaredLength:blob.length})).toMatch(/created|exists/u);
++   expect((await store.read("main","cas",key))?.size).toBe(blob.length);
++   damage(pathOf(store,"cas",key),how);
++   expect(await store.read("main","cas",key)).toBeUndefined();
++   expect(await store.has("main","cas",key)).toBe(false);
++   const rows=readQuarantineLogV1(store.root);expect(rows.length).toBe(1);expect(rows[0]!.kind).toBe("remote-cas");expect(rows[0]!.de).not.toBe(rows[0]!.en);
++   expect(await store.put("main","cas",key,body(blob),{mode:"content",verify:true,declaredLength:blob.length})).toBe("created");
++   expect((await store.read("main","cas",key))?.size).toBe(blob.length);
++   expect(readFileSync(pathOf(store,"cas",key))).toEqual(Buffer.from(blob));
++   await store.close();
++  });
++ }
++});
++
++describe("action results",()=>{
++ test("an intact result reads, a cut one is a miss and quarantined",async()=>{
++  const store=await open(directory("ac")),key=sha("action");
++  await store.put("main","ac",key,body(result),{mode:"replace",declaredLength:result.length});
++  expect((await store.read("main","ac",key))?.size).toBe(result.length);
++  writeFileSync(pathOf(store,"ac",key),result.subarray(0,result.length-10));
++  expect(await store.read("main","ac",key)).toBeUndefined();
++  expect(readQuarantineLogV1(store.root)[0]?.kind).toBe("remote-ac");
++  expect(statSync(store.root).isDirectory()).toBe(true);
++  await store.close();
++ });
++ test("an empty result is a legal message (exit code 0, no outputs) and reads",async()=>{
++  const store=await open(directory("ac-empty")),key=sha("none");
++  mkdirSync(join(store.root,"main","ac",key.slice(0,2)),{recursive:true});writeFileSync(pathOf(store,"ac",key),"");
++  expect((await store.read("main","ac",key))?.size).toBe(0);
++  await store.close();
++ });
++});
++
++describe("task archives",()=>{
++ test("an emptied archive is a miss and quarantined; a non-empty one reads",async()=>{
++  const store=await open(directory("nx")),key="12345678901234567890",archive=new Uint8Array(64).fill(7);
++  await store.put("main","nx",key,body(archive),{mode:"keep",declaredLength:archive.length});
++  expect((await store.read("main","nx",key))?.size).toBe(64);
++  writeFileSync(pathOf(store,"nx",key),"");
++  expect(await store.read("main","nx",key)).toBeUndefined();
++  expect(readQuarantineLogV1(store.root)[0]?.reason).toBe("empty");
++  await store.close();
++ });
++});
++
++describe("low-water mark of the volume",()=>{
++ const GiB=1073741824;
++ const withVolume=(free:()=>number)=>RemoteCacheStoreV1.open({directory:directory("volume"),maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0,volume:()=>({totalBytes:32*GiB,freeBytes:free()})});
++ test("above the mark nothing changes; below the floor a write is refused with the typed outcome and nothing is written",async()=>{
++  let free=20*GiB;const store=await withVolume(()=>free);
++  expect(await store.put("main","nx","k1",body(new Uint8Array(16)),{mode:"keep",declaredLength:16})).toBe("created");
++  free=100*1048576;
++  expect(await store.put("main","nx","k2",body(new Uint8Array(16)),{mode:"keep",declaredLength:16})).toBe("capacity");
++  expect(await store.has("main","nx","k2")).toBe(false);
++  free=20*GiB;
++  expect(await store.put("main","nx","k2",body(new Uint8Array(16)),{mode:"keep",declaredLength:16})).toBe("created");
++  await store.close();
++ });
++ test("between the floor and the low-water mark the collection runs before the write and the write is accepted",async()=>{
++  let free=20*GiB;const store=await withVolume(()=>free);
++  for(let index=0;index<4;index++)await store.put("main","nx","old"+index,body(new Uint8Array(1000)),{mode:"keep",declaredLength:1000});
++  const before=store.usage().entries;free=Math.floor(1.5*GiB);
++  expect(await store.put("main","nx","fresh",body(new Uint8Array(16)),{mode:"keep",declaredLength:16})).toBe("created");
++  expect(store.usage().entries).toBeLessThanOrEqual(before+1);
++  await store.close();
++ });
++ test("a volume that cannot be measured never refuses",async()=>{
++  const store=await RemoteCacheStoreV1.open({directory:directory("blind"),maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0,volume:()=>undefined});
++  expect(await store.put("main","nx","k",body(new Uint8Array(16)),{mode:"keep",declaredLength:16})).toBe("created");await store.close();
++ });
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🩹️self-repair/🟦️.ts
+@@ -0,0 +1,48 @@
++/** 🧪️ A content addressed generation file that a full disk cut, emptied or flipped is quarantined and written again by the next store of the same content; a plain `ifAbsent` file keeps its meaning. */
++import {afterAll,beforeAll,describe,expect,test} from "bun:test";
++import {createHash} from "node:crypto";
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {createNodeFilePortV1} from "../../🗃️file-ports/🟨️.mjs";
++import {readQuarantineLogV1} from "../../../../🩹️cache-repair/🟦️.ts";
++
++let base:string;
++beforeAll(()=>{base=mkdtempSync(join(tmpdir(),"semio-generation-repair-"));});
++afterAll(()=>{rmSync(base,{recursive:true,force:true});});
++let count=0;
++const bytes=Buffer.from("a fragment of the project graph, long enough to be cut in half by a full disk".repeat(3));
++const digest=createHash("sha256").update(bytes).digest("hex");
++const quarantineLog=join(base0(),"q");
++function base0(){return mkdtempSync(join(tmpdir(),"semio-generation-q-"));}
++process.env.SEMIO_CACHE_QUARANTINE_ROOT=quarantineLog;
++const fresh=()=>{const root=join(base,"s"+count++,"generations");mkdirSync(join(root,"f"),{recursive:true});return{root,path:join(root,"f",digest+".json"),port:createNodeFilePortV1()};};
++
++for(const how of ["truncate","flip","empty"] as const){
++ test(`${how}: the next store of the same content replaces the damaged file and quarantines it`,async()=>{
++  const {root,path,port}=fresh(),before=readQuarantineLogV1(quarantineLog).length;
++  expect(await port.write(path,bytes,{ifAbsent:true})).toBe(true);
++  expect(await port.write(path,bytes,{ifAbsent:true})).toBe(false);
++  const held=readFileSync(path);
++  if(how==="empty")writeFileSync(path,"");else if(how==="truncate")writeFileSync(path,held.subarray(0,held.length>>1));else{const copy=Buffer.from(held);copy[7]=copy[7]!^0x08;writeFileSync(path,copy);}
++  expect(await port.write(path,bytes,{ifAbsent:true})).toBe(true);
++  expect(readFileSync(path)).toEqual(bytes);
++  const rows=readQuarantineLogV1(quarantineLog);
++  expect(rows.length).toBe(before+1);expect(rows.at(-1)!.kind).toBe("graph-record");expect(rows.at(-1)!.outcome).toBe("removed");expect(rows.at(-1)!.de).not.toBe(rows.at(-1)!.en);
++  expect(existsSync(join(root,".quarantine"))).toBe(false);
++  expect(readdirSync(join(root,"f")).filter(name=>name.endsWith(".tmp"))).toEqual([]);
++ });
++}
++
++test("a file under a plain name keeps the meaning of `ifAbsent`: an existing file is never replaced",async()=>{
++ const {root,port}=fresh(),path=join(root,"ask.json");
++ expect(await port.write(path,Buffer.from("first"),{ifAbsent:true})).toBe(true);
++ expect(await port.write(path,Buffer.from("second"),{ifAbsent:true})).toBe(false);
++ expect(readFileSync(path,"utf8")).toBe("first");
++ expect(existsSync(join(root,".quarantine"))).toBe(false);
++});
++test("a plain write replaces atomically and leaves no temporary file",async()=>{
++ const {root,port}=fresh(),path=join(root,"p.json");
++ await port.write(path,Buffer.from("one"));await port.write(path,Buffer.from("two"));
++ expect(readFileSync(path,"utf8")).toBe("two");expect(readdirSync(root).filter(name=>name.endsWith(".tmp"))).toEqual([]);
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗄️cas/🧪️tests/🩹️self-repair/🟦️.ts
+@@ -0,0 +1,76 @@
++/** 🧪️ A damaged host store object is a miss, is quarantined with its typed reason and heals on the next put; sync and async stores alike. */
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync,chmodSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {afterAll,beforeAll,describe,expect,test} from "bun:test";
++import {createCasStoreV1,casObjectPathV1} from "../../🗃️store/🟦️.ts";
++import {intactCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1} from "../../🗃️store/🔁️sync/🟦️.ts";
++import {readQuarantineLogV1,sha256HexV1} from "../../../🩹️cache-repair/🟦️.ts";
++
++let root:string;
++beforeAll(()=>{root=mkdtempSync(join(tmpdir(),"semio-cas-repair-"));});
++afterAll(()=>{rmSync(root,{recursive:true,force:true});});
++let count=0;
++const fresh=():string=>{const directory=join(root,"s"+count++);mkdirSync(directory,{recursive:true});return directory;};
++const body=Buffer.from("compiled output of a crate, long enough to be cut in half by a full disk".repeat(4));
++const damage=(path:string,how:"truncate"|"flip"|"empty"):void=>{
++ chmodSync(path,0o644);const bytes=readFileSync(path);
++ if(how==="empty")writeFileSync(path,"");
++ else if(how==="truncate")writeFileSync(path,bytes.subarray(0,bytes.length>>1));
++ else{const copy=Buffer.from(bytes);copy[5]=copy[5]!^0x40;writeFileSync(path,copy);}
++};
++
++for(const how of ["truncate","flip","empty"] as const){
++ describe("object damaged by "+how,()=>{
++  test("sync store: read is a miss, the object is quarantined, a put heals it",()=>{
++   const store=fresh(),hash=putCasObjectSyncV1(store,body),path=casObjectPathV1(store,hash);
++   expect(readCasObjectSyncV1(store,hash)?.equals(body)).toBe(true);
++   damage(path,how);
++   expect(readCasObjectSyncV1(store,hash)).toBeUndefined();
++   expect(existsSync(path)).toBe(false);
++   const rows=readQuarantineLogV1(join(store,"v1"));
++   expect(rows.length).toBe(1);expect(rows[0]!.kind).toBe("cas-object");expect(rows[0]!.de).not.toBe(rows[0]!.en);
++   expect(putCasObjectSyncV1(store,body)).toBe(hash);
++   expect(readCasObjectSyncV1(store,hash)?.equals(body)).toBe(true);
++  });
++  test("sync store: a put over a damaged object of another size replaces it without a read in between",()=>{
++   const store=fresh(),hash=putCasObjectSyncV1(store,body),path=casObjectPathV1(store,hash);
++   damage(path,how==="flip"?"truncate":how);
++   expect(putCasObjectSyncV1(store,body)).toBe(hash);
++   expect(statSync(path).size).toBe(body.length);
++   expect(intactCasObjectSyncV1(store,hash,body.length)).toBe(true);
++  });
++  test("intact check: stamps make the second check cheap and a later change is seen",()=>{
++   const store=fresh(),hash=putCasObjectSyncV1(store,body),path=casObjectPathV1(store,hash);
++   expect(intactCasObjectSyncV1(store,hash,body.length)).toBe(true);expect(intactCasObjectSyncV1(store,hash,body.length)).toBe(true);
++   damage(path,how);
++   expect(intactCasObjectSyncV1(store,hash,body.length)).toBe(false);
++   expect(existsSync(path)).toBe(false);
++  });
++  test("async store: get, read and link answer a miss, never an error or the damaged bytes",async()=>{
++   const store=fresh(),cas=createCasStoreV1({root:store}),digest=await cas.put(body),path=cas.objectPath(digest.hash);
++   expect((await cas.read(digest.hash))?.length).toBe(body.length);
++   damage(path,how);
++   expect(await cas.get(digest.hash)).toBeUndefined();
++   expect(existsSync(path)).toBe(false);
++   expect(await cas.read(digest.hash)).toBeUndefined();
++   expect(await cas.link(digest.hash,join(store,"out","file"))).toBeUndefined();
++   expect(readQuarantineLogV1(join(store,"v1")).length).toBe(1);
++   const again=await cas.put(body);expect(again.hash).toBe(digest.hash);
++   expect(Buffer.from((await cas.read(digest.hash))!).equals(body)).toBe(true);
++  });
++  test("async store: a put over a damaged object of another size heals it",async()=>{
++   const store=fresh(),cas=createCasStoreV1({root:store}),digest=await cas.put(body),path=cas.objectPath(digest.hash);
++   damage(path,how==="flip"?"truncate":how);
++   await cas.put(body);
++   expect(statSync(path).size).toBe(body.length);
++   expect(sha256HexV1(readFileSync(path))).toBe(digest.hash);
++  });
++ });
++}
++
++test("a missing object is a plain miss without a quarantine row",()=>{
++ const store=fresh(),hash=sha256HexV1("never stored");
++ expect(readCasObjectSyncV1(store,hash)).toBeUndefined();expect(intactCasObjectSyncV1(store,hash)).toBe(false);
++ expect(readQuarantineLogV1(join(store,"v1")).length).toBe(0);
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🌊️watermark/🟦️.ts
+@@ -0,0 +1,8 @@
++import {READY_IMAGE_POLICY_V1,readyImageFloorBytesV1,readyImageReliefBytesV1} from "../../🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🟦️.ts";
++
++/** 🌊️ Where the free space of an image stands against the one rule every cache collector shares (the guard floor and the low-water mark of the ready sidecar, see `🖼️image-guard`): `ok` above the low-water mark, `relief` between the mark and the floor (collect now, in place, before anything runs short), `floor` below the floor (collect urgently and refuse new large writes). `needBytes` raises the mark for a caller that is about to write that much. Pure. */
++export function cacheWatermarkV1(totalBytes:number,freeBytes:number,needBytes:number=0):Readonly<{level:"ok"|"relief"|"floor";floorBytes:number;reliefBytes:number}>{
++ const floorBytes=readyImageFloorBytesV1(totalBytes,READY_IMAGE_POLICY_V1),reliefBytes=Math.max(readyImageReliefBytesV1(totalBytes,READY_IMAGE_POLICY_V1),floorBytes+Math.max(0,needBytes));
++ return Object.freeze({level:freeBytes<floorBytes+Math.max(0,needBytes)?"floor":freeBytes<reliefBytes?"relief":"ok",floorBytes,reliefBytes});
++}
++
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🌊️watermark/🧪️tests/🟦️.ts
+@@ -0,0 +1,19 @@
++import {describe,expect,test} from "bun:test";
++import {cacheWatermarkV1} from "../🟦️.ts";
++
++describe("watermark",()=>{
++ const GiB=1073741824;
++ test("the level follows the shared floor and low-water rule, and a need raises both",()=>{
++  const total=32*GiB,mark=cacheWatermarkV1(total,total,0);
++  expect(mark.level).toBe("ok");
++  expect(mark.floorBytes).toBeGreaterThan(0);expect(mark.reliefBytes).toBeGreaterThanOrEqual(mark.floorBytes);
++  expect(cacheWatermarkV1(total,mark.reliefBytes-1).level).toBe("relief");
++  expect(cacheWatermarkV1(total,mark.floorBytes-1).level).toBe("floor");
++  expect(cacheWatermarkV1(total,mark.reliefBytes+1,2*GiB).level).not.toBe("floor");
++  expect(cacheWatermarkV1(total,mark.floorBytes+1,2*GiB).level).toBe("floor");
++ });
++ test("matches the declared floor numbers of the ready sidecar for 19275 MB and 32 GiB images",()=>{
++  expect(Math.round(cacheWatermarkV1(19275*1048576,0).floorBytes/1048576)).toBe(771);
++  expect(Math.round(cacheWatermarkV1(32768*1048576,0).floorBytes/1048576)).toBe(1311);
++ });
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🟦️.ts
+@@ -0,0 +1,347 @@
++import {createHash,randomBytes} from "node:crypto";
++import {appendFileSync,closeSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readSync,readdirSync,renameSync,rmSync,statSync,writeFileSync,writeSync} from "node:fs";
++import {open as openAsync,rename as renameAsync,rm as rmAsync} from "node:fs/promises";
++import {tmpdir} from "node:os";
++import {basename,dirname,join,relative,sep} from "node:path";
++import schema from "./🧬️schema/🔣️.json" with {type:"json"};
++
++const policy=schema.definitions.Policy.const,texts=schema.definitions.Texts.const,quarantinePolicy=policy.quarantine;
++/** 📐️ The self-repair contract of every build cache: record kinds, fault reasons, quarantine bounds, write and scan limits.
++ * @see ./🧬️schema/🔣️.json */
++export const CACHE_REPAIR_POLICY_V1=policy;
++/** 🧬️ The kinds of cache record that verify on read. */
++export type CacheRecordKindV1="unit-entry"|"build-run"|"cas-object"|"spill-object"|"remote-ac"|"remote-cas"|"remote-nx"|"nx-cache"|"dependency-generation"|"graph-record"|"closure-record";
++/** 🚨️ Why a record does not verify; every reason has an English and a German text. */
++export type CacheRecordReasonV1="missing"|"empty"|"truncated"|"malformed"|"digest-mismatch"|"seal-mismatch"|"unsealed"|"structure"|"unreadable";
++/** ⚖️ The verdict on one record: it holds, or it is a miss for this typed reason. */
++export type CacheRecordVerdictV1=Readonly<{ok:true}>|Readonly<{ok:false;reason:CacheRecordReasonV1;detail:string}>;
++/** 🗣️ Languages of every text; English comes first. */
++export type CacheRepairLanguageV1="en"|"de";
++
++const HEX64=/^[0-9a-f]{64}$/u,OK:CacheRecordVerdictV1=Object.freeze({ok:true});
++const bad=(reason:CacheRecordReasonV1,detail:string=""):CacheRecordVerdictV1=>Object.freeze({ok:false,reason,detail:detail.slice(0,quarantinePolicy.maximumDetailCharacters)});
++const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/<([A-Za-z]+)>/gu,(whole,name:string)=>String(values[name]??whole));
++
++/** 💬️ One text of the contract in one language, placeholders filled. */
++export function cacheRepairTextV1(key:keyof typeof texts,language:CacheRepairLanguageV1,values:Readonly<Record<string,string|number>>={}):string{return fill(texts[key][language],values);}
++/** 💬️ One text in English and German, one line. */
++export function cacheRepairLineV1(key:keyof typeof texts,values:Readonly<Record<string,string|number>>={}):string{return cacheRepairTextV1(key,"en",values)+" / "+cacheRepairTextV1(key,"de",values);}
++
++/** 🔏️ The sha256 hex of bytes or text. */
++export const sha256HexV1=(bytes:Uint8Array|string):string=>createHash("sha256").update(bytes).digest("hex");
++
++const sorted=(value:unknown):unknown=>Array.isArray(value)?value.map(sorted):value!==null&&typeof value==="object"?Object.fromEntries(Object.keys(value).sort().map(key=>[key,sorted((value as Record<string,unknown>)[key])])):value;
++
++/** 🔍️ Parses record bytes as one JSON value: empty, cut short (the last character is not a closing one) and otherwise malformed bytes each get their own reason. */
++export function parseJsonRecordV1(bytes:Uint8Array):Readonly<{ok:true;value:unknown;text:string}>|Extract<CacheRecordVerdictV1,{ok:false}>{
++ if(bytes.length===0)return bad("empty") as Extract<CacheRecordVerdictV1,{ok:false}>;
++ let text:string;try{text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}catch{return bad("malformed","not UTF-8") as Extract<CacheRecordVerdictV1,{ok:false}>;}
++ try{return Object.freeze({ok:true as const,value:JSON.parse(text) as unknown,text});}
++ catch(error){const tail=text.trimEnd().at(-1);return bad(tail==="}"||tail==="]"?"malformed":"truncated",String((error as Error).message)) as Extract<CacheRecordVerdictV1,{ok:false}>;}
++}
++
++/** 🔏️ Writes a record with its own seal: the sha256 of the record without the seal field, as the last field. */
++export function sealRecordV1(record:object):string{
++ const body=JSON.stringify(record);return JSON.stringify({...record,[policy.seal.field]:sha256HexV1(body)});
++}
++/** 🔓️ Opens a sealed record: the seal must match the rest; an unsealed record is a miss when `requireSeal`, else it is returned as it is for the shape check. */
++export function openSealedRecordV1<T=Record<string,unknown>>(bytes:Uint8Array,requireSeal:boolean=policy.seal.required):Readonly<{ok:true;value:T;sealed:boolean}>|Extract<CacheRecordVerdictV1,{ok:false}>{
++ const parsed=parseJsonRecordV1(bytes);if(!parsed.ok)return parsed;
++ const value=parsed.value;if(value===null||typeof value!=="object"||Array.isArray(value))return bad("structure","object required") as Extract<CacheRecordVerdictV1,{ok:false}>;
++ const {[policy.seal.field]:seal,...rest}=value as Record<string,unknown>;
++ if(seal===undefined)return requireSeal?bad("unsealed") as Extract<CacheRecordVerdictV1,{ok:false}>:Object.freeze({ok:true as const,value:value as T,sealed:false});
++ if(typeof seal!=="string"||seal!==sha256HexV1(JSON.stringify(rest)))return bad("seal-mismatch") as Extract<CacheRecordVerdictV1,{ok:false}>;
++ return Object.freeze({ok:true as const,value:rest as T,sealed:true});
++}
++
++/** 🛂️ Whether bytes hash to the digest in their name. */
++export function verifyDigestNamedV1(bytes:Uint8Array,expected:string):CacheRecordVerdictV1{
++ if(!HEX64.test(expected))return bad("structure","name is no sha256");
++ const actual=sha256HexV1(bytes);if(actual===expected)return OK;
++ return bad(bytes.length===0?"empty":"digest-mismatch",actual.slice(0,12)+" of "+expected.slice(0,12));
++}
++
++const stampMark=(info:{size:bigint;mtimeNs:bigint;ino:bigint}):string=>`${info.size}:${info.mtimeNs}:${info.ino}`;
++/** 🛂️ Whether a file hashes to its digest, streamed in 1 MiB steps; a size mismatch (when the size is known) answers at once and a file verified before is trusted while its (size, mtime, inode) stamp holds, so every object is hashed once per machine. */
++export function verifyFileDigestSyncV1(request:Readonly<{path:string;digest:string;size?:number;stampDirectory?:string}>):CacheRecordVerdictV1{
++ if(!HEX64.test(request.digest))return bad("structure","name is no sha256");
++ let info;try{info=statSync(request.path,{bigint:true});}catch(error){return bad(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")?"missing":"unreadable");}
++ if(!info.isFile())return bad("structure","not a file");
++ if(request.size!==undefined&&Number(info.size)!==request.size)return bad(info.size===0n?"empty":"truncated",`size ${info.size} of ${request.size}`);
++ const stamp=request.stampDirectory===undefined?undefined:join(request.stampDirectory,request.digest.slice(0,2),request.digest.slice(2,34)),mark=stampMark(info);
++ if(stamp!==undefined){try{if(readFileSync(stamp,"utf8")===mark)return OK;}catch{}}
++ const hash=createHash("sha256");let descriptor:number;
++ try{descriptor=openSync(request.path,"r");}catch{return bad("unreadable");}
++ try{const buffer=Buffer.allocUnsafe(1<<20);for(;;){const read=readSync(descriptor,buffer,0,buffer.length,null);if(read===0)break;hash.update(buffer.subarray(0,read));}}catch{return bad("unreadable");}finally{closeSync(descriptor);}
++ if(hash.digest("hex")!==request.digest)return bad(info.size===0n?"empty":"digest-mismatch");
++ if(stamp!==undefined){try{mkdirSync(dirname(stamp),{recursive:true});const temporary=stamp+"."+randomBytes(3).toString("hex");writeFileSync(temporary,mark);renameSync(temporary,stamp);}catch{}}
++ return OK;
++}
++
++/** 📏️ The cheap half of {@link verifyFileDigestSyncV1}: the file exists, is a file and (when the size is known) has that size; nothing is read. For maintenance passes that look at every record and must not hash a whole cache. */
++export function verifySizeSyncV1(path:string,size?:number):CacheRecordVerdictV1{
++ let info;try{info=statSync(path);}catch(error){return bad(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")?"missing":"unreadable");}
++ if(!info.isFile())return bad("structure","not a file");
++ if(size!==undefined&&info.size!==size)return bad(info.size===0?"empty":"truncated",`size ${info.size} of ${size}`);
++ return OK;
++}
++/** 🛂️ {@link verifyFileDigestSyncV1} for callers that must not block: the same verdicts, the file streamed with awaited reads. */
++export async function verifyFileDigestV1(request:Readonly<{path:string;digest:string;size?:number;stampDirectory?:string}>):Promise<CacheRecordVerdictV1>{
++ if(!HEX64.test(request.digest))return bad("structure","name is no sha256");
++ let handle;try{handle=await openAsync(request.path,"r");}catch(error){return bad(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")?"missing":"unreadable");}
++ try{
++  const info=await handle.stat({bigint:true});
++  if(!info.isFile())return bad("structure","not a file");
++  if(request.size!==undefined&&Number(info.size)!==request.size)return bad(info.size===0n?"empty":"truncated",`size ${info.size} of ${request.size}`);
++  const stamp=request.stampDirectory===undefined?undefined:join(request.stampDirectory,request.digest.slice(0,2),request.digest.slice(2,34)),mark=stampMark(info);
++  if(stamp!==undefined){try{if(readFileSync(stamp,"utf8")===mark)return OK;}catch{}}
++  const hash=createHash("sha256"),buffer=Buffer.allocUnsafe(1<<20);
++  try{for(;;){const{bytesRead}=await handle.read(buffer,0,buffer.length,null);if(bytesRead===0)break;hash.update(buffer.subarray(0,bytesRead));}}catch{return bad("unreadable");}
++  if(hash.digest("hex")!==request.digest)return bad(info.size===0n?"empty":"digest-mismatch");
++  if(stamp!==undefined){try{mkdirSync(dirname(stamp),{recursive:true});const temporary=stamp+"."+randomBytes(3).toString("hex");writeFileSync(temporary,mark);renameSync(temporary,stamp);}catch{}}
++  return OK;
++ }finally{await handle.close().catch(()=>undefined);}
++}
++
++/** 📦️ What a quarantine request names: the cache root whose volume holds the quarantine, the record and why it failed. */
++export type CacheQuarantineRequestV1=Readonly<{root:string;kind:CacheRecordKindV1;path:string;reason:CacheRecordReasonV1;detail?:string;nowMs?:number;mode?:"move"|"remove"}>;
++/** 🗑️ Where the log of a store with closed names (no unknown entry allowed beside its records, as the graph images have) is kept: removed records are only logged here, never moved, so the store keeps exactly its own names; `SEMIO_CACHE_QUARANTINE_ROOT` overrides it. */
++export const machineQuarantineRootV1=(environment:Readonly<Record<string,string|undefined>>=process.env):string=>environment.SEMIO_CACHE_QUARANTINE_ROOT??join(tmpdir(),"semio-cache-quarantine");
++/** 📦️ What became of the record: moved into the quarantine, removed (too large or the quarantine could not take it), kept (neither worked) or already gone. */
++export type CacheQuarantineOutcomeV1=Readonly<{outcome:"moved"|"removed"|"kept"|"absent";destination?:string}>;
++/** 🧾️ One row of the quarantine log with both texts. */
++export type CacheQuarantineRowV1=Readonly<{version:1;atMs:number;pid:number;kind:CacheRecordKindV1;name:string;reason:CacheRecordReasonV1;detail:string;outcome:CacheQuarantineOutcomeV1["outcome"];en:string;de:string}>;
++
++const quarantineDirectory=(root:string):string=>join(root,quarantinePolicy.directory);
++type Sink=(row:CacheQuarantineRowV1)=>void;let sink:Sink|undefined;
++/** 🔔️ Lets a host (the repo CLI, a test) hear every quarantine as it happens; one sink at a time, `undefined` removes it. */
++export function setCacheRepairSinkV1(next:Sink|undefined):void{sink=next;}
++
++function appendLog(root:string,row:CacheQuarantineRowV1):void{
++ try{
++  const directory=quarantineDirectory(root),file=join(directory,quarantinePolicy.log);mkdirSync(directory,{recursive:true});
++  try{if(statSync(file).size>=quarantinePolicy.maximumLogBytes)renameSync(file,file+".1");}catch{}
++  appendFileSync(file,JSON.stringify(row)+"\n");
++ }catch{}
++}
++function bound(root:string,kind:CacheRecordKindV1):void{
++ try{
++  const directory=join(quarantineDirectory(root),kind),rows:{path:string;at:number;size:number}[]=[];let total=0;
++  for(const name of readdirSync(directory)){try{const info=statSync(join(directory,name));rows.push({path:join(directory,name),at:info.mtimeMs,size:info.size});total+=info.size;}catch{}}
++  rows.sort((left,right)=>left.at-right.at);
++  while(rows.length>0&&(rows.length>quarantinePolicy.maximumRecords||total>quarantinePolicy.maximumBytes)){const row=rows.shift()!;rmSync(row.path,{force:true});total-=row.size;}
++ }catch{}
++}
++
++/** 📍️ Where the quarantine of a record kind lives below a scanned root: host store objects and remote cache values under `<root>/v1` (the folder their stores quarantine into), graph records are only removed and logged under the machine root (their images keep exactly their own names), everything else under the root. */
++export function quarantineTargetV1(root:string,kind:CacheRecordKindV1):Readonly<{root:string;mode:"move"|"remove"}>{
++ if(kind==="graph-record")return Object.freeze({root:machineQuarantineRootV1(),mode:"remove"});
++ if(kind==="cas-object"||kind==="remote-ac"||kind==="remote-cas"||kind==="remote-nx")return Object.freeze({root:join(root,"v1"),mode:"move"});
++ return Object.freeze({root,mode:"move"});
++}
++
++/** 🚑️ Takes a corrupt record out of the way: it moves into the bounded quarantine of its cache root (the oldest rows go first), is removed when it is larger than the per-record bound or the move fails, and is logged with its typed reason in both languages. Links are removed, never followed. Never throws: a cache that cannot quarantine still answers a miss. */
++export function quarantineRecordSyncV1(request:CacheQuarantineRequestV1):CacheQuarantineOutcomeV1{
++ let outcome:CacheQuarantineOutcomeV1;const now=request.nowMs??Date.now();
++ try{
++  let info;try{info=lstatSync(request.path);}catch{return Object.freeze({outcome:"absent"});}
++  const name=basename(request.path);
++  if(request.mode==="remove"||info.isSymbolicLink()||!info.isFile()||info.size>quarantinePolicy.maximumRecordBytes){try{rmSync(request.path,{force:true,recursive:info.isDirectory()&&!info.isSymbolicLink()});outcome=Object.freeze({outcome:"removed"});}catch{outcome=Object.freeze({outcome:"kept"});}}
++  else{
++   const directory=join(quarantineDirectory(request.root),request.kind),destination=join(directory,name+"."+now+"."+randomBytes(2).toString("hex"));
++   try{mkdirSync(directory,{recursive:true});renameSync(request.path,destination);outcome=Object.freeze({outcome:"moved",destination});}
++   catch{try{rmSync(request.path,{force:true});outcome=Object.freeze({outcome:"removed"});}catch{outcome=Object.freeze({outcome:"kept"});}}
++  }
++  const values={kind:request.kind,name,reason:cacheRepairTextV1(request.reason,"en")},text=(language:CacheRepairLanguageV1)=>cacheRepairTextV1(outcome.outcome==="moved"?"quarantined" as const:outcome.outcome==="removed"?"removed" as const:"kept" as const,language,{...values,reason:cacheRepairTextV1(request.reason,language)});
++  const row:CacheQuarantineRowV1=Object.freeze({version:1,atMs:now,pid:process.pid,kind:request.kind,name,reason:request.reason,detail:(request.detail??"").slice(0,quarantinePolicy.maximumDetailCharacters),outcome:outcome.outcome,en:text("en"),de:text("de")});
++  appendLog(request.root,row);if(outcome.outcome==="moved")bound(request.root,request.kind);
++  try{sink?.(row);}catch{}
++  return outcome;
++ }catch{return Object.freeze({outcome:"kept"});}
++}
++
++/** 📜️ The newest rows of the quarantine log of a cache root (the rotated file first), `limit` at most; a torn line is skipped. */
++export function readQuarantineLogV1(root:string,limit:number=200):readonly CacheQuarantineRowV1[]{
++ const rows:CacheQuarantineRowV1[]=[],file=join(quarantineDirectory(root),quarantinePolicy.log);
++ for(const path of [file+".1",file]){
++  let text:string;try{text=readFileSync(path,"utf8");}catch{continue;}
++  for(const line of text.split("\n")){if(!line)continue;try{const row=JSON.parse(line) as CacheQuarantineRowV1;if(row.version===1&&typeof row.kind==="string")rows.push(row);}catch{}}
++ }
++ return rows.slice(-limit);
++}
++
++/** 📖️ Reads a record, verifies it and answers its bytes; a missing file is a plain miss, an unreadable, empty, cut or flipped one is quarantined with its reason and is a miss as well. Never throws. */
++export function readVerifiedRecordSyncV1(request:Readonly<{root:string;kind:CacheRecordKindV1;path:string;verify(bytes:Buffer):CacheRecordVerdictV1;nowMs?:number}>):Buffer|undefined{
++ let bytes:Buffer;
++ try{bytes=readFileSync(request.path);}
++ catch(error){
++  const code=(error as NodeJS.ErrnoException).code??"";if(["ENOENT","ENOTDIR"].includes(code))return undefined;
++  quarantineRecordSyncV1({root:request.root,kind:request.kind,path:request.path,reason:"unreadable",detail:code,...request.nowMs===undefined?{}:{nowMs:request.nowMs}});return undefined;
++ }
++ let verdict:CacheRecordVerdictV1;try{verdict=request.verify(bytes);}catch(error){verdict=bad("structure",String((error as Error)?.message));}
++ if(verdict.ok)return bytes;
++ quarantineRecordSyncV1({root:request.root,kind:request.kind,path:request.path,reason:verdict.reason,detail:verdict.detail,...request.nowMs===undefined?{}:{nowMs:request.nowMs}});
++ return undefined;
++}
++
++/** 📖️ Reads a sealed JSON record and answers its value; `shape` returns the first violation of the kind's structure (or `undefined`). The same miss-and-quarantine contract as {@link readVerifiedRecordSyncV1}. */
++export function readSealedRecordSyncV1<T>(request:Readonly<{root:string;kind:CacheRecordKindV1;path:string;shape?(value:T):string|undefined;requireSeal?:boolean;nowMs?:number}>):T|undefined{
++ let value:T|undefined;
++ const bytes=readVerifiedRecordSyncV1({...request,verify:data=>{
++  const opened=openSealedRecordV1<T>(data,request.requireSeal);if(!opened.ok)return opened;
++  const violation=request.shape?.(opened.value);if(violation!==undefined)return bad("structure",violation);
++  value=opened.value;return OK;
++ }});
++ return bytes===undefined?undefined:value;
++}
++
++const renameOver=(from:string,to:string):void=>{
++ try{renameSync(from,to);}
++ catch(error){if(process.platform==="win32"&&["EEXIST","EPERM","EBUSY","EACCES"].includes((error as NodeJS.ErrnoException).code??"")){rmSync(to,{force:true});renameSync(from,to);}else throw error;}
++};
++const synchronizeDirectory=(directory:string):void=>{
++ if(!policy.write.synchronizeDirectory||process.platform==="win32")return;
++ try{const descriptor=openSync(directory,"r");try{fsyncSync(descriptor);}finally{closeSync(descriptor);}}catch{}
++};
++/** 💾️ Writes a new file and forces it to the disk (`wx`, write, fsync, close), for callers that publish by their own rename; the file is removed when the write fails, a full disk included. */
++export function writeSyncedSyncV1(path:string,data:Uint8Array|string,mode:number=policy.write.fileMode):void{
++ const descriptor=openSync(path,"wx",mode);
++ try{const bytes=typeof data==="string"?Buffer.from(data):Buffer.from(data.buffer,data.byteOffset,data.byteLength);for(let at=0;at<bytes.length;)at+=writeSync(descriptor,bytes,at,bytes.length-at);fsyncSync(descriptor);}
++ catch(error){closeSync(descriptor);rmSync(path,{force:true});throw error;}
++ closeSync(descriptor);
++}
++/** 💾️ Publishes a file atomically and durably: written to a temporary file beside it, fsynced, renamed over the final name, the directory fsynced; a failure (a full disk included) removes the temporary file and leaves the old content. Readers see the old file or the new one, never a part, and a crash after the rename cannot leave an empty file. */
++export function writeDurableSyncV1(path:string,data:Uint8Array|string,mode:number=policy.write.fileMode):void{
++ const temporary=path+"."+randomBytes(4).toString("hex")+policy.write.temporarySuffix;
++ try{writeSyncedSyncV1(temporary,data,mode);renameOver(temporary,path);synchronizeDirectory(dirname(path));}
++ catch(error){rmSync(temporary,{force:true});throw error;}
++}
++/** 💾️ {@link writeDurableSyncV1} for callers that await. */
++export async function writeDurableV1(path:string,data:Uint8Array|string,mode:number=policy.write.fileMode):Promise<void>{
++ const temporary=path+"."+randomBytes(4).toString("hex")+policy.write.temporarySuffix;
++ try{
++  const handle=await openAsync(temporary,"wx",mode);
++  try{await handle.writeFile(data);await handle.sync();}finally{await handle.close();}
++  try{await renameAsync(temporary,path);}catch(error){if(process.platform==="win32"&&["EEXIST","EPERM","EBUSY","EACCES"].includes((error as NodeJS.ErrnoException).code??"")){await rmAsync(path,{force:true});await renameAsync(temporary,path);}else throw error;}
++  synchronizeDirectory(dirname(path));
++ }catch(error){await rmAsync(temporary,{force:true});throw error;}
++}
++
++/** 🔌️ Whether an image may be force-detached: never while a process holds a file open on it. Pure. */
++export function mayForceDetachV1(holders:readonly Readonly<{pid:number;command:string}>[]):boolean{return holders.length===0;}
++/** 🔌️ The refusal line (English and German) of a forced detach that has open writers. */
++export function refuseForceDetachLineV1(mountPoint:string,holders:readonly Readonly<{pid:number;command:string}>[]):string{
++ return cacheRepairLineV1("refusedForce",{mountPoint,holders:holders.slice(0,8).map(row=>row.command+" pid "+row.pid).join(", ")+(holders.length>8?", +"+(holders.length-8):"")});
++}
++
++const object=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==="object"&&!Array.isArray(value);
++const hexOrNull=(value:unknown):boolean=>value===null||typeof value==="string"&&HEX64.test(value);
++/** 🧱️ The shape of a unit cache entry (`UnitEntryV1`): the first violation, `undefined` when it holds. */
++export function unitEntryShapeV1(value:unknown):string|undefined{
++ if(!object(value)||value.version!==1)return "version 1 required";
++ if(typeof value.key!=="string"||!HEX64.test(value.key))return "key";
++ if(typeof value.crate!=="string")return "crate";
++ if(!Array.isArray(value.outputs)||value.outputs.some(row=>!object(row)||typeof row.name!=="string"||typeof row.sha256!=="string"||!HEX64.test(row.sha256)||!Number.isSafeInteger(row.bytes)||(row.bytes as number)<0))return "outputs";
++ if(!Array.isArray(value.dependencies)||value.dependencies.some(row=>!object(row)||typeof row.path!=="string"||!hexOrNull(row.sha256)))return "dependencies";
++ if(!Array.isArray(value.environment)||value.environment.some(row=>!object(row)||typeof row.name!=="string"||!(row.value===null||typeof row.value==="string")))return "environment";
++ return undefined;
++}
++/** 🧱️ The shape of a build script run entry (`BuildEntryV1`). */
++export function buildRunShapeV1(value:unknown):string|undefined{
++ if(!object(value)||value.version!==1)return "version 1 required";
++ if(typeof value.key!=="string"||!HEX64.test(value.key))return "key";
++ if(!Array.isArray(value.outputs)||value.outputs.some(row=>!object(row)||typeof row.sha256!=="string"||!HEX64.test(row.sha256)))return "outputs";
++ return undefined;
++}
++/** 🧱️ Verifies a dependency generation receipt (`*.receipt.json`): valid JSON, the right purpose and a `sha256` that matches the key-sorted canonical form of the rest. */
++export function verifyReceiptBytesV1(bytes:Uint8Array):CacheRecordVerdictV1{
++ const parsed=parseJsonRecordV1(bytes);if(!parsed.ok)return parsed;
++ const value=parsed.value;if(!object(value))return bad("structure","object required");
++ if(value.purpose!=="dependency-generation-receipt")return bad("structure","purpose");
++ const {sha256,...body}=value;if(typeof sha256!=="string"||sha256HexV1(JSON.stringify(sorted(body)))!==sha256)return bad("seal-mismatch");
++ return OK;
++}
++
++/** 🗺️ Which kind of record a path below a cache root is, judged by its shape alone (`/`-separated, relative to the root); `undefined` for every file that is no record. */
++export function classifyCacheRecordPathV1(relativePath:string):CacheRecordKindV1|undefined{
++ if(/(^|\/)w\/spill\/[0-9a-f]{64}$/u.test(relativePath))return "spill-object";
++ const cas=/(^|\/)v1\/o\/([0-9a-f]{1,4})\/([0-9a-f]+)$/u.exec(relativePath);if(cas&&cas[2]!.length+cas[3]!.length===64)return "cas-object";
++ if(/(^|\/)e\/[0-9a-f]{2}\/[0-9a-f]{64}\/[^/]+\.json$/u.test(relativePath))return "unit-entry";
++ if(/(^|\/)r\/[0-9a-f]{2}\/[0-9a-f]{64}\/[^/]+\.json$/u.test(relativePath))return "build-run";
++ const remote=/(^|\/)v1\/[^/]+\/(ac|cas|nx)\/[0-9a-f]{2}\/[0-9a-f]{64}$/u.exec(relativePath);if(remote)return remote[2]==="ac"?"remote-ac":remote[2]==="cas"?"remote-cas":"remote-nx";
++ if(/(^|\/)generations\/[^/]+\/[0-9a-f]{64}\.(json|json\.br|facts\.br)$/u.test(relativePath))return "graph-record";
++ if(/(^|\/)(selected\/[0-9a-f]{64}|canonical|authority)\.json$/u.test(relativePath))return "closure-record";
++ if(/\.receipt\.json$/u.test(relativePath))return "dependency-generation";
++ if(/(^|\/)[0-9]{10,24}\.commit$/u.test(relativePath))return "nx-cache";
++ return undefined;
++}
++
++/** 🔬️ Verifies one record file of a kind against what its path and bytes promise; digest-named kinds hash to their name, sealed kinds carry a valid seal and a valid shape, the rest must parse and have their shape. `stampDirectory` lets digest-named files be hashed once per machine; `structure` is the decoder of a binary kind (the Bazel action result of `remote-ac` is protobuf) and answers its first violation. */
++export function verifyCacheRecordFileSyncV1(kind:CacheRecordKindV1,path:string,options:Readonly<{stampDirectory?:string;requireSeal?:boolean;structure?(kind:CacheRecordKindV1,bytes:Uint8Array):string|undefined}>={}):CacheRecordVerdictV1{
++ const name=basename(path);
++ const named=(digest:string)=>verifyFileDigestSyncV1({path,digest,...options.stampDirectory===undefined?{}:{stampDirectory:options.stampDirectory}});
++ if(kind==="cas-object")return named(basename(dirname(path))+name);
++ if(kind==="spill-object"||kind==="remote-cas")return named(name);
++ if(kind==="graph-record")return named(name.slice(0,64));
++ let bytes:Buffer;try{bytes=readFileSync(path);}catch(error){return bad(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")?"missing":"unreadable");}
++ if(kind==="dependency-generation")return verifyReceiptBytesV1(bytes);
++ if(kind==="unit-entry"||kind==="build-run"){
++  const opened=openSealedRecordV1<Record<string,unknown>>(bytes,options.requireSeal);if(!opened.ok)return opened;
++  const violation=(kind==="unit-entry"?unitEntryShapeV1:buildRunShapeV1)(opened.value);if(violation!==undefined)return bad("structure",violation);
++  if(opened.value.key!==basename(dirname(path)))return bad("structure","key differs from its folder");
++  return OK;
++ }
++ if(kind==="remote-nx")return bytes.length===0?bad("empty"):OK;
++ if(kind==="remote-ac"){const violation=options.structure?.(kind,bytes);return violation===undefined?OK:bad("malformed",violation);}
++ if(kind==="closure-record"){const parsed=parseJsonRecordV1(bytes);return parsed.ok?(object(parsed.value)?OK:bad("structure","object required")):parsed;}
++ if(kind==="nx-cache"){
++  const directory=join(dirname(path),name.replace(/\.commit$/u,""));
++  if(bytes.toString("utf8").trim()!=="true")return bad("structure","commit marker");
++  try{if(!statSync(directory).isDirectory())return bad("structure","entry folder");}catch{return bad("missing","entry folder");}
++  try{if(!/^[0-9]+$/u.test(readFileSync(join(directory,"code"),"utf8").trim()))return bad("structure","exit code");}catch{return bad("missing","exit code");}
++  try{statSync(join(directory,"terminalOutput"));}catch{return bad("missing","terminal output");}
++  return OK;
++ }
++ return bad("structure","kind without a verifier");
++}
++
++/** ❌️ Thrown by a scan that its signal stopped. */
++export class CacheRepairCancelledV1 extends Error{constructor(){super(cacheRepairLineV1("cancelled"));this.name="CacheRepairCancelledV1";}}
++/** 📋️ What a scan found: counts per kind and the first findings (the rest is counted). */
++export type CacheScanReportV1=Readonly<{records:number;corrupt:number;quarantined:number;failed:number;partial:boolean;byKind:Readonly<Record<string,Readonly<{records:number;corrupt:number}>>>;findings:readonly Readonly<{kind:CacheRecordKindV1;path:string;reason:CacheRecordReasonV1;detail:string;outcome:CacheQuarantineOutcomeV1["outcome"]|"found"}>[]}>;
++/** 🔌️ What a scan needs: the cache roots to walk, whether to quarantine (else only report), a signal, a progress line sink, the entry bound and the verification options. */
++export type CacheScanOptionsV1=Readonly<{structure?(kind:CacheRecordKindV1,bytes:Uint8Array):string|undefined;roots:readonly string[];repair:boolean;signal?:AbortSignal;progress?(line:string):void;maximumEntries?:number;stampDirectory?:string;requireSeal?:boolean;yieldNow?():Promise<void>;nowMs?:number}>;
++
++/** 🩺️ Verifies every cache record below the roots (classified by path shape), reports progress in both languages, stops when the signal fires (the quarantine moves already done stay) and, when `repair` is set, quarantines each corrupt record into its root. Reads only the files; never follows links; bounded by `maximumEntries`. */
++export async function verifyCachesV1(options:CacheScanOptionsV1):Promise<CacheScanReportV1>{
++ const limit=options.maximumEntries??policy.scan.maximumRecordsPerKind*policy.kinds.length,byKind:Record<string,{records:number;corrupt:number}>={},findings:Extract<CacheScanReportV1["findings"][number],object>[]=[],pause=options.yieldNow??(()=>new Promise<void>(resolve=>setImmediate(resolve)));
++ let records=0,corrupt=0,quarantined=0,failed=0,seen=0,partial=false;
++ for(const root of options.roots){
++  const stack=[root];
++  while(stack.length>0){
++   const directory=stack.pop()!;let entries:import("node:fs").Dirent[];
++   try{entries=readdirSync(directory,{withFileTypes:true});}catch{continue;}
++   for(const entry of entries){
++    if(++seen>limit){partial=true;break;}
++    if(seen%policy.scan.yieldEvery===0){await pause();if(options.signal?.aborted)throw new CacheRepairCancelledV1();}
++    const path=join(directory,entry.name);
++    if(entry.isSymbolicLink())continue;
++    if(entry.isDirectory()){if(entry.name!==quarantinePolicy.directory)stack.push(path);continue;}
++    if(!entry.isFile())continue;
++    const kind=classifyCacheRecordPathV1(relative(root,path).split(sep).join("/"));if(kind===undefined)continue;
++    const verdict=verifyCacheRecordFileSyncV1(kind,path,{...options.stampDirectory===undefined?{}:{stampDirectory:options.stampDirectory},...options.requireSeal===undefined?{}:{requireSeal:options.requireSeal},...options.structure===undefined?{}:{structure:options.structure}});
++    records++;const row=byKind[kind]??={records:0,corrupt:0};row.records++;
++    if(records%policy.scan.progressEvery===0)options.progress?.(cacheRepairLineV1("scanProgress",{kind,done:records,total:"?",corrupt}));
++    if(verdict.ok)continue;
++    corrupt++;row.corrupt++;
++    let outcome:CacheQuarantineOutcomeV1["outcome"]|"found"="found";
++    if(options.repair){const target=quarantineTargetV1(root,kind);outcome=quarantineRecordSyncV1({root:target.root,mode:target.mode,kind,path,reason:verdict.reason,detail:verdict.detail,...options.nowMs===undefined?{}:{nowMs:options.nowMs}}).outcome;if(outcome==="moved"||outcome==="removed")quarantined++;else if(outcome==="kept")failed++;}
++    if(findings.length<200)findings.push({kind,path,reason:verdict.reason,detail:verdict.detail,outcome});
++   }
++   if(partial)break;
++  }
++  if(partial)break;
++ }
++ options.progress?.(cacheRepairLineV1("scanDone",{records,kinds:Object.keys(byKind).length,corrupt,quarantined,failed}));
++ return Object.freeze({records,corrupt,quarantined,failed,partial,byKind,findings});
++}
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🧪️tests/⚖️atomic-writers/🔣️allowlist.json
+@@ -0,0 +1,182 @@
++{
++ "version": 1,
++ "description": {
++  "en": "Cache writers that publish by temporary file and rename but do not fsync yet (control records, stamps, journals and cache records alike). The register may only shrink: a new writer must use writeDurableSyncV1, writeDurableV1 or writeSyncedSyncV1 of the cache-repair member, or fsync itself; a file that became durable must leave it.",
++  "de": "Cache-Schreiber, die über temporäre Datei und rename veröffentlichen, aber noch kein fsync tun (Kontrollsätze, Stempel, Journale und Cache-Einträge). Das Register darf nur schrumpfen: Ein neuer Schreiber nutzt writeDurableSyncV1, writeDurableV1 oder writeSyncedSyncV1 des Mitglieds cache-repair oder ruft selbst fsync auf; eine Datei, die dauerhaft schreibt, muss es verlassen."
++ },
++ "files": [
++  "⚡️caching/☁️stage-fleet/🟦️.ts",
++  "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
++  "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
++  "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🟦️.ts",
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧹️foreign-names/🟦️.ts",
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts",
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧩️images/🟦️.ts",
++  "⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts",
++  "⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
++  "⚡️caching/🔏️inputs/🟦️.ts",
++  "⚡️caching/🕸️graph/🏁️startup/🚏️admission/🟦️.ts",
++  "⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts",
++  "⚡️caching/🕸️graph/🔏️seal/📌️generation/🟦️.ts",
++  "⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🟦️.ts",
++  "⚡️caching/🕸️graph/🔏️seal/🟦️.ts",
++  "⚡️caching/🗃️records/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/📜️script.ts",
++  "⚡️caching/🚀️bootstrap/📦️dependencies/♻️collection/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧊️stamps/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧊️memo/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🐍️uv/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/📦️install/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🦀️crates/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🧰️setup/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🪞️mirror/🟦️.ts",
++  "⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts",
++  "⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🚧️staging/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🔑️run-key/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🔭️interface/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🌱️seed/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📋️manifest/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📮️registry/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🔑️key-samples/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🪪️identity/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🪢️supersession/🙋️claim/🟦️.ts",
++  "⚡️caching/🦀️cargo/🗃️unit-cache/🪪️extern/🟦️.ts",
++  "⚡️caching/🦀️cargo/🧮️manifest-closure/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🎟️claims/💽️journal/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🧭️peers/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🧶️nx/🧰️scratch/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🧹️collector/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🧾️provenance/🟦️.ts",
++  "🏗️build/🌐️remote-cache/🪞️mirror/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🌡️load/🪑️stage-claim/🟦️.ts",
++  "🏗️build/🌐️remote-execution/👷️worker/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🗓️scheduler/📓️journal/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/🔌️client/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/🔬️checkout-test/🚦️gate/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚀️offload/🧰️toolchain/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🚢️status/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/👷️agent/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/📇️code-record/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🕸️graph/🏃️runner/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🕸️graph/🔭️read/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts",
++  "🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧱️partition-census/🟦️.ts",
++  "🏗️build/🌡️host-capacity/⏳️unit-waits/🟦️.ts",
++  "🏗️build/🏞️task-view/🟦️.ts",
++  "🏗️build/🏞️task-view/🧱️hermetic/🟦️.ts",
++  "🏗️build/🏡️resident/🏊️delegate/🟨️.mjs",
++  "🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs",
++  "🏗️build/🏡️resident/🏛️service/🟨️.mjs",
++  "🏗️build/🏡️resident/🏛️service/🧯️failure/🟨️.mjs",
++  "🏗️build/🏡️resident/📜️journal/🟦️.ts",
++  "🏗️build/🏡️resident/🔐️consent/🟨️.mjs",
++  "🏗️build/🏡️resident/🔭️watch/🏗️provision/🟨️.mjs",
++  "🏗️build/🏡️resident/🕰️graph-hooks/📖️direct/🟦️.ts",
++  "🏗️build/🏡️resident/🧾️exit-log/🟨️.mjs",
++  "🏗️build/👁️observation/🗄️analysis-store/🟨️.mjs",
++  "🏗️build/📈️counter-ledger/🟦️.ts",
++  "🏗️build/📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",
++  "🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🧾️test-results/🟦️.ts",
++  "🏗️build/🔧️tools/🏗️bazel/🪵️failure-tail/🟦️.ts",
++  "🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts",
++  "🏗️build/🔬️typecheck/🟦️.ts",
++  "🏗️build/🔭️witness/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🏃️runner/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/📊️status/🟦️.ts",
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts",
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🪦️reaper/🟦️.ts",
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/📥️take/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/🔖️stamps/🧮️conformance/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🌳️closure-graph/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧾️layer-index/🟨️.mjs",
++  "🏗️build/🕸️graph/📥️load/🗞️journal-clean/🟦️.ts",
++  "🏗️build/🕸️graph/📥️load/🟦️.ts",
++  "🏗️build/🕸️graph/📥️load/🤝️selected-exchange/🔌️attempt/🟦️.ts",
++  "🏗️build/🕸️graph/📥️load/🧠️admission-memo/🟦️.ts",
++  "🏗️build/🕸️graph/📥️load/🪦️forgotten-paths/🟦️.ts",
++  "🏗️build/🕸️graph/📥️load/🪪️owner-vouch/🟦️.ts",
++  "🏗️build/🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts",
++  "🏗️build/🕸️graph/🕰️generations/📡️wave-upload/🟦️.ts",
++  "🏗️build/🕸️graph/🕰️generations/🗂️directory-stamps/🟨️.mjs",
++  "🏗️build/🕸️graph/🕰️generations/🛌️yield/🟨️.mjs",
++  "🏗️build/🕸️graph/🕰️generations/🧭️steering/🟨️.mjs",
++  "🏗️build/🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs",
++  "🏗️build/🕸️graph/🧮️derived-nodes/💾️store/🟨️.mjs",
++  "🏗️build/🕸️graph/🧾️collect-errors/🟨️.mjs",
++  "🏗️build/🕸️graph/🧾️registry-consistency/🔏️writer/🟦️.ts",
++  "🏗️build/🗄️cas/🌡️partition/🟦️.ts",
++  "🏗️build/🗄️cas/📌️pins/🟦️.ts",
++  "🏗️build/🗄️cas/📒️ledger/🟦️.ts",
++  "🏗️build/🗄️cas/🧲️adopt/🔒️private/🟦️.ts",
++  "🏗️build/🗄️cas/🧲️adopt/🟦️.ts",
++  "🏗️build/🗄️cas/🧹️collector/🟦️.ts",
++  "🏗️build/🗄️cas/🫂️holders/🟦️.ts",
++  "🏗️build/🗓️scheduler/💾️store/🟦️.ts",
++  "🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts",
++  "🏗️build/🟦️typescript/🧩️units/🟦️.ts",
++  "🏗️build/🧊️revision/🗂️fs/📸️capture.ts",
++  "🏗️build/🧠️memory/📋️slice-report/🏷️owner/🟦️.ts",
++  "🏗️build/🧠️memory/📸️heap-snapshot/🟨️.mjs",
++  "🏗️build/🧠️memory/🟨️.mjs",
++  "🏗️build/🧠️memory/🧽️settle/🔭️heap-profile/🟨️.mjs",
++  "🏗️build/🧩️units/🏃️engine/🟦️.ts",
++  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts",
++  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts",
++  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
++  "🏗️build/🧭️invocation/🛰️plan/🟦️.ts",
++  "🏗️build/🧰️tool-setup/⌨️command/🟦️.ts",
++  "🏗️build/🧱️job-limits/🪟️job-object/🟦️.ts",
++  "🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts",
++  "🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts",
++  "🏗️build/🧾️store-receipt/☁️fleet-content/🟦️.ts",
++  "🏗️build/🧾️store-receipt/🟨️.mjs",
++  "🏗️build/🩺️doctor/🔎️probes/💾️storage/🟦️.ts",
++  "🏗️build/🪞️parity/🏃️collect/🟦️.ts",
++  "🏗️build/🪪️graph-state/🌳️tree/🟦️.ts",
++  "🏗️build/🪪️graph-state/📍️cursor/🟦️.ts",
++  "🏗️build/🪪️graph-state/📍️cursor/🧠️verdicts/🟦️.ts",
++  "🏗️build/🪪️graph-state/📦️project-records/🍃️leaves/🟦️.ts",
++  "🏗️build/🪪️graph-state/📦️project-records/📮️unsent/🟦️.ts",
++  "🏗️build/🪪️graph-state/📦️project-records/🚚️entry-lane/🟦️.ts",
++  "🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
++  "🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
++  "🏗️build/🪪️graph-state/🧶️nx/🟦️.ts",
++  "🏗️build/🪪️graph-state/🧾️generated/🟦️.ts"
++ ]
++}
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🧪️tests/⚖️atomic-writers/🟦️.ts
+@@ -0,0 +1,30 @@
++/** 🧪️ Law: every cache writer that publishes by rename also forces its data to the disk first. The debt is a closed register that may only shrink. */
++import {expect,test} from "bun:test";
++import {readFileSync} from "node:fs";
++import {join} from "node:path";
++import register from "./🔣️allowlist.json" with {type:"json"};
++
++const library=join(import.meta.dir,"..","..","..","..");
++const rename=/\brename(?:Sync)?\(/u,durable=/fsync|writeDurable|writeSynced|\.sync\(\)|datasync/iu,skipped=/(^|\/)(node_modules|🧪️tests|🧰️scripts|🗑️generated|🤖️generated)(\/|$)/u;
++function sources():readonly string[]{
++ const rows:string[]=[];
++ for(const top of ["🏗️build","⚡️caching"])for(const file of new Bun.Glob("**/*.{ts,mjs}").scanSync({cwd:join(library,top),dot:false,followSymlinks:false})){
++  const path=top+"/"+file;
++  if(skipped.test(path)||path.endsWith(".d.mts"))continue;
++  rows.push(path);
++ }
++ return rows.sort();
++}
++const publishesWithoutFsync=(path:string):boolean=>{const text=readFileSync(join(library,path),"utf8");return rename.test(text)&&!durable.test(text);};
++
++test("no new cache writer publishes by rename without an fsync",()=>{
++ const known=new Set(register.files),offenders=sources().filter(path=>publishesWithoutFsync(path)&&!known.has(path));
++ expect(offenders,"use writeDurableSyncV1, writeDurableV1 or writeSyncedSyncV1 of 🩹️cache-repair (en: a rename without fsync can publish an empty file after a crash; de: ein rename ohne fsync kann nach einem Absturz eine leere Datei veröffentlichen)").toEqual([]);
++});
++test("the register only shrinks: a file that became durable or vanished leaves it",()=>{
++ const present=new Set(sources()),stale=register.files.filter(path=>!present.has(path)||!publishesWithoutFsync(path));
++ expect(stale).toEqual([]);
++});
++test("the register is sorted and has no duplicates",()=>{
++ expect([...register.files]).toEqual([...new Set(register.files)].sort());
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🧪️tests/🟦️.ts
+@@ -0,0 +1,267 @@
++import {afterAll,beforeAll,describe,expect,test} from "bun:test";
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {spawnSync} from "node:child_process";
++import {generationCanonicalJsonV1,generationSha256V1,parseGenerationReceiptV1,sealGenerationReceiptV1} from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts";
++import {CACHE_REPAIR_POLICY_V1,CacheRepairCancelledV1,buildRunShapeV1,cacheRepairLineV1,classifyCacheRecordPathV1,machineQuarantineRootV1,mayForceDetachV1,openSealedRecordV1,parseJsonRecordV1,quarantineRecordSyncV1,readQuarantineLogV1,readSealedRecordSyncV1,readVerifiedRecordSyncV1,refuseForceDetachLineV1,sealRecordV1,setCacheRepairSinkV1,sha256HexV1,unitEntryShapeV1,verifyCacheRecordFileSyncV1,verifyReceiptBytesV1,verifyCachesV1,verifyDigestNamedV1,verifyFileDigestSyncV1,writeDurableSyncV1,writeDurableV1,type CacheRecordKindV1} from "../🟦️.ts";
++
++const structure=(_:CacheRecordKindV1,bytes:Uint8Array):string|undefined=>{const parsed=parseJsonRecordV1(bytes);return parsed.ok?undefined:parsed.reason;};
++let root:string;
++beforeAll(()=>{root=mkdtempSync(join(tmpdir(),"semio-cache-repair-"));});
++afterAll(()=>{rmSync(root,{recursive:true,force:true});});
++let counter=0;
++const fresh=():string=>{const directory=join(root,"c"+counter++);mkdirSync(directory,{recursive:true});return directory;};
++const key=sha256HexV1("unit");
++const entry=(extra:object={})=>({version:1,key,crate:"demo",dependencies:[{path:"a.rs",sha256:sha256HexV1("a")}],environment:[{name:"X",value:null}],outputs:[{name:"libdemo.rlib",sha256:sha256HexV1("lib"),bytes:3,executable:false}],stderr:null,stdout:null,...extra});
++
++type Injection="truncate"|"flip"|"empty"|"missing";
++const INJECTIONS:readonly Injection[]=["truncate","flip","empty","missing"];
++function inject(path:string,how:Injection):void{
++ const bytes=readFileSync(path);
++ if(how==="missing")rmSync(path);
++ else if(how==="empty")writeFileSync(path,"");
++ else if(how==="truncate")writeFileSync(path,bytes.subarray(0,Math.max(1,Math.floor(bytes.length/2))));
++ else{const copy=Buffer.from(bytes);const at=Math.floor(copy.length/2);copy[at]=copy[at]!^0x01;writeFileSync(path,copy);}
++}
++
++type Case={kind:CacheRecordKindV1;relative:string;make(directory:string,path:string):void;detects:readonly Injection[]};
++const ALL:readonly Injection[]=["truncate","flip","empty","missing"];
++const object=Buffer.from("object bytes of a cached compilation output, long enough to cut in half");
++const digest=sha256HexV1(object);
++const receipt=Buffer.from(JSON.stringify(sealGenerationReceiptV1({version:1,purpose:"dependency-generation-receipt",scope:".",walkStamp:"w"} as never)));
++const CASES:readonly Case[]=[
++ {kind:"unit-entry",relative:`e/${key.slice(0,2)}/${key}/1.json`,make:(_,path)=>writeFileSync(path,sealRecordV1(entry())),detects:ALL},
++ {kind:"build-run",relative:`r/${key.slice(0,2)}/${key}/1.json`,make:(_,path)=>writeFileSync(path,sealRecordV1({version:1,key,outputs:[{sha256:sha256HexV1("x")}]})),detects:ALL},
++ {kind:"cas-object",relative:`v1/o/${digest.slice(0,2)}/${digest.slice(2)}`,make:(_,path)=>writeFileSync(path,object),detects:ALL},
++ {kind:"spill-object",relative:`w/spill/${digest}`,make:(_,path)=>writeFileSync(path,object),detects:ALL},
++ {kind:"remote-cas",relative:`v1/ns/cas/${digest.slice(0,2)}/${digest}`,make:(_,path)=>writeFileSync(path,object),detects:ALL},
++ {kind:"remote-ac",relative:`v1/ns/ac/${key.slice(0,2)}/${key}`,make:(_,path)=>writeFileSync(path,JSON.stringify({outputFiles:[{path:"a",digest:{hash:digest,sizeBytes:"3"}}],exitCode:0})),detects:["truncate","empty","missing"]},
++ {kind:"remote-nx",relative:`v1/ns/nx/${key.slice(0,2)}/${key}`,make:(_,path)=>writeFileSync(path,JSON.stringify({version:1,hash:digest,size:70})),detects:["empty","missing"]},
++ {kind:"graph-record",relative:`generations/m/${digest}.json`,make:(_,path)=>writeFileSync(path,object),detects:ALL},
++ {kind:"closure-record",relative:"selected/"+digest+".json",make:(_,path)=>writeFileSync(path,JSON.stringify({version:1,generation:3})),detects:["truncate","empty","missing"]},
++ {kind:"dependency-generation",relative:"j/abc.receipt.json",make:(_,path)=>writeFileSync(path,receipt),detects:ALL},
++ {kind:"nx-cache",relative:"12345678901234567890.commit",make:(directory,path)=>{writeFileSync(path,"true");mkdirSync(join(directory,"12345678901234567890","outputs"),{recursive:true});writeFileSync(join(directory,"12345678901234567890","code"),"0");writeFileSync(join(directory,"12345678901234567890","terminalOutput"),"ok");},detects:ALL},
++];
++function place(directory:string,example:Case):string{const path=join(directory,...example.relative.split("/"));mkdirSync(join(path,".."),{recursive:true});example.make(directory,path);return path;}
++
++test("the declared kinds and reasons are exactly the typed ones",()=>{
++ const kinds:readonly CacheRecordKindV1[]=["unit-entry","build-run","cas-object","spill-object","remote-ac","remote-cas","remote-nx","nx-cache","dependency-generation","graph-record","closure-record"];
++ expect([...CACHE_REPAIR_POLICY_V1.kinds].sort()).toEqual([...kinds].sort());
++ expect([...CACHE_REPAIR_POLICY_V1.reasons].sort()).toEqual(["digest-mismatch","empty","malformed","missing","seal-mismatch","structure","truncated","unreadable","unsealed"]);
++});
++
++describe("every record kind: injected damage is a miss, never a failure",()=>{
++ test("the policy names exactly the kinds the cases cover",()=>{expect<string[]>([...new Set(CASES.map(row=>row.kind as string))].sort()).toEqual([...CACHE_REPAIR_POLICY_V1.kinds].sort());});
++ for(const example of CASES){
++  test(`${example.kind}: path classification and an intact record verify`,()=>{
++   const directory=fresh(),path=place(directory,example);
++   expect(classifyCacheRecordPathV1(example.relative)).toBe(example.kind);
++   expect(verifyCacheRecordFileSyncV1(example.kind,path,{structure})).toEqual({ok:true});
++  });
++  for(const how of INJECTIONS){
++   test(`${example.kind}: ${how}`,()=>{
++    const directory=fresh(),path=place(directory,example);
++    if(example.kind==="nx-cache"&&how!=="missing"){writeFileSync(path,how==="empty"?"":how==="flip"?"fals3":"tr");}
++    else if(example.kind==="nx-cache"){rmSync(join(directory,"12345678901234567890","code"));}
++    else inject(path,how);
++    const verdict=verifyCacheRecordFileSyncV1(example.kind,path,{structure});
++    if(!example.detects.includes(how)){expect(typeof verdict.ok).toBe("boolean");return;}
++    if(how==="missing"&&example.kind!=="nx-cache"){expect(verdict).toEqual({ok:false,reason:"missing",detail:""});return;}
++    expect(verdict.ok).toBe(false);
++   });
++  }
++  test(`${example.kind}: a damaged record read through the contract is a miss, is quarantined once and logged in both languages`,()=>{
++   const directory=fresh(),path=place(directory,example);
++   if(example.kind==="nx-cache"){writeFileSync(path,"x");}else inject(path,example.detects.includes("flip")?"flip":example.detects.includes("truncate")?"truncate":"empty");
++   const heard:string[]=[];setCacheRepairSinkV1(row=>heard.push(row.en+" | "+row.de));
++   const first=readVerifiedRecordSyncV1({root:directory,kind:example.kind,path,verify:()=>verifyCacheRecordFileSyncV1(example.kind,path,{structure})});
++   setCacheRepairSinkV1(undefined);
++   expect(first).toBeUndefined();
++   expect(existsSync(path)).toBe(false);
++   const rows=readQuarantineLogV1(directory);
++   expect(rows.length).toBe(1);
++   expect(rows[0]!.kind).toBe(example.kind);
++   expect(CACHE_REPAIR_POLICY_V1.reasons as readonly string[]).toContain(rows[0]!.reason);
++   expect(rows[0]!.en.length).toBeGreaterThan(10);
++   expect(rows[0]!.de.length).toBeGreaterThan(10);
++   expect(rows[0]!.en).not.toBe(rows[0]!.de);
++   expect(heard.length).toBe(1);
++   expect(readVerifiedRecordSyncV1({root:directory,kind:example.kind,path,verify:()=>({ok:true})})).toBeUndefined();
++   expect(readQuarantineLogV1(directory).length).toBe(1);
++  });
++ }
++});
++
++describe("sealed records",()=>{
++ test("round trip, flipped field, flipped seal, cut text, unsealed",()=>{
++  const text=sealRecordV1(entry());
++  const opened=openSealedRecordV1(Buffer.from(text),true);expect(opened.ok&&opened.sealed).toBe(true);
++  expect(openSealedRecordV1(Buffer.from(text.replace('"demo"','"demx"')),true)).toMatchObject({ok:false,reason:"seal-mismatch"});
++  expect(openSealedRecordV1(Buffer.from(text.replace(/"seal":"./u,'"seal":"0')),true)).toMatchObject({ok:false});
++  expect(openSealedRecordV1(Buffer.from(text.slice(0,text.length-9)),true)).toMatchObject({ok:false,reason:"truncated"});
++  expect(openSealedRecordV1(Buffer.from(JSON.stringify(entry())),true)).toMatchObject({ok:false,reason:"unsealed"});
++  expect(openSealedRecordV1(Buffer.from(JSON.stringify(entry())),false)).toMatchObject({ok:true,sealed:false});
++  expect(openSealedRecordV1(Buffer.alloc(0))).toMatchObject({ok:false,reason:"empty"});
++  expect(openSealedRecordV1(Buffer.from("[1]"))).toMatchObject({ok:false,reason:"structure"});
++  expect(parseJsonRecordV1(Buffer.from([0xff,0xfe]))).toMatchObject({ok:false,reason:"malformed"});
++ });
++ test("shapes name the first violation",()=>{
++  expect(unitEntryShapeV1(entry())).toBeUndefined();
++  expect(unitEntryShapeV1(entry({key:"x"}))).toBe("key");
++  expect(unitEntryShapeV1(entry({outputs:[{name:"a",sha256:"zz",bytes:1}]}))).toBe("outputs");
++  expect(unitEntryShapeV1(entry({dependencies:[{path:1}]}))).toBe("dependencies");
++  expect(buildRunShapeV1({version:1,key,outputs:[]})).toBeUndefined();
++  expect(buildRunShapeV1({version:2})).toBe("version 1 required");
++ });
++ test("readSealedRecordSyncV1 returns the value of an intact record and a miss for a record of the wrong shape",()=>{
++  const directory=fresh(),path=join(directory,"e.json");
++  writeFileSync(path,sealRecordV1(entry()));
++  expect(readSealedRecordSyncV1<ReturnType<typeof entry>>({root:directory,kind:"unit-entry",path,shape:unitEntryShapeV1})?.crate).toBe("demo");
++  writeFileSync(path,sealRecordV1(entry({key:"short"})));
++  expect(readSealedRecordSyncV1({root:directory,kind:"unit-entry",path,shape:unitEntryShapeV1})).toBeUndefined();
++  expect(readQuarantineLogV1(directory)[0]?.reason).toBe("structure");
++ });
++});
++
++describe("digest-named files",()=>{
++ test("a stamp makes the second verification a stat; a changed file is hashed again",()=>{
++  const directory=fresh(),path=join(directory,"o"),stamps=join(directory,"s");
++  writeFileSync(path,object);
++  expect(verifyFileDigestSyncV1({path,digest,size:object.length,stampDirectory:stamps})).toEqual({ok:true});
++  expect(readdirSync(stamps).length).toBe(1);
++  expect(verifyFileDigestSyncV1({path,digest,size:object.length,stampDirectory:stamps})).toEqual({ok:true});
++  writeFileSync(path,Buffer.concat([object.subarray(0,10),Buffer.from("X"),object.subarray(11)]));
++  expect(verifyFileDigestSyncV1({path,digest,size:object.length,stampDirectory:stamps})).toMatchObject({ok:false,reason:"digest-mismatch"});
++ });
++ test("size mismatch answers before any hashing, empty is its own reason",()=>{
++  const directory=fresh(),path=join(directory,"o");writeFileSync(path,object.subarray(0,5));
++  expect(verifyFileDigestSyncV1({path,digest,size:object.length})).toMatchObject({ok:false,reason:"truncated"});
++  writeFileSync(path,"");expect(verifyFileDigestSyncV1({path,digest,size:object.length})).toMatchObject({ok:false,reason:"empty"});
++  expect(verifyDigestNamedV1(Buffer.alloc(0),digest)).toMatchObject({ok:false,reason:"empty"});
++  expect(verifyDigestNamedV1(object,"nope")).toMatchObject({ok:false,reason:"structure"});
++  expect(verifyFileDigestSyncV1({path:join(directory,"gone"),digest})).toMatchObject({ok:false,reason:"missing"});
++ });
++ test("an independent implementation (Python hashlib) agrees on digests, seals and the receipt canonical form",()=>{
++  const probe=spawnSync("python3",["-I","-c","import hashlib,json,sys\nrequest=json.load(sys.stdin)\nprint(json.dumps({'object':hashlib.sha256(request['object'].encode()).hexdigest(),'seal':hashlib.sha256(request['body'].encode()).hexdigest(),'receipt':hashlib.sha256(json.dumps(request['receipt'],sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()}))"],{input:JSON.stringify({object:object.toString(),body:JSON.stringify(entry()),receipt:{b:1,a:{d:[2,{z:1,y:2}],c:"é"}}}),encoding:"utf8"});
++  if(probe.status!==0){console.warn("python3 unavailable, oracle skipped");return;}
++  const answer=JSON.parse(probe.stdout) as Record<string,string>;
++  expect(answer.object).toBe(digest);
++  expect(JSON.parse(sealRecordV1(entry())).seal).toBe(answer.seal);
++  expect(generationSha256V1(generationCanonicalJsonV1({b:1,a:{d:[2,{z:1,y:2}],c:"é"}}))).toBe(answer.receipt);
++ });
++});
++
++describe("dependency generation receipts agree with the product's own parser",()=>{
++ for(const how of ["truncate","flip","empty"] as const)test(`${how}: both reject the damaged receipt, as the miss the generation verifier already makes of it`,()=>{
++  const directory=fresh(),path=join(directory,"a.receipt.json");writeFileSync(path,receipt);inject(path,how);
++  const damaged=readFileSync(path);
++  expect(()=>parseGenerationReceiptV1(damaged)).toThrow();
++  expect(verifyReceiptBytesV1(damaged).ok).toBe(false);
++ });
++ test("a receipt whose body was edited but whose digest was kept is rejected by both",()=>{
++  const value=JSON.parse(receipt.toString());value.scope="/elsewhere";const edited=Buffer.from(JSON.stringify(value));
++  expect(()=>parseGenerationReceiptV1(edited)).toThrow();expect(verifyReceiptBytesV1(edited)).toMatchObject({ok:false,reason:"seal-mismatch"});
++ });
++});
++
++describe("quarantine",()=>{
++ test("is bounded: the oldest rows go first, never more than the declared count",()=>{
++  const directory=fresh();const limit=CACHE_REPAIR_POLICY_V1.quarantine.maximumRecords;
++  for(let index=0;index<limit+5;index++){const path=join(directory,"r"+index);writeFileSync(path,"x");quarantineRecordSyncV1({root:directory,kind:"cas-object",path,reason:"digest-mismatch",nowMs:1000+index});}
++  expect(readdirSync(join(directory,".quarantine","cas-object")).length).toBeLessThanOrEqual(limit);
++ });
++ test("a missing record is absent and writes no row; a link is removed, never followed",()=>{
++  const directory=fresh();
++  expect(quarantineRecordSyncV1({root:directory,kind:"cas-object",path:join(directory,"gone"),reason:"missing"}).outcome).toBe("absent");
++  expect(readQuarantineLogV1(directory).length).toBe(0);
++  const target=join(directory,"t");writeFileSync(target,"keep");
++  const link=join(directory,"l");try{require("node:fs").symlinkSync(target,link);}catch{return;}
++  expect(quarantineRecordSyncV1({root:directory,kind:"closure-record",path:link,reason:"structure"}).outcome).toBe("removed");
++  expect(readFileSync(target,"utf8")).toBe("keep");
++ });
++ test("an unwritable quarantine never throws: the record is removed and the answer is a miss",()=>{
++  const directory=fresh(),path=join(directory,"x");writeFileSync(path,"x");
++  writeFileSync(join(directory,".quarantine"),"a file where the folder should be");
++  expect(()=>quarantineRecordSyncV1({root:directory,kind:"cas-object",path,reason:"empty"})).not.toThrow();
++  expect(existsSync(path)).toBe(false);
++ });
++ test("both texts exist for every reason and every outcome",()=>{
++  for(const reason of CACHE_REPAIR_POLICY_V1.reasons)expect(cacheRepairLineV1(reason as never).split(" / ").length).toBeGreaterThanOrEqual(2);
++  for(const key of ["quarantined","removed","kept"] as const)expect(cacheRepairLineV1(key,{kind:"k",name:"n",reason:"r"})).toContain("n");
++ });
++});
++
++describe("durable writes",()=>{
++ test("the file appears whole and no temporary file stays",async()=>{
++  const directory=fresh(),path=join(directory,"a.json");
++  writeDurableSyncV1(path,"one");expect(readFileSync(path,"utf8")).toBe("one");
++  writeDurableSyncV1(path,Buffer.from("two"));expect(readFileSync(path,"utf8")).toBe("two");
++  await writeDurableV1(path,"three");expect(readFileSync(path,"utf8")).toBe("three");
++  expect(readdirSync(directory)).toEqual(["a.json"]);
++ });
++ test("a failing write leaves the old content and no temporary file",()=>{
++  const directory=fresh(),path=join(directory,"a.json");writeFileSync(path,"old");
++  expect(()=>writeDurableSyncV1(join(directory,"missing-folder","a.json"),"new")).toThrow();
++  expect(()=>writeDurableSyncV1(path,{get length():number{throw new Error("disk full");}} as never)).toThrow();
++  expect(readFileSync(path,"utf8")).toBe("old");
++  expect(readdirSync(directory).filter(name=>name.endsWith(CACHE_REPAIR_POLICY_V1.write.temporarySuffix))).toEqual([]);
++ });
++});
++
++describe("scan and repair",()=>{
++ test("finds every damaged record of every kind, repairs only on request, and a repaired tree verifies clean",async()=>{
++  const directory=fresh();
++  for(const example of CASES){
++   const path=place(directory,example);
++   if(example.kind==="nx-cache")writeFileSync(path,"nope");else inject(path,example.detects.includes("flip")?"flip":example.detects.includes("truncate")?"truncate":"empty");
++  }
++  const lines:string[]=[];
++  const dry=await verifyCachesV1({roots:[directory],repair:false,structure,progress:line=>lines.push(line)});
++  expect(dry.records).toBe(CASES.length);
++  expect(dry.corrupt).toBeGreaterThanOrEqual(CASES.filter(example=>example.detects.includes("flip")).length);
++  expect(dry.quarantined).toBe(0);
++  const repaired=await verifyCachesV1({roots:[directory],repair:true,structure,progress:line=>lines.push(line)});
++  expect(repaired.quarantined).toBe(repaired.corrupt);
++  expect(repaired.failed).toBe(0);
++  const again=await verifyCachesV1({roots:[directory],repair:true,structure});
++  expect(again.corrupt).toBe(0);
++  expect(lines.some(line=>line.includes(" / ")&&line.includes("Verified"))).toBe(true);
++  expect(readdirSync(join(directory,".quarantine")).includes("log.jsonl")).toBe(true);
++ });
++ test("is cancellable and bounded",async()=>{
++  const directory=fresh();
++  for(let index=0;index<200;index++){const hash=sha256HexV1("n"+index),path=join(directory,"w","spill",hash);mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"n"+index);}
++  const controller=new AbortController();
++  let calls=0;
++  await expect(verifyCachesV1({roots:[directory],repair:false,signal:controller.signal,yieldNow:async()=>{if(++calls===1)controller.abort();}})).rejects.toBeInstanceOf(CacheRepairCancelledV1);
++  const limited=await verifyCachesV1({roots:[directory],repair:false,maximumEntries:10});
++  expect(limited.partial).toBe(true);
++ });
++ test("never walks into the quarantine and never follows a link",async()=>{
++  const directory=fresh(),other=fresh();
++  const hash=sha256HexV1("z");mkdirSync(join(other,"w","spill"),{recursive:true});writeFileSync(join(other,"w","spill",hash),"not z");
++  try{require("node:fs").symlinkSync(other,join(directory,"link"));}catch{return;}
++  const report=await verifyCachesV1({roots:[directory],repair:true});
++  expect(report.records).toBe(0);
++  expect(existsSync(join(other,"w","spill",hash))).toBe(true);
++ });
++});
++
++describe("closed-name stores",()=>{
++ test("mode remove deletes the record, keeps the store's names and logs under the given root",()=>{
++  const store=fresh(),log=fresh(),path=join(store,"x.json");writeFileSync(path,"x");
++  expect(quarantineRecordSyncV1({root:log,kind:"graph-record",path,reason:"truncated",mode:"remove"}).outcome).toBe("removed");
++  expect(readdirSync(store)).toEqual([]);expect(readQuarantineLogV1(log)[0]?.outcome).toBe("removed");
++  expect(typeof machineQuarantineRootV1({})).toBe("string");expect(machineQuarantineRootV1({SEMIO_CACHE_QUARANTINE_ROOT:"/x"})).toBe("/x");
++ });
++});
++
++describe("force detach",()=>{
++ test("an image with open writers is never force-detached, an idle one may be",()=>{
++  expect(mayForceDetachV1([])).toBe(true);
++  expect(mayForceDetachV1([{pid:1,command:"rustc"}])).toBe(false);
++  expect(refuseForceDetachLineV1("/Volumes/x",[{pid:7,command:"rustc"}])).toMatch(/rustc pid 7.*\/.*rustc pid 7/u);
++ });
++});
++
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩹️cache-repair/🧬️schema/🔣️.json
+@@ -0,0 +1,118 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "$id": "https://semio.tech/framework/repo/cache-repair/v1",
++  "description": "EN: The self-repair contract of every build cache: a record whose digest, seal or structure does not verify is a miss (never a build failure), is moved into a bounded quarantine and is named in a typed, bilingual log row; every cache writer publishes by temporary file, fsync and rename. DE: Der Selbstheilungsvertrag jedes Build-Caches: Ein Eintrag, dessen Digest, Siegel oder Struktur nicht stimmt, ist ein Fehltreffer (nie ein Build-Fehler), wird in eine begrenzte Quarantäne verschoben und in einer typisierten, zweisprachigen Logzeile benannt; jeder Cache-Schreiber veröffentlicht über temporäre Datei, fsync und rename.",
++  "definitions": {
++    "Policy": {
++      "const": {
++        "version": 1,
++        "kinds": [
++          "unit-entry",
++          "build-run",
++          "cas-object",
++          "spill-object",
++          "remote-ac",
++          "remote-cas",
++          "remote-nx",
++          "nx-cache",
++          "dependency-generation",
++          "graph-record",
++          "closure-record"
++        ],
++        "reasons": [
++          "missing",
++          "empty",
++          "truncated",
++          "malformed",
++          "digest-mismatch",
++          "seal-mismatch",
++          "unsealed",
++          "structure",
++          "unreadable"
++        ],
++        "seal": { "field": "seal", "algorithm": "sha256", "required": false },
++        "quarantine": {
++          "directory": ".quarantine",
++          "log": "log.jsonl",
++          "maximumRecords": 256,
++          "maximumBytes": 268435456,
++          "maximumRecordBytes": 134217728,
++          "maximumLogBytes": 1048576,
++          "maximumDetailCharacters": 240
++        },
++        "write": { "temporarySuffix": ".tmp", "fileMode": 420, "synchronizeDirectory": true },
++        "scan": { "yieldEvery": 64, "progressEvery": 256, "maximumRecordsPerKind": 2000000 },
++        "detach": { "forceOnlyWithoutHolders": true },
++        "watermark": { "source": "ready-image-guard", "levels": ["ok", "relief", "floor"] }
++      }
++    },
++    "Texts": {
++      "const": {
++        "missing": {
++          "en": "the record file is gone",
++          "de": "die Datei des Eintrags fehlt"
++        },
++        "empty": {
++          "en": "the record file is empty (a write that never reached the disk)",
++          "de": "die Datei des Eintrags ist leer (ein Schreibvorgang, der die Platte nie erreichte)"
++        },
++        "truncated": {
++          "en": "the record ends before it is complete (a write cut short, usually by a full disk)",
++          "de": "der Eintrag endet vor seinem Ende (ein abgebrochener Schreibvorgang, meist durch eine volle Platte)"
++        },
++        "malformed": {
++          "en": "the record is not valid data (flipped or foreign bytes)",
++          "de": "der Eintrag besteht nicht aus gültigen Daten (gekippte oder fremde Bytes)"
++        },
++        "digest-mismatch": {
++          "en": "the content does not hash to the digest in its name",
++          "de": "der Inhalt ergibt nicht den Digest in seinem Namen"
++        },
++        "seal-mismatch": {
++          "en": "the content does not match the seal written with it",
++          "de": "der Inhalt passt nicht zum mitgeschriebenen Siegel"
++        },
++        "unsealed": {
++          "en": "the record carries no seal",
++          "de": "der Eintrag trägt kein Siegel"
++        },
++        "structure": {
++          "en": "the record has the wrong shape for its kind",
++          "de": "der Eintrag hat nicht die Form seiner Art"
++        },
++        "unreadable": {
++          "en": "the record file cannot be read",
++          "de": "die Datei des Eintrags ist nicht lesbar"
++        },
++        "quarantined": {
++          "en": "Cache record <kind> <name> is corrupt (<reason>) and was moved to quarantine; it counts as a miss and is rebuilt.",
++          "de": "Cache-Eintrag <kind> <name> ist beschädigt (<reason>) und wurde in die Quarantäne verschoben; er zählt als Fehltreffer und wird neu erzeugt."
++        },
++        "removed": {
++          "en": "Cache record <kind> <name> is corrupt (<reason>) and was removed (the quarantine could not take it); it counts as a miss.",
++          "de": "Cache-Eintrag <kind> <name> ist beschädigt (<reason>) und wurde entfernt (die Quarantäne konnte ihn nicht aufnehmen); er zählt als Fehltreffer."
++        },
++        "kept": {
++          "en": "Cache record <kind> <name> is corrupt (<reason>) but could not be moved or removed; it counts as a miss.",
++          "de": "Cache-Eintrag <kind> <name> ist beschädigt (<reason>), konnte aber weder verschoben noch entfernt werden; er zählt als Fehltreffer."
++        },
++        "refusedForce": {
++          "en": "Image at <mountPoint> has open writers (<holders>) and is not force-detached; wait until they finish.",
++          "de": "Image unter <mountPoint> hat offene Schreiber (<holders>) und wird nicht erzwungen abgehängt; warten, bis sie fertig sind."
++        },
++        "scanProgress": {
++          "en": "Verifying <kind>: <done> of <total> records, <corrupt> corrupt.",
++          "de": "Prüfe <kind>: <done> von <total> Einträgen, <corrupt> beschädigt."
++        },
++        "scanDone": {
++          "en": "Verified <records> records of <kinds> kinds: <corrupt> corrupt, <quarantined> quarantined, <failed> could not be moved.",
++          "de": "<records> Einträge aus <kinds> Arten geprüft: <corrupt> beschädigt, <quarantined> in Quarantäne, <failed> nicht verschiebbar."
++        },
++        "cancelled": {
++          "en": "Cancelled",
++          "de": "Abgebrochen"
++        }
++      }
++    }
++  }
++}
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/⚡️caches/🩹️integrity/🟦️.ts
+@@ -0,0 +1,41 @@
++import {existsSync} from "node:fs";
++import {join} from "node:path";
++import budget from "../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
++import {casRootV1} from "../../../../🗄️cas/🗃️store/🟦️.ts";
++import {parseRemoteCacheActionResultV1} from "../../../../🌐️remote-cache/🔬️action-result/🟦️.ts";
++import {CacheRepairCancelledV1,verifyCachesV1} from "../../../../🩹️cache-repair/🟦️.ts";
++import type {DoctorPortsV1} from "../../../🔌️ports/🟦️.ts";
++import type {DoctorProbeContextV1,DoctorRepairRunV1,DoctorRepairV1} from "../../../🔎️probes/📋️contract/🟦️.ts";
++
++/** 🗺️ The roots `repo doctor --repair` verifies: the host content store and every cache image of the checkout that is mounted (`<partition>/m`); an image that is not attached is not read. */
++export function integrityRootsV1(ports:Pick<DoctorPortsV1,"root"|"environment"|"platform">):readonly string[]{
++ const roots:string[]=[],host=casRootV1(ports.environment,ports.platform==="win32"?"win32":ports.platform);
++ if(existsSync(host))roots.push(host);
++ for(const partition of Object.values(budget.partitions as Record<string,{directory:string}>)){
++  const mount=join(ports.root,...partition.directory.split("/"),"m");
++  if(existsSync(mount))roots.push(mount);
++ }
++ return roots;
++}
++
++const structure=(kind:string,bytes:Uint8Array):string|undefined=>{
++ if(kind!=="remote-ac")return undefined;
++ try{parseRemoteCacheActionResultV1(bytes);return undefined;}catch(error){return String((error as Error).message);}
++};
++
++/** 🩹️ Verifies every cache record below the cache roots of the machine (units, host store objects, remote cache values, generations, closures, receipts, task archives) with progress and cancellation, and moves each corrupt record into the bounded quarantine of its root with a typed, bilingual log row; a dry run only counts. The records are caches: each one is rebuilt on its next miss. */
++export const integrityRepairV1:DoctorRepairV1=Object.freeze({
++ id:"caches-integrity",area:"caches" as const,
++ async run(ports:DoctorPortsV1,_context:DoctorProbeContextV1,dryRun:boolean):Promise<DoctorRepairRunV1>{
++  const roots=integrityRootsV1(ports);
++  if(roots.length===0)return {removed:0,bytes:0,status:"nothing",facts:{records:0,corrupt:0,failed:0,roots:0}};
++  try{
++   const report=await verifyCachesV1({roots,repair:!dryRun,structure,signal:ports.signal,progress:line=>ports.progress("integrity:"+line),stampDirectory:join(ports.root,".cache","b","l","m","verified")});
++   const facts={records:report.records,corrupt:report.corrupt,failed:report.failed,roots:roots.length,partial:report.partial?1:0};
++   return report.corrupt===0?{removed:0,bytes:0,status:"nothing",facts}:{removed:dryRun?report.corrupt:report.quarantined,bytes:0,facts};
++  }catch(error){
++   if(error instanceof CacheRepairCancelledV1)throw error;
++   throw error;
++  }
++ },
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🩹️repair/🟦️.ts
+@@ -0,0 +1,83 @@
++/** 🧪️ `repo doctor --repair` verifies every cache record with progress and cancellation, quarantines the corrupt ones, reports in both languages and never fails a healthy machine. */
++import {afterAll,expect,test} from "bun:test";
++import Ajv from "ajv";
++import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
++import {doctorArgumentsV1,runDoctorCommandV1} from "../../⌨️command/🟦️.ts";
++import {readQuarantineLogV1,sealRecordV1,sha256HexV1} from "../../../🩹️cache-repair/🟦️.ts";
++
++const ajv=new Ajv({strict:true,allowUnionTypes:true}),report=ajv.compile({definitions:schema.definitions,$ref:"#/definitions/Report"});
++const roots:string[]=[];
++const fresh=():string=>{const root=mkdtempSync(join(tmpdir(),"doctor-repair-"));roots.push(root);return root;};
++afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
++const key=sha256HexV1("unit"),object=Buffer.from("an object of the host store ".repeat(8)),digest=sha256HexV1(object);
++const entry=sealRecordV1({version:1,key,crate:"demo",dependencies:[],environment:[],outputs:[{name:"a",sha256:digest,bytes:object.length,executable:false}],stderr:null,stdout:null});
++
++function machine(){
++ const root=fresh(),cas=join(root,"cas"),mount=join(root,".cache","b","r","m"),entryFile=join(mount,"u","e",key.slice(0,2),key,"1.json"),objectFile=join(cas,"v1","o",digest.slice(0,2),digest.slice(2));
++ mkdirSync(join(entryFile,".."),{recursive:true});writeFileSync(entryFile,entry);
++ mkdirSync(join(objectFile,".."),{recursive:true});writeFileSync(objectFile,object);chmodSync(objectFile,0o444);
++ return{root,cas,mount,entryFile,objectFile};
++}
++async function run(args:string[],root:string,cas:string,extra:{signal?:AbortSignal;progress?:(line:string)=>void;both?:boolean}={}){
++ const out:string[]=[],progress:string[]=[];
++ const code=await runDoctorCommandV1(args,{root,environment:(extra.both?{SEMIO_CAS_ROOT:cas}:{SEMIO_LANGUAGE:"en",SEMIO_CAS_ROOT:cas}) as never,write:line=>out.push(line),progress:line=>{progress.push(line);extra.progress?.(line);},ports:{now:()=>1000000000000},options:{probes:[]},...extra.signal?{signal:extra.signal}:{}});
++ return{code,out,progress,text:out.join("\n")};
++}
++const rows=(out:string[])=>(JSON.parse(out[0]!) as {repairs:{id:string;status:string;removed:number;dryRun:boolean;facts?:Record<string,number>}[]}).repairs;
++
++test("the arguments: --repair implies --fix, the word repair is the same flag, --dry-run is allowed with it",()=>{
++ expect(doctorArgumentsV1(["--repair"])).toMatchObject({fix:true,repair:true,dryRun:false});
++ expect(doctorArgumentsV1(["repair","--dry-run"])).toMatchObject({fix:true,repair:true,dryRun:true});
++ expect(doctorArgumentsV1(["--fix"])).toMatchObject({fix:true,repair:false});
++ expect(()=>doctorArgumentsV1(["--dry-run"])).toThrow();
++ expect(()=>doctorArgumentsV1(["repair","repair"])).toThrow();
++});
++
++test("a healthy machine: every record is read, nothing is quarantined, the report validates and says so in both languages",async()=>{
++ const {root,cas}=machine();
++ const json=await run(["--repair","--json"],root,cas);
++ expect(json.code).toBe(0);expect(report(JSON.parse(json.out[0]!))).toBe(true);
++ expect(rows(json.out).find(row=>row.id==="caches-integrity")).toMatchObject({status:"nothing",removed:0,facts:{records:2,corrupt:0}});
++ const text=await run(["--repair"],root,cas);
++ expect(text.text).toContain("verified the caches");
++ const both=await run(["--repair"],root,cas,{both:true});
++ expect(both.text).toContain("Caches geprüft");
++});
++
++for(const how of ["truncate","flip","empty"] as const){
++ test(`${how}: a dry run only counts, the repair quarantines the entry and the object, the next run is clean`,async()=>{
++  const {root,cas,entryFile,objectFile}=machine();
++  const damage=(path:string)=>{chmodSync(path,0o644);const bytes=readFileSync(path);if(how==="empty")writeFileSync(path,"");else if(how==="truncate")writeFileSync(path,bytes.subarray(0,bytes.length>>1));else{const copy=Buffer.from(bytes);copy[9]=copy[9]!^0x04;writeFileSync(path,copy);}};
++  damage(entryFile);damage(objectFile);
++  const dry=await run(["--repair","--dry-run","--json"],root,cas);
++  expect(rows(dry.out).find(row=>row.id==="caches-integrity")).toMatchObject({dryRun:true,status:"done",removed:2,facts:{corrupt:2}});
++  expect(existsSync(entryFile)&&existsSync(objectFile)).toBe(true);
++  const real=await run(["--repair","--json"],root,cas);
++  expect(report(JSON.parse(real.out[0]!))).toBe(true);
++  expect(rows(real.out).find(row=>row.id==="caches-integrity")).toMatchObject({dryRun:false,status:"done",removed:2,facts:{corrupt:2,failed:0}});
++  expect(existsSync(entryFile)||existsSync(objectFile)).toBe(false);
++  expect(readQuarantineLogV1(join(root,".cache","b","r","m")).map(row=>row.kind)).toEqual(["unit-entry"]);
++  expect(readQuarantineLogV1(join(cas,"v1")).map(row=>row.kind)).toEqual(["cas-object"]);
++  const again=await run(["--repair","--json"],root,cas);
++  expect(rows(again.out).find(row=>row.id==="caches-integrity")).toMatchObject({status:"nothing",facts:{corrupt:0}});
++ });
++}
++
++test("progress is reported while records are read and a stop request ends the repair as cancelled, keeping what was moved",async()=>{
++ const {root,cas}=machine();
++ for(let index=0;index<600;index++){const hash=sha256HexV1("spill"+index),path=join(root,".cache","b","r","m","u","w","spill",hash);mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"spill"+index);}
++ const controller=new AbortController();
++ const result=await run(["--repair"],root,cas,{both:true,signal:controller.signal,progress:line=>{if(line.includes("Verifying"))controller.abort();}});
++ expect(result.progress.some(line=>line.includes("Verifying"))).toBe(true);
++ expect(result.text).toContain("repair caches-integrity cancelled");
++});
++
++test("no cache roots at all is a clean machine, not an error",async()=>{
++ const root=fresh();
++ const result=await run(["--repair","--json"],root,join(root,"absent-cas"));
++ expect(result.code).toBe(0);
++ expect(rows(result.out).find(row=>row.id==="caches-integrity")).toMatchObject({status:"nothing",facts:{roots:0}});
++});

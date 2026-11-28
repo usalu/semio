@@ -56,6 +56,15 @@ test("a huge partition never starves the next ones, and the folders outside the 
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
+test("a holder is named down to the ticket folder, not only two levels below the root",async()=>{
+ const root=build(),put=(path:string,size:number)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),Buffer.alloc(size,1));};
+ put(".semio/repo/tickets/26/BIG-TICKET/out/blob",50000);put(".semio/repo/tickets/26/SMALL/x",10);
+ try{
+  const row=(await partitionCensusV1(root,{origin:"g1-test"})).partitions.find(entry=>entry.name==="root/.semio")!;
+  expect(row.top[0]!.path).toBe("repo/tickets/26/BIG-TICKET/out");expect(row.top[0]!.bytes).toBe(50000);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
 test("the mirror publishes a valid record after the first delay, not again before the interval, and never without a store",async()=>{
  const root=build(),store=mkdtempSync(join(tmpdir(),"partition-store-"));
  try{
@@ -68,4 +77,16 @@ test("the mirror publishes a valid record after the first delay, not again befor
   at+=1;expect(await mirror.tick()).toBe(true);
   expect(await createPartitionCensusMirrorV1({root,store:undefined,origin:"x",now:()=>at+10**9}).tick()).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});rmSync(store,{recursive:true,force:true});}
+});
+
+test("a partition reports the capacity its image.json was born with, so fullness is readable",async()=>{
+ const root=build();
+ try{
+  writeFileSync(join(root,".cache/b/r/image.json"),JSON.stringify({version:1,maximumPhysicalBytes:67108864}));
+  const record=await partitionCensusV1(root,{origin:"g1-test"});
+  expect(record.partitions.find(row=>row.name==="r")!.capacityBytes).toBe(67108864);
+  expect(record.partitions.find(row=>row.name==="l")!.capacityBytes).toBeUndefined();
+  const run=spawnSync("python3",["-I","-c","import json,sys;print(json.load(open(sys.argv[1]))['maximumPhysicalBytes'])",join(root,".cache/b/r/image.json")],{encoding:"utf8"});
+  expect(Number(run.stdout)).toBe(67108864);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

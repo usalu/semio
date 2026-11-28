@@ -1,6 +1,6 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
-import {spawnSync} from "node:child_process";
+import {execFile} from "node:child_process";
 import {homedir,hostname} from "node:os";
 import {join,resolve} from "node:path";
 import type {LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
@@ -243,10 +243,10 @@ export const readFleetOffloadV1:FleetReaderV1=async context=>{
  let names:string[]=[];try{names=readdirSync(slots);}catch{}
  for(const name of names){const match=/^(light-)?\d+\.lock$/u.exec(name);if(match===null)continue;const claim=name.slice(0,-5),holder=claimHeldV1(slots,claim)?claimHolderV1(slots,claim):undefined;if(holder!==undefined)held.push({pid:holder.pid,fleet:match[1]!==undefined});}
  const parents=new Map<number,number>(),pids=[...new Set(held.map(row=>row.pid))].slice(0,policy.readers.maximumBuildOwners);
- if(pids.length>0&&process.platform!=="win32"){const listed=spawnSync("ps",["-o","pid=,ppid=","-p",pids.join(",")],{encoding:"utf8",timeout:2000});for(const line of String(listed.stdout??"").split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);if(Number.isSafeInteger(pid)&&Number.isSafeInteger(parent)&&parent>0)parents.set(pid!,parent!);}}
+ if(pids.length>0&&process.platform!=="win32"){const listed=await new Promise<string>(done=>{try{execFile("ps",["-o","pid=,ppid=","-p",pids.join(",")],{encoding:"utf8",timeout:2000},(_failure,stdout)=>done(String(stdout??"")));}catch{done("");}});for(const line of listed.split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);if(Number.isSafeInteger(pid)&&Number.isSafeInteger(parent)&&parent>0)parents.set(pid!,parent!);}}
  const builds=new Map<number,{pid:number;local:number;fleet:number}>();
  for(const row of held){const pid=parents.get(row.pid)??row.pid,build=builds.get(pid)??{pid,local:0,fleet:0};builds.set(pid,{...build,[row.fleet?"fleet":"local"]:build[row.fleet?"fleet":"local"]+1});}
- const cacheRoot=context.environment.SEMIO_UNIT_CACHE_ROOT||join(repositoryCachePartitionRootDataV1(context.root,"rust"),"u"),spool=await(async()=>{try{const {spoolBoundV1,spoolLengthV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts");return{depth:spoolLengthV1(cacheRoot),bound:spoolBoundV1(cacheRoot)};}catch{return undefined;}})();
+ const cacheRoot=context.environment.SEMIO_UNIT_CACHE_ROOT||join(repositoryCachePartitionRootDataV1(context.root,"rust"),"u"),spool=await(async()=>{try{const {spoolBoundV1,spoolLengthV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📏️spool-size/🟦️.ts");return{depth:spoolLengthV1(cacheRoot),bound:spoolBoundV1(cacheRoot)};}catch{return undefined;}})();
  const counters=readOffloadCountersV1(context.root),offload:FleetOffloadFactV1={local:held.filter(row=>!row.fleet).length,fleet:held.filter(row=>row.fleet).length,builds:[...builds.values()],out:counters.out,refused:counters.refused,fellBack:counters.fellBack,reasons:readOffloadReasonCountersV1(context.root),...spool===undefined?{}:{spool}};
  return {offload};
 };

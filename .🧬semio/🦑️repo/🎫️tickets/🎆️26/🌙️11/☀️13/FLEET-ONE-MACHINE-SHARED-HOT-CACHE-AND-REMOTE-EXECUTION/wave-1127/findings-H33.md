@@ -1,0 +1,4 @@
+# H33 finding: pruning custody race fails a whole Nx task (not landed, other area)
+
+m12 attempt 10 (workspace log 02:14-02:27): `@semio-tech/framework-rs:generate:prototype` failed with `Inactive Cargo unit changed under physical custody` (plain Error, `⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts` line 60). The retirement plan listed units as inactive; the recensus under the physical lock found one unit changed (bytes, recency or lock held) because a parallel cargo task (--parallel=3) used it in between. The whole retirement throws, the task fails, Nx fails, the stage fails (run duration 4 m 48 s, 8 of 9 tasks fine).
+Fix direction: a changed or locked unit is not an error: drop it from the plan and retire the rest (or return a retry class), because a unit that was used meanwhile is by definition active. Owner: caching/pruning.

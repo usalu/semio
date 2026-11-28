@@ -90,6 +90,44 @@
       "description": { "en": "Maximum number of concurrent tasks.", "de": "Höchstzahl gleichzeitiger Tasks." }
     },
     {
+      "name": "--outage",
+      "value": "none",
+      "operations": ["land"],
+      "description": { "en": "Land outside the landing slot (a fix for a fleet-wide outage); every other gate still runs.", "de": "Landet außerhalb des Landefensters (Behebung eines flottenweiten Ausfalls); jeder andere Prüfschritt läuft weiter." }
+    },
+    {
+      "name": "--rebase",
+      "value": "none",
+      "operations": ["land"],
+      "description": { "en": "Rebase a staged file whose live version changed by a three-way merge instead of refusing; a conflict still refuses.", "de": "Überträgt eine vorbereitete Datei, deren Live-Version sich geändert hat, per Drei-Wege-Zusammenführung statt abzulehnen; ein Konflikt lehnt weiterhin ab." }
+    },
+    {
+      "name": "--no-wait",
+      "value": "none",
+      "operations": ["land"],
+      "description": { "en": "Outside the landing slot queue the changeset and stop (exit 3) instead of waiting for the next slot.", "de": "Reiht den Änderungssatz außerhalb des Landefensters ein und endet (Exit 3), statt auf das nächste Fenster zu warten." }
+    },
+    {
+      "name": "--bench",
+      "value": "none",
+      "operations": ["land"],
+      "description": { "en": "land: also run repo bench latency --strict as a gate (the command latency budgets of the live installation).", "de": "land: führt zusätzlich repo bench latency --strict als Prüfschritt aus (die Latenzbudgets der installierten Befehle)." }
+    },
+    {
+      "name": "--title",
+      "value": "required",
+      "valueName": "title",
+      "operations": ["land"],
+      "description": { "en": "land: the title of the landings entry (default: the staged title).", "de": "land: der Titel des Eintrags in den Landungen (Standard: der vorbereitete Titel)." }
+    },
+    {
+      "name": "--wave",
+      "value": "required",
+      "valueName": "wave",
+      "operations": ["land"],
+      "description": { "en": "land: the wave named in the landings entry header (default: SEMIO_LAND_WAVE, else Landing).", "de": "land: die Welle im Kopf des Eintrags in den Landungen (Standard: SEMIO_LAND_WAVE, sonst Landing)." }
+    },
+    {
       "name": "--no-importers",
       "value": "none",
       "operations": ["typecheck"],
@@ -134,7 +172,7 @@
     {
       "name": "--dry-run",
       "value": "none",
-      "operations": ["run", "run-many", "affected", "exec", "cache", "remote-cache", "doctor", "test-file", "typecheck"],
+      "operations": ["run", "run-many", "affected", "exec", "cache", "remote-cache", "doctor", "test-file", "typecheck", "land"],
       "description": {
         "en": "Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. With test-file: print the route of every file and run nothing. With typecheck: list the files to check and do not run the compiler.",
         "de": "Gibt den Task-Graphen als DryRunPlan auf stdout aus und führt nichts aus; für jedes Werkzeug gleich. Mit cache gc oder remote-cache gc: listet auf, was entfernt würde, und entfernt nichts. Mit test-file: gibt den Ablauf jeder Datei aus und führt nichts aus. Mit typecheck: nennt die zu prüfenden Dateien und führt den Compiler nicht aus."
@@ -189,7 +227,7 @@
     {
       "name": "--json",
       "value": "none",
-      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "scheduler", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session", "test-file", "typecheck"],
+      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "scheduler", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session", "test-file", "typecheck", "land"],
       "description": { "en": "Print lists as JSON instead of one entry per line.", "de": "Gibt Listen als JSON statt eines Eintrags je Zeile aus." }
     },
     {
@@ -314,7 +352,7 @@
       "value": "required",
       "valueName": "n",
       "operations": ["bench"],
-      "description": { "en": "bench run: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven).", "de": "bench run: Stichproben je Messung statt der verfassten Anzahl (das 95. Perzentil braucht 20 Stichproben, das 99. braucht 100; bei weniger bleiben diese Ziele unbewiesen)." }
+      "description": { "en": "bench run|latency: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven).", "de": "bench run|latency: Stichproben je Messung statt der verfassten Anzahl (das 95. Perzentil braucht 20 Stichproben, das 99. braucht 100; bei weniger bleiben diese Ziele unbewiesen)." }
     },
     {
       "name": "--baseline",
@@ -371,6 +409,13 @@
       "description": { "en": "bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile.", "de": "bench acceptance: führt die Szenarien, die Quelldateien ändern und zurücksetzen, in diesem Checkout aus (CI-Runner, private Kopie); währenddessen darf ihn niemand sonst bearbeiten." }
     },
     {
+      "name": "--commands",
+      "value": "required",
+      "valueName": "ids|all",
+      "operations": ["bench"],
+      "description": { "en": "bench latency: comma list of the budgeted developer commands (inputs, run, test-file, typecheck, fleet-status), or all.", "de": "bench latency: Kommaliste der budgetierten Entwicklerbefehle (inputs, run, test-file, typecheck, fleet-status) oder all." }
+    },
+    {
       "name": "--scope",
       "value": "separate",
       "valueName": "owner",
@@ -390,6 +435,12 @@
       "valueName": "cores",
       "operations": ["cargo"],
       "description": { "en": "Positive number of cores for Cargo.", "de": "Positive Anzahl von Kernen für Cargo." }
+    },
+    {
+      "name": "--fresh-lane",
+      "value": "none",
+      "operations": ["cargo"],
+      "description": { "en": "cargo: run in a fresh, empty lane that exists for this call only (a cold Cargo target, nothing carried over from earlier calls) and is removed afterwards; units still come from the local unit cache and the fleet cache, so a probe tells cold, local hit and remote hit apart. Only with --store=shared (an isolated store is fresh by itself).", "de": "cargo: läuft in einer frischen, leeren Lane, die nur für diesen Aufruf besteht (kaltes Cargo-Target, nichts aus früheren Aufrufen) und danach entfernt wird; Einheiten kommen weiterhin aus dem lokalen Einheiten-Cache und dem Flotten-Cache, so dass eine Messung kalt, lokalen und entfernten Treffer trennt. Nur mit --store=shared (ein isolierter Speicher ist von sich aus frisch)." }
     },
     {
       "name": "--port",
@@ -590,7 +641,27 @@
       "value": "required",
       "valueName": "n",
       "operations": ["fleet"],
-      "description": { "en": "fleet status: how many runs the text output lists (default: 20, the JSON output always lists all).", "de": "fleet status: wie viele Läufe die Textausgabe auflistet (Standard: 20, die JSON-Ausgabe listet immer alle)." }
+      "description": { "en": "fleet status: how many runs the summary lists (default: 20).", "de": "fleet status: wie viele Läufe die Zusammenfassung auflistet (Standard: 20)." }
+    },
+    {
+      "name": "--detail",
+      "value": "none",
+      "operations": ["fleet"],
+      "description": { "en": "fleet status: print the full report (all workers, machines, counters and findings, over 100 KB with --json) instead of the summary.", "de": "fleet status: gibt den vollständigen Bericht aus (alle Worker, Maschinen, Zähler und Befunde, mit --json über 100 KB) statt der Zusammenfassung." }
+    },
+    {
+      "name": "--origin",
+      "value": "required",
+      "valueName": "id",
+      "operations": ["fleet"],
+      "description": { "en": "fleet status: print the full report of this origin only (its worker, machine, counters and findings); implies --detail.", "de": "fleet status: gibt nur den vollständigen Bericht dieses Origins aus (Worker, Maschine, Zähler und Befunde); schließt --detail ein." }
+    },
+    {
+      "name": "--section",
+      "value": "required",
+      "valueName": "summary|memory|runs|queues|bazel|storage|sealed|generation|scheduler|fleet|workers|cas|retention|offload|rates|findings|sources",
+      "operations": ["fleet"],
+      "description": { "en": "fleet status: print one section of the full report only; implies --detail.", "de": "fleet status: gibt nur einen Abschnitt des vollständigen Berichts aus; schließt --detail ein." }
     },
     {
       "name": "--key",
@@ -624,8 +695,8 @@
       "name": "--lane",
       "value": "required",
       "valueName": "lane",
-      "operations": ["scheduler"],
-      "description": { "en": "scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped.", "de": "scheduler run: gemeinsame Compiler-Spur (rustc oder tsc), deren Parallelität begrenzt ist." }
+      "operations": ["scheduler", "land"],
+      "description": { "en": "scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped; land: the lane name of the landings entry and the lock owner (default: SEMIO_LAND_LANE, else agent).", "de": "scheduler run: gemeinsame Compiler-Spur (rustc oder tsc), deren Parallelität begrenzt ist; land: der Spurname im Eintrag der Landungen und als Sperreninhaber (Standard: SEMIO_LAND_LANE, sonst agent)." }
     },
     {
       "name": "--class",
@@ -657,8 +728,8 @@
     {
       "name": "--strict",
       "value": "none",
-      "operations": ["doctor"],
-      "description": { "en": "doctor: exit with status 1 for warnings as well as errors.", "de": "doctor: beendet sich mit Status 1 auch bei Warnungen, nicht nur bei Fehlern." }
+      "operations": ["doctor", "bench"],
+      "description": { "en": "doctor, bench latency: exit with status 1 for warnings as well as errors.", "de": "doctor, bench latency: beendet sich mit Status 1 auch bei Warnungen, nicht nur bei Fehlern." }
     },
     {
       "name": "--facts",
@@ -1015,6 +1086,44 @@
       ]
     },
     {
+      "name": "land",
+      "requires": "none",
+      "synopsis": "land checkout <dir> <path>... | delete <dir> <path>... | [check] <dir> | rollback <id> | status [--json] [--dry-run] [--outage] [--rebase] [--no-wait] [--bench] [--lane <lane>] [--title <title>] [--wave <wave>]",
+      "summary": { "en": "Land a staged changeset only once it holds: check it against a scratch overlay of the live tree, then apply all files atomically under the area locks, in the landing slot, with a rollback point and the landings entry.", "de": "Landet einen vorbereiteten Änderungssatz erst, wenn er hält: prüft ihn gegen ein Scratch-Overlay des Live-Baums und wendet dann alle Dateien atomar unter den Bereichssperren im Landefenster an, mit Rücksetzpunkt und Eintrag in den Landungen." },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--json", "--dry-run", "--outage", "--rebase", "--no-wait", "--bench", "--lane", "--title", "--wave"],
+      "examples": [
+        {
+          "command": "repo land checkout ./stage path/to/file.ts",
+          "description": { "en": "Stage a live file: its content hash is remembered as the base and a working copy appears in ./stage/tree/.", "de": "Bereitet eine Live-Datei vor: ihr Inhalts-Hash wird als Basis gemerkt, eine Arbeitskopie erscheint in ./stage/tree/." }
+        },
+        {
+          "command": "repo land ./stage",
+          "description": { "en": "Check the changeset against the overlay (stale bases, dangling imports, type check, Rust check, suite law, declared tests), wait for the slot, apply atomically, record the rollback point and append the landings entry.", "de": "Prüft den Änderungssatz gegen das Overlay (veraltete Basen, hängende Importe, Typprüfung, Rust-Prüfung, Suite-Gesetz, deklarierte Tests), wartet auf das Fenster, wendet atomar an, zeichnet den Rücksetzpunkt auf und hängt den Eintrag an die Landungen an." }
+        },
+        {
+          "command": "repo land check ./stage",
+          "description": { "en": "Run every gate and apply nothing.", "de": "Führt jeden Prüfschritt aus und wendet nichts an." }
+        },
+        {
+          "command": "repo land rollback <id>",
+          "description": { "en": "Restore the files of an earlier landing when none of them changed since.", "de": "Stellt die Dateien einer früheren Landung wieder her, wenn sich seither keine geändert hat." }
+        }
+      ],
+      "notes": [
+        {
+          "en": "A changeset is a staged directory: checkout copies live files into <dir>/tree and remembers their content hashes (the bases), new files are created in the tree, delete stages a removal. Nothing in the live tree is read-modified-written by the agent; the command compares every base with the live file (a changed file is a stale base and refuses, or with --rebase is merged three-way), builds a scratch overlay (a copy-on-write clone of the framework tree with the staged files applied, in the machine cache), runs the gates against that overlay and only then touches the live tree. Slot-bound areas (build, caching, process, manifests) land only in minutes 0 to 10 of each hour: otherwise the command waits for the slot (progress every minute, Ctrl-C cancels) or, with --no-wait, queues and exits 3; --outage lands at once. Tests and documents land any time. --dry-run (like check) runs every gate and applies nothing.",
+          "de": "Ein Änderungssatz ist ein vorbereiteter Ordner: checkout kopiert Live-Dateien nach <dir>/tree und merkt ihre Inhalts-Hashes (die Basen), neue Dateien entstehen im Baum, delete bereitet ein Löschen vor. Der Agent liest und schreibt nichts im Live-Baum; der Befehl vergleicht jede Basis mit der Live-Datei (eine geänderte Datei ist eine veraltete Basis und lehnt ab, mit --rebase wird sie Drei-Wege-zusammengeführt), baut ein Scratch-Overlay (einen Copy-on-Write-Klon des Framework-Baums mit den vorbereiteten Dateien, im Maschinen-Cache), führt die Prüfschritte gegen dieses Overlay aus und berührt erst danach den Live-Baum. Fensterpflichtige Bereiche (build, caching, process, Manifeste) landen nur in den Minuten 0 bis 10 jeder Stunde: sonst wartet der Befehl auf das Fenster (Fortschritt jede Minute, Strg-C bricht ab) oder reiht mit --no-wait ein und endet mit 3; --outage landet sofort. Tests und Dokumente landen jederzeit. --dry-run (wie check) führt jeden Prüfschritt aus und wendet nichts an."
+        },
+        {
+          "en": "The apply writes and syncs every new content to a hidden temporary file beside its target first, then takes landing.lock.<area> for every area in alphabetical order, renames the files (new files first, every imported file before its importer, deletions last) while landing.generation.<area> is odd, and releases the locks at once. A reader that needs one consistent view reads the generation before and after and retries unless both reads are equal and even; every other reader sees only whole old or whole new files and never an import of a missing file. The rollback point (repo land rollback <id>) and the append to landings.md are written for every landing. Exit code 0 landed, checked or rolled back, 1 a gate failed, 2 refused (stale base, locks busy or stale, usage, cancelled), 3 queued.",
+          "de": "Beim Anwenden wird jeder neue Inhalt zuerst in eine versteckte temporäre Datei neben dem Ziel geschrieben und synchronisiert, dann wird landing.lock.<Bereich> für jeden Bereich in alphabetischer Reihenfolge genommen, die Dateien werden umbenannt (neue Dateien zuerst, jede importierte Datei vor ihrem Importeur, Löschungen zuletzt), während landing.generation.<Bereich> ungerade ist, und die Sperren werden sofort freigegeben. Ein Leser, der eine konsistente Sicht braucht, liest die Generation davor und danach und wiederholt, außer beide Werte sind gleich und gerade; jeder andere Leser sieht nur ganze alte oder ganze neue Dateien und nie einen Import einer fehlenden Datei. Der Rücksetzpunkt (repo land rollback <Kennung>) und der Anhang an landings.md entstehen bei jeder Landung. Exit-Code 0 gelandet, geprüft oder zurückgesetzt, 1 ein Prüfschritt fehlgeschlagen, 2 abgelehnt (veraltete Basis, Sperren belegt oder veraltet, Aufruf, abgebrochen), 3 eingereiht."
+        }
+      ]
+    },
+    {
       "name": "exec",
       "requires": "dependencies",
       "synopsis": "exec --projects=<projects> -- <command>",
@@ -1357,7 +1466,7 @@
     {
       "name": "bench",
       "requires": "none",
-      "synopsis": "bench list|run|compare|acceptance",
+      "synopsis": "bench list|run|compare|acceptance|latency",
       "summary": { "en": "Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.", "de": "Misst die Leistungsziele (Latenz bei heißem Cache, Änderung bis Neubau je Sprache, Cache-Trefferquote, Graph, Speicher, gleichzeitige Agenten) in einer Wegwerf-Kopie des Checkouts, beurteilt sie anhand der Zieltabelle und vergleicht mit einer gespeicherten Referenz; `bench acceptance` hält die Abnahmeszenarien der drei Produkte (heißer Leerlauf, fremde Änderung, einzeilige Änderung mit byteidentischer Rücknahme) im Checkout selbst an deklarierte Budgets." },
       "dryRun": false,
       "progress": true,
@@ -1370,13 +1479,15 @@
         { "name": "list", "synopsis": "bench list", "flags": ["--json"], "summary": { "en": "List the objectives with their probe, goal, gate and enforcement.", "de": "Listet die Ziele mit Messung, Zielwert, Schwelle und Durchsetzung auf." } },
         { "name": "run", "synopsis": "bench run [--slo=<ids|all>] [--runs=<n>] [--baseline=<report>] [--save-baseline=<report>] [--history=<folder>] [--prepare]", "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--history", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json"], "summary": { "en": "Measure the selected objectives with every implementation, print percentiles, host load and verdicts, and compare with the baseline.", "de": "Misst die gewählten Ziele mit jeder Implementierung, gibt Perzentile, Rechnerlast und Urteile aus und vergleicht mit der Referenz." } },
         { "name": "compare", "synopsis": "bench compare [--current=<report> --baseline=<report> | --history=<folder>]", "flags": ["--current", "--baseline", "--history", "--markdown", "--json"], "summary": { "en": "Compare two stored reports of the same host class, name every regression beyond the tolerance of its objective and every blocking objective over its budget.", "de": "Vergleicht zwei gespeicherte Berichte derselben Rechnerklasse und nennt jede Verschlechterung über die Toleranz ihres Ziels sowie jedes verbindliche Ziel über dem Budget." } },
-        { "name": "acceptance", "synopsis": "bench acceptance [--scenario=<ids|all>] [--in-place]", "flags": ["--scenario", "--in-place", "--markdown", "--file", "--json"], "summary": { "en": "Run the acceptance scenarios (hot no-op three times, peer edit, one-line edit with byte-exact revert) of the course, print and the dashboard through the official route on this checkout, with the exact wall clock and the physical footprint, judge them against the declared budgets and fail when a blocking budget is broken.", "de": "Führt die Abnahmeszenarien (heißer Leerlauf dreimal, fremde Änderung, einzeilige Änderung mit byteidentischer Rücknahme) von Kurs, Druck und Dashboard über den offiziellen Weg in diesem Checkout aus, mit exakter Laufzeit und physischem Speicherbedarf, beurteilt sie anhand der deklarierten Budgets und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } }
+        { "name": "acceptance", "synopsis": "bench acceptance [--scenario=<ids|all>] [--in-place]", "flags": ["--scenario", "--in-place", "--markdown", "--file", "--json"], "summary": { "en": "Run the acceptance scenarios (hot no-op three times, peer edit, one-line edit with byte-exact revert) of the course, print and the dashboard through the official route on this checkout, with the exact wall clock and the physical footprint, judge them against the declared budgets and fail when a blocking budget is broken.", "de": "Führt die Abnahmeszenarien (heißer Leerlauf dreimal, fremde Änderung, einzeilige Änderung mit byteidentischer Rücknahme) von Kurs, Druck und Dashboard über den offiziellen Weg in diesem Checkout aus, mit exakter Laufzeit und physischem Speicherbedarf, beurteilt sie anhand der deklarierten Budgets und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } },
+        { "name": "latency", "synopsis": "bench latency [--commands=<ids|all>] [--runs=<n>] [--strict]", "flags": ["--commands", "--runs", "--strict", "--root", "--file", "--json"], "summary": { "en": "Run the developer commands (inputs, run --exclude-dependencies --dry-run, test-file, typecheck, fleet status) on a fixed small target with the phase profile on, and judge the time per phase group and the round trips (graph service requests, child processes, cache lookups) against the declared budgets; budgets exceeded are warnings, only --strict turns them into a failing exit code.", "de": "Führt die Entwicklerbefehle (inputs, run --exclude-dependencies --dry-run, test-file, typecheck, fleet status) auf einem festen kleinen Ziel mit eingeschaltetem Phasenprofil aus und beurteilt die Zeit je Phasengruppe und die Rundreisen (Graphdienst-Anfragen, Kindprozesse, Cache-Abfragen) anhand der deklarierten Budgets; überschrittene Budgets sind Warnungen, erst --strict macht daraus einen fehlschlagenden Exit-Code." } }
       ],
-      "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--current", "--history", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json", "--scenario", "--in-place"],
+      "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--current", "--history", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json", "--scenario", "--in-place", "--commands", "--strict"],
       "examples": [
         { "command": "repo bench list", "description": { "en": "List the performance objectives.", "de": "Listet die Leistungsziele auf." } },
         { "command": "repo bench run --slo=kind:noop --baseline=bench-baseline.json", "description": { "en": "Measure the warm no-op objectives and compare with the stored baseline.", "de": "Misst die Ziele für den warmen Leerlauf und vergleicht mit der gespeicherten Referenz." } },
-        { "command": "repo bench acceptance --in-place --file=acceptance.json --markdown=acceptance.md", "description": { "en": "Run every acceptance scenario on this checkout and fail when a blocking budget is broken.", "de": "Führt jedes Abnahmeszenario in diesem Checkout aus und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } }
+        { "command": "repo bench acceptance --in-place --file=acceptance.json --markdown=acceptance.md", "description": { "en": "Run every acceptance scenario on this checkout and fail when a blocking budget is broken.", "de": "Führt jedes Abnahmeszenario in diesem Checkout aus und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } },
+        { "command": "repo bench latency --commands=inputs,typecheck --runs=3", "description": { "en": "Measure the phases and round trips of two developer commands and warn about every exceeded budget.", "de": "Misst die Phasen und Rundreisen zweier Entwicklerbefehle und warnt vor jedem überschrittenen Budget." } }
       ]
     },
     {
@@ -1417,16 +1528,20 @@
     {
       "name": "cargo",
       "requires": "none",
-      "synopsis": "cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>",
+      "synopsis": "cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] [--fresh-lane] -- <cargo subcommand> <args>",
       "summary": { "en": "Compile through the repository's Cargo ingress gate.", "de": "Kompiliert über das Cargo-Eingangstor des Repositorys." },
       "dryRun": false,
       "progress": true,
       "cancellable": true,
-      "flags": ["--store", "--configuration", "--parallelism"],
+      "flags": ["--store", "--configuration", "--parallelism", "--fresh-lane"],
       "examples": [
         {
           "command": "repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib",
           "description": { "en": "Type-check one crate in the shared store.", "de": "Prüft eine Crate im gemeinsamen Speicher." }
+        },
+        {
+          "command": "repo cargo --store=shared --configuration=prototype --fresh-lane -- check -p <crate> --lib",
+          "description": { "en": "Type-check one crate in a cold lane that exists for this call only (probes: cold, local hit, remote hit).", "de": "Prüft eine Crate in einer kalten Lane, die nur für diesen Aufruf besteht (Messungen: kalt, lokaler Treffer, entfernter Treffer)." }
         }
       ]
     },
@@ -1722,10 +1837,10 @@
       "subcommands": [
         {
           "name": "status",
-          "synopsis": "fleet status [--json] [--limit=<n>]",
+          "synopsis": "fleet status [--json] [--detail] [--origin=<id>] [--section=<name>] [--limit=<n>]",
           "summary": {
-            "en": "Print the fleet picture as compact text, or with --json as one document whose schema is validated before it is printed.",
-            "de": "Gibt das Gesamtbild als kompakten Text aus, mit --json als ein Dokument, dessen Schema vor der Ausgabe geprüft wird."
+            "en": "Print the fleet summary (under 16 KB: totals per window, anomalous counters per origin, findings with counts, workers that need a look) as compact text, or with --json as one document whose schema is validated before it is printed; --detail, --origin and --section print the full report or a part of it.",
+            "de": "Gibt die Flottenzusammenfassung (unter 16 KB: Summen je Zeitfenster, auffällige Zähler je Origin, Befunde mit Anzahl, Worker mit Handlungsbedarf) als kompakten Text aus, mit --json als ein Dokument, dessen Schema vor der Ausgabe geprüft wird; --detail, --origin und --section geben den vollständigen Bericht oder einen Teil davon aus."
           }
         },
         {
@@ -1739,6 +1854,9 @@
       ],
       "flags": [
         "--json",
+        "--detail",
+        "--origin",
+        "--section",
         "--limit"
       ],
       "examples": [
@@ -1752,7 +1870,11 @@
         },
         {
           "command": "repo fleet status --json",
-          "description": { "en": "The same picture as one machine-readable document for an agent.", "de": "Dasselbe Bild als ein maschinenlesbares Dokument für einen Agenten." }
+          "description": { "en": "The same summary as one machine-readable document for an agent.", "de": "Dieselbe Zusammenfassung als ein maschinenlesbares Dokument für einen Agenten." }
+        },
+        {
+          "command": "repo fleet status --json --origin=g1-m01 --section=workers",
+          "description": { "en": "The full worker record of one machine, as the schema-validated detail document.", "de": "Der vollständige Worker-Eintrag einer Maschine als schemageprüftes Detaildokument." }
         }
       ],
       "notes": [

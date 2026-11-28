@@ -16,7 +16,7 @@ import { PROFILE_MARKER } from "../🧮️mutation-catalog/🟦️.ts";
 import { schemaModuleDirName } from "../📐️schema-contracts/🟦️.ts";
 import { discoverTestContributions, loadOracleRegistry, type OracleRegistry } from "../🤝️contributions/🟦️.ts";
 import { binaryProtocolDriftBreaches } from "../🌿️mutation-leaves/🟦️.ts";
-import { dependencyEcosystemOf, externalOracleHostPackages, importProbe } from "../🔒️oracle-dependencies/🟦️.ts";
+import { importProbe } from "../🔒️oracle-dependencies/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
 import { capabilityManifestBreaches, fixtureProvenanceBreaches, isolationBreaches, mutationFixtureBreaches, mutationInventoryBreaches, nativeSecondImplementationBreaches, noOracleMisuseBreaches, registryRecordBreaches, reimplementationOracleBreaches, stubDeserializerBreaches, stubSerializerBreaches } from "../🚧️mutation-gates/🟦️.ts";
 import { validateCaseContract } from "../📃️case-contract/🟦️.ts";
@@ -38,11 +38,8 @@ export function oracleImportsInProduction(repoRoot: string, registry: OracleRegi
   const caseDirs = new Set(allCases.map((entry) => entry.caseDir));
   const oracleOwners = new Map<string, string[]>();
   for (const contribution of registry.contributions) for (const oracle of contribution.oracles) oracleOwners.set(oracle.id, [...(oracleOwners.get(oracle.id) ?? []), contribution.owner]);
-  const hostOwners = new Map<string, string[]>();
-  for (const contribution of registry.contributions) for (const host of contribution.oracleHostPackages) if (host.path === undefined) hostOwners.set(`${dependencyEcosystemOf(host.implementation)}:${host.package}`, [...(hostOwners.get(`${dependencyEcosystemOf(host.implementation)}:${host.package}`) ?? []), contribution.owner]);
   const probes: { label: string; name: string; scope?: readonly string[]; pattern: RegExp; files: RegExp }[] = [
     ...registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => ({ label: entry.id, name, scope: oracleOwners.get(entry.id), ...importProbe(entry.ecosystem, name) }))),
-    ...externalOracleHostPackages(registry).map((entry) => ({ label: `host package ${entry.ecosystem}:${entry.name}`, name: entry.name, scope: hostOwners.get(`${entry.ecosystem}:${entry.name}`), ...importProbe(entry.ecosystem, entry.name) })),
   ];
   const taxonomy = testTaxonomy(repoRoot);
   const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];

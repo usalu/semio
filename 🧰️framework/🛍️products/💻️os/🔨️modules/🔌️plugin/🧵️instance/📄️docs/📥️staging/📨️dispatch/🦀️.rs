@@ -16,7 +16,7 @@ use semio_ui_contract::*;
 
 impl<A: ArtifactApp> MediaTransfers<A> {
     /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
         self.segmented_closures.get(operation_id).is_some()
     }

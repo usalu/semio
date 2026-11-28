@@ -94,8 +94,15 @@ def toolchain(text, triple):
     return channel
 
 
+def fitting(classes, megabytes):
+    """The most rustc units whose worst case (the largest classes first, the typical unit for every further one) fits `megabytes`."""
+    peaks, typical = classes["peaks"], classes["typical"]
+    return max([1] + [count for count in range(1, 4096) if sum(peaks[:count]) + max(0, count - len(peaks)) * typical <= megabytes])
+
+
 cases = json.load(sys.stdin)
 print(json.dumps({
+    "memory": [fitting(cases["classes"], c["megabytes"]) for c in cases.get("memory", [])],
     "lineage": [lineage(c["arguments"]) for c in cases.get("lineage", [])],
     "jobs": [jobs(c["arguments"], c["environment"], c["cores"]) for c in cases.get("jobs", [])],
     "caps": [cap(c["arguments"], c["granted"]) for c in cases.get("caps", [])],

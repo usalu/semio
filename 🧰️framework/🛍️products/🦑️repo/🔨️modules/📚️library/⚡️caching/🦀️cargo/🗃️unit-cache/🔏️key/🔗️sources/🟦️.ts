@@ -64,6 +64,15 @@ export function canonicalDepInfoV1(text:string):string{
  }).join("\n");
 }
 
+/** 🌫️ A captured compiler stream (`stderr`, `stdout`) without the number rustc draws for the file that holds a type name too long to print (`long-type-<digits>.txt`, another number in every compilation of one unit): two compilations of one unit, on one machine or two, then give the same stream, and the stored result of a unit whose warning names such a file is no longer refused as diverged. Everything else stays byte for byte; equal compilations give equal text. */
+export const canonicalStreamV1=(text:string):string=>text.replace(/long-type-[0-9]+\.txt/gu,"long-type-0.txt");
+
+/** 🏷️ The name under which the captured streams of a unit are converted for the fleet (see {@link canonicalOutputV1}); no output file has it. */
+export const STREAM_NAME_V1="⟨stream⟩";
+
+/** 🔀️ The text of one stored output of a unit as the fleet keeps it: a dependency file without what the compilation itself wrote ({@link canonicalDepInfoV1}), a captured stream without compiler noise ({@link canonicalStreamV1}), anything else unchanged. */
+export function canonicalOutputV1(name:string,text:string):string{return name.endsWith(".d")?canonicalDepInfoV1(text):name===STREAM_NAME_V1?canonicalStreamV1(text):text;}
+
 /** 📦️ Whether a directory is the unpacked source of one version of a registry crate (`…/registry/src/<index>/<name>-<version>`): its content is fixed by the name and version that the lock file pins and that the compiler arguments already carry, so every file below it is covered by the key without being scanned. */
 export const registryCrateDirectoryV1=(directory:string):boolean=>/(^|\/)registry\/src\/[^/]+\/[^/]+$/u.test(directory.replaceAll("\\","/").replace(/\/+$/u,""));
 

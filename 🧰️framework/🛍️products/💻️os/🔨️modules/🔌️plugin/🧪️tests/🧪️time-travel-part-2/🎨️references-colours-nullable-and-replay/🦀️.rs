@@ -33,7 +33,7 @@ async fn the_open_draft_references_its_reference_inputs_per_domain() {
     assert_eq!(references.get("items").map(Vec::as_slice), Some(["a".to_string(), "b".to_string(), "c".to_string()].as_slice()), "{references:?}");
     assert_eq!(references.get("cells").map(Vec::as_slice), Some(["k".to_string()].as_slice()), "{references:?}");
     assert_eq!(references.len(), 2, "only declared domains are referenced: {references:?}");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     assert!(app.time_travel.draft_references().is_empty(), "an exited session references nothing");
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
@@ -62,7 +62,7 @@ async fn colour_inputs_render_the_contract_recipe_and_vector_axes_keep_their_sna
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = vec![tint, offset];
     editor.value = dsl(&serde_json::json!({ "tint": [1.0, 0.5, 0.0, 0.25], "offset": [0.0, 0.0] }));
-    let history = render_history(&mut app, Locale::De).await;
+    let history = render_history(&mut app, Locale::De,cx).await;
     let colour = find_node(&history, "framework.history.editor.input.tint").unwrap_or_else(|| panic!("the colour recipe: {history}"));
     let text = colour.to_string();
     assert!(text.contains("#ff8000") && text.contains("#ff800040") && text.contains("Deckkraft") && text.contains("0.25"), "swatch, hex with alpha and the opacity slider: {colour}");
@@ -74,7 +74,7 @@ async fn colour_inputs_render_the_contract_recipe_and_vector_axes_keep_their_sna
     assert_eq!(time_travel::time_travel_coerce(&hex_input, hex_element, &DslValue::String("#00ff00".into())).and_then(|value| value.as_array().map(<[DslValue]>::len)), Some(3), "a hex without alpha leaves the opacity to the stored value");
     let (alpha_input, alpha_element) = time_travel::time_travel_input_at(&inputs, &value, "/tint/3").expect("the opacity component");
     assert_eq!(time_travel::time_travel_coerce(&alpha_input, alpha_element, &DslValue::float(0.5)).and_then(|value| value.as_f64()), Some(0.5), "the slider sets the fourth component alone");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -98,7 +98,7 @@ async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = vec![scale, width];
     editor.value = dsl(&serde_json::json!({ "scale": 2.0, "width": 1.0 }));
-    let history = render_history(&mut app, Locale::De).await;
+    let history = render_history(&mut app, Locale::De,cx).await;
     let clear = find_node(&history, "framework.history.editor.input.scale.clear").unwrap_or_else(|| panic!("the clear control: {history}"));
     assert!(clear.to_string().contains("Maßstab leeren"), "a Clear named for its input: {clear}");
     assert!(clear.to_string().contains(semio_framework::history_edit::HISTORY_EDIT_INPUT_ACTION_ID) && clear.to_string().contains("/scale"), "Clear drafts the input's pointer: {clear}");
@@ -108,11 +108,11 @@ async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
     let (input, element) = time_travel::time_travel_input_at(&inputs, &value, "/scale").expect("the nullable input");
     assert_eq!(time_travel::time_travel_coerce(&input, element, &DslValue::Null), Some(DslValue::Null), "Clear drafts null");
     app.time_travel.editor_mut().expect("the draft editor").value = dsl(&serde_json::json!({ "scale": null, "width": 1.0 }));
-    let history = render_history(&mut app, Locale::En).await;
+    let history = render_history(&mut app, Locale::En,cx).await;
     let cleared = find_node(&history, "framework.history.editor.input.scale.clear").expect("the clear control");
     assert!(cleared.to_string().contains("Clear Scale"), "Clear stays named in every locale: {cleared}");
     assert!(find_node(&history, "framework.history.editor.input.scale.row").is_some_and(|row| row.to_string().contains("Cleared (no value)")), "the row reads as cleared");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -135,19 +135,19 @@ async fn the_session_leads_the_history_body_and_the_editor_inputs_are_a_window_o
     }
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    assert_eq!(sections(&render_history(&mut app, Locale::En).await), ["framework.history.actions", "framework.history.commands"]);
+    assert_eq!(sections(&render_history(&mut app, Locale::En,cx).await), ["framework.history.actions", "framework.history.commands"]);
     run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = ["/dx", "/dy", "/dz"].map(|pointer| semio_framework::ActionArgDef::number(pointer, LocalizedLabel::native(pointer, pointer))).to_vec();
     editor.value = dsl(&serde_json::json!({ "dx": 1.0, "dy": 2.0, "dz": 3.0 }));
-    let body = render_history(&mut app, Locale::En).await;
+    let body = render_history(&mut app, Locale::En,cx).await;
     assert_eq!(sections(&body), ["framework.history.timeTravel", "framework.history.editor", "framework.history.editor.inputs", "framework.history.actions", "framework.history.commands"]);
     let inputs = find_node(&body, "framework.history.editor.inputs").expect("the inputs section");
     assert_eq!(inputs["component"]["window"]["total"].as_u64(), Some(3), "the inputs are a window over every row: {inputs}");
     for pointer in ["dx", "dy", "dz"] {
         assert!(find_node(inputs, &format!("framework.history.editor.input.{pointer}.row")).is_some(), "the {pointer} row is materialised: {inputs}");
     }
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -171,12 +171,12 @@ async fn a_schema_without_a_validator_refuses_every_draft() {
     let generation = app.time_travel.session().generation;
     let before = app.time_travel.editor().expect("the draft editor").value.clone();
     app.time_travel.editor_mut().expect("the draft editor").refuse_validator("unresolved $ref");
-    let refused = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::uint(9))], mounted_policy, &mut identity).await;
+    let refused = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::uint(9))], mounted_policy, &mut identity,cx).await;
     assert_eq!(rejected(&refused), Some(text(&refusals["schemaUnavailable"])), "no validator, no draft");
     let editor = app.time_travel.editor().expect("the draft editor");
     assert!(editor.refused.as_ref().is_some_and(|(path, reason)| path == "/value" && reason.contains("unresolved $ref")), "the editor names why: {:?}", editor.refused);
     assert_eq!((&editor.value, app.time_travel.session().generation, app.time_travel.session().pending.as_ref().map(|pending| app.time_travel.session().unchanged(pending))), (&before, generation, Some(true)), "the draft and session are untouched");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -202,8 +202,11 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     }
     while app.take_typed_operation_ui_progress().is_some() {}
     let mut stages = Vec::new();
+    let mut measured = false;
+    let mut settled_turns = 0;
     let mut cursor = app.history.log_generation;
-    for _ in 0..10_000 {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    while std::time::Instant::now() < deadline {
         app.advance_typed_operation_publication(&mut identity,cx).await.expect("driver turn");
         collect_original_history_command_receipt(&mut app);
         while let Some(progress) = app.take_typed_operation_ui_progress() {
@@ -212,17 +215,22 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
             cursor = patch.cursor;
             let status = patch.time_travel.expect("the patch carries the session status");
             if status.stage == semio_framework::kernel::HistoryTimeTravelStage::Replaying {
-                assert!(status.done.zip(status.total).is_some_and(|(done, total)| done <= total && total > 0), "progress is bounded: {status:?}");
+                assert!(status.done.zip(status.total).is_some_and(|(done, total)| done <= total), "progress is bounded: {status:?}");
+                measured |= status.total.is_some_and(|total| total > 0);
             }
             stages.push(status.stage);
         }
         if app.time_travel.session().stage == TimeTravelStage::Reviewing && !app.time_travel.has_pending_work() {
-            break;
+            settled_turns += 1;
+            if settled_turns >= 3 {
+                break;
+            }
         }
     }
     assert!(stages.contains(&semio_framework::kernel::HistoryTimeTravelStage::Replaying), "at least one progress status shipped: {stages:?}");
+    assert!(measured, "the replay reports a measured total once its history plan is read: {stages:?}");
     assert_eq!(stages.last(), Some(&semio_framework::kernel::HistoryTimeTravelStage::Reviewing), "the completion ships the reviewing status");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -240,7 +248,7 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
-    let history = render_history(&mut app, Locale::En).await;
+    let history = render_history(&mut app, Locale::En,cx).await;
     let undo = find_node(&history, "framework.history.undo").expect("undo row");
     assert_ne!(undo["disabled"], Value::Bool(true), "undo is enabled like its chord: the host routes a remote undo this guest cannot see");
     let args = DslValue::object([
@@ -248,7 +256,7 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
         ("detail".to_string(), DslValue::String("a.png".into())),
         ("label".to_string(), DslValue::object([("de".to_string(), DslValue::String("Exportieren".into())), ("en".to_string(), DslValue::String("Export".into()))])),
     ]);
-    let admitted = app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta(&fixture), &mut identity).await.expect("noteShellCommand admits");
+    let admitted = artifact_app_laws::dispatch_fixture_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(args.clone()), &meta(&fixture), &mut identity, cx, mounted_policy.maintenance).await.expect("noteShellCommand admits");
     semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.expect("noteShellCommand settles");
     let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     let row = patch.upserts.iter().find(|entry| entry.action_id == "shell.export").expect("the noted row");

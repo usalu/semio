@@ -523,5 +523,429 @@
       "u/l/d1/t/prototype/build",
       "u/l/d1/wasm32-unknown-unknown/prototype/build"
     ]
-  }
+  },
+  "covers": [
+    {
+      "name": "nothing to cover",
+      "nowMs": 3600000000,
+      "units": [],
+      "covered": []
+    },
+    {
+      "name": "the two newest variants of a crate stay however idle, older idle ones may go",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/b/p/prototype/build/pack/a",
+          "lastUsedMs": 2880000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/b",
+          "lastUsedMs": 2883600000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/c",
+          "lastUsedMs": 2887200000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/d",
+          "lastUsedMs": 2890800000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/e",
+          "lastUsedMs": 2894400000
+        }
+      ],
+      "covered": [
+        "/s/b/p/prototype/build/pack/d",
+        "/s/b/p/prototype/build/pack/e"
+      ]
+    },
+    {
+      "name": "a unit used within the active build window stays even among many variants",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/b/p/prototype/build/pack/a",
+          "lastUsedMs": 2880000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/b",
+          "lastUsedMs": 3578760000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/c",
+          "lastUsedMs": 3580200000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/d",
+          "lastUsedMs": 3596400000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/e",
+          "lastUsedMs": 3598200000
+        }
+      ],
+      "covered": [
+        "/s/b/p/prototype/build/pack/b",
+        "/s/b/p/prototype/build/pack/c",
+        "/s/b/p/prototype/build/pack/d",
+        "/s/b/p/prototype/build/pack/e"
+      ]
+    },
+    {
+      "name": "exactly at the window edge a unit is no longer in use",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/b/p/prototype/build/pack/a",
+          "lastUsedMs": 3492000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/b",
+          "lastUsedMs": 3578400000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/c",
+          "lastUsedMs": 3578436000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/d",
+          "lastUsedMs": 3596400000
+        },
+        {
+          "path": "/s/b/p/prototype/build/pack/e",
+          "lastUsedMs": 3598200000
+        }
+      ],
+      "covered": [
+        "/s/b/p/prototype/build/pack/c",
+        "/s/b/p/prototype/build/pack/d",
+        "/s/b/p/prototype/build/pack/e"
+      ]
+    },
+    {
+      "name": "crates are judged on their own and one variant is its own newest",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/b/p/prototype/build/serde/a",
+          "lastUsedMs": 3276000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/tokio/a",
+          "lastUsedMs": 3312000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/tokio/b",
+          "lastUsedMs": 3348000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/tokio/c",
+          "lastUsedMs": 3384000000
+        },
+        {
+          "path": "/s/b/p/prototype/build/tokio/d",
+          "lastUsedMs": 3420000000
+        }
+      ],
+      "covered": [
+        "/s/b/p/prototype/build/serde/a",
+        "/s/b/p/prototype/build/tokio/c",
+        "/s/b/p/prototype/build/tokio/d"
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "one image is the plain plan",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/b/p/prototype/build/x/1",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3456000000,
+          "held": false
+        },
+        {
+          "path": "/s/b/p/prototype/build/x/2",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3564000000,
+          "held": false
+        },
+        {
+          "path": "/s/b/p/prototype/build/x/3",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3582000000,
+          "held": false
+        },
+        {
+          "path": "/s/b/p/prototype/build/x/4",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3596400000,
+          "held": false
+        }
+      ],
+      "mounts": [],
+      "needs": {
+        "home": 157286400
+      },
+      "remove": [
+        {
+          "path": "/s/b/p/prototype/build/x/1",
+          "bytes": 104857600,
+          "reason": "superseded"
+        },
+        {
+          "path": "/s/b/p/prototype/build/x/2",
+          "bytes": 104857600,
+          "reason": "pressure"
+        }
+      ]
+    },
+    {
+      "name": "a full image sheds under pressure while an image with room loses only its superseded units",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/1",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3456000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3564000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/3",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3582000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/4",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3596400000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/x/1",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3456000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/x/2",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3564000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/x/3",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3582000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/x/4",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3596400000,
+          "held": false
+        }
+      ],
+      "mounts": [
+        {
+          "prefix": "/s/u/l/pa",
+          "id": "pa"
+        },
+        {
+          "prefix": "/s/u/l/pb",
+          "id": "pb"
+        }
+      ],
+      "needs": {
+        "pa": 157286400,
+        "pb": 0
+      },
+      "remove": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/1",
+          "bytes": 104857600,
+          "reason": "superseded"
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/x/1",
+          "bytes": 104857600,
+          "reason": "superseded"
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "bytes": 104857600,
+          "reason": "pressure"
+        }
+      ]
+    },
+    {
+      "name": "a held unit of a full image stays and the next oldest goes",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/1",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3456000000,
+          "held": true
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3564000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/3",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3582000000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/4",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3596400000,
+          "held": false
+        }
+      ],
+      "mounts": [
+        {
+          "prefix": "/s/u/l/pa",
+          "id": "pa"
+        }
+      ],
+      "needs": {
+        "pa": 52428800
+      },
+      "remove": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "bytes": 104857600,
+          "reason": "pressure"
+        }
+      ]
+    },
+    {
+      "name": "a budget applies to its image alone",
+      "nowMs": 3600000000,
+      "units": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/1",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3571200000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3574800000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/3",
+          "crate": "x",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3578400000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/y/1",
+          "crate": "y",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3571200000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/y/2",
+          "crate": "y",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3574800000,
+          "held": false
+        },
+        {
+          "path": "/s/u/l/pb/prototype/build/y/3",
+          "crate": "y",
+          "profile": "prototype",
+          "bytes": 104857600,
+          "lastUsedMs": 3578400000,
+          "held": false
+        }
+      ],
+      "mounts": [
+        {
+          "prefix": "/s/u/l/pa",
+          "id": "pa"
+        },
+        {
+          "prefix": "/s/u/l/pb",
+          "id": "pb"
+        }
+      ],
+      "needs": {},
+      "budgets": {
+        "pa": 157286400,
+        "pb": 419430400
+      },
+      "remove": [
+        {
+          "path": "/s/u/l/pa/prototype/build/x/1",
+          "bytes": 104857600,
+          "reason": "pressure"
+        },
+        {
+          "path": "/s/u/l/pa/prototype/build/x/2",
+          "bytes": 104857600,
+          "reason": "pressure"
+        }
+      ]
+    }
+  ]
 }

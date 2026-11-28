@@ -1,0 +1,178 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
+@@ -17,7 +17,7 @@
+ import{nxFailedTaskTailsV1}from"../../../🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
+ import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+ import{createPartitionCensusMirrorV1}from"./🧱️partition-census/🟦️.ts";
+-import{READY_IMAGE_POLICY_V1,readyImageFactsV1,readyImageGuardV1,readyImagePartitionOfLinesV1,readyImagePurposeV1,readyImageRecheckDueV1,readyImageReliefV1,readyImageRetainBytesV1,readyImageShortV1,readyImageStoreV1,readyImageWritersV1,readyNoSpaceEvidenceV1,type ReadyImageShortV1}from"./🖼️image-guard/🟦️.ts";
++import{READY_IMAGE_POLICY_V1,readyImageFactsV1,readyImageNeedBytesV1,readyImageRowV1,readyImageVerdictV1,readyImagePartitionOfLinesV1,readyImagePurposeV1,readyImageRecheckDueV1,readyImageReliefV1,readyImageRetainBytesV1,readyImageShortV1,readyImageStoreV1,readyImageWritersV1,readyNoSpaceEvidenceV1,type ReadyImageShortV1}from"./🖼️image-guard/🟦️.ts";
+ import{createTicketGeneratedSweepV1}from"./🧹️ticket-generated/🟦️.ts";
+ import{fleetHostReadingV1}from"../../../🧠️memory/🟨️.mjs";
+ import{READY_SLICE_REPORT_POLICY_V1,ownedSliceReportV1,prepareOwnedSliceReportV1}from"../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
+@@ -1193,7 +1193,7 @@
+   let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
+   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
+   const progressEvery=Math.max(1,Math.round(P.progressMilliseconds/P.pollMilliseconds)),sampleEvery=Math.max(1,Math.round(P.samplerMilliseconds/P.pollMilliseconds)),mirrorEvery=Math.max(1,Math.round(P.mirrorMilliseconds/P.pollMilliseconds)),diskEvery=Math.max(1,Math.round(P.diskGuard.checkMilliseconds/P.pollMilliseconds)),imageEvery=Math.max(1,Math.round(READY_IMAGE_POLICY_V1.checkMilliseconds/P.pollMilliseconds));
+-  let settling:Promise<void>|undefined,diskHit:ReadyDiskGuardHitV1|undefined,collecting:Promise<void>|undefined,collectedAt=0;
++  let settling:Promise<void>|undefined,diskHit:ReadyDiskGuardHitV1|undefined,collecting:Promise<void>|undefined,collectedAt=0,floorSince:number|null=null,floorCollectedAt=0;
+   const settle=():Promise<void>=>settling??=(async()=>{
+    if(!owns())return;
+    const result=await readyStopV1({root:rootOf(),known,policy:contain,grace:killed?P.graceMilliseconds:contain.terminateGraceMilliseconds,spare,record:recorder(killed?killReason:"settle"),...windows?{}:{group:inflight.pid}});
+@@ -1307,9 +1307,15 @@
+    if(finishing)return;
+    if(!killed&&tick%diskEvery===0){const path=machinePathV1(input.root,".cache"),hit=readyDiskGuardV1(path,(input.facts??readyFilesystemFactsV1)(path));if(hit!==null&&kill("cancel")){diskHit=hit;say(readyDiskGuardLineV1(hit));}}
+    if(!killed&&tick%imageEvery===0){
+-    const images=readyImageFactsV1(input.root,inflight.stage,input.facts??readyFilesystemFactsV1),hit=readyImageGuardV1(images);
+-    if(hit!==null){if(kill("cancel")){diskHit=hit;say(readyDiskGuardLineV1(hit));}}
+-    else if(input.collectImage!==undefined&&collecting===undefined&&Date.now()-collectedAt>=READY_IMAGE_POLICY_V1.reliefRetryMilliseconds){
++    const images=readyImageFactsV1(input.root,inflight.stage,input.facts??readyFilesystemFactsV1),verdict=readyImageVerdictV1(images,{belowSinceMs:floorSince,collecting:collecting!==undefined,collectedAtMs:floorCollectedAt},Date.now(),input.collectImage!==undefined);
++    if(verdict.hit===null)floorSince=null;else floorSince??=Date.now();
++    if(verdict.action==="stop"){const hit=verdict.hit!;if(kill("cancel")){diskHit=hit;say(readyDiskGuardLineV1(hit));say(`image ${hit.path} can still grow by ${verdict.growableMegabytes} MB: the next start grows it before the stage runs again / Image ${hit.path} kann noch um ${verdict.growableMegabytes} MB wachsen: der nächste Start vergrößert es, bevor die Stufe wieder läuft`);}}
++    else if(verdict.action==="collect"&&collecting===undefined){
++     const image=verdict.image!,floorRow=readyImageRowV1(image,readyImageNeedBytesV1(image.totalBytes));
++     collectedAt=Date.now();say(`image ${floorRow.path} has ${floorRow.available} MB free of ${floorRow.total} MB, below its floor of ${verdict.hit!.floor} MB: collecting inside it before the stage is stopped (it can still grow by ${verdict.growableMegabytes} MB at the next start) / Image ${floorRow.path} hat ${floorRow.available} MB frei von ${floorRow.total} MB, unter der Grenze von ${verdict.hit!.floor} MB: darin wird gesammelt, bevor die Stufe gestoppt wird (es kann beim nächsten Start noch um ${verdict.growableMegabytes} MB wachsen)`);
++     collecting=input.collectImage!(floorRow,input.signal).catch(()=>{}).finally(()=>{collecting=undefined;floorCollectedAt=Date.now();});
++    }
++    else if(verdict.hit===null&&input.collectImage!==undefined&&collecting===undefined&&Date.now()-collectedAt>=READY_IMAGE_POLICY_V1.reliefRetryMilliseconds){
+      const low=readyImageReliefV1(images);
+      if(low!==null){collectedAt=Date.now();say(`image ${low.path} has ${low.available} MB free of ${low.total} MB, below its low-water mark of ${low.needed} MB: collecting inside it while the stage runs / Image ${low.path} hat ${low.available} MB frei von ${low.total} MB, unter der Untergrenze von ${low.needed} MB: während die Stufe läuft wird darin gesammelt`);collecting=input.collectImage(low,input.signal).catch(()=>{}).finally(()=>{collecting=undefined;});}
+     }
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🟦️.ts
+@@ -95,6 +95,10 @@
+  }catch{return[];}
+ }
+ 
++/** 📋️ The row of an image that is short of `neededBytes` (megabytes in the row, as every short disk): the one shape the refusals, the relief and the in-place collection of a running stage take. Pure and language-agnostic. */
++export function readyImageRowV1(image:ReadyImageFactV1,neededBytes:number,policy=READY_IMAGE_POLICY_V1):ReadyImageShortV1{
++ return Object.freeze({partition:image.partition,path:image.path,resource:"space" as const,needed:Math.ceil(neededBytes/MB),available:Math.floor(image.freeBytes/MB),total:Math.floor(image.totalBytes/MB),host:typeof image.hostFreeBytes==="number"?Math.floor(image.hostFreeBytes/MB):null,limitedByHost:readyImageHostLimitedV1(image,policy)});
++}
+ /** 🚫️ The image that lacks the most of its need before a stage starts (the smallest share of its need free), `null` when every image holds its need. Pure and language-agnostic. */
+ export function readyImageShortV1(images:readonly ReadyImageFactV1[],policy=READY_IMAGE_POLICY_V1):ReadyImageShortV1|null{
+  let worst:{image:ReadyImageFactV1;need:number}|null=null;
+@@ -114,6 +118,28 @@
+  return null;
+ }
+ 
++/** 🌱️ The bytes an image can still grow by at the next stage start (the heal grows it while nothing holds it): its sparse capacity up to `growCapMegabytes`, cut to what the host keeps free beyond `growKeepMegabytes`; 0 for an image of an unknown host or one at its cap. Pure and language-agnostic. */
++export function readyImageGrowableBytesV1(image:Pick<ReadyImageFactV1,"totalBytes"|"hostFreeBytes">,policy=READY_IMAGE_POLICY_V1):number{
++ const host=image.hostFreeBytes;
++ if(typeof host!=="number")return 0;
++ return Math.max(0,Math.min(policy.growCapMegabytes*MB-image.totalBytes,host-policy.growKeepMegabytes*MB));
++}
++
++/** 🧭️ What the guard does about one tick of a running stage: `ok` (no image below its floor), `collect` (an image is below its floor and a collector may still help: start it in place), `wait` (the collection works and the grace is not over), `stop` (below the hard floor, no collector, the grace is over or the collection ended with the image still below its floor). The hit carries the image, how far it may still grow and whether the image is only as roomy as the host. */
++export type ReadyImageVerdictV1=Readonly<{action:"ok"|"collect"|"wait"|"stop";hit:ReadyImageGuardV1|null;image:ReadyImageFactV1|null;growableMegabytes:number}>;
++/** 🧭️ State between ticks: when the image first fell below its floor (`null` while above), whether a collection runs and when the last one ended (0 = none). */
++export type ReadyImageVerdictStateV1=Readonly<{belowSinceMs:number|null;collecting:boolean;collectedAtMs:number}>;
++/** 🧭️ Decides one tick of the in-run guard: the first image below its floor is collected in place before the stage is stopped; the stage is stopped at once only below `floorHardBasisPoints` of the floor (a burst the collector cannot outrun) or when no collector exists, and otherwise after the collection ended (or `floorGraceMilliseconds` passed) with the image still below its floor. Pure and language-agnostic.
++ * @see ./🧬️schema/🔣️.json */
++export function readyImageVerdictV1(images:readonly ReadyImageFactV1[],state:ReadyImageVerdictStateV1,nowMs:number,collector:boolean,policy=READY_IMAGE_POLICY_V1):ReadyImageVerdictV1{
++ const hit=readyImageGuardV1(images,policy);
++ if(hit===null)return Object.freeze({action:"ok" as const,hit:null,image:null,growableMegabytes:0});
++ const image=images.find(row=>row.path===hit.path)??null,growableMegabytes=image===null?0:Math.floor(readyImageGrowableBytesV1(image,policy)/MB),since=state.belowSinceMs??nowMs,verdict=(action:ReadyImageVerdictV1["action"])=>Object.freeze({action,hit,image,growableMegabytes});
++ if(image===null||!collector||image.freeBytes<Math.floor(readyImageFloorBytesV1(image.totalBytes,policy)*policy.floorHardBasisPoints/10000))return verdict("stop");
++ if(state.collecting)return verdict(nowMs-since>=policy.floorGraceMilliseconds?"stop":"wait");
++ return verdict(state.collectedAtMs>=since?"stop":"collect");
++}
++
+ /** 🔍️ The partition a failed write names: the last line that says no space was left, or the line before it (Cargo says `failed to write <path>` and then `Caused by: No space left`), is searched for a path below `.cache/b/<partition>/m`; `null` when no such path is named. Pure and language-agnostic. */
+ export function readyImagePartitionOfLinesV1(lines:readonly string[],noSpace:readonly string[],policy=READY_IMAGE_POLICY_V1):string|null{
+  const own=new RegExp(`[\\\\/]${policy.directory.map(part=>part.replaceAll(".","\\.")).join("[\\\\/]")}[\\\\/]([A-Za-z0-9]+)[\\\\/]${policy.mount}(?=[\\\\/\`'"\\s:]|$)`,"u");
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🧬️schema/🔣️.json
+@@ -19,6 +19,14 @@
+         "floorMinimumMegabytes": 128,
+         "floorMaximumMegabytes": 3072,
+         "floorShareBasisPoints": 2500,
++        "floorHardBasisPoints": 5000,
++        "floorGraceMilliseconds": 60000,
++        "growCapMegabytes": 32768,
++        "growKeepMegabytes": 3072,
++        "floorRule": {
++          "en": "The guard floor is a function of the image size alone: floorBasisPoints of the image, at least floorMinimumMegabytes, at most floorMaximumMegabytes, never above floorShareBasisPoints of the image (so 4 % of a 19.3 GB image is 771 MB and 4 % of a 32 GiB image is 1311 MB). It never depends on what lanes or collectors hold. Below the floor a stage with a collector is not stopped at once: the image is collected in place first and the stage runs on while that works (at most floorGraceMilliseconds); only below floorHardBasisPoints of the floor, or when the collection ended and the image is still below the floor, is the stage stopped. A stopped image is grown by the heal before the next start (growCapMegabytes, host free kept: growKeepMegabytes), so the stop names how much it can still grow.",
++          "de": "Die Wächtergrenze ist allein eine Funktion der Image-Größe: floorBasisPoints des Images, mindestens floorMinimumMegabytes, höchstens floorMaximumMegabytes, nie über floorShareBasisPoints des Images (4 % eines 19,3-GB-Images sind also 771 MB, 4 % eines 32-GiB-Images 1311 MB). Sie hängt nie davon ab, was Lanes oder Sammler halten. Unter der Grenze wird eine Stufe mit Sammler nicht sofort gestoppt: zuerst wird im Image an Ort und Stelle gesammelt, und die Stufe läuft währenddessen weiter (höchstens floorGraceMilliseconds); erst unter floorHardBasisPoints der Grenze oder wenn das Sammeln endete und das Image noch unter der Grenze liegt, wird die Stufe gestoppt. Ein gestopptes Image wird vor dem nächsten Start vom Heilen vergrößert (growCapMegabytes, Wirts-Frei bleibt: growKeepMegabytes), der Stopp nennt also, wie viel es noch wachsen kann."
++        },
+         "needBasisPoints": 1000,
+         "needMinimumMegabytes": 256,
+         "needMaximumMegabytes": 6144,
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🖼️image-guard/🧪️tests/🟦️.ts
+@@ -7,7 +7,7 @@
+ import{join}from"node:path";
+ import{READY_IMAGE_POLICY_V1 as P,readyImageFactsV1,readyImageFloorBytesV1,readyImageGuardV1,readyImageHostLimitedV1,readyImageNeedBytesV1,readyImagePartitionOfLinesV1,readyImagePurposeV1,readyImageRecheckDueV1,readyImageRetainBytesV1,readyImageShortV1,readyImageWritersV1}from"../🟦️.ts";
+ 
+-import{readyImageReliefBytesV1,readyImageReliefV1,readyImageStoreV1,readyNoSpaceEvidenceV1}from"../🟦️.ts";
++import{readyImageGrowableBytesV1,readyImageReliefBytesV1,readyImageReliefV1,readyImageRowV1,readyImageStoreV1,readyImageVerdictV1,readyNoSpaceEvidenceV1}from"../🟦️.ts";
+ import{appendNativeImageShardEventV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
+ import{writeFileSync}from"node:fs";
+ const MB=1048576,GB=1024*MB;
+@@ -179,3 +179,68 @@
+   expect(readyImageStoreV1(join(workspace,"elsewhere"))).toBe(join(workspace,"elsewhere"));
+  }finally{rmSync(workspace,{recursive:true,force:true});}
+ });
++
++const fact=(partition:string,freeMegabytes:number,totalMegabytes:number,hostFreeMegabytes:number|null=null)=>({partition,path:`/w/.cache/b/${partition}/m/u/sealed`,freeBytes:freeMegabytes*MB,totalBytes:totalMegabytes*MB,hostFreeBytes:hostFreeMegabytes===null?null:hostFreeMegabytes*MB});
++
++test("the floor is a declared function of the image size: the floors the fleet printed (771 MB and 1311 MB) are 4 % of a 19275 MB and of a 32768 MB image, whatever the lanes hold",()=>{
++ expect(readyImageFloorBytesV1(19275*MB)).toBe(771*MB);
++ expect(Math.ceil(readyImageFloorBytesV1(32768*MB)/MB)).toBe(1311);
++ expect(readyImageFloorBytesV1(512*MB)).toBe(128*MB);
++ expect(readyImageFloorBytesV1(200000*MB)).toBe(3072*MB);
++ expect(P.floorRule.en).toContain("function of the image size alone");
++ expect(P.floorRule.de).toContain("Funktion der Image-Größe");
++});
++
++test("m02 and m15 of 11-27: an image 17 to 98 MB under its floor is collected in place before the stage is stopped, and stopped only when the collection ended without room",()=>{
++ const idle={belowSinceMs:null,collecting:false,collectedAtMs:0};
++ const m02=[fact("r",673,19275,30000)],m15=[fact("r",1294,32768,40000)];
++ for(const images of[m02,m15]){
++  const first=readyImageVerdictV1(images,idle,1000,true);
++  expect(first.action).toBe("collect");
++  expect(first.hit).not.toBeNull();
++  expect(readyImageVerdictV1(images,idle,1000,false).action).toBe("stop");
++  expect(readyImageVerdictV1(images,{belowSinceMs:1000,collecting:true,collectedAtMs:0},20000,true).action).toBe("wait");
++  expect(readyImageVerdictV1(images,{belowSinceMs:1000,collecting:true,collectedAtMs:0},1000+P.floorGraceMilliseconds,true).action).toBe("stop");
++  expect(readyImageVerdictV1(images,{belowSinceMs:1000,collecting:false,collectedAtMs:30000},31000,true).action).toBe("stop");
++  expect(readyImageVerdictV1(images,{belowSinceMs:1000,collecting:false,collectedAtMs:500},31000,true).action).toBe("collect");
++ }
++ expect(readyImageVerdictV1([fact("r",1294+60,32768,40000)],{belowSinceMs:1000,collecting:false,collectedAtMs:30000},31000,true).action).toBe("ok");
++ expect(readyImageVerdictV1([fact("r",300,19275,30000)],idle,1000,true).action).toBe("stop");
++ expect(readyImageVerdictV1([],idle,1000,true).action).toBe("ok");
++});
++
++test("the verdict and the growable bytes equal an independent Python model over a seeded table",()=>{
++ const rows:number[][]=[];let seed=7;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return Math.floor(seed/65536)%limit;};
++ for(let index=0;index<300;index++){const total=[512,2047,12287,19275,32768,40959][next(6)]!,free=next(Math.floor(total/10)),host=[-1,2000,5000,20000,60000][next(5)]!,since=[-1,0,5000][next(3)]!,collecting=next(2),collected=[0,3000,9000][next(3)]!,now=[10000,70000][next(2)]!,collector=next(2);rows.push([total,free,host,since,collecting,collected,now,collector]);}
++ const script=`
++import json,sys
++p=json.loads(sys.argv[1]);rows=json.loads(sys.argv[2]);out=[];MB=1048576
++def clamp(v,lo,hi): return max(lo,min(hi,v))
++for total,free,host,since,collecting,collected,now,collector in rows:
++    t=total*MB;f=free*MB
++    floor=min(t*p["floorShareBasisPoints"]//10000,clamp(t*p["floorBasisPoints"]//10000,p["floorMinimumMegabytes"]*MB,p["floorMaximumMegabytes"]*MB))
++    grow=0 if host<0 else max(0,min(p["growCapMegabytes"]*MB-t,host*MB-p["growKeepMegabytes"]*MB))
++    if f>=floor: out.append(["ok",0]);continue
++    s=now if since<0 else since
++    if not collector or f<floor*p["floorHardBasisPoints"]//10000: a="stop"
++    elif collecting: a="stop" if now-s>=p["floorGraceMilliseconds"] else "wait"
++    else: a="stop" if collected>=s else "collect"
++    out.append([a,grow//MB])
++print(json.dumps(out))`;
++ const run=spawnSync("python3",["-I","-c",script,JSON.stringify(P),JSON.stringify(rows)],{encoding:"utf8"});
++ expect(run.status).toBe(0);
++ const model=JSON.parse(run.stdout) as[string,number][];
++ const mine=rows.map(([total,free,host,since,collecting,collected,now,collector])=>{const verdict=readyImageVerdictV1([fact("r",free!,total!,host!<0?null:host!)],{belowSinceMs:since!<0?null:since!,collecting:collecting===1,collectedAtMs:collected!},now!,collector===1);return[verdict.action,verdict.action==="ok"?0:verdict.growableMegabytes];});
++ expect<unknown>(mine).toEqual(model);
++ for(const action of["collect","wait","stop"])expect(model.filter(row=>row[0]===action).length,action).toBeGreaterThan(3);
++});
++
++test("growable bytes count the sparse capacity the heal can still add: capped at the image maximum, cut to what the host keeps free, zero for an unknown host",()=>{
++ expect(readyImageGrowableBytesV1({totalBytes:19275*MB,hostFreeBytes:100*1024*MB})).toBe((32768-19275)*MB);
++ expect(readyImageGrowableBytesV1({totalBytes:19275*MB,hostFreeBytes:5000*MB})).toBe((5000-3072)*MB);
++ expect(readyImageGrowableBytesV1({totalBytes:19275*MB,hostFreeBytes:1000*MB})).toBe(0);
++ expect(readyImageGrowableBytesV1({totalBytes:32768*MB,hostFreeBytes:100*1024*MB})).toBe(0);
++ expect(readyImageGrowableBytesV1({totalBytes:19275*MB,hostFreeBytes:null})).toBe(0);
++ const row=readyImageRowV1(fact("r",673,19275,30000),readyImageNeedBytesV1(19275*MB));
++ expect(row.available).toBe(673);expect(row.total).toBe(19275);expect(row.needed).toBe(1928);
++});

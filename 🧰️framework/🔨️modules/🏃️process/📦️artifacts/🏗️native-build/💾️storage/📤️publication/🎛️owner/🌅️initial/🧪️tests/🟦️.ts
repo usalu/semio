@@ -13,7 +13,8 @@ import{validateJsonSchemaSubset}from"./../../../../../../../../🧬️schema/✅
 import publicationSchema from"./../../../🧬️schema/🔣️.json"with{type:"json"};
 import receiptSchema from"./../../../../🧬️schema/🔣️.json"with{type:"json"};
 import mountSchema from"./../../../../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json"with{type:"json"};
-import{test,expect}from"bun:test";
+import{test,expect,afterAll}from"bun:test";
+import{tmpdir}from"node:os";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{applyPatch}from"fast-json-patch";
@@ -30,11 +31,11 @@ test("fresh mounted predecessor metadata grammar agrees with independent SQLite"
 });
 
 
+const generated=mkdtempSync(join(tmpdir(),"semio-initial-metadata-"));afterAll(()=>{rmSync(generated,{recursive:true,force:true});});
 /** 🧪️ Models only Native issuance and kernel information; all metadata descriptor IO uses the real first-party implementation. */
 test("mounted helper metadata effects keep actual descriptor roots and fresh parent proofs",async()=>{
  const api=await import("../🟦️.ts");
  if(process.platform==="win32"){await expect(api.retireInitialNativeMountedPublicationMetadataV1({directory:"C:\\cache",leaseDirectory:"C:\\leases",filesystemBytes:67108864,maximumPhysicalBytes:68157440,maximumLogicalBytes:67108864,control:{}}as never,{}as never,{}as never,{}as never)).rejects.toThrow();return;}
- const generated=join(process.cwd(),".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated");mkdirSync(generated,{recursive:true});
  const stamp=(row:BigIntStats)=>JSON.stringify([row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].map(String)),identity=(row:BigIntStats)=>({dev:String(row.dev),ino:String(row.ino),mode:Number(row.mode)}),hash=(value:Uint8Array)=>createHash("sha256").update(value).digest("hex"),escape=(value:string)=>value.replace(/&/gu,"&amp;").replace(/</gu,"&lt;").replace(/>/gu,"&gt;");
  for(const names of [[],["intent.json"],["intent.json","receipt.json"]]){
   const directory=mkdtempSync(join(generated,"mi-")),namespace=join(directory,".publication"),root=join(directory,"m");mkdirSync(namespace,{mode:0o700});mkdirSync(root,{mode:0o700});writeFileSync(join(directory,"fixed.dmg"),"owned descriptor fixture",{mode:0o600});for(const name of names)writeFileSync(join(namespace,name),Buffer.from([0xef,0xbb,0xbf,0xf0,0x9f]),{mode:0o600});

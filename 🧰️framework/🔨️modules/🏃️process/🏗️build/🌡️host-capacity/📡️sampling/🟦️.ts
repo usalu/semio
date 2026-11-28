@@ -112,7 +112,7 @@ export function reduceHostSampleV1(policy:HostCapacityPolicyV1,facts:Readonly<{p
  const physical=facts.physicalMegabytes??facts.totalMegabytes,pressureTotal=constrained===null?physical:Math.min(physical,constrained);
  const share=(megabytes(counters.availableBytes)??pressureTotal)*10000/pressureTotal,fromAvailable=share<policy.pressure.availableCriticalBasisPoints?"critical" as const:share<policy.pressure.availableWarnBasisPoints?"warn" as const:"normal" as const;
  const fromStall=counters.stallPercent===null?undefined:counters.stallPercent>=policy.pressure.psiCriticalPercent?"critical" as const:counters.stallPercent>=policy.pressure.psiWarnPercent?"warn" as const:"normal" as const;
- const squeeze=counters.compressedBytes==null?0:counters.compressedBytes*10000/(physical*MEGABYTE),fromCompressed=squeeze>=policy.pressure.compressedCriticalBasisPoints?"critical" as const:squeeze>=policy.pressure.compressedWarnBasisPoints?"warn" as const:"normal" as const;
+ const squeeze=counters.compressedBytes==null?0:counters.compressedBytes*10000/(physical*MEGABYTE),fromCompressed=share>=policy.pressure.availableWarnBasisPoints?"normal" as const:squeeze>=policy.pressure.compressedCriticalBasisPoints?"critical" as const:squeeze>=policy.pressure.compressedWarnBasisPoints?"warn" as const:"normal" as const;
  const rank={normal:0,warn:1,critical:2} as const,pressure=([counters.pressureLevel??fromStall??"normal",fromAvailable,fromCompressed] as const).reduce((worst,level)=>rank[level]>rank[worst]?level:worst);
  const swappedOut=megabytes(counters.swappedOutBytes),seconds=previous===undefined?0:(facts.atMs-previous.atMs)/1000,rate=previous!==undefined&&seconds>0&&swappedOut!==null&&previous.swappedOutMegabytes!==null?Math.max(0,Math.round((swappedOut-previous.swappedOutMegabytes)/seconds*100)/100):null;
  return Object.freeze({version:1,atMs:facts.atMs,platform:facts.platform,cores:facts.cores,totalMegabytes:total,availableMegabytes:Math.floor(available),pressure,swapUsedMegabytes:megabytes(counters.swapUsedBytes),swapOutMegabytesPerSecond:rate,load:facts.load,openFiles:counters.openFiles,openFilesMaximum:counters.openFilesMaximum,attachedImages:counters.attachedImages,...counters.compressedBytes==null?{}:{compressedMegabytes:megabytes(counters.compressedBytes)!},...counters.partial?{counters:"partial" as const}:{}});
@@ -332,7 +332,13 @@ export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=
   if(charged.some(value=>value!==null)){const resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes*1024] as const));return Math.floor(members.reduce((total,member,index)=>total+(charged[index]??resident.get(member)??0),0)/MEGABYTE);}
  }
  const tool=OBSERVERS.platforms.darwin.footprint;let failure:(language:"en"|"de")=>string=()=>"footprint printed no process";
- const text=await run(tool.command,[...tool.arguments,...members.flatMap(member=>[tool.pidFlag,String(member)])]).catch((error:unknown)=>{failure=reason(error);const partial=(error as {stdout?:unknown})?.stdout;return typeof partial==="string"?partial:"";}),bytes=parseFootprintV1(text);
+ const partialOf=(error:unknown):string=>{const partial=(error as {stdout?:unknown})?.stdout;return typeof partial==="string"?partial:"";};
+ const text=await run(tool.command,[...tool.arguments,...members.flatMap(member=>[tool.pidFlag,String(member)])]).catch((error:unknown)=>{failure=reason(error);return partialOf(error);});
+ let bytes=parseFootprintV1(text);
+ if(bytes.size<members.length&&members.length>1&&members.length<=LIMITS.footprintRetryMembers){
+  const each=await Promise.all(members.map(member=>run(tool.command,[...tool.arguments,tool.pidFlag,String(member)]).catch(partialOf)));
+  bytes=new Map([...bytes,...each.flatMap(one=>[...parseFootprintV1(one)])]);
+ }
  if(!bytes.size){fallback(failure);return treeMegabytesV1(rows,pid,scope);}
  const resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes*1024] as const));
  return Math.floor(members.reduce((total,member)=>total+(bytes.get(member)??resident.get(member)??0),0)/MEGABYTE);

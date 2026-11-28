@@ -48,7 +48,8 @@
           "waitMilliseconds": 180000,
           "pollMilliseconds": 1000,
           "cancelledFactorBasisPoints": 12500,
-          "cancelledMemoryMilliseconds": 3600000
+          "cancelledMemoryMilliseconds": 3600000,
+          "cancelsShareMilliseconds": 1000
         },
         "growth": {
           "description": "Grant growth: a unit that needs more than the parent memory grant asks the host for a supplementary reservation of the difference (the fair queue of the host capacity gate decides against free memory, the warden thresholds and the interactive reserve) and waits for it at most `waitMilliseconds` (a unit that fits the grant by itself and only misses the driver's own memory waits at most `overheadWaitMilliseconds` and then runs alone with the rest of the grant), printing a progress line every `progressMilliseconds`. A unit that no memory this host can ever hold carries is queued for a larger machine; a unit that no machine of the fleet can hold is refused. `fleetDirectory` is the folder below the fleet store that holds one `memory.json` per origin.",
@@ -65,11 +66,11 @@
           "progressMilliseconds": 30000
         },
         "bounds": {
-          "description": "Every client-to-broker request ends in a verdict, never in silence: a unit that waits in the broker queue is told so every `heartbeatMilliseconds` (the wrapper treats `silenceMilliseconds` without any line as a lost broker, drops the connection, and sends the request again, at most `attempts` times with a growing pause, so a request survives a broker that restarted); estimating the memory of a unit is bounded by `predictMilliseconds`; a grant growth by its own wait plus `growthGraceMilliseconds`; a unit that waits with nothing running for `stallMilliseconds` runs alone beside the budget it cannot get; a unit that waits longer than `queueMilliseconds` is refused; a running unit whose scheduler sends no report (its resident memory is reported every second) for `runningSilenceMilliseconds` is taken for lost, its connection is closed and its memory booking is given back, so a wedged wrapper cannot hold the budget for ever. The Rust scheduler keeps `silenceMilliseconds` and `attempts` as constants and a test compares them.",
+          "description": "Every client-to-broker request ends in a verdict, never in silence: a unit that waits in the broker queue is told so every `heartbeatMilliseconds` (the wrapper treats `silenceMilliseconds` without any line as a lost broker, drops the connection, and sends the request again, at most `attempts` times with a growing pause, so a request survives a broker that restarted); estimating the memory of a unit is bounded by `predictMilliseconds` and never fails the unit: a stalled estimate is replaced by a conservative forecast (the unit ceiling of its class, or its recorded peak when higher) and the unit is queued as a cold one, so the connection is never closed for it; a grant growth by its own wait plus `growthGraceMilliseconds`; a unit that waits with nothing running for `stallMilliseconds` runs alone beside the budget it cannot get; a unit that waits longer than `queueMilliseconds` is refused; a running unit whose scheduler sends no report (its resident memory is reported every second) for `runningSilenceMilliseconds` is taken for lost, its connection is closed and its memory booking is given back, so a wedged wrapper cannot hold the budget for ever. The Rust scheduler keeps `silenceMilliseconds` and `attempts` as constants and a test compares them.",
           "heartbeatMilliseconds": 30000,
           "silenceMilliseconds": 180000,
           "attempts": 5,
-          "predictMilliseconds": 120000,
+          "predictMilliseconds": 10000,
           "growthGraceMilliseconds": 30000,
           "stallMilliseconds": 90000,
           "queueMilliseconds": 2700000,
@@ -203,7 +204,7 @@
               "crate": "semio_s_artifact_stdio_dwg_snapshot_document",
               "target": "wasm32-wasip2",
               "measuredMegabytes": 2317,
-              "budgetMegabytes": 2550,
+              "budgetMegabytes": 2549,
               "action": "split-families"
             },
             {
@@ -412,8 +413,8 @@
             {
               "crate": "semio_s_artifact_process_process3d_harness",
               "target": "host",
-              "measuredMegabytes": 2033,
-              "budgetMegabytes": 2237,
+              "measuredMegabytes": 2256,
+              "budgetMegabytes": 2482,
               "action": "split-tests"
             },
             {
@@ -540,6 +541,20 @@
               "target": "wasm32-wasip2",
               "measuredMegabytes": 1911,
               "budgetMegabytes": 2103,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_process_editor_app",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1900,
+              "budgetMegabytes": 2090,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_process_viewer_app",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1642,
+              "budgetMegabytes": 1806,
               "action": "split-app-fleet"
             },
             {
@@ -728,7 +743,7 @@
             "growth": "unit {unit} waits for a wider memory grant: it needs about {predicted} MB; waited {seconds} s",
             "stalled": "unit {unit} waited {seconds} s with nothing running although it needs about {predicted} MB and the budget is {budget} MB: it runs alone now so that the build cannot stand still",
             "expired": "unit {unit} waited {seconds} s in the broker queue, longer than the bound of {minutes} min: it is refused so that the build ends instead of waiting for ever; retry on a quieter host or a fleet worker",
-            "late": "unit {unit}: the broker did not finish estimating its memory within {seconds} s, the request is dropped and the compiler asks again",
+            "late": "unit {unit}: the broker did not finish estimating its memory within {seconds} s (stuck at {stage}), the unit is admitted on a conservative forecast",
             "silent": "unit {unit} sent no report for {seconds} s while it should be running: its scheduler is taken for lost, the connection is closed and its memory booking is given back",
             "row": "[capacity]   unit wait, pid {pid}: {text}"
           },
@@ -765,7 +780,7 @@
             "growth": "Einheit {unit} wartet auf eine größere Speicherzuteilung: sie braucht etwa {predicted} MB; {seconds} s gewartet",
             "stalled": "Einheit {unit} wartete {seconds} s, obwohl nichts lief: sie braucht etwa {predicted} MB und das Budget beträgt {budget} MB; sie läuft jetzt allein, damit der Bau nicht stillsteht",
             "expired": "Einheit {unit} wartete {seconds} s in der Warteschlange des Brokers, länger als die Grenze von {minutes} min: sie wird abgelehnt, damit der Bau endet, statt ewig zu warten; auf einem ruhigeren Host oder einem Flotten-Worker erneut versuchen",
-            "late": "Einheit {unit}: der Broker hat die Speicherschätzung nicht innerhalb von {seconds} s abgeschlossen, die Anfrage wird verworfen und der Compiler fragt erneut",
+            "late": "Einheit {unit}: der Broker hat die Speicherschätzung nicht innerhalb von {seconds} s abgeschlossen (hängt bei {stage}), die Einheit wird mit einer konservativen Prognose zugelassen",
             "silent": "Einheit {unit} hat seit {seconds} s nichts gemeldet, obwohl sie laufen sollte: ihr Scheduler gilt als verloren, die Verbindung wird geschlossen und ihre Speicherbuchung zurückgegeben",
             "row": "[capacity]   Einheit wartet, pid {pid}: {text}"
           },

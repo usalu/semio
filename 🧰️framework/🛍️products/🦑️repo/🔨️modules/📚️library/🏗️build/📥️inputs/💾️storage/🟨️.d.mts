@@ -6,6 +6,8 @@ import type {RepositoryCacheNativeVerificationObserversV1,RepositoryCacheStoreV1
 /** 🎟️ Runs producers within original fixed-volume custody. */
 export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🎯️ Holds one selected inference namespace within the original graph writer. */
+/** ⏱️ The cancellation of one inline optional-cache eviction: the lease control or the declared budget. */
+export function optionalEvictionCancelV1(control:{readonly signal:AbortSignal},options?:{budgetMilliseconds?:number;now?:()=>number}):()=>boolean;
 export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,options?:Readonly<{optionalCaches?:boolean;shared?:boolean}>):Promise<T>;
 /** 🔒️ Checks live writer custody before synchronous publication. */
 export function requireRepositoryBuildGraphWriterV1(workspace:string):void;

@@ -25,6 +25,31 @@ pub struct ColdPreparationBounds<S, M> {
     pub maximum_bytes: usize,
     pub mutation_bytes: fn(&M) -> usize,
     pub snapshot_bytes: fn(&S) -> usize,
+    pub heap_quote: fn(&S, &M) -> ColdHeapQuote,
+}
+
+/// 📐️ The declared worst-case heap of one cold decide, invert and apply turn: bytes copied, bytes still owned afterwards, and transient bytes allocated and freed inside the turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ColdHeapQuote {
+    pub copy_bytes: usize,
+    pub capacity_bytes: usize,
+    pub transient_bytes: usize,
+}
+
+impl ColdHeapQuote {
+    pub const REFERENCE_FACTOR: usize = 4;
+    pub const REFERENCE_FIXED_BYTES: usize = 4096;
+
+    /// 📐️ The reference bound every domain measure starts from: four clones of the measured base and mutation plus one page, for owned and transient heap alike.
+    pub fn reference(snapshot_bytes: usize, mutation_bytes: usize) -> Self {
+        let measured = snapshot_bytes.saturating_add(mutation_bytes);
+        let bound = measured.saturating_mul(Self::REFERENCE_FACTOR).saturating_add(Self::REFERENCE_FIXED_BYTES);
+        Self { copy_bytes: measured.saturating_mul(2).saturating_add(Self::REFERENCE_FIXED_BYTES), capacity_bytes: bound, transient_bytes: bound }
+    }
+
+    pub fn demand(self, copy_bytes: usize) -> RetirementDemand {
+        RetirementDemand { copy_bytes, capacity_bytes: self.capacity_bytes, release_bytes: self.transient_bytes, depth: 1 }
+    }
 }
 
 impl<S, M> Clone for ColdPreparationBounds<S, M> {
@@ -51,7 +76,7 @@ impl<S: 'static, M, Projection> Default for ColdMutationApplyFactory<S, M, Proje
     }
 }
 
-impl<S: 'static, M> ColdMutationApplyFactory<S, M> {
+impl<S: 'static, M, Projection> ColdMutationApplyFactory<S, M, Projection> {
     pub fn bounded(bounds: ColdPreparationBounds<S, M>) -> Self {
         Self { marker: PhantomData, bounds: Some(bounds) }
     }
@@ -461,6 +486,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
 
 /// ✏️ Decides, inverts and applies one cold mutation in place on the owned post projection in one funded turn.
 pub struct ColdReplayEdit<S: 'static, M: 'static> {
+    bounds: Option<ColdPreparationBounds<S, M>>,
     last_work: u64,
     operation_index: u32,
     applied: bool,
@@ -472,7 +498,16 @@ pub struct ColdReplayEdit<S: 'static, M: 'static> {
 
 impl<S: 'static, M: 'static> Default for ColdReplayEdit<S, M> {
     fn default() -> Self {
-        Self { last_work: 0, operation_index: 0, applied: false, failed: false, closing: false, closed: false, marker: PhantomData }
+        Self { bounds: None, last_work: 0, operation_index: 0, applied: false, failed: false, closing: false, closed: false, marker: PhantomData }
+    }
+}
+
+impl<S: 'static, M: 'static> ColdReplayEdit<S, M> {
+    fn funded_demand(&self, before: &S, input: &M) -> RetirementDemand {
+        match self.bounds {
+            Some(bounds) => (bounds.heap_quote)(before, input).demand(size_of::<S>()),
+            None => RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() },
+        }
     }
 }
 
@@ -494,17 +529,18 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         PagedOneItemPostMode::Mutable
     }
 
-    fn demands(&self, _before: RetainedCloneRef<'_, S>, _input: RetainedCloneRef<'_, M>, _post: PagedOneItemPostRead<'_, S>, _body: usize) -> Result<RetirementDemand, ValueError> {
-        Ok(RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() })
+    fn demands(&self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, _post: PagedOneItemPostRead<'_, S>, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(self.funded_demand(before.get(), input.get()))
     }
 
     fn advance(&mut self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_, S>, _body: usize, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SemanticEditStep<M>, ValueError> {
         self.last_work = 0;
+        let funded = self.funded_demand(before.get(), input.get());
         let demand = RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() };
         if self.failed {
             return Err(fault("cold replay edit refused after a failed in-place application"));
         }
-        if self.closing || self.applied || !retained_clone_grant_admits(grant, demand) {
+        if self.closing || self.applied || !retained_clone_grant_admits(grant, funded) {
             return Ok(SemanticEditStep::Progress(RetainedCloneProgress::default()));
         }
         let post = post.mutable()?;
@@ -631,7 +667,7 @@ where
             return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "cold replay producer birth not funded"), request));
         }
         let projection = Projection::for_replay(self.bounds);
-        let edit = ColdReplayEdit::<S, M> { operation_index: request.context.operation_index, ..Default::default() };
+        let edit = ColdReplayEdit::<S, M> { bounds: self.bounds, operation_index: request.context.operation_index, ..Default::default() };
         let producer = NativeSemanticPreparation::new(request, projection, edit);
         Ok((Box::new(producer), RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }))
     }

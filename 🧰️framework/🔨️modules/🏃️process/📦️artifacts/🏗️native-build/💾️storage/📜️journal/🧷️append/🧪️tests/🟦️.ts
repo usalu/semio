@@ -69,9 +69,9 @@ test("a journal that never settles ends after the bounded attempts with a biling
   const path=join(directory,"storage-events.jsonl");writeFileSync(path,"x\n");
   const hostile=async<T>(opener:()=>Promise<Awaited<ReturnType<typeof open>>>,body:(file:Awaited<ReturnType<typeof open>>)=>Promise<T>):Promise<T>=>{appendFileSync(path,"y\n");return withDescriptor(opener,body);};
   let observations=0;
-  const error=await retireChildFundingJournalV1({path,first:"x\n",observe:async()=>{observations++;return readFileSync(path,"utf8");},suffixFor:()=>"z\n",limit:1048576,check,withDescriptor:hostile}).catch((value:unknown)=>value as Error&{kind:string;texts:{en:string;de:string}});
+  const error=await retireChildFundingJournalV1({path,first:"x\n",observe:async()=>{observations++;return readFileSync(path,"utf8");},suffixFor:()=>"z\n",limit:1048576,check,withDescriptor:hostile}).catch((value:unknown)=>value);
   expect(observations).toBe(childFundingJournalAttemptsV1-1);
-  expect(error.kind).toBe("changed");expect(error.texts.de).toContain("Versuche");
+  expect(error).toBeInstanceOf(Error);expect(Reflect.get(error as object,"kind")).toBe("changed");expect(Reflect.get(Reflect.get(error as object,"texts"),"de")).toContain("Versuche");
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 

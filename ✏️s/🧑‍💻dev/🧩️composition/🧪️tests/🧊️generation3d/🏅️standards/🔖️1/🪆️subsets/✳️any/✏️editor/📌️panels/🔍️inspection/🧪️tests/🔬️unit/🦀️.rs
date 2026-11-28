@@ -99,7 +99,7 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
                 host.connect_ports(&source, connection["port"].as_str().unwrap(), &selected, channel).unwrap();
             }
             host.host_snapshot.clone()
-        });
+        }).expect("the evaluation host binds its snapshot");
         std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
         let before = semio_framework_pack_json::to_json_string(&*snapshot);
         let outputs = case["outputs"].as_array().unwrap().iter().map(|row| (row["port"].as_str().unwrap().to_string(), row["value"].clone())).collect::<serde_json::Map<_, _>>();
@@ -161,7 +161,7 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
             let projected = with_host(&snapshot.host_snapshot, |host| {
                 host.set_neuron_params("selected", &serde_json::json!({(channel):{"$schema":"text","value":serde_json::to_string(&values).unwrap()}}).to_string()).unwrap();
                 host.host_snapshot.clone()
-            });
+            }).expect("the evaluation host binds its snapshot");
             std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
             let before = semio_framework_pack_json::to_json_string(&*snapshot);
             for (locale, labels) in [(Locale::En, &Generation3dLabels::NATIVE_EN), (Locale::De, &Generation3dLabels::NATIVE_DE)] {

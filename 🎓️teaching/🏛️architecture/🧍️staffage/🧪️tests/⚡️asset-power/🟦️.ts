@@ -10,7 +10,7 @@ import { catalogAsset, catalogIds } from "../../🧫️fixtures/🌡️thermal/�
 import { POWER_TOLERANCE_W, powerOf, totalPowerW, validateAsset, validateManifest } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const manifest = manifestDocument as unknown as Manifest;
-const assets = catalogIds().map(catalogAsset);
+const assets = catalogIds().map((id) => catalogAsset(id, false));
 const twoDecimals = (value: number): number => Math.round(value * 100) / 100;
 
 const metabolicWithMathjs = (asset: Asset): number => {

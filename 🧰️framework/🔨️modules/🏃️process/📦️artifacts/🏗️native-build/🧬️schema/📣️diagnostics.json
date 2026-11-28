@@ -11,7 +11,8 @@
         "repoCargoAdmittedShared": "[repo cargo] shared store, {tokens} of {cores} cores admitted, rustc memory budget {budget} GiB",
         "repoCargoAdmittedIsolated": "[repo cargo] isolated store, {tokens} of {cores} cores admitted, rustc memory budget {budget} GiB",
         "provenanceReading": "[cargo-provenance] reading build records: {work} file operation(s), {bytes} of {totalBytes} bytes",
-        "recipeReading": "[cargo-target-recipe] reading the target recipe inputs: {work} file operation(s), {bytes} of {totalBytes} bytes"
+        "recipeReading": "[cargo-target-recipe] reading the target recipe inputs: {work} file operation(s), {bytes} of {totalBytes} bytes",
+        "jobserverRetirementFailed": "[repo cargo] warning: the job token pool could not be removed ({path}), the build result is kept: {reason}"
       },
       "de": {
         "diagnosticsHidden": "[cargo] {count} Diagnosezeile(n) nicht angezeigt",
@@ -20,7 +21,8 @@
         "repoCargoAdmittedShared": "[repo cargo] gemeinsamer Speicher, {tokens} von {cores} Kernen zugelassen, rustc-Speicherbudget {budget} GiB",
         "repoCargoAdmittedIsolated": "[repo cargo] isolierter Speicher, {tokens} von {cores} Kernen zugelassen, rustc-Speicherbudget {budget} GiB",
         "provenanceReading": "[cargo-provenance] Build-Dateien werden gelesen: {work} Dateivorgang/-vorgänge, {bytes} von {totalBytes} Bytes",
-        "recipeReading": "[cargo-target-recipe] Eingaben des Target-Rezepts werden gelesen: {work} Dateivorgang/-vorgänge, {bytes} von {totalBytes} Bytes"
+        "recipeReading": "[cargo-target-recipe] Eingaben des Target-Rezepts werden gelesen: {work} Dateivorgang/-vorgänge, {bytes} von {totalBytes} Bytes",
+        "jobserverRetirementFailed": "[repo cargo] Warnung: der Jobtoken-Pool konnte nicht entfernt werden ({path}), das Build-Ergebnis bleibt erhalten: {reason}"
       }
     }
   }

@@ -421,6 +421,13 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-retaining-wall-soil-gamma | ✏️change-retaining-wall-soil-gamma | ✅apply  |
       | change-retaining-wall-r | ✏️change-retaining-wall-r | ✅apply  |
       | change-retaining-wall-h-rd-n-per-m | ✏️change-retaining-wall-h-rd-n-per-m | ✅apply  |
+      | insert-case                  | ➕️insert-case                  | ✅apply  |
+      | remove-case                  | ➖️remove-case                  | ✅apply  |
+      | change-case-number           | 🔢️change-case-number           | ✅apply  |
+      | change-case-text             | 🔤️change-case-text             | ✅apply  |
+      | change-case-label-en         | 🏷️change-case-label-en         | ✅apply  |
+      | change-case-label-de         | 🏷️change-case-label-de         | ✅apply  |
+      | change-case-entry-id         | 📇️change-case-entry-id         | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -795,6 +802,13 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-retaining-wall-soil-gamma | ✏️change-retaining-wall-soil-gamma | ✅apply  |
       | change-retaining-wall-r | ✏️change-retaining-wall-r | ✅apply  |
       | change-retaining-wall-h-rd-n-per-m | ✏️change-retaining-wall-h-rd-n-per-m | ✅apply  |
+      | insert-case                  | ➕️insert-case                  | ✅apply  |
+      | remove-case                  | ➖️remove-case                  | ✅apply  |
+      | change-case-number           | 🔢️change-case-number           | ✅apply  |
+      | change-case-text             | 🔤️change-case-text             | ✅apply  |
+      | change-case-label-en         | 🏷️change-case-label-en         | ✅apply  |
+      | change-case-label-de         | 🏷️change-case-label-de         | ✅apply  |
+      | change-case-entry-id         | 📇️change-case-entry-id         | ✅apply  |
 
   @id-identity-round-trip
   @level-long

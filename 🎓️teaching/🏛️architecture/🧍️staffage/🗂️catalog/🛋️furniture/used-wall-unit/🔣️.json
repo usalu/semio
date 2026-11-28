@@ -13192,11 +13192,11 @@
       "role": "body",
       "tone": 0.35,
       "repeat": {
-       "count": 3,
+       "count": 2,
        "translation": [
         0,
         0,
-        0.9
+        1.8
        ]
       },
       "kind": "extrude",
@@ -13261,6 +13261,75 @@
       ],
       "from": -1.35,
       "to": -0.45
+     },
+     {
+      "id": "blankets-mid",
+      "bone": "blankets",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.35,
+      "kind": "extrude",
+      "plane": "xy",
+      "profile": [
+       [
+        0.006,
+        0
+       ],
+       [
+        0.554,
+        0
+       ],
+       [
+        0.557,
+        0.000804
+       ],
+       [
+        0.559196,
+        0.003
+       ],
+       [
+        0.56,
+        0.006
+       ],
+       [
+        0.559196,
+        0.009
+       ],
+       [
+        0.557,
+        0.011196
+       ],
+       [
+        0.554,
+        0.012
+       ],
+       [
+        0.006,
+        0.012
+       ],
+       [
+        0.003,
+        0.011196
+       ],
+       [
+        0.000804,
+        0.009
+       ],
+       [
+        0,
+        0.006
+       ],
+       [
+        0.000804,
+        0.003
+       ],
+       [
+        0.003,
+        0.000804
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
      }
     ],
     "thermal": [
@@ -13392,6 +13461,11 @@
      {
       "id": "th-blankets",
       "of": "blankets",
+      "region": "blankets"
+     },
+     {
+      "id": "th-blankets-mid",
+      "of": "blankets-mid",
       "region": "blankets"
      },
      {
@@ -13846,6 +13920,12 @@
       "part": "member"
      },
      {
+      "id": "m-blankets-mid",
+      "of": "blankets-mid",
+      "member": "blankets",
+      "part": "member"
+     },
+     {
       "id": "m-flap",
       "of": "flap-slab",
       "member": "flap",
@@ -14113,8 +14193,8 @@
       "de": "Der Körper 1:50 ist die Schrankwand, wie sie gebaut ist: je Teil zwei 19-mm-Seiten bis zum Boden, Boden, Deckel und feste Böden dazwischen, die 3-mm-Hartfaserrückwand 8 mm vor der Hinterkante, die 51 mm zurückgesetzte Sockelblende, der profilierte Kranz 60 x 70 mm; verstellbare Böden innen; jede Tür- und Schubkastenfront eine 11-mm-Platte mit 8 mm erhabenem Fräsrahmen; Glastüren mit 55-mm-Rahmen und 4-mm-Scheiben; zwei Schubkästen mit Kästen, 4-mm-Böden und Rollenauszügen; die Barklappe an ihrem äußeren Unterkantenband mit zwei 6-mm-Haltern durch ihre Bremsführungen; Spiegelrückwand und Glasboden in der Bar; zwei Glasböden in der Vitrine; gedrechselte Knöpfe, der Chrom-Ersatzbügelgriff, der fehlende Knopf der oberen TV-Tür, der 60-mm-Kabeldurchlass; drei auf 12 mm gefaltete Decken mit runden Falzen."
      },
      {
-      "en": "Thermal 1:50: the boards are their own surfaces (references); the fronts are own solids that close the 3 mm running gaps, so the closed cabinets are sealed; the glass panes are the glazing, the 35 W line lamp a hidden solid under the bar top. Structure 1:50: the carcass boards are the members of each body, the flap slab, the stays, the drawer boxes and the blankets theirs; flap hinges, stay pins, runners and guides are joints; the plinths of the two end bodies are the supports, the centre body stands on its contact; masses at the centres of the three bodies.",
-      "de": "Thermik 1:50: die Platten sind ihre eigenen Oberflächen (Verweise); die Fronten sind eigene Körper, die die 3-mm-Fugen schließen, sodass die geschlossenen Fächer dicht sind; die Glasscheiben sind die Verglasung, die 35-W-Linienlampe ein verborgener Körper unter dem Bardeckel. Tragwerk 1:50: die Korpusplatten sind die Stäbe jedes Teils, Klappenplatte, Halter, Schubkastenkästen und Decken die ihren; Klappenbänder, Halterbolzen, Auszüge und Führungen sind Gelenke; die Sockel der zwei Endteile sind die Auflager, das Mittelteil steht auf seinem Kontakt; Massen in den Schwerpunkten der drei Teile."
+      "en": "Thermal 1:50: the boards are their own surfaces (references); the fronts are own solids that close the 3 mm running gaps, so the closed cabinets are sealed; the glass panes are the glazing, the 35 W line lamp a hidden solid under the bar top. Structure 1:50: the carcass boards are the members of each body, the flap slab, the stays, the drawer boxes and the blankets theirs; flap hinges, stay pins, runners and guides are joints; the plinths of the two end bodies are the supports, the centre body stands on its contact; masses at the centres of the three bodies. The three blankets are two solids, the outer pair and the middle one, so that no solid has copies that share a face.",
+      "de": "Thermik 1:50: die Platten sind ihre eigenen Oberflächen (Verweise); die Fronten sind eigene Körper, die die 3-mm-Fugen schließen, sodass die geschlossenen Fächer dicht sind; die Glasscheiben sind die Verglasung, die 35-W-Linienlampe ein verborgener Körper unter dem Bardeckel. Tragwerk 1:50: die Korpusplatten sind die Stäbe jedes Teils, Klappenplatte, Halter, Schubkastenkästen und Decken die ihren; Klappenbänder, Halterbolzen, Auszüge und Führungen sind Gelenke; die Sockel der zwei Endteile sind die Auflager, das Mittelteil steht auf seinem Kontakt; Massen in den Schwerpunkten der drei Teile. Die drei Decken sind zwei Körper, das äußere Paar und die mittlere, damit kein Körper Kopien mit gemeinsamer Fläche hat."
      }
     ]
    },
@@ -15727,11 +15807,11 @@
       "tone": 0.35,
       "sheet": true,
       "repeat": {
-       "count": 3,
+       "count": 2,
        "translation": [
         0,
         0,
-        0.9
+        1.8
        ]
       },
       "kind": "extrude",
@@ -15756,6 +15836,36 @@
       ],
       "from": -1.35,
       "to": -0.45
+     },
+     {
+      "id": "blankets-mid-100",
+      "bone": "blankets",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.35,
+      "sheet": true,
+      "kind": "extrude",
+      "plane": "xy",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.56,
+        0
+       ],
+       [
+        0.56,
+        0.012
+       ],
+       [
+        0,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
      }
     ],
     "thermal": [
@@ -15887,6 +15997,11 @@
      {
       "id": "th-blankets",
       "of": "blankets-100",
+      "region": "blankets"
+     },
+     {
+      "id": "th-blankets-mid",
+      "of": "blankets-mid-100",
       "region": "blankets"
      },
      {
@@ -16094,6 +16209,12 @@
      {
       "id": "m-blankets",
       "of": "blankets-100",
+      "member": "blankets",
+      "part": "member"
+     },
+     {
+      "id": "m-blankets-mid",
+      "of": "blankets-mid-100",
       "member": "blankets",
       "part": "member"
      },
@@ -16347,8 +16468,8 @@
       "de": "Körper 1:100, für 15 mm gebaut: Platten wie bei 1:50, Fronten als glatte 19-mm-Platten (das 8-mm-Relief liegt unter dem Merkmal), Knöpfe als Zylinder 30 x 25 mm, der Chromgriff als Block, Schubkastenkästen als Blöcke, der Kranz mit zwei Stufen, Führungen und Schubkastenböden entfallen; Glas, Spiegel, Rückwände und Decken als dünne Bleche erklärt."
      },
      {
-      "en": "Thermal 1:100 references the body (the 3 mm gaps are below a quarter feature and closed by the flood). Structure 1:100: the boards, flap, stays, drawer blocks and blankets as members, 15 mm hinge and pin joints, supports and masses.",
-      "de": "Thermik 1:100 verweist auf den Körper (die 3-mm-Fugen liegen unter einem Viertel Merkmal und sind für die Flutung zu). Tragwerk 1:100: Platten, Klappe, Halter, Schubkastenblöcke und Decken als Stäbe, 15-mm-Band- und Bolzengelenke, Auflager und Massen."
+      "en": "Thermal 1:100 references the body (the 3 mm gaps are below a quarter feature and closed by the flood). Structure 1:100: the boards, flap, stays, drawer blocks and blankets as members, 15 mm hinge and pin joints, supports and masses. The three blankets are two solids, the outer pair and the middle one, so that no solid has copies that share a face.",
+      "de": "Thermik 1:100 verweist auf den Körper (die 3-mm-Fugen liegen unter einem Viertel Merkmal und sind für die Flutung zu). Tragwerk 1:100: Platten, Klappe, Halter, Schubkastenblöcke und Decken als Stäbe, 15-mm-Band- und Bolzengelenke, Auflager und Massen. Die drei Decken sind zwei Körper, das äußere Paar und die mittlere, damit kein Körper Kopien mit gemeinsamer Fläche hat."
      }
     ]
    },
@@ -17225,11 +17346,11 @@
       "tone": 0.35,
       "sheet": true,
       "repeat": {
-       "count": 3,
+       "count": 2,
        "translation": [
         0,
         0,
-        0.9
+        1.8
        ]
       },
       "kind": "extrude",
@@ -17254,6 +17375,36 @@
       ],
       "from": -1.35,
       "to": -0.45
+     },
+     {
+      "id": "blankets-mid-200",
+      "bone": "blankets",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.35,
+      "sheet": true,
+      "kind": "extrude",
+      "plane": "xy",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.56,
+        0
+       ],
+       [
+        0.56,
+        0.012
+       ],
+       [
+        0,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
      }
     ],
     "thermal": [
@@ -17305,6 +17456,11 @@
      {
       "id": "th-blankets",
       "of": "blankets-200",
+      "region": "blankets"
+     },
+     {
+      "id": "th-blankets-mid",
+      "of": "blankets-mid-200",
       "region": "blankets"
      },
      {
@@ -17788,6 +17944,12 @@
       "part": "member"
      },
      {
+      "id": "m-blankets-mid",
+      "of": "blankets-mid-200",
+      "member": "blankets",
+      "part": "member"
+     },
+     {
       "id": "m-flap",
       "of": "flap-slab",
       "member": "flap",
@@ -18009,8 +18171,8 @@
       "de": "Körper 1:200, für 30 mm gebaut: jeder Korpus ist ein 19-mm-Rohr aus Seiten und Böden mit einem Loch je Fach (nach seinen Gesamtmaßen beurteilt), hinten von der Hartfaserplatte geschlossen; Fronten sind 30-mm-Platten, die Glastüren 30-mm-Rahmen mit Scheibe; die Schubkästen Front- und Kastenblöcke; der Kranz ein Band 60 x 70 mm; Spiegel, Barboden und Vitrinenböden bleiben dünne Bleche; Knöpfe, Griff, Halter und die verdeckten Böden entfallen."
      },
      {
-      "en": "Thermal 1:200 references the tubes, fronts, glass, backs, cornice and blankets. Structure 1:200: the side panels and boards as 19 mm declared sheets, the backs, the flap, the drawer blocks, the stays as 6 mm rods, the blankets, 30 mm hinge joints, supports and masses.",
-      "de": "Thermik 1:200 verweist auf Rohre, Fronten, Glas, Rückwände, Kranz und Decken. Tragwerk 1:200: Seiten und Böden als erklärte 19-mm-Bleche, die Rückwände, die Klappe, die Schubkastenblöcke, die Halter als 6-mm-Stangen, die Decken, 30-mm-Bandgelenke, Auflager und Massen."
+      "en": "Thermal 1:200 references the tubes, fronts, glass, backs, cornice and blankets. Structure 1:200: the side panels and boards as 19 mm declared sheets, the backs, the flap, the drawer blocks, the stays as 6 mm rods, the blankets, 30 mm hinge joints, supports and masses. The three blankets are two solids, the outer pair and the middle one, so that no solid has copies that share a face.",
+      "de": "Thermik 1:200 verweist auf Rohre, Fronten, Glas, Rückwände, Kranz und Decken. Tragwerk 1:200: Seiten und Böden als erklärte 19-mm-Bleche, die Rückwände, die Klappe, die Schubkastenblöcke, die Halter als 6-mm-Stangen, die Decken, 30-mm-Bandgelenke, Auflager und Massen. Die drei Decken sind zwei Körper, das äußere Paar und die mittlere, damit kein Körper Kopien mit gemeinsamer Fläche hat."
      }
     ]
    },
@@ -18764,11 +18926,11 @@
       "tone": 0.35,
       "sheet": true,
       "repeat": {
-       "count": 3,
+       "count": 2,
        "translation": [
         0,
         0,
-        0.9
+        1.8
        ]
       },
       "kind": "extrude",
@@ -18793,6 +18955,36 @@
       ],
       "from": -1.35,
       "to": -0.45
+     },
+     {
+      "id": "blankets-mid-500",
+      "bone": "blankets",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.35,
+      "sheet": true,
+      "kind": "extrude",
+      "plane": "xy",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.56,
+        0
+       ],
+       [
+        0.56,
+        0.012
+       ],
+       [
+        0,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
      }
     ],
     "thermal": [
@@ -18844,6 +19036,11 @@
      {
       "id": "th-blankets",
       "of": "blankets-500",
+      "region": "blankets"
+     },
+     {
+      "id": "th-blankets-mid",
+      "of": "blankets-mid-500",
       "region": "blankets"
      },
      {
@@ -19327,6 +19524,12 @@
       "part": "member"
      },
      {
+      "id": "m-blankets-mid",
+      "of": "blankets-mid-500",
+      "member": "blankets",
+      "part": "member"
+     },
+     {
       "id": "m-flap",
       "of": "flap-slab",
       "member": "flap",
@@ -19509,8 +19712,8 @@
       "de": "Körper 1:500, für 75 mm gebaut: die Korpusrohre enden 75 mm hinter der Frontebene, die Fronten sind 75-mm-Platten (Türen, Schubkästen, Klappe, Glastürrahmen), der Kranz ein Band 75 x 75 mm auf einem 15 mm niedrigeren Korpus, Rückwände, Vitrinenglas und Decken dünne Bleche; Spiegel und Glasböden entfallen. Das Modell ist minimal: weniger Teile verlören Klappe und Schubkästen, die sich bewegen."
      },
      {
-      "en": "Thermal 1:500 references the body; the lamp is a 75 mm block in the bar. Structure 1:500: side panels and boards as declared 19 mm sheets, backs, flap, drawers, stays, blankets, supports and masses; the hinges are below the feature and merged into the flap member.",
-      "de": "Thermik 1:500 verweist auf den Körper; die Lampe ist ein 75-mm-Block in der Bar. Tragwerk 1:500: Seiten und Böden als erklärte 19-mm-Bleche, Rückwände, Klappe, Schubkästen, Halter, Decken, Auflager und Massen; die Bänder liegen unter dem Merkmal und gehen im Klappenstab auf."
+      "en": "Thermal 1:500 references the body; the lamp is a 75 mm block in the bar. Structure 1:500: side panels and boards as declared 19 mm sheets, backs, flap, drawers, stays, blankets, supports and masses; the hinges are below the feature and merged into the flap member. The three blankets are two solids, the outer pair and the middle one, so that no solid has copies that share a face.",
+      "de": "Thermik 1:500 verweist auf den Körper; die Lampe ist ein 75-mm-Block in der Bar. Tragwerk 1:500: Seiten und Böden als erklärte 19-mm-Bleche, Rückwände, Klappe, Schubkästen, Halter, Decken, Auflager und Massen; die Bänder liegen unter dem Merkmal und gehen im Klappenstab auf. Die drei Decken sind zwei Körper, das äußere Paar und die mittlere, damit kein Körper Kopien mit gemeinsamer Fläche hat."
      }
     ]
    }

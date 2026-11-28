@@ -295,3 +295,19 @@ fn context_menu_projections_return_their_aliases_and_the_host_view_retires_throu
     }
     drain(contexts);drain(view);
 }
+
+/// 🔒️ An open original view capture is observable, so the reactor can hold every registry mutation until it is released instead of aborting on the lease.
+#[test]
+fn an_open_capture_is_reported_held_until_it_is_released_and_then_the_registry_mutates_again(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();
+    let mut contexts=SurfaceContexts::default();
+    assert!(!contexts.capture_held());
+    contexts.cached_capture=Some(1);
+    assert!(contexts.capture_held());
+    contexts.cached_capture=None;
+    assert!(!contexts.capture_held());
+    contexts.insert("7:left".into(),"graph".into(),view.for_window_instance("left").unwrap()).unwrap();
+    assert!(contexts.borrow("7:left").is_some());
+    drain(contexts);drain(view);
+}

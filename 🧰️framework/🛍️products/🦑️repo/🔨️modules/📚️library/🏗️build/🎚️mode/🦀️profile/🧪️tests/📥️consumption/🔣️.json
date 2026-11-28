@@ -2180,7 +2180,7 @@
         "debug": 0,
         "codegen-units": 16,
         "incremental": false,
-        "lto": "off",
+        "lto": "thin",
         "debug-assertions": false,
         "overflow-checks": false,
         "strip": "symbols",

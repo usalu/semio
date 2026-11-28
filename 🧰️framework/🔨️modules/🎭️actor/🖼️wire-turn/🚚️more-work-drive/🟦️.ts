@@ -111,14 +111,15 @@ export function shardTurnDriveBudgetMsV1(grantWallMs: number, guestTurnCostMs: n
  * no events and returned no patch** (`📓️ui-turn-patch-batching-2026-09-15.md` §7 item 2).
  *
  * The drive owns that pump. It re-enters the guest until the turn produces something the host can act
- * on, and it crosses back for exactly five other reasons, each named by its stop tag:
+ * on, and it crosses back for exactly six other reasons, each named by its stop tag:
  *
  * | stop | means |
  * |---|---|
  * | `carried` | the turn produced something for the host — the ONLY reason the host is told anything |
  * | `idle` | the guest stopped answering `more-work` |
  * | `input` | a host-owned input is pending behind the drive — an ingress message, a cancel, a view-state change — and the drive may not hold the wire while the host has something to say |
- * | `steps` | the derived step ceiling is spent |
+ * | `batched` | the host crosses the next event of the same batch right away, so pumping an empty answer now only delays it |
+| `steps` | the derived step ceiling is spent |
  * | `closed` | the actor was disposed or re-activated under a new generation |
  *
  * A result is only ever discarded when {@link shardTurnCarriesNothingV1} admits it, so the drive is
@@ -132,15 +133,17 @@ export async function driveShardTurnMoreWorkV1(drive: {
   readonly now: () => number;
   readonly live: () => boolean;
   readonly inputPending: () => boolean;
+  readonly batched?: boolean;
   readonly steps: number;
   readonly budgetMs: number;
-}): Promise<{ readonly result: ShardTurnCarriers; readonly polls: number; readonly stopped: "carried" | "idle" | "input" | "steps" | "budget" | "closed" }> {
+}): Promise<{ readonly result: ShardTurnCarriers; readonly polls: number; readonly stopped: "carried" | "idle" | "input" | "steps" | "budget" | "closed" | "batched" }> {
   const deadline = drive.now() + drive.budgetMs;
   let result = drive.first;
   let polls = 0;
   for (;;) {
     if (wireTurnStatusTag(result.status) !== "more-work") return { result, polls, stopped: "idle" };
     if (!shardTurnCarriesNothingV1(result)) return { result, polls, stopped: "carried" };
+    if (drive.batched === true) return { result, polls, stopped: "batched" };
     if (drive.inputPending()) return { result, polls, stopped: "input" };
     if (!drive.live()) return { result, polls, stopped: "closed" };
     if (drive.now() >= deadline) return { result, polls, stopped: "budget" };

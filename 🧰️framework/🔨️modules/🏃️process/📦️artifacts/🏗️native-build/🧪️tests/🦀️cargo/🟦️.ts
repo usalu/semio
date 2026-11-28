@@ -117,8 +117,9 @@ export async function buildThroughBrokerV1(options: Readonly<{ manifest: string;
   try {
     const slot = await pool.acquire();
     let stderr = "";
+    const { RUSTC: _compiler, RUSTC_WRAPPER: _wrapper, RUSTC_WORKSPACE_WRAPPER: _workspaceWrapper, ...inherited } = process.env;
     const exit = await pool.withClient(async environment => {
-      const child = spawn(registeredToolExecutableV1("cargo"), ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { env: { ...process.env, ...environment, RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
+      const child = spawn(registeredToolExecutableV1("cargo"), ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { cwd: dirname(options.manifest), env: { ...inherited, ...environment, RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
       child.stderr!.on("data", (chunk) => { stderr += chunk; });
       return new Promise<number>((accept) => child.once("close", (code) => accept(code ?? 1)));
     });

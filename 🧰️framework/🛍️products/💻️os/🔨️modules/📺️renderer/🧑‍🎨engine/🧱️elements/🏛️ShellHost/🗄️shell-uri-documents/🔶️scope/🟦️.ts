@@ -20,7 +20,7 @@ import { logUnlessRetiredV1, requiredHostPanelLeafId } from "../../🧱️built-
 import { pluginInstanceWasRetiredV1 } from "../../../🔌️PluginRuntime/🪦️instance-retirement/🟦️.ts";
 import type { ShellCoreAfterApplyHostEffects } from "../../⚡️host-effects/🟦️.ts";
 
-/** 🎯️ The session an export or sync addresses: the active spawned program, unless its instance is RETIRED (its windows closed, its channel disposed), in which case the primary session stays the target. */
+/** 🎯️ The session an export or sync addresses: the active spawned program while its instance lives; once that instance is RETIRED (windows closed, channel disposed) the newest spawned program still alive, and the primary session only when none remains. */
 export function resolveSyncTargetSessionV1({ session, panel, hostMode, loadedPlugins, retired }: {
   readonly session: ActiveSession | null;
   readonly panel: ReturnType<typeof parsePanelState> | null | undefined;
@@ -29,12 +29,13 @@ export function resolveSyncTargetSessionV1({ session, panel, hostMode, loadedPlu
   readonly retired: (pluginId: string, instanceId: number) => boolean;
 }): ActiveSession | null {
   if (!session) return null;
-  if (hostMode && panel?.activeSpawnedId) {
-    const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-    if (spawned && !retired(spawned.pluginId, spawned.instanceId)) {
-      const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-      if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
-    }
+  if (!hostMode || !panel?.activeSpawnedId) return session;
+  const active = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+  const candidates = [...(active ? [active] : []), ...[...panel.spawnedApps].reverse().filter((entry) => entry !== active)];
+  for (const spawned of candidates) {
+    if (retired(spawned.pluginId, spawned.instanceId)) continue;
+    const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+    if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
   }
   return session;
 }

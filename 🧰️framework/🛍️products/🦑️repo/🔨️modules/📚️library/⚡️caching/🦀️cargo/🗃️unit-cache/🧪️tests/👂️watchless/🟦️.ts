@@ -9,7 +9,7 @@ import cases from "./🔣️.json" with {type:"json"};
 const fake=()=>({on:()=>undefined,close:()=>undefined}) as never;
 
 for(const row of cases.cases)test(`a waiter on ${row.platform} opens ${row.watchesOpened} directory watches and ${row.waitsAtMostWatchlessPoll?"sleeps at most the watchless poll":"sleeps the whole fallback"}`,async()=>{
- const opened:string[]=[],listener=watchChangesV1(Array.from({length:row.directories},(_,index)=>`/d${index}`),{platform:row.platform,watch:(directory=>{opened.push(String(directory));return fake();}) as never}),started=Date.now();
+ const opened:string[]=[],listener=watchChangesV1(Array.from({length:row.directories},(_,index)=>`/d${index}`),{platform:row.platform,watch:((directory:unknown)=>{opened.push(String(directory));return fake();}) as never}),started=Date.now();
  expect(opened.length).toBe(row.watchesOpened);
  await listener.wait(row.waitsAtMostWatchlessPoll?3000:60,undefined);
  const slept=Date.now()-started;

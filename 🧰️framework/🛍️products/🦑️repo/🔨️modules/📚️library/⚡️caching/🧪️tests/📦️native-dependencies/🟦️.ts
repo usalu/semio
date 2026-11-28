@@ -19,7 +19,7 @@ import{readNxAuthorizerSourceV1}from"../../🚀️bootstrap/🛠️tools/🔏️
 import {nativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 /** 🏗️ Proves native preparation is an uncached, application-independent build leaf against Cargo and esbuild. */
-export async function testNativeDependencies(workspace: string, output: string,invocation:ScriptInvocation,parent:ResourceLeaseControl,storageRoot:string=workspace): Promise<void> {
+export async function testNativeDependencies(workspace: string, output: string,invocation:ScriptInvocation,parent:ResourceLeaseControl,storageRoot:string=workspace,probeBudget?:number): Promise<void> {
   requireIssuedResourceControlInvocationV1(parent,invocation);
   await testWasmBindgenToolSelection(workspace,parent);
   const require = createRequire(join(workspace, "package.json")), vectors = resolve(import.meta.dir, "../🧫️fixtures/📦️native-dependencies");
@@ -45,7 +45,8 @@ export async function testNativeDependencies(workspace: string, output: string,i
   const transportFor=(phase:ReturnType<typeof nativeCallerPhaseV1>)=>({maximumBytes:Math.min(fixture.originalNativeControl.native.transport.maximumBytes,phase.authority.transport.maximumBytes),maximumLines:Math.min(fixture.originalNativeControl.native.transport.maximumLines,phase.authority.transport.maximumLines)});
   const identity=async(cwd:string,signal:AbortSignal)=>{const phase=phaseFor(controller.signal);assert.equal(signal,phase.leaseControl.signal);return captureOwnedCommandV1("cargo",["--version"],cwd,{control:phase.leaseControl,env:phase.options(process.env).env,output:transportFor(phase)});};
   const preparationFor=(signal:AbortSignal)=>{const phase=phaseFor(signal);return{leaseControl:phase.leaseControl,signal:phase.leaseControl.signal,async advance(event:unknown){await phase.advance(JSON.stringify(event));const continuation=phase.leaseControl.yieldContinuation;if(!continuation)throw Error("Issued Native continuation required");await continuation();progress.push("yield");},childBudget:(requested:number)=>Math.min(requested,phase.budget()),childOptions:(environment:Readonly<Record<string,string|undefined>>)=>({...phase.options(environment),signal:phase.leaseControl.signal,output:transportFor(phase)})};};
-  const stop = (): void => controller.abort(), timer = setTimeout(() => controller.abort(new Error("Native synchronization probe exceeded 90s")), 90000);
+  const probeMilliseconds = probeBudget ?? fixture.originalNativeControl.maximumElapsedMilliseconds;fixture.originalNativeControl.maximumElapsedMilliseconds = probeMilliseconds;
+  const stop = (): void => controller.abort(), timer = setTimeout(() => controller.abort(new Error("Native synchronization probe exceeded "+Math.round(probeMilliseconds/1000)+"s")), probeMilliseconds);
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   let passed = false;
   const authorCargoFixture = (): void => { for (const [path, contents] of Object.entries(fixture.cargo.files)) writeFileSync(join(root, path), contents as string); };
@@ -206,7 +207,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
       const script=row.kind==="read-race"?initial.replace('observeCargoPreparationInputV1(input,"file",bytes);','writeFileSync(input,"8");observeCargoPreparationInputV1(input,"file",bytes);'):row.kind==="unknown"?initial.replace("completeCargoPreparationObservationV1();",""):row.kind==="member"?initial.replace(String.raw`member-manifests = [\"Cargo.toml\", \"generated/Cargo.toml\"]`,String.raw`member-manifests = [\"Cargo.toml\", \"generated/Cargo.toml\", \"additional/*/Cargo.toml\"]`):initial;
       if(row.kind==="member")assert.notEqual(script,initial);
       writeFileSync(recipe,script);const calls=["unknown","read-race"].includes(row.kind)?0:row.kind==="lock"?2:1;
-      await runNativeDependencyFixtureNegativeV1(workspace,output,root,invocation,parent,"mutation",row.id,calls,new RegExp(row.expected));
+      await runNativeDependencyFixtureNegativeV1(workspace,output,root,invocation,parent,"mutation",row.id,calls,new RegExp(row.expected),storageRoot);
       rmSync(join(root,"owned/program.ts"),{force:true});writeFileSync(join(root,"owned/program.js"),fixture.cargo.programSource);
       rmSync(join(root,"additional"),{recursive:true,force:true});
       writeFileSync(recipe,initial);writeFileSync(join(root,"owned-input.txt"),fixture.cargo.ownedInput);writeFileSync(join(root,"Cargo.lock"),preparedLock!);
@@ -257,7 +258,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
     rmSync(join(root,"additional"),{recursive:true,force:true});writeFileSync(join(root,"Cargo.toml"),fixture.cargo.preparedFiles["Cargo.toml"]);writeFileSync(join(root,"generated/Cargo.toml"),fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata);writeFileSync(join(root,"generated/📜️script.ts"),ordered.script);
     const changed=fixture.changedPreparation,changedManifest=fixture.cargo.preparedFiles["generated/Cargo.toml"]+ordered.metadata.replace('command=["prepare"]',`command=${JSON.stringify(changed.command)}`),change=`const target=resolve(process.cwd(),"generated/Cargo.toml"),content=${JSON.stringify(changedManifest)};writeFileSync(target,content);observeCargoPreparationOutputV1(target,content);`;
     writeFileSync(recipe,ordered.script.replace("completeCargoPreparationObservationV1();",change+"\ncompleteCargoPreparationObservationV1();"));
-    await runNativeDependencyFixtureNegativeV1(workspace,output,root,invocation,parent,"changed","changed-preparation",0,new RegExp(changed.expected));
+    await runNativeDependencyFixtureNegativeV1(workspace,output,root,invocation,parent,"changed","changed-preparation",0,new RegExp(changed.expected),storageRoot);
 
 
 

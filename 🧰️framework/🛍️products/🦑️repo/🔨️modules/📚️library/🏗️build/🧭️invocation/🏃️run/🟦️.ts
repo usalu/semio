@@ -20,6 +20,13 @@ export async function recordPlanSuccessV1(options:Readonly<{root:string;args:rea
  return Object.keys(keys).length;
 }
 
+/** 🔭️ Whether the command line asks only for a plan: `--dry-run` (true unless `=false`) or its alias `--graph` before the `--` separator, wherever the flags stand; such an invocation prints the plan, is never admitted by the scheduler and executes no task.
+ * @see ../🧪️tests/🛰️plan/📨️task-arguments.json */
+export function planOnlyInvocationV1(args:readonly string[]):boolean{
+ const boundary=args.indexOf("--"),head=boundary<0?args:args.slice(0,boundary);
+ return buildBooleanOptionV1(head,"dry-run")===true||head.some(argument=>argument==="--graph"||argument.startsWith("--graph="));
+}
+
 /** 🏃️ A `repo` invocation as a client of the per-host graph service and scheduler: a task command first asks the service for its plan (service started on demand, progress printed, request withdrawn on cancellation), then runs through the host-wide scheduler keyed by its content, with the verified plan handed to the executing process; every other command runs as it is. */
 export async function runRepoInvocationV1(options:Readonly<{root:string;args:readonly string[];signal?:AbortSignal;execute:()=>Promise<void>;environment?:NodeJS.ProcessEnv;write?:(line:string)=>void;store?:SchedulerStoreV1;ports?:Parameters<typeof requestInvocationPlanV1>[0]["ports"]}>):Promise<void>{
  const{root,args,signal,execute,environment=process.env,write=line=>{process.stderr.write(line+"\n");}}=options,request=await invocationPlanRequestV1(root,args,environment);
@@ -33,7 +40,7 @@ export async function runRepoInvocationV1(options:Readonly<{root:string;args:rea
   return;
  }
  const run=async():Promise<void>=>{Object.assign(environment,planHandoffEnvironmentV1(plan));try{await execute();}finally{delete environment[PLAN_HANDOFF_V1];}};
- if(request.arguments[0]==="watch"){await run();return;}
+ if(request.arguments[0]==="watch"||planOnlyInvocationV1(request.arguments)){await run();return;}
  const outcome=await runScheduledInvocationV1({args:request.arguments,generationKey:plan.generationKey,workspace:root,environment,...signal?{signal}:{},write,work:run,...options.store?{store:options.store}:{}});
  if(outcome.exit!=="ok")process.exitCode=1;else await recordPlanSuccessV1({root,args:request.arguments,keys:plan.keys});
 }

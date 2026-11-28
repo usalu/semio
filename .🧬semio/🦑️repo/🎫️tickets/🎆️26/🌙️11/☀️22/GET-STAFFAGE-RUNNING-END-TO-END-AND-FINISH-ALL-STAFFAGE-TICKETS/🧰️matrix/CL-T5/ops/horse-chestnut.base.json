@@ -1,0 +1,238 @@
+[
+ {
+  "facet": "tw-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   50
+  ],
+  "above": 0.00435,
+  "segments": 6
+ },
+ {
+  "facet": "br-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   50
+  ],
+  "above": 0.0039,
+  "segments": 12
+ },
+ {
+  "facet": "candle-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   50
+  ],
+  "above": 0.0039,
+  "segments": 12
+ },
+ {
+  "facet": "t\\d+-\\d+(-b)?",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   50
+  ],
+  "above": 0.0039
+ },
+ {
+  "facet": "member-t.*",
+  "list": "structure",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   50
+  ],
+  "above": 0.0039,
+  "segments": 12
+ },
+ {
+  "facet": "tw-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   100
+  ],
+  "above": 0.0087,
+  "segments": 6
+ },
+ {
+  "facet": "br-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   100
+  ],
+  "above": 0.0078,
+  "segments": 12
+ },
+ {
+  "facet": "candle-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   100
+  ],
+  "above": 0.0078,
+  "segments": 12
+ },
+ {
+  "facet": "t\\d+-\\d+(-b)?",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   100
+  ],
+  "above": 0.0078
+ },
+ {
+  "facet": "member-t.*",
+  "list": "structure",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   100
+  ],
+  "above": 0.0078,
+  "segments": 12
+ },
+ {
+  "facet": "tw-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   200
+  ],
+  "above": 0.0174,
+  "segments": 6
+ },
+ {
+  "facet": "br-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   200
+  ],
+  "above": 0.0156,
+  "segments": 12
+ },
+ {
+  "facet": "candle-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   200
+  ],
+  "above": 0.0156,
+  "segments": 12
+ },
+ {
+  "facet": "t\\d+-\\d+(-b)?",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   200
+  ],
+  "above": 0.0156
+ },
+ {
+  "facet": "member-t.*",
+  "list": "structure",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   200
+  ],
+  "above": 0.0156,
+  "segments": 12
+ },
+ {
+  "facet": "tw-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   500
+  ],
+  "above": 0.0435,
+  "segments": 6
+ },
+ {
+  "facet": "br-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   500
+  ],
+  "above": 0.039,
+  "segments": 12
+ },
+ {
+  "facet": "candle-.*",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   500
+  ],
+  "above": 0.039,
+  "segments": 12
+ },
+ {
+  "facet": "t\\d+-\\d+(-b)?",
+  "list": "body",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   500
+  ],
+  "above": 0.039
+ },
+ {
+  "facet": "member-t.*",
+  "list": "structure",
+  "kinds": [
+   "loft"
+  ],
+  "scales": [
+   500
+  ],
+  "above": 0.039,
+  "segments": 12
+ }
+]

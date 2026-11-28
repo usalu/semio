@@ -304,4 +304,7 @@ pub fn create_xlsx_transitional_editor() -> semio_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️media-in/🦀️.rs"]
+mod media_in_tests;
 //#endregion 🧪️Tests

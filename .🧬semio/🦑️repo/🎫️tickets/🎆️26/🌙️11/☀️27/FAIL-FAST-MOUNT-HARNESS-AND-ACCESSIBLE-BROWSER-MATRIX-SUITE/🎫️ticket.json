@@ -1,0 +1,22 @@
+{
+  "title": "Fail-Fast Mount Harness and Accessible Browser Matrix Suite",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Follow-up of wave 1127 proposal items 4 and 5 (ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION). (1) Cheap fail-fast harness for tests that mount the full app: boot only what the test touches, a deadline per phase, abort at the first failure with a precise bilingual (en, de) reason. (2) Turn the browser interaction matrix into a maintained parallel test suite that finds elements by accessible names and roles (no CSS/xpath selectors), dispatched across idle fleet workers through the existing repo test-file / suite offload (H44/H50). Done = one app's mount tests run in under a minute locally with fail-fast behaviour, and its browser matrix runs as a suite in parallel on at least 2 workers with results identical to local, written up in the ticket folder.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "9b45f24c-6508-4da6-bb1f-d793d40ed3d0"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-27 11:50:28",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Follow-up of wave 1127 proposal items 4 and 5 (ticket 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION). (1) Cheap fail-fast harness for tests that mount the full app: boot only what the test touches, a deadline per phase, abort at the first failure with a precise bilingual (en, de) reason. (2) Turn the browser interaction matrix into a maintained parallel test suite that finds elements by accessible names and roles (no CSS/xpath selectors), dispatched across idle fleet workers through the existing repo test-file / suite offload (H44/H50). Done = one app's mount tests run in under a minute locally with fail-fast behaviour, and its browser matrix runs as a suite in parallel on at least 2 workers with results identical to local, written up in the ticket folder.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

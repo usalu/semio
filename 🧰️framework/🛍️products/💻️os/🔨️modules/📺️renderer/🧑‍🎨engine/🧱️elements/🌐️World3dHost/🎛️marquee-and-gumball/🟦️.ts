@@ -99,9 +99,9 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
   const handleGumballDragStart = useCallback(
     (kind: GumballHandleKind, before: GumballPose) => {
       (globalThis as { __gumballDragEntered?: boolean }).__gumballDragEntered = true;
-      stepGumballGestureRef.current({ kind: "start", handle: kind, pose: before, targets: selectionArgs(), live: gumballLiveDispatch, transformMode: selection.transformMode });
+      stepGumballGestureRef.current({ kind: "start", handle: kind, pose: before, targets: selectionArgs(), live: gumballLiveDispatch, cumulative: Boolean(selection.gumballCumulative), transformMode: selection.transformMode });
     },
-    [gumballLiveDispatch, selection.transformMode, selectionArgs],
+    [gumballLiveDispatch, selection.gumballCumulative, selection.transformMode, selectionArgs],
   );
 
   useEffect(() => {

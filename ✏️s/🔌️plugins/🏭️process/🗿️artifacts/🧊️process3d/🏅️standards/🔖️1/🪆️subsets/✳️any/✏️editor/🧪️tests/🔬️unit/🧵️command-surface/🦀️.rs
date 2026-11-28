@@ -405,12 +405,112 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
     assert!(Process3dPlayApp::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
+/// 🚫️ A required argument that is absent never defaults to an empty id, index zero or an empty
+/// contribution list (which would clear every machine); the bridge refuses it as `process3d.action.invalid`.
+#[semio_framework_async_macros::async_test]
+async fn missing_required_action_args_are_refused_as_invalid() {
+    let refused = |action: &str, args: serde_json::Value| {
+        let fault = Process3dPlayApp::command_from_action(action, &mut Some(DslValue::from(&args)), &mut None).expect_err(&format!("{action} {args} must be refused"));
+        assert_eq!(fault.code.as_str(), "process3d.action.invalid", "{action}");
+    };
+    for (action, args) in [
+        ("removeStep", serde_json::json!({})),
+        ("removeStep", serde_json::json!({ "id": "" })),
+        ("removeWorkshopMachine", serde_json::json!({})),
+        ("addWorkshopMachine", serde_json::json!({ "catalogId": "wood" })),
+        ("updateWorkshopMachine", serde_json::json!({})),
+        ("moveStep", serde_json::json!({ "id": "cut-1" })),
+        ("moveStep", serde_json::json!({ "index": 1 })),
+        ("dropStep", serde_json::json!({ "documentId": "d", "stepId": "a", "targetId": "b" })),
+        ("updateStep", serde_json::json!({})),
+        ("setStepEnabled", serde_json::json!({ "enabled": true })),
+        ("patchInspector", serde_json::json!({ "target": "stock" })),
+        ("patchInspector", serde_json::json!({ "target": "stock", "field": "width" })),
+        ("stepCursor", serde_json::json!({})),
+        ("worldFaceDragEnd", serde_json::json!({ "normal": [0, 0, 1] })),
+        ("importModelFile", serde_json::json!({ "name": "a.step" })),
+        ("engagementInput", serde_json::json!({})),
+        ("setSunAzimuth", serde_json::json!({})),
+        ("setSunElevation", serde_json::json!({ "value": "high" })),
+        ("setSunIntensity", serde_json::json!({})),
+        ("setContributions", serde_json::json!({})),
+        ("setSnapshot", serde_json::json!({})),
+    ] {
+        refused(action, args);
+    }
+    assert!(Process3dPlayApp::command_from_action("removeStep", &mut None, &mut None).is_err());
+    assert!(Process3dPlayApp::command_from_action("setCursor", &mut None, &mut None).is_ok(), "setCursor without a value keeps meaning every step");
+    let sun = Process3dPlayApp::command_from_action("setSunAzimuth", &mut Some(DslValue::from(&serde_json::json!({ "value": 135.0 }))), &mut None).expect("slider value arrives as args.value");
+    assert_eq!(sun, Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 135.0 }));
+}
+
+/// 📤️ `exportModel` accepts exactly the manifest's formats and refuses anything else instead of falling back to STEP.
+#[semio_framework_async_macros::async_test]
+async fn export_model_refuses_unknown_formats() {
+    for format in ["step", "obj", "stl", "glb"] {
+        let command = Process3dPlayApp::command_from_action("exportModel", &mut Some(DslValue::from(&serde_json::json!({ "format": format }))), &mut None).expect("declared format");
+        assert_eq!(command, Process3dCommand::ExportModel(export_model::ExportModel { format: format.into() }));
+    }
+    let fault = Process3dPlayApp::command_from_action("exportModel", &mut Some(DslValue::from(&serde_json::json!({ "format": "pdf" }))), &mut None).expect_err("unknown format");
+    assert_eq!(fault.code.as_str(), "process3d.action.invalid");
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document());
+    assert!(semio_s_artifact_process_process3d_io::export_process3d_model(&scene, None, "pdf").is_err());
+    assert!(semio_s_artifact_process_process3d_io::export_process3d_model(&scene, None, "").is_err());
+}
+
+/// 📢️ Every fault code this editor raises on a user-reachable path carries a localized en/de notice.
+#[semio_framework_async_macros::async_test]
+async fn every_user_reachable_fault_code_has_a_localized_notice() {
+    let notices = <Process3dPlayApp as ArtifactEditor>::fault_notices();
+    for code in ["process3d.action.invalid", "process3d.media.export", "process3d.capability.stock-limit", "process3d.stock.display-only", "process3d.media.import"] {
+        assert!(notices.iter().any(|(known, _)| *known == code), "{code} has no notice");
+    }
+    for (code, _) in notices {
+        assert!(semio_framework::is_fault_notice_code(code), "{code} is outside the `<app>.<area>.<name>` notice grammar the manifest gate enforces");
+    }
+    let mut codes: Vec<_> = notices.iter().map(|(code, _)| *code).collect();
+    codes.sort();
+    codes.dedup();
+    assert_eq!(codes.len(), notices.len(), "notice codes are unique");
+}
+
+/// 🎥️ The manifest's `setCamera` declares exactly the camera fields the command consumes.
+#[semio_framework_async_macros::async_test]
+async fn set_camera_manifest_declares_only_consumed_fields() {
+    let declared = format!("{:?}", process3d_app_manifest_for_tests().definition);
+    assert!(declared.contains("\"fov\""), "setCamera keeps declaring the consumed field of view");
+    assert!(!declared.contains("\"zoom\"") && !declared.contains("\"up\""), "setCamera must not declare fields the command ignores");
+}
+
 /// 🧾️ What the lane RETAINS is the distilled roster, never the host's whole contribution pack: an
 /// entry addressed to this app's `process.machines` topic survives, everything else is dropped
 /// (`installable_contributions`, the same discipline `🪵️sourcing` applies to its own config lane).
 
 /// 🖱️ The interaction payload shape that regressed retains its identifier through the transport
 /// bridge instead of being dropped into ad-hoc host state.
+/// 🏠️ The registered `demo` example id loads the default document.
+#[semio_framework_async_macros::async_test]
+async fn demo_example_action_loads_the_default_document() {
+    let mut app = app_with_registry();
+    let result = action(&mut app, "setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_DEMO }))));
+    let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("demo example action must load a document") else {
+        panic!("expected a LoadDocument effect");
+    };
+    let loaded = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode example document");
+    assert_eq!(loaded, semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document());
+}
+
+/// 🚫️ An unknown example id is refused with a fault and never requests a document load.
+#[semio_framework_async_macros::async_test]
+async fn unknown_example_action_is_refused_without_loading_a_document() {
+    let mut app = app_with_registry();
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| action(&mut app, "setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": "no-such-example" }))))));
+    if let Ok(result) = outcome {
+        assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "an unknown example must not load a document");
+        assert!(!result.diagnostics.is_empty(), "an unknown example must be reported: {:?}", result.output);
+    }
+}
+
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `setHover`/`contextMenuAt` were
 /// app-owned selection/hover commands, deleted along with `Process3dConfig::selected_id`/
 /// `hovered_id` — hover/selection now decode through the framework's auto-injected

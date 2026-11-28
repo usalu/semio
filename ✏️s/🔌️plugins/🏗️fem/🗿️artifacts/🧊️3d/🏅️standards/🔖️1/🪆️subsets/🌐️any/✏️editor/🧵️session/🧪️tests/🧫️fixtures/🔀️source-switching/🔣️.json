@@ -1,0 +1,21 @@
+{
+  "window": "switching",
+  "cases": ["a", "b"],
+  "prepares": 3,
+  "admissions": 4,
+  "settleRounds": 512,
+  "switches": [
+    { "family": 0, "index": 0, "namespace": 0, "source": "a" },
+    { "family": 0, "index": 0, "namespace": 0, "source": "b" },
+    { "family": 1, "index": 0, "namespace": 2, "source": "none" },
+    { "family": 2, "index": 0, "namespace": 0, "source": "a" },
+    { "family": 1, "index": 1, "namespace": 2, "source": "none" },
+    { "family": 0, "index": 0, "namespace": 1, "source": "a" },
+    { "family": 0, "index": 0, "namespace": 0, "source": "a" },
+    { "family": 2, "index": 1, "namespace": 0, "source": "b" },
+    { "family": 0, "index": 0, "namespace": 0, "source": "b" },
+    { "family": 1, "index": 0, "namespace": 2, "source": "none" },
+    { "family": 0, "index": 0, "namespace": 0, "source": "a" }
+  ],
+  "last": { "family": 0, "index": 0, "namespace": 0, "source": "a" }
+}

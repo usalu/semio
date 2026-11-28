@@ -20,7 +20,7 @@
   "yieldAfterMilliseconds": 5000,
   "minimumShareBasisPoints": 2500,
   "ownHoldShareBasisPoints": 1500,
-  "swapActiveBasisPointsPerSecond": 0.6,
+  "swapActiveBasisPointsPerSecond": 10,
   "swapOutBasisPointsPerSecond": 40
  },
  "target": [
@@ -867,6 +867,70 @@
    },
    "children": 0,
    "childMegabytes": 1237
+  },
+  {
+   "name": "H53 a retained graph reservation of the own read keeps the children alive while the machine's own work waits behind it (g1-m04 07:16)",
+   "host": {
+    "cores": 12,
+    "totalMegabytes": 15848,
+    "availableMegabytes": 9513,
+    "pressure": "normal",
+    "load": 20.9,
+    "idleCores": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "foreground": {
+     "cpu": 3,
+     "unrealizedMegabytes": 0,
+     "waiters": 6,
+     "waitingMegabytes": 19248,
+     "oldestWaitMilliseconds": 2331000,
+     "retainedUnrealizedMegabytes": 6414
+    }
+   },
+   "children": 1,
+   "childMegabytes": 800
+  },
+  {
+   "name": "H53 a request that does not fit the room even now is not held by the cores the children take",
+   "host": {
+    "cores": 12,
+    "totalMegabytes": 15848,
+    "availableMegabytes": 9513,
+    "pressure": "normal",
+    "load": 20.9,
+    "idleCores": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "foreground": {
+     "cpu": 3,
+     "unrealizedMegabytes": 6414,
+     "waiters": 6,
+     "waitingMegabytes": 19248,
+     "oldestWaitMilliseconds": 2331000
+    }
+   },
+   "children": 1,
+   "childMegabytes": 800
+  },
+  {
+   "name": "H53 a request that fits the room and still waits is held by the cores: the children yield",
+   "host": {
+    "cores": 12,
+    "totalMegabytes": 15848,
+    "availableMegabytes": 9513,
+    "pressure": "normal",
+    "load": 20.9,
+    "idleCores": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "foreground": {
+     "cpu": 3,
+     "unrealizedMegabytes": 0,
+     "waiters": 6,
+     "waitingMegabytes": 1000,
+     "oldestWaitMilliseconds": 2331000
+    }
+   },
+   "children": 1,
+   "childMegabytes": 800
   }
  ],
  "limits": [
@@ -1207,6 +1271,18 @@
    {
     "children": 0,
     "reason": "nothing-fits"
+   },
+   {
+    "children": 1,
+    "reason": "yielding"
+   },
+   {
+    "children": 1,
+    "reason": "yielding"
+   },
+   {
+    "children": 0,
+    "reason": "waiting"
    }
   ],
   "limits": [
@@ -1605,6 +1681,27 @@
     "freeMegabytes": 258,
     "heldMegabytes": 2457,
     "floorMegabytes": 2048
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 7532,
+    "heldMegabytes": 0,
+    "floorMegabytes": 1981
+   },
+   {
+    "limit": "cores",
+    "needMegabytes": 800,
+    "freeMegabytes": 5155,
+    "heldMegabytes": 2377,
+    "floorMegabytes": 1981
+   },
+   {
+    "limit": "waiting",
+    "needMegabytes": 800,
+    "freeMegabytes": 6532,
+    "heldMegabytes": 1000,
+    "floorMegabytes": 1981
    }
   ]
  },

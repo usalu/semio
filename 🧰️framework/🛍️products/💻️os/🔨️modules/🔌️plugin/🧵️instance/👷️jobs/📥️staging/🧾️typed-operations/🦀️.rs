@@ -11,7 +11,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
-use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US, TypedOperationResultPage, TypedOperationResultToken};
+use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US, TypedOperationResultPage, TypedOperationResultToken, WORKER_PRODUCER_UNFUNDED_CEILING};
 use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
 use semio_plugin_retained_command_operation::typed_operation::MountedTypedCommandFullOperation;
@@ -76,6 +76,13 @@ impl<A: ArtifactApp> ToolOperations<A> {
             if closing{assert!(operation.original_retirement_receipt.is_none(),"worker Close receipt awaits its original recipient");operation.original_retirement_receipt=Some((grant,spent));}
             else{assert!(operation.publication_ownership_progress.is_none(),"worker preparation receipt awaits its original recipient");operation.publication_ownership_progress=Some((grant,spent));}
         }
+        let unfunded=failure.is_none()&&spent==RetainedCloneProgress::default()&&!cx.should_yield();
+        let stalled=self.tool_operations.get_mut(operation_id).filter(|operation|operation.stage==MountedTypedCommandFullOperationStage::Worker).and_then(|operation|{
+            if !(unfunded&&operation.producer_build_pending()){operation.publication_stall_streak=0;return None}
+            operation.publication_stall_streak=operation.publication_stall_streak.saturating_add(1);
+            (operation.publication_stall_streak>=WORKER_PRODUCER_UNFUNDED_CEILING).then(||format!("typed operation '{}' made no producer build progress for {} worker turns under its preparation grant {:?}",operation.verb,operation.publication_stall_streak,mounted_policy.preparation))
+        });
+        if let Some(message)=stalled{self.fault_typed_operation_worker(operation_id,&Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.producer-unfunded"),message))?;}
         #[cfg(target_arch="wasm32")]
         if let Some(now_ms)=semio_framework_job::default_now_ms(){semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get))).pump(now_ms);}
         match failure{Some(failure)=>Err(failure.into()),None=>Ok(())}
@@ -190,6 +197,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         let Some(mounted) = self.tool_operations.get(operation_id) else { return Ok(()) };
         let waited = semio_plugin_retained_command_operation::typed_operation::last_publication_wait(operation_id).map_or_else(String::new, |wait| format!(": waiting on {wait}"));
         let message = format!("typed operation '{}' advanced {streak} publication units without moving its ladder{waited}", mounted.verb);
+        eprintln!("[DEBUG] stalled: stage={:?} tool_stage={} pending={} publication={} published_artifact={} ui_pending={} plan={} result_page={} diag={}",mounted.stage,mounted.tool_stage as u8,mounted.pending_artifact_publication.is_some(),mounted.publication.is_some(),mounted.published_artifact,mounted.ui_pending,mounted.page_publication.plan.is_some(),mounted.result_page.is_some(),mounted.verb);
         self.fault_typed_operation_publication(operation_id, message)
     }
 
@@ -202,15 +210,17 @@ impl<A: ArtifactApp> ToolOperations<A> {
     }
 
     fn fault_typed_operation_publication(&mut self, operation_id: u64, message: String) -> Result<(), Fault> {
-        let Some(mounted) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
+        let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-stalled"), message);
+        self.fault_typed_operation_publication_with(operation_id, &fault).map(|_| ())
+    }
+
+    /// 🛑️ Terminates a `Publishing`-stage operation with `fault` itself (code and message kept): the per-operation failure of one publication unit (a stale ephemeral generation, a refused lane) becomes that operation's terminal fault page, never the turn's, because a turn failure the bridge holds poisons the whole actor. Answers whether the operation took the fault; `false` leaves it untouched for the caller to propagate.
+    pub fn fault_typed_operation_publication_with(&mut self, operation_id: u64, fault: &Fault) -> Result<bool, Fault> {
+        let Some(mounted) = self.tool_operations.get_mut(operation_id) else { return Ok(false) };
         if mounted.stage != MountedTypedCommandFullOperationStage::Publishing || mounted.result_page.is_some() {
-            return Ok(());
+            return Ok(false);
         }
-        let fault = ArtifactBoundedToolFault::from_fault(&Fault::new(
-            FaultOrigin::Framework,
-            FaultCode::new("interactive-job.publication-stalled"),
-            message,
-        ));
+        let fault = ArtifactBoundedToolFault::from_fault(fault);
         if let Some(lease) = mounted.cancellation_lease.as_ref() {
             lease.cancel();
         }
@@ -218,7 +228,8 @@ impl<A: ArtifactApp> ToolOperations<A> {
         let framed_len = fault.framed_page_bytes(&mut framed);
         let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, &framed[..framed_len])?;
         mounted.terminal_fault = Some(fault);
-        mounted.queue_page(page)
+        mounted.queue_page(page)?;
+        Ok(true)
     }
 
     /// 🔀️ Whether this operation's next publication unit is the inline fold of its emit's

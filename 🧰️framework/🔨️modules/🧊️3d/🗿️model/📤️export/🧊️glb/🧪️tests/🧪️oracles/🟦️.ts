@@ -345,7 +345,7 @@ describe("🧪️ GLB oracles", () => {
     const read = (await io.readBinary(compact)).getRoot().listMeshes()[0]!.listPrimitives()[0]!.getAttribute("NORMAL")!;
     const gltf = await new Promise<any>((resolve, reject) => new GLTFLoader().parse(compact.buffer.slice(compact.byteOffset, compact.byteOffset + compact.byteLength) as ArrayBuffer, "", resolve, reject));
     let geometry: any;
-    gltf.scene.traverse((node: any) => { if (geometry === undefined && node.geometry?.attributes.normal !== undefined) geometry = node.geometry; });
+    gltf.scene.traverse((node: any) => { if (geometry === undefined && node.geometry?.attributes.normal !== undefined) { geometry = node.geometry; } });
     f.normals.forEach((normal, i) => {
       expect(angle(read.getElement(i, []), normal)).toBeLessThan(f.toleranceRadians);
       expect(angle([geometry.attributes.normal.getX(i), geometry.attributes.normal.getY(i), geometry.attributes.normal.getZ(i)], normal)).toBeLessThan(f.toleranceRadians);
@@ -356,6 +356,150 @@ describe("🧪️ GLB oracles", () => {
     expect(flat.extensionsRequired).toBeUndefined();
     const original = flat.accessors![flat.meshes![0]!.primitives[1]!.attributes.NORMAL!]!;
     expect([original.componentType, original.normalized]).toEqual([5126, undefined]);
+    expect(compact.length).toBeLessThan(plain.length);
+  });
+
+  it("compact encoding welds the vertices of a primitive no lit material draws inside each solid and keeps its triangles, lines and solid ranges", async () => {
+    const f = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧷️welded-unread/🔣️.json", import.meta.url), "utf8")) as { positions: number[][]; indices: number[]; solids: { id: string; first: number; count: number }[]; lines: { indices: number[]; solids: { id: string; first: number; count: number }[] }; weldedVertexCount: number; triangleCorners: number[][][] };
+    const template = vectors.find((v) => v.name === "minimal-triangle")!;
+    const [grey] = template.document.materials;
+    const positions = f.positions.flat();
+    const normals = f.positions.flatMap((_, i) => (i === 3 ? [0, 0, -1] : [0, 0, 1]));
+    const documentOf = (unlit: boolean) => ({
+      ...template.document, variants: [] as never[],
+      materials: [{ ...grey!, id: "ink", unlit }, { ...grey!, id: "edge", unlit: true }],
+      meshes: [{ ...template.document.meshes[0]!, primitives: [
+        { mode: "triangles" as const, material: "ink", positions, normals, indices: f.indices, solids: f.solids },
+        { mode: "lines" as const, material: "edge", positions, indices: f.lines.indices, solids: f.lines.solids },
+      ] }],
+    });
+    const io = new WebIO().registerExtensions([KHRMaterialsUnlit, KHRMaterialsVariants, KHRMeshQuantization]);
+    const bytes = encodeGlb(documentOf(true), { animations: false, variants: true, compact: true }, quiet);
+    const [triangles, lines] = (await io.binaryToJSON(bytes)).json.meshes![0]!.primitives;
+    const json = (await io.binaryToJSON(bytes)).json;
+    expect(json.accessors![triangles!.attributes.POSITION!]!.count).toBe(f.weldedVertexCount);
+    expect(json.accessors![lines!.attributes.POSITION!]!.count).toBe(f.weldedVertexCount);
+    expect(triangles!.extras).toEqual({ solids: f.solids });
+    expect(lines!.extras).toEqual({ solids: f.lines.solids });
+    const read = (await io.readBinary(bytes)).getRoot().listMeshes()[0]!.listPrimitives();
+    const place = read[0]!.getAttribute("POSITION")!, index = read[0]!.getIndices()!;
+    const corners = Array.from({ length: index.getCount() / 3 }, (_, t) => [0, 1, 2].map((k) => Array.from(place.getElement(index.getScalar(3 * t + k), [])))); 
+    expect(corners).toEqual(f.triangleCorners);
+    const segments = read[1]!.getIndices()!;
+    const ends = Array.from({ length: segments.getCount() }, (_, i) => Array.from(read[1]!.getAttribute("POSITION")!.getElement(segments.getScalar(i), [])));
+    expect(ends).toEqual(f.lines.indices.map((i) => f.positions[i]));
+    expect((await validator.validateBytes(bytes, { uri: "welded.glb", maxIssues: 0 })).issues).toMatchObject({ numErrors: 0, numWarnings: 0 });
+    const lit = (await io.binaryToJSON(encodeGlb(documentOf(false), { animations: false, variants: true, compact: true }, quiet))).json;
+    expect(lit.accessors![lit.meshes![0]!.primitives[0]!.attributes.POSITION!]!.count).toBe(f.positions.length);
+    const plain = (await io.binaryToJSON(encodeGlb(documentOf(true), { animations: false, variants: true }, quiet))).json;
+    expect(plain.accessors![plain.meshes![0]!.primitives[0]!.attributes.POSITION!]!.count).toBe(f.positions.length);
+  });
+
+  it("compact encoding writes colour factors and node transforms as the shortest decimals of the same 32-bit floats", async () => {
+    const f = JSON.parse(readFileSync(new URL("./🧫️fixtures/📉️compact-normals/🔣️.json", import.meta.url), "utf8")) as { shortFloats: { baseColor: number[]; translation: number[]; scale: number[]; maxCharacters: number } };
+    const template = vectors.find((v) => v.name === "minimal-triangle")!;
+    const material = { ...template.document.materials[0]!, baseColor: f.shortFloats.baseColor as never };
+    const nodes = template.document.nodes.map((node, i) => (i === 0 ? { ...node, translation: f.shortFloats.translation as never, scale: f.shortFloats.scale as never } : node));
+    const mesh0 = template.document.meshes[0]!;
+    const meshes = [{ ...mesh0, primitives: mesh0.primitives.map((p, i) => (i === 0 ? { ...p, positions: p.positions.map((x) => x + 0.1) } : p)) }, ...template.document.meshes.slice(1)];
+    const document = { ...template.document, meshes, materials: [material, ...template.document.materials.slice(1)], nodes };
+    const compact = encodeGlb(document, { animations: false, variants: true, compact: true }, quiet);
+    const plain = encodeGlb(document, { animations: false, variants: true }, quiet);
+    const io = new WebIO().registerExtensions([KHRMaterialsUnlit, KHRMaterialsVariants, KHRMeshQuantization]);
+    const json = (await io.binaryToJSON(compact)).json;
+    const written = [json.materials![0]!.pbrMetallicRoughness!.baseColorFactor!, json.nodes![0]!.translation!, json.nodes![0]!.scale!];
+    const wanted = [f.shortFloats.baseColor, f.shortFloats.translation, f.shortFloats.scale];
+    written.forEach((values, k) => values.forEach((value, i) => {
+      expect(Math.fround(value), `float ${k}/${i}`).toBe(Math.fround(wanted[k]![i]!));
+      expect(String(value).length, `digits of ${k}/${i}`).toBeLessThanOrEqual(f.shortFloats.maxCharacters);
+    }));
+    const bounds = json.accessors!.find((accessor) => accessor.type === "VEC3" && accessor.min !== undefined)!;
+    for (const value of [...bounds.min!, ...bounds.max!]) expect(String(value).length, "digits of an accessor bound").toBeLessThanOrEqual(f.shortFloats.maxCharacters);
+    expect(bounds.min!.some((value) => Math.fround(value) === Math.fround(0.1))).toBe(true);
+    const long = (await io.binaryToJSON(plain)).json;
+    expect(long.materials![0]!.pbrMetallicRoughness!.baseColorFactor).toEqual(f.shortFloats.baseColor);
+    expect((await validator.validateBytes(compact, { uri: "short.glb", maxIssues: 0 })).issues).toMatchObject({ numErrors: 0, numWarnings: 0 });
+    const read = (await io.readBinary(compact)).getRoot();
+    expect(Array.from(read.listMaterials()[0]!.getBaseColorFactor()).map(Math.fround)).toEqual(wanted[0]!.map(Math.fround));
+    expect(compact.length).toBeLessThan(plain.length);
+  });
+  it("compact encoding leaves out glTF defaults, packs accessors of one kind into shared views and shares the indices of a pattern drawn at many places", async () => {
+    const f = JSON.parse(readFileSync(new URL("./🧫️fixtures/📦️compact-structure/🔣️.json", import.meta.url), "utf8")) as {
+      patternTriangles: number; copyOffsets: number[][]; copyNormals: number[][]; copyIds: string[]; plainMaterial: string; glassMaterial: string; edgeMaterial: string;
+      expect: { trianglePrimitives: number; indexComponentTypes: { pattern: number; triangle: number; plainTriangle: number }; triangleCount: number; sharedIndexAccessors: number; maxBufferViews: number; attributeKinds: string[]; defaults: { alphaMode: string; doubleSided: boolean; trianglesMode: number; linesMode: number }; kept: { alphaMode: string; doubleSided: boolean } };
+    };
+    const template = vectors.find((v) => v.name === "minimal-triangle")!;
+    const [grey] = template.document.materials;
+    const copy = (offset: number[]): number[] => Array.from({ length: f.patternTriangles }, (_, t) => [offset[0]! + t, offset[1]!, offset[2]!, offset[0]! + t + 0.5, offset[1]! + 1, offset[2]!, offset[0]! + t + 1, offset[1]!, offset[2]!]).flat();
+    const positions = f.copyOffsets.flatMap(copy);
+    const per = f.patternTriangles * 3;
+    const indices = Array.from({ length: per * f.copyOffsets.length }, (_, i) => i);
+    const solids = f.copyIds.map((id, i) => ({ id, first: i * per, count: per }));
+    const lineIndices = f.copyOffsets.flatMap((_, c) => [3 * 0, 3 * 0 + 1, 3 * 0 + 1, 3 * 0 + 2].map((v) => v + c * per));
+    const document = {
+      ...template.document, variants: [] as never[],
+      materials: [{ ...grey!, id: f.plainMaterial }, { ...grey!, id: f.glassMaterial, alphaMode: "blend" as const, doubleSided: true }, { ...grey!, id: f.edgeMaterial, unlit: true }],
+      meshes: [{ ...template.document.meshes[0]!, primitives: [
+        { mode: "triangles" as const, material: f.plainMaterial, positions, normals: f.copyNormals.flatMap((normal) => Array.from({ length: per }, () => normal).flat()), indices, solids },
+        { mode: "triangles" as const, material: f.glassMaterial, positions: positions.slice(0, 9), normals: [0, 0, 1, 0, 0, 1, 0, 0, 1], indices: [0, 1, 2] },
+        { mode: "lines" as const, material: f.edgeMaterial, positions, indices: lineIndices, solids: f.copyIds.map((id, i) => ({ id, first: 4 * i, count: 4 })) },
+      ] }],
+    };
+    const io = new WebIO().registerExtensions([KHRMaterialsUnlit, KHRMaterialsVariants, KHRMeshQuantization]);
+    const compact = encodeGlb(document, { animations: false, variants: true, compact: true }, quiet);
+    const plain = encodeGlb(document, { animations: false, variants: true }, quiet);
+    const json = (await io.binaryToJSON(compact)).json;
+    const plainJson = (await io.binaryToJSON(plain)).json;
+    const primitives = json.meshes![0]!.primitives;
+    const triangles = primitives.filter((p) => p.mode === undefined && p.attributes.NORMAL !== undefined && p.extras?.solids !== undefined);
+    expect(triangles.length).toBe(f.expect.trianglePrimitives);
+    expect(new Set(triangles.map((p) => p.indices)).size).toBe(f.expect.sharedIndexAccessors);
+    expect(plainJson.meshes![0]!.primitives.length).toBe(3);
+    expect(json.accessors![triangles[0]!.indices!]!.componentType).toBe(f.expect.indexComponentTypes.pattern);
+    const single = primitives.find((p) => p.mode === undefined && p.extras === undefined)!;
+    expect(json.accessors![single.indices!]!.componentType).toBe(f.expect.indexComponentTypes.triangle);
+    expect(plainJson.accessors![plainJson.meshes![0]!.primitives[1]!.indices!]!.componentType).toBe(f.expect.indexComponentTypes.plainTriangle);
+    expect(primitives.filter((p) => p.mode === f.expect.defaults.linesMode).length).toBeGreaterThan(0);
+    expect(primitives.every((p) => p.mode === undefined || p.mode === f.expect.defaults.linesMode)).toBe(true);
+    expect(plainJson.meshes![0]!.primitives.map((p) => p.mode)).toEqual([f.expect.defaults.trianglesMode, f.expect.defaults.trianglesMode, f.expect.defaults.linesMode]);
+    const [leaf, glass] = json.materials!;
+    expect(leaf!.alphaMode).toBeUndefined();
+    expect(leaf!.doubleSided).toBeUndefined();
+    expect([glass!.alphaMode, glass!.doubleSided]).toEqual([f.expect.kept.alphaMode, f.expect.kept.doubleSided]);
+    expect([plainJson.materials![0]!.alphaMode, plainJson.materials![0]!.doubleSided]).toEqual([f.expect.defaults.alphaMode, f.expect.defaults.doubleSided]);
+    expect(json.bufferViews!.length).toBeLessThanOrEqual(f.expect.maxBufferViews);
+    expect(json.bufferViews!.length).toBeLessThan(json.accessors!.length);
+    expect(plainJson.bufferViews!.length).toBe(plainJson.accessors!.length);
+    for (const accessor of json.accessors!) {
+      const view = json.bufferViews![accessor.bufferView!]!;
+      if (view.target === 34962) expect(view.byteStride, "vertex attribute views carry their stride").toBeGreaterThanOrEqual(4);
+      expect(((view.byteOffset ?? 0) + (accessor.byteOffset ?? 0)) % 4).toBe(0);
+    }
+    expect((await validator.validateBytes(compact, { uri: "structure.glb", maxIssues: 0 })).issues).toMatchObject({ numErrors: 0, numWarnings: 0 });
+    const corners = (position: { getElement(i: number, target: number[]): number[] }, index: ArrayLike<number>, first: number, count: number): number[][] => Array.from({ length: count }, (_, i) => position.getElement(index[first + i]!, []));
+    const wanted = f.copyOffsets.map((_, c) => Array.from({ length: per }, (_, i) => [positions[3 * (c * per + i)]!, positions[3 * (c * per + i) + 1]!, positions[3 * (c * per + i) + 2]!]));
+    const read = (await io.readBinary(compact)).getRoot().listMeshes()[0]!.listPrimitives();
+    for (const [c, id] of f.copyIds.entries()) {
+      const primitive = read.find((p) => p.getMode() === 4 && p.getExtras().solids !== undefined && (p.getExtras().solids as { id: string }[])[0]!.id === id)!;
+      expect(primitive.getExtras().solids).toEqual([{ id, first: 0, count: per }]);
+      expect(corners(primitive.getAttribute("POSITION")!, primitive.getIndices()!.getArray()!, 0, per)).toEqual(wanted[c]);
+      expect(primitive.getMaterial()!.getName()).toBe(f.plainMaterial);
+    }
+    const lone = read.find((p) => p.getMode() === 4 && p.getExtras().solids === undefined)!;
+    expect(Array.from(lone.getIndices()!.getArray()!)).toEqual([0, 1, 2]);
+    const segments = read.filter((p) => p.getMode() === 1).flatMap((p) => corners(p.getAttribute("POSITION")!, p.getIndices()!.getArray()!, 0, p.getIndices()!.getCount()));
+    expect(segments).toEqual(f.copyOffsets.flatMap((_, c) => [0, 1, 1, 2].map((v) => wanted[c]![v]!)));
+    const glb = await new Promise<any>((resolve, reject) => new GLTFLoader().parse(compact.buffer.slice(compact.byteOffset, compact.byteOffset + compact.byteLength) as ArrayBuffer, "", resolve, reject));
+    let count = 0, doubled = 0, blended = 0;
+    glb.scene.traverse((node: any) => {
+      if (node.geometry === undefined || node.isLine || node.isLineSegments) return;
+      const material = Array.isArray(node.material) ? node.material[0] : node.material;
+      if (material.transparent) blended += 1;
+      if (material.side === 2) doubled += 1;
+      count += (node.geometry.index?.count ?? node.geometry.attributes.position.count) / 3;
+    });
+    expect(count).toBe(f.expect.triangleCount + 1);
+    expect([blended, doubled]).toEqual([1, 1]);
     expect(compact.length).toBeLessThan(plain.length);
   });
 });

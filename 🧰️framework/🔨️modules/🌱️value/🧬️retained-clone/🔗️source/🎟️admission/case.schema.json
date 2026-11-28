@@ -57,7 +57,7 @@
       ]
     },
     "allocatingTurns": {
-      "const": [true,false,false,false,false,false,false,true,false,true,false,true,false,false,false,false,false,false,false,false,false]
+      "const": [true,false,false,false,false,false,true,false,true,false,true,false,false,false,false,false,false,false,false,false]
     },
     "deniedAxes": {
       "const": [

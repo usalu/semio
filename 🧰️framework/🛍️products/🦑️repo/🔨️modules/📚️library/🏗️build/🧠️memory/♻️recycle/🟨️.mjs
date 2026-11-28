@@ -18,12 +18,15 @@ export function sliceRecycleCarriedV1(environment=process.env,policy=SLICE_RECYC
  return Object.freeze({recycles:count(state.recycles),round:count(state.round),passes:count(state.passes),owners:count(state.owners),heapMegabytes:count(state.heapMegabytes)});
 }
 
-/** ⚖️ Whether a worker with `heapBytes` of live heap hands the read over now: never without a threshold in its environment, never after the maximum number of recycles. */
-export function sliceRecycleDecisionV1({environment=process.env,heapBytes,carried=sliceRecycleCarriedV1(environment)},policy=SLICE_RECYCLE_POLICY_V1){
+/** ⚖️ Whether a worker with `heapBytes` of live heap hands the read over now: never without a threshold in its environment, never after the maximum number of recycles, and, below the ceiling, only when the next pass observes at least the declared share of the owners again (`evicted` of `kept` plus `evicted`), because a handover discards everything the worker verified and a fresh worker starts with a cold inventory of the tree.
+ * @see ./🧬️schema/🔣️.json */
+export function sliceRecycleDecisionV1({environment=process.env,heapBytes,kept,evicted,carried=sliceRecycleCarriedV1(environment)},policy=SLICE_RECYCLE_POLICY_V1){
  const limit=Number(environment[policy.heapEnvironment]);
  if(!Number.isFinite(limit)||limit<=0||!Number.isFinite(heapBytes)||carried.recycles>=policy.maximumRecycles)return undefined;
  const heap=Math.round(heapBytes/1048576);
- return heap>limit?Object.freeze({heapMegabytes:heap,limitMegabytes:limit,recycles:carried.recycles+1}):undefined;
+ if(heap<=limit)return undefined;
+ const pays=kept+evicted===0||evicted*10000>=(kept+evicted)*policy.minimumEvictedBasisPoints,ceiling=heap*10000>limit*policy.ceilingBasisPoints;
+ return pays||ceiling?Object.freeze({heapMegabytes:heap,limitMegabytes:limit,recycles:carried.recycles+1}):undefined;
 }
 
 /** 🤝 The error that ends a worker at a pass boundary: both texts, the counters the next worker continues from. */

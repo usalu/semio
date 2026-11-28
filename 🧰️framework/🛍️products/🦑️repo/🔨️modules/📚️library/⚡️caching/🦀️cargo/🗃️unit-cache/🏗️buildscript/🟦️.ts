@@ -1,6 +1,7 @@
 import {spawn} from "node:child_process";
 import {chmodSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
+import {physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import {join} from "node:path";
 import {parseBuildDirectivesV1,toolchainIdentityV1,unitKeyComponentsV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../🔏️key/🟦️.ts";
 import {buildRunKeyInputV1,buildScriptIdentityV1,buildScriptKeyV1,markBuildRunKeyV1} from "./🔑️run-key/🟦️.ts";
@@ -21,7 +22,7 @@ import {exitWithStatusOfV1} from "../🏁️exit/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
-const module=fileURLToPath(new URL("./🟦️.ts",import.meta.url));
+const module=fileURLToPath(new URL("./🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)));
 
 /** 🏗️ Whether a rustc unit compiles a package's build script, the only executable whose runs are shared between lanes. */
 export function isBuildScriptUnitV1(unit:RustcUnitV1):boolean{return unit.crateName.startsWith("build_script_")&&unit.crateTypes.every(type=>type==="bin")&&unit.emit.includes("link");}
@@ -29,9 +30,9 @@ export function isBuildScriptUnitV1(unit:RustcUnitV1):boolean{return unit.crateN
 /** 🎚️ Whether build script runs are shared: switched on by the launcher, and only where an executable text file can stand in for a binary. */
 export function buildScriptsEnabledV1(environment:Environment,platform:NodeJS.Platform=process.platform):boolean{return environment.SEMIO_UNIT_CACHE_BUILD_SCRIPTS==="on"&&(policy.buildScript.platforms as readonly string[]).includes(platform);}
 
-/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: a POSIX `sh` script, because it must look at the descriptors Cargo handed down BEFORE the runtime opens descriptors of its own ({@link jobserverProbeShellV1}), then it starts this module, which consults the cache and otherwise runs the real executable beside it with the pool of Cargo's job tokens handed on. */
+/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: a POSIX `sh` script, because it must look at the descriptors Cargo handed down BEFORE the runtime opens descriptors of its own ({@link jobserverProbeShellV1}), then it starts this module (the real executable directly when the module is gone: a retired sealed snapshot must never fail a cached build script), which consults the cache and otherwise runs the real executable beside it with the pool of Cargo's job tokens handed on. */
 export function shimSourceV1(real:string,runtime:string=process.execPath):string{
- return["#!/bin/sh",`# ${policy.buildScript.shimMarker}`,...jobserverProbeShellV1(),`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(module)} ${shellQuoteV1(real)} "$@"`,""].join("\n");
+ return["#!/bin/sh",`# ${policy.buildScript.shimMarker}`,...jobserverProbeShellV1(),`[ -f ${shellQuoteV1(module)} ] || exec ${shellQuoteV1(real)} "$@"`,`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(module)} ${shellQuoteV1(real)} "$@"`,""].join("\n");
 }
 
 /** 🔁️ Replaces the compiled build script `artifact` by its stand-in; the real executable moves to `<artifact>.real`. Idempotent. */

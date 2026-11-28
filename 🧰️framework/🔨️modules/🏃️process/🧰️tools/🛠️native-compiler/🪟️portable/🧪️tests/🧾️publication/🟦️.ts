@@ -19,9 +19,9 @@ test("pending publication intent is closed",()=>{
 });
 
 test("interrupted publication observations select only a safe next step",()=>{
- const db=new Database(":memory:");try{for(const row of recovery.cases){const oracle=db.query("select case when ?1 and ?3 and not ?4 and not ?2 then 'resume' when ?1 and not ?3 and ?4 then 'finish' when not ?1 and not ?3 and not ?4 and not ?2 then 'create' when not ?1 and not ?3 and ?4 and ?2 then 'ready' else 'refuse' end result").get(row.intent,row.receipt,row.stage,row.published) as{result:string};expect(oracle.result).toBe(row.result);expect(portableMsvcRecoveryV1(row)).toBe(row.result);}}finally{db.close();}
+ const db=new Database(":memory:");try{for(const row of recovery.cases){const oracle=db.query("select case when ?1 and ?3 and not ?4 and not ?2 then 'resume' when ?1 and not ?3 and ?4 then 'finish' when not ?1 and not ?3 and not ?4 and not ?2 then 'create' when not ?1 and not ?3 and ?4 and ?2 then 'ready' else 'refuse' end result").get(row.intent,row.receipt,row.stage,row.published) as{result:string};expect(oracle.result).toBe(row.result);expect<unknown>(portableMsvcRecoveryV1(row)).toBe(row.result);}}finally{db.close();}
 });
 
 test("receipt observation only selects the reader path",()=>{
- const db=new Database(":memory:");try{for(const row of provision.cases){const oracle=db.query("select case when ?1='ordinary' and not ?2 then 'reader' else 'exclusive' end decision").get(row.receipt,row.pending) as{decision:string};expect(oracle.decision).toBe(row.decision);expect(portableMsvcProvisionDecisionV1({receipt:row.receipt,pending:row.pending})).toBe(row.decision);}}finally{db.close();}
+ const db=new Database(":memory:");try{for(const row of provision.cases){const oracle=db.query("select case when ?1='ordinary' and not ?2 then 'reader' else 'exclusive' end decision").get(row.receipt,row.pending) as{decision:string};expect(oracle.decision).toBe(row.decision);expect<unknown>(portableMsvcProvisionDecisionV1({receipt:row.receipt,pending:row.pending})).toBe(row.decision);}}finally{db.close();}
 });

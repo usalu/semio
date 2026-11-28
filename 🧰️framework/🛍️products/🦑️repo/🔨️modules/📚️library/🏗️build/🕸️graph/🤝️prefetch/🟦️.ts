@@ -168,6 +168,16 @@ export async function builderIdleV1(input:{root:string;invocation:ScriptInvocati
 }
 
 
+/** 🫧️ Whether a live claim of the builder custody rebuilds the whole workspace: the narrow reader that would queue behind it refreshes its own stale owners privately instead. Any doubt or failure answers false and the reader queues as before. */
+export async function wholeBuildBusyV1(input:{root:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl}):Promise<boolean> {
+  const{root,invocation,phaseControl}=input;
+  try{
+    requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+    return await withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>generationCustodyV1(root,store,control).structuralBusy({signal:invocation.control.signal}),{optionalCaches:false,shared:true});
+  }catch(error){if(invocation.control.signal.aborted)throw error;return false;}
+}
+
+
 /** 🧭️ What an attached reader looks at: whether a live claim of the builder custody (held or queued) conflicts with the owners of its request, and the generation the pointer names now; a failure answers by throwing and the attachment ends in the local read. */
 export async function builderLookV1(input:{root:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl;request:GenerationPrefetchRequestV1}):Promise<{held:boolean;generation:number|undefined}> {
   const{root,invocation,phaseControl,request}=input;
@@ -179,11 +189,11 @@ export async function builderLookV1(input:{root:string;invocation:ScriptInvocati
 }
 
 
-/** 🧵️ The owners of the previous generation that keep their fragment and only get their edges again, without inference, when the environment moved or when their stored edges are of another environment (`stale`, always refreshed, never carried, also while the environment stays): every owner of a real project root that is not inferred again, except the `consumers` when they are known (the owners whose recorded lookups an edit of the environment touches, see `edgeConsumersOfPartV1`): the others keep their edges, are `carried` and only name the new environment. A withheld owner has no edges, but its fragment names the environment it was published for, so it is refreshed like the others; tagged owners are rediscovered as a group when the environment moves. */
+/** 🧵️ The owners of the previous generation that keep their fragment and only get their edges again, without inference, when the environment moved or when their stored edges are of another environment (`stale`, always refreshed, never carried, also while the environment stays; a scanned root (`roots`) excuses nothing: an owner the scan did not infer again keeps its edges only by being refreshed or carried): every owner of a real project root that is not inferred again, except the `consumers` when they are known (the owners whose recorded lookups an edit of the environment touches, see `edgeConsumersOfPartV1`): the others keep their edges, are `carried` and only name the new environment. A withheld owner has no edges, but its fragment names the environment it was published for, so it is refreshed like the others; tagged owners are rediscovered as a group when the environment moves. */
 export function edgeRefreshOwnersV1(input:{cold:boolean;environment:string;previousEnvironment:string|null;roots:ReadonlySet<string>;stubs:Readonly<Record<string,{root:string;kind:string;tag?:string}>>;inferred:ReadonlySet<string>;consumers?:ReadonlySet<string>;stale?:ReadonlySet<string>}):{projects:string[];withheld:string[];carried:string[]} {
   const forced=input.stale??new Set<string>(),moved=input.environment!==input.previousEnvironment;
   if(input.cold||!moved&&!forced.size)return{projects:[],withheld:[],carried:[]};
-  const kept=Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&!input.inferred.has(name)&&!input.roots.has(stub.root)&&(moved||forced.has(name))),projects=kept.filter(([,stub])=>stub.kind==="project"),carried=(name:string)=>moved&&input.consumers!==undefined&&!input.consumers.has(name)&&!forced.has(name);
+  const kept=Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&!input.inferred.has(name)&&(moved||forced.has(name))),projects=kept.filter(([,stub])=>stub.kind==="project"),carried=(name:string)=>moved&&input.consumers!==undefined&&!input.consumers.has(name)&&!forced.has(name);
   return{projects:projects.filter(([name])=>!carried(name)).map(([name])=>name),withheld:kept.filter(([,stub])=>stub.kind==="unavailable").map(([name])=>name),carried:projects.filter(([name])=>carried(name)).map(([name])=>name)};
 }
 

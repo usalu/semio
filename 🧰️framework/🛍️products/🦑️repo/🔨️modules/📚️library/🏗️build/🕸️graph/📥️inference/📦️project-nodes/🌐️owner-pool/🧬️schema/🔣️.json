@@ -81,7 +81,7 @@
         "loadCeilingBasisPointsPerCore": 15000,
         "foregroundCoreShareBasisPoints": 2500,
         "yieldAfterMilliseconds": 5000,
-        "swapActiveBasisPointsPerSecond": 0.6,
+        "swapActiveBasisPointsPerSecond": 10,
         "swapOutBasisPointsPerSecond": 40,
         "yieldKillMilliseconds": 3000,
         "unshareableLimit": 3,

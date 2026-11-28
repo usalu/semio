@@ -335,7 +335,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
     pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{state,progress,contended,..}=self;let Some(original)=state.as_ref()else{return CleanupTurn::Cancelled};
         let turn=match cx.with_original_native_weak_source(original,|state,cx|Ok(Self::advance_source(state,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)};
-        if runtime_cleanup_reading_is_starved(*progress,cx.retirement_should_yield()){*contended=true}
+        if runtime_cleanup_reading_is_starved(*progress,cx.should_yield()){*contended=true}
         turn
     }
     pub fn advance_source(state:&RuntimeCloseWorkerState<PA>,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{

@@ -486,5 +486,4 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
         }
     }
     acknowledge_local_interaction_pages(app);
-    if std::env::var_os("L3D_TRACE").is_some() { eprintln!("[DEBUG] turn {} census [{}] diag {}", settled.turns, semio_plugin::app::typed_operation_unit_census() - debug_before, app.parts().0.typed_operation_diagnostic()); }
 }

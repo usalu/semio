@@ -6,6 +6,7 @@ type Span = { lo: number; hi: number };
 type Part = Span & { range: PrimitiveSolid; keys: string[] };
 type Group = Span & { parts: Part[] };
 const MIN_VERTEX_BYTES = 4096;
+const SPLIT_BYTES = 320;
 
 function partsOf(p: Primitive, pace: Pace): Part[] {
   const vertices = p.positions.length / 3;
@@ -49,13 +50,14 @@ function split(p: Primitive, group: Group, pace: Pace): Primitive {
   };
 }
 
-/** ♊️ Retains the original order of every index, solid, material and mesh. A hash nominates a candidate partition; BufferBuilder verifies every encoded component before sharing an accessor. Feature lines can use the matching triangle span, including its unused boundary vertices. */
-export function partitionRigidParts(meshes: readonly Mesh[], pace: Pace): readonly Mesh[] {
+/** ♊️ Retains the original order of every index, solid, material and mesh. A hash nominates a candidate partition; BufferBuilder verifies every encoded component before sharing an accessor. Feature lines can use the matching triangle span, including its unused boundary vertices. With `shareTopology`, a solid whose indices counted from its first vertex repeat in other solids also becomes a primitive of its own when the 16-bit index bytes it then shares outweigh the JSON of the extra primitives (one tessellation pattern drawn at many places, like the lobes of a crown). */
+export function partitionRigidParts(meshes: readonly Mesh[], pace: Pace, shareTopology = false): readonly Mesh[] {
   if (!meshes.some((mesh) => mesh.primitives.some((p) => p.mode === "triangles" && !p.joints && !p.weights && (p.solids?.length ?? 0) > 1 && p.positions.length * 4 >= MIN_VERTEX_BYTES))) return meshes;
   const rows = new Map<Primitive, Part[]>();
   const owners = new Map<string, string>();
   const repeated = new Set<string>();
   const parentHashes = new Map<readonly number[], number>();
+  const patterns = new Map<string, { bytes: number; places: Set<string>; splits: number }>();
   const float = new Float32Array(1), bits = new Uint32Array(float.buffer);
   const fingerprint = (values: readonly number[], start: number, end: number): number => {
     let hash = 2166136261;
@@ -67,9 +69,32 @@ export function partitionRigidParts(meshes: readonly Mesh[], pace: Pace): readon
     }
     return hash;
   };
+  const topologyHash = (indices: readonly number[], part: Part): number => {
+    let hash = 2166136261;
+    for (let i = part.range.first; i < part.range.first + part.range.count; i++) {
+      pace.tick();
+      hash = Math.imul(hash ^ (indices[i]! - part.lo), 16777619);
+    }
+    return hash;
+  };
   for (const mesh of meshes) for (const p of mesh.primitives) {
     if (p.mode !== "triangles" || p.positions.length * 4 < MIN_VERTEX_BYTES) continue;
     const parts = partsOf(p, pace);
+    if (shareTopology) {
+      let parent = parentHashes.get(p.indices);
+      if (parent === undefined) {
+        parent = fingerprint(p.indices, 0, p.indices.length);
+        parentHashes.set(p.indices, parent);
+      }
+      for (const part of parts) {
+        const key = `t/${part.range.count}/${topologyHash(p.indices, part)}`;
+        const pattern = patterns.get(key) ?? { bytes: part.range.count * 2, places: new Set<string>(), splits: 0 };
+        pattern.places.add(`${parent}/${p.indices.length}/${part.range.first}`);
+        if (parts.length > 1) pattern.splits += 1;
+        patterns.set(key, pattern);
+        part.keys.push(key);
+      }
+    }
     for (const part of parts) {
       if ((part.hi - part.lo) * 12 < MIN_VERTEX_BYTES) continue;
       for (const [name, values] of [["p", p.positions], ["n", p.normals]] as const) {
@@ -90,6 +115,7 @@ export function partitionRigidParts(meshes: readonly Mesh[], pace: Pace): readon
     }
     if (parts.length > 1) rows.set(p, parts);
   }
+  for (const [key, pattern] of patterns) if (pattern.places.size > 1 && pattern.bytes * (pattern.places.size - 1) > pattern.splits * SPLIT_BYTES) repeated.add(key);
   const partitions = new Map<Primitive, Group[]>();
   const lineOwners = new Map<readonly number[], Map<string, Group>>();
   for (const [p, parts] of rows) {

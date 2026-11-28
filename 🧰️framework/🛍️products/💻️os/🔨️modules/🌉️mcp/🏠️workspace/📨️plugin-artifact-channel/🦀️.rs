@@ -19,7 +19,7 @@ use semio_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, fin
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_foundation::errors::GatewayError;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, ActivationPhase, ActivationScope, Fault, InferCommand, PreparedOps};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, GUEST_REFUSED_FAULT_CODE, ActivationPhase, ActivationScope, Fault, InferCommand, PreparedOps};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_schema::schema::{ARTIFACT_INFERENCE_WIRE_VERSION, ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
 

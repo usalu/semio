@@ -35,7 +35,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioOfficeApps>, PluginAssemblyError> {
-    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioOfficeApps>::new("stdio-office").label("Stdio Office").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-office").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioOfficeApps>::new("stdio-office").label(semio_plugin::LocalizedLabel::native("Stdio Office", "Stdio Büro")).version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-office").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_docx::declaration(semio_s_artifact_stdio_docx::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_pptx::declaration(semio_s_artifact_stdio_pptx::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition()?).map_err(PluginAssemblyError::definition)?);

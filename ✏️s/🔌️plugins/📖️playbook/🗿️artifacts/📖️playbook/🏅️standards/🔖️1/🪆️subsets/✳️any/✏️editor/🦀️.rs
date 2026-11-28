@@ -313,6 +313,7 @@ fn playbook_store_bounds<P: semio_framework_value::ToValue, M: semio_framework_v
         maximum_bytes: PLAYBOOK_STORE_MAXIMUM_BYTES,
         mutation_bytes: |mutation| semio_framework_pack_json::to_json_string(mutation).len(),
         snapshot_bytes: |snapshot| semio_framework_pack_json::to_json_string(snapshot).len(),
+        heap_quote: |snapshot, mutation| store::ColdHeapQuote::reference(semio_framework_pack_json::to_json_string(snapshot).len(), semio_framework_pack_json::to_json_string(mutation).len()),
     }
 }
 //#endregion 📬️OneItemPreparation

@@ -5,7 +5,7 @@ use crate::standards::v1_7::subsets::base::modules::{
     colour::{extra_entries, lift_ext_g_state}, content::{bounded_number, content_extent, FontTable, PdfFixedCodeWidth}, fonts::{controlled_simple_text, ControlledFontResources, FontCodec},
     images::{ControlledImageBinding, ControlledImageResources}, lexer::{CosReceipt, CosStatus, grow_table, table_growth},
 };
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCharProc, PdfContent, PdfExtGState, PdfFont, PdfFontKind, PdfFontProgram, PdfFormXObject, PdfNamedProperties};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOutputIntent, PdfBaseEncoding, PdfCharProc, PdfContent, PdfExtGState, PdfFont, PdfFontKind, PdfFontProgram, PdfFormXObject, PdfNamedProperties};
 use crate::standards::v1_7::subsets::base::io::text_string::decode_text_string;
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{rename_target, ResourceMap};
 use crate::standards::v1_7::subsets::base::modules::lift::{Category as LiftCategory, FontLift, FontStart};
@@ -81,7 +81,7 @@ impl InfoField {
 
 /// 🧭️ The document lanes lifted after every page, in the reference lifter's catalog order.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Lane { Outlines, Names, Dests, Labels, Form, Preferences, OpenAction, Metadata, Extra, Release }
+enum Lane { Outlines, Names, Dests, Labels, Form, Preferences, OpenAction, Metadata, OutputIntents, Extra, Release }
 
 /// 🪢️ A tree node: an indirect object, or a direct dictionary nested under at most two keys of an indirect owner.
 #[derive(Clone, Copy)]
@@ -557,7 +557,6 @@ impl ControlledDocumentLiftCursor {
                 let Some(form) = Node::within(catalog, None, TreeKey::AcroForm, value) else { return self.defer_detail(Barrier::Catalog, "AcroForm"); };
                 self.acro_form = Some(form);
             }
-            "OutputIntents" => return self.defer_detail(Barrier::Catalog, &entry.key),
             "Type" | "Pages" => return self.defer(Barrier::Catalog),
             _ => {}
         }
@@ -1726,7 +1725,7 @@ impl ControlledDocumentLiftCursor {
         self.frames_len = 0;
         self.stage = Stage::Navigation(match lane {
             Lane::Outlines => Lane::Names, Lane::Names => Lane::Dests, Lane::Dests => Lane::Labels, Lane::Labels => Lane::Form, Lane::Form => Lane::Preferences,
-            Lane::Preferences => Lane::OpenAction, Lane::OpenAction => Lane::Metadata, Lane::Metadata => Lane::Extra, Lane::Extra | Lane::Release => Lane::Release,
+            Lane::Preferences => Lane::OpenAction, Lane::OpenAction => Lane::Metadata, Lane::Metadata => Lane::OutputIntents, Lane::OutputIntents => Lane::Extra, Lane::Extra | Lane::Release => Lane::Release,
         });
         work(0, 0)
     }
@@ -1796,6 +1795,15 @@ impl ControlledDocumentLiftCursor {
                 if roles.len() > snapshot.admitted_stream_roles.capacity() - snapshot.admitted_stream_roles.len() { return self.defer_detail(Barrier::Roles, "Metadata"); }
                 for (offset, role) in roles.into_iter().enumerate() { snapshot.admitted_stream_roles.insert(at + offset, role); }
                 snapshot.metadata = text;
+                let _ = self.next_lane(lane);
+                work(bytes, 0)
+            }
+            Lane::OutputIntents => {
+                let Some(intents) = self.catalog_value(source, "OutputIntents") else { return self.next_lane(lane); };
+                let bytes = 8 * size_of::<PdfOutputIntent>() + 3 * reach(source, &intents, 3);
+                if let Some(denied) = budget(grant, bytes, 0) { return denied; }
+                let Some((lifted, _)) = self.cold(source, false, |lifter| lifter.lift_output_intents(&intents)) else { return self.defer_detail(Barrier::Catalog, "OutputIntents"); };
+                self.snapshot_mut().output_intents = lifted;
                 let _ = self.next_lane(lane);
                 work(bytes, 0)
             }

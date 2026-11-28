@@ -61,7 +61,7 @@ export class ShardExactActivations {
         let postponed = false;
         for (const [index, slice] of slices.entries()) {
           const requestId = this.hub.transport.nextRequestId();
-          const answer = await this.hub.transport.send(slot, { kind: "turn", requestId, actorId, activationGeneration: activation.generation, events: slice, commandPage: index === slices.length - 1 ? commandPage : undefined, budget }, requestId);
+          const answer = await this.hub.transport.send(slot, { kind: "turn", requestId, actorId, activationGeneration: activation.generation, events: slice, commandPage: index === slices.length - 1 ? commandPage : undefined, budget, batched: index < slices.length - 1 }, requestId);
           answers.push(answer);
           if (index < slices.length - 1) {
             assertActive();

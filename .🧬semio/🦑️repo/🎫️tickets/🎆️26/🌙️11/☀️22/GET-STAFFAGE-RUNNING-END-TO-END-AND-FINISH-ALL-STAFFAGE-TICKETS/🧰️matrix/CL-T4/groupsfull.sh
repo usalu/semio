@@ -1,0 +1,3 @@
+#!/bin/zsh
+# 🌿️ `groups.sh` with every group listed: groupsfull.sh <folder under $GEN> <id | file.json>…
+TOP=9999 zsh "${0:A:h}/groups.sh" "$@"

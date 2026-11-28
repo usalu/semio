@@ -16,13 +16,14 @@ if(record!==undefined){
   await new Promise<void>(done=>setTimeout(done,policy.pollMilliseconds));
  }
 }
+const received:{signal:string;atMs:number}[]=[],sent:{signal:string;reason:"deadline";atMs:number}[]=[];
 const end=(exit:number|null,spawnFailed:boolean,signal:string|null=null):void=>{
- writeFileSync(`${exitFile}.tmp`,JSON.stringify({exit,signal,spawnFailed,endedMs:Date.now()}));
+ writeFileSync(`${exitFile}.tmp`,JSON.stringify({exit,signal,spawnFailed,endedMs:Date.now(),...received.length>0?{received}:{},...sent.length>0?{sent}:{}}));
  renameSync(`${exitFile}.tmp`,exitFile);
  process.exit(0);
 };
 const child=spawn(command,args,{stdio:"inherit",windowsHide:true});
 child.on("error",()=>end(null,true));
-const disarm=endsAt===undefined?undefined:armWrapperDeadlineV1({deadlineMs:endsAt,graceMs:schema.definitions.Policy.const.graceMilliseconds,now:Date.now,setTimer:(run,milliseconds)=>setTimeout(run,milliseconds),clearTimer:timer=>clearTimeout(timer as ReturnType<typeof setTimeout>),terminate:()=>{try{child.kill("SIGTERM");}catch{}},kill:()=>{try{child.kill("SIGKILL");}catch{}}});
+const disarm=endsAt===undefined?undefined:armWrapperDeadlineV1({deadlineMs:endsAt,graceMs:schema.definitions.Policy.const.graceMilliseconds,now:Date.now,setTimer:(run,milliseconds)=>setTimeout(run,milliseconds),clearTimer:timer=>clearTimeout(timer as ReturnType<typeof setTimeout>),terminate:()=>{sent.push({signal:"SIGTERM",reason:"deadline",atMs:Date.now()});try{child.kill("SIGTERM");}catch{}},kill:()=>{if(sent.length<4)sent.push({signal:"SIGKILL",reason:"deadline",atMs:Date.now()});try{child.kill("SIGKILL");}catch{}}});
 child.on("close",(code,signal)=>{disarm?.();end(code,false,signal);});
-for(const name of["SIGTERM","SIGINT"] as const)process.on(name,()=>{try{child.kill(name);}catch{}});
+for(const name of["SIGTERM","SIGINT","SIGHUP"] as const)process.on(name,()=>{if(received.length<8)received.push({signal:name,atMs:Date.now()});try{child.kill(name);}catch{}});

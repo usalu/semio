@@ -64,7 +64,7 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("dead".into()) }),
         Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: Some(0.02), mesh_size: None }),
         Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
-        Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
+        Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }),
         Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
         Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
         Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e1".into()] }),
@@ -140,8 +140,8 @@ async fn every_command_matches_declared_wire_bytes() {
         ),
         ("010a01044c697665020006000101", Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })),
         (
-            "010b0303554c530464656164046c69766502000600010c020d0200060101059a9999999999f53f0d020006020105000000000000f83f",
-            Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
+            "010b0203554c531c5b5b2264656164222c312e33355d2c5b226c697665222c312e355d5d02000600010601",
+            Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }),
         ),
         ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
         ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None })),
@@ -221,7 +221,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
             Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
             Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::result_animation_tick_step::<semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::Fem2dResultsPlayback>(payload, &cfg, &view("results-left", results_window::WINDOW_KIND_ID), None).map(|step| step.emit),
-            Fem2dCommand::SetTransformGumballFlag(payload) => gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::SetTransformGumballFlag(payload) => gumball::set_transform_gumball_flag::handle_window(payload, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
         .unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));
@@ -550,4 +550,23 @@ fn set_result_display_is_offered_only_by_the_results_window_2d() {
     let offers = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).map(|window| semio_framework::window_kind_actions(&definition, window).iter().any(|action| action.id == "setResultDisplay")).expect("declared window kind");
     assert!(offers(results_window::WINDOW_KIND_ID), "the Results window offers Set Result Display");
     assert!(!offers(model_window::WINDOW_KIND_ID), "the Model window never lists it");
+}
+
+/// 📚️ LAW: the `setActiveExample` palette options are the Artifact panel combobox rows: the empty example, then every registered example in registration order, each with one canonical name per language (language-neutral fixture `🧫️fixtures/📚️example-options/🔣️.json`).
+#[test]
+fn set_active_example_options_equal_the_combobox_options() {
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️example-options/🔣️.json")).expect("language-neutral example-options fixture");
+    let definition = create_fem2d_app();
+    let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared");
+    let arg = action.args.iter().find(|arg| arg.id == "exampleId").expect("exampleId is declared");
+    let semio_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is a select: {:?}", arg.schema) };
+    let declared: Vec<(String, String, String)> = options.iter().map(|option| (option.value.clone(), option.label.resolve(Terminology::Native, Locale::En).to_string(), option.label.resolve(Terminology::Native, Locale::De).to_string())).collect();
+    let vector: Vec<(String, String, String)> = fixture["options"].as_array().expect("options").iter().map(|row| (row["id"].as_str().expect("id").to_owned(), row["en"].as_str().expect("en").to_owned(), row["de"].as_str().expect("de").to_owned())).collect();
+    assert_eq!(declared, vector, "the palette action offers exactly the fixture's options");
+    let mut combobox = vec![(semio_s_fem_app_surface::EMPTY_EXAMPLE_ID.to_owned(), semio_s_fem_app_surface::no_example_label().resolve(Terminology::Native, Locale::En).to_string(), semio_s_fem_app_surface::no_example_label().resolve(Terminology::Native, Locale::De).to_string())];
+    combobox.extend(semio_s_artifact_fem_2d_io::examples::sources().iter().map(|example| (example.id().to_owned(), example.label().resolve(Terminology::Native, Locale::En).to_string(), example.label().resolve(Terminology::Native, Locale::De).to_string())));
+    assert_eq!(declared, combobox, "the palette action and the combobox derive from one registry");
+    assert_eq!(arg.default.as_ref().and_then(|value| value.as_str()), fixture["default"].as_str(), "the declared default is the boot example");
 }

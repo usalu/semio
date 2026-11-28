@@ -35,3 +35,24 @@ The coordinator's 1-minute load sits at 50-55 from processes outside the wave (a
 
 ## Addendum 01:40 (11/27): landing slots
 Ready fell 9 → 5 because our landings in build-system code keep restarting every worker's workspace stage (same as wave 1125). From now on product landings in B, C, HC, 🏃️process, 🚦️ready, graph and any Cargo.toml/package.json land ONLY in landing slots: minutes :00-:10 of each hour (next: 02:00-02:10, 03:00-03:10, …). Between slots: stage the complete patch in `T/🧰️scripts/<lane>/` (or a scratch copy), run its tests against the scratch copy, and keep working on the next item. Test-only edits (files under 🧪️tests) and docs may land any time. Exception: a fix for a fleet-wide outage (every worker failing) — tell the coordinator in your final message.
+
+## Addendum 04:15 (11/27): graph lock queue in slots
+Several lanes land in `graph` each slot (05:00: H9 edge heal, H31 yield, H38 narrow reads, H37). Take `landing.lock.graph` only for the atomic apply (seconds), release it, then typecheck/test and fix forward. If the lock is held > 3 min inside a slot, write `T/landing.queue.graph` (append your lane + time) and wait; the coordinator clears stuck holders. A landing that misses its slot by < 15 min may finish in that overrun.
+
+## Addendum 08:15 (11/27): SEAL QUIET WINDOW
+H9's proof read 5 (pid 90730, started 07:05, round 4 code) is converging (stale owners 1225 → 460 → 336). Until the coordinator lifts this window: NO landings in graph or inference-relevant code — B/🕸️graph, B/📥️inputs, B/🗂️workspaces, B/🧩️units, inference/closure/owner code, any `📋️project.json`, `🗂️suites/🔣️.json`, Cargo.toml, package.json. Other areas (caching, host-capacity, remote-execution sidecars, process, tests) may land in the 09:00 slot as usual. Stage graph-relevant patches and keep working.
+
+## Addendum 13:00 (11/27): seal quiet window LIFTED
+No whole read runs now. Graph code may land again in hourly slots (13:00, 14:00, …). Staged graph patches land in the 13:00 slot via lane H84 (H60, H78). A new quiet window will be declared when the next proof read starts.
+
+## Addendum 14:10 (11/27): land through `repo land`
+From now on every product landing in B, C, HC, 🏃️process, 🚦️ready, graph and manifests goes through `repo land` (MCP tool `land`): stage → `repo land check` → `repo land --wave "Wave 1127" --lane <id> --title "…" <stage>`. Usage and semantics: `W/brief-addendum-repo-land.md`. It runs the gates (debug lines, dangling imports, typecheck, cargo check, suite law, declared tests) on an overlay, waits for the slot, locks only for the atomic apply, writes the rollback point and the landings.md entry. Manual landing scripts are no longer allowed except `--outage` emergencies.
+
+## Addendum 14:40 (11/27): SEAL QUIET WINDOW 2
+H84's proof read 10 (pid 48808, started 13:16) is running. Same rule as 08:15: no landings in graph/inputs/workspaces/units/inference code, project.json, suite tables, manifests until the coordinator lifts it. `repo land` users: stage and `repo land check` only for those areas.
+
+## Addendum 16:50 (11/27): FULL BUILD-SYSTEM FREEZE until the seal
+The proof read (pid 48808) restarted after the 14:30 and 16:00-16:13 landings in process/caching code: the whole read's closure includes ALL build-system code, not just graph. Until the coordinator lifts this: NO product landings anywhere under B, C, HC, 🧰️framework/🔨️modules/🏃️process, 🚦️ready/sidecars, manifests, project.json, suite tables — also no `repo land` applies and no manual exceptions (the 17:00 exceptions are revoked). Test-only edits under 🧪️tests and ticket files are allowed. Stage everything; it lands in the first slot after the seal.
+
+## Addendum 19:35 (11/27): freeze LIFTED at the 20:00 slot; landing train
+The proof read does not converge while peers outside this wave keep editing build-system code (stale edges 1 → 59 → 219 → 292 between waves); holding the freeze blocks ~25 staged landings with no seal in sight. From the 20:00 slot: product landings resume, but ONLY through lane H101 (landing train), which lands the staged queue in order via `repo land`, one changeset at a time, re-checking each against live. Lanes do not land themselves; they hand their stage path to H101 (message the coordinator). The seal becomes a structural task (incremental per-owner publication), not a freeze.

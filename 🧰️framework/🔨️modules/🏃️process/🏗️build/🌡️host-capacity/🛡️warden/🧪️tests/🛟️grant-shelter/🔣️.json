@@ -1,0 +1,22 @@
+{
+  "total": 16384,
+  "subject": {"id":"worker","pid":21,"kind":"slice-worker","rank":60,"elapsedSeconds":600,"suspended":false,"suspendedSeconds":0,"canSuspend":true,"canCancel":true,"capMegabytes":6144,"capCritical":true},
+  "calm": {"totalMegabytes":16384,"availableMegabytes":9000,"swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"compressedMegabytes":0,"pressure":"normal","swapFreeMegabytes":4096,"swapVolumeFreeMegabytes":50000},
+  "cap": [
+    {"name":"within the static cap without a grant","megabytes":6000,"grant":null,"cancel":false},
+    {"name":"above the static cap without a grant","megabytes":6807,"grant":null,"cancel":true},
+    {"name":"above the static cap but within the grant","megabytes":6807,"grant":8000,"cancel":false},
+    {"name":"above the grant and the static cap but below the host cap share, the owner cuts it","megabytes":8100,"grant":8000,"cancel":false},
+    {"name":"a claimed worker above the host cap share","megabytes":9900,"grant":8000,"cancel":true},
+    {"name":"grant above the host cap share","megabytes":9900,"grant":12000,"cancel":true}
+  ],
+  "acute": {
+    "host": {"totalMegabytes":16384,"availableMegabytes":4329,"swapUsedMegabytes":3000,"swapOutMegabytesPerSecond":400,"intervalMilliseconds":10000,"compressedMegabytes":4800,"pressure":"warn","swapFreeMegabytes":1000,"swapVolumeFreeMegabytes":50000},
+    "cases": [
+      {"name":"room above the guard line spares a sheltered worker","available":2300,"megabytes":5372,"grant":6839,"cancel":false},
+      {"name":"an unsheltered worker above its grant is still taken","available":2300,"megabytes":7000,"grant":6839,"cancel":true},
+      {"name":"4329 MB available is no shortage: even a worker above its grant is not taken","available":4329,"megabytes":7000,"grant":6839,"cancel":false},
+      {"name":"memory below the danger line takes a sheltered worker","available":600,"megabytes":5372,"grant":6839,"cancel":true}
+    ]
+  }
+}

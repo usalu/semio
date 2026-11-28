@@ -286,6 +286,8 @@ export type PluginOperationCompletion = Readonly<{
   historyPatch: HistoryPatch | undefined;
   requestedEffects: readonly Effect[];
   terminalOutput: unknown;
+  /** ⚠️ Present when the operation ended in a fault no awaiting host call received: the input that started it settles as refused with this fault instead of waiting for a completion that never comes. */
+  fault?: SemioFaultError;
 }>;
 //#endregion 🔖️ActorAdapter
 

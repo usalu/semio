@@ -1,7 +1,7 @@
 /** 🧪️ terra-jco-spike Web Worker harness — same S1-S4 sequence as 📜️script.ts, run inside a real
  * browser Web Worker (importing the jco-transpiled ES module directly), reporting results back to
  * the page via postMessage so the Browser pane's console/page-text tools can read them. */
-import { probe } from "../../🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
+const { probe } = await import(new URL("../../🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js", import.meta.url).href);
 
 function log(text) {
   postMessage({ kind: "log", text });

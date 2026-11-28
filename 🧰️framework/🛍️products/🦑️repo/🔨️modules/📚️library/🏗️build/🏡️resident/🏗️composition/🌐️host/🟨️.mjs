@@ -1,6 +1,7 @@
 /** 🏗 Composition root of `repo service host --foreground`: binds the graph loader to the per-host service and ties its lifetime to the process signals. */
 import {spawnSync} from "node:child_process";
 import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
+import {LEASE_OWNER_ENVIRONMENT_V1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
 import {createHash} from "node:crypto";
 import {basename,dirname,join} from "node:path";
 import {mkdirSync,readdirSync,rmSync} from "node:fs";
@@ -15,7 +16,7 @@ import {settleGraphMemoryV1} from "../../../🧠️memory/🧽️settle/🟨️.
 import {READY_SLICE_REPORT_POLICY_V1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import {placeServiceOutsideJobsV1,prepareServiceGroupV1,releaseOwnServiceGroupV1,runsInServiceGroupV1,serviceLaunchArgumentsV1,sweepEmptyServiceGroupsV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import {appendServiceExitRowV1,completeServiceStartRowV1} from "../../🧾️exit-log/🟨️.mjs";
-import {ACCESS_PROOF_VERSION_V1,accessDirectoryV1,consentIdentityV1,createMountReproofV1,launchdRefusalV1,launcherDigestV1,probeConsentV1,protectedFolderOfV1,sampleAccessInChildV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
+import {ACCESS_PROOF_VERSION_V1,LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1,accessDirectoryV1,consentIdentityV1,createMountReproofV1,launchdRefusalV1,launcherDigestV1,probeConsentV1,protectedFolderOfV1,sampleAccessInChildV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
 import {ensureLauncherConsentV1,launchdRouteV1,listServiceJobsV1,startViaLaunchdV1} from "./🍎️launchd/🟨️.mjs";
 import {createResponsibilityWatchV1} from "../../🔐️consent/🧷️responsibility/🟨️.mjs";
 import {fileURLToPath} from "node:url";
@@ -50,7 +51,7 @@ async function gateConsentV1({runtime,environment,platform,log,access}){
 }
 
 /** ▶ Runs the host service until it closes; resolves the exit code (75 when the memory bound forced a restart, else 0). `loadGraph({root,signal})` returns the neutral build graph of one workspace. */
-export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0,cache,reload,access={}}){
+export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0,workerHandover=()=>undefined,cache,reload,access={}}){
  const runtime=hostEndpointsV1(implementation,environment,platform);
  const gate=await gateConsentV1({runtime,environment,platform,log,access});
  if(gate!==undefined)return gate;
@@ -64,7 +65,7 @@ export async function runHostForegroundV1({implementation,loadGraph,loadSlice,id
   if(found)throw Object.assign(Error("Relative filesystem fstatat failed (EPERM)"),{code:"EPERM",root:dirname(found.place),entry:basename(found.place)});
   return load(...args);
  };
- const service=createHostServiceV1({runtime:{...runtime},implementation,...access.root?{access:{root:access.root,...access.platform?{platform:access.platform}:{},...access.home?{home:access.home}:{}}}:{},policy,log,ports:{planner:createGraphPlannerPortV1({loadGraph:guard(loadGraph),loadSlice:guard(loadSlice),identify,stale,capture,taskState}),...(admission?{admission}:{}),...(reload?{reload}:{}),settle:()=>settleGraphMemoryV1(),workers:{memory:workerMemory,active:workerBusy},cache:cache??{tick:async signal=>{const[{casEnforceTickV1},{casRootV1}]=await Promise.all([import("../../../🗄️cas/🚦️guard/🟦️.ts"),import("../../../🗄️cas/🗃️store/🟦️.ts")]);await casEnforceTickV1({root:casRootV1(environment,platform),signal});}}}});
+ const service=createHostServiceV1({runtime:{...runtime},implementation,...access.root?{access:{root:access.root,...access.platform?{platform:access.platform}:{},...access.home?{home:access.home}:{}}}:{},policy,log,ports:{planner:createGraphPlannerPortV1({loadGraph:guard(loadGraph),loadSlice:guard(loadSlice),identify,stale,capture,taskState}),...(admission?{admission}:{}),...(reload?{reload}:{}),settle:()=>settleGraphMemoryV1(),workers:{memory:workerMemory,active:workerBusy,handover:workerHandover},cache:cache??{tick:async signal=>{const[{casEnforceTickV1},{casRootV1}]=await Promise.all([import("../../../🗄️cas/🚦️guard/🟦️.ts"),import("../../../🗄️cas/🗃️store/🟦️.ts")]);await casEnforceTickV1({root:casRootV1(environment,platform),signal});}}}});
  let stopping,recorded=false;
  const record=row=>{if(recorded)return;recorded=true;const usage=process.memoryUsage();appendServiceExitRowV1(runtime.directory,{event:"exit",at:Date.now(),pid:process.pid,...seen.responsible===undefined?{}:{responsible:seen.responsible},rssMegabytes:Math.round(usage.rss/1048576),heapMegabytes:Math.round(usage.heapUsed/1048576),workers:workerMemory(),workersBusy:workerBusy(),...row});releaseOwnServiceGroupV1();};
  const crash=error=>{record({reason:"crash",error:error?.stack??String(error)});};
@@ -91,9 +92,9 @@ export async function runHostForegroundV1({implementation,loadGraph,loadSlice,id
  }
 }
 
-/** 🧷️ What belongs to the client that happened to start the service and must not follow it: its capacity grant (released when the client ends), the plan child of its own run, and the owner pid and admitted deadline of its Script process (the owner rule ends a process whose owner is gone, so a service that kept the starting client as its owner ended, with every slice worker it carried, the moment that client was killed).
+/** 🧷️ What belongs to the client that happened to start the service and must not follow it: its capacity grant (released when the client ends), the plan child of its own run, its lease owner token (`SEMIO_LEASE_OWNER`, which a stage runner of the readiness protocol puts into everything a try starts and reaps by: a service that kept it carried the work of every other client under the token of one stopped try, and that try then stopped it; the owner of a request travels with the request instead, see `owner` of the plan frame), the build invocation pids of its run, and the owner pid and admitted deadline of its Script process (the owner rule ends a process whose owner is gone, so a service that kept the starting client as its owner ended, with every slice worker it carried, the moment that client was killed).
  * @see ../../🧪️tests/🛡️client-kill/🟦️.ts */
-const CLIENT_BOUND_ENVIRONMENT_V1=Object.freeze(["SEMIO_SCRIPT_PROCESS_OWNER","SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_HOST_CAPACITY_GRANT","SEMIO_HOST_CAPACITY_PLAN","SEMIO_HOST_CAPACITY_PHASE_MARKS","SEMIO_BUILD_GRAPH_PLAN_OUT","SEMIO_BUILD_GRAPH_YIELD_TICKET","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST"]);
+export const CLIENT_BOUND_ENVIRONMENT_V1=Object.freeze([LEASE_OWNER_ENVIRONMENT_V1,"SEMIO_BUILD_INVOCATION_PID","SEMIO_BUILD_INVOCATION_PIDS","SEMIO_SCRIPT_PROCESS_OWNER","SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_HOST_CAPACITY_GRANT","SEMIO_HOST_CAPACITY_PLAN","SEMIO_HOST_CAPACITY_PHASE_MARKS","SEMIO_BUILD_GRAPH_PLAN_OUT","SEMIO_BUILD_GRAPH_YIELD_TICKET","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST"]);
 
 /** 🚫️ Why a service that a running service starts (`SEMIO_SERVICE_ROUTE_REQUIRED=launchd`, the reload) never starts directly on macOS below a protected folder: the direct child inherits the responsible app of the service that spawned it and loses the file access of the checkout the moment that one ends, so only a launchd job under the launcher may carry the service over; otherwise the next client starts it under its own access. */
 export const REPLACEMENT_REFUSAL_V1="A graph service is not started from inside a running service unless launchd runs it under the launcher: a direct child loses the file access of the checkout when the service that started it ends, so the next client starts it under its own access / Ein Graphdienst wird nicht aus einem laufenden Dienst gestartet, wenn ihn nicht launchd unter dem Launcher ausführt: ein direktes Kind verliert den Dateizugriff auf den Checkout, sobald der startende Dienst endet; der nächste Client startet ihn mit seinem eigenen Zugriff";
@@ -115,10 +116,10 @@ export function spawnHostServiceV1({command,environment=process.env,cwd=process.
   if(linux)sweepEmptyServiceGroupsV1("graph-",undefined);
   const group=linux?prepareServiceGroupV1(service):undefined,argv=group?serviceLaunchArgumentsV1(join(group,"cgroup.procs"),command):command;
   const eligible=launchdRouteV1({command,environment,cwd,runtimeDirectory:runtime.directory,tag:runtime.tag,...launchd.route}),remembered=eligible?(launchd.refused??launchdRefusalV1)(cwd):undefined,route=remembered?undefined:eligible;
-  if(remembered)process.stderr.write("The graph service runs under the access of the calling app: the launchd route was refused for "+(remembered.place||cwd)+" earlier since this machine started / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für "+(remembered.place||cwd)+" seit dem Start dieses Rechners bereits abgewiesen\n");
+  if(remembered){const place=remembered.place||cwd,clock=new Date(Number.isFinite(remembered.at)?remembered.at:Date.now()).toTimeString().slice(0,5),minutes=Math.max(1,Math.ceil(((Number.isFinite(remembered.at)?remembered.at:Date.now())+LAUNCHD_REFUSAL_RETRY_MILLISECONDS_V1-Date.now())/60_000));process.stderr.write("The graph service runs under the access of the calling app: the launchd route was refused for "+place+" at "+clock+"; it is probed again in "+minutes+" min / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für "+place+" um "+clock+" abgewiesen; sie wird in "+minutes+" Min. erneut geprüft\n");}
   if(required&&!route)refuseDirect();
   if(route){
-   const run=launchd.run??((program,args)=>{const result=spawnSync(program,args,{windowsHide:true,encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};});
+   const run=launchd.run??((program,args)=>{const result=spawnSync(program,args,{windowsHide:true,encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??"",stderr:result.stderr??""};});
    const consent=(launchd.ensure??ensureLauncherConsentV1)({root:cwd,probeScript:fileURLToPath(new URL("../../🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run,environment,...launchd.consent});
    if(required&&consent.state!=="ready")refuseDirect();
    if(consent.state==="waiting"){

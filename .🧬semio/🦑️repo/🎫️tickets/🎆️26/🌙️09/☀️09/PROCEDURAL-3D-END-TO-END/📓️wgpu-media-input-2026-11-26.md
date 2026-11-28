@@ -65,3 +65,12 @@ WGPU build, stage and Add Generation probe: BLOCKED. Every `repo cargo build -p 
 - No wasm was produced, so nothing was staged on 6118 and the Add Generation probe was not run. Roster mutation and geometry paint remain unverified. The served renderer is still the 02:44 build that predates `note_pending_input`.
 - Optimized-profile run of the two exhaustive media-slots laws: not started, because it needs a second large compile that the same memory queue would block. Command when memory is calm: `repo cargo --store=shared --configuration=release -- test -p semio-renderer-wgpu-media-slots --lib -- original_presented_params_same_source original_presented_slot_exact_identity`.
 - Remaining steps after the wasm exists (script already runs wasm-bindgen into `.cache/g3d-native/wasm-dev`): `wgpu-native-generate.ts`, `wgpu-native-components.sh`, `wgpu-native-activate.ts`, `screen -dmS g3dwgpu <ticket>/serve-generation3d-wgpu-native.sh`, then `SEMIO_PROBE_SETTLE=300 bun 🐍️wgpu-add-generation-probe.mjs` with one Chromium.
+
+## Follow-up 4: wasm build retries (2026-11-27 night)
+
+Blockers met, each different, none in the presenter fix:
+1. Concurrent in-flight edits by other agents (job-payload `JOB_PAYLOAD_PROCESS_OWNED_BYTES`, `plugin-builder` `semio_ui_locale`): resolved by waiting until the files were quiet.
+2. The repo's own unit-cache admission code was mid-edit (`world.hold.park is not a function` in `⚡️caching/🦀️cargo/🗃️unit-cache/⏳️admit/🟦️.ts`, failing the `syn` unit): resolved by waiting until quiet (3 min), retry.
+3. Host memory warden: five attempts cancelled with "the host was critically short of memory" (headroom reached -2745 MB with other sessions' `graph-plan` reads); the compiler image also reported 100 % full. `wgpu-wasm-build-retry.sh` (ticket) retries up to 6 times while the warden cancels. Each attempt rebuilds base crates (`semio_framework_value_*`, `semio_ui_contract_presentation`, `semio_os_history_schema`) before being cancelled, so the build is not converging while other sessions saturate the host.
+
+Status at hand-off: `wgpu-wasm-build-retry.sh` still running in the background (log `🗑️generated/wgpu-wasm-build.txt`, ends with `RETRY_DONE` or `RETRY_FAILED`). No new renderer wasm exists, so staging, serve on 6118 and the Add Generation probe have not run; roster mutation and geometry paint remain unverified.

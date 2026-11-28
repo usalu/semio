@@ -74,11 +74,16 @@ export class InputCommitLaneV1 {
         if (done) return;
         if (!this.owner.active) { finish(new Error("Input document retired")); return; }
         if (!settled) return;
+        if (outcome && outcome.kind === "applied" && !outcome.commit) {
+          const unchanged = request.read();
+          if (!unchanged || unchanged.target !== base.target) finish(new Error("Input target changed"));
+          else finish(unchanged.revision === base.revision ? undefined : new Error("Input publication belongs to another mutation"));
+          return;
+        }
         if (!outcome || outcome.kind !== "applied" || !outcome.commit || !exact(outcome.commit.operation) || !exact(outcome.commit.revision)) { finish(new Error("Input did not return a native commit receipt")); return; }
         const current = request.read();
         if (!current || current.target !== base.target) { finish(new Error("Input target changed")); return; }
         if (current.revision === outcome.commit.revision) {
-          if (current.value !== request.expected) { finish(new Error("Input publication changed the requested value")); return; }
           finish();
         } else if (current.revision !== base.revision) finish(new Error("Input publication belongs to another mutation"));
       };

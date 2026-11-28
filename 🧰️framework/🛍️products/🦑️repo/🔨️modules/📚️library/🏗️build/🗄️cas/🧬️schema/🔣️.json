@@ -30,6 +30,7 @@
           "releaseBytes": 17179869184,
           "serverBytes": 25769803776,
           "roleTtlMs": 604800000,
+          "reserveFloorMaxPercent": 12,
           "defaultRole": "builder",
           "roles": [
             {"id": "worker", "sharePercent": 3, "freePercent": 0, "releases": 0, "server": false, "reservePercent": 4, "reserveFloorBytes": 8589934592},
@@ -176,6 +177,14 @@
           "en": "Cache preview scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, {freedMib} MiB reclaimable.",
           "de": "Cache-Vorschau prüfte {entries} Einträge, {usedGib} GiB von {capGib} GiB belegt, {freedMib} MiB freigebbar."
         },
+        "previewProgressUnreferenced": {
+          "en": "Unreferenced preview scanned {entries} entries, {usedGib} GiB held, {freedMib} MiB reclaimable.",
+          "de": "Vorschau unreferenzierter Objekte prüfte {entries} Einträge, {usedGib} GiB belegt, {freedMib} MiB freigebbar."
+        },
+        "progressUnreferenced": {
+          "en": "Cache store: scanned {entries} entries, {usedGib} GiB held, freed {freedMib} MiB of unreferenced objects.",
+          "de": "Cache-Speicher: {entries} Einträge geprüft, {usedGib} GiB belegt, {freedMib} MiB unreferenzierter Objekte freigegeben."
+        },
         "progress": {
           "en": "Cache store: scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, freed {freedMib} MiB.",
           "de": "Cache-Speicher: {entries} Einträge geprüft, {usedGib} GiB belegt von {capGib} GiB, {freedMib} MiB freigegeben."
@@ -217,12 +226,12 @@
           "de": " Der Graph verwaltet {protectedMib} MiB an Quellinventaren. Nicht referenzierte Inventare lassen sich mit repo cache gc --area=graph-inference bereinigen."
         },
         "status": {
-          "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
-          "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
+          "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap in force, {heldGib} GiB for held entries.",
+          "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB wirksamer Grenze, {heldGib} GiB für gehaltene Einträge."
         },
         "statusCap": {
-          "en": "Cap in force {effectiveGib} GiB for role {role} (declared ceiling {capGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
-          "de": "Wirksame Grenze {effectiveGib} GiB für Rolle {role} (deklarierte Obergrenze {capGib} GiB): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
+          "en": "Cap in force {effectiveGib} GiB for role {role} (machine budget ceiling {capGib} GiB, held entries are judged against {heldGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
+          "de": "Wirksame Grenze {effectiveGib} GiB für Rolle {role} (Obergrenze des Maschinenbudgets {capGib} GiB, gehaltene Einträge werden an {heldGib} GiB gemessen): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
         },
         "statusCollection": {
           "en": "Last collection {age} min ago left {gib} GiB.",
@@ -273,12 +282,12 @@
           "de": "Der Speicher hält {usedGib} GiB seiner wirksamen Grenze von {capGib} GiB (Rolle {role}, {freeGib} GiB frei auf der Partition, harte Reserve {reserveGib} GiB); größte Halter: {holders}."
         },
         "statusReserve": {
-          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (larger of {percent}% of the partition and {floorGib} GiB): {freeGib} GiB free, {distanceGib} GiB above it; the store never grows into it.",
-          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größer von {percent} % der Partition und {floorGib} GiB): {freeGib} GiB frei, {distanceGib} GiB darüber; der Speicher wächst nie hinein."
+          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (largest of {percent}% of the partition, the {floorGib} GiB floor scaled to the volume and the machine's host free floor): {freeGib} GiB free, {distanceGib} GiB above it; the store never grows into it.",
+          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größter von {percent} % der Partition, der auf das Volume skalierten {floorGib} GiB Untergrenze und der Host-Freiraum-Untergrenze des Rechners): {freeGib} GiB frei, {distanceGib} GiB darüber; der Speicher wächst nie hinein."
         },
         "statusReserveBreached": {
-          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (larger of {percent}% of the partition and {floorGib} GiB): only {freeGib} GiB free, {distanceGib} GiB BELOW it; the store collects expired inputs, then unreferenced data, until the reserve is back and refuses writes meanwhile.",
-          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größer von {percent} % der Partition und {floorGib} GiB): nur {freeGib} GiB frei, {distanceGib} GiB UNTER der Reserve; der Speicher bereinigt abgelaufene Eingaben, dann unreferenzierte Daten, bis die Reserve wieder erreicht ist, und lehnt solange Schreiben ab."
+          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (largest of {percent}% of the partition, the {floorGib} GiB floor scaled to the volume and the machine's host free floor): only {freeGib} GiB free, {distanceGib} GiB BELOW it; the store collects expired inputs, then unreferenced data, until the reserve is back and refuses writes meanwhile.",
+          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größter von {percent} % der Partition, der auf das Volume skalierten {floorGib} GiB Untergrenze und der Host-Freiraum-Untergrenze des Rechners): nur {freeGib} GiB frei, {distanceGib} GiB UNTER der Reserve; der Speicher bereinigt abgelaufene Eingaben, dann unreferenzierte Daten, bis die Reserve wieder erreicht ist, und lehnt solange Schreiben ab."
         },
         "reserveRefused": {
           "en": "The cache store would grow into its free-space reserve ({freeGib} GiB free, {reserveGib} GiB reserved for role {role}); this write is refused and the caller carries on without the cache.",

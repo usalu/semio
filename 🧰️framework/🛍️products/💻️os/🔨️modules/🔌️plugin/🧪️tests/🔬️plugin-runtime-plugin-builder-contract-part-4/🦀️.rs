@@ -60,7 +60,9 @@ use semio_plugin_window_config::WindowConfigOwner;
 use semio_plugin_window_config::WindowConfigReplaceMutation;
 use semio_plugin_window_kits::WindowKit;
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{ContractApp, SingleDocumentApp, TEST_APP_WINDOW_BODY_KEY, TEST_COMMAND_RETAINED_GRANT, TEST_HOST_EVENTS, TEST_RESTART_SCHEMA, TEST_RESTART_TOOL, TEST_RETAINED_COMMAND_RAW_BYTES, TEST_RETAINED_COMMAND_TOOL, TestApp, TestCommand, app_maintenance_turn, archive_fault_text, close_member_admission_app, close_reserved_app, contract_app, contract_app_under_test, contract_composed_app, contract_composed_app_raw, drain_and_close_composed_fixture, drive_job_close, drive_single_document_archive, dv, inline_interaction_select, interaction_app_under_test, interaction_target_args, job_close_grant, label_in, meta, reads_child_count, register_test_child, reserved_action, settle_contract_app, settle_reserved, test_child_emit, test_retained_command_id, test_retained_command_payload, test_task};
+use store::ReferenceSpaceMember as _;
+use semio_plugin_ownership::bounded_ownership::{plugin_demand_grant, ARTIFACT_LIVE_OUTPUT_SLOTS};
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{TestRuntimeApps, ContractApp, SingleDocumentApp, TEST_APP_WINDOW_BODY_KEY, TEST_COMMAND_RETAINED_GRANT, TEST_HOST_EVENTS, TEST_RESTART_SCHEMA, TEST_RESTART_TOOL, TEST_RETAINED_COMMAND_RAW_BYTES, TEST_RETAINED_COMMAND_TOOL, TestApp, TestCommand, app_maintenance_turn, archive_fault_text, close_member_admission_app, close_reserved_app, contract_app, contract_app_under_test, contract_composed_app, contract_composed_app_raw, drain_and_close_composed_fixture, drive_job_close, drive_single_document_archive, dv, inline_interaction_select, interaction_app_under_test, interaction_target_args, job_close_grant, label_in, meta, reads_child_count, register_test_child, reserved_action, settle_contract_app, settle_reserved, test_child_emit, test_retained_command_id, test_retained_command_payload, test_task};
 use semio_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;
@@ -104,6 +106,72 @@ use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutation
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+
+/// 🪙️ Runs one operation inside the allocation effect of a funded original retirement pump turn.
+fn run_retirement_effect<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    try_retirement_effect(grant, operation).expect("the retirement effect is funded")
+}
+
+/// 🪙️ Like [`run_retirement_effect`], answering `None` when the grant funds no effect at all.
+fn try_retirement_effect<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> Option<R> {
+    semio_framework_job::OriginalRetirementPump::new()
+        .turn(1 << 16, u64::MAX, semio_framework_job::logical_now_us, grant)
+        .and_then(|mut turn| turn.with_effect(operation))
+        .expect("the retirement effect has a finite original Source turn")
+        .map(|(output, _)| output)
+}
+
+
+const PART_4_JOB_POLICY: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+const PART_4_ORIGIN_POLICY: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1_048_576, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+/// 🧹️ The job return origins of one test thread. A test that failed before closing them has already reported its own failure; its unclosed origins are leaked on thread exit instead of panicking inside the thread-local destructor, which would abort the whole test binary.
+#[derive(Default)]
+struct Part4Origins(std::collections::HashMap<usize, semio_framework_job::OriginalJobReturnOrigin>);
+impl Drop for Part4Origins {
+    fn drop(&mut self) {
+        for (_, origin) in self.0.drain() { if !origin.terminal_is_empty() { std::mem::forget(origin) } }
+    }
+}
+thread_local! { static PART_4_ORIGINS: std::cell::RefCell<Part4Origins> = std::cell::RefCell::new(Part4Origins::default()); }
+
+/// 🎟️ Admits a job's return origin until its body is ready, as the host does at job birth.
+fn prepare_job_origin(origin: &mut semio_framework_job::OriginalJobReturnOrigin, cx: &mut semio_framework_job::StepContext<'_>) {
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+        if origin.body_ready() { return }
+        cx.with_retained_loan(PART_4_ORIGIN_POLICY, |same| origin.admit(same).map(|_| ())).expect("original job return origin admission");
+    }
+    assert!(origin.body_ready(), "the job return origin admits within its turn bound");
+}
+
+/// ▶️ One fixture job step whose outcome travels the job's own paid return origin.
+fn job_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J, cx: &mut semio_framework_job::StepContext<'_>) -> artifact_app_laws::FixtureStepOutcome {
+    let key = (job as *mut J).cast::<()>() as usize;
+    PART_4_ORIGINS.with(|origins| {
+        let mut origins = origins.borrow_mut();
+        let origin = origins.0.entry(key).or_insert_with(semio_framework_job::OriginalJobReturnOrigin::empty);
+        prepare_job_origin(origin, cx);
+        let mut outcome = None;
+        cx.with_retained_loan(PART_4_JOB_POLICY, |same| { outcome = Some(artifact_app_laws::fixture_step(job, same, origin.receiver()?)); Ok(()) }).expect("original job step");
+        let outcome = outcome.expect("original job step returned");
+        if !cx.is_cancelled() { prepare_job_origin(origin, cx) }
+        outcome
+    })
+}
+
+/// 🧹️ Returns every job return origin this thread admitted.
+fn close_job_origins(cx: &mut semio_framework_job::StepContext<'_>) {
+    PART_4_ORIGINS.with(|origins| {
+        for origin in origins.borrow_mut().0.values_mut() {
+            for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+                if origin.terminal_is_empty() { break }
+                cx.with_retained_loan(PART_4_ORIGIN_POLICY, |same| origin.close_step(same).map(|_| ())).expect("original job return origin close");
+            }
+            assert!(origin.terminal_is_empty(), "the job return origin closes within its turn bound");
+        }
+        origins.borrow_mut().0.clear();
+    })
+}
+
 include!("../🔬️plugin-runtime-plugin-builder-contract-part-4-x/🦀️.rs");
 
 include!("🎞️host-events-media-cancel-and-download-seam/🦀️.rs");

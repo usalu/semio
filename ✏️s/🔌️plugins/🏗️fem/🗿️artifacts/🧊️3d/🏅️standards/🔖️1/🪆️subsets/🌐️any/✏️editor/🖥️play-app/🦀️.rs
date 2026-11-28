@@ -35,7 +35,18 @@ fn fem3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         ]);
         table.extend(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::fem_editor_fault_notices("fem3d", &[("node", "node", "Knoten"), ("element", "element", "Element"), ("material", "material", "Material"), ("section", "section", "Querschnitt"), ("support", "support", "Lager"), ("solid", "solid", "Volumenkörper"), ("load", "load", "Last"), ("load-case", "load case", "Lastfall"), ("combination", "combination", "Kombination")]));
         table.extend([
+            ("fem3d.camera.orbit-required", notice("Set Camera needs a camera: a position, a target and a zoom.", "Kamera festlegen braucht eine Kamera: Position, Ziel und Zoom.")),
+            ("fem3d.camera.orbit-invalid", notice("This camera is not valid: {reason}.", "Diese Kamera ist nicht gültig: {reason}.")),
+            ("clipboard.copy.empty-selection", notice("Nothing is selected to copy or cut. Select something in the model first.", "Es ist nichts zum Kopieren oder Ausschneiden ausgewählt. Wähle zuerst etwas im Modell aus.")),
+            ("clipboard.paste.empty", notice("The clipboard holds nothing this editor can paste. Copy something here first.", "Die Zwischenablage enthält nichts, das dieser Editor einfügen kann. Kopiere zuerst etwas.")),
+            ("fem3d.self-weight.case-unknown", notice("'{case}' is not a load case of this document.", "'{case}' ist kein Lastfall dieses Dokuments.")),
+            ("fem3d.analysis.nothing", notice("Give at least one analysis setting to change: modal count, buckling count or deformation scale.", "Gib mindestens eine zu ändernde Analyseeinstellung an: Anzahl Moden, Anzahl Beulmoden oder Verformungsmaßstab.")),
+            ("fem3d.analysis.value", notice("'{value}' is not a number.", "'{value}' ist keine Zahl.")),
+            ("fem3d.analysis.field", notice("'{field}' is not an analysis setting.", "'{field}' ist keine Analyseeinstellung.")),
             ("fem3d.remove-selection.empty", notice("Nothing is selected to remove. Select something in the model first.", "Es ist nichts zum Entfernen ausgewählt. Wähle zuerst etwas im Modell aus.")),
+            ("fem3d.remove-selection.material-referenced", notice("Nothing was removed: the material '{id}' is still used by {referrers}. Remove or change those first.", "Nichts wurde entfernt: Das Material '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst.")),
+            ("fem3d.remove-selection.section-referenced", notice("Nothing was removed: the section '{id}' is still used by {referrers}. Remove or change those first.", "Nichts wurde entfernt: Der Querschnitt '{id}' wird noch von {referrers} verwendet. Entferne oder ändere diese zuerst.")),
+            ("fem3d.remove-selection.load-case-referenced", notice("Nothing was removed: the load case '{id}' is still used by the combinations {referrers}. Remove or change those first.", "Nichts wurde entfernt: Der Lastfall '{id}' wird noch von den Kombinationen {referrers} verwendet. Entferne oder ändere diese zuerst.")),
             ("fem3d.remove-selection.identity-refused", notice("Nothing was removed: the selection no longer matches the document. Select again.", "Nichts wurde entfernt: Die Auswahl passt nicht mehr zum Dokument. Wähle erneut.")),
             ("fem3d.interaction.identity-refused", notice("The selection no longer matches the document. Select again.", "Die Auswahl passt nicht mehr zum Dokument. Wähle erneut.")),
             ("fem3d.gumball.identity-refused", notice("The gumball no longer matches the document. Select again.", "Der Transformationsgriff passt nicht mehr zum Dokument. Wähle erneut.")),
@@ -446,7 +457,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             "setActiveExample" => Ok(Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
             "setCamera" => {
                 let camera = args.and_then(|value| value.get("camera")).cloned().ok_or_else(|| Fault::from("fem3d.camera.orbit-required"))?;
-                let camera: semio_os_kernel::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::from(format!("fem3d.camera.orbit-invalid: {error}")))?;
+                let camera: semio_os_kernel::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem3d.camera.orbit-invalid"), error.to_string()).with_param("reason", error.to_string()))?;
                 Ok(Fem3dCommand::SetCamera(set_camera::SetCamera { camera }))
             }
             "setResultDisplay" => Ok(Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay {

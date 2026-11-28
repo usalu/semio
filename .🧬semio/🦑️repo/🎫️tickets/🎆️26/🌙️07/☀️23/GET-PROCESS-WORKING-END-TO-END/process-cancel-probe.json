@@ -1,0 +1,26 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "open example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "pick Concrete Forest",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 60000
+ },
+ {
+  "name": "probe record",
+  "js": "(async()=>{const P=window.__probe;return JSON.stringify({rep:P.rep.slice(0,60),text:P.text.slice(0,60),con:P.con.slice(0,40),combo:P.combo})})()",
+  "settleMs": 200
+ }
+]

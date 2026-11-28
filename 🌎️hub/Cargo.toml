@@ -107,6 +107,14 @@ members = [
     "🧩️compositions/📐️cad/📦️packages/🦀️rust",
     "🧩️compositions/📐️cad/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🌬️din16798/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🌬️din16798/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🏭️vdi3805/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🏭️vdi3805/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/📇️iso16757/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/📇️iso16757/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🧱️din4108/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🗃️apps/🧱️din4108/👁️viewer/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/📦️packages/🦀️rust",
@@ -243,6 +251,14 @@ semio-hub-demonstrator-process-editor-app = { path = "🧩️compositions/🎪�
 semio-hub-demonstrator-process-viewer-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/👁️process-viewer/📦️packages/🦀️rust" }
 semio-hub-process-editor-app = { path = "🧩️compositions/🏭️process/🗃️apps/✏️process-editor/📦️packages/🦀️rust" }
 semio-hub-process-viewer-app = { path = "🧩️compositions/🏭️process/🗃️apps/👁️process-viewer/📦️packages/🦀️rust" }
+semio-hub-norm-din4108-editor = { path = "🧩️compositions/📕️norm/🗃️apps/🧱️din4108/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-din4108-viewer = { path = "🧩️compositions/📕️norm/🗃️apps/🧱️din4108/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-norm-din16798-editor = { path = "🧩️compositions/📕️norm/🗃️apps/🌬️din16798/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-din16798-viewer = { path = "🧩️compositions/📕️norm/🗃️apps/🌬️din16798/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-norm-iso16757-editor = { path = "🧩️compositions/📕️norm/🗃️apps/📇️iso16757/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-iso16757-viewer = { path = "🧩️compositions/📕️norm/🗃️apps/📇️iso16757/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-norm-vdi3805-editor = { path = "🧩️compositions/📕️norm/🗃️apps/🏭️vdi3805/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-vdi3805-viewer = { path = "🧩️compositions/📕️norm/🗃️apps/🏭️vdi3805/👁️viewer/📦️packages/🦀️rust" }
 semio-plugin-instance-construction = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
 semio-hub-raster-editor-app = { path = "🧩️compositions/🖨️raster/🗃️apps/✏️raster-editor/📦️packages/🦀️rust" }
 semio-hub-raster-viewer-app = { path = "🧩️compositions/🖨️raster/🗃️apps/👁️raster-viewer/📦️packages/🦀️rust" }

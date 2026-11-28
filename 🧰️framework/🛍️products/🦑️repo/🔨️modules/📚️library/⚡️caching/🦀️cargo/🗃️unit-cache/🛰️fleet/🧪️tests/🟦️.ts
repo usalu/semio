@@ -10,7 +10,8 @@ import {parseRemoteCacheActionResultV1} from "../../../../../🏗️build/🌐�
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {stretchedBudgetMillisecondsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {cargoScratchBaseV1} from "../../🧪️tests/🏖️scratch/🟦️.ts";
-import {drainUploadsV1,spoolLengthV1} from "../📤️uploader/🟦️.ts";
+import {drainUploadsV1} from "../📤️uploader/🟦️.ts";
+import {spoolLengthV1} from "../📏️spool-size/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../📡️client/🟦️.ts";
 import {explainFleetMissV1,keyComponentsOfV1,obtainFleetUnitV1,type FleetUnitV1} from "../🟦️.ts";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";

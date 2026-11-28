@@ -27,7 +27,7 @@ export function readGenerationManifestV1(bytes){
  if(value.frontier!==null)requireHex(value.frontier,"frontier");
  if(!isObject(value.owners)||Object.keys(value.owners).length>P.maximumOwners)throw fail("Bounded owner table required");
  for(const[name,row]of Object.entries(value.owners)){
-  requireText(name,"owner name");requireKeys(row,["root","kind","fragment","bytes","edgesEnv","targets"],["config","nativeRoot","tag","reads"],"generation owner");if(row.reads!==undefined)readEdgeReadsV1(row.reads);
+  requireText(name,"owner name");requireKeys(row,["root","kind","fragment","bytes","edgesEnv","targets"],["config","nativeRoot","tag","reads","edgesReads"],"generation owner");if(row.edgesReads!==undefined)requireHex(row.edgesReads,"edgesReads");if(row.reads!==undefined)readEdgeReadsV1(row.reads);
   requireText(row.root,"owner root");if(!["project","unavailable"].includes(row.kind))throw fail("Closed owner kind required");
   requireHex(row.fragment,"fragment");requireHex(row.edgesEnv,"edgesEnv");requireCount(row.bytes,"fragment bytes",P.maximumFragmentBytes);
   if(!Array.isArray(row.targets)||row.targets.some(target=>typeof target!=="string"))throw fail("Target name list required");

@@ -23,3 +23,10 @@ export const S_FORMAT_CATALOG_V1: SFormatCatalogV1 = Object.freeze({
   revisionsOf: (kindId: string) => revisions.get(kindId) ?? [],
   packageOf: (kindId: string) => packages.get(kindId),
 });
+
+/** 🔀️ The catalog of a variant whose own editor owns one shared format: `kindId` routes to `artifactRef` instead of the stdio owner that is not loaded there (the sourcing curation editor owns the `.json` natural file). */
+export function formatCatalogOwnedByV1(kindId: string, artifactRef: string): SFormatCatalogV1 {
+  const reclaimed = formats.map((format) => (format.kindId === kindId ? { ...format, artifactRef } : format));
+  const holders = new Map(reclaimed.map((format) => [format.kindId, format.artifactRef] as const));
+  return Object.freeze({ ...S_FORMAT_CATALOG_V1, descriptors: () => reclaimed, artifactRefOf: (id: string) => holders.get(id) ?? owners.get(id) });
+}

@@ -13,7 +13,7 @@ const named=(prefix:string)=>fixture.worlds.find(world=>world.name.startsWith(pr
 const evaluate=(world:World)=>plain(evaluateHostCapacityV1(policy,world.host as HostSampleV1,world.ledger as HostGrantV1[],world.queue as HostWaiterV1[],world.nowMs));
 
 test("The lent view and the decision on every stored world equal the Python oracle, and the vectors reach every rule",()=>{
- for(const world of fixture.worlds){expect(view(world),world.name).toEqual(world.view);expect(evaluate(world),world.name).toEqual(world.expect);}
+ for(const world of fixture.worlds){expect<unknown>(view(world),world.name).toEqual(world.view);expect<unknown>(evaluate(world),world.name).toEqual(world.expect);}
  expect(fixture.protocol.lendKeepBasisPoints).toBe(schema.definitions.Protocol.const.lendKeepBasisPoints);
  expect(fixture.coverage.lent,"worlds with lent workers").toBeGreaterThan(30);
  expect(fixture.coverage.withChildren,"worlds with workers already running").toBeGreaterThan(30);

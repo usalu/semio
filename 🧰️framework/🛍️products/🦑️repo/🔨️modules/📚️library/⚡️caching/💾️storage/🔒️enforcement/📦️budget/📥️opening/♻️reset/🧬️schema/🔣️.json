@@ -461,7 +461,8 @@
         "graph",
         "nx",
         "rust",
-        "products"
+        "products",
+        "dependencies"
       ]
     },
     "InactivePublicationProtocol": {

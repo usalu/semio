@@ -111,6 +111,20 @@ export function guestWindowIdV1(windowId: string | null | undefined, spawnedIds:
   return spawnedWindowKindOfInstanceV1(windowId, spawnedIds) ?? windowId;
 }
 
+/** 🌳️ The tree-window state one program is addressed with. A spawned window streams under its shell window id (`${spawnedId}::<guest window>`), so the session's own state must not carry it and a spawned program receives only its own windows, restated under the body key its guest window kind declares. `guestBodyKeyOf` maps the guest window id to that body key. */
+export function treeWindowViewFieldsOfProgramV1<F extends { readonly treeWindows?: readonly { readonly bodyKey: string }[] }>(fields: F, spawnedId: string | null, spawnedIds: readonly string[], guestBodyKeyOf: (guestWindowId: string) => string | undefined): F {
+  if (fields.treeWindows === undefined) return fields;
+  const treeWindows = fields.treeWindows.flatMap((request) => {
+    const owner = spawnedIdOfWindowInstanceV1(request.bodyKey, spawnedIds);
+    if (spawnedId === null) return owner === null ? [request] : [];
+    if (owner !== spawnedId) return [];
+    const bodyKey = guestBodyKeyOf(request.bodyKey.slice(owner.length + SPAWNED_WINDOW_SEPARATOR.length));
+    return bodyKey === undefined ? [] : [{ ...request, bodyKey }];
+  });
+  const { treeWindows: _dropped, ...rest } = fields;
+  return (treeWindows.length > 0 ? { ...rest, treeWindows } : rest) as F;
+}
+
 /** 🧭️ A shell-keyed record as ONE program knows it — the mode-level chrome (panel bodies, tool measures) of whichever
  * program owns the focused window. The session's own app keeps its plain keys; a spawned program's entries are stored
  * under `${spawnedId}::<id>` (two programs declare the same `framework.panel.toolRun` tab and the same `fill` tool) and

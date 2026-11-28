@@ -10,7 +10,8 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { Asset, AuthoredRepresentation, ViewSection, Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DrawingItem, DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { DEFAULT_CATALOG_ROOT } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { catalogAssetsById } from "../🧰️support/🧊️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { defaultDepictionOptions, depict, textlessDepictionOptions } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { sectionOf, viewpointCaption } from "../../🔨️modules/🎨️depiction/✂️section/🟦️.ts";
@@ -40,7 +41,7 @@ const FIXTURE = join(STAFFAGE_ROOT, "🧫️fixtures/✂️section-views/🔣️
 let assets: ReadonlyMap<string, Asset>;
 
 beforeAll(async () => {
-  assets = new Map((await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets.map((asset) => [asset.id, asset]));
+  assets = await catalogAssetsById(["curtain-wall-bay", "cooking-pot", "solar-thermal-collector", "sliding-door", ...Object.keys(vectors.catalog), ...Object.keys(vectors.elevationCatalog)]);
 });
 
 const near = (actual: readonly number[], expected: readonly number[], tolerance: number, label: string): void => {

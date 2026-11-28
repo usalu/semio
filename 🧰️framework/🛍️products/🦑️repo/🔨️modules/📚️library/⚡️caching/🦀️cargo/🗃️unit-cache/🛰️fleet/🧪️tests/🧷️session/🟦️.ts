@@ -6,7 +6,8 @@ import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.ts";
-import {drainUploadsV1,spoolLengthV1} from "../../📤️uploader/🟦️.ts";
+import {drainUploadsV1} from "../../📤️uploader/🟦️.ts";
+import {spoolLengthV1} from "../../📏️spool-size/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
 process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 

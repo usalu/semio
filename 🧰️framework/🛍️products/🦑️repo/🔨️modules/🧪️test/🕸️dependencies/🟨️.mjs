@@ -33,10 +33,32 @@ export function rustSubjectPackage(workspaceRoot, owner) {
   return null;
 }
 
-/** 🔮️ Selects every applicable ancestor contribution for one adapter implementation. */
+/** 🔖️ Whether an oracle pin names an installable release: a bare version or a PEP 440 / npm range, never a lock marker such as `locked`, `*` or `builtin`. */
+export function isInstallablePin(version) {
+  return typeof version === "string" && /^(?:[<>=!~]=?\s*)?\d/.test(version);
+}
+
+/** 🌱️ The external host distributions one oracle declares: its primary package and each linked one, in the adapter language its ecosystem runs in. Registering the oracle IS the declaration. */
+export function oracleHostPackagesOf(oracle) {
+  const implementation = { python: "python", javascript: "typescript" }[oracle.ecosystem];
+  if (implementation === undefined) return [];
+  return [oracle, ...(oracle.packages ?? [])]
+    .filter((entry) => typeof entry.package === "string" && entry.package.length > 0 && !entry.package.startsWith("node:"))
+    .map((entry) => ({ implementation, package: entry.package, ...(isInstallablePin(entry.version) ? { version: entry.version } : {}), ...(entry.module === undefined ? {} : { module: entry.module }) }));
+}
+
+/** 🔮️ Selects every applicable ancestor contribution for one adapter implementation: the explicit local sources plus the external distributions its oracles declare, one row per package. */
 export function packagesForOwner(contributions, owner, implementation) {
   const ancestors = new Set(ownerAncestors(owner));
-  return contributions.filter((entry) => ancestors.has(entry.owner)).flatMap((entry) => entry.oracleHostPackages ?? []).filter((entry) => implementation === undefined || entry.implementation === implementation);
+  const merged = new Map();
+  for (const entry of contributions.filter((candidate) => ancestors.has(candidate.owner)))
+    for (const row of [...(entry.oracleHostPackages ?? []), ...(entry.oracles ?? []).flatMap(oracleHostPackagesOf)]) {
+      if (implementation !== undefined && row.implementation !== implementation) continue;
+      const key = `${row.implementation}:${row.path ?? ""}:${row.package}`;
+      const previous = merged.get(key);
+      if (previous === undefined || (previous.version === undefined && row.version !== undefined)) merged.set(key, { ...previous, ...row });
+    }
+  return [...merged.values()];
 }
 
 /** 🧾️ Reads only the contribution manifests that can supply packages to this owner. */

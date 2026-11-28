@@ -4,7 +4,7 @@
 import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { CLEAR_SELECTION_ACTION_ID } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
-import { spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1, windowProgramGoneV1 } from "../../../🪟️spawned-program/🟦️.ts";
+import { spawnedGuestWindowInstancesV1, treeWindowViewFieldsOfProgramV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedIdOfWindowInstanceV1, windowProgramGoneV1 } from "../../../🪟️spawned-program/🟦️.ts";
 import { inputActionWindowV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../../🎯️input-ledger/🟦️.ts";
 import { type ActiveSession } from "../../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
@@ -127,7 +127,7 @@ export function buildDispatchViewState({ spawnedIdsRef, extraWindowInstancesRef,
     windowInstances: sessionWindowInstances(targetSession.app, dispatchExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
     activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, targetSpawnedId, spawnedIdsRef.current),
     focusedWindowId: guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current),
-    ...treeWindowSchedulerRef.current!.viewStateFields(),
+    ...treeWindowViewFieldsOfProgramV1(treeWindowSchedulerRef.current!.viewStateFields(), targetSpawnedId, spawnedIdsRef.current, (guestWindowId) => spawnedGuestWindowInstancesV1(targetSession.app.windowKinds, dispatchExtraInstances).find((instance) => instance.id === guestWindowId)?.bodyKey),
   };
   return { baseDispatchViewState, dispatchWindowId, dispatchExtraInstances };
 }

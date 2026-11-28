@@ -2,6 +2,7 @@
 pub use semio_framework_value_source_turn::{OriginalSourceTurnIssuerIdentity,OriginalSourceTurnIdentity,OriginalSourceTurnError,OriginalSourceTurnIssuer,OriginalSourceTurn,OriginalSourceTurnWitness};
 /// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
 pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
+/// 🪙️ One turn's wallet. Divisible work (retirement, copying, paging) progresses under any non-zero wallet, one item at a time. An indivisible step (an original construction: capture, candidate, Source outcome, scope claim and settle) names its floor by quote, for example `original_construction_settled_turn_quote`, and a wallet below that floor yields without spending; hosts size the wallet from the quote and never from a single item.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RetainedCloneGrant {

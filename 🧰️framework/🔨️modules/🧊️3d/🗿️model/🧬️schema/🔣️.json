@@ -602,6 +602,11 @@
         "lateralScale": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "segments": {
+          "description": "The vertices of every ring, instead of the segment count the tessellation quality asks for (chord, bounds and round floor of the Quality). Absent: the quality rule.",
+          "type": "integer",
+          "minimum": 3
         }
       }
     },
@@ -821,6 +826,11 @@
         },
         "capEnd": {
           "type": "boolean"
+        },
+        "segments": {
+          "description": "The vertices of every ring, instead of the segment count the tessellation quality asks for (chord, bounds and round floor of the Quality): a tube far thinner than a viewer resolves needs no more. Absent: the quality rule.",
+          "type": "integer",
+          "minimum": 3
         }
       }
     },

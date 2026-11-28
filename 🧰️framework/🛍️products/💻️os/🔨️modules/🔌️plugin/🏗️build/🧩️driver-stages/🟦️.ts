@@ -228,20 +228,24 @@ export function componentOwnerPreparationArgumentsV1(pass: Readonly<{
     ...pass.packages.flatMap(pkg => ["-p", pkg.name])];
 }
 
+/** 🧪️ Runs every declared crate preparation (`[package.metadata.semio.preparation]`) of the crates each Cargo pass reaches, through the same owner preparation `repo cargo` uses, before any source is admitted or snapshotted. A witnessed current receipt is not run again.
+ * @see ../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts */
+async function prepareComponentOwnersV1(repoRoot: string, plan: NativeBuildPlanV1, invocation: ScriptInvocation, environment: Readonly<Record<string, string | undefined>>, control: CompilerAdmissionControl): Promise<void> {
+  const storage = repositoryCargoPreparationStorageV1(repoRoot);
+  for (const pass of plan.passes) {
+    await prepareCargoWorkspaceInvocation(storage, repoRoot, componentOwnerPreparationArgumentsV1(pass), repoRoot,
+      scriptInvocationEnvironment(invocation, environment), control);
+  }
+}
+
 /** 🎯️ Builds exactly `pluginIds` — the closure one dev launch serves — through the one build driver over the warm stores: only the passes and packages of
  * those components, each streamed through its cached stages into the one plugin-modules root. A launch never pays for components it does not load.
  * @see ../../../🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts */
-export async function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{invocation:ScriptInvocation;facet:ComponentStageFacetV1;network:CargoDependencyNetworkV1; control: CompilerAdmissionControl; prepareCargoOwners?:true; emitterHeld?:true; emitterPin?:DescriptorEmitterPinV1; generation?:NativeBuildGenerationKindV1;consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number;log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
+export async function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{invocation:ScriptInvocation;facet:ComponentStageFacetV1;network:CargoDependencyNetworkV1; control: CompilerAdmissionControl; emitterHeld?:true; emitterPin?:DescriptorEmitterPinV1; generation?:NativeBuildGenerationKindV1;consume?:NativeBuildDriverOptionsV1["consume"];maximumObservationBytes?:number;retainCompilationBytes?:number;log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);
   const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),mode=authority.original.buildMode;if(repoRoot!==authority.repositoryRoot)throw Error("Actual component driver workspace required");
   const plan = componentPassPlanV1(repoRoot, pluginIds, mode), environment = buildModeEnvironment(mode);
-  if (options.prepareCargoOwners) {
-    const storage = repositoryCargoPreparationStorageV1(repoRoot);
-    for (const pass of plan.passes) {
-      await prepareCargoWorkspaceInvocation(storage, repoRoot, componentOwnerPreparationArgumentsV1(pass), repoRoot,
-        scriptInvocationEnvironment(options.invocation, environment), options.control);
-    }
-  }
+  await prepareComponentOwnersV1(repoRoot, plan, options.invocation, environment, options.control);
   return runRepositoryComponentDriverV1(repoRoot,mode,plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment, generation:options.generation??"warm",...(options.emitterHeld?{emitterHeld:true as const}:{}),...(options.emitterPin?{emitterPin:options.emitterPin}:{}),...(options.consume?{consume:options.consume,maximumObservationBytes:options.maximumObservationBytes,retainCompilationBytes:options.retainCompilationBytes}:{}), ...(options.log ? { log: options.log } : {}) });
 }
 
@@ -260,6 +264,8 @@ export async function describeComponentsV1(repoRoot: string, invocation:ScriptIn
   requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode;
   const {all,pluginIds,profile,facet}=componentsDescribeArgumentsV1(segments);if(repoRoot!==authority.repositoryRoot||profile!==componentProfileV1(buildModePolicy(mode).cargoProfile))throw Error("Describe selection must match its actual Original workspace and mode");
   const plan=componentPassPlanV1(repoRoot,all?undefined:new Set(pluginIds),mode);
-  const outcome=await runRepositoryComponentDriverV1(repoRoot,mode,plan,{invocation,facet,describeMode:"write",network,control,environment:buildModeEnvironment(mode),generation:"warm"});
+  const environment=buildModeEnvironment(mode);
+  await prepareComponentOwnersV1(repoRoot,plan,invocation,environment,control);
+  const outcome=await runRepositoryComponentDriverV1(repoRoot,mode,plan,{invocation,facet,describeMode:"write",network,control,environment,generation:"warm"});
   console.log(`components describe: ${outcome.staged.length} component(s) described from ${profile} bytes; report ${outcome.report}`);
 }

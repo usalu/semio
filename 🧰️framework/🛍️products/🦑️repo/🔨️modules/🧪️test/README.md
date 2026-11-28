@@ -133,15 +133,21 @@ into that route.
 
 ## Reaching a reference library — in any language
 
-An oracle runs in whichever implementation its registry `ecosystem` names, and the library it needs
-is declared by the OWNER, never by the framework. One field carries this, in the owner's
-`🔮️oracles/🔣️.json`:
+An oracle runs in whichever implementation its registry `ecosystem` names, and the registry is the
+single source of truth for the library it needs: declaring the oracle IS the declaration. A `python`
+oracle provisions its `package` and every nested `packages` row into the Python host, a `javascript`
+oracle resolves them from the repository's `node_modules` for the TypeScript host. `version` pins
+the release (a bare release is exact; a leading comparator such as `>=2.5.0` is a range; `locked`,
+`*` and `builtin` leave it unpinned) and `module` names the import when it differs from the
+distribution name. Nothing is repeated in a second field.
+
+The owner's `🔮️oracles/🔣️.json` carries `oracleHostPackages` only for what no oracle describes: LOCAL
+in-repo source, always with a `path`. An external library is never declared there; register it as an
+oracle in the subset that uses it.
 
 ```json
 "oracleHostPackages": [
-  { "implementation": "rust",       "package": "semio-s-plugin-stdio-test-oracle", "path": "…/📦️packages/🦀️rust", "features": ["oracles"] },
-  { "implementation": "python",     "package": "pypdf",  "version": "6.14.2" },
-  { "implementation": "typescript", "package": "semver", "version": "7.8.5" }
+  { "implementation": "rust",   "package": "semio-s-plugin-stdio-test-oracle", "path": "…/📦️packages/🦀️rust", "features": ["oracles"] }
 ]
 ```
 
@@ -150,21 +156,21 @@ is declared by the OWNER, never by the framework. One field carries this, in the
 * **With a path** the entry is LOCAL in-repo source. The Rust host writes a `Cargo.toml` that
   depends on it by path — a crates.io coordinate is refused, because it would be an unreviewed
   dependency of a generated host.
-* **Without a path** the entry is an EXTERNAL distribution. The Python host builds a cache-local
+* **Without a path** the entry (declared here or derived from an oracle) is an EXTERNAL distribution. The Python host builds a cache-local
   virtual environment under `.🧬semio/🦑️repo/⚡️cache/tests/hosts/`, keyed by the base interpreter
   and the declared package set so it is created once and reused by every run. Its site directory
   carries `semio-base-interpreter.pth`, which adds the base interpreter's own site directories (the
-  repository's `.venv`) behind the environment's, so a distribution the base already provides at the
+  locked workspace environment) behind the environment's, so a distribution the base already provides at the
   declared version is reused rather than downloaded — `--system-site-packages` would expose the
-  `.venv`'s base installation instead and hide every `.venv` package — and anything else, including
+  environment's base installation instead and hide every package of the environment — and anything else, including
   a base copy that does not import at the declared version, is installed INTO the environment with
   `--ignore-installed`, where it shadows the base. The system interpreter is never written to. The TypeScript host resolves the package from the repository's own `node_modules`
   instead of installing a private copy — one lockfile, one version of every library — and reports
   the declaration as unmet if it does not resolve.
 
-An external host package is a third-party test dependency, so it is classified in
-`🔒️dependencies.json` as `test-oracle` and held to the same purity rule as a registered oracle
-package: it must be registered, it must not be production-reachable, and the production scan looks
+An external host package is derived from a registered oracle, so it is classified in
+`🔒️dependencies.json` as `test-oracle` and held to the purity rule of that oracle's package:
+it must not be production-reachable, and the production scan looks
 for each ecosystem's own import syntax (`import x` / `from x import` for Python, `use x` for Rust,
 `from "x"` / `require("x")` for JavaScript) in that ecosystem's own files.
 

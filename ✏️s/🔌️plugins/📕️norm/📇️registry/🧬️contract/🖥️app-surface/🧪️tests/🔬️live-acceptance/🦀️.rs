@@ -4,6 +4,12 @@
 #[macro_export]
 macro_rules! norm_live_acceptance {
     ($app:ty, entities = $entities:path) => {
+        $crate::norm_live_acceptance!(@stamp $app, $entities, placed);
+    };
+    ($app:ty, entities = $entities:path, layout = derived) => {
+        $crate::norm_live_acceptance!(@stamp $app, $entities, derived);
+    };
+    (@stamp $app:ty, $entities:path, $layout:tt) => {
         #[cfg(test)]
         mod live_acceptance {
             use super::*;
@@ -109,84 +115,7 @@ macro_rules! norm_live_acceptance {
                 assert!(transient_after(&doc, &entity, &transient, &commit).drag.is_none(), "the release clears the preview");
             }
 
-            fn placement_probe() -> (Doc, semio_s_plugin_norm_structural_scene::EntityRef, semio_s_plugin_norm_structural_scene::Handle, f64) {
-                let doc = Doc::default();
-                for entity in $entities(&doc) {
-                    for handle in <$app as $crate::NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity)) {
-                        let moves = handle.writes.iter().any(|binding| semio_s_plugin_norm_structural_scene::projection_kit::placement_target(&binding.path).is_some());
-                        let reach = [1.0, -1.0, 0.5].into_iter().map(|s| handle.limits.as_ref().map_or(s, |limits| limits.clamp(s))).find(|s| $crate::direct_manipulation::writes_for(&handle, *s) != $crate::direct_manipulation::writes_for(&handle, 0.0));
-                        if let (true, Some(s)) = (moves, reach) {
-                            return (doc, entity, handle, s);
-                        }
-                    }
-                }
-                panic!("the default document offers a placement grip");
-            }
-
-            #[test]
-            fn a_synthetic_placement_drag_previews_the_complete_row_commits_one_event_and_reloads_to_the_same_pose() {
-                use semio_s_plugin_norm_structural_scene::projection_kit::placements_of;
-                let (doc, entity, handle, s) = placement_probe();
-                let stream = json(&entity, &handle, s, 0.0, r#""phase":"stream""#);
-                let transient = transient_after(&doc, &entity, &$crate::NormTransient::default(), &stream);
-                let preview = $crate::overlay_document(&doc.to_value(), &transient).expect("the preview overlays even for an entity without a row");
-                let commit = json(&entity, &handle, s, 0.0, r#""phase":"commit""#);
-                let gesture = $crate::Gesture::parse(&commit).expect("gesture json");
-                let handles = <$app as $crate::NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity));
-                let writes = $crate::commit_writes(&handles, &gesture).expect("the release commits");
-                let rows = placements_of(&doc);
-                let edits = $crate::direct_manipulation::placement_edits(&rows, &$crate::standing_of::<$app>(&doc, &handles), &writes);
-                assert_eq!(edits.len(), 1, "one typed event per release: {edits:?}");
-                let has_row = writes.iter().any(|write| semio_s_plugin_norm_structural_scene::projection_kit::placement_target(&write.path).is_some_and(|(id, _)| rows.iter().any(|row| row.entity_id == id)));
-                assert!(has_row || matches!(edits[0], $crate::NormEdit::InsertItem { .. }), "an entity without a row is ONE insert: {edits:?}");
-                let mut reloaded = doc.to_value();
-                for edit in &edits {
-                    match edit {
-                        $crate::NormEdit::InsertItem { path, index, value } => $crate::insert_value_at_path(&mut reloaded, path, *index, value.clone()).expect("insert"),
-                        $crate::NormEdit::SetField { path, value } => $crate::set_value_at_path(&mut reloaded, path, value.clone()).expect("set"),
-                        $crate::NormEdit::RemoveItem { path, index } => $crate::remove_value_at_path(&mut reloaded, path, *index).expect("remove"),
-                        $crate::NormEdit::MoveItem { .. } => unreachable!("a drag never reorders"),
-                    }
-                }
-                assert_eq!(placements_of(&reloaded), placements_of(&preview), "the reloaded pose is the previewed pose");
-                for edit in &edits {
-                    assert_eq!(<$app as $crate::NormLiveEditor>::live_resolve(&doc, edit).expect("the typed kind resolves").len(), 1, "{edit:?} is one mutation");
-                }
-                let emit = $crate::live_set_fields::<$app>(&doc, "[]", Some(&commit), None).expect("commit");
-                assert_eq!(emit.artifact_mutations.len(), 1, "the release raises exactly one mutation");
-            }
-
-            #[test]
-            fn the_first_drag_of_a_row_less_entity_keeps_its_derived_yaw_inserts_through_dispatch_and_selects_by_id() {
-                use semio_s_plugin_norm_structural_scene::projection_kit::{placement_target, placements_of};
-                let (seed, entity, handle, s) = placement_probe();
-                let mut tree = seed.to_value();
-                $crate::set_value_at_path(&mut tree, "placements", semio_framework_value::DslValue::Array(Vec::new())).expect("the placements are dropped");
-                let bare = <Doc as semio_framework_value::FromValue>::from_value(tree.clone()).expect("a document without placement rows");
-                let handles = <$app as $crate::NormLiveEditor>::live_handles(&bare, std::slice::from_ref(&entity));
-                let binds_yaw = handles.iter().flat_map(|handle| handle.writes.iter()).any(|binding| placement_target(&binding.path).is_some_and(|(id, leaf)| id == entity.id && leaf == "yaw"));
-                let derived = $crate::direct_manipulation::derived_yaw(&<$app as $crate::NormLiveEditor>::live_scene(&bare, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()), &entity.id).unwrap_or(0.0);
-                let standing = $crate::standing_of::<$app>(&bare, &handles);
-                let pose = standing(&entity.id).expect("the grips give the standing pose");
-                assert!(binds_yaw || (pose.yaw - derived).abs() < 1e-12, "the standing yaw is the derived yaw {derived}, not {}", pose.yaw);
-                let writes = $crate::direct_manipulation::writes_for(&handle, s).into_iter().filter(|write| !$crate::is_view_write(write)).collect::<Vec<_>>();
-                let edits = $crate::direct_manipulation::placement_edits(&placements_of(&bare), &standing, &writes);
-                assert!(matches!(edits.as_slice(), [$crate::NormEdit::InsertItem { .. }]), "one insert for the row-less entity: {edits:?}");
-                let outcome = $crate::dispatch_live_command::<Family, _>(&bare, &$crate::LiveCommand::SetFields { writes: writes.clone() }, &standing, |d, e| <$app as $crate::NormLiveEditor>::live_resolve(d, e)).unwrap_or_else(|fault| panic!("a placement leaf of a row-less entity dispatches through the insert path: {fault:?}"));
-                assert!(matches!(outcome, $crate::LiveOutcome::Mutations(ref emit) if emit.artifact_mutations.len() == 1), "dispatch raises exactly the one insert");
-                if let $crate::NormEdit::InsertItem { path, index, value } = &edits[0] {
-                    $crate::insert_value_at_path(&mut tree, path, *index, value.clone()).expect("insert");
-                }
-                let row = placements_of(&tree).into_iter().find(|row| row.entity_id == entity.id).expect("the inserted row");
-                assert!(binds_yaw || (row.yaw - derived).abs() < 1e-12, "the first drag keeps the derived yaw {derived}, the row says {}", row.yaw);
-                let placed = <Doc as semio_framework_value::FromValue>::from_value(tree).expect("the document with its row");
-                for leaf in ["x", "y", "z", "yaw"] {
-                    let edit = $crate::NormEdit::SetField { path: format!("placements[id={}].{leaf}", entity.id), value: semio_framework_value::DslValue::float(1.5) };
-                    let mutations = <$app as $crate::NormLiveEditor>::live_resolve(&placed, &edit).unwrap_or_else(|error| panic!("{leaf}: {error}"));
-                    let text = format!("{mutations:?}");
-                    assert!(mutations.len() == 1 && text.contains(&format!("id: \"{}\"", entity.id)) && !text.to_lowercase().contains("placement_id") && !text.contains("placementId"), "every placement rule selects by `id`: {text}");
-                }
-            }
+            $crate::__norm_live_placement_acceptance!($layout, $app, $entities);
 
             #[test]
             fn every_handle_binding_of_the_default_document_resolves_to_a_typed_kind() {
@@ -701,6 +630,106 @@ macro_rules! norm_live_acceptance {
                 }
                 assert!(grips > 0 && nudged > 0, "the editor offers grips that the nudge buttons move ({grips} grips, {nudged} moved)");
             }
+        }
+    };
+}
+
+/// 📍️ The placement half of [`norm_live_acceptance!`]: an editor whose snapshot persists `placements` (`placed`) is held to the first-drag insert and the reload-to-the-same-pose laws; an editor whose layout is derived from its document (`derived`) must offer no placement grip and persist no placement rows.
+#[macro_export]
+macro_rules! __norm_live_placement_acceptance {
+    (placed, $app:ty, $entities:path) => {
+        fn placement_probe() -> (Doc, semio_s_plugin_norm_structural_scene::EntityRef, semio_s_plugin_norm_structural_scene::Handle, f64) {
+            let doc = Doc::default();
+            for entity in $entities(&doc) {
+                for handle in <$app as $crate::NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity)) {
+                    let moves = handle.writes.iter().any(|binding| semio_s_plugin_norm_structural_scene::projection_kit::placement_target(&binding.path).is_some());
+                    let reach = [1.0, -1.0, 0.5].into_iter().map(|s| handle.limits.as_ref().map_or(s, |limits| limits.clamp(s))).find(|s| $crate::direct_manipulation::writes_for(&handle, *s) != $crate::direct_manipulation::writes_for(&handle, 0.0));
+                    if let (true, Some(s)) = (moves, reach) {
+                        return (doc, entity, handle, s);
+                    }
+                }
+            }
+            panic!("the default document offers a placement grip");
+        }
+
+        #[test]
+        fn a_synthetic_placement_drag_previews_the_complete_row_commits_one_event_and_reloads_to_the_same_pose() {
+            use semio_s_plugin_norm_structural_scene::projection_kit::placements_of;
+            let (doc, entity, handle, s) = placement_probe();
+            let stream = json(&entity, &handle, s, 0.0, r#""phase":"stream""#);
+            let transient = transient_after(&doc, &entity, &$crate::NormTransient::default(), &stream);
+            let preview = $crate::overlay_document(&doc.to_value(), &transient).expect("the preview overlays even for an entity without a row");
+            let commit = json(&entity, &handle, s, 0.0, r#""phase":"commit""#);
+            let gesture = $crate::Gesture::parse(&commit).expect("gesture json");
+            let handles = <$app as $crate::NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity));
+            let writes = $crate::commit_writes(&handles, &gesture).expect("the release commits");
+            let rows = placements_of(&doc);
+            let edits = $crate::direct_manipulation::placement_edits(&rows, &$crate::standing_of::<$app>(&doc, &handles), &writes);
+            assert_eq!(edits.len(), 1, "one typed event per release: {edits:?}");
+            let has_row = writes.iter().any(|write| semio_s_plugin_norm_structural_scene::projection_kit::placement_target(&write.path).is_some_and(|(id, _)| rows.iter().any(|row| row.entity_id == id)));
+            assert!(has_row || matches!(edits[0], $crate::NormEdit::InsertItem { .. }), "an entity without a row is ONE insert: {edits:?}");
+            let mut reloaded = doc.to_value();
+            for edit in &edits {
+                match edit {
+                    $crate::NormEdit::InsertItem { path, index, value } => $crate::insert_value_at_path(&mut reloaded, path, *index, value.clone()).expect("insert"),
+                    $crate::NormEdit::SetField { path, value } => $crate::set_value_at_path(&mut reloaded, path, value.clone()).expect("set"),
+                    $crate::NormEdit::RemoveItem { path, index } => $crate::remove_value_at_path(&mut reloaded, path, *index).expect("remove"),
+                    $crate::NormEdit::MoveItem { .. } => unreachable!("a drag never reorders"),
+                }
+            }
+            assert_eq!(placements_of(&reloaded), placements_of(&preview), "the reloaded pose is the previewed pose");
+            for edit in &edits {
+                assert_eq!(<$app as $crate::NormLiveEditor>::live_resolve(&doc, edit).expect("the typed kind resolves").len(), 1, "{edit:?} is one mutation");
+            }
+            let emit = $crate::live_set_fields::<$app>(&doc, "[]", Some(&commit), None).expect("commit");
+            assert_eq!(emit.artifact_mutations.len(), 1, "the release raises exactly one mutation");
+        }
+
+        #[test]
+        fn the_first_drag_of_a_row_less_entity_keeps_its_derived_yaw_inserts_through_dispatch_and_selects_by_id() {
+            use semio_s_plugin_norm_structural_scene::projection_kit::{placement_target, placements_of};
+            let (seed, entity, handle, s) = placement_probe();
+            let mut tree = seed.to_value();
+            $crate::set_value_at_path(&mut tree, "placements", semio_framework_value::DslValue::Array(Vec::new())).expect("the placements are dropped");
+            let bare = <Doc as semio_framework_value::FromValue>::from_value(tree.clone()).expect("a document without placement rows");
+            let handles = <$app as $crate::NormLiveEditor>::live_handles(&bare, std::slice::from_ref(&entity));
+            let binds_yaw = handles.iter().flat_map(|handle| handle.writes.iter()).any(|binding| placement_target(&binding.path).is_some_and(|(id, leaf)| id == entity.id && leaf == "yaw"));
+            let derived = $crate::direct_manipulation::derived_yaw(&<$app as $crate::NormLiveEditor>::live_scene(&bare, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()), &entity.id).unwrap_or(0.0);
+            let standing = $crate::standing_of::<$app>(&bare, &handles);
+            let pose = standing(&entity.id).expect("the grips give the standing pose");
+            assert!(binds_yaw || (pose.yaw - derived).abs() < 1e-12, "the standing yaw is the derived yaw {derived}, not {}", pose.yaw);
+            let writes = $crate::direct_manipulation::writes_for(&handle, s).into_iter().filter(|write| !$crate::is_view_write(write)).collect::<Vec<_>>();
+            let edits = $crate::direct_manipulation::placement_edits(&placements_of(&bare), &standing, &writes);
+            assert!(matches!(edits.as_slice(), [$crate::NormEdit::InsertItem { .. }]), "one insert for the row-less entity: {edits:?}");
+            let outcome = $crate::dispatch_live_command::<Family, _>(&bare, &$crate::LiveCommand::SetFields { writes: writes.clone() }, &standing, |d, e| <$app as $crate::NormLiveEditor>::live_resolve(d, e)).unwrap_or_else(|fault| panic!("a placement leaf of a row-less entity dispatches through the insert path: {fault:?}"));
+            assert!(matches!(outcome, $crate::LiveOutcome::Mutations(ref emit) if emit.artifact_mutations.len() == 1), "dispatch raises exactly the one insert");
+            if let $crate::NormEdit::InsertItem { path, index, value } = &edits[0] {
+                $crate::insert_value_at_path(&mut tree, path, *index, value.clone()).expect("insert");
+            }
+            let row = placements_of(&tree).into_iter().find(|row| row.entity_id == entity.id).expect("the inserted row");
+            assert!(binds_yaw || (row.yaw - derived).abs() < 1e-12, "the first drag keeps the derived yaw {derived}, the row says {}", row.yaw);
+            let placed = <Doc as semio_framework_value::FromValue>::from_value(tree).expect("the document with its row");
+            for leaf in ["x", "y", "z", "yaw"] {
+                let edit = $crate::NormEdit::SetField { path: format!("placements[id={}].{leaf}", entity.id), value: semio_framework_value::DslValue::float(1.5) };
+                let mutations = <$app as $crate::NormLiveEditor>::live_resolve(&placed, &edit).unwrap_or_else(|error| panic!("{leaf}: {error}"));
+                let text = format!("{mutations:?}");
+                assert!(mutations.len() == 1 && text.contains(&format!("id: \"{}\"", entity.id)) && !text.to_lowercase().contains("placement_id") && !text.contains("placementId"), "every placement rule selects by `id`: {text}");
+            }
+        }
+    };
+    (derived, $app:ty, $entities:path) => {
+        #[test]
+        fn a_derived_layout_persists_no_placement_and_offers_no_placement_grip() {
+            let doc = Doc::default();
+            assert!(semio_framework_value::ToValue::to_value(&doc).get(semio_s_plugin_norm_structural_scene::projection_kit::PLACEMENTS_FIELD).is_none(), "a derived layout persists no placement rows");
+            let mut grips = 0;
+            for entity in $entities(&doc) {
+                for handle in <$app as $crate::NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity)) {
+                    assert!(handle.writes.iter().all(|binding| semio_s_plugin_norm_structural_scene::projection_kit::placement_target(&binding.path).is_none()), "grip '{}' writes a placement of a derived layout", handle.id);
+                    grips += 1;
+                }
+            }
+            assert!(grips > 0, "the derived layout still offers its data grips");
         }
     };
 }

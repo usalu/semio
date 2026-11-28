@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = ["dep:semio-framework-test-fixtures", "semio-plugin-instance-dispatch/artifact-app-testing", "semio-plugin-instance-jobs/artifact-app-testing", "semio-plugin-instance-render/artifact-app-testing", "semio-plugin-instance-stores/artifact-app-testing", "semio-plugin-instance-children/artifact-app-testing", "semio-plugin-time-travel/artifact-app-testing"]
+artifact-app-testing = ["dep:semio-framework-test-fixtures", "semio-plugin-instance-dispatch/artifact-app-testing", "semio-plugin-instance-jobs/artifact-app-testing", "semio-plugin-instance-render/artifact-app-testing", "semio-plugin-instance-stores/artifact-app-testing", "semio-plugin-instance-children/artifact-app-testing", "semio-plugin-instance-docs/artifact-app-testing", "semio-plugin-time-travel/artifact-app-testing"]
 
 [dependencies]
 semio-framework-value-factory = {path="../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust"}

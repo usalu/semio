@@ -19,7 +19,7 @@ import { writePdf } from "../../🔨️modules/📤️export/📕️pdf/🟦️.
 import { frameName, frameSchedule, writePngSequenceZip } from "../../🔨️modules/📤️export/🎞️frames/🟦️.ts";
 import { encodeClip, videoFileName, type VideoFrame } from "../../🔨️modules/📤️export/🎥️video/🟦️.ts";
 import { writeSvg } from "../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { catalogAssetsById } from "../🧰️support/🧊️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { type DrawOptions, resolveViews } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 import { solveStructure } from "../../🔨️modules/🏗️structure/🟦️.ts";
@@ -46,7 +46,7 @@ const CASES: readonly Case[] = [
 
 let assets: ReadonlyMap<string, Asset>;
 beforeAll(async () => {
-  assets = new Map((await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT)).assets.map((asset) => [asset.id, asset]));
+  assets = await catalogAssetsById([...new Set([...CASES.map((entry) => entry.asset), "jogger", "standing-adult", "forklift", "skateboarder"])]);
   for (const entry of CASES)
     for (const projection of PROJECTIONS) {
       const b = built(entry, projection, "en");

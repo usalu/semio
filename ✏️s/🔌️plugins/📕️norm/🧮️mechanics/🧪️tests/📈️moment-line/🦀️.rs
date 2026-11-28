@@ -146,5 +146,5 @@ fn the_moment_line_matches_the_numpy_slope_deflection_oracle_on_random_beams() {
         assert!((lo - sampled.0).abs() <= 2e-2 * scale.max(1.0) && (hi - sampled.1).abs() <= 2e-2 * scale.max(1.0), "{} extremes {lo} {hi} vs sampled {sampled:?}", b.id);
         close(reactions.iter().sum::<f64>(), b.loads.iter().zip(&b.spans).map(|(l, s)| l.udl * s + l.points.iter().map(|p| p.force).sum::<f64>()).sum::<f64>(), scale, &format!("{} vertical equilibrium", b.id));
     }
-    assert!(checked > 5_000);
+    assert_eq!(checked, all.iter().map(|b| b.xs.len() + 2 * (b.spans.len() + 1)).sum::<usize>(), "every beam is compared at every sampled point, support moment and reaction");
 }

@@ -1,5 +1,5 @@
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
-import {hostRunAfterNeedV1,declareHostCapacityNeedV1,hostCapacityErrorV1,readLiveHostGrantV1,adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {hostGrowthLabelV1,hostRunAfterNeedV1,declareHostCapacityNeedV1,hostCapacityErrorV1,readLiveHostGrantV1,adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readdirSync,readFileSync} from "node:fs";
@@ -12,6 +12,7 @@ const GROWTH_POLICY_V1=admissionPolicy.definitions.Policy.const.growth;
 import {readLiveHostCapacityReservationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {leasePriorityClassV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📈️standing/⚖️priority/🟦️.ts";
 import {availableParallelism} from "node:os";
+import {boundCargoRequestV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {currentWorkerHostV1,planWorkersV1,readWorkerPolicyV1,workerActionKindV1} from "../👷️workers/🟦️.ts";
 import dashboardInstallation from "../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json" with {type:"json"};
@@ -176,19 +177,29 @@ export function createGrantGrowthPortV1(input:HostCapacityPortsV1&Readonly<{envi
  return Object.freeze({
   local:()=>{const available=hostAvailableBytesV1();return growthHostV1(policy,{origin,totalMegabytes:Math.floor(totalmem()/1048576),...available===undefined?{}:{availableMegabytes:Math.floor(available/1048576)}});},
   fleet:()=>readFleetGrowthHostsV1(policy,input.environment??process.env),
-  acquire:ask=>new Promise(accept=>{
-   const environment:NodeJS.ProcessEnv={...(input.environment??process.env)};delete environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_PLAN"];
-   if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off"){accept(Object.freeze({granted:true as const,release:()=>{}}));return;}
-   const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"cargo-growth",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(1,Math.ceil(ask.extraMegabytes)),perJobMegabytes:0,cpuPerJob:1,label:"unit-growth"}),session=currentAgentSessionV1({environment});
-   const controller=new AbortController(),control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
-   let release=()=>{},admitted=false,timedOut=false;const held=new Promise<void>(done=>{release=done;});
-   const stop=()=>{if(!admitted)controller.abort(refuseCapacityV1("cancelled","unit-growth-cancelled"));release();};
-   const timer=setTimeout(()=>{timedOut=true;stop();},ask.waitMilliseconds);timer.unref?.();
-   if(ask.signal.aborted)stop();else ask.signal.addEventListener("abort",stop,{once:true});
-   const leave=()=>{clearTimeout(timer);ask.signal.removeEventListener("abort",stop);};
-   const refused=()=>{leave();accept(Object.freeze({granted:false as const,reason:timedOut?"timeout" as const:"cancelled" as const}));};
-   withHostCapacityV1({observe:()=>Promise.resolve(0),...input,directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,write:ask.write,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{admitted=true;clearTimeout(timer);accept(Object.freeze({granted:true as const,release:()=>{leave();release();}}));void handle;await held;}).then(()=>{if(!admitted)refused();},()=>{if(!admitted)refused();else leave();});
-  })
+  acquire:async ask=>{
+   const environment:NodeJS.ProcessEnv={...(input.environment??process.env)},parentGrant=environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_PLAN"];
+   if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off")return Object.freeze({granted:true as const,release:()=>{}});
+   const session=currentAgentSessionV1({environment}),startedMs=Date.now(),remaining=()=>ask.waitMilliseconds-(Date.now()-startedMs);
+   const once=(waitMilliseconds:number)=>new Promise<Awaited<ReturnType<GrantGrowthPortV1["acquire"]>>|undefined>(accept=>{
+    const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"cargo-growth",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(1,Math.ceil(ask.extraMegabytes)),perJobMegabytes:0,cpuPerJob:1,label:parentGrant===undefined||!/^[A-Za-z0-9_-]{8,32}$/u.test(parentGrant)?"unit-growth":hostGrowthLabelV1(parentGrant),...ask.floorMegabytes===undefined||ask.floorMegabytes>=Math.ceil(ask.extraMegabytes)?{}:{minimumMegabytes:Math.max(1,Math.ceil(ask.extraMegabytes)),floorMegabytes:Math.max(1,Math.ceil(ask.floorMegabytes))}});
+    const controller=new AbortController(),control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
+    let release=()=>{},admitted=false,timedOut=false;const held=new Promise<void>(done=>{release=done;});
+    const stop=()=>{if(!admitted)controller.abort(refuseCapacityV1("cancelled","unit-growth-cancelled"));release();};
+    const timer=setTimeout(()=>{timedOut=true;stop();},waitMilliseconds);timer.unref?.();
+    if(ask.signal.aborted)stop();else ask.signal.addEventListener("abort",stop,{once:true});
+    const leave=()=>{clearTimeout(timer);ask.signal.removeEventListener("abort",stop);};
+    const refused=(error?:unknown)=>{leave();if(ask.signal.aborted)accept(Object.freeze({granted:false as const,reason:"cancelled" as const}));else if(timedOut)accept(Object.freeze({granted:false as const,reason:"timeout" as const}));else{if(error!==undefined)try{ask.write(error instanceof Error?error.message:String(error));}catch{}accept(undefined);}};
+    withHostCapacityV1({observe:()=>Promise.resolve(0),...input,directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,write:ask.write,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{admitted=true;clearTimeout(timer);accept(Object.freeze({granted:true as const,release:()=>{leave();release();}}));void handle;await held;}).then(()=>{if(!admitted)refused();},error=>{if(!admitted)refused(error);else leave();});
+   });
+   for(;;){
+    if(ask.signal.aborted)return Object.freeze({granted:false as const,reason:"cancelled" as const});
+    if(remaining()<=0)return Object.freeze({granted:false as const,reason:"timeout" as const});
+    const answer=await once(remaining());
+    if(answer!==undefined)return answer;
+    await new Promise<void>(done=>{const timer=setTimeout(finish,Math.min(policy.wait.progressMilliseconds,Math.max(0,remaining())));function finish(){clearTimeout(timer);ask.signal.removeEventListener("abort",finish);done();}ask.signal.addEventListener("abort",finish,{once:true});});
+   }
+  }
  });
 }
 
@@ -246,8 +257,8 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{p
  });
 }
 
-/** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy: first admits it to the cache partition (`disk.low-space` refusal before anything is written, see `admitBuildDiskV1`), then waits fairly with progress lines that name what it stands behind (its request is labelled with what it builds, e.g. the target of `repo run`, without control characters), then hands the body the arguments rewritten to the granted jobs and sets the environment the children inherit; light commands pass untouched. A run of a forecast-aware tool is learned as one that executed work when an executor asked for it or when its peak exceeded the quiet size of its class, so the quiet class learns only what quiet runs hold and the next forecast follows the run's own last outcome. */
-export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{offloadAdmission?:import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").OffloadAdmissionPortsV1;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean;repositoryRoot?:string;disk?:import("./💽️disk/🟦️.ts").BuildDiskPortsV1}>={}):Promise<T>{
+/** 🚪️ Admits one build invocation (the single attempt `withBuildCapacityV1` repeats after a preemption): runs an invocation under the machine-wide capacity grant when its command is heavy: first admits it to the cache partition (`disk.low-space` refusal before anything is written, see `admitBuildDiskV1`), then waits fairly with progress lines that name what it stands behind (its request is labelled with what it builds, e.g. the target of `repo run`, without control characters), then hands the body the arguments rewritten to the granted jobs and sets the environment the children inherit; light commands pass untouched. A run of a forecast-aware tool is learned as one that executed work when an executor asked for it or when its peak exceeded the quiet size of its class, so the quiet class learns only what quiet runs hold and the next forecast follows the run's own last outcome. */
+async function admitBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{offloadAdmission?:import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").OffloadAdmissionPortsV1;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean;repositoryRoot?:string;disk?:import("./💽️disk/🟦️.ts").BuildDiskPortsV1}>={}):Promise<T>{
  const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,requested=buildCapacityAskV1(stripped,parsed?.graphPolicy===undefined?environment:{...environment,SEMIO_BUILD_GRAPH_POLICY:parsed.graphPolicy},policy);
  if(!requested||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  if(ports.plannedByService===true&&requested.lineage[requested.lineage.length-1]!.endsWith(":dry"))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
@@ -257,7 +268,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
   nativeImageRecovery=recovery.admitsNativeImageDiskRecoveryV1(root,plan,environment);
   if(plan?.kind==="cache-image"&&(plan.target.operation==="reclaim"||plan.target.operation==="reclaim-wait"))ask={operation:"command",preferredJobs:1,kinds:[],targets:[],lineage:hostEstimateLineageV1("command",stripped[1])};
  }
- const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets,host:hostProfileV1(environment)}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
+ const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets,host:hostProfileV1(environment),environment}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
  if(!base)return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  if(stripped[0]!=="preflight"&&!nativeImageRecovery){
   const disk=await import("./💽️disk/🟦️.ts");
@@ -292,7 +303,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
   if(inherited||await fleetAdmission(fleetEnvironment,{...ports.offloadAdmission,...ports.control===undefined?{}:{signal:ports.control.signal}})!==undefined)return runWithFleet();
  }
  const stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,phaseless=client||PHASELESS_COMMANDS_V1.includes(ask.operation),learned=phaseless?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
- const total=hostProfileV1(environment).totalMegabytes,capacity=Math.max(0,total-hostFloorMegabytesV1(policy,{totalMegabytes:total})),scaled=scaleHostRequestV1(policy,{...base,priority:hostRequestPriorityV1(base.priority,leasePriorityClassV1(environment,{agentSession:session.agent.client!=="human",interactiveTerminal:session.agent.client==="human"}),estimate)},estimate.ratioBasisPoints,capacity,estimate.floorMegabytes),measured=hostClassBoundV1(policy,learned,ask.lineage,now()).source==="measured",request=rampHostRequestV1(base,scaled,estimate,measured),growth=estimate.growRatioBasisPoints<estimate.ratioBasisPoints?rampHostRequestV1(base,scaleHostRequestV1(policy,{...base,priority:request.priority},estimate.growRatioBasisPoints,capacity,estimate.floorMegabytes),estimate,measured):request;
+ const total=hostProfileV1(environment).totalMegabytes,capacity=Math.max(0,total-hostFloorMegabytesV1(policy,{totalMegabytes:total})),scaled=scaleHostRequestV1(policy,{...base,priority:hostRequestPriorityV1(base.priority,leasePriorityClassV1(environment,{agentSession:session.agent.client!=="human",interactiveTerminal:session.agent.client==="human"}),estimate)},estimate.ratioBasisPoints,capacity,estimate.floorMegabytes),measured=hostClassBoundV1(policy,learned,ask.lineage,now()).source==="measured",bound=<R extends HostRequestV1>(row:R):R=>ask.operation==="cargo"?boundCargoRequestV1(row,Math.floor(capacity*policy.estimates.maximumShareBasisPoints/10000)):row,request=bound(rampHostRequestV1(base,scaled,estimate,measured)),growth=estimate.growRatioBasisPoints<estimate.ratioBasisPoints?bound(rampHostRequestV1(base,scaleHostRequestV1(policy,{...base,priority:request.priority},estimate.growRatioBasisPoints,capacity,estimate.floorMegabytes),estimate,measured)):request;
  if(estimate.floorMegabytes>estimate.phases.execution!.megabytes)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"phased",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples,floor:estimate.floorMegabytes,phase:(estimate.phases.plan?.megabytes??0)>=(estimate.phases.assembly?.megabytes??0)?"plan":"assembly"}));
  else if(estimate.samples>0)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"estimated",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples}));
  const leaf=ask.lineage[ask.lineage.length-1]!,forecastable=ports.forecast!==false&&tool==="bazel"&&policy.operations.find(row=>row.name===ask.operation)?.forecast===true,forecast=forecastable||client?forecastHostQuietV1(policy,learned,leaf,now()):undefined,small=forecast!==undefined&&forecast.megabytes<growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes,quiet=small&&(client||forecast!.quiet),admission=quiet?quietHostRequestV1(growth,forecast!):request;
@@ -319,4 +330,31 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
    return fan===undefined?undefined:()=>{waiting?.dispose();return runWithFleet();};
   });
  }finally{waiting?.dispose();}
+}
+
+/** ⛓️ How many times one invocation is run again after the gate preempted it to break a memory hold-and-wait before the preemption is raised to the caller. */
+export const PREEMPTED_RERUNS_V1=5;
+
+/** 🔁️ Runs `attempt` again at once while the gate preempts it (its grant was released, the units it finished stay in the unit cache, so a rerun loses no compile work), at most `reruns` times; every other outcome and every other error passes through. */
+export async function rerunPreemptedV1<T>(attempt:(number:number)=>Promise<T>,ports:Readonly<{write?:(line:string)=>void;environment?:NodeJS.ProcessEnv;reruns?:number}>={}):Promise<T>{
+ const reruns=ports.reruns??PREEMPTED_RERUNS_V1;
+ for(let number=0;;number++){
+  try{return await attempt(number);}
+  catch(error){
+   if((error as {code?:unknown}|null)?.code!=="capacity-preempted"||number>=reruns)throw error;
+   const environment=ports.environment??process.env;
+   (ports.write??(line=>process.stderr.write(line+"\n")))(resolveHostCapacityLanguageV1(environment)==="de"?`[capacity] Lauf nach Verdrängung erneut gestartet (${number+1}/${reruns}): fertige Einheiten kommen aus dem Cache`:`[capacity] running again after preemption (${number+1}/${reruns}): finished units come from the cache`);
+  }
+ }
+}
+
+/** 🚪️ Runs an invocation under the machine-wide capacity grant (see `admitBuildCapacityV1`) and again, at once, when the gate preempted its grant to break a memory hold-and-wait: the body is told through the handle, its child processes end, the grant is released and the whole invocation is admitted anew (`rerunPreemptedV1`). */
+export async function withBuildCapacityV1<T>(...[args,environment,body,ports]:Parameters<typeof admitBuildCapacityV1<T>>):Promise<T>{
+ return rerunPreemptedV1(()=>admitBuildCapacityV1(args,environment,async granted=>{
+  let result:T,failure:unknown,failed=false;
+  try{result=await body(granted);}catch(error){failed=true;failure=error;}
+  if(granted.handle?.preempted?.aborted===true)throw Object.assign(hostCapacityErrorV1("capacityPreempted",{operation:granted.handle.plan.id},environment),{code:"capacity-preempted"});
+  if(failed)throw failure;
+  return result!;
+ },ports),{environment,...ports?.write===undefined?{}:{write:ports.write}});
 }

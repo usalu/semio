@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "store": {
+    "directory": [
+      "v1",
+      "origins"
+    ],
+    "boardFile": "broken.json"
+  },
+  "manifestRoots": [
+    "✏️s",
+    "🧰️framework"
+  ],
+  "excludedSegments": [
+    "target",
+    "node_modules",
+    ".cache",
+    ".git"
+  ],
+  "workspaceTriggers": [
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    ".cargo/config.toml"
+  ],
+  "rustExtensions": [
+    ".rs",
+    "Cargo.toml",
+    "build.rs"
+  ],
+  "sweep": {
+    "quietSeconds": 20,
+    "maximumQuietSeconds": 180,
+    "pollSeconds": 30,
+    "workspaceThreshold": 40,
+    "timeoutSeconds": 1800,
+    "fullAfterHours": 24,
+    "priority": 19
+  },
+  "check": {
+    "binary": "repo",
+    "environment": "SEMIO_REPO_BINARY",
+    "wrapper": [],
+    "prefix": [
+      "cargo",
+      "--store=shared",
+      "--configuration=prototype",
+      "--"
+    ],
+    "arguments": [
+      "check",
+      "--keep-going",
+      "--message-format=json"
+    ]
+  },
+  "limits": {
+    "maximumRows": 4096,
+    "messageCharacters": 400,
+    "stderrCharacters": 600,
+    "maximumBoardBytes": 4194304,
+    "staleSeconds": 3600
+  }
+}

@@ -10,10 +10,19 @@ pub mod initialization_authority;
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,failure:&mut Option<semio_framework_job::OriginalConstructionFailure>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     use semio_framework_job::OriginalConstructionStatus as Status;
+    refuse_below_ceiling::<O>(cx,demand)?;
     match semio_framework_job::admit_original_construction(cx,output,admission,demand,1,|_,_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})?{
         Status::Pending=>Ok(false),
         Status::Ready=>admission.reset_step(cx),
         Status::Failed=>{admission.take_failure_into_step(failure,cx)?;Err(semio_framework_value::ValueError::invariant("original construction failed; its complete causes are retained").into())}
+    }
+}
+/// 🚧️ Refuses, naming the floor and the ceiling, a construction whose floor exceeds a currency of the largest grant any turn of this host can have: such a replay could only yield forever.
+fn refuse_below_ceiling<O>(cx:&semio_framework_job::StepContext<'_>,demand:semio_framework_job::OriginalConstructionDemand)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    let floor=semio_framework_job::original_construction_step_floor::<O>(demand)?;let(ceiling,_)=cx.original_turn_ceiling();
+    match floor.wire_fields().into_iter().zip(ceiling.wire_fields()).find(|((_,needed),(_,granted))|needed>granted){
+        Some(((currency,needed),(_,granted)))=>Err(ValueError::new(ValueRefusalKind::OwnershipLimit,format!("{ARTIFACT_STORE_REPLAY_STEP_FLOOR_REFUSAL}: {currency} floor {needed} above ceiling {granted}")).into()),
+        None=>Ok(()),
     }
 }
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
@@ -65,6 +74,14 @@ use semio_os_store_ledger::native_digest;
 
 /// 📏️ The widest id or encoded operation one replay turn admits, the page every retained store initializer shares.
 pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+
+/// 🪙️ The item floor of a replay: every construction it runs demands one item, so its floor is [`semio_framework_job::original_construction_step_floor`] of that one item, the same pricing the refusal and the quotes use. A wallet below it yields without advancing and never completes; every wallet at or above it replays one operation per turn. A law pins this number against the smallest wallet that completes.
+pub fn artifact_store_replay_step_items_floor()->usize{
+    semio_framework_job::original_construction_step_floor::<()>(semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:0}).expect("the replay step floor is a fixed quote").maximum_items
+}
+
+/// 🚧️ The code a replay refuses with when a construction's floor exceeds the largest grant any turn of its host can have.
+pub const ARTIFACT_STORE_REPLAY_STEP_FLOOR_REFUSAL: &str = "replay.step-floor-above-ceiling";
 
 const ITEM: RetainedCloneProgress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 };
 
@@ -316,6 +333,11 @@ where
     }
 
     pub fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn {
+        let turn=self.turn_inner(cx);
+        turn
+    }
+
+    fn turn_inner(&mut self, cx: &mut StepContext<'_>) -> Turn {
         let grant = cx.retained_grant();
         let stale = cx.is_cancelled() || cx.replacement_is_stale(self.replacement);
         let unclaimed = self.phase == Phase::Complete && !self.terminal_handoff && self.candidate.is_some();
@@ -860,6 +882,10 @@ where
     }
 
     fn next_step_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if let Phase::ValidateEdit { .. } = self.phase {
+            let floor = self.next_step_floor()?;
+            return Ok(RetirementDemand { copy_bytes: floor.maximum_copy_bytes, capacity_bytes: floor.maximum_capacity_bytes, release_bytes: floor.maximum_release_bytes, depth: floor.maximum_depth });
+        }
         if self.phase == Phase::BuildCandidate && self.candidate.is_none() {
             let demand = self.candidate_construction_demand()?;
             let (quote, _) = semio_framework_job::original_construction_reserve::<Box<ArtifactStore<P,M>>>(demand, 1)?;
@@ -870,6 +896,23 @@ where
         let (_, scope_copy, _) = semio_framework_job::original_receiving_scope_headroom();
         demand.copy_bytes = demand.copy_bytes.checked_add(scope_copy).ok_or_else(|| ValueError::invariant("registry birth quote exceeds its copy currency"))?;
         Ok(demand)
+    }
+
+    fn next_step_floor(&self) -> Result<RetainedCloneGrant, ValueError> {
+        let bare = semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: 0, capacity_bytes: 0, release_bytes: 0, depth: 0 };
+        match self.phase {
+            Phase::ValidateEdit { index } => {
+                let envelope = self.envelope.as_ref().ok_or_else(|| ValueError::invariant("replay envelope is absent"))?;
+                let demand = self.edit_index.admission_demands(&envelope.vcs.edits, index, ARTIFACT_STORE_REPLAY_FIELD_BYTES)?;
+                semio_framework_job::original_construction_step_floor::<ArtifactStoreInitializationEditAdmission>(semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth })
+            }
+            Phase::BuildCandidate if self.candidate.is_none() => semio_framework_job::original_construction_step_floor::<Box<ArtifactStore<P, M>>>(self.candidate_construction_demand()?),
+            Phase::BuildCandidate | Phase::FindApplied { .. } | Phase::FindRedo { .. } | Phase::BindGenesis | Phase::SeedHistory { .. } | Phase::CommitApplied { .. } | Phase::CommitRedo { .. } => semio_framework_job::original_construction_step_floor::<()>(bare),
+            _ => {
+                let demand = self.next_step_demands()?;
+                Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth })
+            }
+        }
     }
 
     fn request_cancel(&mut self) {

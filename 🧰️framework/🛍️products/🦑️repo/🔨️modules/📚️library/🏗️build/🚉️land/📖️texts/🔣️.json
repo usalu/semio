@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "id": "land",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "usage": {
+      "en": "Expected: repo land checkout <dir> <path>... | delete <dir> <path>... | [check|apply] <dir> | rollback <id> | status  [--json] [--dry-run] [--outage] [--rebase] [--no-wait] [--bench] [--lane <lane>] [--title <title>] [--wave <wave>]",
+      "de": "Erwartet: repo land checkout <Ordner> <Pfad>... | delete <Ordner> <Pfad>... | [check|apply] <Ordner> | rollback <Kennung> | status  [--json] [--dry-run] [--outage] [--rebase] [--no-wait] [--bench] [--lane <Spur>] [--title <Titel>] [--wave <Welle>]"
+    },
+    "option.unknown": {
+      "en": "Unknown option for land: {option}",
+      "de": "Unbekannte Option für land: {option}"
+    },
+    "option.value": {
+      "en": "Option {option} needs a value",
+      "de": "Option {option} braucht einen Wert"
+    },
+    "language.unknown": {
+      "en": "Unknown language: {value} (en|de)",
+      "de": "Unbekannte Sprache: {value} (en|de)"
+    },
+    "stage.missing": {
+      "en": "No staged changeset in {directory} (run: repo land checkout {directory} <path>...)",
+      "de": "Kein vorbereiteter Änderungssatz in {directory} (ausführen: repo land checkout {directory} <Pfad>...)"
+    },
+    "stage.invalid": {
+      "en": "The staged changeset in {directory} is invalid: {details}",
+      "de": "Der vorbereitete Änderungssatz in {directory} ist ungültig: {details}"
+    },
+    "entries.too-many": {
+      "en": "At most {maximum} entries per changeset, got {count}",
+      "de": "Höchstens {maximum} Einträge je Änderungssatz, erhalten {count}"
+    },
+    "bytes.too-many": {
+      "en": "A changeset may carry at most {maximum} bytes",
+      "de": "Ein Änderungssatz darf höchstens {maximum} Bytes tragen"
+    },
+    "checkout.existing": {
+      "en": "staged copy of {path}",
+      "de": "Arbeitskopie von {path} angelegt"
+    },
+    "checkout.new": {
+      "en": "new file {path} (edit it in the staged tree)",
+      "de": "neue Datei {path} (im vorbereiteten Baum bearbeiten)"
+    },
+    "checkout.deleted": {
+      "en": "{path} will be deleted",
+      "de": "{path} wird gelöscht"
+    },
+    "checkout.done": {
+      "en": "{count} path(s) staged in {directory}",
+      "de": "{count} Pfad(e) in {directory} vorbereitet"
+    },
+    "changeset.empty": {
+      "en": "The staged changeset changes nothing",
+      "de": "Der vorbereitete Änderungssatz ändert nichts"
+    },
+    "tracked.missing": {
+      "en": "Staged file {path} is gone from the tree; delete it with: repo land delete",
+      "de": "Vorbereitete Datei {path} fehlt im Baum; löschen mit: repo land delete"
+    },
+    "base.stale": {
+      "en": "Stale base: {path} changed in the live tree since it was staged",
+      "de": "Veraltete Basis: {path} hat sich seit dem Vorbereiten im Live-Baum geändert"
+    },
+    "base.exists": {
+      "en": "{path} was staged as a new file but exists in the live tree now",
+      "de": "{path} wurde als neue Datei vorbereitet, existiert aber inzwischen im Live-Baum"
+    },
+    "base.gone": {
+      "en": "{path} was staged but is gone from the live tree",
+      "de": "{path} wurde vorbereitet, fehlt aber inzwischen im Live-Baum"
+    },
+    "base.deleted-changed": {
+      "en": "{path} is staged for deletion but changed in the live tree",
+      "de": "{path} ist zum Löschen vorbereitet, hat sich aber im Live-Baum geändert"
+    },
+    "rebase.merged": {
+      "en": "Rebased {path} onto the live version (3-way merge)",
+      "de": "{path} auf die Live-Version übertragen (3-Wege-Zusammenführung)"
+    },
+    "rebase.conflict": {
+      "en": "Rebase conflict in {path}: both sides changed the same lines",
+      "de": "Zusammenführungskonflikt in {path}: beide Seiten änderten dieselben Zeilen"
+    },
+    "rebase.unavailable": {
+      "en": "No 3-way merge available: {reason}",
+      "de": "Keine 3-Wege-Zusammenführung verfügbar: {reason}"
+    },
+    "progress.bases": {
+      "en": "Checking {count} staged base(s) against the live tree",
+      "de": "Prüfe {count} vorbereitete Basis(e) gegen den Live-Baum"
+    },
+    "progress.overlay": {
+      "en": "Building the scratch overlay in {directory}",
+      "de": "Baue das Scratch-Overlay in {directory}"
+    },
+    "progress.gate": {
+      "en": "Gate {gate}",
+      "de": "Prüfschritt {gate}"
+    },
+    "progress.slot-waiting": {
+      "en": "Waiting for the landing slot: {minutes} min until {next}",
+      "de": "Warte auf das Landefenster: {minutes} Min. bis {next}"
+    },
+    "progress.slot-open": {
+      "en": "The landing slot is open",
+      "de": "Das Landefenster ist offen"
+    },
+    "progress.recheck": {
+      "en": "Live files changed during the wait; checking again",
+      "de": "Live-Dateien haben sich während des Wartens geändert; prüfe erneut"
+    },
+    "progress.lock": {
+      "en": "Taking the landing lock(s): {areas}",
+      "de": "Nehme die Landesperre(n): {areas}"
+    },
+    "progress.apply": {
+      "en": "Applying {count} change(s) atomically",
+      "de": "Wende {count} Änderung(en) atomar an"
+    },
+    "progress.verify": {
+      "en": "Verifying the applied files",
+      "de": "Prüfe die angewendeten Dateien"
+    },
+    "gate.passed": {
+      "en": "{gate}: passed ({seconds} s)",
+      "de": "{gate}: bestanden ({seconds} s)"
+    },
+    "gate.failed": {
+      "en": "{gate}: FAILED ({seconds} s)",
+      "de": "{gate}: FEHLGESCHLAGEN ({seconds} s)"
+    },
+    "gate.skipped": {
+      "en": "{gate}: skipped ({reason})",
+      "de": "{gate}: übersprungen ({reason})"
+    },
+    "skip.scripts": {
+      "en": "no script touched",
+      "de": "keine Skriptdatei berührt"
+    },
+    "skip.rust": {
+      "en": "no Rust source or manifest touched",
+      "de": "keine Rust-Quelle und kein Manifest berührt"
+    },
+    "skip.law": {
+      "en": "no suite table or project target touched",
+      "de": "keine Suite-Tabelle und kein Projektziel berührt"
+    },
+    "skip.tests": {
+      "en": "no declared test of a touched member",
+      "de": "kein deklarierter Test eines berührten Mitglieds"
+    },
+    "skip.dry": {
+      "en": "check only",
+      "de": "nur Prüfung"
+    },
+    "dangling.row": {
+      "en": "{file} imports {specifier}, which does not exist",
+      "de": "{file} importiert {specifier}, das nicht existiert"
+    },
+    "tests.truncated": {
+      "en": "{count} declared tests found, running the first {maximum}",
+      "de": "{count} deklarierte Tests gefunden, es laufen die ersten {maximum}"
+    },
+    "tests.deferred": {
+      "en": "{file}: bound to the live workspace (storage, cache partitions, Cargo), cannot run in an overlay; it runs on the live tree right after the apply and rolls the landing back when red",
+      "de": "{file}: an den Live-Arbeitsbereich gebunden (Speicher, Cache-Partitionen, Cargo), läuft nicht in einem Overlay; er läuft direkt nach dem Anwenden auf dem Live-Baum und macht die Landung bei Rot rückgängig"
+    },
+    "tests.live-red": {
+      "en": "{file}: red on the live tree after the apply, rolling the landing back",
+      "de": "{file}: nach dem Anwenden auf dem Live-Baum rot, die Landung wird rückgängig gemacht"
+    },
+    "slot.queued": {
+      "en": "Outside the landing slot; queued until {next} (use --outage for a fleet-wide outage fix)",
+      "de": "Außerhalb des Landefensters; eingereiht bis {next} (--outage für die Behebung eines flottenweiten Ausfalls)"
+    },
+    "lock.busy": {
+      "en": "Landing lock {area} is held by {owner}",
+      "de": "Landesperre {area} wird gehalten von {owner}"
+    },
+    "lock.waiting": {
+      "en": "Landing lock {area} is held by {owner}; waiting ({seconds} s)",
+      "de": "Landesperre {area} wird gehalten von {owner}; warte ({seconds} s)"
+    },
+    "lock.stale": {
+      "en": "Landing lock {area} of {owner} is older than {minutes} min; report it to the coordinator, it is not stolen",
+      "de": "Landesperre {area} von {owner} ist älter als {minutes} Min.; an die Koordination melden, sie wird nicht übernommen"
+    },
+    "overlay.busy": {
+      "en": "The overlay of lane {lane} is in use by another run",
+      "de": "Das Overlay der Spur {lane} wird von einem anderen Lauf benutzt"
+    },
+    "overlay.failed": {
+      "en": "The overlay could not be built: {reason}",
+      "de": "Das Overlay konnte nicht gebaut werden: {reason}"
+    },
+    "apply.failed": {
+      "en": "Applying {path} failed ({reason}); every earlier file was restored",
+      "de": "Anwenden von {path} schlug fehl ({reason}); jede frühere Datei wurde wiederhergestellt"
+    },
+    "apply.verify-failed": {
+      "en": "{path} no longer has the landed content",
+      "de": "{path} hat nicht mehr den gelandeten Inhalt"
+    },
+    "rollback.recorded": {
+      "en": "Rollback point {id} recorded",
+      "de": "Rücksetzpunkt {id} aufgezeichnet"
+    },
+    "rollback.unknown": {
+      "en": "No rollback point {id}",
+      "de": "Kein Rücksetzpunkt {id}"
+    },
+    "rollback.diverged": {
+      "en": "Cannot roll back: {path} changed after the landing",
+      "de": "Rücksetzen nicht möglich: {path} hat sich nach dem Landen geändert"
+    },
+    "landings.appended": {
+      "en": "Entry appended to {file}",
+      "de": "Eintrag an {file} angehängt"
+    },
+    "cancelled": {
+      "en": "Cancelled; nothing was applied",
+      "de": "Abgebrochen; nichts wurde angewendet"
+    },
+    "result.invalid": {
+      "en": "The result document is invalid: {details}",
+      "de": "Das Ergebnisdokument ist ungültig: {details}"
+    },
+    "totals.landed": {
+      "en": "Landed {count} file(s) in area(s) {areas}; rollback point {rollback}",
+      "de": "{count} Datei(en) in Bereich(en) {areas} gelandet; Rücksetzpunkt {rollback}"
+    },
+    "totals.checked": {
+      "en": "All gates passed for {count} file(s) in area(s) {areas}; nothing was applied",
+      "de": "Alle Prüfschritte bestanden für {count} Datei(en) in Bereich(en) {areas}; nichts wurde angewendet"
+    },
+    "totals.failed": {
+      "en": "Refused to land: {count} gate(s) failed; nothing was applied",
+      "de": "Landen abgelehnt: {count} Prüfschritt(e) fehlgeschlagen; nichts wurde angewendet"
+    },
+    "totals.refused": {
+      "en": "Refused to land: {count} problem(s); nothing was applied",
+      "de": "Landen abgelehnt: {count} Problem(e); nichts wurde angewendet"
+    },
+    "totals.queued": {
+      "en": "Queued {id} for the next landing slot ({next})",
+      "de": "{id} für das nächste Landefenster eingereiht ({next})"
+    },
+    "totals.rolled-back": {
+      "en": "Rolled back {count} file(s) of {id}",
+      "de": "{count} Datei(en) von {id} zurückgesetzt"
+    },
+    "status.free": {
+      "en": "No landing lock is held",
+      "de": "Keine Landesperre wird gehalten"
+    },
+    "status.held": {
+      "en": "{area}: {owner}",
+      "de": "{area}: {owner}"
+    },
+    "status.slot": {
+      "en": "Landing slot {state}; next opening {next}",
+      "de": "Landefenster {state}; nächste Öffnung {next}"
+    },
+    "state.open": {
+      "en": "open",
+      "de": "offen"
+    },
+    "state.closed": {
+      "en": "closed",
+      "de": "geschlossen"
+    },
+    "path.outside": {
+      "en": "Path is outside the checkout: {path}",
+      "de": "Pfad liegt außerhalb des Checkouts: {path}"
+    },
+    "path.segment": {
+      "en": "Path is in a protected folder: {path}",
+      "de": "Pfad liegt in einem geschützten Ordner: {path}"
+    },
+    "path.long": {
+      "en": "Path is longer than the allowed path length: {path}",
+      "de": "Pfad ist länger als die erlaubte Pfadlänge: {path}"
+    },
+    "path.kind": {
+      "en": "Not a regular file: {path}",
+      "de": "Keine reguläre Datei: {path}"
+    },
+    "debug.row": {
+      "en": "{file}:{line} carries a temporary debug line; remove it before landing",
+      "de": "{file}:{line} trägt eine temporäre Debug-Zeile; vor dem Landen entfernen"
+    },
+    "skip.roots": {
+      "en": "no written file under a checked root",
+      "de": "keine geschriebene Datei unter einer geprüften Wurzel"
+    },
+    "skip.bench": {
+      "en": "not requested (use --bench)",
+      "de": "nicht angefordert (--bench verwenden)"
+    }
+  }
+}

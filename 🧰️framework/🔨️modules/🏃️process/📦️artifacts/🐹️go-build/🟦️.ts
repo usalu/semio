@@ -12,11 +12,11 @@ import schema from "./🧬️schema/🔣️.json" with { type:"json" };
 /** 🐹️ Declares one Go compiler's intent, source owner, artifact custody and deadline. */
 export type GoArtifactBuildPolicyV1=Readonly<{version:1;mode:BuildMode;cwd:string;captureDirectory:string;leaseDirectory:string;budgetMs:number}>;
 
-/** 🎚️ Owns Go optimization flags so caller arguments cannot silently override the selected mode. */
+/** 🎚️ Owns Go optimization flags and disables VCS stamping (workers share no `.git`; stamped outputs would also differ per checkout and defeat cache sharing) so caller arguments cannot silently override the selected mode. */
 export function goBuildArgumentsV1(mode:BuildMode,args:readonly string[]):string[]{
  readBuildMode(mode);
- if(args.some(argument=>/^-+(?:gcflags|ldflags|trimpath|p)(?:=|$)/u.test(argument)))throw Error("Go optimization and worker flags belong to the build policy");
- return [...(mode==="release"?["-trimpath","-ldflags=-s -w"]:["-gcflags=all=-N -l"]),...args.map(argument=>argument==="..."?"./...":argument)];
+ if(args.some(argument=>/^-+(?:gcflags|ldflags|trimpath|buildvcs|p)(?:=|$)/u.test(argument)))throw Error("Go optimization and worker flags belong to the build policy");
+ return ["-buildvcs=false",...(mode==="release"?["-trimpath","-ldflags=-s -w"]:["-gcflags=all=-N -l"]),...args.map(argument=>argument==="..."?"./...":argument)];
 }
 
 /** 📦️ Captures one Go deliverable privately and publishes it after the compiler releases host capacity. */

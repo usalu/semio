@@ -1,0 +1,49 @@
+{
+  "why": "Language-agnostic vectors of the FEM physics fingerprint of the analysis settings shared by FEM 2D and FEM 3D: FNV-1a 64 (offset cbf29ce484222325, prime 100000001b3) over, for every setting that is not display-only in declaration order, its UTF-8 name, `=`, its value as 8 little-endian bytes (counts as u64, reals as IEEE 754 binary64 bits) and `;`. Display-only settings are left out, so a deformation scale edit keeps the fingerprint while a mode count edit changes it.",
+  "displayOnly": [
+    "deformationScale"
+  ],
+  "fields": [
+    "modalCount",
+    "bucklingCount",
+    "deformationScale"
+  ],
+  "cases": [
+    {
+      "modalCount": 3,
+      "bucklingCount": 3,
+      "deformationScale": 50.0,
+      "fingerprint": "7498a7d5ed038cab"
+    },
+    {
+      "modalCount": 3,
+      "bucklingCount": 3,
+      "deformationScale": 1.0,
+      "fingerprint": "7498a7d5ed038cab"
+    },
+    {
+      "modalCount": 3,
+      "bucklingCount": 3,
+      "deformationScale": 500.5,
+      "fingerprint": "7498a7d5ed038cab"
+    },
+    {
+      "modalCount": 4,
+      "bucklingCount": 3,
+      "deformationScale": 50.0,
+      "fingerprint": "3c696361a7c18f74"
+    },
+    {
+      "modalCount": 3,
+      "bucklingCount": 4,
+      "deformationScale": 50.0,
+      "fingerprint": "2ed769eeaad4058a"
+    },
+    {
+      "modalCount": 1,
+      "bucklingCount": 1,
+      "deformationScale": 50.0,
+      "fingerprint": "36c06ec90eae390f"
+    }
+  ]
+}

@@ -59,3 +59,22 @@ async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
     assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(create)] if create.index == 0), "the step lands at the viewer's cursor");
     assert_eq!(emit.config_mutations, vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(1) })], "the cursor moves past the new step on the config lane");
 }
+
+/// 🧲️ An armed capability placed by a pointer-down on the demo workshop emits one stamped step without leaking any retained map.
+#[semio_framework_async_macros::async_test]
+async fn an_armed_capability_pointer_down_places_one_step_on_the_demo_document() {
+    use semio_plugin::{AppOperationContext, HistoryView};
+    use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document;
+    let snapshot = default_document();
+    let history = HistoryView::empty();
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-world".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: Default::default(), authoring_seed: "world-seed".into() };
+    let doc = ArtifactView::with_operation(&snapshot, &history, operation);
+    let config = Process3dConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let view = semio_plugin::ViewModel { active_utility_id: Some(placement::PLACE_CAPABILITY_UTILITY.into()), ..Default::default() };
+    let ctx = semio_s_artifact_process_process3d_kit::Process3dDispatchCtx { interaction: Default::default(), view_state: Some(view) };
+    let machine = &snapshot.workshop.machines[0];
+    let chosen = Some((machine.id.as_str(), machine.capabilities[0].id.as_str()));
+    let emit = world_pointer_down::handle_placement(&world_pointer_down::WorldPointerDown { position: [0.1, 0.2, 0.3] }, &doc, &cfg, &ctx, chosen).expect("the placement emits");
+    assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(_)]));
+}

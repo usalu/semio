@@ -1,0 +1,185 @@
+{
+ "generator": "openpyxl 3.1.5 Translator + formulas 1.3.4",
+ "translations": [
+  {
+   "master": "A2*2+$A$1",
+   "from": "B2",
+   "to": "B3",
+   "expected": "A3*2+$A$1"
+  },
+  {
+   "master": "A2*2+$A$1",
+   "from": "B2",
+   "to": "B4",
+   "expected": "A4*2+$A$1"
+  },
+  {
+   "master": "A2*2+$A$1",
+   "from": "B2",
+   "to": "B5",
+   "expected": "A5*2+$A$1"
+  },
+  {
+   "master": "A1+Other!$A$1",
+   "from": "C1",
+   "to": "D1",
+   "expected": "B1+Other!$A$1"
+  },
+  {
+   "master": "A1+B2*$C3-D$4",
+   "from": "B2",
+   "to": "E9",
+   "expected": "D8+E9*$C10-G$4"
+  },
+  {
+   "master": "SUM($A2:A2)",
+   "from": "C2",
+   "to": "D5",
+   "expected": "SUM($A5:B5)"
+  },
+  {
+   "master": "Sheet1!A1+'My Sheet'!B2+\"A1\"",
+   "from": "A1",
+   "to": "B2",
+   "expected": "Sheet1!B2+'My Sheet'!C3+\"A1\""
+  },
+  {
+   "master": "LOG10(A1)+A:A",
+   "from": "A1",
+   "to": "C3",
+   "expected": "LOG10(C3)+C:C"
+  },
+  {
+   "master": "IF(A1>0,\"x\",B$2)",
+   "from": "A1",
+   "to": "A1",
+   "expected": "IF(A1>0,\"x\",B$2)"
+  }
+ ],
+ "cases": [
+  {
+   "id": "open",
+   "edit": null,
+   "formulas": {
+    "Sheet1!C1": "A1+Other!$A$1",
+    "Sheet1!D1": "B1+Other!$A$1",
+    "Sheet1!F1": "SUM(A2:A5)",
+    "Sheet1!B2": "A2*2+$A$1",
+    "Sheet1!B3": "A3*2+$A$1",
+    "Sheet1!B4": "A4*2+$A$1",
+    "Sheet1!B5": "A5*2+$A$1"
+   },
+   "values": {
+    "Sheet1!C1": 110.0,
+    "Sheet1!D1": 100.0,
+    "Sheet1!F1": 10.0,
+    "Sheet1!B2": 12.0,
+    "Sheet1!B3": 14.0,
+    "Sheet1!B4": 16.0,
+    "Sheet1!B5": 18.0
+   }
+  },
+  {
+   "id": "edit-master-to-formula",
+   "edit": {
+    "cell": "Sheet1!B2",
+    "formula": "=A2*3",
+    "number": null
+   },
+   "formulas": {
+    "Sheet1!C1": "A1+Other!$A$1",
+    "Sheet1!D1": "B1+Other!$A$1",
+    "Sheet1!F1": "SUM(A2:A5)",
+    "Sheet1!B2": "A2*3",
+    "Sheet1!B3": "A3*2+$A$1",
+    "Sheet1!B4": "A4*2+$A$1",
+    "Sheet1!B5": "A5*2+$A$1"
+   },
+   "values": {
+    "Sheet1!C1": 110.0,
+    "Sheet1!D1": 100.0,
+    "Sheet1!F1": 10.0,
+    "Sheet1!B2": 3.0,
+    "Sheet1!B3": 14.0,
+    "Sheet1!B4": 16.0,
+    "Sheet1!B5": 18.0
+   }
+  },
+  {
+   "id": "edit-dependent-to-formula",
+   "edit": {
+    "cell": "Sheet1!B4",
+    "formula": "=A4+1000",
+    "number": null
+   },
+   "formulas": {
+    "Sheet1!C1": "A1+Other!$A$1",
+    "Sheet1!D1": "B1+Other!$A$1",
+    "Sheet1!F1": "SUM(A2:A5)",
+    "Sheet1!B2": "A2*2+$A$1",
+    "Sheet1!B3": "A3*2+$A$1",
+    "Sheet1!B4": "A4+1000",
+    "Sheet1!B5": "A5*2+$A$1"
+   },
+   "values": {
+    "Sheet1!C1": 110.0,
+    "Sheet1!D1": 100.0,
+    "Sheet1!F1": 10.0,
+    "Sheet1!B2": 12.0,
+    "Sheet1!B3": 14.0,
+    "Sheet1!B4": 1003.0,
+    "Sheet1!B5": 18.0
+   }
+  },
+  {
+   "id": "edit-master-to-number",
+   "edit": {
+    "cell": "Sheet1!B2",
+    "formula": null,
+    "number": 7
+   },
+   "formulas": {
+    "Sheet1!C1": "A1+Other!$A$1",
+    "Sheet1!D1": "B1+Other!$A$1",
+    "Sheet1!F1": "SUM(A2:A5)",
+    "Sheet1!B3": "A3*2+$A$1",
+    "Sheet1!B4": "A4*2+$A$1",
+    "Sheet1!B5": "A5*2+$A$1"
+   },
+   "values": {
+    "Sheet1!C1": 110.0,
+    "Sheet1!D1": 100.0,
+    "Sheet1!F1": 10.0,
+    "Sheet1!B3": 14.0,
+    "Sheet1!B4": 16.0,
+    "Sheet1!B5": 18.0
+   }
+  },
+  {
+   "id": "edit-horizontal-master",
+   "edit": {
+    "cell": "Sheet1!C1",
+    "formula": "=A1*2",
+    "number": null
+   },
+   "formulas": {
+    "Sheet1!C1": "A1*2",
+    "Sheet1!D1": "B1+Other!$A$1",
+    "Sheet1!F1": "SUM(A2:A5)",
+    "Sheet1!B2": "A2*2+$A$1",
+    "Sheet1!B3": "A3*2+$A$1",
+    "Sheet1!B4": "A4*2+$A$1",
+    "Sheet1!B5": "A5*2+$A$1"
+   },
+   "values": {
+    "Sheet1!C1": 20.0,
+    "Sheet1!D1": 100.0,
+    "Sheet1!F1": 10.0,
+    "Sheet1!B2": 12.0,
+    "Sheet1!B3": 14.0,
+    "Sheet1!B4": 16.0,
+    "Sheet1!B5": 18.0
+   }
+  }
+ ]
+}

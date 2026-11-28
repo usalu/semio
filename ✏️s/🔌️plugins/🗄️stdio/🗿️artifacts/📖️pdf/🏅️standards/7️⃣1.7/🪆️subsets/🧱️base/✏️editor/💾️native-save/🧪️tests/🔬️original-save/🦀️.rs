@@ -128,6 +128,7 @@ fn drive_save(snapshot: &PdfSnapshot, turn: RetainedCloneGrant, cancel_after: Op
     let mut turns = 0usize;
     let mut cancelled = false;
     let mut idle_after_cancel = 0usize;
+    let mut refused = None;
     let mut decoder = source.admitted_decoder();
     source.retain_dispatch().unwrap();
     let mut candidate = None;
@@ -143,10 +144,10 @@ fn drive_save(snapshot: &PdfSnapshot, turn: RetainedCloneGrant, cancel_after: Op
         match source.turn_with_decoder(turn, &mut decoder, |cx| program.prepare_original(&snapshot, revision, cx)) {
             Ok(PlanDecision::Pending) | Err(_) => None,
             Ok(PlanDecision::Ready) => Some(true),
-            Ok(PlanDecision::ReferenceRequired(_)) => Some(false),
+            Ok(PlanDecision::ReferenceRequired(c)) => { refused = Some(c); Some(false) }
         }
     });
-    assert!(ready == Some(true) || cancelled, "the Save plan settles or is cancelled: {ready:?}");
+    assert!(ready == Some(true) || cancelled, "the Save plan settles or is cancelled: {ready:?}, refused for {refused:?}");
     let mut actual = Vec::new();
     let mut page = None;
     let mut construction = MediaConstruction::default();

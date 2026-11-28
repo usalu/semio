@@ -11,7 +11,7 @@ import { testCheckoutRootV1 } from "../../🧪️testing/🏖️sandbox/🛡️g
 import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import { estimateHostRatioV1, hostCapacityDirectoryV1, hostClassBoundV1, hostFloorMegabytesV1, hostLearnCeilingV1, learnableHostRunV1, newHostCapacityIdV1, rampHostRequestV1, readHostEstimateStoreV1, recordHostOutcomeV1, scaleHostRequestV1, sizeHostRequestV1, updateHostEstimateStoreV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1, type HostCapacityPortsV1, type HostRunV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
 import { hostProfileV1 } from "../../🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
-import { CARGO_GRANT_POLICY_V1, capCargoGrantJobsV1, cargoGrantEnvironmentV1, cargoGrantJobsV1, cargoGrantLineageV1 } from "../../🏗️build/🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
+import { CARGO_GRANT_POLICY_V1, boundCargoRequestV1, capCargoGrantJobsV1, cargoGrantEnvironmentV1, cargoGrantJobsV1, cargoGrantLineageV1 } from "../../🏗️build/🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
 import { findToolV1, toolCommandNameV1, toolForCommandV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1, type ToolHostV1, type ToolResolutionV1 } from "../🔎️resolve/🟦️.ts";
 import { toolEnvironmentV1 } from "../🌿️environment/🟦️.ts";
@@ -61,14 +61,14 @@ export function setDefaultToolAdmissionV1(admission: ToolAdmissionV1 | undefined
 export function createToolAdmissionV1(policy: HostCapacityPolicyV1, ports: Readonly<{ environment?: NodeJS.ProcessEnv; directory?: string; write?: (line: string) => void; gate?: HostCapacityPortsV1 }> = {}): ToolAdmissionV1 {
   return async (ask, body, signal) => {
     const environment = ports.environment ?? process.env, cargo = ask.operation === CARGO_GRANT_POLICY_V1.operation && ask.arguments !== undefined, host = hostProfileV1(environment);
-    const sized = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, host, ...cargo ? { preferredJobs: cargoGrantJobsV1(ask.arguments!, environment, availableParallelism()) } : {}, ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
+    const sized = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, host, environment, ...cargo ? { preferredJobs: cargoGrantJobsV1(ask.arguments!, environment, availableParallelism()) } : {}, ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
     if (sized === undefined) return body({ environment: {}, jobs: 1 });
     const directory = ports.directory ?? hostCapacityDirectoryV1(environment), lineage = cargo ? cargoGrantLineageV1(ask.arguments!) : [], now = Date.now();
     const capacity = Math.max(0, host.totalMegabytes - hostFloorMegabytesV1(policy, host));
     let request = sized;
     if (cargo) {
       const store = readHostEstimateStoreV1(directory), estimate = estimateHostRatioV1(policy, store, lineage, now);
-      request = rampHostRequestV1(sized, scaleHostRequestV1(policy, sized, estimate.ratioBasisPoints, capacity), estimate, hostClassBoundV1(policy, store, lineage, now).source === "measured");
+      request = boundCargoRequestV1(rampHostRequestV1(sized, scaleHostRequestV1(policy, sized, estimate.ratioBasisPoints, capacity), estimate, hostClassBoundV1(policy, store, lineage, now).source === "measured"), Math.floor(capacity * policy.estimates.maximumShareBasisPoints / 10000));
     }
     let failed = false;
     const learn = cargo ? async (run: HostRunV1): Promise<void> => {

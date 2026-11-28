@@ -48,3 +48,18 @@ fn a_quoted_receiving_scope_beyond_the_turn_is_refused_at_no_charge(){
  }
  close(caller,decoder);
 }
+
+/// 🪣️ A quoted scope opened over a held scope that carries no capacity is served the capacity it quotes, never a grant nobody can run, and waits or tops up instead.
+#[test]
+fn a_quoted_receiving_scope_over_a_held_scope_is_never_served_less_capacity_than_it_quotes(){
+ let mut caller=caller();let mut decoder=caller.admitted_decoder();let funded=caller.fuel_remaining();
+ assert!(offered(&mut caller,&mut decoder,RetirementDemand::default()).is_some(),"the held scope never opened");
+ let quote=(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:2368,maximum_capacity_bytes:2384,maximum_depth:1,..Default::default()},1);
+ let mut served=None;
+ for _ in 0..funded.min(64){
+  measured(&mut caller,&mut decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving_quoted(&mut out,quote,|_,grant|{served=Some(grant);Ok(())}))?;account(cx,|_|drop(out));if served.is_some(){cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;}Ok(())});
+  if served.is_some(){break}
+ }
+ if let Some(grant)=served{assert!(grant.maximum_capacity_bytes>=quote.0.maximum_capacity_bytes,"a quoted scope was served {grant:?} for a capacity quote of {}",quote.0.maximum_capacity_bytes)}
+ close(caller,decoder);
+}

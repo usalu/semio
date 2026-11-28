@@ -48,12 +48,13 @@ test("the worker accepts exactly the linked wasm actions and link arguments of t
  expect(validateRemoteExecutionRustcActionV1(view(argumentsOf({crateType:"cdylib",target:"wasm32-wasip2",linkArguments:[],flags:[]}).filter(value=>value!=="--target"&&value!=="wasm32-wasip2")))).toBeUndefined();
 });
 
-test("a cdylib final is sent with one front-end thread and no back-end flag (the worker sizes the back end); every other unit is unchanged",()=>{
+test("every offloaded unit is sent with one front-end thread (a parallel front end gives other metadata bytes on other machines) and a cdylib final no back-end flag (the worker sizes the back end)",()=>{
  const final=["--crate-type","cdylib","-Z","threads=0","a.rs","-Zthreads=8"];
  expect(offloadFrontEndArgumentsV1(final)).toEqual(["--crate-type","cdylib","-Z","threads=1","a.rs","-Zthreads=1"]);
  expect(offloadFrontEndArgumentsV1(["--crate-type=cdylib","-Z","threads=0"])).toEqual(["--crate-type=cdylib","-Z","threads=1"]);
  const library=["--crate-type","lib","-Z","threads=0","a.rs"];
- expect(offloadFrontEndArgumentsV1(library)).toBe(library);
+ expect(offloadFrontEndArgumentsV1(library)).toEqual(["--crate-type","lib","-Z","threads=1","a.rs"]);
+ expect(offloadFrontEndArgumentsV1(["--crate-type=proc-macro","-Zthreads=0","--cfg","threads=0"])).toEqual(["--crate-type=proc-macro","-Zthreads=1","--cfg","threads=0"]);
 });
 
 test("the object prefix of the macOS linker is never sent for a WebAssembly target",()=>{

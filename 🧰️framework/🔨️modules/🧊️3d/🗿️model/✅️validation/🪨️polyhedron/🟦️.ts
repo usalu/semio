@@ -1,6 +1,7 @@
 /** 🪨️ Checks one connected outward triangular shell, including intersections between faces. */
 import { meshIntegrity } from "../../🩻️integrity/🟦️.ts";
 import { cross, dot, sub, type V3 } from "../../🧮️math/🟦️.ts";
+import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 import type { Pace } from "../../⏱️operation/🟦️.ts";
 
 type Face = readonly [number, number, number];
@@ -12,7 +13,7 @@ function edges(points: V3[]): V3[] {
 }
 
 function separated(pa: V3[], pb: V3[], axis: V3): boolean {
-  const length = Math.hypot(...axis);
+  const length = portable.hypot(...axis);
   if (length < 1e-16) return false;
   const a = pa.map((p) => dot(p, axis)), b = pb.map((p) => dot(p, axis));
   return Math.max(...a) < Math.min(...b) - epsilon * length || Math.max(...b) < Math.min(...a) - epsilon * length;
@@ -27,8 +28,8 @@ function crosses(a: Face, b: Face, points: readonly V3[]): boolean {
   const pa = a.map((i) => points[i]!), pb = b.map((i) => points[i]!);
   const ea = edges(pa), eb = edges(pb);
   const na = cross(ea[0]!, ea[1]!), nb = cross(eb[0]!, eb[1]!);
-  const lengthA = Math.hypot(...na), lengthB = Math.hypot(...nb);
-  const coplanar = Math.hypot(...cross(na, nb)) <= epsilon * lengthA * lengthB && Math.abs(dot(na, sub(pb[0]!, pa[0]!))) <= epsilon * lengthA;
+  const lengthA = portable.hypot(...na), lengthB = portable.hypot(...nb);
+  const coplanar = portable.hypot(...cross(na, nb)) <= epsilon * lengthA * lengthB && Math.abs(dot(na, sub(pb[0]!, pa[0]!))) <= epsilon * lengthA;
   if (shared.length === 2) return coplanar && dot(na, nb) < 0;
   if (shared.length === 0) {
     const directions = [na, nb, ...ea.flatMap((x) => eb.map((y) => cross(x, y)))];

@@ -16,6 +16,9 @@ use semio_s_fem_model::Dof;
 use semio_plugin::ActionArgDef;
 use semio_plugin::ActionArgOption;
 use semio_plugin::BuiltNode;
+use semio_ui_contract::Buildable;
+use semio_ui_contract::HasChildren;
+use semio_ui_contract::HasStackLayout;
 use semio_ui_locale::LocalizedLabel;
 use std::collections::HashMap;
 
@@ -41,6 +44,31 @@ pub fn canvas_2d_surface(id: impl Into<String>, scene: &semio_ui_scene::Canvas2d
 /// refused by the 32 KiB surface doc (`ui.scene.encode: World3d scene admission failed`).
 pub fn world_3d_surface(id: impl Into<String>, scene: &semio_ui_scene::World3dScene, name: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::World3d, scene, name, None)
+}
+
+/// 🏷️ The caption a read-only viewer carries above its model: the load case its loads belong to, `∅` when the document has none.
+pub fn viewer_case_caption(load_case: Option<&str>, locale: semio_plugin::Locale) -> String {
+    format!("{}: {}", semio_plugin::surface_name(locale, "Case", "Lastfall"), load_case.unwrap_or("∅"))
+}
+
+/// 🏷️ Places the viewer's data caption above its scene; both enter the column as builders so the column keys them positionally.
+pub fn with_viewer_caption(scene: BuiltNode, load_case: Option<&str>, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let admission = |detail: &'static str| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", detail);
+    let caption = semio_ui_contract::Label::try_from(viewer_case_caption(load_case, locale).as_str()).map_err(|_| admission("fem viewer caption label admission failed"))?;
+    let scene_stack = semio_ui_contract::column().grow(true).try_child(scene).map_err(|_| admission("fem viewer caption scene child admission failed"))?;
+    semio_ui_contract::column()
+        .grow(true)
+        .try_child(semio_ui_contract::text(caption))
+        .map_err(|_| admission("fem viewer caption text admission failed"))?
+        .try_child(scene_stack)
+        .map_err(|_| admission("fem viewer caption scene stack admission failed"))?
+        .try_build()
+        .map_err(|_| admission("fem viewer caption node admission failed"))
+}
+
+/// 🖱️ The Canvas2d meta layer a read-only viewer carries: primary and secondary drag pan, as in the editor's Direct Select, and nothing else is armed.
+pub fn canvas_2d_viewer_meta_layer() -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({ "id": "meta:utility", "role": "meta", "utility": "selectDirect", "leftDragPans": true, "rightDragPans": true })
 }
 
 /// 🎨️ Projects the shared color-input parser into Canvas2d RGB, using black for refused input.
@@ -186,6 +214,24 @@ impl ResultMode {
             Self::Buckling => DisplayMode::Buckling(index as usize),
         }
     }
+}
+
+/// 🫙️ The wire id of the empty document, the Artifact panel combobox's `No example` row and the palette's first option.
+pub const EMPTY_EXAMPLE_ID: &str = "";
+
+/// 🏷️ The label of the empty example row, English first then German.
+pub fn no_example_label() -> LocalizedLabel {
+    LocalizedLabel::native("No example", "Kein Beispiel")
+}
+
+/// 📚️ The options every FEM surface offers for the same bundled examples: the empty example, then each registered example in registration order with its own label.
+pub fn example_options(examples: &[semio_plugin::ExampleSource]) -> Vec<ActionArgOption> {
+    std::iter::once(ActionArgOption::new(EMPTY_EXAMPLE_ID, no_example_label())).chain(examples.iter().map(|example| ActionArgOption::new(example.id(), example.label().clone()))).collect()
+}
+
+/// 📚️ The `exampleId` select of `setActiveExample`, derived from the registered examples so the palette and the Artifact panel combobox cannot name one example two ways.
+pub fn set_active_example_arg(examples: &[semio_plugin::ExampleSource], default_id: &str) -> ActionArgDef {
+    ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example_options(examples)).default_value(&default_id)
 }
 
 /// 📝️ Shared `setResultDisplay` arg declarations for both apps' builders — `sourceId` (a case/

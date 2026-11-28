@@ -77,7 +77,7 @@ describe("🏷️ cast provenance written by the exporter", { timeout: 60_000 },
     await withScratch(async (directory) => {
       const ids = ["walker-line", "radiator-rated", "radiator-transient", "walker-thermal"];
       const indexes = (await exportCast(pick(...ids), ids, directory)) as readonly CastIndex[];
-      const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"));
+      const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"), undefined, new Set(ids.map((id) => exporting.manifest.casts[id]!.asset)));
       for (const index of indexes) {
         expect(indexOf(JSON.parse(readFileSync(join(directory, index.cast, "🔣️.json"), "utf8"))), JSON.stringify(indexOf.errors?.slice(0, 3))).toBe(true);
         const cast = exporting.manifest.casts[index.cast]!;

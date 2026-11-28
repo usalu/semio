@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/build/bench/latency/schema.json",
+  "title": "Developer Command Latency Budgets",
+  "description": "⏲️ The latency and round trip budgets of the developer commands per phase group, the profile rows they are measured from and the report one run leaves. / Die Latenz- und Rundreisebudgets der Entwicklerbefehle je Phasengruppe, die Profilzeilen, aus denen sie gemessen werden, und der Bericht eines Laufs.",
+  "definitions": {
+    "Text": {"type": "object", "required": ["en", "de"], "additionalProperties": false, "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}},
+    "Group": {"type": "string", "enum": ["door", "graph", "source", "tools", "leases", "children", "other", "uncovered"]},
+    "Trip": {"type": "string", "enum": ["graphService", "cacheLookup", "spawn"]},
+    "Status": {"type": "string", "enum": ["ok", "warn", "breach", "unmeasured"]},
+    "Policy": {
+      "const": {
+        "version": 1,
+        "profileVariable": "SEMIO_REPO_PROFILE",
+        "profileValue": "json",
+        "spawnPrefix": "spawn.",
+        "tripPrefix": "rt.",
+        "toleranceMilliseconds": 250,
+        "breachRatio": 2,
+        "maximumRuns": 20,
+        "maximumOutputBytes": 33554432,
+        "timeoutMilliseconds": 3600000,
+        "operation": "latency",
+        "environment": {"keep": ["SEMIO_BUILD_BUDGET_MS"], "prefixes": ["SEMIO_FLEET_", "SEMIO_REMOTE_CACHE_", "SEMIO_HOST_CAPACITY_"]},
+        "options": {"valued": ["--commands"], "plain": ["--strict"], "shared": ["--runs", "--root", "--lang", "--file", "--json"]}
+      }
+    },
+    "Groups": {
+      "const": [
+        {"id": "door", "prefixes": ["boot.", "cli.", "door.", "selection.", "invocation."], "title": {"en": "Front door and command start", "de": "Eingangstür und Befehlsstart"}},
+        {"id": "graph", "prefixes": ["graph."], "title": {"en": "Graph read and plan", "de": "Graphlesen und Plan"}},
+        {"id": "source", "prefixes": ["source.", "products.", "rust.", "receipts."], "title": {"en": "Source capture and receipts", "de": "Quellerfassung und Belege"}},
+        {"id": "tools", "prefixes": ["tool.", "tools.", "nx.", "bazel.", "cargo.", "dependencies."], "title": {"en": "Build tools and dependencies", "de": "Build-Werkzeuge und Abhängigkeiten"}},
+        {"id": "leases", "prefixes": ["leases."], "title": {"en": "Leases", "de": "Leihen"}},
+        {"id": "children", "prefixes": ["spawn."], "title": {"en": "Child processes", "de": "Kindprozesse"}},
+        {"id": "other", "prefixes": [], "title": {"en": "Everything else that is profiled", "de": "Alles übrige Profilierte"}},
+        {"id": "uncovered", "prefixes": [], "title": {"en": "Time no phase covers", "de": "Zeit ohne Phase"}}
+      ]
+    },
+    "Trips": {
+      "const": {
+        "graphService": {"marker": "rt.graph-service", "measured": true, "title": {"en": "Graph service requests", "de": "Graphdienst-Anfragen"}},
+        "cacheLookup": {"marker": "rt.cache-lookup", "measured": false, "title": {"en": "Cache lookups", "de": "Cache-Abfragen"}},
+        "spawn": {"marker": "spawn.", "measured": true, "title": {"en": "Child processes started", "de": "Gestartete Kindprozesse"}}
+      }
+    },
+    "Command": {
+      "type": "object",
+      "required": ["id", "args", "title", "wallMs", "phases", "trips"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "args": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "title": {"$ref": "#/definitions/Text"},
+        "wallMs": {"type": "integer", "minimum": 1},
+        "phases": {"type": "object", "propertyNames": {"$ref": "#/definitions/Group"}, "additionalProperties": {"type": "integer", "minimum": 0}},
+        "trips": {"type": "object", "propertyNames": {"$ref": "#/definitions/Trip"}, "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "Budgets": {
+      "type": "object",
+      "required": ["version", "reference", "targets", "commands"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {"const": 1},
+        "reference": {"$ref": "#/definitions/Text"},
+        "targets": {"type": "object", "required": ["project", "file"], "additionalProperties": false, "properties": {"project": {"type": "string"}, "file": {"type": "string"}}},
+        "commands": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Command"}}
+      }
+    }
+  }
+}

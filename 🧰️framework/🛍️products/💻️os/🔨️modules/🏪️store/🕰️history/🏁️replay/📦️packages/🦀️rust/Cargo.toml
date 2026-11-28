@@ -36,3 +36,7 @@ semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" 
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-os-store-replay-operation = { path = "../../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

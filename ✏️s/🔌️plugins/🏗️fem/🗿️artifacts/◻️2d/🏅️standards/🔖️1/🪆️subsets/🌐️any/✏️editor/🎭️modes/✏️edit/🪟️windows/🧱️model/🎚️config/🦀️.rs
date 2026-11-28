@@ -3,10 +3,11 @@
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::*;
+pub use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballConfig;
 
 impl Default for Fem2dModelWindowConfig {
     fn default() -> Self {
-        Self { camera: semio_os_kernel::Viewport2d::default() }
+        Self { camera: semio_os_kernel::Viewport2d::default(), gumball: Fem2dGumballConfig::default() }
     }
 }
 
@@ -160,6 +161,9 @@ impl semio_plugin::WindowConfigApplyMutation<Fem2dModelWindowConfig> for Fem2dMo
         if let Some(value) = patch.camera.as_mut() {
             std::mem::swap(value, &mut post.camera);
         }
+        if let Some(value) = patch.gumball.as_mut() {
+            std::mem::swap(value, &mut post.gumball);
+        }
         Ok(Self::Update(Fem2dModelWindowConfigUpdate { patch }))
     }
     fn payload_bytes(&self) -> usize {
@@ -204,6 +208,11 @@ impl semio_plugin::WindowConfigOwner for Fem2dModelWindowConfigOwner {
 
 pub fn current<C>(view: &semio_plugin::ConfigView<'_, C>) -> Fem2dModelWindowConfig {
     view.window::<Fem2dModelWindowConfigOwner>().cloned().unwrap_or_default()
+}
+
+/// 🪟️ The captured model-window partition, or `None` when the projection captured another window.
+pub fn captured<C>(view: &semio_plugin::ConfigView<'_, C>) -> Option<Fem2dModelWindowConfig> {
+    view.window::<Fem2dModelWindowConfigOwner>().cloned()
 }
 
 pub fn addressed(view: &semio_plugin::ViewModel, config: Fem2dModelWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {

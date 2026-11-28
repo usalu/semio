@@ -1,0 +1,6 @@
+B-ltonly user 50.33 sys 3.41 real 107.47 rssMB 2494 total 106.939 link 0.968 llvm 27.199
+C-ltoff user 49.86 sys 3.18 real 88.10 rssMB 2609 total 86.879 link 0.762 llvm 14.098
+B-ltonly user 80.26 sys 8.07 real 152.55 rssMB 2258 total 138.048 link 1.200 llvm 37.471
+C-ltoff user 51.69 sys 3.73 real 96.59 rssMB 2530 total 96.296 link 0.724 llvm 22.308
+B-ltonly user 49.83 sys 3.37 real 66.79 rssMB 2181 total 66.522 link 0.803 llvm 14.624
+C-ltoff user 48.77 sys 2.93 real 63.00 rssMB 2511 total 62.798 link 0.908 llvm 20.650

@@ -12,7 +12,9 @@ import traces from "./📋️traces/🔣️.json" with {type:"json"};
 import enforcement from "./📋️enforcement/🔣️.json" with {type:"json"};
 import {collectCasV1,createCasPlannerV1,formatCasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {casEnforceTickV1,createCasGuardV1,resetCasGuardsV1} from "../🚦️guard/🟦️.ts";
-import {casEffectiveCapBytesV1,casReserveBytesV1,casReserveStateV1,casPartitionNeedBytesV1,declareCasRoleV1,decideCasEnforcementV1,measureCasPartitionV1,readCasRoleV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {machineHostFloorV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
+import machinePolicy from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json" with {type:"json"};
+import {casBudgetCapBytesV1,casEffectiveCapBytesV1,casPartitionPolicyForV1,casProportionalCapBytesV1,casReserveBytesV1,casReserveStateV1,casPartitionNeedBytesV1,declareCasRoleV1,decideCasEnforcementV1,measureCasPartitionV1,readCasRoleV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {casUsageHintPathV1,readCasCensusV1,readCasUsageHintV1,type CasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {putCasObjectSyncV1} from "../🗃️store/🔁️sync/🟦️.ts";
 import {casLedgerShardV1,foldCasShardV1,openCasShardViewV1} from "../📒️ledger/🟦️.ts";
@@ -731,6 +733,19 @@ test("operator sizing sees a newer collection when held eviction left an older o
  expect(JSON.parse(lines.at(-1)!).effectiveCapBytes).toBe(casEffectiveCapBytesV1(CAS_POLICY_V1,partition,42*gib));
 });
 
+test("on a 228 GiB volume the cap in force is the volume-scaled reserve term, never the 1 GiB minimum, the ceiling follows the machine budget, held entries of the cache host are judged against the cap in force (never below the protected share of the proportional cap) and the unreferenced collection reports no cap",async()=>{
+ const {runCasCommandV1,casJudgementV1}=await import("../⌨️command/🟦️.ts"),gib=2**30,lines:string[]=[],stages:string[]=[],partition={role:"cache-host" as const,partition:"/volume",totalBytes:228*gib,freeBytes:37*gib};
+ expect(casBudgetCapBytesV1(CAS_POLICY_V1,partition)).toBe(Math.floor(228*gib*0.6/(256*2**20))*256*2**20);expect(casBudgetCapBytesV1(CAS_POLICY_V1,undefined)).toBe(CAS_POLICY_V1.capBytes);
+ const store=Math.round(27.76*gib),judged=casPartitionPolicyForV1(CAS_POLICY_V1,partition,store);
+ expect(judged.capBytes).toBe(Math.floor((store+partition.freeBytes-casReserveBytesV1(CAS_POLICY_V1,partition))/(256*2**20))*256*2**20);expect(judged.capBytes).toBeGreaterThan(store);expect(judged.heldCapBytes===undefined||judged.heldCapBytes>=judged.capBytes).toBe(true);expect(judged.heldCapBytes).toBeLessThanOrEqual(casBudgetCapBytesV1(CAS_POLICY_V1,partition));
+ const root=hinted(scratch("cmd-228"),store),home=scratch("cmd-228-home"),context={workspace:home,home,environment:{SEMIO_CAS_ROOT:root},partition:()=>partition,write:(line:string)=>lines.push(line)},ports={signal:new AbortController().signal,progress:async(stage:string)=>{stages.push(stage);}};
+ expect((await casJudgementV1(root,partition)).policy).toEqual(judged);
+ await runCasCommandV1(["status","--json"],context,ports);const status=JSON.parse(lines.at(-1)!);
+ expect(status).toMatchObject({effectiveCapBytes:judged.capBytes,heldCapBytes:judged.heldCapBytes,budgetCapBytes:casBudgetCapBytesV1(CAS_POLICY_V1,partition)});
+ await runCasCommandV1(["status","--lang=en"],context,ports);expect(lines.at(-1)).toContain(`${Math.round(judged.capBytes/gib*100)/100} GiB cap in force`);expect(lines.at(-1)).toContain(`${Math.round(judged.heldCapBytes!/gib*100)/100} GiB for held entries`);
+ await runCasCommandV1(["gc","--unreferenced","--dry-run","--lang=en"],context,ports);expect(stages.join("\n")).not.toContain(" cap in force");expect(lines.at(-1)).toContain("held entries evicted: 0");
+});
+
 test("a machine's role is declared by the environment or by a live record the fleet cache server renews, the strongest live role wins, and a record expires",()=>{
  const root=scratch("role"),t0=1_000_000,policy=CAS_POLICY_V1;
  expect(readCasRoleV1(root,policy,{},t0)).toBe("builder");
@@ -885,13 +900,42 @@ test("a refused manual collection names the process that holds the lock and how 
  expect(formatCasCollectionV1(result,small,"en")).toContain(`process ${process.pid} holds the lock`);expect(formatCasCollectionV1(result,small,"de")).toContain(`Prozess ${process.pid} hält die Sperre`);
 });
 
+test("a store above the cap in force judges the held entries of the cache host against that cap, other roles and a store inside the cap keep the proportional cap",()=>{
+ const gib=2**30,total=926*gib,host=(free:number,role:CasRoleV1)=>({totalBytes:total,freeBytes:free*gib,role});
+ const over=casPartitionPolicyForV1(CAS_POLICY_V1,host(72,"cache-host"),54*gib),proportional=casProportionalCapBytesV1(CAS_POLICY_V1,host(72,"cache-host"),54*gib);
+ expect(over.capBytes).toBeLessThan(54*gib);expect(proportional).toBeGreaterThan(over.capBytes);
+ expect(over.heldCapBytes).toBe(Math.max(over.capBytes,Math.floor(proportional*CAS_POLICY_V1.holderProtectedShare)));expect(over.heldCapBytes!).toBeLessThan(proportional);
+ const inside=casPartitionPolicyForV1(CAS_POLICY_V1,host(120,"cache-host"),30*gib);expect(inside.heldCapBytes===undefined||inside.heldCapBytes>=inside.capBytes).toBe(true);
+ const builder=casPartitionPolicyForV1(CAS_POLICY_V1,host(40,"builder"),54*gib),builderProportional=casProportionalCapBytesV1(CAS_POLICY_V1,host(40,"builder"),54*gib);
+ if(builder.heldCapBytes!==undefined)expect(builder.heldCapBytes).toBe(builderProportional);
+});
+
 test("the hard free-space reserve per role is the larger of its partition share and its floor (72 GiB or more on the 926 GiB cache host), and the cap in force never lets the store grow into it",()=>{
  const GiB=2**30,reserve=(role:CasRoleV1,total:number)=>casReserveBytesV1(CAS_POLICY_V1,{totalBytes:total*GiB,role})/GiB;
- expect(reserve("cache-host",926)).toBeGreaterThanOrEqual(72);expect(reserve("cache-host",926)).toBeCloseTo(74.08,2);expect(reserve("cache-host",256)).toBe(72);expect(reserve("builder",256)).toBe(16);expect(reserve("worker",256)).toBeCloseTo(10.24,2);expect(reserve("worker",30)).toBe(8);expect(reserve("cache-host",100)).toBe(50);
+ expect(reserve("cache-host",926)).toBeGreaterThanOrEqual(72);expect(reserve("cache-host",926)).toBeCloseTo(74.08,2);expect(reserve("cache-host",600)).toBe(72);expect(reserve("cache-host",256)).toBeCloseTo(30.72,2);expect(reserve("builder",256)).toBe(16);expect(reserve("worker",256)).toBeCloseTo(15,0);expect(reserve("worker",30)).toBeCloseTo(3.6,2);expect(reserve("cache-host",100)).toBe(12);
  const at=(free:number,store:number)=>casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:free*GiB,role:"cache-host"},store*GiB)/GiB,step=0.25,caps:number[]=[];
  for(const free of [130,110,90,76,74,70,60,50,30]){const cap=at(free,90);caps.push(cap);expect(cap).toBeLessThanOrEqual(90+free-reserve("cache-host",926)+0.0001);if(free<=110)expect(cap).toBeGreaterThan(90+free-reserve("cache-host",926)-step-0.0001);}
  expect(caps).toEqual([...caps].sort((left,right)=>right-left));expect(at(74,90)).toBeLessThan(90);expect(at(76,90)).toBeGreaterThanOrEqual(90);
  const state=casReserveStateV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:60*GiB,role:"cache-host"});expect(state.distanceBytes).toBeLessThan(0);expect(state.reserveBytes).toBe(casReserveBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,role:"cache-host"}));
+});
+
+test("the cache-host reserve scales with the volume and stays at or above the machine free floor: a 228 GiB laptop keeps 27.36 GiB, never 72 GiB, and its cap never collapses to the minimum while the host has room",()=>{
+ const GiB=2**30,total=228*GiB,floor=machineHostFloorV1(machinePolicy,total);
+ for(const role of CAS_POLICY_V1.sizing.roles)for(const size of [64,100,228,512,926,4096]){const bytes=casReserveBytesV1(CAS_POLICY_V1,{totalBytes:size*GiB,role:role.id});expect(bytes).toBeGreaterThanOrEqual(machineHostFloorV1(machinePolicy,size*GiB));expect(bytes).toBeLessThanOrEqual(size*GiB/2);}
+ expect(casReserveBytesV1(CAS_POLICY_V1,{totalBytes:total,role:"cache-host"})).toBe(Math.floor(total*CAS_POLICY_V1.sizing.reserveFloorMaxPercent/100));
+ expect(casReserveBytesV1(CAS_POLICY_V1,{totalBytes:total,role:"cache-host"})).toBeGreaterThan(floor);
+ for(const free of [36,37,45,60]){const cap=casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:total,freeBytes:free*GiB,role:"cache-host"},27.76*GiB)/GiB;expect(cap,"free "+free).toBeGreaterThan(27.76);expect(cap).toBeGreaterThan(CAS_POLICY_V1.minimumCapBytes/GiB*10);}
+ const state=casPartitionPolicyForV1(CAS_POLICY_V1,{totalBytes:total,freeBytes:37*GiB,role:"cache-host"},27.76*GiB);expect(state.capBytes).toBeGreaterThan(27.76*GiB);
+ expect(decideCasEnforcementV1({policy:state,storeBytes:27.76*GiB,incomingBytes:GiB,partition:{totalBytes:total,freeBytes:37*GiB},collected:true}).action).toBe("allow");
+});
+
+test("over its cap the planner evicts the least recently accessed unheld candidates down to the low watermark and keeps every held entry",()=>{
+ const planner=createCasPlannerV1({policy:{capBytes:100,highWatermark:0.9,lowWatermark:0.75},areas:[{id:"store",capBytes:null,maxAgeMs:null}],externalBytes:0,nowMs:1e9});
+ for(let index=0;index<4;index++)planner.add("store",1000+index,10,true);for(let index=0;index<8;index++)planner.add("store",index,10,false);
+ const {totals,evaluator}=planner.finish(),decide=evaluator();
+ expect(totals).toMatchObject({protectedBytes:40,candidateBytes:80,plannedBytes:50,capShortfallBytes:0});
+ const gone=Array.from({length:8},(_,index)=>decide.decide("store",index,10)!==null);
+ expect(gone).toEqual([true,true,true,true,true,false,false,false]);
 });
 
 test("a cap that includes the reserve frees candidates but evicts no held entry: the shortfall that may touch held entries is judged against the proportional cap",()=>{

@@ -338,7 +338,7 @@
    ]
   },
   {
-   "id": "actor-decoder-host-keeps-grant",
+   "id": "actor-decoder-host-serial",
    "args": [
     "--crate-name",
     "semio_plugin_actor_input_decoder",
@@ -347,13 +347,34 @@
     "-Zthreads=0"
    ],
    "tokens": 5,
-   "note": "native actor decoder retains the admitted parallelism",
+   "note": "the native actor decoder is compiled serially like the WASI one (1836 MB under the admitted parallelism, above its ceiling)",
    "expected": [
     "--crate-name",
     "semio_plugin_actor_input_decoder",
     "--target=aarch64-apple-darwin",
     "--crate-type=lib",
-    "-Zthreads=5"
+    "-Zthreads=1",
+    "-Z",
+    "no-parallel-backend"
+   ]
+  },
+  {
+   "id": "actor-wire-host-serial",
+   "args": [
+    "--crate-name",
+    "semio_plugin_actor_input_wire",
+    "--crate-type=lib",
+    "-Zthreads=0"
+   ],
+   "tokens": 5,
+   "note": "the actor wire crate peaked at 1749 MB (host) and 2269 MB (WASI) under the admitted parallelism: serial on every target",
+   "expected": [
+    "--crate-name",
+    "semio_plugin_actor_input_wire",
+    "--crate-type=lib",
+    "-Zthreads=1",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {

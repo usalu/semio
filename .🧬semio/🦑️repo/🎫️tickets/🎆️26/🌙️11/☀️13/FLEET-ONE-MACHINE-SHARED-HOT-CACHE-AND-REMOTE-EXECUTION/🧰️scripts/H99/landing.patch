@@ -1,0 +1,551 @@
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🟦️.ts ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🟦️.ts
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🟦️.ts	2026-11-26 03:34:58
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🟦️.ts	2026-11-27 19:03:20
+@@ -6,40 +6,25 @@
+ import {leakedRootKindsV1} from "../../🛰️fleet/🟦️.ts";
+ import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
+ import policySchema from "./🧬️schema/🔣️.json" with {type:"json"};
++import {BUILD_PROBE_POLICY_V1,buildScriptVerdictV1,rustcStandInTextV1} from "../🧭️probe/🟦️.ts";
++import {buildDependencyNamesV1,buildScriptSourcePathV1} from "../🧭️probe/🗝️key/🟦️.ts";
+ 
+ type Environment=Readonly<Record<string,string|undefined>>;
+ 
+-/** ☁️ The authored policy of a build script run on another machine: what a hermetic script may read, the markers of the ones that are not, and the layout of the worker's private root.
++/** ☁️ The authored policy of a build script run on another machine: the layout of the worker's private root, the environment a command carries and the markers of compiled scripts that are not hermetic (what a script may ask of the host is `🧭️probe`).
+  * @see ./🧬️schema/🔣️.json */
+ export const BUILD_OFFLOAD_POLICY_V1=policySchema.policy;
+ const policy=BUILD_OFFLOAD_POLICY_V1,ignored=new Set<string>(UNIT_CACHE_POLICY_V1.buildScript.ignoredDirectories);
+ 
+-const sourceMarkers=policy.sourceMarkers.map(row=>({reason:row.reason,pattern:new RegExp(row.pattern,"u")}));
+ const binaryMarkers=policy.binaryMarkers.map(row=>({reason:row.reason,bytes:Buffer.from(row.text)}));
+ const declaredName=(name:string):boolean=>name==="OUT_DIR"||name==="CARGO_MANIFEST_DIR"||(policy.environment.names as readonly string[]).includes(name)||policy.environment.prefixes.some(prefix=>name.startsWith(prefix));
+ const SAFE_TEXT=/^[^\0\r\n]{0,16384}$/u,SAFE_PATH=/^[^\s"'\\`$;|&<>*?(){}\[\]!~#%^=:,\u0000-\u001f\u007f]{1,512}$/u;
+ 
+ 
+-/** 📜️ The source file of a package's build script, from its `Cargo.toml` (`build = "path"`, `build = false`), `build.rs` by default; `undefined` when the package has none. */
+-export function buildScriptSourcePathV1(manifest:string):string|undefined{
+- const row=/^\s*build\s*=\s*(?:"([^"]+)"|(false))/mu.exec(manifest);
+- if(row?.[2]!==undefined)return undefined;
+- return row?.[1]??"build.rs";
+-}
+-
+-/** 🔎️ Why the source text of a build script is not hermetic (it spawns programs, reaches the network or the host's libraries, reads a path outside its package, or reads an environment variable the command does not carry), `undefined` when it is. */
+-export function buildScriptSourceRefusalV1(source:string):string|undefined{
+- const code=source.split("\n").filter(line=>!/^\s*\/\//u.test(line)).join("\n");
+- for(const row of sourceMarkers)if(row.pattern.test(code))return row.reason;
+- if(new RegExp(policy.allEnvironment,"u").test(code))return"reads-all-environment";
+- for(const match of code.matchAll(new RegExp(policy.environmentRead,"gu")))if(!declaredName(match[1]!))return"undeclared-environment:"+match[1]!.slice(0,40);
+- return undefined;
+-}
+-
+-/** 🔎️ Why the bytes of a compiled build script are not hermetic (the names of the environment variables, programs and libraries of host probing it carries), `undefined` when none is. */
+-export function buildScriptBinaryRefusalV1(bytes:Uint8Array):string|undefined{
++/** 🔎️ Why the bytes of a compiled build script are not hermetic (the names of the environment variables, programs and libraries of host probing it carries), `undefined` when none is; the reasons in `answered` (the compiler questions the stand-in answers) do not count. */
++export function buildScriptBinaryRefusalV1(bytes:Uint8Array,answered:readonly string[]=[]):string|undefined{
+  const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+- for(const row of binaryMarkers)if(buffer.includes(row.bytes))return row.reason;
++ for(const row of binaryMarkers)if(!answered.includes(row.reason)&&buffer.includes(row.bytes))return row.reason;
+  return undefined;
+ }
+ 
+@@ -48,7 +33,6 @@
+  const rows:Array<readonly [string,string]>=[];
+  for(const name of Object.keys(environment).sort()){
+   const value=environment[name];if(value===undefined)continue;
+-  if(policy.environment.refused.some(prefix=>name===prefix||name.startsWith(prefix)))return{refusal:"environment:"+name.slice(0,40)};
+   if(name==="OUT_DIR"||name==="CARGO_MANIFEST_DIR"||!declaredName(name))continue;
+   if(!SAFE_TEXT.test(value)||value.includes("@root")){if(source.includes(name))return{refusal:"unsafe-environment:"+name.slice(0,40)};continue;}
+   rows.push([name,value]);
+@@ -96,7 +80,7 @@
+ export type BuildScriptOffloadOutcomeV1=Readonly<{kind:"done";stdout:string;stderr:string;origin:string}>|Readonly<{kind:"local";reason:string;detail:string}>;
+ 
+ /** ☁️ Runs one build script on another machine of the fleet through the command offload (the tool `build-script`), or says why it runs here. Hermetic only: no network (workers deny it), the package directory and `OUT_DIR` are the only paths it reads, its environment is the declared one and it spawns nothing; anything else is refused before a byte leaves (`not-portable`, with the reason), and an output that names the worker's directories is withdrawn (`path-dependent-output`). Never throws; progress, cancellation, timeouts and the decline memo are the command offload's. */
+-export async function offloadBuildScriptRunV1(input:Readonly<{real:string;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;signal?:AbortSignal;digest?:(path:string)=>string|null;ports?:unknown}>):Promise<BuildScriptOffloadOutcomeV1>{
++export async function offloadBuildScriptRunV1(input:Readonly<{real:string;args:readonly string[];environment:Environment;toolchain:string;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;signal?:AbortSignal;digest?:(path:string)=>string|null;ports?:unknown}>):Promise<BuildScriptOffloadOutcomeV1>{
+  const {environment,root}=input,manifestDir=environment.CARGO_MANIFEST_DIR;
+  const local=(reason:string,detail:string):BuildScriptOffloadOutcomeV1=>({kind:"local",reason,detail});
+  if(offloadModeV1(environment)==="never")return local("never","");
+@@ -109,15 +93,17 @@
+  try{
+   manifest=readFileSync(join(manifestDir,"Cargo.toml"),"utf8");
+   const path=buildScriptSourcePathV1(manifest);
+-  if(path===undefined||relative(manifestDir,join(manifestDir,path)).startsWith(".."))return refuse("source");
++  if(path===undefined||relative(manifestDir,join(manifestDir,path)).startsWith(".."))return refuse("host-bound:source");
+   source=readFileSync(join(manifestDir,path),"utf8");
+  }catch{return refuse("unreadable-input");}
+  const dependencies=/^\s*\[(?:[\w.-]+\.)?build-dependencies\][^[]*/gmu,declared=[...manifest.matchAll(dependencies)].map(match=>match[0]).join("\n");
+- for(const row of policy.buildDependencies)if(new RegExp(`^\\s*"?${row.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")}"?\\s*[=.]`,"mu").test(declared))return refuse("build-dependency:"+row);
+- const sourceRefusal=buildScriptSourceRefusalV1(source);if(sourceRefusal!==undefined)return refuse(sourceRefusal);
++ for(const row of policy.buildDependencies)if(new RegExp(`^\\s*"?${row.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")}"?\\s*[=.]`,"mu").test(declared))return refuse("host-bound:build-dependency:"+row);
++ const verdict=buildScriptVerdictV1({source,dependencies:buildDependencyNamesV1(manifest),environment,declared:declaredName,include:path=>{try{return readFileSync(join(manifestDir,path),"utf8");}catch{return undefined;}}});
++ if(verdict.kind!=="portable")return refuse(verdict.reason);
+  let binary:Buffer;try{binary=readFileSync(input.real);}catch{return refuse("unreadable-input");}
+- const binaryRefusal=buildScriptBinaryRefusalV1(binary);if(binaryRefusal!==undefined)return refuse(binaryRefusal);
++ const binaryRefusal=buildScriptBinaryRefusalV1(binary,verdict.standIn?["compiler-probe"]:[]);if(binaryRefusal!==undefined)return refuse(binaryRefusal);
+  const variables=buildScriptEnvironmentV1(environment,source);if("refusal" in variables)return refuse(variables.refusal);
++ const probe=BUILD_PROBE_POLICY_V1.standIn,standIn=verdict.standIn?{text:rustcStandInTextV1()}:undefined;
+  const limits=offload.COMMAND_POLICY_V1.limits,files=manifestInputsV1(manifestDir,{maximumFiles:limits.maximumInputFiles-4,maximumBytes:limits.maximumInputBytes});
+  if("refusal" in files)return refuse(files.refusal);
+  const tools=join(root,policy.layout.tools),toolText=buildScriptToolTextV1(),toolDigest=sha256(toolText),tool=join(tools,toolDigest.slice(0,32));
+@@ -126,12 +112,14 @@
+   if(!existsSync(tool)||sha256(readFileSync(tool))!==toolDigest){mkdirSync(tools,{recursive:true});const temporary=`${tool}.${process.pid}.tmp`;writeFileSync(temporary,toolText);chmodSync(temporary,0o755);renameSync(temporary,tool);}
+   mkdirSync(join(root,policy.layout.scratch),{recursive:true});scratch=mkdtempSync(join(root,policy.layout.scratch,"run-"));
+   const rootFile=join(scratch,"root"),inputs=new Map(files);inputs.set(policy.layout.input+"/"+policy.layout.executable,input.real);
++  if(standIn!==undefined){const standInFile=join(scratch,"rustc"),identityFile=join(scratch,"rustc.identity");writeFileSync(standInFile,standIn.text);chmodSync(standInFile,0o755);writeFileSync(identityFile,input.toolchain);inputs.set(probe.file,standInFile);inputs.set(probe.identity,identityFile);}
+   const before=new Set(existsSync(input.outDir)?readdirSync(input.outDir):[]);
+-  const answer=await offload.offloadCommandV1({tool:{name:"build-script",digest:toolDigest,file:tool},arguments:[...input.args],inputs,outputs:new Map([[policy.layout.output+"/"+policy.layout.rootFile,rootFile]]),directories:new Map([[policy.layout.output+"/"+policy.layout.outDirectory,input.outDir]]),variables:variables.variables,root,environment,lane:input.lane,label:input.crate+" build script",key:input.key,...input.digest?{digest:input.digest}:{},...input.signal?{signal:input.signal}:{},...input.ports?{ports:input.ports as never}:{}});
++  const answer=await offload.offloadCommandV1({tool:{name:"build-script",digest:toolDigest,file:tool},arguments:[...input.args],inputs,outputs:new Map([[policy.layout.output+"/"+policy.layout.rootFile,rootFile]]),directories:new Map([[policy.layout.output+"/"+policy.layout.outDirectory,input.outDir]]),variables:[...variables.variables,...verdict.carry],root,environment,lane:input.lane,label:input.crate+" build script",key:input.key,...input.digest?{digest:input.digest}:{},...input.signal?{signal:input.signal}:{},...input.ports?{ports:input.ports as never}:{}});
+   if(answer.kind==="local")return local(answer.reason,answer.detail);
+   const discard=()=>{for(const entry of readdirSync(input.outDir))if(!before.has(entry))rmSync(join(input.outDir,entry),{recursive:true,force:true});};
+-  const marker=join(input.outDir,policy.layout.marker);
+-  rmSync(marker,{force:true});
++  const marker=join(input.outDir,policy.layout.marker),refused=join(input.outDir,probe.refusedMarker),unanswered=existsSync(refused);
++  rmSync(marker,{force:true});rmSync(refused,{force:true});
++  if(unanswered){discard();return refuse("toolchain-probe:unanswered-arguments");}
+   const roots=readFileSync(rootFile,"utf8").split("\n").filter(row=>row.startsWith("/")),named=Object.fromEntries(roots.map((row,index)=>["worker"+index,row]));
+   const leaked=leakedRootKindsV1(listFilesV1(input.outDir,limits.maximumOutputFiles),named),stdout=translateBuildStreamV1(answer.stdout,roots,{outDir:input.outDir,manifest:manifestDir}),stderr=translateBuildStreamV1(answer.stderr,roots,{outDir:input.outDir,manifest:manifestDir});
+   if(roots.length===0||leaked!==undefined||stdout===undefined||stderr===undefined){
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🔣️.json ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🔣️.json
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🔣️.json	2026-11-22 22:18:30
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🔣️.json	2026-11-27 19:03:21
+@@ -1,76 +1,4 @@
+ {
+- "sources": [
+-  {
+-   "name": "hermetic",
+-   "source": "use std::{env,fs};\nfn main(){let o=env::var(\"OUT_DIR\").unwrap();let t=std::env::var_os(\"TARGET\");let f=env::var(\"CARGO_FEATURE_X\");fs::write(format!(\"{}/a\",o),b\"1\").unwrap();println!(\"cargo:rerun-if-changed=build.rs\");}\n",
+-   "reason": null
+-  },
+-  {
+-   "name": "comment only",
+-   "source": "// Command::new(\"cc\") is not used\nfn main(){}\n",
+-   "reason": null
+-  },
+-  {
+-   "name": "spawns",
+-   "source": "fn main(){std::process::Command::new(\"sh\").status().unwrap();}",
+-   "reason": "spawns-process"
+-  },
+-  {
+-   "name": "network",
+-   "source": "use std::net::TcpStream;fn main(){}",
+-   "reason": "network"
+-  },
+-  {
+-   "name": "pkg-config",
+-   "source": "fn main(){pkg_config::probe_library(\"zlib\").unwrap();}",
+-   "reason": "host-probing"
+-  },
+-  {
+-   "name": "cc crate",
+-   "source": "fn main(){cc::Build::new().file(\"a.c\").compile(\"a\");}",
+-   "reason": "host-probing"
+-  },
+-  {
+-   "name": "absolute path",
+-   "source": "fn main(){let _=std::fs::read_to_string(\"/etc/hosts\");}",
+-   "reason": "reads-outside-manifest"
+-  },
+-  {
+-   "name": "parent path",
+-   "source": "fn main(){let _=std::fs::read_to_string(\"../proto/a.proto\");}",
+-   "reason": "reads-outside-manifest"
+-  },
+-  {
+-   "name": "home path",
+-   "source": "fn main(){let _=std::fs::read_to_string(\"~/.config/x\");}",
+-   "reason": "reads-outside-manifest"
+-  },
+-  {
+-   "name": "relative path",
+-   "source": "fn main(){let _=std::fs::read_to_string(\"data/a.txt\");let _=\"/\";}",
+-   "reason": null
+-  },
+-  {
+-   "name": "undeclared variable",
+-   "source": "fn main(){let _=std::env::var(\"RUSTC\");}",
+-   "reason": "undeclared-environment:RUSTC"
+-  },
+-  {
+-   "name": "undeclared os variable",
+-   "source": "fn main(){let _=env::var_os(\"HOME\");}",
+-   "reason": "undeclared-environment:HOME"
+-  },
+-  {
+-   "name": "all variables",
+-   "source": "fn main(){for (k,v) in std::env::vars(){}}",
+-   "reason": "reads-all-environment"
+-  },
+-  {
+-   "name": "declared prefixes",
+-   "source": "fn main(){let _=env::var(\"CARGO_PKG_VERSION\");let _=env::var(\"CARGO_CFG_TARGET_OS\");let _=env::var(\"CARGO_MANIFEST_DIR\");let _=env::var(\"NUM_JOBS\");}",
+-   "reason": null
+-  }
+- ],
+  "binaries": [
+   {
+    "name": "plain",
+@@ -85,7 +13,7 @@
+   {
+    "name": "compiler variable",
+    "text": "x RUSTC_WRAPPER y",
+-   "reason": "compiler-environment"
++   "reason": "compiler-probe"
+   },
+   {
+    "name": "flags",
+@@ -172,8 +100,21 @@
+     "DEP_Z_ROOT": "/z"
+    },
+    "source": "",
+-   "variables": null,
+-   "refusal": "environment:DEP_Z_ROOT"
++   "variables": [
++    [
++     "CARGO_MANIFEST_DIR",
++     "@root/in/manifest"
++    ],
++    [
++     "OUT_DIR",
++     "@root/out/out-dir"
++    ],
++    [
++     "PATH",
++     "/usr/bin:/bin:/usr/sbin:/sbin"
++    ]
++   ],
++   "refusal": null
+   },
+   {
+    "name": "links",
+@@ -181,8 +122,21 @@
+     "CARGO_MANIFEST_LINKS": "z"
+    },
+    "source": "",
+-   "variables": null,
+-   "refusal": "environment:CARGO_MANIFEST_LINKS"
++   "variables": [
++    [
++     "CARGO_MANIFEST_DIR",
++     "@root/in/manifest"
++    ],
++    [
++     "OUT_DIR",
++     "@root/out/out-dir"
++    ],
++    [
++     "PATH",
++     "/usr/bin:/bin:/usr/sbin:/sbin"
++    ]
++   ],
++   "refusal": null
+   },
+   {
+    "name": "multi-line description unread",
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts	2026-11-26 05:07:55
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts	2026-11-27 19:03:21
+@@ -7,7 +7,9 @@
+ import Ajv from "ajv";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import fixtures from "./🔣️.json" with {type:"json"};
+-import {BUILD_OFFLOAD_POLICY_V1,buildScriptBinaryRefusalV1,buildScriptEnvironmentV1,buildScriptSourcePathV1,buildScriptSourceRefusalV1,buildScriptToolTextV1,manifestInputsV1,offloadBuildScriptRunV1,translateBuildStreamV1} from "../🟦️.ts";
++import {BUILD_OFFLOAD_POLICY_V1,buildScriptBinaryRefusalV1,buildScriptEnvironmentV1,buildScriptToolTextV1,manifestInputsV1,offloadBuildScriptRunV1,translateBuildStreamV1} from "../🟦️.ts";
++import {BUILD_PROBE_POLICY_V1} from "../../🧭️probe/🟦️.ts";
++import {buildScriptSourcePathV1} from "../../🧭️probe/🗝️key/🟦️.ts";
+ import {runBuildScriptV1} from "../../🟦️.ts";
+ import {lightSlotsHeldV1} from "../../../🔒️lock/🟦️.ts";
+ import {eventuallyV1,startClusterV1,type ClusterV1} from "../../../../../../🏗️build/🌐️remote-execution/🧪️tests/🧰️cluster/🟦️.ts";
+@@ -62,6 +64,23 @@
+ }
+ `;
+ 
++const COMPILER=join(spawnSync("rustc",["--print","sysroot"],{encoding:"utf8"}).stdout.trim(),"bin","rustc"),IDENTITY=spawnSync(COMPILER,["-vV"],{encoding:"utf8"}).stdout;
++const ASKS_VERSION=`use std::{env,fs,process::Command};
++fn main(){
++ let out=env::var("OUT_DIR").unwrap();
++ let text=String::from_utf8(Command::new(env::var_os("RUSTC").unwrap()).arg("--version").output().unwrap().stdout).unwrap();
++ let minor:u32=text.split('.').nth(1).unwrap().parse().unwrap();
++ fs::write(format!("{}/minor.txt",out),format!("{}",minor)).unwrap();
++ println!("cargo:rustc-cfg=rustc_minor_{}",minor);
++}
++`;
++const ASKS_CFG=`use std::{env,process::Command};
++fn main(){
++ let out=Command::new(env::var_os("RUSTC").unwrap()).arg("--print").arg("cfg").output().unwrap();
++ println!("cargo:warning={}",out.stdout.len());
++}
++`;
++
+ type Package=Readonly<{manifest:string;binary:string}>;
+ function packageOf(name:string,source:string):Package{
+  const manifest=join(scratch,name,"pkg"),binary=join(scratch,name,"build-script");
+@@ -115,7 +134,6 @@
+ });
+ 
+ test("the language-agnostic fixture gives the verdicts on sources, binaries, environments, translations and manifests",()=>{
+- for(const row of fixtures.sources)expect(buildScriptSourceRefusalV1(row.source),row.name).toBe(row.reason??undefined);
+  for(const row of fixtures.binaries)expect(buildScriptBinaryRefusalV1(Buffer.from(row.text)),row.name).toBe(row.reason??undefined);
+  for(const row of fixtures.environments){
+   const answer=buildScriptEnvironmentV1(row.environment,row.source);
+@@ -139,7 +157,7 @@
+  expect(expected.status).toBe(0);
+  const wanted=tree(outDir);rmSync(outDir,{recursive:true,force:true});mkdirSync(outDir,{recursive:true});
+  await ready();
+- const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"tiny",key:"k".repeat(64),outDir});
++ const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"tiny",key:"k".repeat(64),outDir});
+  expect(answer,JSON.stringify(answer)).toMatchObject({kind:"done"});
+  const done=answer as {stdout:string;stderr:string};
+  expect(done.stdout).toBe(expected.stdout);expect(done.stderr).toBe(expected.stderr);
+@@ -150,28 +168,48 @@
+  expect(events("offload-run").some(row=>row.crate.startsWith("tiny"))).toBe(true);
+ },120000);
+ 
++test("a script that asks the compiler for its version runs on another machine and gets the answer of the declared toolchain, byte for byte",async()=>{
++ const pack=packageOf("asks-version",ASKS_VERSION),outDir=join(scratch,"asks-version","out"),extra={RUSTC:COMPILER},expected=local(pack,outDir,extra);
++ expect(expected.status).toBe(0);
++ const wanted=tree(outDir);rmSync(outDir,{recursive:true,force:true});mkdirSync(outDir,{recursive:true});
++ await ready();
++ const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir,extra),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"asks-version",key:"v".repeat(64),outDir});
++ expect(answer,JSON.stringify(answer)).toMatchObject({kind:"done"});
++ expect((answer as {stdout:string}).stdout).toBe(expected.stdout);
++ expect([...tree(outDir)]).toEqual([...wanted]);
++ expect(existsSync(join(outDir,BUILD_PROBE_POLICY_V1.standIn.refusedMarker))).toBe(false);
++},120000);
++
++test("a script that asks the compiler more than its version runs here, the output of the worker withdrawn",async()=>{
++ const pack=packageOf("asks-cfg",ASKS_CFG),outDir=join(scratch,"asks-cfg","out");mkdirSync(outDir,{recursive:true});
++ await ready();
++ const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir,{RUSTC:COMPILER}),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"asks-cfg",key:"c".repeat(64),outDir});
++ expect(answer).toEqual({kind:"local",reason:"not-portable",detail:"toolchain-probe:unanswered-arguments"});
++ expect(readdirSync(outDir)).toEqual([]);
++},120000);
++
+ test("a script that reads a path outside its package stays here with its reason recorded, and nothing is written",async()=>{
+  const pack=packageOf("outside",READS_OUTSIDE),outDir=join(scratch,"outside","out");mkdirSync(outDir,{recursive:true});
+- const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"outside",key:"o".repeat(64),outDir});
+- expect(answer).toEqual({kind:"local",reason:"not-portable",detail:"reads-outside-manifest"});
++ const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"outside",key:"o".repeat(64),outDir});
++ expect(answer).toEqual({kind:"local",reason:"not-portable",detail:"host-bound:host-path"});
+  expect(readdirSync(outDir)).toEqual([]);
+- expect(events("offload-declined").some(row=>row.crate==="outside"&&row.reason==="not-portable"&&row.detail==="build-script: reads-outside-manifest")).toBe(true);
++ expect(events("offload-declined").some(row=>row.crate==="outside"&&row.reason==="not-portable"&&row.detail==="build-script: host-bound:host-path")).toBe(true);
+ },60000);
+ 
+ test("a script whose output names the worker's directory is withdrawn: the landed files are removed and it runs here",async()=>{
+  const pack=packageOf("leaks",LEAKS_ROOT),outDir=join(scratch,"leaks","out");mkdirSync(outDir,{recursive:true});writeFileSync(join(outDir,"kept.txt"),"before");
+  await ready();
+- const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"leaks",key:"l".repeat(64),outDir});
++ const answer=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"leaks",key:"l".repeat(64),outDir});
+  expect(answer).toMatchObject({kind:"local",reason:"path-dependent-output"});
+  expect(readdirSync(outDir)).toEqual(["kept.txt"]);
+ },120000);
+ 
+ test("offloading switched off and an environment the command cannot carry leave the run here untouched",async()=>{
+  const pack=packageOf("never",SCRIPT),outDir=join(scratch,"never","out");mkdirSync(outDir,{recursive:true});
+- const never=await offloadBuildScriptRunV1({real:pack.binary,args:[],environment:cargoEnvironment(pack.manifest,outDir,{SEMIO_OFFLOAD:"never"}),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"never",key:"n".repeat(64),outDir});
++ const never=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir,{SEMIO_OFFLOAD:"never"}),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"never",key:"n".repeat(64),outDir});
+  expect(never).toMatchObject({kind:"local",reason:"never"});
+- const links=await offloadBuildScriptRunV1({real:pack.binary,args:[],environment:cargoEnvironment(pack.manifest,outDir,{DEP_Z_ROOT:"/z"}),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"never",key:"n".repeat(64),outDir});
+- expect(links).toEqual({kind:"local",reason:"not-portable",detail:"environment:DEP_Z_ROOT"});
++ const links=await offloadBuildScriptRunV1({real:pack.binary,args:[],toolchain:IDENTITY,environment:cargoEnvironment(pack.manifest,outDir,{DEP_Z_ROOT:"/z"}),cwd:pack.manifest,root:join(scratch,"offload"),lane:"d",crate:"never",key:"n".repeat(64),outDir});
++ expect(links).toEqual({kind:"local",reason:"not-portable",detail:"host-bound:host-value"});
+  expect(readdirSync(outDir)).toEqual([]);
+ },60000);
+ 
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧬️schema/🔣️.json ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧬️schema/🔣️.json
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧬️schema/🔣️.json	2026-11-22 23:09:44
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧬️schema/🔣️.json	2026-11-27 19:03:20
+@@ -11,9 +11,6 @@
+         "version",
+         "layout",
+         "environment",
+-        "allEnvironment",
+-        "environmentRead",
+-        "sourceMarkers",
+         "binaryMarkers",
+         "buildDependencies",
+         "tool"
+@@ -75,8 +72,7 @@
+           "additionalProperties": false,
+           "required": [
+             "names",
+-            "prefixes",
+-            "refused"
++            "prefixes"
+           ],
+           "properties": {
+             "names": {
+@@ -90,40 +86,9 @@
+               "items": {
+                 "type": "string"
+               }
+-            },
+-            "refused": {
+-              "type": "array",
+-              "items": {
+-                "type": "string"
+-              }
+             }
+           }
+         },
+-        "allEnvironment": {
+-          "type": "string"
+-        },
+-        "environmentRead": {
+-          "type": "string"
+-        },
+-        "sourceMarkers": {
+-          "type": "array",
+-          "items": {
+-            "type": "object",
+-            "additionalProperties": false,
+-            "required": [
+-              "reason",
+-              "pattern"
+-            ],
+-            "properties": {
+-              "reason": {
+-                "type": "string"
+-              },
+-              "pattern": {
+-                "type": "string"
+-              }
+-            }
+-          }
+-        },
+         "binaryMarkers": {
+           "type": "array",
+           "items": {
+@@ -194,32 +159,8 @@
+         "CARGO_PKG_",
+         "CARGO_CFG_",
+         "CARGO_FEATURE_"
+-      ],
+-      "refused": [
+-        "DEP_",
+-        "CARGO_MANIFEST_LINKS"
+       ]
+     },
+-    "allEnvironment": "\\benv\\s*::\\s*vars(?:_os)?\\s*\\(",
+-    "environmentRead": "\\bvar(?:_os)?\\s*\\(\\s*\"([^\"]+)\"",
+-    "sourceMarkers": [
+-      {
+-        "reason": "spawns-process",
+-        "pattern": "\\bCommand\\s*::\\s*new\\b|process\\s*::\\s*Command"
+-      },
+-      {
+-        "reason": "network",
+-        "pattern": "std\\s*::\\s*net\\b|\\bTcpStream\\b|\\bUdpSocket\\b|\\bTcpListener\\b|\\breqwest\\b|\\bureq\\b|\\bcurl\\s*::|\\bhyper\\b"
+-      },
+-      {
+-        "reason": "host-probing",
+-        "pattern": "\\bpkg_config\\b|\\bcc\\s*::|\\bcmake\\s*::|\\bbindgen\\b|\\bvcpkg\\b|\\bsystem_deps\\b|\\bautocfg\\b|\\bversion_check\\b|\\brustc_version\\b|\\bwhich\\s*::|\\bprost_build\\b|\\btonic_build\\b|\\bcxx_build\\b|\\bprotoc\\b"
+-      },
+-      {
+-        "reason": "reads-outside-manifest",
+-        "pattern": "\"(?:/[A-Za-z0-9_.~-][^\"]*|~/[^\"]*|\\.\\.(?:/[^\"]*)?)\""
+-      }
+-    ],
+     "binaryMarkers": [
+       {
+         "reason": "host-probing",
+@@ -242,7 +183,7 @@
+         "text": "CC_ENABLE_DEBUG_OUTPUT"
+       },
+       {
+-        "reason": "compiler-environment",
++        "reason": "compiler-probe",
+         "text": "RUSTC"
+       },
+       {
+@@ -269,9 +210,6 @@
+       "bindgen",
+       "vcpkg",
+       "system-deps",
+-      "autocfg",
+-      "version_check",
+-      "rustc_version",
+       "which",
+       "reqwest",
+       "ureq",
+@@ -292,6 +230,7 @@
+         "printf '%s\\n%s\\n' \"$root\" \"$(pwd -P)\" > out/root",
+         ": > \"$OUT_DIR/.semio-offload\"",
+         "chmod 755 in/run",
++        "[ -f in/tools/rustc ] && chmod 755 in/tools/rustc && export RUSTC=\"$root/in/tools/rustc\"",
+         "cd in/manifest || exit 70",
+         "exec ../run \"$@\""
+       ]
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🔑️run-key/🟦️.ts ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🔑️run-key/🟦️.ts
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🔑️run-key/🟦️.ts	2026-11-23 02:26:13
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🔑️run-key/🟦️.ts	2026-11-27 19:03:21
+@@ -2,6 +2,7 @@
+ import {readFileSync,renameSync,writeFileSync} from "node:fs";
+ import {dirname,join} from "node:path";
+ import {buildKeyEnvironmentV1,sha256V1,type unitKeyV1} from "../../🔏️key/🟦️.ts";
++import {buildScriptProbeKeyV1} from "../🧭️probe/🗝️key/🟦️.ts";
+ 
+ type Environment=Readonly<Record<string,string|undefined>>;
+ 
+@@ -26,9 +27,10 @@
+  }catch{}
+ }
+ 
+-/** 🔑️ The inputs of the key of one build script run, in the shape of a unit key so it is tokenised and hashed exactly like one (`portableKeyV1`, `remoteKeyV1`): the compiler release, the executable's identity (marked `run:` so it can never equal the source digest of a compiled unit), the arguments Cargo passed and the run's environment with the lane, the compiler flags and the tool paths neutralised. */
++/** 🔑️ The inputs of the key of one build script run, in the shape of a unit key so it is tokenised and hashed exactly like one (`portableKeyV1`, `remoteKeyV1`): the compiler release, the executable's identity (marked `run:` so it can never equal the source digest of a compiled unit), the arguments Cargo passed and the run's environment with the lane, the compiler flags and the tool paths neutralised (for a script that only asks the compiler for its version or reads keyed environment: without compiler wrappers, plus the carried and absent names and the toolchain digest, `🧭️probe`). */
+ export function buildRunKeyInputV1(input:Readonly<{toolchain:string;identity:string;args:readonly string[];environment:Environment;laneRoot:string|undefined}>):Parameters<typeof unitKeyV1>[0]{
+- return{toolchain:input.toolchain,normalized:["--semio-build-script-run",...input.args],sourceSha256:"run:"+input.identity,externs:[],environment:buildKeyEnvironmentV1(input.environment,input.laneRoot)};
++ const rows=buildKeyEnvironmentV1(input.environment,input.laneRoot);
++ return{toolchain:input.toolchain,normalized:["--semio-build-script-run",...input.args],sourceSha256:"run:"+input.identity,externs:[],environment:buildScriptProbeKeyV1({environment:input.environment,toolchain:input.toolchain,keyEnvironment:rows})??rows};
+ }
+ 
+ /** 🔗️ The local key of the entry that compiled a build script executable, as the identity file beside it records it, trusted only while it names the executable's current bytes; `undefined` otherwise. A run declares it as the unit it consumed. */
+diff -ru --exclude node_modules --exclude 🧭️probe ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts
+--- ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 16:00:03
++++ ⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 19:03:21
+@@ -110,7 +110,7 @@
+    else{hold=decision.hold;if(decision.reason!=="granted")countFallbackV1(root,"run-"+decision.reason);}
+   }
+   lookup("miss");
+-  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,cwd,root,lane,crate,key,outDir,stampDirectory,hold,event:(kind,key,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),capture:held=>runReal(real,args,held?slotHeldEnvironmentV1(environment):environment,cwd,true)});
++  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,toolchain:keyInput.toolchain,cwd,root,lane,crate,key,outDir,stampDirectory,hold,event:(kind,key,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),capture:held=>runReal(real,args,held?slotHeldEnvironmentV1(environment):environment,cwd,true)});
+   if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
+   event("script-miss",key,Date.now()-compiled,waited);
+   let entry:ReturnType<typeof publishBuildRunV1>;
+@@ -125,7 +125,7 @@
+ }
+ 
+ /** ☁️ Produces the outcome of one build script run on a fleet miss, after the fleet claim: on an idle machine of the fleet when the script is hermetic (`offloadBuildScriptRunV1`, in `distribute` mode, same cancellation and timeouts as every command offload), its streams replayed here exactly as a local run prints them; otherwise, or on any fault, by running the real executable here with the reason recorded. */
+-async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;hold?:FleetHoldV1|undefined;event:(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs?:number,reason?:string)=>void;capture:(slotHeld:boolean)=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
++async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;toolchain:string;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;hold?:FleetHoldV1|undefined;event:(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs?:number,reason?:string)=>void;capture:(slotHeld:boolean)=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
+  const waiting=(waited:number)=>input.event("slot-wait",null,0,waited),light=Number(input.environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS??0),slots=Number(input.environment.SEMIO_UNIT_CACHE_SLOTS??0);
+  const controller=new AbortController();let received:number|undefined;
+  const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
+@@ -135,7 +135,7 @@
+    let hold:ClaimV1|undefined;
+    try{
+     hold=light>0?await acquireLightSlotV1(input.root,light,{signal:controller.signal,maximumWaitMilliseconds:policy.slot.lightMaximumWaitMilliseconds,onWait:waiting}):undefined;
+-    const {offloadBuildScriptRunV1}=await import("./☁️offload/🟦️.ts"),answer=await offloadBuildScriptRunV1({real:input.real,args:input.args,environment:input.environment,cwd:input.cwd,root:input.root,lane:input.lane,crate:input.crate,key:input.key,outDir:input.outDir,signal:controller.signal,digest:path=>digestFileV1(path,input.stampDirectory)});
++    const {offloadBuildScriptRunV1}=await import("./☁️offload/🟦️.ts"),answer=await offloadBuildScriptRunV1({real:input.real,args:input.args,environment:input.environment,toolchain:input.toolchain,cwd:input.cwd,root:input.root,lane:input.lane,crate:input.crate,key:input.key,outDir:input.outDir,signal:controller.signal,digest:path=>digestFileV1(path,input.stampDirectory)});
+     if(answer.kind==="done"){process.stdout.write(answer.stdout);process.stderr.write(answer.stderr);return{status:0,stdout:answer.stdout,stderr:answer.stderr};}
+    }catch{}
+    finally{hold?.release();}
+--- 🏗️build/🌐️remote-execution/🚀️offload/🧰️command/🧬️schema/🔣️.json	2026-11-24 03:30:03
++++ 🏗️build/🌐️remote-execution/🚀️offload/🧰️command/🧬️schema/🔣️.json	2026-11-27 19:03:21
+@@ -248,12 +248,14 @@
+         "DEBUG",
+         "NUM_JOBS",
+         "RUST_BACKTRACE",
++        "CARGO_MANIFEST_LINKS",
+         "PATH"
+       ],
+       "allowedPrefixes": [
+         "CARGO_PKG_",
+         "CARGO_CFG_",
+-        "CARGO_FEATURE_"
++        "CARGO_FEATURE_",
++        "DEP_"
+       ],
+       "pathNames": [
+         "OUT_DIR",

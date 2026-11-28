@@ -608,6 +608,20 @@
         }
       }
     },
+    "composition-prepare-catalog-definition": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts composition prepare-catalog-definition",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+        }
+      }
+    },
     "composition-contribution-check": {
       "executor": "repo:script",
       "cache": true,

@@ -9,7 +9,7 @@ async function run(options:Record<string,unknown>|undefined,contend:boolean){
  const events:{kind:string;mode?:string;cohort?:boolean;timeoutMs?:number;resource?:string}[]=[],controller=new AbortController(),phase={signal:controller.signal},original={};let tries=0;
  const image={root:"/workspace/.cache/b/g/m",recheck:async()=>{}},store={root:image.root,image,invocation:original,recheck:image.recheck};
  const ports={schema:componentSchema,requireCurrentRepositoryBuildGraphConsumerV1:()=>{},requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},requireIssuedResourceControlRefinementV1:()=>{},requireRepositoryBuildGraphWriterV1:()=>{},writers:new AsyncLocalStorage(),datasets:new AsyncLocalStorage(),graphDatasetWorkspaceV1:(value:string)=>value,
-  openRepositoryCachePartitionV1:async()=>({root:image.root,recheck:async()=>{},close:async()=>{}}),
+  withRepositoryCommandCustodyV1:(_workspace:string,_image:unknown,body:()=>Promise<unknown>)=>body(),openRepositoryCachePartitionV1:async()=>({root:image.root,recheck:async()=>{},close:async()=>{}}),
   withRepositoryCacheStoreV1:async(_workspace:string,_id:string,_original:unknown,_control:unknown,body:Function)=>body(store,phase),
   acquireQueuedResourceLease:async(request:{mode:string;timeoutMs?:number;resource:string;sharedCohort?:boolean})=>{
    events.push({kind:request.timeoutMs===0?"try":"wait",mode:request.mode,cohort:request.sharedCohort===true,timeoutMs:request.timeoutMs,resource:request.resource});

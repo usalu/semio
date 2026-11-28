@@ -202,6 +202,9 @@ path = "../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️ed
 [workspace.dependencies.semio-s-artifact-fem-2d-editor-transient]
 path = "../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-fem-2d-load]
+path = "../◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-fem-2d-model]
 path = "../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust"
 

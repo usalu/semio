@@ -1,12 +1,12 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join,sep} from "node:path";
 import {linkRootArgumentsV1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
 import {PATH_NEUTRAL_FLAGS_V1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
 import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
-import {moduleRemapArgumentsV1,planOffloadV1,type OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
+import {moduleRemapArgumentsV1,moduleRemapV1,planOffloadV1,type OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
 import {offloadRustcCommandV1} from "../../📜️action/🟦️.ts";
 import {expandRemoteExecutionRootV1,validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
 import {testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
@@ -200,3 +200,22 @@ for(const source of SOURCES){
   }finally{cleanup();}
  },240000);
 }
+
+test("the module remap of a unit says what it came to: a remap of its directory, nothing needed, or the guard that declined it (a declined unit is never shared)",()=>{
+ try{
+  const {base,root}=checkout("remap",{label:"lib",type:"lib"}),manifest=join(root,"t","📦️packages","🦀️rust"),shipped=join(root,"t"),environment={CARGO_MANIFEST_DIR:manifest};
+  const args=["--crate-name","t","--edition=2021","🦀️.rs","--crate-type","lib","--emit=metadata","--out-dir","/o"],remap=`--remap-path-prefix=${shipped}=t`;
+  const made=moduleRemapV1(args,environment,manifest,root);
+  expect("arguments" in made&&made.arguments.includes(remap)&&made.arguments.includes(join(manifest,"🦀️.rs"))).toBe(true);
+  expect(moduleRemapArgumentsV1(args,environment,manifest,root)).toEqual("arguments" in made?made.arguments:undefined);
+  expect(moduleRemapV1(args,environment,manifest,undefined)).toEqual({declined:"no-workspace"});
+  expect(moduleRemapV1(args,environment,manifest,join(base,"elsewhere"))).toEqual({declined:"outside-workspace"});
+  const link=join(base,"link");symlinkSync(root,link);
+  const linked=moduleRemapV1(args,environment,manifest,link);
+  expect("arguments" in linked&&linked.arguments.includes(remap),"a workspace spelled through a link names the directory like the manifest").toBe(true);
+  expect(moduleRemapV1([...args,`--remap-path-prefix=${root}=⟨root⟩`],environment,manifest,root)).toEqual({needless:true});
+  writeFileSync(join(manifest,"local.rs"),"pub fn f()->u32{1}\n");
+  expect(moduleRemapV1(["--crate-name","t","local.rs"],environment,manifest,root)).toEqual({needless:true});
+  expect(moduleRemapV1(args,{},manifest,root)).toEqual({needless:true});
+ }finally{cleanup();}
+});

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Consulted paths of a module resolution row / Befragte Pfade einer Modulauflösungs-Zeile",
+  "description": "A `resolve` observation row is `{path: JSON [from, request], fact: resolved path | '!CODE'}`. For a relative or absolute request the answer of the resolution depends only on the directory of the target and the target itself (extension probing, index files, the package.json of a target directory), so the row may be vouched by the change journal when none of these paths changed. A bare specifier, an imports-map or any other request reads node_modules chains, exports maps and configuration files and is never vouched; a `node:` builtin reads no file at all. / Eine `resolve`-Zeile hängt bei relativer oder absoluter Anfrage nur vom Verzeichnis des Ziels und vom Ziel selbst ab; sie darf vom Änderungsjournal bestätigt werden, wenn sich keiner dieser Pfade geändert hat. Bare Specifier, imports-Maps und alles andere wird nie bestätigt; ein `node:`-Builtin liest keine Datei.",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "request", "fact", "consulted"],
+      "properties": {
+        "from": { "type": "string" },
+        "request": { "type": "string" },
+        "fact": { "type": ["string", "null"] },
+        "consulted": { "description": "null: never vouched / null: nie bestätigt", "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases"],
+      "properties": { "cases": { "type": "array", "items": { "$ref": "#/definitions/Case" } } }
+    }
+  }
+}

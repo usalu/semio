@@ -248,7 +248,8 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     let exporter: ProcessSolidExporter = match format {
         "obj" => ProcessSolidExporter::Obj(ObjSolidExporter),
         "stl" => ProcessSolidExporter::Stl(StlSolidExporter),
-        _ => ProcessSolidExporter::Step(StepMetresSolidExporter),
+        "step" => ProcessSolidExporter::Step(StepMetresSolidExporter),
+        other => return Err(format!("unknown process export format `{other}`")),
     };
     let mut session = semio_s_artifact_process_process3d_inferences::ProcessKernelReplay::new();
     let Some(handle) = semio_s_artifact_process_process3d_inferences::replay_process(&mut session, scene, resolved_up_to).map_err(|error| error.to_string())? else {

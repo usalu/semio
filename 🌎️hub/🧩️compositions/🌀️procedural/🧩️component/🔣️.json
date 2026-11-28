@@ -4,7 +4,16 @@
   "role": "plugin",
   "manifest": {
     "pluginId": "procedural",
-    "label": "Procedural",
+    "label": {
+      "native": {
+        "en": "Procedural",
+        "de": "Prozedural"
+      },
+      "reuse": {
+        "en": "Procedural",
+        "de": "Prozedural"
+      }
+    },
     "version": "0.1.0",
     "apps": [
       {

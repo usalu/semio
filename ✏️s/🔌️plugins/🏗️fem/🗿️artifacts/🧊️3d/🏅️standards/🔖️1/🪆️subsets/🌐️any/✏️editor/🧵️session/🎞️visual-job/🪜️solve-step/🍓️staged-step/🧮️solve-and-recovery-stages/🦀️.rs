@@ -7,7 +7,7 @@ impl Fem3dNumericalChild {
     /// 🗜 Builds the CSR matrix of the assembled system.
     pub(super) fn step_build_csr(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
         let build = self.csr_build.as_mut().ok_or_else(|| b"fem3d.numerical-csr".to_vec())?;
-        for _ in 0..64 {
+        for _ in 0..1024 {
             if context.should_yield() || context.is_cancelled() { break; }
             let grant = context.retained_grant();
             if grant.maximum_items == 0 { break; }

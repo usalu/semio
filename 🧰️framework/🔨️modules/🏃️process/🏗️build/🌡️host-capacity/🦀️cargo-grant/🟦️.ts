@@ -50,6 +50,25 @@ export function capCargoGrantJobsV1(args:readonly string[],jobs:number):string[]
  return result;
 }
 
+/** 🧱️ How many rustc units may compile at once inside `megabytes` of grant: the worst case in which the largest classes of rustc peaks (`unitPeakClassesMegabytes`: the test crate `kernel_event_receiving`, 2.1 GB, then `semio_framework_kernel`, 1.4 GB) run together with the typical unit (`typicalUnitMegabytes`) for every further slot; the most `n` whose summed worst case fits, never fewer than one. A build is sized by this, not by the cores alone, so that the sum of its parallel rustc processes fits its grant (an 8 GB host grants 3.3 GB to a session: one unit; the 8 to 12 GB sums of the cargo classes came from ten units at once).
+ * @see ./🧬️schema/🔣️.json
+ * @see ../🧪️tests/🦀️cargo-grant/🐍️oracle/🐍️.py */
+export function cargoUnitsFittingV1(megabytes:number):number{
+ const classes=policy.unitPeakClassesMegabytes;let units=1,sum=classes[0]!;
+ for(;;){const next=sum+(units<classes.length?classes[units]!:policy.typicalUnitMegabytes);if(next>megabytes)return units;sum=next;units++;}
+}
+
+/** 🧮️ The jobs a grant carries: the jobs the admission granted, at most the rustc units that fit the memory of the grant above its fixed block (`cargoUnitsFittingV1`); never below one. */
+export function cargoMemoryJobsV1(jobs:number,reservedMegabytes:number,fixedMegabytes:number):number{
+ return Math.max(1,Math.min(jobs,cargoUnitsFittingV1(Math.max(0,reservedMegabytes-fixedMegabytes))));
+}
+
+/** 🪣️ A cargo request as the memory carries it: every job is charged at least the typical rustc unit (a learned share of the default must not price a job below what rustc takes), and the jobs it prefers are at most the units that fit the most a request may ask for (`ceilingMegabytes` above its fixed block). Pure; the envelope per job stays the default.
+ * @see cargoUnitsFittingV1 */
+export function boundCargoRequestV1<T extends Readonly<{fixedMegabytes:number;perJobMegabytes:number;preferredJobs:number;minimumJobs:number}>>(request:T,ceilingMegabytes:number):T{
+ return Object.freeze({...request,perJobMegabytes:Math.max(request.perJobMegabytes,policy.typicalUnitMegabytes),preferredJobs:Math.max(request.minimumJobs,Math.min(request.preferredJobs,cargoUnitsFittingV1(Math.max(0,ceilingMegabytes-request.fixedMegabytes))))});
+}
+
 /** 🌐️ The Rust target triple of a host: the platform and the architecture of the process. */
 export function cargoHostTripleV1(platform:NodeJS.Platform=process.platform,arch:string=process.arch):string{
  const cpu=arch==="arm64"?"aarch64":"x86_64";

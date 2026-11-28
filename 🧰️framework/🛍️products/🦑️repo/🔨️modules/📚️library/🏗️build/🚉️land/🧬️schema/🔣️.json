@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/build/land/v1",
+  "title": "Land: a changeset staged in a scratch overlay, checked against that overlay and applied atomically under the area locks",
+  "definitions": {
+    "Sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "Area": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 256},
+    "AreaRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefix", "area", "slot"],
+      "properties": {
+        "prefix": {"type": "string", "minLength": 1},
+        "area": {"type": "string", "minLength": 1},
+        "prefixLabel": {"type": "string"},
+        "slot": {"type": "boolean"}
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "areas", "fallbackArea", "slot", "locks", "landings", "overlay", "gates", "limits", "refusedSegments"],
+      "properties": {
+        "version": {"const": 1},
+        "areas": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/AreaRule"}},
+        "fallbackArea": {"$ref": "#/definitions/Area"},
+        "slot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["startMinute", "endMinute", "overrunMinutes", "exemptSegments", "exemptExtensions", "boundBasenames"],
+          "properties": {
+            "startMinute": {"type": "integer", "minimum": 0, "maximum": 59},
+            "endMinute": {"type": "integer", "minimum": 0, "maximum": 59},
+            "overrunMinutes": {"type": "integer", "minimum": 0, "maximum": 59},
+            "exemptSegments": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "exemptExtensions": {"type": "array", "items": {"type": "string", "pattern": "^\\."}},
+            "boundBasenames": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "locks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["root", "directoryPrefix", "ownerFile", "generationPrefix", "queuePrefix", "slotQueueFile", "waitMilliseconds", "pollMilliseconds", "staleMinutes"],
+          "properties": {
+            "root": {"type": "string", "minLength": 1},
+            "directoryPrefix": {"type": "string", "minLength": 1},
+            "ownerFile": {"type": "string", "minLength": 1},
+            "generationPrefix": {"type": "string", "minLength": 1},
+            "queuePrefix": {"type": "string", "minLength": 1},
+            "slotQueueFile": {"type": "string", "minLength": 1},
+            "waitMilliseconds": {"type": "integer", "minimum": 0},
+            "pollMilliseconds": {"type": "integer", "minimum": 1},
+            "staleMinutes": {"type": "integer", "minimum": 1}
+          }
+        },
+        "landings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "defaultWave"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "defaultWave": {"type": "string", "minLength": 1}}
+        },
+        "overlay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["roots", "rustRoots", "manifestFiles", "mirrors", "heavyMembers", "rootFiles", "links", "cacheDirectory", "variable"],
+          "properties": {
+            "roots": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "rustRoots": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "manifestFiles": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "mirrors": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
+            "heavyMembers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "rootFiles": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "links": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "cacheDirectory": {"type": "string", "minLength": 1},
+            "variable": {"type": "string", "minLength": 1}
+          }
+        },
+        "gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scriptExtensions", "rustExtensions", "suiteLawTriggers", "suiteLawTests", "maximumTests", "testBudgetMs", "offloadEnvironment", "workspaceBound", "debugMarker", "debugAllowPaths", "benchCommand"],
+          "properties": {
+            "scriptExtensions": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^\\."}},
+            "rustExtensions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "suiteLawTriggers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "suiteLawTests": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "maximumTests": {"type": "integer", "minimum": 1},
+            "testBudgetMs": {"type": "integer", "minimum": 1000},
+            "offloadEnvironment": {"type": "object", "additionalProperties": {"type": "string"}},
+            "workspaceBound": {"type": "array", "items": {"type": "string", "minLength": 3}},
+            "debugMarker": {"type": "string", "minLength": 3},
+            "debugAllowPaths": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "benchCommand": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumEntries", "maximumBytes", "maximumPathCharacters", "diagnosticCharacters", "maximumSlotWaitMinutes"],
+          "properties": {
+            "maximumEntries": {"type": "integer", "minimum": 1},
+            "maximumBytes": {"type": "integer", "minimum": 1},
+            "maximumPathCharacters": {"type": "integer", "minimum": 1},
+            "diagnosticCharacters": {"type": "integer", "minimum": 1},
+            "maximumSlotWaitMinutes": {"type": "integer", "minimum": 1}
+          }
+        },
+        "refusedSegments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "Stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "id", "lane", "title", "bases", "deletes"],
+      "properties": {
+        "version": {"const": 1},
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "lane": {"type": "string", "minLength": 1, "maxLength": 64},
+        "title": {"type": "string", "maxLength": 200},
+        "bases": {"type": "object", "additionalProperties": {"oneOf": [{"$ref": "#/definitions/Sha"}, {"type": "null"}]}},
+        "deletes": {"type": "array", "items": {"$ref": "#/definitions/Path"}}
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "op", "base", "after", "area"],
+      "properties": {
+        "path": {"$ref": "#/definitions/Path"},
+        "op": {"enum": ["write", "delete"]},
+        "base": {"oneOf": [{"$ref": "#/definitions/Sha"}, {"type": "null"}]},
+        "after": {"oneOf": [{"$ref": "#/definitions/Sha"}, {"type": "null"}]},
+        "area": {"type": "string", "minLength": 1}
+      }
+    },
+    "Gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "seconds", "detail"],
+      "properties": {
+        "id": {"enum": ["debug-lines", "dangling-imports", "typecheck", "rust", "suite-law", "tests", "bench"]},
+        "status": {"enum": ["passed", "failed", "skipped"]},
+        "seconds": {"type": "number", "minimum": 0},
+        "detail": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mode", "status", "id", "lane", "seconds", "areas", "slot", "entries", "gates", "rollback", "landings"],
+      "properties": {
+        "version": {"const": 1},
+        "mode": {"enum": ["land", "check", "rollback"]},
+        "status": {"enum": ["landed", "checked", "failed", "refused", "queued", "rolled-back"]},
+        "id": {"type": "string"},
+        "lane": {"type": "string"},
+        "seconds": {"type": "number", "minimum": 0},
+        "areas": {"type": "array", "items": {"type": "string"}},
+        "slot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bound", "open", "next"],
+          "properties": {"bound": {"type": "boolean"}, "open": {"type": "boolean"}, "next": {"type": "string"}}
+        },
+        "entries": {"type": "array", "items": {"$ref": "#/definitions/Entry"}},
+        "gates": {"type": "array", "items": {"$ref": "#/definitions/Gate"}},
+        "rollback": {"type": "string"},
+        "landings": {"type": "boolean"},
+        "reason": {"type": "string"}
+      }
+    },
+    "RollbackPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "id", "lane", "title", "atMs", "entries"],
+      "properties": {
+        "version": {"const": 1},
+        "id": {"type": "string", "minLength": 1},
+        "lane": {"type": "string"},
+        "title": {"type": "string"},
+        "atMs": {"type": "integer", "minimum": 0},
+        "entries": {"type": "array", "items": {"$ref": "#/definitions/Entry"}}
+      }
+    }
+  }
+}

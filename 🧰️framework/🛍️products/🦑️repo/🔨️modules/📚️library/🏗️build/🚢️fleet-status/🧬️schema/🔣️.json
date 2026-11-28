@@ -102,7 +102,60 @@
       "cache.remote.refused"
      ]
     },
-    "digestCharacters": 12
+    "digestCharacters": 12,
+    "summary": {
+     "maximumSubjects": 8,
+     "textCharacters": 200,
+     "maximumOriginMetrics": 4,
+     "maximumFleetMetrics": 16,
+     "maximumReasonsShown": 6,
+     "phaseCharacters": 40,
+     "anomalousMetrics": [
+      "cache.skip.spool-full",
+      "cache.skip.upload-expired",
+      "cache.skip.upload-expired-down",
+      "cache.skip.upload-expired-denied",
+      "cache.skip.upload-entry-gone",
+      "cache.skip.upload-failed",
+      "cache.skip.upload-dropped",
+      "cache.skip.key-incomplete",
+      "cache.skip.path-dependent",
+      "cache.skip.read-only",
+      "cache.skip.diverged",
+      "cache.skip.breaker-denied",
+      "cache.skip.other",
+      "exec.offload.fellback",
+      "exec.refused",
+      "warden.cancelled",
+      "cache.remote.refused",
+      "exec.decline.infrastructure",
+      "exec.decline.pin-failed",
+      "exec.decline.not-portable",
+      "exec.decline.queue-timeout",
+      "exec.decline.incomplete-inputs",
+      "exec.decline.unmapped-path",
+      "exec.decline.other"
+     ],
+     "sections": [
+      "summary",
+      "memory",
+      "runs",
+      "queues",
+      "bazel",
+      "storage",
+      "sealed",
+      "generation",
+      "scheduler",
+      "fleet",
+      "workers",
+      "cas",
+      "retention",
+      "offload",
+      "rates",
+      "findings",
+      "sources"
+     ]
+    }
    }
   },
   "PolicySchema": {
@@ -116,6 +169,7 @@
     "rates",
     "readers",
     "runs",
+    "summary",
     "version"
    ],
    "properties": {
@@ -312,6 +366,78 @@
     "digestCharacters": {
      "type": "integer",
      "minimum": 0
+    },
+    "summary": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "anomalousMetrics",
+      "maximumFleetMetrics",
+      "maximumOriginMetrics",
+      "maximumReasonsShown",
+      "maximumSubjects",
+      "phaseCharacters",
+      "sections",
+      "textCharacters"
+     ],
+     "properties": {
+      "maximumSubjects": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "textCharacters": {
+       "type": "integer",
+       "minimum": 2
+      },
+      "maximumOriginMetrics": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "maximumFleetMetrics": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "maximumReasonsShown": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "phaseCharacters": {
+       "type": "integer",
+       "minimum": 2
+      },
+      "anomalousMetrics": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "sections": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "enum": [
+         "summary",
+         "memory",
+         "runs",
+         "queues",
+         "bazel",
+         "storage",
+         "sealed",
+         "generation",
+         "scheduler",
+         "fleet",
+         "workers",
+         "cas",
+         "retention",
+         "offload",
+         "rates",
+         "findings",
+         "sources"
+        ]
+       }
+      }
+     }
     }
    }
   },
@@ -890,10 +1016,28 @@
      "en": "worker {origin}: its warden takes {percent}% of one core (tick p95 {tick} ms, {resident} MB resident)",
      "de": "Worker {origin}: sein Wächter braucht {percent} % eines Kerns (Takt p95 {tick} ms, {resident} MB resident)"
     },
-    "error.syntax": {
-     "en": "Usage: repo fleet status [--json] [--limit=<n>]",
-     "de": "Verwendung: repo fleet status [--json] [--limit=<n>]"
-    },
+    "error.syntax": {"en": "Usage: repo fleet status [--json] [--detail] [--origin=<id>] [--section=<name>] [--limit=<n>]", "de": "Verwendung: repo fleet status [--json] [--detail] [--origin=<id>] [--section=<name>] [--limit=<n>]"},
+    "error.origin": {"en": "Unknown origin {origin}; known: {list}", "de": "Unbekannter Origin {origin}; bekannt: {list}"},
+    "error.section": {"en": "Unknown section {section}; known: {list}", "de": "Unbekannter Abschnitt {section}; bekannt: {list}"},
+    "summary.run": {"en": "  {pid} {state} {who} {what}{progress} · {age}{waiting}", "de": "  {pid} {state} {who} {what}{progress} · {age}{waiting}"},
+    "summary.run.waiting": {"en": " · waits for {kind} {waited}", "de": " · wartet auf {kind} {waited}"},
+    "summary.queues": {"en": "Queues: graph {graph} waiting (longest {longest}), builder {builder}; capacity {capacity} waiting, {spare} MB spare; {leases} lease queue(s)", "de": "Warteschlangen: Graph {graph} wartend (längste {longest}), Builder {builder}; Kapazität {capacity} wartend, {spare} MB frei; {leases} Lease-Warteschlange(n)"},
+    "summary.lease": {"en": "  {resource}: {holders} holder(s), {waiters} waiting, longest {longest}", "de": "  {resource}: {holders} Halter, {waiters} wartend, längste {longest}"},
+    "summary.keys": {"en": "  unit keys: {differing} of {units} compared unit(s) differ between {origins} origins, {dependent} on identical source", "de": "  Einheitenschlüssel: {differing} von {units} verglichenen Einheiten weichen zwischen {origins} Origins ab, {dependent} bei gleicher Quelle"},
+    "summary.machine": {"en": "  {origin}: worker {worker}, pressure {pressure}{headroom}{why}{code}", "de": "  {origin}: Worker {worker}, Druck {pressure}{headroom}{why}{code}"},
+    "summary.worker": {"en": "  {origin}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}{detail}", "de": "  {origin}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}{detail}"},
+    "summary.tree": {"en": "tree {verdict}", "de": "Baum {verdict}"},
+    "summary.level": {"en": "memory {level}, {available} MB free, swap {swap} MB", "de": "Speicher {level}, {available} MB frei, Auslagerung {swap} MB"},
+    "summary.failed": {"en": "{count} failed run(s) recently", "de": "{count} fehlgeschlagene Läufe zuletzt"},
+    "summary.healthy": {"en": "  healthy: {list}", "de": "  in Ordnung: {list}"},
+    "summary.reasons": {"en": "  declined: {list}", "de": "  abgelehnt: {list}"},
+    "summary.rate": {"en": "  {label}: {values}", "de": "  {label}: {values}"},
+    "summary.rate.origin": {"en": "  {origin}: {list}", "de": "  {origin}: {list}"},
+    "summary.rate.omitted": {"en": "  … {count} more counter row(s); see --detail", "de": "  … {count} weitere Zählerzeilen; siehe --detail"},
+    "summary.storage": {"en": "Storage: host free {free} GiB (floor {floor} GiB), {over} GiB over budget{images}", "de": "Speicher auf Datenträger: Rechner frei {free} GiB (Untergrenze {floor} GiB), {over} GiB über dem Budget{images}"},
+    "summary.generation": {"en": "Generation {number}: {age} old, {owners} owner(s), {dirty} dirty, {percent} % verified", "de": "Generation {number}: {age} alt, {owners} Eigentümer, {dirty} geändert, {percent} % geprüft"},
+    "summary.finding": {"en": "  [{severity}] ×{count} {text} ({subjects})", "de": "  [{severity}] ×{count} {text} ({subjects})"},
+    "summary.hint": {"en": "Details: repo fleet status --detail [--origin=<id>] [--section=<name>]", "de": "Einzelheiten: repo fleet status --detail [--origin=<id>] [--section=<name>]"},
     "error.timeout": {
      "en": "The reader did not answer within {seconds} s",
      "de": "Der Leser antwortete nicht innerhalb von {seconds} s"
@@ -3272,6 +3416,1291 @@
      "$ref": "#/definitions/RatesSection"
     }
    }
+  },
+  "Summary": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "atMs",
+    "bazel",
+    "findings",
+    "generation",
+    "memory",
+    "queues",
+    "runs",
+    "sealed",
+    "sources",
+    "storage",
+    "summary",
+    "version",
+    "view",
+    "workspace"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "view": {
+     "const": "summary"
+    },
+    "atMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "workspace": {
+     "type": "string"
+    },
+    "summary": {
+     "$ref": "#/definitions/Report/properties/summary"
+    },
+    "memory": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "admittedMegabytes",
+      "availableMegabytes",
+      "cores",
+      "floorMegabytes",
+      "grants",
+      "load",
+      "observedMegabytes",
+      "overReservedMegabytes",
+      "pressure",
+      "sampleAgeSeconds",
+      "spareMegabytes",
+      "swapUsedMegabytes",
+      "totalMegabytes",
+      "underReservedMegabytes",
+      "unobservedGrants",
+      "waiters"
+     ],
+     "properties": {
+      "totalMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "availableMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "sampleAgeSeconds": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "floorMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "spareMegabytes": {
+       "type": "integer"
+      },
+      "pressure": {
+       "enum": [
+        "normal",
+        "warn",
+        "critical"
+       ]
+      },
+      "swapUsedMegabytes": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "load": {
+       "anyOf": [
+        {
+         "type": "number",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "cores": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "admittedMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "observedMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "unobservedGrants": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "overReservedMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "underReservedMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "grants": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "waiters": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "runs": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "count",
+      "rows"
+     ],
+     "properties": {
+      "count": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "rows": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "ageSeconds",
+         "pid",
+         "state",
+         "what",
+         "who"
+        ],
+        "properties": {
+         "pid": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "state": {
+          "enum": [
+           "running",
+           "blocked",
+           "waiting"
+          ]
+         },
+         "who": {
+          "type": "string"
+         },
+         "what": {
+          "type": "string"
+         },
+         "phase": {
+          "type": "string"
+         },
+         "done": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "total": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "etaSeconds": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "ageSeconds": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "priority": {
+          "enum": [
+           "interactive",
+           "agent",
+           "background"
+          ]
+         },
+         "waiting": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "kind",
+           "waitedSeconds"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "lease",
+             "capacity"
+            ]
+           },
+           "waitedSeconds": {
+            "type": "integer",
+            "minimum": 0
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "queues": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "capacity",
+      "graph",
+      "leases",
+      "leasesOmitted"
+     ],
+     "properties": {
+      "graph": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "builder",
+        "computers",
+        "longestWaitSeconds",
+        "slots",
+        "waiting"
+       ],
+       "properties": {
+        "builder": {
+         "anyOf": [
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "etaSeconds",
+            "heldSeconds",
+            "pid",
+            "state"
+           ],
+           "properties": {
+            "pid": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "phase": {
+             "type": "string"
+            },
+            "done": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "total": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "heldSeconds": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "state": {
+             "enum": [
+              "unknown",
+              "progressing",
+              "silent",
+              "stuck",
+              "stale"
+             ]
+            },
+            "etaSeconds": {
+             "anyOf": [
+              {
+               "type": "integer",
+               "minimum": 0
+              },
+              {
+               "type": "null"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "computers": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "slots": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "waiting": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "longestWaitSeconds": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "capacity": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "floorMegabytes",
+        "grants",
+        "spareMegabytes",
+        "waiters"
+       ],
+       "properties": {
+        "grants": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "waiters": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "floorMegabytes": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "spareMegabytes": {
+         "type": "integer"
+        }
+       }
+      },
+      "leases": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "class",
+         "holders",
+         "longestWaitSeconds",
+         "resource",
+         "waiters"
+        ],
+        "properties": {
+         "resource": {
+          "type": "string"
+         },
+         "class": {
+          "type": "string"
+         },
+         "holders": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "waiters": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "longestWaitSeconds": {
+          "type": "integer",
+          "minimum": 0
+         }
+        }
+       }
+      },
+      "leasesOmitted": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "bazel": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "held",
+      "live",
+      "rssMegabytes",
+      "slots"
+     ],
+     "properties": {
+      "slots": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "live": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "held": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "rssMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "storage": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "fullImages",
+      "hostFreeBytes",
+      "hostFreeFloorBytes",
+      "overBytes"
+     ],
+     "properties": {
+      "hostFreeBytes": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "hostFreeFloorBytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "overBytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "fullImages": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "usedBasisPoints"
+        ],
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "usedBasisPoints": {
+          "type": "integer",
+          "minimum": 0
+         }
+        }
+       }
+      }
+     }
+    },
+    "sealed": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "blocked",
+      "drifted",
+      "entries",
+      "mode"
+     ],
+     "properties": {
+      "mode": {
+       "enum": [
+        "sealed",
+        "live",
+        "promote"
+       ]
+      },
+      "entries": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "drifted": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "blocked": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "generation": {
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ageSeconds",
+        "dirty",
+        "number",
+        "owners",
+        "verifiedBasisPoints"
+       ],
+       "properties": {
+        "number": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "ageSeconds": {
+         "anyOf": [
+          {
+           "type": "integer",
+           "minimum": 0
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "owners": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "dirty": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "verifiedBasisPoints": {
+         "anyOf": [
+          {
+           "type": "integer",
+           "minimum": 0
+          },
+          {
+           "type": "null"
+          }
+         ]
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "scheduler": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "budgetMegabytes",
+      "longestWaitSeconds",
+      "queued",
+      "reservedMegabytes",
+      "running",
+      "sharedTickets"
+     ],
+     "properties": {
+      "running": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "queued": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "reservedMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "budgetMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "sharedTickets": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "longestWaitSeconds": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "fleet": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "attention",
+      "cacheHit",
+      "cacheMiss",
+      "declined",
+      "executing",
+      "machines",
+      "offloadedIn",
+      "offloadedOut",
+      "queued",
+      "refused",
+      "retried"
+     ],
+     "properties": {
+      "machines": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "queued": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "executing": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "offloadedIn": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "offloadedOut": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "refused": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "declined": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "retried": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "cacheHit": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "cacheMiss": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "treeCode": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{16}$"
+      },
+      "cache": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "hits",
+        "misses",
+        "puts"
+       ],
+       "properties": {
+        "hits": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "misses": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "puts": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "claims": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "active",
+        "waiting",
+        "oldestSeconds"
+       ],
+       "properties": {
+        "active": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "waiting": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "oldestSeconds": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "keys": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "dependent",
+        "differing",
+        "origins",
+        "units"
+       ],
+       "properties": {
+        "origins": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "units": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "differing": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "dependent": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "attention": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "headroom",
+         "origin",
+         "pressure",
+         "worker"
+        ],
+        "properties": {
+         "origin": {
+          "type": "string"
+         },
+         "worker": {
+          "enum": [
+           "absent",
+           "idle",
+           "busy",
+           "refusing"
+          ]
+         },
+         "pressure": {
+          "enum": [
+           "normal",
+           "warn",
+           "critical"
+          ]
+         },
+         "headroom": {
+          "type": "boolean"
+         },
+         "why": {
+          "type": "string"
+         },
+         "code": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+         }
+        }
+       }
+      }
+     }
+    },
+    "workers": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "counts",
+      "healthy",
+      "rows"
+     ],
+     "properties": {
+      "counts": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ready",
+        "working",
+        "idle",
+        "silent",
+        "offline",
+        "absent"
+       ],
+       "properties": {
+        "ready": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "working": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "idle": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "silent": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "offline": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "absent": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "rows": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "attempts",
+         "availableMegabytes",
+         "failed",
+         "level",
+         "liveness",
+         "origin",
+         "recordAgeSeconds",
+         "refusal",
+         "stage",
+         "stageCount",
+         "stageIndex",
+         "swapUsedMegabytes",
+         "tree"
+        ],
+        "properties": {
+         "origin": {
+          "type": "string"
+         },
+         "liveness": {
+          "enum": [
+           "absent",
+           "offline",
+           "silent",
+           "working",
+           "ready",
+           "idle"
+          ]
+         },
+         "stage": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "stageIndex": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "stageCount": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "attempts": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "recordAgeSeconds": {
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": 0
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "refusal": {
+          "type": [
+           "string",
+           "null"
+          ]
+         },
+         "tree": {
+          "enum": [
+           "ok",
+           "off",
+           "retired",
+           "missing",
+           "stale",
+           "lagging",
+           "diverged",
+           null
+          ]
+         },
+         "level": {
+          "enum": [
+           "calm",
+           "guard",
+           "danger",
+           null
+          ]
+         },
+         "availableMegabytes": {
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": 0
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "swapUsedMegabytes": {
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": 0
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "failed": {
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": 0
+           },
+           {
+            "type": "null"
+           }
+          ]
+         }
+        }
+       }
+      },
+      "healthy": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "cas": {
+     "$ref": "#/definitions/Report/properties/cas"
+    },
+    "retention": {
+     "$ref": "#/definitions/Report/properties/retention"
+    },
+    "offload": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "deadline",
+      "fellBack",
+      "fleet",
+      "local",
+      "lost",
+      "out",
+      "reasons",
+      "refused",
+      "silent"
+     ],
+     "properties": {
+      "local": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "fleet": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "out": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "refused": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "fellBack": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "deadline": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "lost": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "silent": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "reasons": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+       }
+      },
+      "spool": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "depth",
+        "bound"
+       ],
+       "properties": {
+        "depth": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "bound": {
+         "type": "integer",
+         "minimum": 1
+        }
+       }
+      }
+     }
+    },
+    "rates": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "fleet",
+      "omitted",
+      "origins",
+      "windowsSeconds"
+     ],
+     "properties": {
+      "windowsSeconds": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "integer",
+        "minimum": 1
+       }
+      },
+      "fleet": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 0
+        }
+       }
+      },
+      "origins": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "array",
+         "items": {
+          "type": "integer",
+          "minimum": 0
+         }
+        }
+       }
+      },
+      "omitted": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "findings": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "count",
+       "id",
+       "more",
+       "severity",
+       "subjects",
+       "text"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "severity": {
+        "enum": [
+         "alert",
+         "warn",
+         "info"
+        ]
+       },
+       "count": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "subjects": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "more": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "text": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "sources": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "count",
+      "failed",
+      "milliseconds"
+     ],
+     "properties": {
+      "count": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "milliseconds": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "failed": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "id"
+        ],
+        "properties": {
+         "id": {
+          "enum": [
+           "leases",
+           "capacity",
+           "bazel",
+           "storage",
+           "sealed",
+           "generation",
+           "scheduler",
+           "fleet",
+           "workers",
+           "memory",
+           "cas",
+           "offload",
+           "rates"
+          ]
+         },
+         "error": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "description": "The default view of `repo fleet status`, derived from the detail report alone: totals per window, per-origin counters only where anomalous, findings grouped by id with counts and subjects, workers that need a look as rows and the healthy ones as one list. Everything else is behind `--detail`, `--origin` and `--section`."
+  },
+  "Selection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "atMs",
+    "sections",
+    "version",
+    "view",
+    "workspace"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "view": {
+     "const": "detail"
+    },
+    "atMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "workspace": {
+     "type": "string"
+    },
+    "origin": {
+     "type": "string"
+    },
+    "sections": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "summary": {
+       "$ref": "#/definitions/Report/properties/summary"
+      },
+      "memory": {
+       "$ref": "#/definitions/Report/properties/memory"
+      },
+      "runs": {
+       "$ref": "#/definitions/Report/properties/runs"
+      },
+      "queues": {
+       "$ref": "#/definitions/Report/properties/queues"
+      },
+      "bazel": {
+       "$ref": "#/definitions/Report/properties/bazel"
+      },
+      "storage": {
+       "$ref": "#/definitions/Report/properties/storage"
+      },
+      "sealed": {
+       "$ref": "#/definitions/Report/properties/sealed"
+      },
+      "generation": {
+       "$ref": "#/definitions/Report/properties/generation"
+      },
+      "scheduler": {
+       "$ref": "#/definitions/Report/properties/scheduler"
+      },
+      "fleet": {
+       "$ref": "#/definitions/Report/properties/fleet"
+      },
+      "workers": {
+       "$ref": "#/definitions/Report/properties/workers"
+      },
+      "cas": {
+       "$ref": "#/definitions/Report/properties/cas"
+      },
+      "retention": {
+       "$ref": "#/definitions/Report/properties/retention"
+      },
+      "offload": {
+       "$ref": "#/definitions/Report/properties/offload"
+      },
+      "rates": {
+       "$ref": "#/definitions/Report/properties/rates"
+      },
+      "findings": {
+       "$ref": "#/definitions/Report/properties/findings"
+      },
+      "sources": {
+       "$ref": "#/definitions/Report/properties/sources"
+      }
+     }
+    }
+   },
+   "description": "The sections of the detail report that `--section` and `--origin` selected, each exactly as in the full report; with `--origin` the workers, machines, counters and findings are those of that origin."
   },
   "Corpus": {
    "type": "object",

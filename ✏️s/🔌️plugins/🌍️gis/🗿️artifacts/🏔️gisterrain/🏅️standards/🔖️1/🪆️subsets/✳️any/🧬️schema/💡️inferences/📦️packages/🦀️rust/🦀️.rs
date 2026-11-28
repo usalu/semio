@@ -15,6 +15,9 @@ pub use crate::standards::v1::subsets::any::schema::imported_map::artifact_items
 #[path = "../../📐️elevation-edit/🦀️.rs"]
 pub mod elevation_edit;
 
+#[path = "../../📤️media-export/📐️scene/🦀️.rs"]
+pub mod terrain_scene_export;
+
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;

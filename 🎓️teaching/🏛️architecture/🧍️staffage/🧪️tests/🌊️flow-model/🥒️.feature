@@ -13,6 +13,7 @@ Feature: The 3D model carries the air flow
     And the radius of a section is half the paper width of its speed, at most 0.012 of the extent
     And every arrow of the stream is a cone with its tip on the stream point and its axis along the flow
     And every vapour and fog puff is an icosphere of its clamped radius with the volume and area of trimesh's icosphere, in the material of its bin
+    And a puff is one instance: the unit icosphere on a node of its own whose translation is the centre of the puff and whose uniform scale is its radius
 
     Examples:
       | scale |
@@ -51,3 +52,9 @@ Feature: The 3D model carries the air flow
     Then it has no error and no warning, the thermal scenes hold the flow nodes and no other scene does
     And every vertex of a stream node lies within the tube, arrow head and chord reach of its stream, and the node spans its stream
     And the flow shows in the thermal variant and in no other
+
+  Scenario: A puff costs a node, not a sphere
+    Given the GLB of a pose of the sample figure with vapour puffs
+    When three's GLTFLoader reads it
+    Then every puff is a node of its own whose bounding box is centred on the puff and spans its clamped radius
+    And all puffs of one scene share the vertices of the two unit icospheres

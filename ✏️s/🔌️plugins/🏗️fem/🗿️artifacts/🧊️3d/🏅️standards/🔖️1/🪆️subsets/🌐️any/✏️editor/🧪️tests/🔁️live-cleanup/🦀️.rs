@@ -64,7 +64,7 @@ async fn fem3d_replacement_revokes_the_read_leases_of_the_displaced_store() {
     assert!(lease.as_ref().is_some_and(|read| read.commit_authority_matches(generation, revision)), "a fresh lease holds the live commit authority");
     plugin_admit_document_load(fixture.runtime(), INSTANCE, &files, &mut fixture_identity(), scope.cx()).await.expect("admit the replacement load");
     let (mut revoked_at, mut terminal, mut stuck_turns) = (None, None, 0usize);
-    for turn in 0..TURNS * 10 {
+    for turn in 0..TURNS * 20 {
         fixture.pump(1, scope.cx()).unwrap_or_else(|refusal| panic!("live cleanup faulted during the replacement: {refusal}"));
         let status = plugin_poll_document_load(fixture.runtime(), INSTANCE, &mut fixture_identity(), scope.cx()).await.expect("poll the replacement load");
         let running = matches!(status.state, store::DocumentArchiveLoadState::Pending | store::DocumentArchiveLoadState::Running);

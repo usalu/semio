@@ -35,7 +35,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
                 if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant").into()); }
             }
             app.advance_typed_operation_publication(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
-            if let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
+            if let Some(mut page) = artifact_app_laws::take_fixture_result_page(&mut app, meta.instance_id, artifact_app_laws::fixture_mounted_policy().preparation)? {
                 let fault = match page.lane {
                     TypedOperationResultLane::Artifact => { artifact += 1; None }
                     TypedOperationResultLane::Ui => { ui += 1; None }
@@ -43,7 +43,8 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
                     TypedOperationResultLane::Fault => Some(Fault::from(format!("restart publication fault: {}", String::from_utf8_lossy(page.bytes())))),
                     _ => Some(Fault::from("restart publication produced an undeclared lane")),
                 };
-                if !app.acknowledge_typed_operation_result(page.token)? { return Err(Fault::from("restart publication rejected its exact result ACK").into()); }
+                let token = artifact_app_laws::close_fixture_result_page(&mut page, artifact_app_laws::fixture_mounted_policy().close);
+                if !app.acknowledge_typed_operation_result(token)? { return Err(Fault::from("restart publication rejected its exact result ACK").into()); }
                 if let Some(fault) = fault { return Err(fault.into()); }
             }
             if let Some(scope) = app.take_typed_operation_ui_scope() {
@@ -78,7 +79,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
         std::thread::yield_now();
     }
     let closed = app.close_terminal_is_empty();
-    assert!(closed, "original restart app must retire before the collected publication result is asserted");
+    assert!(closed, "original restart app must retire before the collected publication result is asserted: outcome {outcome:?}, close fault {close_fault:?}, close diagnostic {}", app.close_diagnostic());
     drop(app);
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original restart full-body source close");
     assert!(close_fault.is_none(), "{close_fault:?}");
@@ -163,32 +164,32 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut source, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
-    let ids: Vec<protocol::MutationId> = source.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] }, &mut identity)).await).expect("history edit");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity)).await).expect("revert");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity)).await).expect("reinstate");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] }, &mut identity)).await).expect("history edit as a new alternative");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] }, &mut identity)).await).expect("a second history edit as a new alternative");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None }, &mut identity)).await).expect("edit on the alternative");
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None }, &mut identity)).await).expect("a second edit on the alternative");
+    let ids: Vec<protocol::MutationId> = source.stores.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] }, &mut identity)).await).expect("history edit");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity)).await).expect("revert");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity)).await).expect("reinstate");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] }, &mut identity)).await).expect("history edit as a new alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] }, &mut identity)).await).expect("a second history edit as a new alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None }, &mut identity)).await).expect("edit on the alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None }, &mut identity)).await).expect("a second edit on the alternative");
     let expected = source.snapshot().expect("source projection");
     let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
     let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
     let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut target, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
-    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(target.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(target.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
     let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
-    let target_id = target.store.envelope().id.clone();
-    let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&archive.parent_spr, &target_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, target.store.envelope().owner.as_ref())).await.expect("archive identity stamp");
+    let target_id = target.stores.store.envelope().id.clone();
+    let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&archive.parent_spr, &target_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, target.stores.store.envelope().owner.as_ref())).await.expect("archive identity stamp");
     semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut target, 96, protocol::DocumentArchivePack { parent_spr, ..archive }, &mut cx).expect("archive admission");
     let status = Box::pin(drive_single_document_archive(&mut target, 96, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "the archive failed to load: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut target, 96).expect("archive acknowledgement");
     assert_eq!(target.snapshot().expect("loaded projection"), expected);
-    assert_eq!(target.store.envelope().transitions.len(), source.store.envelope().transitions.len(), "every history transition survives the round trip");
+    assert_eq!(target.stores.store.envelope().transitions.len(), source.stores.store.envelope().transitions.len(), "every history transition survives the round trip");
     let after = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history after the load"));
     for label in ["Set count to 1", "Set label to edited", "Set count to 2", "Set label to branched", "Set count to 9"] {
         assert!(before.iter().any(|(_, _, row)| row == label), "the source lists {label}: {before:?}");

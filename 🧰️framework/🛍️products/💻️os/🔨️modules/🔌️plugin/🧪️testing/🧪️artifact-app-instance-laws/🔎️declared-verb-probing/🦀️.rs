@@ -254,12 +254,16 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 /// 🫴️ Deferred addressed fixture dispatch keeps its actual input slots and initiating context over every step.
 pub async fn dispatch_addressed_fixture_on_original<PA:semio_plugin_reactor_app::PluginApp>(app:&mut PA,address:&semio_framework::manifest::ActionAddress,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<semio_framework::Fault>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let maximum_turns=OriginalFixtureCaller::maximum_turns();let mut original_meta=Some(meta.clone());
+    semio_framework_job::testkit::issue_initiating_event(cx,OriginalFixtureCaller::event_stock())?;
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
     for _ in 0..maximum_turns{
+        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
+        semio_framework_job::testkit::renew_payload_page_grant(cx);
         if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture exhausted its initiating work").into())}
         if let Some(result)=app.handle_action_invocation(address,args,fault,active_mode,&mut original_meta,identity,cx).await?{return Ok(result)}
         let grant=cx.retained_grant();app.maintenance_step(cx,grant)?;
     }
-    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture reached its finite step limit").into())
+    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,format!("original addressed fixture reached its finite step limit: fuel {}, deadline exceeded {}, cancelled {}, remaining grant {:?}, {}",cx.fuel_remaining(),cx.deadline_exceeded(),cx.is_cancelled(),cx.retained_grant(),app.typed_operation_diagnostic())).into())
 }
 
 /// 🪜️ Keeps one admitted preview source under its initiating fixture context through pending phases.

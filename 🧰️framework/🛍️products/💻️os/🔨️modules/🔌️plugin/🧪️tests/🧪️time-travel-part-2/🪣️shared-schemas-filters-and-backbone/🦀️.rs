@@ -27,10 +27,10 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
     let editor = app.time_travel.editor_mut().expect("the draft editor");
     editor.inputs = inputs;
     editor.value = dsl(&serde_json::json!({ "opacity": 0.5 }));
-    let history = render_history(&mut app, Locale::De).await;
+    let history = render_history(&mut app, Locale::De,cx).await;
     let row = find_node(&history, "framework.history.editor.input.opacity").unwrap_or_else(|| panic!("the input's control: {history}"));
     assert!(history.to_string().contains("Deckkraft"), "the control carries the input's own label: {row}");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -61,17 +61,17 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     for value in &declared {
         let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
-        let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta, &mut identity).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        let admitted = artifact_app_laws::dispatch_fixture_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(args.clone()), &meta, &mut identity, cx, mounted_policy.maintenance).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
         semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
         assert_eq!(&app.render_ctx().history_patch(true).await.expect("history patch").command_filter, value, "the wire echoes the declared option");
-        let body = render_history(&mut app, Locale::En).await;
+        let body = render_history(&mut app, Locale::En,cx).await;
         let select = find_node(&body, "framework.history.filter.control").expect("the filter select");
         for option in &declared {
             assert!(select.to_string().contains(&format!("\"{option}\"")), "the select offers {option}: {select}");
         }
     }
     let undeclared = DslValue::Object(vec![("value".into(), DslValue::String("withoutOperations".into()))]);
-    let refused = match app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&undeclared), &meta, &mut identity).await {
+    let refused = match artifact_app_laws::dispatch_fixture_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(undeclared.clone()), &meta, &mut identity, cx, mounted_policy.maintenance).await {
         Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.err(),
         Err(fault) => Some(fault),
     };
@@ -83,12 +83,28 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
 //#endregion 🎚️HistoryFilter
 
 
+/// ♻️ Returns one built tree's arena values through its typed retirement, the way every host does before the arena closes.
+fn retire_built_tree(root: BuiltNode) {
+    let mut owner = semio_ui_contract::BuiltTreeRetirement::new(root);
+    for _ in 0..2_000_000 {
+        let step = owner.close_step(1, 65_536).expect("the built tree retires");
+        if step.complete && owner.terminal_is_empty() {
+            return;
+        }
+        if !step.progressed {
+            std::thread::yield_now();
+        }
+    }
+    panic!("the built tree retirement did not finish");
+}
+
 /// ☑️ LAW (audit W1E-2, conformance `💬️row-semantics` `selectedRows`): a choice with more options than one fixed list holds is
 /// windowed option rows, each a tree row holding its choose button and stating its choice as `selected` — the chosen option
 /// `Some(true)`, every other `Some(false)` — so both renderers announce (`aria-selected`, the mirror's `selected`) and paint it,
 /// never by its icon alone.
 #[test]
 fn long_option_rows_state_their_choice_as_selected() {
+    let _arena = semio_plugin_testing_laws::FixtureUiArena::admit();
     let option = |index: usize| semio_framework::ActionArgOption { value: format!("o{index}"), label: LocalizedLabel::native(&format!("Option {index}"), &format!("Option {index}")) };
     let mode = semio_framework::ActionArgDef {
         schema: semio_framework::ArgSchema::String { options: (0..40).map(option).collect(), option_source: None, min_len: None, max_len: None, pattern: None, format: None },
@@ -113,6 +129,7 @@ fn long_option_rows_state_their_choice_as_selected() {
     for (key, selected) in &rows {
         assert_eq!(*selected, Some(key == "framework.history.editor.input.mode.option.3.row"), "{key}");
     }
+    sections.into_iter().for_each(retire_built_tree);
 }
 
 /// ⚖️ LAW (design §22.24, live fault F4): the base a session watches is the content revision of its store, never the
@@ -144,10 +161,10 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     assert_eq!(app.time_travel.session(), &before, "no base move: the stage, the generation, the base and the draft are what they were");
-    let typed = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("c".into())), ("generation".into(), DslValue::uint(u64::from(before.generation)))], mounted_policy, &mut identity).await;
+    let typed = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("c".into())), ("generation".into(), DslValue::uint(u64::from(before.generation)))], mounted_policy, &mut identity,cx).await;
     assert_eq!(rejected(&typed), None, "an input stamped before the port change is accepted");
-    assert!(render_body(&mut app).await.contains("count=1 label=c"), "the preview follows the draft");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    assert!(render_body(&mut app,cx).await.contains("count=1 label=c"), "the preview follows the draft");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity,cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     drop(probe);
     close(&mut app,cx);
@@ -193,7 +210,7 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
     pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     assert!(app.time_travel.status().is_none(), "the session closed with its commit: {:?}", app.time_travel.session().stage);
     assert_eq!(head(&app), (5, "b".to_string()), "the committed document is the head reviewed");
-    assert!(render_body(&mut app).await.contains("count=5 label=b"), "every window shows the committed edit");
+    assert!(render_body(&mut app,cx).await.contains("count=5 label=b"), "every window shows the committed edit");
     drop(probe);
     close(&mut app,cx);
 
@@ -206,6 +223,7 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
 /// locales; only an offered Edit is the row's activation.
 #[test]
 fn a_mutation_row_names_why_edit_or_withdraw_is_refused() {
+    let _arena = semio_plugin_testing_laws::FixtureUiArena::admit();
     let entry = |editable: bool, withdrawable: bool, withdrawn: bool| semio_framework::kernel::HistoryMutationEntry {
         mutation_id: "e-1#0".into(),
         position: 0,

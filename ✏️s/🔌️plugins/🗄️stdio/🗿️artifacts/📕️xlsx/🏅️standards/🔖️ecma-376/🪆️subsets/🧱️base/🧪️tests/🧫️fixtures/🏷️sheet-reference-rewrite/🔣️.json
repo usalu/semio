@@ -1,0 +1,480 @@
+{
+ "generator": "formulas 1.3.4 via openpyxl 3.1.5",
+ "cases": [
+  {
+   "id": "simple",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1*2"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 21
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Data"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=Data!A1*2"
+   },
+   "expected": {
+    "Sheet1!A1": 42
+   }
+  },
+  {
+   "id": "quoted-to-bare",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=SUM('Old Name'!A1:B2)"
+     }
+    },
+    {
+     "name": "Old Name",
+     "cells": {
+      "A1": 1,
+      "B2": 4
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Old Name",
+     "Renamed"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=SUM(Renamed!A1:B2)"
+   },
+   "expected": {
+    "Sheet1!A1": 5
+   }
+  },
+  {
+   "id": "bare-to-quoted",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1+Sheet2!$B$2"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 1,
+      "B2": 4
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "New Name"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "='New Name'!A1+'New Name'!$B$2"
+   },
+   "expected": {
+    "Sheet1!A1": 5
+   }
+  },
+  {
+   "id": "apostrophe-doubled",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Bob's"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "='Bob''s'!A1"
+   },
+   "expected": {
+    "Sheet1!A1": 5
+   }
+  },
+  {
+   "id": "case-insensitive",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=sheet2!A1+SHEET2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Z"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=Z!A1+Z!A1"
+   },
+   "expected": {
+    "Sheet1!A1": 10
+   }
+  },
+  {
+   "id": "string-literal-untouched",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=\"Sheet2!A1\"&Sheet2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Z"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=\"Sheet2!A1\"&Z!A1"
+   },
+   "expected": {
+    "Sheet1!A1": "Sheet2!A15"
+   }
+  },
+  {
+   "id": "prefix-names-untouched",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet20!A1+Sheet2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    },
+    {
+     "name": "Sheet20",
+     "cells": {
+      "A1": 7
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Z"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=Sheet20!A1+Z!A1"
+   },
+   "expected": {
+    "Sheet1!A1": 12
+   }
+  },
+  {
+   "id": "cell-like-name-quoted",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Q1"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "='Q1'!A1"
+   },
+   "expected": {
+    "Sheet1!A1": 5
+   }
+  },
+  {
+   "id": "digit-start-name-quoted",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "2024"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "='2024'!A1"
+   },
+   "expected": {
+    "Sheet1!A1": 5
+   }
+  },
+  {
+   "id": "self-reference",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": 1
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5,
+      "A2": "=Sheet2!A1+A1"
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Z"
+    ]
+   },
+   "expected_formulas": {
+    "Z!A2": "=Z!A1+A1"
+   },
+   "expected": {
+    "Z!A2": 10
+   }
+  },
+  {
+   "id": "chain-across-sheets",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1+1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": "=Sheet3!A1*2"
+     }
+    },
+    {
+     "name": "Sheet3",
+     "cells": {
+      "A1": 10
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet3",
+     "Base"
+    ]
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=Sheet2!A1+1",
+    "Sheet2!A1": "=Base!A1*2"
+   },
+   "expected": {
+    "Sheet1!A1": 21,
+    "Sheet2!A1": 20
+   }
+  },
+  {
+   "id": "unrelated-formula-unchanged",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=A2+1",
+      "A2": 1
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    }
+   ],
+   "op": {
+    "rename": [
+     "Sheet2",
+     "Z"
+    ]
+   },
+   "expected_formulas": {},
+   "expected": {
+    "Sheet1!A1": 2
+   }
+  },
+  {
+   "id": "remove-single-ref",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1+1",
+      "A2": "=Sheet3!A1"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    },
+    {
+     "name": "Sheet3",
+     "cells": {
+      "A1": 7
+     }
+    }
+   ],
+   "op": {
+    "remove": "Sheet2"
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=#REF!+1"
+   },
+   "expected": {
+    "Sheet1!A1": {
+     "error": "#REF!"
+    },
+    "Sheet1!A2": 7
+   }
+  },
+  {
+   "id": "remove-range-ref",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=SUM('My Sheet'!A1:B2)",
+      "A2": "=IFERROR(SUM('My Sheet'!A1:B2),0)"
+     }
+    },
+    {
+     "name": "My Sheet",
+     "cells": {
+      "A1": 1
+     }
+    },
+    {
+     "name": "Sheet3",
+     "cells": {
+      "A1": 7
+     }
+    }
+   ],
+   "op": {
+    "remove": "My Sheet"
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=SUM(#REF!)",
+    "Sheet1!A2": "=IFERROR(SUM(#REF!),0)"
+   },
+   "expected": {
+    "Sheet1!A1": {
+     "error": "#REF!"
+    },
+    "Sheet1!A2": 0
+   }
+  },
+  {
+   "id": "remove-chain",
+   "sheets": [
+    {
+     "name": "Sheet1",
+     "cells": {
+      "A1": "=Sheet2!A1+1",
+      "A2": "=A1*2"
+     }
+    },
+    {
+     "name": "Sheet2",
+     "cells": {
+      "A1": 5
+     }
+    },
+    {
+     "name": "Sheet3",
+     "cells": {
+      "A1": 7
+     }
+    }
+   ],
+   "op": {
+    "remove": "Sheet2"
+   },
+   "expected_formulas": {
+    "Sheet1!A1": "=#REF!+1"
+   },
+   "expected": {
+    "Sheet1!A1": {
+     "error": "#REF!"
+    },
+    "Sheet1!A2": {
+     "error": "#REF!"
+    }
+   }
+  }
+ ]
+}

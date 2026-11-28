@@ -27,3 +27,7 @@ mod set_camera;
 mod set_result_animation;
 #[path = "../../🧪️tests/🪟️window-config-ownership/🦀️.rs"]
 mod window_config_ownership;
+#[path = "../🔁️results-settle/🦀️.rs"]
+mod results_settle;
+#[path = "../🕰️history-undo-and-alternatives/🦀️.rs"]
+mod history_undo_and_alternatives;

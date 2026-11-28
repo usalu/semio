@@ -2321,7 +2321,10 @@
       "dependsOn": [
         "@semio-tech/os-plugin-describe-rs:build",
         "@semio-tech/os-plugin-native-transpile-rs:build",
-        "@semio-tech/framework-plugin-web:support"
+        "@semio-tech/framework-plugin-web:support",
+        "@semio-tech/flow-plugin:graph-generate",
+        "@semio-tech/stdio-plugin:composition-prepare",
+        "@semio-tech/stdio-plugin:composition-prepare-catalog-definition"
       ],
       "options": {
         "command": "repo ./📜️script.ts components",

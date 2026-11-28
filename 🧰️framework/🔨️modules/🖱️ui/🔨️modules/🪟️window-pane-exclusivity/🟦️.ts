@@ -49,3 +49,12 @@ export function windowViewportInsetV1(bodyWidthPx: number, panes: readonly Windo
   if (bodyWidthPx - cursor > best.to - best.from) best = { from: cursor, to: bodyWidthPx };
   return best.to - best.from < minViewportPx ? none : { leftPx: Math.round(best.from), rightPx: Math.round(bodyWidthPx - best.to) };
 }
+
+/** 📦️ A rectangle in viewport pixels. */
+export type WindowRectV1 = { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number };
+
+/** 🛬️ How far the shell docks that lie over the lower half of a window body reach up from its bottom edge: top-anchored panes stop that much higher, so their last rows and footers are never covered. Docks that miss the body, or reach into its upper half (they claim the viewport's side instead, {@link windowViewportCoverMinShare}), reserve nothing. */
+export function windowBottomDockReservePx(body: WindowRectV1, docks: readonly WindowRectV1[]): number {
+  const middle = body.top + (body.bottom - body.top) * windowViewportCoverMinShare;
+  return Math.round(docks.reduce((reserve, dock) => dock.right > body.left && dock.left < body.right && dock.bottom > dock.top && dock.top >= middle && dock.top < body.bottom ? Math.max(reserve, body.bottom - dock.top) : reserve, 0));
+}

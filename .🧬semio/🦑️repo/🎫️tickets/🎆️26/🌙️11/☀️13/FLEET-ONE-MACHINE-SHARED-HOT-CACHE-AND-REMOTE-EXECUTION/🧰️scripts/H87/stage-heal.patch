@@ -1,0 +1,91 @@
+--- ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts	2026-11-27 13:00:11
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H87/stage-heal/tree/./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts	2026-11-27 16:07:07
+@@ -10,7 +10,7 @@
+ import {compilerTemporaryArgumentsV1,lanePathsV1} from "./🧵️lane/🟦️.ts";
+ import {unitThreadsArgumentsV1,unitThreadsVerdictV1} from "./🧵️threads/🟦️.ts";
+ import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverBunStdioV1} from "./🎰️jobserver/🟦️.ts";
+-import {buildScriptsEnabledV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
++import {buildScriptsEnabledV1,healStaleBuildScriptShimsV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
+ import {awaitCompileAdmissionV1} from "./⏳️admit/🟦️.ts";
+ import {brokerOfV1,brokerWouldWaitV1,compilerBrokerOfV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
+ import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1} from "./🧹️gc/🟦️.ts";
+@@ -406,6 +406,7 @@
+ export async function runUnitCacheMainV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{
+  try{
+   if(argv[0]==="--semio-unit-cache"){console.log(JSON.stringify(await manageV1(argv.slice(1))));return 0;}
++  if(buildScriptsEnabledV1(environment)&&environment.CARGO_BUILD_BUILD_DIR)try{healStaleBuildScriptShimsV1(environment.CARGO_BUILD_BUILD_DIR);}catch{}
+   return await wrapRustcV1(argv,environment,cwd);
+  }catch(error){console.error(String((error as Error)?.message??error));return 1;}
+ }
+--- ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 16:00:03
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H87/stage-heal/tree/./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts	2026-11-27 16:07:07
+@@ -1,5 +1,5 @@
+ import {spawn} from "node:child_process";
+-import {chmodSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
++import {chmodSync,existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+ import {fileURLToPath} from "node:url";
+ import {physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
+ import {join} from "node:path";
+@@ -43,6 +43,26 @@
+  return real;
+ }
+ 
++/** 🩹️ Rewrites every stand-in under `buildDirectory` whose sealed module no longer exists (a unit Cargo keeps fresh forever carries the path it was written with), once per module and build directory; returns the number repaired. */
++export function healStaleBuildScriptShimsV1(buildDirectory:string,runtime:string=process.execPath):number{
++ const marker=join(buildDirectory,".shims-healed-"+toolchainFreeDigestV1(module));let repaired=0;
++ if(existsSync(marker))return 0;
++ const visit=(directory:string,depth:number):void=>{
++  let names:string[];try{names=readdirSync(directory);}catch{return;}
++  for(const name of names){
++   const path=join(directory,name);let facts;try{facts=statSync(path);}catch{continue;}
++   if(facts.isDirectory()){if(depth<4)visit(path,depth+1);continue;}
++   if(!facts.isFile()||facts.size>8192||!/^build[_-]script[_-]build/u.test(name)||name.endsWith(".real")||!isShimV1(path))continue;
++   const target=/exec '(?:[^']|'\\'')*' '((?:[^']|'\\'')*)' '/u.exec(readFileSync(path,"utf8"))?.[1]?.replaceAll("'\\''","'");
++   if(target!==undefined&&!existsSync(target)&&existsSync(path+".real")){try{installBuildScriptShimV1(path,runtime);repaired++;}catch{}}
++  }
++ };
++ visit(buildDirectory,0);
++ try{mkdirSync(buildDirectory,{recursive:true});writeFileSync(marker,String(repaired));}catch{}
++ return repaired;
++}
++const toolchainFreeDigestV1=(text:string):string=>{let hash=0;for(let index=0;index<text.length;index++)hash=Math.imul(hash^text.charCodeAt(index),16777619)>>>0;return hash.toString(16);};
++
+ /** 🔎️ Whether a file is already a stand-in (a script carrying the marker), not a compiled executable. */
+ export function isShimV1(path:string):boolean{
+  try{const head=readFileSync(path).subarray(0,256).toString("latin1");return head.startsWith("#!")&&head.includes(policy.buildScript.shimMarker);}catch{return false;}
+--- ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪦️retired-module/🟦️.ts	2026-11-27 16:00:03
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H87/stage-heal/tree/./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪦️retired-module/🟦️.ts	2026-11-27 16:07:19
+@@ -1,10 +1,10 @@
+ /** 🪦️ Contract: a cached build script stand-in whose sealed module was retired runs the real executable directly instead of failing with `Module not found` (m03, serde_core, 11/27). */
+ import {expect,test} from "bun:test";
+ import {spawnSync} from "node:child_process";
+-import {chmodSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
++import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+ import {tmpdir} from "node:os";
+ import {join} from "node:path";
+-import {shimSourceV1} from "../../🏗️buildscript/🟦️.ts";
++import {healStaleBuildScriptShimsV1,isShimV1,shimSourceV1} from "../../🏗️buildscript/🟦️.ts";
+ 
+ test("a stand-in whose module is gone runs the real build script with the same arguments",()=>{
+  const directory=mkdtempSync(join(tmpdir(),"semio-retired-module-"));
+@@ -17,3 +17,20 @@
+   expect(shimSourceV1(real,"/x").split("\n").some(line=>line.startsWith("[ -f "))).toBe(true);
+  }finally{rmSync(directory,{recursive:true,force:true});}
+ });
++
++test("a stale stand-in under a build directory is rewritten once to the current module, a sound one is left alone",()=>{
++ const directory=mkdtempSync(join(tmpdir(),"semio-heal-shim-"));
++ try{
++  const unit=join(directory,"build","serde_core","abc","out");mkdirSync(unit,{recursive:true});
++  const real=join(unit,"build_script_build.real"),shim=join(unit,"build_script_build"),sound=join(unit,"build_script_other");
++  writeFileSync(real,'#!/bin/sh\necho real\n');chmodSync(real,0o755);
++  const fresh=shimSourceV1(real,process.execPath),module=/^\[ -f '([^']+)' \]/u.exec(fresh.split("\n").find(line=>line.startsWith("[ -f "))!)![1]!;
++  const stale=fresh.replaceAll(module,"/retired/sealed/gone/🟦️.ts");
++  writeFileSync(shim,stale);chmodSync(shim,0o755);writeFileSync(sound,fresh);chmodSync(sound,0o755);
++  expect(isShimV1(shim)).toBe(true);
++  expect(healStaleBuildScriptShimsV1(join(directory,"build"))).toBe(1);
++  expect(readFileSync(shim,"utf8")).toContain(module);expect(readFileSync(shim,"utf8")).not.toContain("/retired/sealed/gone");
++  expect(readFileSync(sound,"utf8")).toBe(fresh);expect(existsSync(real)).toBe(true);
++  expect(healStaleBuildScriptShimsV1(join(directory,"build"))).toBe(0);
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});

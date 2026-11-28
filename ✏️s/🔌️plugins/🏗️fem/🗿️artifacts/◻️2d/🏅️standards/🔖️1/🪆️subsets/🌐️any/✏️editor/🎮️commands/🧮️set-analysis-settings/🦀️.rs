@@ -34,17 +34,20 @@ pub struct SetAnalysisSettings {
 
 /// 🧮️ Applies ONE named analysis field, leaving the rest of the settings alone.
 fn apply_field(settings: &mut FemAnalysisSettings, field: &str, value: &str) -> Result<(), Fault> {
-    let number = value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem2d.analysis.value: '{value}' is not a number")))?;
+    let number = value.trim().parse::<f64>().map_err(|_| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem2d.analysis.value"), format!("'{value}' is not a number")).with_param("value", value))?;
     match field {
         "modalCount" => settings.modal_count = number.max(0.0) as usize,
         "bucklingCount" => settings.buckling_count = number.max(0.0) as usize,
         "deformationScale" => settings.deformation_scale = number,
-        other => return Err(Fault::from(format!("fem2d.analysis.field: '{other}' is not an analysis field"))),
+        other => return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem2d.analysis.field"), format!("'{other}' is not an analysis field")).with_param("field", other)),
     }
     Ok(())
 }
 
 pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    if payload.modal_count.is_none() && payload.buckling_count.is_none() && payload.deformation_scale.is_none() && payload.field.as_deref().is_none_or(str::is_empty) {
+        return Err(Fault::from("fem2d.analysis.nothing"));
+    }
     let current = &doc.snapshot.analysis;
     let mut settings = FemAnalysisSettings {
         modal_count: payload.modal_count.map_or(current.modal_count, |value| value as usize),

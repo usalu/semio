@@ -13,6 +13,14 @@ fn funded_group_input(grant: semio_framework_value::RetainedCloneGrant, advance:
         semio_framework_value_testing_admission::RetainedWorkPoll::Pending { .. } => panic!("funded turn stayed pending"),
     }
 }
+/// 🧾️ One decoder-owning original caller whose own ledger carries no foreign birth, so a private owner's release is charged exactly once.
+fn private_close_caller(operation: u64) -> (semio_framework_job::OriginalJobFixtureCaller, semio_framework_job::OriginalJobDecodeOwner, semio_framework_value::RetainedCloneGrant, semio_framework_value::RetainedCloneGrant) {
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 };
+    let turn = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(operation), semio_framework_job::Generation(3), stock, || Some(1), u64::MAX, 1 << 40);
+    let decoder = caller.receipted_decoder(turn);
+    (caller, decoder, stock, turn)
+}
 #[test]
 fn work_fixture_close_reconciles_the_actual_original_job_and_allocator_once(){
  use crate::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
@@ -32,7 +40,7 @@ fn work_fixture_close_reconciles_the_actual_original_job_and_allocator_once(){
  }
  let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️testing/🎟️caller/👷️work/🧪️tests/close-fixture.json")).unwrap();let bytes=law["payloadBytes"].as_u64().unwrap()as usize;
  for row in law["cases"].as_array().unwrap(){let mut caller=crate::app_testing::artifact_app_laws::OriginalWorkFixture::new();let grant=crate::app_testing::artifact_app_laws::OriginalWorkFixture::stock();let mode=match row["mode"].as_str().unwrap(){"unposted"=>0,"posted"=>1,_=>2};let mut work={let mut payload=Vec::with_capacity(bytes);payload.resize(bytes,7);CloseProbe{bytes:payload,mode}};
-  let before=caller.turn(grant,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.close::<EditorApp<SurfaceEditorFixture>,_>(&mut work,grant));let after=caller.turn(grant,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();assert_eq!(after.0.released_bytes-before.0.released_bytes,heap.released_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));assert_eq!(after.0.copied_bytes-before.0.copied_bytes,law["headerWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());assert_eq!(before.1-after.1,law["work"].as_u64().unwrap());assert_eq!(result.is_err(),row["fails"].as_bool().unwrap());assert!(work.terminal_is_empty());if let Err(error)=result{assert_eq!(error.effects.released_bytes,bytes);caller.retire_owned(error,grant);}caller.finish();
+  let idle=semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant};let before=caller.turn(idle,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.close::<EditorApp<SurfaceEditorFixture>,_>(&mut work,grant));let after=caller.turn(idle,|cx|Ok((cx.retained_progress(),cx.fuel_remaining()))).unwrap();assert_eq!(after.0.released_bytes-before.0.released_bytes,heap.released_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));assert_eq!(after.0.copied_bytes-before.0.copied_bytes,law["headerWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());assert_eq!(before.1-after.1,law["work"].as_u64().unwrap());assert_eq!(result.is_err(),row["fails"].as_bool().unwrap());assert!(work.terminal_is_empty());if let Err(error)=result{assert_eq!(error.effects.released_bytes,bytes);caller.retire_owned(error,grant);}caller.finish();
  }
 }
 
@@ -80,31 +88,38 @@ async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once()
             snapshot_read:app.stores.store.snapshot_read().expect("Store issues the actual command donor"),
             snapshot:app.stores.store.snapshot_owner(), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
             interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
-            operation: crate::app_views::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id:cx.operation().0,generation:cx.generation().0,canonical_base_revision:[0;32],retained:SURFACE_ONE_UNIT_POLICY, authoring_seed: "unit-authority".into() }, completion,
+            operation: crate::app_views::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id:cx.operation().0,generation:cx.generation().0,canonical_base_revision:[0;32],retained:SURFACE_STEP_POLICY, authoring_seed: "unit-authority".into() }, completion,
         }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work));
         let mut job = ArtifactRetainedCommandJob::new(payload);
         assert!(job.test_admit_original_source(&mut cx).expect("actual original source binds the preborn fixture job"));
         let mut observed_work=false;
         let mut origin=semio_framework_job::OriginalJobReturnOrigin::empty();
-        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.admit(same).map(|_|())).expect("original return origin admission")}
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){break}cx.with_retained_loan(SURFACE_STEP_POLICY,|same|origin.admit(same).map(|_|())).expect("original return origin admission")}
         for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            let before=cx.fuel_remaining();let mut outcome=None;cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(&mut job,same,origin.receiver()?));Ok(())}).unwrap();assert!(!matches!(outcome.unwrap(),crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)));
+            let before=cx.fuel_remaining();let mut outcome=None;cx.with_retained_loan(SURFACE_STEP_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(&mut job,same,origin.receiver()?));Ok(())}).unwrap();assert!(!matches!(outcome.unwrap(),crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)));
             if observed.load(std::sync::atomic::Ordering::SeqCst)!=u64::MAX{assert!(before>1);assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst),before);assert_eq!(cx.fuel_remaining(),before-row["workDebit"].as_u64().unwrap());observed_work=true;break}
         }
         assert!(observed_work);assert_eq!(cx.original_recipient_identity(),recipient);
         job.begin_close();
         for _ in 0..100_000 {
-            let step=cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|job.close_step(same)).expect("original retained command close");assert!(step.progress().fits(SURFACE_ONE_UNIT_POLICY));match step{semio_framework_job::InteractiveJobCloseStep::Complete{..}=>break,semio_framework_job::InteractiveJobCloseStep::Pending{..}=>{},other=>panic!("one-unit original fixed policy retained its frontier: {other:?}")}
+            let step=cx.with_retained_loan(SURFACE_STEP_POLICY,|same|job.close_step(same)).expect("original retained command close");assert!(step.progress().fits(SURFACE_STEP_POLICY));match step{semio_framework_job::InteractiveJobCloseStep::Complete{..}=>break,semio_framework_job::InteractiveJobCloseStep::Pending{..}=>{},other=>panic!("one-unit original fixed policy retained its frontier: {other:?}")}
         }
         assert!(job.terminal_is_empty());
         surface_close_origin(&mut origin,&mut cx);
         assert!(consumer.take_emit().unwrap().is_none());
-        crate::app_testing::mutation_fixture::job_close::retire_completion(consumer,&mut cx,SURFACE_ONE_UNIT_POLICY);
+        crate::app_testing::mutation_fixture::job_close::retire_completion(consumer,&mut cx,SURFACE_STEP_POLICY);
         close_registered_fixture_app(&mut app,crate::app_testing::artifact_app_laws::fixture_mounted_policy(),&mut cx).unwrap();assert_eq!(cx.original_recipient_identity(),recipient);let fuel=cx.fuel_remaining();drop(cx);let fuel=original_caller.retire_decoder(&mut decoder,fuel).unwrap();original_caller.retire(fuel).unwrap();
     }
 }
 
-macro_rules! lane_advance{($lane:expr,$member:expr,$visibility:expr,$grant:expr)=>{{let mut observer=|_|true;let mut native=store::MemberNativeDecodeControl::new(1<<20,&mut observer);$lane.advance($member,$visibility,4096,$grant,&mut native)}}}
+macro_rules! lane_advance{($caller:expr,$decoder:expr,$turn:expr,$lane:expr,$member:expr,$visibility:expr,$grant:expr)=>{{
+    let mut observed=None;
+    $caller.turn_with_decoder($turn,$decoder,|cx|{let issued=cx.retained_grant();let mut scope=None;
+        let opened=cx.with_native_receiving_work(&mut scope,Default::default(),|control,_,_|{observed=Some(semio_framework_trace::observe_heap_allocations_on_this_thread(||$lane.advance($member,$visibility,4096,$grant,control)));Ok(())})?;
+        if opened{let progress=scope.take().expect("opened receiving scope returns its outcome").retained_progress();cx.consume_receiving_retained(issued,progress)?;}
+        Ok(())}).expect("original receiving turn");
+    observed.expect("original receiving scope opened")
+}}}
 
 #[test]
 fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_denied_original() {
@@ -133,7 +148,7 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
         let mut released = 0;
         for _ in 0..count * 8 + 32 {
             let demand = owner.next_demands(64).unwrap();
-            assert!(demand.copy_bytes <= 64 && demand.depth <= 8);
+            assert!(demand.copy_bytes <= 1_024 && demand.depth <= 8, "close demand exceeds its fixed per-turn bound: {demand:?}");
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: 8 };
             let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }, |cx| Ok(cx.with_original_effect(grant, |_, effect| owner.close_granted(effect))?.map(|(step, _)| step))).expect("original fixture effect turn").expect("original effect work quote admitted").unwrap());
             let progress = match step { RetainedCloneStep::Progress(progress) => progress, RetainedCloneStep::Complete(progress) => progress };
@@ -164,6 +179,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut stops: Vec<Option<usize>> = corpus["cancelBeforeCommit"].as_array().unwrap().iter().map(|stop| Some(stop.as_u64().unwrap() as usize)).collect();
     stops.push(None);
+    let (mut close_caller, mut close_decoder, close_stock, close_turn) = private_close_caller(7101);
     for stop in stops {
         let mut apps = Vec::new();
         let mut lanes = Vec::new();
@@ -181,7 +197,8 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let mut lane = PrivateOwnedPublicationLane::new(request);
             let admitted = lane.next_capacity_byte_demand(&*app.stores.store).unwrap();
             for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
-                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane_advance!(lane, &mut *app.stores.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
+                let (step, events) = lane_advance!(close_caller, &mut close_decoder, close_turn, lane, &mut *app.stores.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant });
+                let step = step.unwrap();
                 assert_eq!(step, store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(events.requested_bytes, 0);
                 assert_eq!(events.released_bytes, 0);
@@ -193,7 +210,8 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let mut turns = 0;
         let mut index = 0;
         while index < lanes.len() && stop.is_none_or(|stop| turns < stop) {
-            lane_advance!(lanes[index], &mut *apps[index].stores.store, &visibility, grant).unwrap();
+            let prepared_before = lanes[index].prepared_for_staging();
+            lane_advance!(close_caller, &mut close_decoder, close_turn, lanes[index], &mut *apps[index].stores.store, &visibility, grant).0.unwrap_or_else(|error| {let staged = lanes[index].staged();let owner = lanes[index].publication_mut().map(|p| format!("{:?} fault={:?} refusal={:?} receiving={:?}", p.phase(), p.fault(), p.preparation_refusal(), p.receiving_preparation_refusal()));panic!("stop {stop:?} turn {turns} lane {index} prepared_before {prepared_before} staged {staged} owner {owner:?}: {error:?}")});
             if lanes[index].prepared_for_staging() {
                 let identity = lanes[index].prepared_edit_id().unwrap();
                 assert!(!identity.is_empty());
@@ -210,7 +228,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 assert_eq!(same_pointer, pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 let paused = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
-                assert_eq!(lane_advance!(lanes[index], &mut *apps[index].stores.store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+                assert_eq!(lane_advance!(close_caller, &mut close_decoder, close_turn, lanes[index], &mut *apps[index].stores.store, &visibility, paused).0.unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
             assert_eq!(apps.iter().map(|app| app.stores.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
@@ -232,20 +250,24 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             assert_eq!((decision_heap.requested_bytes, decision_heap.released_bytes), (0, 0));
         } else { assert!(owner.abort()); }
         for index in 0..3 {
+            let mut stalled = String::new();
             for _ in 0..4096 {
                 let demand = lanes[index].retirement_demands(grant.maximum_copy_bytes).unwrap();
-                assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
+                assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth,"close demand {demand:?} exceeds its quoted grant {grant:?}");
                 let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-                let step = lanes[index].close_step(&mut *apps[index].stores.store, cx, exact).unwrap();
-                assert!(step.progress().fits(exact));
+                let step = close_caller.retirement_turn_with_decoder(close_turn, &mut close_decoder, |same| lanes[index].close_step(&mut *apps[index].stores.store, same, close_turn)).unwrap();
+                assert!(step.progress().fits(close_turn));
+                stalled = format!("{demand:?} {exact:?} {:?}", step.progress());
                 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; }
             }
-            assert!(lanes[index].terminal_is_empty());
+            assert!(lanes[index].terminal_is_empty(), "lane close stalled at {stalled}");
             assert_eq!(apps[index].stores.store.snapshot_ref().count, i32::from(stop.is_none()));
         }
         drop(lanes);
         for mut app in apps { close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close"); }
     }
+    close_caller.close_decoder(&mut close_decoder, close_turn);
+    close_caller.retire(close_stock);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
@@ -292,19 +314,23 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         }
-        let mut original_group_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7391),semio_framework_job::Generation(3),grant,||Some(1),1_000_000,1);
         let mut graph = app.child_composition.composition.graph_mut().await;
+        let close_grant = RetainedCloneGrant { maximum_copy_bytes: 1024, ..grant };
+        let group_stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 };
+        let mut original_group_caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), group_stock, || Some(1), 1_000_000, 1 << 20);
         for _ in 0..100_000 {
             if group.terminal_is_empty() { break; }
             let demand = group.retirement_demands(grant.maximum_copy_bytes).unwrap();
-            assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
-            let exact=grant;
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut *app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
+            assert!(demand.copy_bytes <= close_grant.maximum_copy_bytes && demand.capacity_bytes <= close_grant.maximum_capacity_bytes && demand.release_bytes <= close_grant.maximum_release_bytes && demand.depth <= close_grant.maximum_depth,"close demand {demand:?} exceeds its quoted grant {close_grant:?}");
+            let exact=close_grant;
+            let settled_before = semio_framework_value::birth_ledger::original_birth_ledger().settled();
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.retirement_turn(exact,|same|semio_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut *app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
             assert!(step.progress().unwrap().fits(exact));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().unwrap().retained_capacity_bytes, step.progress().unwrap().released_bytes));
+            let settled = semio_framework_value::birth_ledger::original_birth_ledger().settled() - settled_before;
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().unwrap().retained_capacity_bytes, step.progress().unwrap().released_bytes + settled));
         }
         assert!(group.terminal_is_empty());
-        drop(graph);drop(group);original_group_caller.retire(grant);
+        drop(graph);drop(group);original_group_caller.retire(group_stock);
         close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     }
     }

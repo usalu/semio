@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 use semio_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, MediaClass, MediaForm, MediaPayload};
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
-use crate::editor::sourcing::config::{SetContributionsEdit, SetFilterModulesEdit, SetFilterQueryEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SetContributionsEdit, SetFilterQueryEdit, ToggleFilterModuleEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool, load_document_json, set_active_example, set_contributions, set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit;
@@ -98,8 +98,8 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value }) if value == &base.filters.query));
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) })).is_ok());
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) })).is_err());
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: Vec::new() })).is_ok(), "clearing the module filter is a retained edit");
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] })).is_err());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::ToggleFilterModule(ToggleFilterModuleEdit { module_id: "beams".into(), enabled: false })).is_ok(), "clearing a module filter is a retained edit");
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::ToggleFilterModule(ToggleFilterModuleEdit { module_id: "m".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1), enabled: true })).is_err());
     assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, 768 + SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the retained config store is the filter envelope plus its own contributions lane");
     assert_eq!(SOURCING_CURATION_CONFIG_GRANT_BYTES, 4_096, "one config turn must still fit the host's fixed 4 KiB typed-operation page grant");
 }
@@ -309,6 +309,51 @@ async fn the_min_availability_release_sent_while_its_tick_still_publishes_settle
     drain_live_cleanup_to_idle(&mut app);
     drop(browser);
     assert_eq!(app.0.rendered_config().filters.min_availability, BROWSER_PRESS_MIN_AVAILABILITY, "the released press must filter the Pool");
+}
+
+/// 🌐️ LAW: two module toggles sent back to back while the first still publishes both land and both operations settle; the second is never lost to the first one's config commit.
+#[semio_framework_async_macros::async_test]
+async fn back_to_back_module_toggles_sent_while_the_first_still_publishes_both_apply() {
+    use crate::editor_unit_tests::context::{dispatch_wire_unsettled, settle};
+    let mut app = browser_press_app().await;
+    let browser = browser_grant();
+    for module in ["beams", "windows"] {
+        let arguments = format!(r#"{{"moduleId":"{module}","enabled":true,"windowId":"sourcing-pool"}}"#);
+        dispatch_wire_unsettled(&mut app, "setFilterModule", &arguments).await.unwrap_or_else(|fault| panic!("{arguments}: {fault:?}"));
+    }
+    settle(&mut app).await;
+    drain_live_cleanup_to_idle(&mut app);
+    drop(browser);
+    assert_eq!(app.0.rendered_config().filters.module_ids, vec!["beams".to_string(), "windows".to_string()], "both toggles must filter the Pool");
+}
+
+/// 🧾️ LAW: a typed operation's retirement posts direct units and then one granted run inside one publication window, and the window's original receipt covers every effect it posted, whatever per-turn grant the host issues; a receipt smaller than the window refuses the whole turn.
+#[semio_framework_async_macros::async_test]
+async fn retirement_receipts_cover_the_whole_publication_window_under_every_host_grant() {
+    use crate::editor_unit_tests::context::{dispatch_wire_unsettled, settle};
+    for (items, copy_kib) in [(64usize, 520usize), (48, 400), (32, 260)] {
+        let mut app = browser_press_app().await;
+        let stock = semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy_kib * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+        let _grant = (semio_plugin::artifact_app_laws::arm_host_turn_grant(stock), semio_plugin::artifact_app_laws::arm_host_turn_fuel(BROWSER_TURN_FUEL));
+        for module in ["beams", "windows"] {
+            let arguments = format!(r#"{{"moduleId":"{module}","enabled":true,"windowId":"sourcing-pool"}}"#);
+            dispatch_wire_unsettled(&mut app, "setFilterModule", &arguments).await.unwrap_or_else(|fault| panic!("{items} items {arguments}: {fault:?}"));
+                settle(&mut app).await;
+        }
+        drain_live_cleanup_to_idle(&mut app);
+        assert_eq!(app.0.rendered_config().filters.module_ids, vec!["beams".to_string(), "windows".to_string()], "{items} items: every retired operation settles inside its window receipt");
+    }
+}
+
+/// 🚧️ LAW: a per-turn host grant below the instance birth quote (`ToolCancellationIssuer::admission_demands`, `plugin/♻️cancellation/🎟️issuer`) never opens the instance, so it is refused at the first dispatch, before any operation, publication window or retirement exists; the retirement receipt law above holds for every grant at or above that quote.
+#[semio_framework_async_macros::async_test]
+async fn a_host_grant_below_the_instance_birth_quote_is_refused_before_any_operation_exists() {
+    use crate::editor_unit_tests::context::dispatch_wire_unsettled;
+    let mut app = browser_press_app().await;
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 16, maximum_copy_bytes: 128 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+    let _grant = (semio_plugin::artifact_app_laws::arm_host_turn_grant(stock), semio_plugin::artifact_app_laws::arm_host_turn_fuel(BROWSER_TURN_FUEL));
+    let refusal = dispatch_wire_unsettled(&mut app, "setFilterModule", r#"{"moduleId":"beams","enabled":true,"windowId":"sourcing-pool"}"#).await.expect_err("an unaffordable instance birth refuses the dispatch");
+    assert!(format!("{refusal:?}").contains("cancellation issuer birth exceeded its authored turn bound"), "{refusal:?}");
 }
 
 const BROWSER_PRESS_MIN_AVAILABILITY: u32 = 25;

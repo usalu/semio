@@ -321,12 +321,9 @@ impl Lowering<'_> {
             self.set(reference, value);
         }
         for properties in &self.snapshot.properties {
+            if self.property_group(&properties.name).is_some() { continue; }
             let reference = self.refs[&(Category::Properties, properties.name.clone())];
-            let value = match properties.entries.as_slice() {
-                [PdfDictEntry { key, value: PdfObject::Name(group) }] if key == "OCG" => self.reference(Category::OptionalContent, group).unwrap_or(PdfObject::Dict(properties.entries.clone())),
-                entries => PdfObject::Dict(entries.to_vec()),
-            };
-            self.set(reference, value);
+            self.set(reference, PdfObject::Dict(properties.entries.clone()));
         }
         Ok(())
     }

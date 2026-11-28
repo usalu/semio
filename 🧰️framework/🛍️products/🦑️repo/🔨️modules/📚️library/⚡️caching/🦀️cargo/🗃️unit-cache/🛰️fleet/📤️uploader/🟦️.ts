@@ -1,12 +1,13 @@
 import {spawn} from "node:child_process";
 import {createHash,randomBytes} from "node:crypto";
-import {existsSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,statfsSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
+import {physicalSourceOriginV1,type PhysicalSourceModuleMetaV1} from "../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import {claimHeldV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {dropSpillObjectsV1,newestBuildRunV1,newestEntryV1,emitUnitEventV1,readSpilledEntryV1,readSpillObjectV1} from "../../💾️store/🟦️.ts";
 import {packRunV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
-import {canonicalDepInfoV1} from "../../🔏️key/🔗️sources/🟦️.ts";
+import {canonicalOutputV1,STREAM_NAME_V1} from "../../🔏️key/🔗️sources/🟦️.ts";
 import {casRootV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {readCasObjectSyncV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 import {pinCasV1,releaseCasPinsV1} from "../../../../../🏗️build/🗄️cas/📌️pins/🟦️.ts";
@@ -16,6 +17,7 @@ import {remoteCacheFetchV1} from "../../../../../🏗️build/🌐️remote-cach
 import {FLEET_POLICY_V1,portableRootsV1,portableTextV1,type PlatformV1,type ToolRootsV1} from "../🪪️identity/🟦️.ts";
 import {adoptFleetUnitV1} from "../📥️adopt/🟦️.ts";
 import {registerSpoolV1} from "../📮️registry/🟦️.ts";
+import {spoolBoundV1,spoolDirectoryV1,spoolLengthV1} from "../📏️spool-size/🟦️.ts";
 import {packUnitV1,type KeyComponentsV1,type RemoteUnitV1} from "../📦️wire/🟦️.ts";
 import {countSkipV1,countUnitV1,noteSpoolV1,writeBuildCountersV1} from "../📊️counters/🟦️.ts";
 import {publishRootHintByKeyV1} from "../🟦️.ts";
@@ -27,7 +29,6 @@ type Environment=Readonly<Record<string,string|undefined>>;
 /** 🧾️ One unit waiting for upload (`SpoolJob` of the schema). */
 export type SpoolJobV1={version:1;key:string;localKey:string;slot:string;crate:string;cwd:string;workspace:string|null;laneRoot:string|null;owner:string;claimed:boolean;offer?:boolean;run?:boolean;tools?:ToolRootsV1;hint?:{neutralKey:string;kinds:string[]};keyComponents?:KeyComponentsV1;costMs:number;platform:PlatformV1;queuedMs:number;attempts?:number;notBeforeMs?:number;deferredBy?:string};
 
-const spoolDirectory=(root:string)=>join(root,fleet.layout.state,fleet.layout.spool);
 const offeredPath=(root:string,key:string)=>join(root,fleet.layout.state,"offered",key.slice(0,2),key);
 
 /** 🏷️ Whether this machine already settled the unit with the fleet cache (uploaded it, found it there, or installed it from there). */
@@ -35,22 +36,10 @@ export function offeredV1(root:string,key:string):boolean{try{statSync(offeredPa
 /** 🏷️ Remembers that the unit is settled, so later local hits do not offer it again. */
 export function markOfferedV1(root:string,key:string):void{try{const path=offeredPath(root,key);mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"");}catch{}}
 
-const bounds=new Map<string,{at:number;entries:number}>();
-
-/** 📏️ How many units the spool of this cache root may hold: `spool.freeSharePercent` of the free room of its disk, one entry per `spool.entryBytes`, between `spool.minimumEntries` and `spool.maximumEntries` (a machine with a small disk still holds a build's worth, a big one never fills its disk with queue files). Re-measured every `spool.boundTtlMilliseconds`. */
-export function spoolBoundV1(root:string):number{
- const policy=fleet.spool,known=bounds.get(root),now=Date.now();
- if(known!==undefined&&now-known.at<policy.boundTtlMilliseconds)return known.entries;
- let entries=policy.minimumEntries;
- try{const stats=statfsSync(root);entries=Math.floor(Number(stats.bavail)*Number(stats.bsize)*policy.freeSharePercent/100/policy.entryBytes);}catch{}
- entries=Math.min(policy.maximumEntries,Math.max(policy.minimumEntries,entries));
- bounds.set(root,{at:now,entries});return entries;
-}
-
 /** 📮️ Queues a unit for upload: one small file renamed into the spool, `false` (the unit is not queued; the caller waits for room or counts it) when the spool holds {@link spoolBoundV1} units already; offers of local hits may fill half of it, so they never crowd out a unit that was just compiled. Never waits for the network. */
 export function enqueueUploadV1(root:string,job:SpoolJobV1,bound?:number):boolean{
  try{
-  const directory=spoolDirectory(root);mkdirSync(directory,{recursive:true});
+  const directory=spoolDirectoryV1(root);mkdirSync(directory,{recursive:true});
   const waiting=readdirSync(directory).filter(name=>name.endsWith(".json")),limit=bound??spoolBoundV1(root);
   if(waiting.some(name=>name.endsWith("-"+job.key.slice(0,16)+".json")))return true;
   if(waiting.length>=(job.offer?limit/2:limit))return false;
@@ -64,10 +53,8 @@ function rewriteJobV1(path:string,job:SpoolJobV1):boolean{
  try{const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";writeFileSync(temporary,JSON.stringify(job));renameSync(temporary,path);return true;}catch{return false;}
 }
 
-/** 🔢️ How many units wait in the spool. */
-export function spoolLengthV1(root:string):number{try{return readdirSync(spoolDirectory(root)).filter(name=>name.endsWith(".json")).length;}catch{return 0;}}
 
-const scriptOf=()=>{const path=fileURLToPath(new URL("../../📜️script.ts",import.meta.url));return existsSync(path)?path:undefined;};
+const scriptOf=()=>{const path=fileURLToPath(new URL("../../📜️script.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)));return existsSync(path)?path:undefined;};
 
 /** 🚀️ Starts the upload worker when none is alive (`true` when it started one) and registers the root with the machine's sidecar, which starts the worker again whenever the spool holds jobs and none lives (a build that ends, a worker that is killed or crashes, a machine that restarts): one detached process per machine (a lock file with a heartbeat names it), without any inherited descriptor, so Cargo never waits for it and the compiler's exit is not delayed by uploads. A start storm is throttled per cache identity: the stamp names the identity of the last start, so a build whose credential, endpoint or generation changed within `uploader.spawnThrottleMilliseconds` of that start still hands the spool over to a successor at once, and the drainer of the old identity (which lives as long as any job waits) never keeps the lock. */
 export function startUploaderV1(root:string,environment:Environment):boolean{
@@ -127,9 +114,9 @@ async function sendV1(client:FleetClientV1,job:SpoolJobV1,upload:Readonly<{blobs
 }
 
 /** 📤️ Builds and uploads one spooled unit: reads the local entry and its objects (within the in-flight byte budget, {@link withUploadBytesV1}), turns every path into its token, uploads the blobs the server lacks and then the action result. See {@link UploadOutcomeV1} for the ends; `"retry"`, `"capacity"` queue the job again (see {@link retryJobV1}). */
-export async function uploadUnitV1(client:FleetClientV1,root:string,job:SpoolJobV1):Promise<UploadOutcomeV1>{
- const roots=portableRootsV1({cwd:job.cwd,workspace:job.workspace??undefined,...job.tools}),cas=casRootV1();
- if(job.run===true)return uploadRunV1(client,root,job,roots);
+export async function uploadUnitV1(client:FleetClientV1,root:string,job:SpoolJobV1,environment:Environment=process.env):Promise<UploadOutcomeV1>{
+ const roots=portableRootsV1({cwd:job.cwd,workspace:job.workspace??undefined,...job.tools}),cas=casRootV1(environment);
+ if(job.run===true)return uploadRunV1(client,root,job,roots,cas);
  const entry=newestEntryV1(root,job.localKey)??readSpilledEntryV1(root,job.localKey);if(!entry)return "gone";
  if(entry.session===true)return false;
  const declared=entry.outputs.reduce((sum,output)=>sum+(Number(output.bytes)||0),0);
@@ -142,7 +129,7 @@ async function sendEntryV1(client:FleetClientV1,root:string,job:SpoolJobV1,entry
  let total=0,missing=false;
  const convert=(sha256:string,text:boolean,name=""):string|undefined=>{
   const bytes=readCasObjectSyncV1(cas,sha256)??readSpillObjectV1(root,sha256);if(!bytes){missing=true;return undefined;}
-  const out=text?encoder.encode(portableTextV1(name.endsWith(".d")?canonicalDepInfoV1(decoder.decode(bytes)):decoder.decode(bytes),roots)):new Uint8Array(bytes);total+=out.length;
+  const out=text?encoder.encode(portableTextV1(canonicalOutputV1(name,decoder.decode(bytes)),roots)):new Uint8Array(bytes);total+=out.length;
   if(out.length>limits.maximumBlobBytes||total>limits.maximumEntryBytes)return undefined;
   const hash=sha(out);contents.set(hash,out);return hash;
  };
@@ -153,7 +140,7 @@ async function sendEntryV1(client:FleetClientV1,root:string,job:SpoolJobV1,entry
    const hash=convert(output.sha256,output.template===true,output.name);if(hash===undefined)return failed();
    outputs.push({name:output.name,sha256:hash,bytes:contents.get(hash)!.length,executable:output.executable,...(output.template?{template:true}:{})});
   }
-  const stream=(value:string|null|undefined):string|null|undefined=>value==null?null:convert(value,true);
+  const stream=(value:string|null|undefined):string|null|undefined=>value==null?null:convert(value,true,STREAM_NAME_V1);
   const stdout=stream(entry.stdout),stderr=stream(entry.stderr);if(stdout===undefined||stderr===undefined)return failed();
   const unit:RemoteUnitV1={version:1,key:job.key,localKey:job.localKey,slot:job.slot,crate:job.crate,platform:job.platform,createdMs:entry.createdMs,costMs:job.costMs,dependencies:entry.dependencies.map(row=>({path:portableTextV1(row.path,roots),sha256:row.sha256})),environment:entry.environment.map(row=>({name:row.name,value:row.value===null?null:portableTextV1(row.value,roots)})),outputs,stdout,stderr,...(job.keyComponents===undefined?{}:{keyComponents:job.keyComponents}),...(entry.retention===undefined?{}:{retention:entry.retention})};
   return await sendV1(client,job,packUnitV1(unit,contents));
@@ -161,9 +148,9 @@ async function sendEntryV1(client:FleetClientV1,root:string,job:SpoolJobV1,entry
 }
 
 /** 📤️ {@link uploadUnitV1} for the run of a build script: the local run entry and its objects become one manifest (`run.json` and one `f:` output per OUT_DIR file) with the roots of the machine as tokens. A run that still names a directory of this machine is not uploaded. */
-async function uploadRunV1(client:FleetClientV1,root:string,job:SpoolJobV1,roots:ReturnType<typeof portableRootsV1>):Promise<UploadOutcomeV1>{
+async function uploadRunV1(client:FleetClientV1,root:string,job:SpoolJobV1,roots:ReturnType<typeof portableRootsV1>,cas:string):Promise<UploadOutcomeV1>{
  const entry=newestBuildRunV1(root,job.localKey);if(!entry)return "gone";
- const cas=casRootV1(),packed=packRunV1(entry,{key:job.key,localKey:job.localKey,slot:job.slot,platform:job.platform,costMs:job.costMs},roots,digest=>readCasObjectSyncV1(cas,digest)??readSpillObjectV1(root,digest));
+ const packed=packRunV1(entry,{key:job.key,localKey:job.localKey,slot:job.slot,platform:job.platform,costMs:job.costMs},roots,digest=>readCasObjectSyncV1(cas,digest)??readSpillObjectV1(root,digest));
  if(typeof packed==="string")return packed==="too-large"?"oversize":packed==="unreadable"?"gone":false;
  try{return await sendV1(client,job,packUnitV1(packed.unit,packed.contents));}catch{return "retry";}
 }
@@ -184,6 +171,9 @@ function jobDigestsV1(root:string,job:SpoolJobV1):string[]{
 
 /** 🚰️ The summary of one drain. */
 export type DrainResultV1=Readonly<{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}>;
+
+/** 🫧️ Gives the heap of an idle uploader back: a drain that ran a busy period leaves the buffers of its uploads as garbage the allocator keeps (an uploader that waited 9 hours for work held 2.1 GB of footprint, nearly all of it dirty and compressed), so one full collection and a shrink run when the spool becomes empty. */
+const releaseHeapV1=():void=>{try{(globalThis as {Bun?:{gc(force:boolean):void;shrink?:()=>void}}).Bun?.gc(true);(globalThis as {Bun?:{shrink?:()=>void}}).Bun?.shrink?.();}catch{}};
 
 /** 🚰️ Drains the spool until it has been empty for `idleMilliseconds` (default `uploader.idleMilliseconds`, `SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS` overrides; or once, with `idleMilliseconds` 0): one drainer per machine holds the lock (on an idle end it releases the lock, then clears the spawn stamp, then looks at the spool again: a unit queued while it was ending either is seen by it or finds neither a worker nor a throttle, so it is never left without a worker), takes units oldest first, uploads a few at a time in a sliding pool (`maximumUploadJobs`, so one slow upload never stalls the others), and lives as long as any job waits, so a cache that is down for minutes costs no unit. A job leaves the spool only when it is uploaded, settled by the fleet, refused for good, or too old; a job that must wait (cache down or busy or full) is rewritten in place with a later due time and keeps its slot. The claim of a unit that was not uploaded is released so a waiter can take over. A drainer lives with the cache identity it started with (endpoint, generation, token): `takeover` names a new identity in `uploader.identity`, the old drainer finishes its running uploads and leaves, and this one replaces it (the next compile with another identity does the same through {@link startUploaderV1}). */
 export async function drainUploadsV1(root:string,environment:Environment,options:Readonly<{idleMilliseconds?:number;signal?:AbortSignal;takeover?:boolean}>={}):Promise<DrainResultV1|"busy">{
@@ -209,15 +199,15 @@ async function drainPassV1(root:string,environment:Environment,options:Readonly<
  let lock=tryClaimV1(directory,"uploader");
  if(!lock&&options.takeover===true){if(identity()!==settings.identity)try{writeFileSync(identityFile,settings.identity);}catch{}const until=Date.now()+fleet.uploader.takeoverMilliseconds;while(!lock&&Date.now()<until&&identity()===settings.identity){await new Promise(done=>setTimeout(done,500));lock=tryClaimV1(directory,"uploader");}}
  if(!lock)return "busy";
- const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:workspace||root})}),idle=options.idleMilliseconds??(Number(environment.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS)||fleet.uploader.idleMilliseconds),spool=spoolDirectory(root),policy=fleet.uploader,result:{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}={uploaded:0,failed:0,dropped:0};
- const cas=casRootV1(),pinHolder="unit-spool-"+sha(encoder.encode(root)).slice(0,16),pinned=new Map<string,string[]>();let pinnedAt=0,pinsChanged=false,pinning:Promise<void>=Promise.resolve();
+ const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:workspace||root})}),idle=options.idleMilliseconds??(Number(environment.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS)||fleet.uploader.idleMilliseconds),spool=spoolDirectoryV1(root),policy=fleet.uploader,result:{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}={uploaded:0,failed:0,dropped:0};
+ const cas=casRootV1(environment),pinHolder="unit-spool-"+sha(encoder.encode(root)).slice(0,16),pinned=new Map<string,string[]>();let pinnedAt=0,pinsChanged=false,pinning:Promise<void>=Promise.resolve();
  const pin=(now:number):void=>{
   if(!(pinsChanged&&now-pinnedAt>=policy.pinRefreshMilliseconds)&&now-pinnedAt<CAS_POLICY_V1.leaseMaxMs/3)return;
   pinnedAt=now;pinsChanged=false;
   const digests=[...pinned.keys()].sort().slice(0,policy.pinMaximumJobs).flatMap(name=>pinned.get(name)!);
   pinning=pinning.then(()=>digests.length===0?releaseCasPinsV1(cas,pinHolder):pinCasV1(cas,CAS_POLICY_V1,pinHolder,digests,CAS_POLICY_V1.leaseMaxMs,now)).catch(()=>undefined);
  };
- let quietSince=Date.now(),listedAt=0,idled=false;const dueAt=new Map<string,number>(),inFlight=new Set<string>(),queued=new Set<string>(),running=new Set<Promise<boolean>>(),queue:string[]=[];
+ let quietSince=Date.now(),listedAt=0,idled=false,busyBefore=false;const dueAt=new Map<string,number>(),inFlight=new Set<string>(),queued=new Set<string>(),running=new Set<Promise<boolean>>(),queue:string[]=[];
  const pause=(milliseconds:number)=>new Promise(done=>setTimeout(done,milliseconds));
  const refill=():number=>{
   let names:string[]=[];try{names=readdirSync(spool).filter(name=>name.endsWith(".json")).sort();}catch{}
@@ -254,7 +244,7 @@ async function drainPassV1(root:string,environment:Environment,options:Readonly<
     if(!job.hint.kinds.every(kind=>(named as readonly string[]).includes(kind))||named.length!==job.hint.kinds.length){finish();result.dropped++;countSkipV1(workspace,"root-key-conflict");event("remote-skip","root-key-conflict: the fleet names other directories for this unit");return false;}
    }
    if(job.offer===true&&await client.hasResult(job.key)===true){markOfferedV1(root,job.key);finish();result.dropped++;event("remote-skip","already-stored");return true;}
-   const outcome=await Promise.race([uploadUnitV1(client,root,job),new Promise<"retry">(done=>{const timer=setTimeout(()=>done("retry"),policy.jobMilliseconds);timer.unref?.();})]);
+   const outcome=await Promise.race([uploadUnitV1(client,root,job,environment),new Promise<"retry">(done=>{const timer=setTimeout(()=>done("retry"),policy.jobMilliseconds);timer.unref?.();})]);
    if(outcome===true){markOfferedV1(root,job.key);finish();result.uploaded++;countUnitV1(workspace,"stored");event("remote-publish","uploaded");return true;}
    if(outcome==="retry"||outcome==="capacity"){
     const again=client.usable()||outcome==="capacity"?retryJobV1(job,Date.now()):{...job,claimed:false,notBeforeMs:Date.now()+policy.retryBackoffMilliseconds,deferredBy:settings.identity};
@@ -282,10 +272,10 @@ async function drainPassV1(root:string,environment:Environment,options:Readonly<
    if(running.size>=limits.maximumUploadJobs){await Promise.race([...running]);continue;}
    if(queue.length===0&&Date.now()-listedAt>=(running.size>0?policy.pollMilliseconds*5:0)){
     const files=refill();
-    if(files>0||running.size>0)quietSince=Date.now();
+    if(files>0||running.size>0){quietSince=Date.now();busyBefore=true;}
     if(queue.length>0)continue;
     if(running.size===0){
-     if(files===0){if(Date.now()-quietSince>=idle){idled=true;break;}await pause(policy.pollMilliseconds);continue;}
+     if(files===0){if(Date.now()-quietSince>=idle){idled=true;break;}if(busyBefore){busyBefore=false;releaseHeapV1();}await pause(policy.pollMilliseconds);continue;}
      if(idle===0)break;
      await pause(policy.waitingPollMilliseconds);continue;
     }

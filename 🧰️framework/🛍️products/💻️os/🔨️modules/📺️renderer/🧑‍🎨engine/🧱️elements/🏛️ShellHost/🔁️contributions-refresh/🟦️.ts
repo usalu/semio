@@ -21,7 +21,7 @@ import {
   type BuiltNode,
   type UiDirtyScope
 } from "@semio-tech/framework";
-import { contributionsReceiverSessionV1, withProgramEntriesV1 } from "../🪟️spawned-program/🟦️.ts";
+import { contributionsReceiverSessionV1, treeWindowViewFieldsOfProgramV1, withProgramEntriesV1 } from "../🪟️spawned-program/🟦️.ts";
 import { MEDIA_TRANSPORT_EXTENSION_ID } from "../../🎬️MediaTransportHost/🟦️.tsx";
 import { type ActiveSession, type LoadedProgramState, localProgramsV1, programPluginIdV1, sessionProgramsV1 } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
@@ -266,7 +266,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(windowInstances.map((instance) => instance.id)),
         activeUtilityId: undefined,
         focusedWindowId: activeWindowIdRef.current ?? undefined,
-        ...treeWindowSchedulerRef.current!.viewStateFields(),
+        ...treeWindowViewFieldsOfProgramV1(treeWindowSchedulerRef.current!.viewStateFields(), null, spawnedIdsRef.current ?? [], () => undefined),
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       const { fetched: fetchWindowInstances, skipped: unmountedWindowInstances } = partitionRefreshWindowInstancesV1(windowInstances, isSessionSwitch ? new Set<string>() : mountedWindowIdsRef.current);

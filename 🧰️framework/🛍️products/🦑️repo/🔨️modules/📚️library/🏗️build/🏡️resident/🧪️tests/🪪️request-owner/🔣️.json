@@ -1,0 +1,38 @@
+{
+ "version": 1,
+ "service": {
+  "inherited": {
+   "SEMIO_LEASE_OWNER": "ready:31a731c45270:workspace:1795778187130",
+   "SEMIO_BUILD_INVOCATION_PID": "4711",
+   "SEMIO_BUILD_INVOCATION_PIDS": "4711,4712",
+   "SEMIO_SCRIPT_PROCESS_OWNER": "4711",
+   "SEMIO_HOST_CAPACITY_GRANT": "grant",
+   "SEMIO_LANGUAGE": "en"
+  },
+  "absent": ["SEMIO_LEASE_OWNER", "SEMIO_BUILD_INVOCATION_PID", "SEMIO_BUILD_INVOCATION_PIDS", "SEMIO_SCRIPT_PROCESS_OWNER", "SEMIO_HOST_CAPACITY_GRANT"],
+  "kept": ["SEMIO_LANGUAGE"],
+  "launchd": ["PATH", "SEMIO_LANGUAGE"]
+ },
+ "environments": [
+  {"id": "a request that names its owner carries it", "base": {"SEMIO_LANGUAGE": "en"}, "request": {"owner": "ready:aaaaaaaaaaaa:workspace:1"}, "owner": "ready:aaaaaaaaaaaa:workspace:1"},
+  {"id": "a request without an owner carries none", "base": {"SEMIO_LANGUAGE": "en"}, "request": {}, "owner": null},
+  {"id": "the owner of the request replaces one the service inherited", "base": {"SEMIO_LEASE_OWNER": "ready:bbbbbbbbbbbb:workspace:2"}, "request": {"owner": "ready:aaaaaaaaaaaa:workspace:1"}, "owner": "ready:aaaaaaaaaaaa:workspace:1"},
+  {"id": "a request without an owner never takes the one the service inherited", "base": {"SEMIO_LEASE_OWNER": "ready:bbbbbbbbbbbb:workspace:2"}, "request": {}, "owner": null},
+  {"id": "an empty owner is none", "base": {}, "request": {"owner": ""}, "owner": null}
+ ],
+ "frames": [
+  {"id": "the owner of a stage try is a valid owner", "owner": "ready:31a731c45270:workspace:1795778187130", "valid": true},
+  {"id": "a space is refused", "owner": "ready x", "valid": false},
+  {"id": "an empty owner is refused", "owner": "", "valid": false},
+  {"id": "a very long owner is refused", "owner": "ready:aaaaaaaaaaaa:workspace:1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "valid": false}
+ ],
+ "pool": {
+  "requests": [
+   {"name": "stage-a", "owner": "ready:aaaaaaaaaaaa:workspace:1"},
+   {"name": "stage-b", "owner": "ready:bbbbbbbbbbbb:workspace:2"},
+   {"name": "shell"}
+  ],
+  "expected": {"stage-a": "ready:aaaaaaaaaaaa:workspace:1", "stage-b": "ready:bbbbbbbbbbbb:workspace:2", "shell": null},
+  "workers": 3
+ }
+}

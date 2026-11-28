@@ -532,14 +532,13 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
 }
 
 /// 🧵️ Reads the compiler mode from direct arguments and response files before spending the run's parallelism. The third value tells that the link of a wasm final must run on one `wasm-ld` thread: lld threads every section pass by default, and a final that links its whole dependency closure measured 4.8 GiB at 6.6 CPUs against 2.0-3.0 GiB at one.
-/// The concrete WASI actor decoder measured 1,173 MiB with the serial policy; wider codegen exceeded its library memory ceiling.
+/// The actor input decoder and wire crates are compiled serially on every target (one front-end thread, no parallel back end): the WASI decoder measured 1,173 MiB serial against 2,280 MiB wide, and the host decoder and wire peaked at 1,836 and 1,749 MiB under the admitted parallelism (warden alarms of 2026-11-27, which the front-end thread count alone does not change: shared units already run one front-end thread).
 fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usize, bool, bool), String> {
     let mut expects_type = false;
     let mut expects_crate = false;
     let mut expects_target = false;
     let mut final_component = false;
-    let mut actor_decoder = false;
-    let mut wasip2 = false;
+    let mut actor_input = false;
     let mut wasm = false;
     let mut nightly = false;
     let mut inspect = |argument: &str| {
@@ -547,8 +546,7 @@ fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usi
         let name = argument.strip_prefix("--crate-name=").or_else(|| expects_crate.then_some(argument));
         let target = argument.strip_prefix("--target=").or_else(|| expects_target.then_some(argument));
         final_component |= types.is_some_and(|types| types.split(',').any(|kind| kind == "cdylib"));
-        actor_decoder |= name == Some("semio_plugin_actor_input_decoder");
-        wasip2 |= target == Some("wasm32-wasip2");
+        actor_input |= matches!(name, Some("semio_plugin_actor_input_decoder" | "semio_plugin_actor_input_wire"));
         wasm |= target.is_some_and(|target| target.starts_with("wasm32-"));
         expects_type = argument == "--crate-type";
         expects_crate = argument == "--crate-name";
@@ -567,7 +565,7 @@ fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usi
         }
     }
     let grant = tokens.filter(|count| *count > 0);
-    let serial_unit = final_component || (actor_decoder && wasip2);
+    let serial_unit = final_component || actor_input;
     let workers = if serial_unit { 1 } else { grant.unwrap_or(1) };
     Ok((workers, grant == Some(1) || (serial_unit && (nightly || grant.is_some())), final_component && wasm))
 }

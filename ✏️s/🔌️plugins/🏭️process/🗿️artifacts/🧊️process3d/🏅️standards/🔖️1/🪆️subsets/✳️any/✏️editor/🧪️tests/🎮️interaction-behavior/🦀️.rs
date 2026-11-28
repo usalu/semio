@@ -282,3 +282,39 @@ async fn process_contribution_envelope_accepts_exact_limits_and_rejects_plus_one
     assert!(!process_json_envelope_is_bounded(&items_plus_one));
 }
 //#endregion 🔖️BehaviorTests
+
+//#region 🔖️ArmedPlacementCommit
+/// 🧲️ Browser path: Catalogue "Place capability" arms the saw cut, then ONE viewport press (no preceding hover)
+/// commits exactly one enabled Cut step from machine saw / capability cut, through the registry-backed action bridge.
+#[semio_framework_async_macros::async_test]
+async fn armed_generic_saw_cut_commits_one_enabled_cut_step_on_a_bare_viewport_press() {
+    use semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure;
+    let mut app = app_with_registry();
+    let before = app.snapshot().expect("published snapshot").step_payloads.len();
+    let mut view = main_window_view();
+    let window_id = view.window_id.clone().unwrap();
+    let mut act = |app: &mut context::Process3dApp, view: &semio_plugin::ViewModel, verb: &str, values: serde_json::Value| {
+        let args = semio_framework_pack_json::from_json_str::<DslValue>(&values.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let metadata = semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..artifact_app_laws::meta("local") };
+        let admitted = semio_framework_async::poll::resolve_ready(artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args), &metadata, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("dispatch action");
+        let mut result = semio_framework_async::poll::resolve_ready(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("settle reserved action");
+        let receipt = context::settle(app);
+        result.requested_effects.extend(receipt.effects.iter().cloned());
+        (result, receipt)
+    };
+    let (receipt, result) = { let (result, receipt) = act(&mut app, &view, "placeCapability", serde_json::json!({"machineId": "saw", "capabilityId": "cut"})); (receipt, result) };
+    assert!(!published_a_document_mutation(&receipt), "arming writes no document mutation");
+    assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id: id, utility_id } if *id == window_id && utility_id == workpiece::placement::PLACE_CAPABILITY_UTILITY)), "arming hands the host SetActiveUtility(placeCapability)");
+    view.active_utility_id = Some(workpiece::placement::PLACE_CAPABILITY_UTILITY.into());
+    let (result, receipt) = act(&mut app, &view, "worldPointerDown", serde_json::json!({"position": [0.0, 0.0, 0.5]}));
+    assert!(published_a_document_mutation(&receipt), "the armed press commits a document mutation");
+    assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "select")), "the commit disarms back to select");
+    let snapshot = app.snapshot().expect("published snapshot");
+    assert_eq!(snapshot.step_payloads.len(), before + 1, "exactly one step is added");
+    let step = snapshot.step_payloads.last().unwrap();
+    let origin = step.origin.as_ref().expect("origin");
+    assert_eq!((origin.machine_id.as_str(), origin.capability_id.as_str()), ("saw", "cut"));
+    assert!(step.enabled);
+    assert!(matches!(step.measure, ProcessMeasure::Cut { .. }));
+}
+//#endregion 🔖️ArmedPlacementCommit

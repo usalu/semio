@@ -11,6 +11,7 @@
 //! Every other node (rows, columns, styles, merged ranges, the other parts, the OPC layer) has no kind and is refused.
 
 use super::*;
+use super::recalculation::{xlsx_remove_sheet_mutations, xlsx_rename_sheet_mutations, xlsx_with_recalculated_caches};
 use canonical_edit::{inserted_cell_coordinates, node_cell_value, part_role, shared_string_position, shared_string_text, sheet_element_name, PartRole};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
@@ -209,7 +210,7 @@ fn workbook_edit(at: &Located<'_>) -> Result<Option<Vec<XlsxMutation>>, Snapshot
         return match at.event {
             SnapshotEditEvent::RemoveValue { .. } => {
                 let name = children.get(sheet_row(position)?).and_then(sheet_element_name).ok_or_else(|| unsupported(pointer, "only a sheet is removed"))?;
-                Ok(Some(vec![XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: name.to_string() })]))
+                xlsx_remove_sheet_mutations(at.snapshot, name).map(Some).map_err(|message| refusal(pointer, message))
             }
             SnapshotEditEvent::InsertValue { value, .. } => {
                 let physical = child_position(position, children.len(), pointer, true)?;
@@ -234,7 +235,7 @@ fn workbook_edit(at: &Located<'_>) -> Result<Option<Vec<XlsxMutation>>, Snapshot
     let (XmlNode::Element { attrs: before, children: before_children, name: before_name }, XmlNode::Element { attrs: after, children: after_children, name: after_name }) = (sheet, &patched) else { return Ok(None) };
     let unchanged_apart_from_name = before_name == after_name && before_children == after_children && before.len() == after.len() && before.iter().zip(after).all(|(left, right)| left.name == right.name && (left.name == "name" || left.value == right.value));
     match (sheet_element_name(&patched), unchanged_apart_from_name) {
-        (Some(new_name), true) => Ok(Some(vec![XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: old.to_string(), new_name: new_name.to_string() })])),
+        (Some(new_name), true) => xlsx_rename_sheet_mutations(at.snapshot, old, new_name).map(Some).map_err(|message| refusal(pointer, message)),
         _ => Err(unsupported(pointer, "a sheet entry is edited through its name only")),
     }
 }
@@ -331,6 +332,11 @@ fn content_type_edit(event: &SnapshotEditEvent, pointer: &str, snapshot: &XlsxSn
 
 /// 🎯 The kinds of an edit of a node below a part's root; `None` hands the edit on to the (empty) table.
 pub fn special(event: &SnapshotEditEvent, snapshot: &XlsxSnapshot) -> Result<Option<Vec<XlsxMutation>>, SnapshotEditError> {
+    Ok(resolved_special(event, snapshot)?.map(|mutations| xlsx_with_recalculated_caches(snapshot, mutations)))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolved_special(event: &SnapshotEditEvent, snapshot: &XlsxSnapshot) -> Result<Option<Vec<XlsxMutation>>, SnapshotEditError> {
     let Some(pointer) = event_path(event) else { return Ok(None) };
     let segments: Vec<&str> = pointer.split('/').skip(1).collect();
     match segments.as_slice() {

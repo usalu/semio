@@ -62,7 +62,7 @@ pub fn close_original_fixture<T:semio_framework_value::retirement::RetireOwned>(
         }).unwrap();
     }
     assert!(source.is_none()&&retirement.is_none());
-    caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK)
+    caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
 }
 
 

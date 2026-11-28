@@ -121,6 +121,7 @@
           }
         },
         "deformationScale": {
+          "x-semio-display-only": true,
           "type": "number",
           "exclusiveMinimum": 0,
           "x-semio-ui": {

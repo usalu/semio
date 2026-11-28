@@ -80,7 +80,7 @@ def peak_at_threads(samples,threads,extra):
     return grown if not above else min(grown,min(above)[1])
 
 def build():
-    gates=[{"pressure":pressure,"swapOutMegabytesPerSecond":swap,"megabytes":megabytes,"gate":gate(pressure,TOTAL,swap,megabytes)} for pressure in ("normal","warn","critical") for swap in (None,0,0.5,1.2,52) for megabytes in (256,1024,1025,2048,6144)]
+    gates=[{"pressure":pressure,"swapOutMegabytesPerSecond":swap,"megabytes":megabytes,"gate":gate(pressure,TOTAL,swap,megabytes)} for pressure in ("normal","warn","critical") for swap in (None,0,0.5,1.2,12,20,52) for megabytes in (256,1024,1025,2048,6144)]
     admissions=[]
     for available in (3000,4300,6000,8000,12000):
         for held in ([],[{"megabytes":2048,"usedMegabytes":0}],[{"megabytes":6144,"usedMegabytes":3000}],[{"megabytes":512,"usedMegabytes":512},{"megabytes":512,"usedMegabytes":100}],[{"megabytes":2048,"usedMegabytes":0},{"megabytes":2048,"usedMegabytes":2048},{"megabytes":2048,"usedMegabytes":4000}],[{"megabytes":5014,"usedMegabytes":1200}]):

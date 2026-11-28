@@ -161,6 +161,6 @@ test("the pause before the restart of a silent stage doubles from 30 s up to 10 
 test("the windows without progress are lengthened for a slower machine and nothing else changes",()=>{
  const scaled=readyScaledTreePolicyV1(2.83);
  expect(scaled.stallMilliseconds).toBe(Math.ceil(P.stallMilliseconds*2.83));expect(scaled.stallStopMilliseconds).toBe(1698000);expect(scaled.holderWaitRestartMilliseconds).toBe(1698000);expect(scaled.staleStageMilliseconds).toBe(Math.ceil(P.staleStageMilliseconds*2.83));
- expect(scaled.speedFactor).toBe(2.83);expect({...scaled,speedFactor:1,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0}).toEqual({...P,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0});
+ expect(scaled.speedFactor).toBe(2.83);expect({...scaled,speedFactor:1,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0,staleWaitingMilliseconds:0}).toEqual({...P,stallMilliseconds:0,stallStopMilliseconds:0,holderWaitRestartMilliseconds:0,holderSilentMilliseconds:0,holderYieldMilliseconds:0,staleStageMilliseconds:0,staleWaitingMilliseconds:0});
  expect(readyScaledTreePolicyV1(1)).toEqual(P);expect(readyScaledTreePolicyV1(0.5)).toEqual(P);
 });

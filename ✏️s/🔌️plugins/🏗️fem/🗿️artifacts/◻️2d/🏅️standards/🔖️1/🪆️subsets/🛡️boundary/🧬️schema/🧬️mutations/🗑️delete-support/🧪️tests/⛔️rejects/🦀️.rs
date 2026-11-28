@@ -49,7 +49,7 @@ fn rejection_leaves_the_document_untouched() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem2dMutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "delete-support/rejects-a-missing-23f3c3: a rejecting delete-support must carry the empty diff, never a half-built delta");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "delete-support/rejects-a-missing-23f3c3: a rejecting delete-support must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "delete-support/rejects-a-missing-23f3c3: the refusal is reported as mutation.target-missing");

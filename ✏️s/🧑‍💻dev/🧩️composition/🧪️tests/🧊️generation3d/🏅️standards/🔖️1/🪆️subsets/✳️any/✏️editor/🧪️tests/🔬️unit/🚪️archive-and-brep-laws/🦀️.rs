@@ -81,7 +81,7 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
             host.connect_ports("solid", publication["output"].as_str().unwrap(), id, "geometry").unwrap();
         }
         host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();
@@ -140,7 +140,7 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
         host.add_widget(&json!({"kind":"neuron","id":consumer,"neuronKind":measurement["kind"]}).to_string(),600.0,0.0).unwrap();
         host.connect_ports(source,publication["output"].as_str().unwrap(),consumer,"geometry").unwrap();
         host.host_snapshot.clone()
-    });
+    }).expect("the evaluation host binds its snapshot");
     std::mem::replace(&mut snapshot.host_snapshot,projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();

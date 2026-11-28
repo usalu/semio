@@ -41,6 +41,7 @@ test("a disconnected recall client leaves the broker available for the next comp
     await broker.close();
   }
 });
+const HERMETIC={available:()=>undefined,warden:()=>"calm" as const,cancels:()=>[]};
 const key="a".repeat(64),unit=(crate:string,outDir:string)=>({v:1,pass:"p1",pid:4242,crate,package:crate,version:"0.1.0",target:"host",crateTypes:["lib"],outDir,extraFilename:"-1f",source:"/ws/"+crate+"/src/lib.rs",manifestDir:"/ws/"+crate,primary:false,buildScriptOutDir:null,externs:["/lane/b/deps/libdep-9.rmeta"]});
 function converse(endpoint:string,lines:readonly object[],replies:number):Promise<Record<string,unknown>[]>{
  return new Promise((done,fail)=>{
@@ -52,7 +53,7 @@ function converse(endpoint:string,lines:readonly object[],replies:number):Promis
 }
 
 test("cached units are recorded with their measurements, marked, excluded from history and not recallable; invalid reports are refused",async()=>{
- const broker=await startAdmissionBrokerV1({physicalBytes:64*2**30,history:new Map()});
+ const broker=await startAdmissionBrokerV1({physicalBytes:64*2**30,history:new Map(),...HERMETIC});
  try{
   broker.registerPass({id:"p1",profile:"dev",target:"host"});
   const compiled=unit("alpha","/lane/a/deps");
@@ -101,7 +102,7 @@ test("the compiler chain of the native-build driver carries the fleet tier exact
 test("physical charge freezes broker admission independently of resident memory",async()=>{
  const {budgetBytes,samples}=disconnect.physicalCharge,policy=ADMISSION_POLICY_V1;
  const usable=(bytes:number)=>bytes-admissionReserveBytesV1(bytes);let physicalBytes=Math.max(budgetBytes+1,Math.floor(budgetBytes*10000/(10000-policy.reserveBasisPoints)));while(usable(physicalBytes)<budgetBytes)physicalBytes++;expect(physicalBytes-admissionReserveBytesV1(physicalBytes)).toBe(budgetBytes);
- const broker=await startAdmissionBrokerV1({physicalBytes,history:new Map()});
+ const broker=await startAdmissionBrokerV1({physicalBytes,history:new Map(),...HERMETIC});
  broker.registerPass({id:"p1",profile:"release",target:"host"});
  const peers:Socket[]=[];
  const send=(socket:Socket,message:object)=>socket.write(JSON.stringify(message)+"\n");

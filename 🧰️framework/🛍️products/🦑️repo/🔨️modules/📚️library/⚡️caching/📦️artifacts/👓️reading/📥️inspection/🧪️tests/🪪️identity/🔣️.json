@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "owner": "fixture:artifact-identity",
+  "maximumBytes": 65536,
+  "maximumFiles": 16,
+  "files": {
+    "entry.js": "console.log('original');",
+    "nested/data.json": "{\"value\":1}"
+  },
+  "cases": [
+    {"name": "directory change time bump is stable", "mutation": "touch-directories", "stable": true},
+    {"name": "same-size file rewrite is detected", "mutation": "rewrite-same-size", "stable": false},
+    {"name": "stray entry is detected", "mutation": "add-entry", "stable": false},
+    {"name": "removed file is detected", "mutation": "remove-file", "stable": false}
+  ]
+}

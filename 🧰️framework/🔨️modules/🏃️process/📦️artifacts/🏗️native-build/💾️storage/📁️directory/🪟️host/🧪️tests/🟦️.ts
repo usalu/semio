@@ -77,7 +77,7 @@ test("setCaseSensitive with false clears the flag, so a directory created below 
 test("availableBytes reads the caller's free bytes through GetDiskFreeSpaceExW and openExclusive probes with share mode zero",()=>{
  const wide=(text:string)=>Buffer.from(text+"\0","utf16le").toString("hex"),free=recorder({free:123456789,total:400000000000}),host=createNativeWindowsHostPortV1(free.binding);
  expect(host.availableBytes("C:\\cache")).toEqual({ok:true,error:0,bytes:123456789,totalBytes:400000000000});expect(free.calls).toEqual([["GetDiskFreeSpaceExW",wide("\\\\?\\C:\\cache"),8,8]]);
- expect(createNativeWindowsHostPortV1(recorder({freeOk:false,error:3}).binding).availableBytes("C:\\cache")).toEqual({ok:false,error:3,bytes:0});
+ expect<unknown>(createNativeWindowsHostPortV1(recorder({freeOk:false,error:3}).binding).availableBytes("C:\\cache")).toEqual({ok:false,error:3,bytes:0});
  const probe=recorder(),open=createNativeWindowsHostPortV1(probe.binding).openExclusive("C:\\cache\\o\\m");
  expect(open).toEqual({ok:true,error:0});expect(probe.calls).toEqual([["CreateFileW",wide("\\\\?\\C:\\cache\\o\\m"),windows.createFile.fileReadAttributes,0,3,windows.createFile.backupSemantics],["CloseHandle",5n]]);
  expect(windows.createFile.fileReadAttributes).toBe(0x80);

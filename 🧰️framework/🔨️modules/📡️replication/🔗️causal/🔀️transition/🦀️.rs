@@ -593,6 +593,10 @@ impl HistoryTransitionEvents for [semio_framework_replication_causal::MutationEn
 impl HistoryTransitionEvents for Vec<semio_framework_replication_causal::MutationEnvelope>{fn event_count(&self)->usize{self.len()}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.get(index)}}
 impl<const N:usize> HistoryTransitionEvents for [semio_framework_replication_causal::MutationEnvelope;N]{fn event_count(&self)->usize{N}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.get(index)}}
 
+/// 🪞️ Sized view of any [`HistoryTransitionEvents`] so unsized containers coerce to `&dyn`.
+struct HistoryTransitionEventsRef<'a,T:HistoryTransitionEvents+?Sized>(&'a T);
+impl<T:HistoryTransitionEvents+?Sized> HistoryTransitionEvents for HistoryTransitionEventsRef<'_,T>{fn event_count(&self)->usize{self.0.event_count()}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.0.event_at(index)}}
+
 pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &(impl HistoryTransitionEvents+?Sized), excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     fold_history_for(document_id, edits, transitions, excluded, &ViewerHead::canonical_trunk(document_id))
 }
@@ -607,7 +611,7 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
     HistoryFoldJob::new(|control| async move {
         let mut ignored=control.track(HistoryFoldIndex::<String,()>::new()).unwrap_or_else(|_|unreachable!("cold fold exclusions declare controlled ownership")).await;
         for id in excluded {control.insert_text(&mut ignored,copy_history_text(id,&control).await?,()).await?;}
-        fold_history_for_controlled(document_id,edits,transitions,&ignored,head,&control).await
+        fold_history_for_controlled(document_id,edits,&HistoryTransitionEventsRef(transitions),&ignored,head,&control).await
     }).finish_cold()
 }
 

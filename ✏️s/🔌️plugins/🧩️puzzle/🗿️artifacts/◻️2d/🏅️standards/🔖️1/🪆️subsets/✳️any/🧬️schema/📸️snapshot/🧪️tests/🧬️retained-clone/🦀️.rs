@@ -114,18 +114,24 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
 #[test]
 fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact_retirement() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧫️fixtures/🧬️mutations");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations");
     let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: controls["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: controls["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: 64, maximum_release_bytes: controls["maximumReleaseBytes"].as_u64().unwrap() as usize };
     let mut kinds = std::collections::BTreeSet::new();
     let mut count = 0;
-    for leaf in std::fs::read_dir(root).unwrap() {
-        let leaf = leaf.unwrap().path();
-        if !leaf.is_dir() { continue; }
-        for case in std::fs::read_dir(leaf).unwrap() {
-            let input = case.unwrap().path().join("🦠️mutation/🔣️.json");
-            if !input.is_file() { continue; }
+    fn authored_inputs(directory: &std::path::Path, inputs: &mut Vec<std::path::PathBuf>) {
+        let mut entries: Vec<_> = std::fs::read_dir(directory).unwrap().map(|entry| entry.unwrap().path()).filter(|path| path.is_dir()).collect();
+        entries.sort();
+        for path in entries {
+            let input = path.join("🦠️mutation/🔣️.json");
+            if input.is_file() { inputs.push(input); } else { authored_inputs(&path, inputs); }
+        }
+    }
+    let mut inputs = Vec::new();
+    authored_inputs(&root, &mut inputs);
+    {
+        for input in inputs {
             let text = std::fs::read_to_string(input).unwrap();
             let Ok(original) = serde_json::from_str::<Puzzle2dMutation>(&text) else { continue; };
             let expected = serde_json::to_value(&original).unwrap();

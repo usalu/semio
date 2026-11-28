@@ -48,6 +48,15 @@ fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize, cx: &
     owner.close_step(cx, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, ..grant }).expect("owner close turn")
 }
 
+/// 🧹️ Funds one-item close turns until the operation owner and then its inference registry have both retired, within the fixture's turn bound.
+fn close_owner_completely(owner: &ArtifactInstanceOperationOwnerHandle, cx: &mut semio_framework_job::StepContext<'_>) -> bool {
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if owner.close_terminal_is_empty().expect("owner close witness") { return true }
+        close_owner(owner, 1, cx);
+    }
+    owner.close_terminal_is_empty().expect("owner close witness")
+}
+
 pub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {
     owner
         .with_mut::<MediaOwner, _>(|owner| {
@@ -71,7 +80,7 @@ fn payload(media: Media) -> serde_json::Value {
 /// 🎞️ Editor, viewer, and live VCS exports consume the supplied owner and preserve document defaults.
 #[semio_framework_async_macros::async_test]
 async fn media_export_request_context_preserves_exact_supplied_owner() {
-        let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut scope=crate::app_testing::artifact_app_laws::OriginalFixtureScope::admit();let mut refusals=Vec::new();let result=async{let cx=scope.cx();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️media-owner-context.json")).unwrap();
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(include_str!("../../🧪️testing/🎞️media-owner-context/🧬️schema/🔣️.json")).unwrap();
     let history = HistoryView::empty();
@@ -90,8 +99,9 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
         assert_eq!(viewer, case["expected"]);
         validator.validate_json(&editor.to_string()).unwrap();
         validator.validate_json(&viewer.to_string()).unwrap();
-        assert!(matches!(close_owner(&supplied, 1, cx), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
+        assert!(close_owner_completely(&supplied, cx), "the operation owner and then its inference registry close within the funded turn bound");
         assert!(supplied.terminal_is_empty().unwrap());
+        assert!(supplied.close_terminal_is_empty().unwrap());
         assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
         assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
     }
@@ -101,7 +111,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::tool_contract::EmptyArtifactInstanceOperationOwner));
     assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
     assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
-    assert!(matches!(close_owner(&foreign, 1, cx), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
+    assert!(close_owner_completely(&foreign, cx));
     let default_port = fixture["defaultPort"].as_str().unwrap();
     let supplied = ArtifactInstanceOperationOwnerHandle::new(owner("defaults"));
     let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
@@ -117,7 +127,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     }
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
-    assert!(matches!(close_owner(&supplied, 1, cx), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
+    assert!(close_owner_completely(&supplied, cx));
     let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     editor
@@ -140,10 +150,10 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert_eq!(viewer.snapshot().unwrap().count, 0);
     assert!(export_until!(editor,default_port,cx).is_ok());
     assert!(export_until!(viewer,default_port,cx).is_ok());
-    assert!(matches!(export_until!(editor,"unknown:out",cx), Err(ref failure) if failure.primary.message().contains(&MediaError::NotImplemented.to_string())));
-    assert!(matches!(export_until!(viewer,"unknown:out",cx), Err(ref failure) if failure.primary.message().contains(&MediaError::NotImplemented.to_string())));
+    match export_until!(editor,"unknown:out",cx) { Err(failure) => { assert!(failure.primary.message().contains(&MediaError::NotImplemented.to_string())); refusals.push(failure); } Ok(_) => panic!("an undeclared media port must be refused") }
+    match export_until!(viewer,"unknown:out",cx) { Err(failure) => { assert!(failure.primary.message().contains(&MediaError::NotImplemented.to_string())); refusals.push(failure); } Ok(_) => panic!("an undeclared media port must be refused") }
     close_registered_fixture_app(&mut editor, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     close_registered_fixture_app(&mut viewer, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
-        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
+        }.await;for failure in refusals{scope.retire_failure(failure);}scope.retire();result
     }

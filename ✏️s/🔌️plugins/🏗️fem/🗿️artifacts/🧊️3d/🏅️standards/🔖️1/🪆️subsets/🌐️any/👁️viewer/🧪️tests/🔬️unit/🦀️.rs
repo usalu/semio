@@ -18,3 +18,11 @@ fn initial_snapshot_is_the_bundled_example_not_empty() {
     let expected = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotRetiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_io::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses"));
     assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
 }
+
+#[test]
+fn viewer_declares_no_mutation_action_anywhere() {
+    let def = create_fem3d_viewer();
+    let declared = def.actions.iter().chain(def.window_kinds.iter().flat_map(|kind| kind.actions.iter()));
+    let editing: Vec<&str> = declared.filter(|action| action.kind == semio_plugin::ActionKind::Mutation).map(|action| action.id.as_str()).collect();
+    assert!(editing.is_empty(), "a viewer is read-only; editing actions declared: {editing:?}");
+}

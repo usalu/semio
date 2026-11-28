@@ -13,7 +13,7 @@ import { basisOf, mirrorRepeat, mirrorTransform, pseudoToNeutral, quaternionOf, 
 import { placementsOf, skeletonOf } from "../../🔨️modules/🧊️volume/🦴️skeleton/🟦️.ts";
 import { restFrames } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import { fixture } from "../🧰️support/🧰️.ts";
-import { sampleFigure, volumeAssets } from "../🧰️support/🧊️.ts";
+import { catalogAssetsWithVolume, sampleFigure } from "../🧰️support/🧊️.ts";
 import { modelOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 
@@ -117,7 +117,7 @@ describe("🧊️ frame conversion between the staffage world and the neutral mo
   });
 
   it.each(["sample-figure", "dairy-cow", "bookshelf", "toaster"])("reproduces in the staffage world, at rest and in the default pose, the point set of the raw kernel tessellation carried by the bone frames (the reference of the authoring tool volume-lib) for %s, wound outward", async (id) => {
-    const asset = id === "sample-figure" ? sampleFigure() : volumeAssets().find((a) => a.id === id);
+    const asset = id === "sample-figure" ? sampleFigure() : catalogAssetsWithVolume([id]).find((a) => a.id === id);
     if (asset === undefined) return;
     const document = await modelOf(asset, { scale: 50, view: "light-solid", poses: [asset.presentation.defaultPose], clips: [], at: { kind: "pose", pose: asset.presentation.defaultPose } });
     const nodes = skeletonOf(asset);

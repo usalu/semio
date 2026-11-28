@@ -36,6 +36,7 @@ semio-s-fem-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
 
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-diff = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
 
 [dev-dependencies]

@@ -417,6 +417,10 @@
         },
         "tail": {
           "type": "string"
+        },
+        "ranOn": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

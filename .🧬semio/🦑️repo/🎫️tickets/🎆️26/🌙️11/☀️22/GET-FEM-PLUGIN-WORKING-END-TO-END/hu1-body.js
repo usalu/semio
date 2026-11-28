@@ -1,0 +1,18 @@
+const res={};
+await fresh();
+await row(/e5 · Beam/); await page.waitForTimeout(1500);
+if(!/ID e5/.test(await insp())){await clickBtn("Inspection",{exact:true});} await page.waitForTimeout(2500);
+const mat=async()=>(await insp()).match(/Material \| ([^|]+)\|/)?.[1]?.trim();
+const waitM=async(re,ms)=>{const t=Date.now();while(Date.now()-t<ms){const m=await mat();if(re.test(m||""))return Date.now()-t;await page.waitForTimeout(300);}return "FAIL:"+await mat();};
+res.start=await mat();
+res.log0=log.splice(0);
+await pickOpt(IS("element.material"),/C30\/37/); res.edit=await waitM(/C30/,20000);
+res.logEdit=log.splice(0);
+await page.waitForTimeout(8000);
+res.logSettle=log.splice(0);
+await page.keyboard.press("Control+z");
+res.undo=await waitM(/C24/,15000);
+res.logUndo=log.splice(0);
+res.health=await health();
+res.logEnd=log.splice(0);
+return res;

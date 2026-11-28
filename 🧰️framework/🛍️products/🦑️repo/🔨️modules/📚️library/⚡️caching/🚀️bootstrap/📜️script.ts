@@ -4,6 +4,8 @@ import{projectionAdmissionV1}from"../../🏗️build/📥️source/🔏️closur
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1} from "./📥️caller/🟦️.ts";
 import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+import {refuseProcessV1} from "../../../../../../🔨️modules/🏃️process/📖️texts/🟦️.ts";
+import {enterScriptProcessWaitV1} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import{isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1}from"./🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
 import {withNxCollectionAdmissionStoreV1,NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1} from "./📥️admission/💾️storage/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
@@ -457,9 +459,9 @@ export class NxScript extends Script {
     Object.assign(env,buildBackendProcessEnvironmentV1("nx",env));
     Object.assign(env,await(await import("../../🏗️build/🌐️remote-cache/🧶️nx/🟦️.ts")).nxRemoteCacheEnvironmentV1(env));
     {
-      const flightModule=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts"),flight=await flightModule.routeNxThroughFlightV1(env,{report:event=>{process.stderr.write((["en","de"] as const).map(language=>"[nx-flight] "+flightModule.nxFlightTextV1(language,event)).join("\n")+"\n");}}).catch(()=>undefined);
+      const flightModule=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts"),flight=await flightModule.routeNxThroughFlightV1(env,{waiting:enterScriptProcessWaitV1,report:event=>{process.stderr.write((["en","de"] as const).map(language=>"[nx-flight] "+flightModule.nxFlightTextV1(language,event)).join("\n")+"\n");}}).catch(()=>undefined);
       if(flight){
-        const sinceMs=Date.now();Object.assign(env,flight.environment());hold.stopFlight=()=>flight.stop();
+        const sinceMs=Date.now();Object.assign(env,flight.environment(),flightModule.nxFlightStallEnvironmentV1(env));hold.stopFlight=()=>flight.stop();
         hold.settleSlots=async()=>(await import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts")).settleNxSlotsV1({root:this.root,environment:env,flight,sinceMs});
       }
     }
@@ -659,7 +661,7 @@ export async function runOwnedNxInvocationV1(root:string,args:readonly string[],
  const[{holdHostV1},{hostImplementationV1}]=await Promise.all([import("../../🏗️build/🏡️resident/🟨️.mjs"),import("../../🏗️build/🧭️invocation/🛰️plan/🟦️.ts")]),release=await holdHostV1({implementation:hostImplementationV1(root,process.env),environment:process.env,agent:"nx-run"});
  try{await new NxScript(root,root,parent).runIssued([...args],phaseControl);}finally{await release();}
  const status=process.exitCode;process.exitCode=priorExitCode;
- if(status!==undefined&&status!==0)throw new Error(`Owned Nx invocation failed (${status}): nx ${args.join(" ")}`);
+ if(status!==undefined&&status!==0)throw status===124?refuseProcessV1("stalled","nx.run-stalled",{status,command:"nx "+args.join(" ")}):refuseProcessV1("failed","nx.run-failed",{status,command:"nx "+args.join(" ")});
 }
 
 /** 📨️ Retains the inherited process deadline, policy and capabilities before dashboard or Nx dispatch. */

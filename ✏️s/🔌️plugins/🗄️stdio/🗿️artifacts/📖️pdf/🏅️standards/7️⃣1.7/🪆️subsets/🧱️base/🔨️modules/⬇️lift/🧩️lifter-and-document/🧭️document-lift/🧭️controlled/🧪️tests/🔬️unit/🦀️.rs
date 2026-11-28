@@ -214,6 +214,20 @@ fn a_page_with_forty_images_lifts_like_the_reference_lifter() {
     assert_eq!(controlled, reference);
 }
 
+/// 🎯️ A document whose catalog carries an output intent without a destination profile lifts to the same typed intents as the reference lifter instead of stopping at the catalog barrier, so a saved `set-output-intent` edit opens again.
+#[test]
+fn output_intents_without_a_profile_lift_like_the_reference_lifter() {
+    use crate::standards::v1_7::subsets::base::{io::export::encode_pdf, schema::snapshot::{PdfOutputIntent, PdfPage}};
+    let mut document = PdfSnapshot::default();
+    document.pages.push(PdfPage::new(200.0, 200.0));
+    document.output_intents.push(PdfOutputIntent { subtype: "GTS_PDFA1".into(), condition_identifier: "sRGB IEC61966-2.1".into(), condition: None, registry_name: None, info: Some("sweep intent".into()), profile: None });
+    let retained = decode_pdf(&encode_pdf(&document).unwrap()).unwrap();
+    let reference = typed(lift_document(&retained.trailer, &retained.declared_version, &mut GraphSource::new(&retained.objects)).unwrap());
+    let controlled = typed(controlled_lift(&retained).unwrap_or_else(|barrier| panic!("an output intent stops at {barrier}")));
+    assert_eq!(controlled.output_intents, document.output_intents);
+    assert_eq!(controlled, reference);
+}
+
 /// 🏃️ LAW: body runs (page programs, image bytes) lift every ledger document to exactly the typed snapshot or barrier that single units reach, every run inside its grant and no unit above one browser turn, in at most a quarter of the ledger's calls.
 #[test]
 fn body_runs_lift_every_real_world_document_like_single_units_in_fewer_calls() {

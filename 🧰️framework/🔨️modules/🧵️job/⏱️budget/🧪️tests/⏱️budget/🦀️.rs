@@ -39,6 +39,19 @@ impl InteractiveJob for EntryProbe {
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
+
+struct CancelProbe { closing: bool }
+
+impl InteractiveJob for CancelProbe {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(if cx.is_cancelled() { JobOutcomeBorrow::admit_cancelled(cx) } else { JobOutcomeBorrow::admit_yield(cx) }.map_err(OriginalTurnFailure::from))
+    }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded or cancelled descriptor"))}}
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self,_:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+    fn terminal_is_empty(&self) -> bool { self.closing }
+}
+
 //#endregion 🧪️DriverProbe
 
 //#region 🚧️DeadlineAdmission
@@ -58,6 +71,24 @@ fn microsecond_zero_expired_or_empty_fuel_never_enters_job() {
         for _ in 0..16384{if decoder.terminal_is_empty(){break}caller.turn(source,|cx|{let _=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(source);
         assert_eq!(probe.entered, 0, "expired or exhausted grant entered job: fuel={fuel}, deadline={deadline}");
     }
+}
+
+/// 🛑 Cancellation is a first-class terminal outcome: a cancelled context still enters the job body, which settles as a typed `Cancelled` outcome that the original receiver receives and acknowledges.
+#[test]
+fn a_cancelled_job_settles_as_a_typed_cancelled_outcome_through_the_original_receiver() {
+    bind_clock(Some(1_000));
+    let mut probe = CancelProbe { closing: false };
+    let source=RetainedCloneGrant{maximum_copy_bytes:TEST_RETAINED_POLICY.maximum_copy_bytes+OriginalJobFixtureCaller::birth_copy_bytes()+original_decoder_prerequisite_quote().unwrap().0.maximum_copy_bytes,..TEST_RETAINED_POLICY};let mut caller=OriginalJobFixtureCaller::admit(allocate_operation_id(),Generation(1),source,now,u64::MAX,100000);let mut decoder=OriginalJobDecodeOwner::empty();let mut origin=OriginalJobReturnOrigin::empty();
+    for _ in 0..16384{if origin.body_ready(){break}caller.turn_with_decoder(source,&mut decoder,|cx|origin.admit(cx)).unwrap();}assert!(origin.body_ready());
+    caller.cancel().cancel_now();
+    let mut returned=None;let mut cancelled=false;
+    for _ in 0..16384{if returned.is_some()||cancelled{break}caller.turn_with_decoder(source,&mut decoder,|cx|{let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(8,deadline,|cx|{if let OriginalJobReturn::Outcome(reply)=drive_step(&mut probe,cx,origin.receiver()?,"cancelled-entry",InteractiveStage::InteractiveStep,&mut None)?{cancelled=matches!(reply.original(),Some(JobOutcomeBorrow::Cancelled{..}));returned=Some(reply.into_descriptor());}Ok(())})}).unwrap();}
+    assert!(cancelled,"a cancelled context must settle its job as a typed Cancelled outcome");
+    for _ in 0..16384{if returned.is_none(){break}caller.turn_with_decoder(source,&mut decoder,|cx|{let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(8,deadline,|cx|origin.receive_outcome(cx,&mut returned).map(|_|()))}).unwrap();}assert!(returned.is_none());
+    for _ in 0..16384{if origin.outcome().is_none(){break}caller.turn_with_decoder(source,&mut decoder,|cx|{let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(8,deadline,|cx|origin.acknowledge_outcome(cx).map(|_|()))}).unwrap();}assert!(origin.outcome().is_none());
+    probe.begin_close();assert!(probe.terminal_is_empty());
+    for _ in 0..16384{if origin.terminal_is_empty(){break}let demand=origin.retirement_demands(source.maximum_copy_bytes).unwrap();let close=RetainedCloneGrant{maximum_copy_bytes:source.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:source.maximum_capacity_bytes.max(demand.capacity_bytes),maximum_release_bytes:source.maximum_release_bytes.max(demand.release_bytes),maximum_depth:source.maximum_depth.max(demand.depth),..source};caller.fund_closure(demand.copy_bytes,0);caller.fund_retirement();caller.turn_with_decoder(close,&mut decoder,|cx|origin.close_step(cx)).unwrap();}assert!(origin.terminal_is_empty());
+    for _ in 0..16384{if decoder.terminal_is_empty(){break}caller.turn(source,|cx|{let _=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty());caller.retire(source);
 }
 
 #[test]

@@ -120,14 +120,13 @@ fn workbook_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
 
 //#region 🔖️CellNodes
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cell_value_nodes(cell_name: &str, current: &[XmlNode], scope: &[(String, String)], namespace: &str, value: &XlsxCellValue) -> Result<(Option<String>, Vec<XmlNode>), String> {
+fn cell_value_nodes(cell_name: &str, current: &[XmlNode], scope: &[(String, String)], namespace: &str, value: &XlsxCellValue, effective: &XlsxCellValue) -> Result<(Option<String>, Vec<XmlNode>), String> {
     let child_name = |local| qualified_like(cell_name, local);
-    let mut formula_attrs = None;
+    let mut formula_node = None;
     for node in current {
         let child_scope = namespace_scope(scope, node);
         if element_matches(node, &child_scope, &[namespace], "f")? {
-            let XmlNode::Element { attrs, .. } = node else { unreachable!() };
-            formula_attrs = Some(attrs.clone());
+            formula_node = Some(node.clone());
             break;
         }
     }
@@ -146,7 +145,15 @@ fn cell_value_nodes(cell_name: &str, current: &[XmlNode], scope: &[(String, Stri
         XlsxCellValue::Boolean(value) => (Some("b".into()), vec![v(if *value { "1".into() } else { "0".into() })]),
         XlsxCellValue::Error(error) => (Some("e".into()), vec![v(error.clone())]),
         XlsxCellValue::Formula { expr, cached } => {
-            let mut children = vec![XmlNode::Element { name: child_name("f"), attrs: formula_attrs.unwrap_or_default(), children: vec![XmlNode::Text { text: expr.clone() }] }];
+            let shared = formula_node.as_ref().is_some_and(|node| matches!(node, XmlNode::Element { attrs, .. } if attrs.iter().any(|attr| attr.name == "t" && attr.value == "shared")));
+            let unchanged = matches!(effective, XlsxCellValue::Formula { expr: current, .. } if current == expr);
+            let formula = match formula_node {
+                Some(node) if shared && unchanged => node,
+                Some(XmlNode::Element { attrs, .. }) if shared => XmlNode::Element { name: child_name("f"), attrs: attrs.into_iter().filter(|attr| !matches!(attr.name.as_str(), "t" | "si" | "ref")).collect(), children: vec![XmlNode::Text { text: expr.clone() }] },
+                Some(XmlNode::Element { attrs, .. }) => XmlNode::Element { name: child_name("f"), attrs, children: vec![XmlNode::Text { text: expr.clone() }] },
+                _ => XmlNode::Element { name: child_name("f"), attrs: Vec::new(), children: vec![XmlNode::Text { text: expr.clone() }] },
+            };
+            let mut children = vec![formula];
             let cell_type = match cached.as_deref() {
                 Some(XlsxCellValue::Number(number)) => {
                     children.push(v(number.to_string()));
@@ -176,13 +183,21 @@ fn cell_value_nodes(cell_name: &str, current: &[XmlNode], scope: &[(String, Stri
     })
 }
 
-/// 🔎️ The typed value the cell element `node` holds, read through the same projection the snapshot's workbook view uses.
+/// 🔎️ The typed value the cell element `node` holds, read through the same projection the snapshot's workbook view uses; `at` is the cell's path in the part, which lets a dependent shared-formula cell spell its master's translated formula.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cell_value_of(snapshot: &XlsxSnapshot, part_path: &str, node: &XmlNode, scope: &[(String, String)], namespace: &str) -> Result<XlsxCellValue, String> {
+fn cell_value_of(snapshot: &XlsxSnapshot, part_path: &str, node: &XmlNode, scope: &[(String, String)], namespace: &str, at: Option<&[usize]>) -> Result<XlsxCellValue, String> {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::{extract_cell_value, shared_formula_index, shared_formula_masters, worksheet_cell_refs, SharedFormulas};
     let XmlNode::Element { children, .. } = node else { return Err("XLSX cell address resolved a non-element".into()) };
     let cell_type = attribute_value(node, scope, &[""], "t")?;
     let shared = shared_strings(snapshot).map_or(0, |table| table.positions.len());
-    semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::extract_cell_value(children, scope, namespace, cell_type, shared, part_path).map_err(|error| error.to_string())
+    let (masters, position) = match (at, shared_formula_index(children, scope, namespace)?) {
+        (Some(at), Some(_)) => {
+            let refs = worksheet_cell_refs(part_root(snapshot, part_path)?)?;
+            (shared_formula_masters(&refs)?, refs.iter().find(|cell| cell.path == at).map(|cell| (cell.row, cell.col)))
+        }
+        _ => (SharedFormulas::new(), None),
+    };
+    extract_cell_value(children, scope, namespace, cell_type, shared, part_path, &masters, position).map_err(|error| error.to_string())
 }
 
 //#endregion 🔖️CellNodes
@@ -190,9 +205,9 @@ fn cell_value_of(snapshot: &XlsxSnapshot, part_path: &str, node: &XmlNode, scope
 //#region 🔖️CellPlans
 /// 🧩️ The cell element `current` becomes when it holds `value`: value children replaced where the old ones stood, every other child and attribute kept.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rebuilt_cell(current: &XmlNode, scope: &[(String, String)], namespace: &str, value: &XlsxCellValue) -> Result<XmlNode, String> {
+fn rebuilt_cell(current: &XmlNode, scope: &[(String, String)], namespace: &str, value: &XlsxCellValue, effective: &XlsxCellValue) -> Result<XmlNode, String> {
     let XmlNode::Element { name, attrs, children } = current else { return Err("XLSX cell address resolved a non-element".into()) };
-    let (cell_type, replacement) = cell_value_nodes(name, children, scope, namespace, value)?;
+    let (cell_type, replacement) = cell_value_nodes(name, children, scope, namespace, value, effective)?;
     let mut new_attrs = attrs.clone();
     set_attr(&mut new_attrs, "t", cell_type);
     let mut kept = Vec::new();
@@ -217,7 +232,7 @@ fn rebuilt_cell(current: &XmlNode, scope: &[(String, String)], namespace: &str, 
 /// 🧩️ The cell element a brand-new cell named `cell_name` holding `value` at `reference` is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn new_cell(cell_name: String, scope: &[(String, String)], namespace: &str, reference: &str, value: &XlsxCellValue) -> Result<XmlNode, String> {
-    let (cell_type, children) = cell_value_nodes(&cell_name, &[], scope, namespace, value)?;
+    let (cell_type, children) = cell_value_nodes(&cell_name, &[], scope, namespace, value, &XlsxCellValue::Empty)?;
     let mut attrs = vec![XmlAttr { name: "r".into(), value: reference.to_string() }];
     if let Some(cell_type) = cell_type {
         attrs.push(XmlAttr { name: "t".into(), value: cell_type });
@@ -234,13 +249,66 @@ fn cell_reference<'a>(node: &'a XmlNode, scope: &[(String, String)], namespace: 
     attribute_value(node, &scope, &[""], "r")
 }
 
+/// 🧩️ The diff that replaces each addressed node of one part: `edits` pairs a path below the part root with the node that stands there afterwards.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn replacements_leaf(edits: Vec<(&[usize], XmlNode)>) -> XmlNodeDiff {
+    if let [(path, node)] = edits.as_slice() {
+        if path.is_empty() {
+            return XmlNodeDiff::Replace { node: Some(node.clone()) };
+        }
+    }
+    let mut groups: std::collections::BTreeMap<usize, Vec<(&[usize], XmlNode)>> = std::collections::BTreeMap::new();
+    for (path, node) in edits {
+        if let Some((&index, rest)) = path.split_first() {
+            groups.entry(index).or_default().push((rest, node));
+        }
+    }
+    children_leaf(Vec::new(), groups.into_iter().map(|(index, rest)| XmlChildModified { index, diff: replacements_leaf(rest) }).collect(), Vec::new())
+}
+
+/// 📋️ The dependents of the shared-formula group `index` as explicit-formula cells: each keeps its other children and spells the formula its master translated to it, as `(path, old node, new node, old value)`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn materialized_dependents(snapshot: &XlsxSnapshot, part_path: &str, index: &str, master_path: &[usize]) -> Result<Vec<(Vec<usize>, XmlNode, XmlNode, XlsxCellValue)>, String> {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::{shared_formula_index, worksheet_cell_refs};
+    let refs = worksheet_cell_refs(part_root(snapshot, part_path)?)?;
+    let mut dependents = Vec::new();
+    for cell in refs.iter().filter(|cell| cell.path != master_path) {
+        let XmlNode::Element { name, attrs, children } = cell.node else { continue };
+        if shared_formula_index(children, &cell.scope, &cell.namespace)?.as_deref() != Some(index) {
+            continue;
+        }
+        let old_value = cell_value_of(snapshot, part_path, cell.node, &cell.scope, &cell.namespace, Some(&cell.path))?;
+        let XlsxCellValue::Formula { expr, .. } = &old_value else { continue };
+        if expr.is_empty() {
+            continue;
+        }
+        let mut rebuilt = Vec::with_capacity(children.len());
+        for child in children {
+            let child_scope = namespace_scope(&cell.scope, child);
+            match child {
+                XmlNode::Element { name, attrs, children } if element_matches(child, &child_scope, &[cell.namespace.as_str()], "f")? => {
+                    let kept = attrs.iter().filter(|attr| !matches!(attr.name.as_str(), "t" | "si" | "ref")).cloned().collect();
+                    let text = if children.is_empty() { vec![XmlNode::Text { text: expr.clone() }] } else { children.clone() };
+                    rebuilt.push(XmlNode::Element { name: name.clone(), attrs: kept, children: text });
+                }
+                other => rebuilt.push(other.clone()),
+            }
+        }
+        dependents.push((cell.path.clone(), cell.node.clone(), XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: rebuilt }, old_value));
+    }
+    Ok(dependents)
+}
+
 /// ✍️ Replaces the addressed cell (by `node` verbatim, or by `value` rebuilt in place); the inverse restores the cell it held, carrying that element verbatim when
-/// rebuilding it from its typed value would lose something, and is named by the address the cell has afterwards.
+/// rebuilding it from its typed value would lose something, and is named by the address the cell has afterwards. A shared-formula master that stops being that group's
+/// formula first turns every dependent of its group into an explicit formula, so no other cell changes what it computes; the inverse restores each of them verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress, value: &XlsxCellValue, node: Option<&XmlNode>) -> Planned {
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::shared_formula_index;
     let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
     let scope = cell_address::addressed_cell_scope(snapshot, address)?;
-    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri)?;
+    let at = Some(address.node_path.as_slice());
+    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri, at)?;
     let next = match node {
         Some(node) => {
             let parent_path = &address.node_path[..address.node_path.len().saturating_sub(1)];
@@ -251,19 +319,55 @@ pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::Xls
             }
             node.clone()
         }
-        None => rebuilt_cell(resolved.node, &scope, &address.namespace_uri, value)?,
+        None => rebuilt_cell(resolved.node, &scope, &address.namespace_uri, value, &old_value)?,
     };
     if next == *resolved.node {
         return Ok(XlsxPlan { diff: XlsxDiff::default(), inverse: Vec::new() });
     }
+    let XmlNode::Element { children: old_children, .. } = resolved.node else { unreachable!() };
+    let XmlNode::Element { children: next_children, .. } = &next else { return Err("XLSX cell replacement is not an element".into()) };
+    let group = shared_formula_index(old_children, &scope, &address.namespace_uri)?;
+    let dependents = match group {
+        Some(index) if matches!(&old_value, XlsxCellValue::Formula { expr, .. } if !expr.is_empty()) && shared_formula_index(next_children, &scope, &address.namespace_uri)?.as_deref() != Some(index.as_str()) && old_children_spell_master(old_children, &scope, &address.namespace_uri)? => {
+            materialized_dependents(snapshot, &address.part_path, &index, &address.node_path)?
+        }
+        _ => Vec::new(),
+    };
     let mut after = part_root(snapshot, &address.part_path)?.clone();
     *node_at_mut(&mut after, &address.node_path).ok_or_else(|| "XLSX cell address is stale".to_string())? = next.clone();
+    for (path, _, replacement, _) in &dependents {
+        *node_at_mut(&mut after, path).ok_or_else(|| "XLSX cell address is stale".to_string())? = replacement.clone();
+    }
     let restored = cell_address::cell_address_in(snapshot, &address.part_path, &after, address.node_path.clone())?;
-    let exact = (rebuilt_cell(&next, &scope, &address.namespace_uri, &old_value)? != *resolved.node).then(|| resolved.node.clone());
-    Ok(XlsxPlan {
-        diff: part_diff(&address.part_path, &address.node_path, XmlNodeDiff::Replace { node: Some(next) }),
-        inverse: vec![XlsxMutation::SetCell(set_cell::SetCell { address: restored, value: old_value, node: exact })],
-    })
+    let after_value = cell_value_of(snapshot, &address.part_path, &next, &scope, &address.namespace_uri, at)?;
+    let exact = (rebuilt_cell(&next, &scope, &address.namespace_uri, &old_value, &after_value)? != *resolved.node).then(|| resolved.node.clone());
+    let diff = if dependents.is_empty() {
+        part_diff(&address.part_path, &address.node_path, XmlNodeDiff::Replace { node: Some(next) })
+    } else {
+        let mut edits: Vec<(&[usize], XmlNode)> = vec![(address.node_path.as_slice(), next)];
+        edits.extend(dependents.iter().map(|(path, _, replacement, _)| (path.as_slice(), replacement.clone())));
+        modified_parts(vec![(address.part_path.clone(), diff_at_path(&[], replacements_leaf(edits)))])
+    };
+    let mut inverse = vec![XlsxMutation::SetCell(set_cell::SetCell { address: restored, value: old_value, node: exact })];
+    for (path, original, _, original_value) in dependents {
+        let dependent = cell_address::cell_address_in(snapshot, &address.part_path, &after, path)?;
+        inverse.push(XlsxMutation::SetCell(set_cell::SetCell { address: dependent, value: original_value, node: Some(original) }));
+    }
+    Ok(XlsxPlan { diff, inverse })
+}
+
+/// 🔎️ Whether a shared-formula cell carries its group's formula text itself, which makes it the master.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn old_children_spell_master(children: &[XmlNode], scope: &[(String, String)], namespace: &str) -> Result<bool, String> {
+    for child in children {
+        let child_scope = namespace_scope(scope, child);
+        if let XmlNode::Element { children: text, .. } = child {
+            if element_matches(child, &child_scope, &[namespace], "f")? {
+                return Ok(text.iter().any(|node| matches!(node, XmlNode::Text { text } if !text.is_empty())));
+            }
+        }
+    }
+    Ok(false)
 }
 
 struct WorksheetInsertion<'a> {
@@ -396,7 +500,7 @@ pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::
     let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
     let scope = cell_address::addressed_cell_scope(snapshot, address)?;
     let namespace = address.namespace_uri.as_str();
-    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, namespace)?;
+    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, namespace, Some(&address.node_path))?;
     let (&cell_index, row_path) = address.node_path.split_last().ok_or_else(|| "cannot remove worksheet root".to_string())?;
     let (&row_index, sheet_data_path) = row_path.split_last().ok_or_else(|| "cell has no row".to_string())?;
     let root = part_root(snapshot, &address.part_path)?;
@@ -1011,7 +1115,7 @@ pub(super) fn node_cell_value(snapshot: &XlsxSnapshot, part_path: &str, parent_p
     let XmlNode::Element { name, .. } = root else { return Err("worksheet root is not an element".into()) };
     let (namespace, _) = expanded_element_name(name, &namespace_scope(&[], root))?;
     let cell_scope = namespace_scope(&scope, node);
-    cell_value_of(snapshot, part_path, node, &cell_scope, &namespace)
+    cell_value_of(snapshot, part_path, node, &cell_scope, &namespace, None)
 }
 
 /// 🔤️ The text a shared-string entry `node` spells.

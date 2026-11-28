@@ -1,0 +1,19 @@
+{
+  "cases": [
+    { "from": "/w/a/b/f.ts", "request": "./g", "fact": "/w/a/b/g.ts", "consulted": ["/w/a/b", "/w/a/b/g"] },
+    { "from": "/w/a/b/f.ts", "request": "../c/h.js", "fact": "/w/a/c/h.js", "consulted": ["/w/a/c", "/w/a/c/h.js"] },
+    { "from": "/w/a/b/f.ts", "request": "./dir", "fact": "/w/a/b/dir/index.ts", "consulted": ["/w/a/b", "/w/a/b/dir"] },
+    { "from": "/w/a/b/f.ts", "request": ".", "fact": "/w/a/b/index.ts", "consulted": ["/w/a", "/w/a/b"] },
+    { "from": "/w/a/b/f.ts", "request": "./missing", "fact": "!ENOENT", "consulted": ["/w/a/b", "/w/a/b/missing"] },
+    { "from": "/w/a/b/f.ts", "request": "/w/x/y", "fact": "/w/x/y.mjs", "consulted": ["/w/x", "/w/x/y"] },
+    { "from": "/w/a/b/f.ts", "request": "node:fs", "fact": "node:fs", "consulted": [] },
+    { "from": "/w/a/b/f.ts", "request": "node:fs", "fact": "/elsewhere/fs", "consulted": null },
+    { "from": "/w/a/b/f.ts", "request": "typescript", "fact": "/w/node_modules/typescript/lib/typescript.js", "consulted": null },
+    { "from": "/w/a/b/f.ts", "request": "#internal", "fact": "/w/a/b/internal.ts", "consulted": null },
+    { "from": "/w/a/b/f.ts", "request": "./linked", "fact": "/elsewhere/linked.ts", "consulted": null },
+    { "from": "/w/a/b/f.ts", "request": "./g", "fact": "/w/a/b/other.ts", "consulted": null },
+    { "from": "/w/a/b/f.ts", "request": "./g", "fact": null, "consulted": null },
+    { "from": "relative/f.ts", "request": "./g", "fact": "/w/g.ts", "consulted": null },
+    { "from": "C:\\w\\a\\f.ts", "request": ".\\g", "fact": "C:\\w\\a\\g.ts", "consulted": ["C:/w/a", "C:/w/a/g"] }
+  ]
+}

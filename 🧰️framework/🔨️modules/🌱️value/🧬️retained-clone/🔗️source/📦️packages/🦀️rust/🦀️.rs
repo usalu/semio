@@ -3,13 +3,16 @@ pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementControl,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement,OriginalRetirementFailure,OriginalRetirementCloseLoan,OriginalRetirementClosePort,OriginalFailureStorageBirth,OriginalFailureStoragePool};
 pub use semio_framework_value_shared_issuance as shared_issuance;
-use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
+use semio_framework_value_retirement::RetireOwned;
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
 static RETAINED_CLONE_SOURCE_IDS:AtomicU64=AtomicU64::new(1);
 #[path="../../🦀️.rs"]
 mod source_custody;
 pub use source_custody::{RetainedCloneSource,RetainedCloneSourceAdmission,StagedSourceAdmission,StagedProjectionSelection,OriginalProjectionContext,OriginalProjectionFrame,OriginalProjectionFramePhase,OriginalProjectionProducer,OriginalProjectionReply,OriginalSourceProjection};
 use source_custody::RetainedCloneLeaseOwner;
+#[path="../../🧯️compact-close/🦀️.rs"]
+mod compact_close;
+use compact_close::BindingState;
 #[path="../../../🔗️projection/🦀️.rs"]
 mod owned_projection;
 pub use owned_projection::{RetainedOwnedProjection,RetainedOwnedProjectionAdmission,RetainedNativeFieldProjection,RetainedNativeArrayIndexProjection};
@@ -46,23 +49,26 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn check_binding_work(binding:&Option<RetainedCloneBinding>)->u64{if binding.is_some(){5}else{1}}
  /// 🪪️ Checks one issued original binding under its caller work and physical grant.
  pub fn check_binding_paid(self,binding:&Option<RetainedCloneBinding>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<bool>>{
-  let before=effect.performed_work();let result=(||->Result<Option<bool>,ValueError>{let quoted=Self::check_binding_work(binding);if effect.remaining_work_units()?<quoted||!retained_clone_grant_admits(effect.grant(),RetirementDemand{depth:1,..Default::default()}){return Ok(None)}let charge=|effect:&mut RetainedAllocationEffect<'_>|->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"source binding check exceeded its original work"))}};charge(effect)?;let Some(expected)=binding.as_ref()else{return Ok(Some(false))};let Some(lease)=expected.lease.as_ref()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))};let mismatch=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed");charge(effect)?;if lease.get().id!=self.lease.get().id{return Err(mismatch())}charge(effect)?;if expected.projection.parent!=self.projection.parent{return Err(mismatch())}charge(effect)?;if expected.projection.address!=self.projection.address{return Err(mismatch())}charge(effect)?;if expected.projection.discriminator!=self.projection.discriminator{return Err(mismatch())}Ok(Some(true))})();RetainedWorkOutcome{result,work:effect.performed_work()-before}
+  let before=effect.performed_work();let result=(||->Result<Option<bool>,ValueError>{let quoted=Self::check_binding_work(binding);if effect.remaining_work_units()?<quoted||!retained_clone_grant_admits(effect.grant(),RetirementDemand{depth:1,..Default::default()}){return Ok(None)}let charge=|effect:&mut RetainedAllocationEffect<'_>|->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"source binding check exceeded its original work"))}};charge(effect)?;let Some(expected)=binding.as_ref()else{return Ok(Some(false))};let Some(lease)=expected.lease()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))};let mismatch=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed");charge(effect)?;if lease.get().id!=self.lease.get().id{return Err(mismatch())}charge(effect)?;if expected.projection.parent!=self.projection.parent{return Err(mismatch())}charge(effect)?;if expected.projection.address!=self.projection.address{return Err(mismatch())}charge(effect)?;if expected.projection.discriminator!=self.projection.discriminator{return Err(mismatch())}Ok(Some(true))})();RetainedWorkOutcome{result,work:effect.performed_work()-before}
  }
   /// ✅️ Checks the original issued source and exact projected path without granting a new alias.
  pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}
  /// 🔒️ Validates one original lease and projected path without exposing private custody.
- pub fn matches_binding(self,binding:&RetainedCloneBinding)->bool{binding.lease.as_ref().is_some_and(|lease|lease.get().id==self.lease.get().id)&&binding.projection==self.projection}
- pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<RetirementDemand>,ValueError>{if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
+ pub fn matches_binding(self,binding:&RetainedCloneBinding)->bool{binding.lease().is_some_and(|lease|lease.get().id==self.lease.get().id)&&binding.projection==self.projection}
+ pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<RetirementDemand>,ValueError>{if let Some(expected)=binding{if expected.lease().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
  /// ⛽️ Validates the original binding before borrowing its defining alias increment quote.
  pub fn binding_work_demand(self,binding:&Option<RetainedCloneBinding>)->Result<u64,ValueError>{if self.binding_demand(binding)?.is_none(){Ok(0)}else{self.lease.duplicate_work_demand()}}
  pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let grant=effect.grant();let mut work=0;let result=(||{
-  if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
+  if let Some(expected)=binding{if expected.lease().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
   if effect.remaining_work_units()?<self.binding_work_demand(binding)?||grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
   let mut alias=None;let turn=self.lease.duplicate_into(&mut alias,effect);work=turn.work;let mut progress=turn.result?.progress();let Some(alias)=alias else{return Ok(Some(progress))};*binding=Some(RetainedCloneBinding::new(alias,self.projection));progress.copied_bytes=self.binding_copy_bytes();Ok(Some(progress))
  })();RetainedWorkOutcome{result,work}}
 }
 fn close_query_busy()->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,"original close query already holds exclusive cursor custody")}
-pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>,projection:RetainedCloneProjection}
+pub struct RetainedCloneBinding{state:ManuallyDrop<BindingState>,projection:RetainedCloneProjection}
+type SealedLease=shared_issuance::SealedShared<RetainedCloneLeaseOwner>;
+fn work_exceeded(work:u128)->crate::OriginalRetirementPoll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work})}
+fn done(result:Result<RetainedCloneStep,OriginalRetirementFailure>,work:u128)->crate::OriginalRetirementPoll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work})}
 impl RetainedCloneBinding{
  pub fn close_into<'reply>(binding:&mut Option<Self>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Self::close_borrowed(binding,None,body,effect,reply,false)}
  pub fn recover_close_into<'reply>(binding:&mut Option<Self>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Self::close_borrowed(binding,None,body,effect,reply,true)}
@@ -70,64 +76,100 @@ impl RetainedCloneBinding{
  pub fn recover_close_original_into<'reply>(binding:&mut Option<Self>,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Self::close_borrowed(binding,Some(original),body,effect,reply,true)}
  fn close_borrowed<'reply>(binding:&mut Option<Self>,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>,recover:bool)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
   if effect.invocation().is_none(){return Err(ValueError::invariant("binding close requires its original producer invocation"))}
-  if recover{
-   let owner=binding.as_mut().and_then(|owner|owner.close.as_mut()).ok_or_else(||ValueError::invariant("binding recovery lost its original close owner"))?.get_mut();
-   return match original{Some(original)=>owner.recover_step_original_into(original,body,effect,reply),None=>owner.recover_step_into(body,effect,reply)}
-  }
-  if let Some(owner)=binding.as_mut().and_then(|owner|owner.close.as_mut()){
-   let owner=owner.get_mut();if !owner.terminal_is_empty(){return match original{Some(original)=>owner.step_original_into(original,body,effect,reply),None=>owner.step_into(body,effect,reply)}}
+  let selected=binding.as_ref().is_some_and(|owner|!owner.state.is_live()&&!owner.state.is_closed());
+  if recover&&!selected{return Err(ValueError::invariant("binding recovery lost its original close owner"))}
+  if selected{
+   let owner=binding.as_mut().expect("selected binding close");
+   return match owner.state.step(original,compact_close::Drive::Reply{recover},body,effect){RetainedWorkPoll::Pending{..}=>Ok(reply.pending()),RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result))}
   }
   match Self::close_one(binding,body,effect){RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result)),RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("native binding header transition cannot suspend"))}
  }
-
-
- pub fn bound_close_available(binding:&Option<Self>)->bool{binding.as_ref().is_some_and(|owner|owner.close.is_none()&&owner.lease.as_ref().is_some_and(|lease|!lease.terminal_is_empty()))}
- pub fn bound_close_demand<T:?Sized>(binding:&Option<Self>,source:RetainedCloneRef<'_,T>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=binding.as_ref()else{return Ok(Default::default())};if owner.close.is_some(){return Self::close_demand(binding,body)}source.binding_demand(binding)?;let lease=owner.lease.as_ref().ok_or_else(||ValueError::invariant("bound close lost its lease"))?;let mut demand=lease.borrowed_alias_return_demand();demand.copy_bytes=demand.copy_bytes.checked_add(std::mem::size_of_val(&owner.lease)).and_then(|n|n.checked_add(std::mem::size_of::<Option<Self>>())).ok_or_else(||ValueError::invariant("bound alias copy overflow"))?;Ok(demand)}
+ /// 🪢️ Borrows the counted lease while no close has begun.
+ pub(crate) fn lease(&self)->Option<&SealedLease>{match &*self.state{BindingState::Live(lease)=>Some(lease),_=>None}}
+ pub fn bound_close_available(binding:&Option<Self>)->bool{binding.as_ref().and_then(Self::lease).is_some_and(|lease|!lease.terminal_is_empty())}
+ pub fn bound_close_demand<T:?Sized>(binding:&Option<Self>,source:RetainedCloneRef<'_,T>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=binding.as_ref()else{return Ok(Default::default())};if !owner.state.is_live(){return Self::close_demand(binding,body)}source.binding_demand(binding)?;let lease=owner.lease().ok_or_else(||ValueError::invariant("bound close lost its lease"))?;let mut demand=lease.borrowed_alias_return_demand();demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<SealedLease>()).and_then(|n|n.checked_add(size_of::<Option<Self>>())).ok_or_else(||ValueError::invariant("bound alias copy overflow"))?;Ok(demand)}
  pub fn bound_close_work_demand<T:?Sized>(binding:&Option<Self>,_source:RetainedCloneRef<'_,T>,body:usize)->Result<u64,ValueError>{Self::close_work_demand(binding,body)}
  pub fn close_bound_into<'r,T:?Sized>(binding:&mut Option<Self>,source:RetainedCloneRef<'_,T>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
-  if effect.invocation().is_none(){return Err(ValueError::invariant("bound close requires its actual invocation"))}if binding.as_ref().is_some_and(|owner|owner.close.is_some()){return Self::close_into(binding,body,effect,reply)}let demand=Self::bound_close_demand(binding,source,effect.grant().maximum_copy_bytes)?;let Some(owner)=binding.as_mut()else{return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))};if !retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}let turn=owner.lease.as_mut().unwrap().return_borrowed_alias(source.lease,effect);let result=match turn.result{Err(error)=>Err(error.into()),Ok(progress)if progress.copied_items==0=>Ok(RetainedCloneStep::Progress(progress)),Ok(progress)=>{*binding.as_mut().unwrap().lease=None;*binding=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..progress}))}};Ok(reply.complete(result))
+  if effect.invocation().is_none(){return Err(ValueError::invariant("bound close requires its actual invocation"))}if binding.as_ref().is_some_and(|owner|!owner.state.is_live()){return Self::close_into(binding,body,effect,reply)}let demand=Self::bound_close_demand(binding,source,effect.grant().maximum_copy_bytes)?;let Some(owner)=binding.as_mut()else{return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))};if !retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  let BindingState::Live(lease)=&mut *owner.state else{return Err(ValueError::invariant("bound close lost its lease"))};let turn=lease.return_borrowed_alias(source.lease,effect);let result=match turn.result{Err(error)=>Err(error.into()),Ok(progress)if progress.copied_items==0=>Ok(RetainedCloneStep::Progress(progress)),Ok(progress)=>{*binding.as_mut().expect("bound binding").state=BindingState::Closed;*binding=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..progress}))}};Ok(reply.complete(result))
  }
  /// 🪙️ Quotes the one-step alias return of a bound alias that nothing else is closing: `Ok(None)` when unbound, `Err` when the ladder is required.
- pub fn flat_release_quote(binding:&Option<Self>)->Result<Option<RetirementDemand>,()>{match binding{None=>Ok(None),Some(owner)=>if owner.close.is_none()&&owner.lease.as_ref().is_some_and(|lease|lease.alias_is_returnable()){Ok(Some(Self::alias_return_demand()))}else{Err(())}}}
+ pub fn flat_release_quote(binding:&Option<Self>)->Result<Option<RetirementDemand>,()>{match binding{None=>Ok(None),Some(owner)=>if owner.lease().is_some_and(|lease|lease.alias_is_returnable()){Ok(Some(Self::alias_return_demand()))}else{Err(())}}}
  /// 🪙️ Returns the quoted alias; false means another holder raced and the ladder remains.
- pub fn flat_release(binding:&mut Option<Self>)->bool{let Some(owner)=binding.as_mut()else{return true};let Some(lease)=owner.lease.take()else{return false};match lease.retire_shared_alias(){Ok(())=>{*binding=None;true},Err(lease)=>{*owner.lease=Some(lease);false}}}
+ pub fn flat_release(binding:&mut Option<Self>)->bool{let Some(owner)=binding.as_mut()else{return true};if !owner.state.is_live(){return false}let BindingState::Live(lease)=std::mem::replace(&mut *owner.state,BindingState::Closed)else{unreachable!("live lease checked")};match lease.retire_shared_alias(){Ok(())=>{*binding=None;true},Err(lease)=>{*owner.state=BindingState::Live(lease);false}}}
  /// 🪙️ Quotes the one-step return of a counted alias: its lease slot and the binding discriminant.
- pub fn alias_return_demand()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
- pub fn alias_copy_bytes()->usize{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_copy_bytes()+std::mem::size_of::<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>()+std::mem::size_of::<bool>()}
+ pub fn alias_return_demand()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<Option<SealedLease>>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
+ pub fn alias_copy_bytes()->usize{SealedLease::duplicate_copy_bytes()+std::mem::size_of::<Option<SealedLease>>()+std::mem::size_of::<bool>()}
  /// ⛽️ Quotes the actual sealed alias duplication and two binding-state writes.
- pub const fn alias_work_demand()->u64{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::DUPLICATE_WORK}
- fn new(lease:shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
+ pub const fn alias_work_demand()->u64{SealedLease::DUPLICATE_WORK}
+ fn new(lease:SealedLease,projection:RetainedCloneProjection)->Self{Self{state:ManuallyDrop::new(BindingState::Live(lease)),projection}}
  pub fn close_one(binding:&mut Option<Self>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
-  if binding.is_none(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}let grant=effect.grant();let demand=match Self::close_demand(binding,body){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};let work=match Self::close_work_demand(binding,body){Ok(work)=>work,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if effect.maximum_work_units()<work||!retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
-  let Some(owner)=binding.as_mut()else{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
-  if owner.close.is_none()&&owner.lease.as_ref().is_some_and(|lease|lease.alias_is_returnable()){match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work:1}),Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}let lease=owner.lease.take().expect("returnable alias checked");match lease.retire_shared_alias(){Ok(())=>{*binding=None;return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})},Err(lease)=>{*owner.lease=Some(lease);return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:1})}}}
-  if owner.close.is_none()&&owner.lease.is_some(){match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work:1}),Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}let lease=owner.lease.take().expect("original lease checked");*owner.close=Some(RetainedOwnerGate::new(retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer"))));return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})}
-  let close=match owner.close.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("close absent").into()),work:0})}.get_mut();if close.terminal_is_empty(){match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work:1}),Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}*owner.close=None;*binding=None;return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})}close.step(body,effect)
+  let Some(owner)=binding.as_mut()else{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)};
+  let grant=effect.grant();let demand=match Self::close_demand_of(owner,body){Ok(demand)=>demand,Err(error)=>return done(Err(error.into()),0)};let work=match Self::close_work_of(owner,body){Ok(work)=>work,Err(error)=>return done(Err(error.into()),0)};
+  if effect.maximum_work_units()<work||!retained_clone::retained_clone_grant_admits(grant,demand)||grant.maximum_items==0||grant.maximum_depth==0{return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
+  let progress=|bytes:usize|RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
+  match &mut *owner.state{
+   BindingState::Live(lease)=>{
+    let returnable=lease.alias_is_returnable();
+    match effect.performed(1){Ok(true)=>{},Ok(false)=>return work_exceeded(1),Err(error)=>return done(Err(error.into()),1)}
+    if returnable{
+     let BindingState::Live(lease)=std::mem::replace(&mut *owner.state,BindingState::Closed)else{unreachable!("live lease checked")};
+     return match lease.retire_shared_alias(){Ok(())=>{*binding=None;done(Ok(RetainedCloneStep::Complete(progress(demand.copy_bytes))),1)},Err(lease)=>{*owner.state=BindingState::Live(lease);done(Ok(RetainedCloneStep::Progress(Default::default())),1)}}
+    }
+    if !lease.retirement_ready(){return done(Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original owner requires recovery before retirement").into()),1)}
+    let BindingState::Live(lease)=std::mem::replace(&mut *owner.state,BindingState::Closed)else{unreachable!("live lease checked")};*owner.state=BindingState::Sealed(lease.retirement_seed());
+    done(Ok(RetainedCloneStep::Progress(progress(demand.copy_bytes))),1)
+   },
+   BindingState::Closed=>{match effect.performed(1){Ok(true)=>{},Ok(false)=>return work_exceeded(1),Err(error)=>return done(Err(error.into()),1)}*binding=None;done(Ok(RetainedCloneStep::Complete(progress(demand.copy_bytes))),1)},
+   _=>owner.state.step(None,compact_close::Drive::Reply{recover:false},body,effect),
+  }
+ }
+ /// 🧯️ Closes an exclusively held lease-bound source back to back inside one funded turn: every step whose quote needs no heap birth runs under the remaining grant and its receipts fold into one item (copied and released bytes and work summed); `None` when no step can run (nothing bound, a live alias returns in its one step, a first step that births a frame, or an unfunded grant), and a partial turn leaves the same resumable state the stepwise close continues from.
+ pub fn close_compact(binding:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>)->Option<OriginalRetirementPoll>{
+  let grant=effect.grant();let mut total=RetainedCloneProgress::default();let mut work=0u128;let mut steps=0usize;
+  loop{
+   let Some(owner)=binding.as_ref()else{break};
+   let remaining=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(total.copied_bytes),maximum_capacity_bytes:0,maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(total.released_bytes),maximum_depth:grant.maximum_depth};
+   let Ok(demand)=Self::close_demand_of(owner,remaining.maximum_copy_bytes)else{break};let Ok(units)=Self::close_work_of(owner,remaining.maximum_copy_bytes)else{break};
+   if demand.capacity_bytes!=0||grant.maximum_items==0||(steps==0&&owner.lease().is_some_and(|lease|lease.alias_is_returnable()))||u128::from(units)>u128::from(effect.remaining_work_units().unwrap_or(0))||!retained_clone::retained_clone_grant_admits(remaining,demand){break}
+   let Ok(mut step_effect)=effect.reborrow(remaining,units)else{break};
+   match Self::close_one(binding,remaining.maximum_copy_bytes,&mut step_effect){
+    RetainedWorkPoll::Pending{work:pending}=>return Some(RetainedWorkPoll::Pending{work:work+pending}),
+    RetainedWorkPoll::Complete(turn)=>match turn.result{
+     Err(error)=>return Some(done(Err(error),work+turn.work)),
+     Ok(step)=>{let progress=step.progress();work+=turn.work;steps+=1;total.copied_bytes+=progress.copied_bytes;total.released_bytes+=progress.released_bytes;if progress==RetainedCloneProgress::default(){break}}
+    },
+   }
+  }
+  if steps==0{return None}
+  total.copied_items=1;
+  Some(done(Ok(if binding.is_none(){RetainedCloneStep::Complete(total)}else{RetainedCloneStep::Progress(total)}),work))
  }
  /// ⛽️ Quotes the actual original binding closure action.
- pub fn close_work_demand(binding:&Option<Self>,body:usize)->Result<u64,ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|gate|{let owner=gate.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}))}
+ pub fn close_work_demand(binding:&Option<Self>,body:usize)->Result<u64,ValueError>{binding.as_ref().map_or(Ok(0),|owner|Self::close_work_of(owner,body))}
+ fn close_work_of(owner:&Self,body:usize)->Result<u64,ValueError>{if owner.state.is_live()||owner.state.is_closed(){Ok(1)}else{owner.state.phase_demand(body).map(|(_,work)|work)}}
  pub fn copy_demand(binding:&Option<Self>)->Result<usize,ValueError>{Self::close_demand(binding,0).map(|demand|demand.copy_bytes)}
- pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_capacity_byte_demand(body))}
- pub fn release_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_release_byte_demand())}
- pub fn depth_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|owner|{let owner=owner.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()}}))}
- pub fn close_demand(binding:&Option<Self>,body:usize)->Result<RetirementDemand,ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(if owner.lease.as_ref().is_some_and(|lease|lease.alias_is_returnable()){Self::alias_return_demand()}else{RetirementDemand{copy_bytes:std::mem::size_of::<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>()+std::mem::size_of::<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>(),depth:1,..Default::default()}}),|gate|{let current=gate.try_lock().map_err(|_|close_query_busy())?;if current.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>()+std::mem::size_of::<Option<Self>>(),depth:1,..Default::default()})}else{current.selected_demand(body)}}))}
- /// 👶️ Preserves a selected child Birth; busy custody conservatively selects its original route.
- pub fn requires_original_birth(binding:&Option<Self>)->bool{binding.as_ref().and_then(|owner|owner.close.as_ref()).is_some_and(|gate|gate.try_lock().map_or(true,|owner|owner.requires_original_birth()))}
+ pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,ValueError>{Self::close_demand(binding,body).map(|demand|demand.capacity_bytes)}
+ pub fn release_demand(binding:&Option<Self>)->Result<usize,ValueError>{Self::close_demand(binding,0).map(|demand|demand.release_bytes)}
+ pub fn depth_demand(binding:&Option<Self>)->Result<usize,ValueError>{Self::close_demand(binding,0).map(|demand|demand.depth)}
+ pub fn close_demand(binding:&Option<Self>,body:usize)->Result<RetirementDemand,ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|Self::close_demand_of(owner,body))}
+ fn close_demand_of(owner:&Self,body:usize)->Result<RetirementDemand,ValueError>{match &*owner.state{BindingState::Live(lease)=>Ok(if lease.alias_is_returnable(){Self::alias_return_demand()}else{BindingState::transition_demand()}),BindingState::Closed=>Ok(BindingState::closed_demand()),state=>state.phase_demand(body).map(|(demand,_)|demand)}}
+ /// 👶️ Preserves a selected child Birth.
+ pub fn requires_original_birth(binding:&Option<Self>)->bool{binding.as_ref().is_some_and(|owner|owner.state.requires_original_birth())}
  /// 🪪️ Preserves the selected child original-control route without inventing a loan.
- pub fn requires_original_control(binding:&Option<Self>)->bool{binding.as_ref().and_then(|owner|owner.close.as_ref()).is_some_and(|gate|gate.try_lock().map_or(true,|owner|ErasedSnapshotRetirement::requires_original_control(&*owner)))}
+ pub fn requires_original_control(binding:&Option<Self>)->bool{binding.as_ref().is_some_and(|owner|owner.state.requires_original_control())}
  /// 👶️ Advances a real selected Birth before any general receiving effect.
  pub fn close_original_birth_step(binding:&mut Option<Self>,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{
-  match binding.as_mut().and_then(|owner|owner.close.as_mut()){Some(gate)=>gate.get_mut().step_original_birth(original,grant),None=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original binding has no selected child birth").into()),work:0})}
+  match binding.as_mut(){Some(owner)=>owner.state.birth_step(original,grant),None=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original binding has no selected child birth").into()),work:0})}
  }
  /// 🧷️ Lends the unchanged original loan and effect directly to the actual selected child.
  pub fn close_original_step(binding:&mut Option<Self>,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   if !Self::requires_original_control(binding){return Self::close_one(binding,body,effect)}
-  let owner=binding.as_mut().and_then(|owner|owner.close.as_mut()).expect("selected original binding child").get_mut();
-  ErasedSnapshotRetirement::close_original_step(owner,original,body,effect)
+  binding.as_mut().expect("selected original binding child").state.step(Some(original),compact_close::Drive::Loan,body,effect)
  }
- pub fn terminal_is_empty(&self)->bool{self.lease.is_none()&&self.close.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.state.is_closed()}
 }
-impl Drop for RetainedCloneBinding{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"projected original source requires genuine alias closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.lease);ManuallyDrop::drop(&mut self.close);}}}}
+impl Drop for RetainedCloneBinding{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"projected original source requires genuine alias closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.state);}}}}
 
 pub struct RetainedCloneBorrowAuthority<A:RetireOwned+Sync>{source:RetainedCloneSource<A>}
 impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{

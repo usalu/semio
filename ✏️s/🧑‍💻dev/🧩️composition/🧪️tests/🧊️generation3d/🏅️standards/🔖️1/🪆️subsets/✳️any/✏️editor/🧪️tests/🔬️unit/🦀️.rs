@@ -103,7 +103,7 @@ pub(crate) mod context {
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
         let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": domain, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
         let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interaction selection admitted");
-        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interaction selection settles its reserved tool job")
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("interaction selection settles its reserved tool job")
     }
     
     pub fn preview_views(left: &str, right: &str) -> (ViewModel, ViewModel) {
@@ -116,13 +116,13 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch_with_view(app: &mut Generation3dAppFixture, command: Generation3dCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
-        dispatch_with_view_meta(app, command, ActionMeta { view_state: Some(view_state), ..meta("local") }).await
+        dispatch_with_view_meta(app, command, ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") }).await
     }
 
     /// 🎚️ One action exactly as a host sends it — named args, the window's own view — settled through the registered
     /// ladder: the door a continuous control's press (`gesture`/`commit`/`abort`) takes into the framework scrub machine.
     pub async fn act_with_view(app: &mut Generation3dAppFixture, action: &str, args: serde_json::Value, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
-        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
         let args: semio_framework_value::DslValue = args.into();
         semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))?;
         settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))

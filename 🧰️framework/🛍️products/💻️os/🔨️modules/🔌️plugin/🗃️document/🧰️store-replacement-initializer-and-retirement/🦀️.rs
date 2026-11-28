@@ -166,7 +166,7 @@ where
                 if admitted_delta==RetainedCloneProgress::default(){
                     thread_local! { static DEBUG_ADMISSION_ZEROS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
                     let zeros=DEBUG_ADMISSION_ZEROS.with(|zeros|{zeros.set(zeros.get()+1);zeros.get()});
-                    if zeros%32==1{eprintln!("[DEBUG] store initializer admission zero run={zeros} phases={:?} pending={} should_yield={} grant={:?} fuel={} deadline_us={} now_us={:?} session={}",rejected.admission_phases(),rejected.admission_pending(),cx.should_yield(),cx.retained_grant(),cx.fuel_remaining(),cx.deadline_us(),cx.now_us(),self.session.is_some());}
+                    if zeros%32==1{eprintln!("[DEBUG] store initializer admission zero run={zeros} phases={:?} pending={} should_yield={} grant={:?} claim={} fuel={} deadline_us={} now_us={:?} session={}",rejected.admission_phases(),rejected.admission_pending(),cx.should_yield(),cx.retained_grant(),cx.last_claim_reason(),cx.fuel_remaining(),cx.deadline_us(),cx.now_us(),self.session.is_some());}
                 }
                 if admitted_delta==RetainedCloneProgress::default() && rejected.admission_pending(){
                     if store_initializer_worker_idle_is_dead(&mut self.worker_idle_since_us, cx.now_us()) {
@@ -347,7 +347,7 @@ where
         if store.snapshot_read_leases_await_return()&&store.close_owned_phase_witness().starts_with("ReturnedReads"){return Ok(PluginLifecycleStep::AwaitingInput{reason:"displaced document store awaits its outstanding read leases"});}
         let demand=disposer.retirement_demands(store,grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
         semio_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
-            let step=disposer.close_step(store,effect)?;
+            let step=disposer.close_step(store,effect)?;{thread_local!{static N:std::cell::Cell<u64>=const{std::cell::Cell::new(0)}}let n=N.with(|n|{n.set(n.get()+1);n.get()});if n%256==1{eprintln!("[DEBUG] retained store close n={n} grant={:?} demand={demand:?} step={step:?} witness={}",effect.grant(),store.close_owned_phase_witness())}}
             if matches!(step,PluginLifecycleStep::Complete(_))&&!disposer.terminal_is_empty(store){return Err(plugin_sdk_fault("replacement original disposer completed with retained Store owners"));}
             Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},false))
         })

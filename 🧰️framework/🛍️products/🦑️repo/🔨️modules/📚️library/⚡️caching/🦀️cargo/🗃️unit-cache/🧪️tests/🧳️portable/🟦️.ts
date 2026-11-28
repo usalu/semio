@@ -1,15 +1,15 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {keyEnvironmentV1,neutralRustflagsV1,normalizeRustcArgumentsV1,sdkIdentityV1,sha256V1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
+import {deterministicFrontEndArgumentsV1,extraFilenameV1,frontEndThreadsV1,keyEnvironmentV1,neutralRustflagsV1,normalizeRustcArgumentsV1,sdkIdentityV1,sha256V1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {machineNeutralRemapV1} from "../../🧭️remap/🟦️.ts";
 import {localKeyV1,localTextV1,portableKeyV1,portableRootsV1,portableTextV1,remoteKeyV1,toolRootsV1,type PlatformV1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
 import {buildRunKeyInputV1,buildScriptIdentityV1,markBuildScriptIdentityV1} from "../../🏗️buildscript/🔑️run-key/🟦️.ts";
 import {packRunV1,unpackRunV1,runFileNameV1,runFilePathV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
-import {canonicalDepInfoV1,compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
+import {canonicalDepInfoV1,canonicalOutputV1,canonicalStreamV1,compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
 import {manifestFilesV1,manifestOfV1,observedManifestV1,readManifestV1,writeManifestV1} from "../../🛰️fleet/📋️manifest/🟦️.ts";
 import type {BuildEntryV1} from "../../💾️store/🟦️.ts";
 import {buildKeyEnvironmentV1} from "../../🔏️key/🟦️.ts";
@@ -56,7 +56,7 @@ test("what is an input still moves the key: the profile, a feature, the compiler
 });
 
 test("the key equals an independent recomputation by python's hashlib over the same inputs",()=>{
- const key=keyOn(machineB()),run=spawnSync("python3",["-I","-c","import hashlib,json,sys;d=json.load(sys.stdin);print(hashlib.sha256(json.dumps([d['namespace'],d['toolchain'],d['normalized'],d['source'],[],d['environment']],separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify({namespace:UNIT_CACHE_POLICY_V1.namespace,toolchain:fixture.toolchain,normalized:key.normalized,source:fixture.sourceSha256,environment:key.environment}),encoding:"utf8"});
+ const key=keyOn(machineB()),run=spawnSync("python3",["-I","-c","import hashlib,json,sys;d=json.load(sys.stdin);print(hashlib.sha256(json.dumps([d['namespace'],d['toolchain'],d['normalized'],d['source'],[],d['environment'],['determinism',d['determinism']]],separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify({namespace:UNIT_CACHE_POLICY_V1.namespace,toolchain:fixture.toolchain,normalized:key.normalized,source:fixture.sourceSha256,environment:key.environment,determinism:UNIT_CACHE_POLICY_V1.key.outputDeterminism.version}),encoding:"utf8"});
  expect(run.status).toBe(0);expect(run.stdout.trim()).toBe(key.unit);
 });
 
@@ -75,9 +75,10 @@ const remapRows:ReadonlyArray<readonly [string,string,string]>=[
 test.each(remapRows)("normalised argument: %s",(_,given,expected)=>{expect(machineNeutralRemapV1(given)).toBe(expected);});
 
 const flagRows:ReadonlyArray<readonly [string,string,string]>=[
- ["joined remapping in the encoded flags","-Zthreads=0\u001f--remap-path-prefix=/home/deck/.cargo/registry/src=","-Zthreads=0\u001f--remap-path-prefix="+REGISTRY+"="],
+ ["joined remapping in the encoded flags","-Cdebuginfo=1\u001f--remap-path-prefix=/home/deck/.cargo/registry/src=","-Cdebuginfo=1\u001f--remap-path-prefix="+REGISTRY+"="],
  ["two-argument remapping in the encoded flags","--remap-path-prefix\u001f/Users/ueli/.cargo/git/checkouts=/g","--remap-path-prefix\u001f"+GIT+"=/g"],
- ["flags without a path stay as they are","-Z\u001fthreads=0","-Z\u001fthreads=0"],
+ ["flags without a path stay as they are","-C\u001fdebuginfo=1","-C\u001fdebuginfo=1"],
+ ["the front-end thread count is no input (two spellings, any count)","-Z\u001fthreads=0\u001f-Zthreads=4\u001f-C\u001fdebuginfo=1\u001f-Z\u001fthreads=0","-C\u001fdebuginfo=1"],
 ];
 test.each(flagRows)("normalised environment value: %s",(_,given,expected)=>{expect(neutralRustflagsV1(given)).toBe(expected);});
 
@@ -196,7 +197,7 @@ test("the portable key of the registry crate equals an independent recomputation
  const a=homeA(),b=homeB(),roots=(machine:Home)=>portableRootsV1({cwd:machine.cargo+"/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",workspace:machine.root,...toolRootsV1(homeEnvironment(machine))});
  const compute=(machine:Home)=>{const key=registryKey(machine),text=(value:string)=>portableTextV1(value,roots(machine));const input={toolchain:fixture.toolchain,normalized:key.normalized,sourceSha256:sha256V1("serde source"),externs:[],environment:key.environment};return{ours:portableKeyV1(input,roots(machine)),normalized:key.normalized.map(text),environment:key.environment.map(([name,value])=>[name,text(value)])};};
  const one=compute(a),two=compute(b);expect(one.ours).toBe(two.ours);
- const run=spawnSync("python3",["-I","-c","import hashlib,json,sys;d=json.load(sys.stdin);print(hashlib.sha256(json.dumps([d['namespace'],d['toolchain'],d['normalized'],d['source'],[],d['environment']],separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify({namespace:UNIT_CACHE_POLICY_V1.namespace,toolchain:fixture.toolchain,normalized:two.normalized,source:sha256V1("serde source"),environment:two.environment}),encoding:"utf8"});
+ const run=spawnSync("python3",["-I","-c","import hashlib,json,sys;d=json.load(sys.stdin);print(hashlib.sha256(json.dumps([d['namespace'],d['toolchain'],d['normalized'],d['source'],[],d['environment'],['determinism',d['determinism']]],separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify({namespace:UNIT_CACHE_POLICY_V1.namespace,toolchain:fixture.toolchain,normalized:two.normalized,source:sha256V1("serde source"),environment:two.environment,determinism:UNIT_CACHE_POLICY_V1.key.outputDeterminism.version}),encoding:"utf8"});
  expect(run.status).toBe(0);expect(run.stdout.trim()).toBe(two.ours);
 });
 
@@ -299,4 +300,60 @@ test("the dependency file of one unit has the same bytes whichever run, process 
  expect(first).toBe("out/a.d: src/lib.rs src/mod.rs\n\nsrc/lib.rs:\nsrc/mod.rs:\n\n# env-dep:SEMIO_COMPILER_RESOURCE_ROOT=@@semio-lane@@/semio-compiler-resources\n# checksum:blake3=1111 file_len:5 src/lib.rs\n# checksum:blake3=2222 file_len:7 src/mod.rs\n");
  expect(canonicalDepInfoV1(first)).toBe(first);
  expect(sha256V1(first)).toBe(sha256V1(second));
+});
+
+test("a captured stream names the file of a long type name the same in every compilation (the digits are compiler noise), equal to an independent Python substitution",()=>{
+ const stream=(digits:string)=>'{"message":"the full name for the type has been written to \'@@semio-lane@@/z/c@@semio-extra@@.long-type-'+digits+'.txt\'","rendered":"note: long-type-'+digits+'.txt"}\n{"keep":"long-type-abc.txt short-type-12.txt"}\n';
+ const first=canonicalStreamV1(stream("10939469467408083722")),second=canonicalStreamV1(stream("11235794353410082362"));
+ expect(first).toBe(second);expect(canonicalStreamV1(first)).toBe(first);expect(first).toContain("long-type-abc.txt short-type-12.txt");expect(first).not.toContain("10939469467408083722");
+ expect(canonicalOutputV1("⟨stream⟩",stream("5"))).toBe(canonicalStreamV1(stream("5")));expect(canonicalOutputV1("out/x.rlib",stream("5"))).toBe(stream("5"));
+ const python=spawnSync("python3",["-I","-c","import re,sys;sys.stdout.write(re.sub(r'long-type-[0-9]+\\.txt','long-type-0.txt',sys.stdin.read()))"],{input:stream("10939469467408083722"),encoding:"utf8"});
+ if(python.status===0)expect(first).toBe(python.stdout);
+});
+
+test("the front-end thread count of a final command line is read in either spelling and the last one wins",()=>{
+ expect(frontEndThreadsV1(["-Z","threads=0","-Zthreads=1"])).toBe("1");
+ expect(frontEndThreadsV1(["-Z","threads=4","-C","opt-level=0","-Z","threads=2"])).toBe("2");
+ expect(frontEndThreadsV1(["--cfg","threads=0"])).toBeUndefined();expect(frontEndThreadsV1([])).toBeUndefined();
+});
+
+test("a shared unit is compiled with one front-end thread in every spelling, and nothing else of the command line moves",()=>{
+ expect(deterministicFrontEndArgumentsV1(["--crate-name","a","-Z","threads=0","-C","opt-level=0","-Zthreads=8","-Z","unstable-options"])).toEqual(["--crate-name","a","-Z","threads=1","-C","opt-level=0","-Zthreads=1","-Z","unstable-options"]);
+ expect(deterministicFrontEndArgumentsV1(["--cfg","threads=0"])).toEqual(["--cfg","threads=0"]);
+});
+
+test("one real compiler: async fn in a trait gives the same metadata bytes in every compilation with one front-end thread (the cross-check of the rewrite; threads=0 does not)",()=>{
+ const found=spawnSync("rustc",["-vV"],{encoding:"utf8"});if(found.status!==0)return;
+ const work=directory("front-end"),source=join(work,"lib.rs");
+ writeFileSync(source,"#![allow(async_fn_in_trait)]\n"+Array.from({length:40},(_,index)=>`pub trait T${index}{async fn a(&self)->u32;async fn b(&self,m:&[u8;32])->Result<Vec<u8>,String>;}\npub trait V${index}{async fn v(&self,s:&str,m:&[u8;32])->Result<bool,String>;}\n`).join(""));
+ const digests=new Set<string>();
+ for(let run=0;run<4;run++){
+  const out=join(work,"o"+run);mkdirSync(out);
+  const args=deterministicFrontEndArgumentsV1(["--crate-name","fe","--crate-type","lib","--edition","2021","-Z","threads=0","-C","metadata=fe","--emit=metadata","--out-dir",out,source]);
+  const compiled=spawnSync("rustc",args,{encoding:"utf8",env:{...process.env,RUSTC_BOOTSTRAP:"1"}});
+  if(compiled.status!==0)return;
+  digests.add(sha256V1(readFileSync(join(out,"libfe.rmeta"))));
+ }
+ expect(digests.size).toBe(1);
+});
+
+test("two machines compile one unit under the determinism contract: one key and one set of output bytes; another Cargo identity or another contract version is another key",()=>{
+ const found=spawnSync("rustc",["-vV"],{encoding:"utf8"});if(found.status!==0)return;
+ const source="#![allow(async_fn_in_trait)]\n"+Array.from({length:40},(_,index)=>`pub trait T${index}{async fn a(&self)->u32;async fn b(&self,m:&[u8;32])->Result<Vec<u8>,String>;}\n`).join("");
+ const raw=(out:string,extra:string)=>["--crate-name","two","--crate-type","lib","--edition","2021","-Z","threads=0","-C","metadata=two","-C","extra-filename="+extra,"--emit=metadata,link","--out-dir",out,"lib.rs"];
+ const keyOf=(extra:string,version=UNIT_CACHE_POLICY_V1.key.outputDeterminism.version)=>{
+  const arguments_=raw("/o",extra),input={toolchain:found.stdout,normalized:normalizeRustcArgumentsV1(arguments_,new Map(),undefined),sourceSha256:sha256V1(source),externs:[],environment:[] as Array<[string,string]>,cargoIdentity:extraFilenameV1(arguments_)};
+  return version===UNIT_CACHE_POLICY_V1.key.outputDeterminism.version?unitKeyV1(input):sha256V1(JSON.stringify([UNIT_CACHE_POLICY_V1.namespace,input.toolchain,input.normalized,input.sourceSha256,[],[],["determinism",version],["cargo",input.cargoIdentity]]));
+ };
+ const outputs=["a","bbbbbbbbbbbb"].map(label=>{
+  const work=directory("two-"+label),out=join(work,"o");mkdirSync(out);writeFileSync(join(work,"lib.rs"),source);
+  const compiled=spawnSync("rustc",[...deterministicFrontEndArgumentsV1(raw(out,"-3c9971acb8b0a698")),"--remap-path-prefix="+work+"=/w"],{cwd:work,encoding:"utf8",env:{...process.env,RUSTC_BOOTSTRAP:"1"}});
+  if(compiled.status!==0)return undefined;
+  return["libtwo-3c9971acb8b0a698.rmeta","libtwo-3c9971acb8b0a698.rlib"].map(name=>sha256V1(readFileSync(join(out,name))));
+ });
+ if(outputs.some(row=>row===undefined))return;
+ expect(outputs[0]).toEqual(outputs[1]);
+ expect(keyOf("-3c9971acb8b0a698")).toBe(keyOf("-3c9971acb8b0a698"));
+ expect(keyOf("-4fe346c9fadf2a8a")).not.toBe(keyOf("-3c9971acb8b0a698"));
+ expect(keyOf("-3c9971acb8b0a698","1")).not.toBe(keyOf("-3c9971acb8b0a698"));
 });

@@ -63,3 +63,12 @@ test("a running resident service answers the third identical request failure wit
   for(const language of ["en","de"])expect(rows[2].message_[language]).not.toMatch(/try again|versuche es erneut/iu);
  }finally{await service.stop("test");}
 },60000);
+
+test("a request ended by a signal from outside is never a repeated deterministic cause: five SIGTERMs in a row stay the handover refusal with retry later and do not count",()=>{
+ const streak={cause:"",count:0},ended=()=>new Error("Original Script process terminated");
+ for(let at=0;at<5;at++)expect(refuse(ended(),streak)).toMatchObject({code:"handover",key:"host-graph-handover",retry:"later"});
+ expect(streak.count).toBe(0);
+ expect(refuse(Object.assign(new Error("x"),{signal:"SIGKILL"}),streak)).toMatchObject({code:"handover",retry:"later"});
+ expect(refuse(Object.assign(new Error("wrapper"),{cause:ended()}),streak).code).toBe("handover");
+ expect(refuse(defect(),streak)).toMatchObject({key:"internal",retry:"later"});
+});

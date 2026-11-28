@@ -19,8 +19,8 @@ impl<E:ArtifactEditor> EditorClipboardWork<E>{
   let document=ArtifactView::with_operation(request.snapshot.as_ref(),request.history.as_ref(),operation);
   match request.tool_id.as_str(){
    "paste"=>{
-    let Some(args)=args.as_ref() else{return Ok(Emit::default())};
-    let Some(fragment)=args.get("fragment").and_then(|value|ClipboardFragment::from_value(value.clone()).ok()) else{return Ok(Emit::default())};
+    let Some(fragment)=args.as_ref().and_then(|args|args.get("fragment")).and_then(|value|ClipboardFragment::from_value(value.clone()).ok()) else{return Err(Fault::from("clipboard.paste.empty"))};
+    let Some(args)=args.as_ref() else{return Err(Fault::from("clipboard.paste.empty"))};
     let placement=PastePlacement::from_action_args(args).map_err(|error|Fault::from(error.to_string()))?;
     let mutations=E::paste_operations(&document,&fragment,&placement).map_err(|error|Fault::from(error.to_string()))?;
     Ok(Emit::mutations(mutations))
@@ -29,7 +29,7 @@ impl<E:ArtifactEditor> EditorClipboardWork<E>{
     let config=ConfigView{snapshot:request.config.as_ref(),window:None};
     let hover=InteractionHoverState::default();
     let view=InteractionView::new(interaction.get(),&hover,&PeerPresenceRoot::EMPTY,empty_draft_references());
-    let Ok(fragment)=E::copy_fragment(&document,&config,&view) else{return Ok(Emit::default())};
+    let fragment=E::copy_fragment(&document,&config,&view).map_err(|error|match error{semio_framework::kernel::ClipboardError::EmptySelection=>Fault::from("clipboard.copy.empty-selection"),other=>Fault::from(other.to_string())})?;
     let mut emit=Emit::effect(Effect::ClipboardWrite{fragment});
     if tool=="cut"{emit.artifact_mutations=E::cut_operations(&document,&config,&view)}
     Ok(emit)

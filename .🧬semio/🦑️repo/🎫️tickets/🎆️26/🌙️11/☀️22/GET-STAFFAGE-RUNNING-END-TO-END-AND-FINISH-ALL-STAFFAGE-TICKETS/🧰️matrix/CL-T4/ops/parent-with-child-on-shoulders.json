@@ -1,0 +1,223 @@
+[
+ {
+  "remove": "joint-head|mass-head|joint-scapula-l|joint-hip-bone-l|joint-thigh-l|joint-scapula-r|joint-hip-bone-r|joint-thigh-r|mass-toddler-head|joint-toddler-thigh-l|joint-toddler-thigh-r",
+  "list": "structure",
+  "scales": [
+   50
+  ]
+ },
+ {
+  "remove": "joint-head|mass-head|joint-hip-bone-l|joint-thigh-l|joint-hip-bone-r|joint-thigh-r|mass-toddler-head|joint-toddler-thigh-l|joint-toddler-thigh-r",
+  "list": "structure",
+  "scales": [
+   100
+  ]
+ },
+ {
+  "remove": "joint-head|mass-head|joint-thigh-l|joint-hip-bone-r|joint-thigh-r|mass-toddler-head",
+  "list": "structure",
+  "scales": [
+   200
+  ]
+ },
+ {
+  "remove": "mass-pelvis|mass-thorax|joint-head|mass-head|joint-forearm-l|joint-forearm-r|mass-toddler-torso|mass-toddler-head|joint-toddler-shank-l|joint-toddler-shank-r",
+  "list": "structure",
+  "scales": [
+   500
+  ]
+ },
+ {
+  "facet": "mass-pelvis|joint-lumbar|mass-lumbar|joint-thorax|mass-thorax|joint-neck|mass-neck|joint-clavicle-l|joint-upper-arm-l|mass-upper-arm-l|joint-forearm-l|mass-forearm-l|joint-hand-l|mass-hand-l|joint-fingers-l|joint-fingertips-l|joint-thumb-l|joint-thumbtip-l|mass-thigh-l|joint-shank-l|mass-shank-l|joint-foot-l|mass-foot-l|joint-toe-l|joint-clavicle-r|joint-upper-arm-r|mass-upper-arm-r|joint-forearm-r|mass-forearm-r|joint-hand-r|mass-hand-r|joint-fingers-r|joint-fingertips-r|joint-thumb-r|joint-thumbtip-r|mass-thigh-r|joint-shank-r|mass-shank-r|joint-foot-r|mass-foot-r|joint-toe-r|joint-toddler-seat|mass-toddler-torso|joint-toddler-neck|mass-toddler-neck|joint-toddler-head|joint-toddler-arm-l|mass-toddler-arm-l|joint-toddler-forearm-l|mass-toddler-forearm-l|joint-toddler-hand-l|mass-toddler-thigh-l|joint-toddler-shank-l|mass-toddler-shank-l|joint-toddler-foot-l|mass-toddler-foot-l|joint-toddler-arm-r|mass-toddler-arm-r|joint-toddler-forearm-r|mass-toddler-forearm-r|joint-toddler-hand-r|mass-toddler-thigh-r|joint-toddler-shank-r|mass-toddler-shank-r|joint-toddler-foot-r|mass-toddler-foot-r|joint-joint-toe-r-metatarsal-3-r|joint-joint-toe-l-metatarsal-3-l",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "c7|c6|c5|c4|c3|c2|c1|t12|t11|t10|t9|t8|t7|t6|t5|t4|t3|t2|t1|l5|l4|l3|l2|l1|glenoid-l|glenoid-r|acetabulum-l|acetabulum-r|femur-head-l|femur-head-r|femur-trochanter-l|femur-trochanter-r|femur-condyles-l|femur-condyles-r|patella-l|patella-r|tibia-plateau-l|tibia-plateau-r|malleolus-medial-l|malleolus-medial-r|talus-l|talus-r|humerus-head-l|humerus-head-r|humerus-condyles-l|humerus-condyles-r|carpus-l|carpus-r|toddler-c7|toddler-c5|toddler-c3|toddler-c1|toddler-l5|toddler-l3|toddler-l1|toddler-t11|toddler-t9|toddler-t7|toddler-t5|toddler-t3|toddler-t1|toddler-femur-head-l|toddler-femur-head-r|toddler-humerus-head-l|toddler-humerus-head-r",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "cranium|toddler-cranium",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 16
+ },
+ {
+  "facet": "t12-process|t11-process|t10-process|t9-process|t8-process|t7-process|t6-process|t5-process|t4-process|t3-process|t2-process|t1-process|l5-process|l4-process|l3-process|l2-process|l1-process|l5-transverse|l4-transverse|l3-transverse|l2-transverse|l1-transverse|costal-arch-l|costal-arch-r|metatarsal-2-l|metatarsal-2-r|toe-2-l|toe-2-r|metatarsal-3-l|metatarsal-3-r|toe-3-l|toe-3-r|metatarsal-4-l|metatarsal-4-r|toe-4-l|toe-4-r|metatarsal-5-l|metatarsal-5-r|toe-5-l|toe-5-r|metacarpal-2-l|metacarpal-2-r|phalanx-proximal-2-l|phalanx-proximal-2-r|metacarpal-3-l|metacarpal-3-r|phalanx-proximal-3-l|phalanx-proximal-3-r|metacarpal-4-l|metacarpal-4-r|phalanx-proximal-4-l|phalanx-proximal-4-r|metacarpal-5-l|metacarpal-5-r|metacarpal-1-l|metacarpal-1-r|thumb-proximal-l|thumb-proximal-r|thumb-distal-l|thumb-distal-r|toddler-clavicle-l|toddler-clavicle-r|toddler-acromion-l|toddler-acromion-r|toddler-pubis-l|toddler-pubis-r|toddler-fibula-l|toddler-fibula-r|toddler-ulna-l|toddler-ulna-r|toddler-radius-l|toddler-radius-r",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 8
+ },
+ {
+  "facet": "rib-1-r|rib-1-l|rib-2-r|rib-2-l|rib-3-r|rib-3-l|rib-4-r|rib-4-l|rib-5-r|rib-5-l|rib-6-r|rib-6-l|rib-7-r|rib-7-l|rib-8-r|rib-8-l|rib-9-r|rib-9-l|rib-10-r|rib-10-l|rib-11-r|rib-11-l|rib-12-r|rib-12-l|toddler-rib-1-r|toddler-rib-1-l|toddler-rib-3-r|toddler-rib-3-l|toddler-rib-5-r|toddler-rib-5-l|toddler-rib-7-r|toddler-rib-7-l|toddler-rib-9-r|toddler-rib-9-l|toddler-rib-11-r|toddler-rib-11-l",
+  "list": "structure",
+  "kinds": [
+   "revolve"
+  ],
+  "scales": [
+   50
+  ],
+  "segments": 16
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:50: 11 joint and mass spheres that lie wholly inside the members they tie in every pose (joint-head, mass-head, joint-scapula-l, joint-hip-bone-l, joint-thigh-l, joint-scapula-r, joint-hip-bone-r, joint-thigh-r, mass-toddler-head, joint-toddler-thigh-l, joint-toddler-thigh-r) are merged into those members; the other 68 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. 36 rib arcs are swept in steps of 1/16 of a turn, within 0.04 mm of paper of their arc. Of the members, 65 ellipsoid bone masses are faceted bodies of 12 facets around and 2 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 72 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:50: 11 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (joint-head, mass-head, joint-scapula-l, joint-hip-bone-l, joint-thigh-l, joint-scapula-r, joint-hip-bone-r, joint-thigh-r, mass-toddler-head, joint-toddler-thigh-l, joint-toddler-thigh-r), gehen in diesen Gliedern auf; die übrigen 68 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. 36 Rippenbögen sind in Schritten von 1/16 einer Umdrehung gezogen, innerhalb von 0,04 mm Papier ihres Bogens. Von den Gliedern sind 65 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 2 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 72 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   50
+  ]
+ },
+ {
+  "facet": "mass-pelvis|joint-lumbar|mass-lumbar|joint-thorax|mass-thorax|joint-neck|mass-neck|joint-clavicle-l|joint-upper-arm-l|mass-upper-arm-l|joint-forearm-l|mass-forearm-l|joint-hand-l|mass-hand-l|mass-thigh-l|joint-shank-l|mass-shank-l|joint-foot-l|mass-foot-l|joint-clavicle-r|joint-upper-arm-r|mass-upper-arm-r|joint-forearm-r|mass-forearm-r|joint-hand-r|mass-hand-r|mass-thigh-r|joint-shank-r|mass-shank-r|joint-foot-r|mass-foot-r|joint-toddler-seat|mass-toddler-torso|joint-toddler-neck|joint-toddler-head|joint-toddler-arm-l|mass-toddler-arm-l|joint-toddler-forearm-l|mass-toddler-forearm-l|mass-toddler-thigh-l|joint-toddler-shank-l|mass-toddler-shank-l|joint-toddler-foot-l|joint-toddler-arm-r|mass-toddler-arm-r|joint-toddler-forearm-r|mass-toddler-forearm-r|mass-toddler-thigh-r|joint-toddler-shank-r|mass-toddler-shank-r|joint-toddler-foot-r",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "cranium|c7|c6|c5|c4|c3|c2|c1|t12|t11|t10|t9|t8|t7|t6|t5|t4|t3|t2|t1|l5|l4|l3|l2|l1|acetabulum-l|acetabulum-r|femur-head-l|femur-head-r|femur-trochanter-l|femur-trochanter-r|femur-condyles-l|femur-condyles-r|patella-l|patella-r|tibia-plateau-l|tibia-plateau-r|malleolus-medial-l|malleolus-medial-r|talus-l|talus-r|humerus-head-l|humerus-head-r|humerus-condyles-l|humerus-condyles-r|carpus-l|carpus-r|toddler-cranium|toddler-l5|toddler-l3|toddler-l1|toddler-t11|toddler-t9|toddler-t7|toddler-t5|toddler-t3|toddler-t1|toddler-femur-head-l|toddler-femur-head-r|toddler-humerus-head-l|toddler-humerus-head-r",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "mandible-ramus-l|mandible-ramus-r|mandible-body-l|mandible-body-r|acromion-l|acromion-r|scapula-neck-l|scapula-neck-r|pubis-l|pubis-r|ischiopubic-ramus-l|ischiopubic-ramus-r|child-seat-link",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 8
+ },
+ {
+  "facet": "rib-1-r|rib-1-l|rib-3-r|rib-3-l|rib-5-r|rib-5-l|rib-7-r|rib-7-l|rib-9-r|rib-9-l|rib-11-r|rib-11-l|toddler-rib-1-r|toddler-rib-1-l|toddler-rib-3-r|toddler-rib-3-l|toddler-rib-5-r|toddler-rib-5-l|toddler-rib-7-r|toddler-rib-7-l|toddler-rib-9-r|toddler-rib-9-l|toddler-rib-11-r|toddler-rib-11-l",
+  "list": "structure",
+  "kinds": [
+   "revolve"
+  ],
+  "scales": [
+   100
+  ],
+  "segments": 16
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:100: 9 joint and mass spheres that lie wholly inside the members they tie in every pose (joint-head, mass-head, joint-hip-bone-l, joint-thigh-l, joint-hip-bone-r, joint-thigh-r, mass-toddler-head, joint-toddler-thigh-l, joint-toddler-thigh-r) are merged into those members; the other 51 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. 24 rib arcs are swept in steps of 1/16 of a turn, within 0.04 mm of paper of their arc. Of the members, 61 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 13 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:100: 9 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (joint-head, mass-head, joint-hip-bone-l, joint-thigh-l, joint-hip-bone-r, joint-thigh-r, mass-toddler-head, joint-toddler-thigh-l, joint-toddler-thigh-r), gehen in diesen Gliedern auf; die übrigen 51 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. 24 Rippenbögen sind in Schritten von 1/16 einer Umdrehung gezogen, innerhalb von 0,04 mm Papier ihres Bogens. Von den Gliedern sind 61 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 13 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   100
+  ]
+ },
+ {
+  "facet": "joint-toddler-seat|mass-pelvis|joint-lumbar|mass-lumbar|joint-thorax|mass-thorax|joint-clavicle-l|joint-upper-arm-l|joint-forearm-l|mass-thigh-l|joint-shank-l|mass-shank-l|joint-foot-l|joint-clavicle-r|joint-upper-arm-r|joint-forearm-r|mass-thigh-r|joint-shank-r|mass-shank-r|joint-foot-r|mass-toddler-torso",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid",
+   "capsule"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "cranium|femur-head-l|femur-head-r|femur-condyles-l|femur-condyles-r|tibia-plateau-l|tibia-plateau-r|talus-l|talus-r|humerus-head-l|humerus-head-r|toddler-cranium",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 12
+ },
+ {
+  "facet": "iliac-column-l|iliac-column-r|femur-neck-l|femur-neck-r",
+  "list": "structure",
+  "kinds": [
+   "capsule"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 8
+ },
+ {
+  "facet": "rib-3-r|rib-3-l|rib-6-r|rib-6-l|rib-9-r|rib-9-l|toddler-rib-3-r|toddler-rib-3-l|toddler-rib-7-r|toddler-rib-7-l",
+  "list": "structure",
+  "kinds": [
+   "revolve"
+  ],
+  "scales": [
+   200
+  ],
+  "segments": 16
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:200: 6 joint and mass spheres that lie wholly inside the members they tie in every pose (joint-head, mass-head, joint-thigh-l, joint-hip-bone-r, joint-thigh-r, mass-toddler-head) are merged into those members; the other 21 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. 10 rib arcs are swept in steps of 1/16 of a turn, within 0.04 mm of paper of their arc. Of the members, 12 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 4 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:200: 6 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (joint-head, mass-head, joint-thigh-l, joint-hip-bone-r, joint-thigh-r, mass-toddler-head), gehen in diesen Gliedern auf; die übrigen 21 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. 10 Rippenbögen sind in Schritten von 1/16 einer Umdrehung gezogen, innerhalb von 0,04 mm Papier ihres Bogens. Von den Gliedern sind 12 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 4 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   200
+  ]
+ },
+ {
+  "facet": "cranium|ribcage|pelvic-girdle|toddler-cranium|toddler-ribcage|toddler-pelvis",
+  "list": "structure",
+  "kinds": [
+   "ellipsoid"
+  ],
+  "scales": [
+   500
+  ],
+  "segments": 12
+ },
+ {
+  "decision": {
+   "en": "Structure budget at 1:500: 10 joint and mass spheres that lie wholly inside the members they tie in every pose (mass-pelvis, mass-thorax, joint-head, mass-head, joint-forearm-l, joint-forearm-r, mass-toddler-torso, mass-toddler-head, joint-toddler-shank-l, joint-toddler-shank-r) are merged into those members; the other 0 joint and mass knobs are faceted bodies of 12 facets around instead of smooth spheres of 24 to 64, (a knob of just the smallest feature of the scale stays a smooth sphere), which leaves their outline within 3.4 % of their radius. Of the members, 6 ellipsoid bone masses are faceted bodies of 12 facets around and 0 of 16, each within 0.04 mm of paper of its ellipsoid at this scale, and 0 short round bones at most 0.3 mm of paper across are prisms of 8 facets with pointed ends, within 0.012 mm of paper of their capsule; the long shafts, the lofted, extruded and revolved members stay as they were.",
+   "de": "Tragwerksbudget bei 1:500: 10 Gelenk- und Massenkugeln, die in jeder Pose ganz in den Gliedern liegen, die sie verbinden (mass-pelvis, mass-thorax, joint-head, mass-head, joint-forearm-l, joint-forearm-r, mass-toddler-torso, mass-toddler-head, joint-toddler-shank-l, joint-toddler-shank-r), gehen in diesen Gliedern auf; die übrigen 0 Gelenk- und Massenknoten sind facettierte Körper mit 12 Facetten im Umfang statt glatter Kugeln mit 24 bis 64, (ein Knoten von gerade dem kleinsten Merkmal des Massstabs bleibt eine glatte Kugel), ihr Umriss bleibt innerhalb von 3,4 % ihres Radius. Von den Gliedern sind 6 ellipsoide Knochenmassen facettierte Körper mit 12 Facetten im Umfang und 0 mit 16, jede innerhalb von 0,04 mm Papier ihres Ellipsoids in diesem Massstab, und 0 kurze runde Knochen, höchstens 0,3 mm Papier im Durchmesser, sind Prismen mit 8 Facetten und spitzen Enden, innerhalb von 0,012 mm Papier ihrer Kapsel; die langen Schäfte und die gelofteten, extrudierten und rotierten Glieder bleiben, wie sie waren."
+  },
+  "scales": [
+   500
+  ]
+ }
+]

@@ -6,7 +6,41 @@
   "capacityBytes": 65536,
   "releaseBytes": 65536,
   "depth": 4096,
-  "cancelAfter": [0, 1, 3, 11, 64, 128],
-  "operationIndices": [0, 7],
-  "expected": {"heapMatchesReceipts": true, "unchangedOnDenial": true}
+  "cancelAfter": [
+    0,
+    1,
+    3,
+    11,
+    64,
+    128
+  ],
+  "operationIndices": [
+    0,
+    7
+  ],
+  "expected": {
+    "heapMatchesReceipts": true,
+    "unchangedOnDenial": true,
+    "coldEditWithinQuote": true
+  },
+  "heapQuote": {
+    "factor": 4,
+    "fixedBytes": 4096,
+    "cases": [
+      {
+        "snapshotBytes": 0,
+        "mutationBytes": 0,
+        "copyBytes": 4096,
+        "capacityBytes": 4096,
+        "transientBytes": 4096
+      },
+      {
+        "snapshotBytes": 4082,
+        "mutationBytes": 487,
+        "copyBytes": 13234,
+        "capacityBytes": 22372,
+        "transientBytes": 22372
+      }
+    ]
+  }
 }

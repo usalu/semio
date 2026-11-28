@@ -20,6 +20,7 @@ use semio_plugin_command::lifted_command::HISTORY_ROW_MUTATION_ROWS;
 use semio_plugin_decl_views::history_view::HistoryCommandFilter;
 use semio_ui_locale::Locale;
 use store::Mutation;
+
 use semio_framework::NOTE_SHELL_COMMAND_ACTION_ID;
 use semio_plugin_testing_caller::OriginalFixtureCaller;
 use semio_framework::SET_HISTORY_COMMAND_FILTER_ACTION_ID;

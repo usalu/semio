@@ -154,7 +154,7 @@ impl OpBinary for Puzzle5dMutation {
 }
 
 dsl::original_tagged_operation_receiving!(Puzzle5dMutation, COMPONENT_PROTOCOL_SEMIO);
-dsl::artifact_persisted_binary_operation!(Puzzle5dMutation);
+dsl::artifact_persisted_encoded_binary_operation!(Puzzle5dMutation);
 }
 
 /// 🫳️ Borrows the original concrete leaf of a mutation and its canonical protocol tag before publication: the authoring wire source the artifact store requires.

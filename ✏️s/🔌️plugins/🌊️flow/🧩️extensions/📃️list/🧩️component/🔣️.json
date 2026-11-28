@@ -4,7 +4,16 @@
   "role": "extension",
   "manifest": {
     "pluginId": "flow-extension-list",
-    "label": "List",
+    "label": {
+      "native": {
+        "en": "List",
+        "de": "Liste"
+      },
+      "reuse": {
+        "en": "List",
+        "de": "Liste"
+      }
+    },
     "version": "0.1.0",
     "apps": [],
     "examples": [],

@@ -150,7 +150,7 @@ describe("🧊️ a third-party library recomputes the twisted chain and extents
 });
 
 describe("🧊️ the tower crane slews its jib", () => {
-  const crane = catalog().find((candidate) => candidate.id === "tower-crane")!;
+  const crane = catalog(["tower-crane"]).find((candidate) => candidate.id === "tower-crane")!;
   const evaluated = (pose: string) => evaluate(crane, { kind: "pose", pose }, select(100));
 
   it("turns the jib of the parked weathervane pose by 60 degrees: half as long in the side view, 55 sin 60 deg to the side", () => {

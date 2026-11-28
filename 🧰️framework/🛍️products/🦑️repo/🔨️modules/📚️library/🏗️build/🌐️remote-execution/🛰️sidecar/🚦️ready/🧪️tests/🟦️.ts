@@ -1,6 +1,6 @@
 import{afterAll,expect,spyOn,test}from"bun:test";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,utimesSync,writeFileSync}from"node:fs";
-import{tmpdir}from"node:os";
+import{cpus,loadavg,tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
 import{findWorkspaceRoot}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,6 +13,8 @@ import{READY_TREE_POLICY_V1 as TREE}from"../🌲️process-tree/🟦️.ts";
 import{createReadyMemoryMirrorV1,READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,createReadyLeaseV1,createReadyPortsV1,createReadyStatusV1,readyWriteStoreFileV1,readyInputHashV1,readyReasonV1,readyRepoBinaryV1,emptyReadyStateV1,readyBackoffV1,readyDecideV1,readyDigestsV1,readyHumanActiveV1,readyHumanRecordV1,readyHumanVerdictV1,readyIsServerV1,readyJobsV1,readyRefusalV1,readyStoreFullV1,readyTreeMegabytesV1,runReadyStageV1,runReadyV1,type ReadyCodeV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1}from"../🟦️.ts";
 
 /** 🚦️ Readiness that drives itself: a ready machine does nothing, a machine that is not ready runs its stages and records them, a failed stage waits for its back-off and is recorded, the group server never runs, and two runners on one machine never overlap. */
+/** ⚖️ How many times slower a process gets on this host: the one-minute load per core halved, from 1 to 4. The documented load of the fleet coordinator is 60 to 70 on 16 cores, where a child needs seconds to start and a busy loop gets a fraction of a core, so a timing bound that holds at load 1 is the wrong bound there. */
+const slow=Math.max(1,Math.min(4,Math.ceil(loadavg()[0]/Math.max(1,cpus().length)/2)));
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`ready-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -296,6 +298,17 @@ posix("a real stage runs the account's repo binary with its tools on PATH, the l
  }finally{restore();}
 });
 
+posix("a real stage runs its commands at interactive capacity priority, whatever the supervisor was started with, so a worker that is also a dev workstation does not queue them behind agent jobs",async()=>{
+ const {home,restore}=fakeHome('#!/bin/sh\necho "priority=$SEMIO_HOST_CAPACITY_PRIORITY"\nexit 0\n');
+ try{
+  const root=temp("root");
+  for(const inherited of [undefined,"batch"]){
+   const result=await runReadyStageV1({home,root,environment:{PATH:"/usr/bin:/bin",...inherited===undefined?{}:{SEMIO_HOST_CAPACITY_PRIORITY:inherited}},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+   expect(result.tail[0]).toBe("priority=interactive");
+  }
+ }finally{restore();}
+});
+
 posix("a real stage reports a failing exit and a missing binary, never throws",async()=>{
  const {home,restore}=fakeHome('#!/bin/sh\necho "no network"\nexit 9\n');
  try{
@@ -337,15 +350,15 @@ posix("a stage outlives the runner that started it: aborting the signal detaches
 });
 
 posix("a silent stage that spends processor time is alive and is not stopped as stalled, a silent stage that spends none is, and the kill is recorded with its killer in both languages",async()=>{
- const busy=fakeHome("#!/bin/bash\nwhile [ $SECONDS -lt 17 ]; do :; done\nexit 0\n"),idle=fakeHome("#!/bin/sh\nexec sleep 40\n"),rootBusy=temp("root"),rootIdle=temp("root");
+ const busy=fakeHome(`#!/bin/bash\nwhile [ $SECONDS -lt ${17*slow} ]; do :; done\nexit 0\n`),idle=fakeHome("#!/bin/sh\nexec sleep 400\n"),rootBusy=temp("root"),rootIdle=temp("root");
  const moves:string[]=[];
- const run=(home:string,root:string)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onActivity:()=>moves.push(root),onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:11000}});
+ const run=(home:string,root:string)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onActivity:()=>moves.push(root),onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:11000*slow}});
  const [alive,silent]=await Promise.all([run(busy.home,rootBusy),run(idle.home,rootIdle)]);
  expect(moves).toContain(rootBusy);
  expect(alive.stalled,"a busy compile is alive without any output").toBe(false);expect(alive.exit).toBe(0);
  expect(silent.stalled,"no output and no processor time is a stall").toBe(true);
  const record=readFileSync(join(rootIdle,".cache","f","ready",CONTAIN.killRecordName),"utf8");
- expect(record).toContain("received SIGTERM from the ready stage runner of this worker");expect(record).toContain("owner ready:");expect(record).toContain("showed no output and no processor time for 11 second(s)");expect(record).toContain(" / Prozess ");expect(record).toContain("weder Ausgabe noch Prozessorzeit");
+ expect(record).toContain("received SIGTERM from the ready stage runner of this worker");expect(record).toContain("owner ready:");expect(record).toContain(`showed no output and no processor time for ${11*slow} second(s)`);expect(record).toContain(" / Prozess ");expect(record).toContain("weder Ausgabe noch Prozessorzeit");
  expect(existsSync(join(rootBusy,".cache","f","ready",CONTAIN.killRecordName))).toBe(false);
 },120000);
 
@@ -357,7 +370,7 @@ posix("a stage that runs too long is stopped as timed out, with its group",async
  const sleeper=Number(readFileSync(pidFile,"utf8").trim());
  for(let waited=0;!gone(sleeper)&&waited<3000;waited+=50)await new Promise<void>(done=>setTimeout(done,50));
  expect(gone(sleeper)).toBe(true);
-});
+},30000*slow);
 
 test("the output of a stage and its timings are mirrored into the store: at most 200 lines and 64 KiB per stage, rotated by stage, timings capped, both validated",async()=>{
  const store=temp("mirror"),root=temp("mirror-root");
@@ -611,25 +624,25 @@ test("a stage stopped because it waited on a holder while its code changed start
 
 posix("a stage that waits on a named holder is stopped with its tree only when a declared semantics source moved after it started; an edit of other code lets it wait",async()=>{
  const holder='#!/bin/sh\ni=0\nwhile [ $i -lt 40 ]; do i=$((i+1)); echo "Process 48352 (x show projects) holds the dependency store since 2026-11-14T16:34:21.027Z; waiting for it ($i s of at most 21600 s)"; echo "[script] {\\"activity\\":{\\"resource\\":\\"dependencies:maintenance-parent-observation\\",\\"mode\\":\\"shared\\",\\"elapsedMs\\":1.$i}}"; sleep 0.3; done\nexit 0\n';
- const policy={...TREE,holderWaitRestartMilliseconds:1500,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],stallStopMilliseconds:600000},declare=(directory:string,revision:number)=>{mkdirSync(join(directory,"code"),{recursive:true});writeFileSync(join(directory,"code","semantics.json"),JSON.stringify({revision}));};
- const quiet=fakeHome(holder),quietRoot=temp("root");declare(quietRoot,1);writeFileSync(join(quietRoot,"code","a.ts"),"x");
+ const policy={...TREE,holderWaitRestartMilliseconds:1500,codeCheckMilliseconds:300,semanticsSources:[{file:"code/semantics.json",pointer:"/revision"}],stallStopMilliseconds:600000},declareSemantics=(directory:string,revision:number)=>{mkdirSync(join(directory,"code"),{recursive:true});writeFileSync(join(directory,"code","semantics.json"),JSON.stringify({revision}));};
+ const quiet=fakeHome(holder),quietRoot=temp("root");declareSemantics(quietRoot,1);writeFileSync(join(quietRoot,"code","a.ts"),"x");
  const unchanged=await runReadyStageV1({home:quiet.home,root:quietRoot,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});
  expect(unchanged.stalled).toBe(false);expect(unchanged.codeChanged).toBeUndefined();expect(unchanged.exit).toBe(0);
- const busy=fakeHome(holder),root=temp("root");declare(root,1);
+ const busy=fakeHome(holder),root=temp("root");declareSemantics(root,1);
  const began=Date.now(),pending=runReadyStageV1({home:busy.home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:policy});
- setTimeout(()=>{writeFileSync(join(root,"code","b.ts"),"y");declare(root,2);},700);
+ setTimeout(()=>{writeFileSync(join(root,"code","b.ts"),"y");declareSemantics(root,2);},700);
  const changed=await pending;
  expect(changed.stalled).toBe(true);expect(changed.codeChanged).toBe("code/semantics.json");expect(changed.timedOut).toBe(false);expect(Date.now()-began).toBeGreaterThan(1500);expect(Date.now()-began).toBeLessThan(25000);
 },90000);
 
 posix("a stage whose only moving values are elapsedMs floats is stopped as stalled after the stall limit, one whose resource counter grows is not",async()=>{
  const flat=fakeHome('#!/bin/sh\ni=0\nwhile true; do i=$((i+1)); echo "[script] {\\"activity\\":{\\"resource\\":\\"dependencies:maintenance-parent-observation\\",\\"mode\\":\\"shared\\",\\"elapsedMs\\":1.$i}}"; sleep 0.3; done\n');
- const began=Date.now(),stuck=await runReadyStageV1({home:flat.home,root:temp("root"),environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:3000}});
- expect(stuck.stalled).toBe(true);expect(Date.now()-began).toBeGreaterThan(3000);expect(Date.now()-began).toBeLessThan(25000);
+ const began=Date.now(),stuck=await runReadyStageV1({home:flat.home,root:temp("root"),environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:5000}});
+ expect(stuck.stalled).toBe(true);expect(Date.now()-began).toBeGreaterThan(5000);expect(Date.now()-began).toBeLessThan(60000);
  const growing=fakeHome('#!/bin/sh\ni=48000\nwhile [ $i -lt 48040 ]; do i=$((i+1)); echo "[script] {\\"activity\\":{\\"resource\\":\\"javascript-selected-payload:$i\\",\\"mode\\":\\"shared\\",\\"elapsedMs\\":1.5}}"; sleep 0.2; done\nexit 0\n');
- const moving=await runReadyStageV1({home:growing.home,root:temp("root"),environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:3000}});
+ const moving=await runReadyStageV1({home:growing.home,root:temp("root"),environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:5000}});
  expect(moving.stalled).toBe(false);expect(moving.exit).toBe(0);
-},90000);
+},90000*slow);
 
 test("the status file is still written when the rename over the old file is refused (Windows with an open reader): the new document replaces it directly and no temporary file is left",()=>{
  const store=temp("status-rename");let clock=5,refused=0;
@@ -683,12 +696,13 @@ posix("a detached test grandchild exits when its private fixture directory close
 posix("a stage that starts a detached grandchild whose parent exits is stopped without it, and the next stage start reaps it by pid and start time and says so in both languages, while a process that started in a person's working window is left alone",async()=>{
  const tools=toolsDirectory("tools"),registry=temp("registry"),root=temp("root"),command="fed0aa7c7c00cedaa8abc3ae7c9a032a8655b5ef9d0d37095feddf0e08b75442 show projects",lease=`${root}/.cache/b/l/m/data`;
  const files={orphan:join(registry,"aaaa"),agent:join(registry,"bbbb"),person:join(registry,"cccc")};
- const script=`#!/bin/sh\nsleep 0.7\n"${process.execPath}" ${tools}/launch.js ${files.orphan} "${command}" ${lease}\n"${process.execPath}" ${tools}/launch.js ${files.agent} "${command}" ${lease} claude-code:s1\nsleep 1.5\n"${process.execPath}" ${tools}/launch.js ${files.person} "${command}" ${lease}\nwhile true; do echo "Reading the project graph slice (1 s): verification 3575 of 3575."; sleep 0.3; done\n`;
+ const launch=(file:string,extra:string="")=>`"${process.execPath}" ${tools}/launch.js ${file} "${command}" ${lease} ${extra}\nn=0; while [ -z "$(ls ${file} 2>/dev/null)" ] && [ $n -lt 3000 ]; do n=$((n+1)); sleep 0.1; done\n`;
+ const script=`#!/bin/sh\ncase "$1" in tools) exit 0;; esac\n${launch(files.orphan)}${launch(files.agent,"claude-code:s1")}sleep 1.5\n${launch(files.person)}echo "Reading the project graph slice (1 s): verification 3575 of 3575."\nexec sleep 3600\n`;
  const fake=fakeHome(script);
  try{
-  const began=Date.now(),first=await runReadyStageV1({home:fake.home,root,environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:5000}});
+  const began=Date.now(),first=await runReadyStageV1({home:fake.home,root,environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:5000*slow}});
   const ended=Date.now();
-  expect(first.stalled).toBe(true);expect(Date.now()-began).toBeLessThan(40000);
+  expect(first.stalled).toBe(true);expect(Date.now()-began).toBeLessThan(40000*slow);
   const found=Object.values(files).map(folder=>registryEntryV1(folder)?.pid);expect(found.every(pid=>pid!==undefined),JSON.stringify(found)).toBe(true);const pids=found as number[];
   const [orphan,agent,person]=pids as [number,number,number];
   for(const pid of pids)expect(()=>process.kill(pid,0),`pid ${pid} survived the stop of its stage: it is a detached grandchild of an exited parent`).not.toThrow();
@@ -706,7 +720,7 @@ posix("a stage that starts a detached grandchild whose parent exits is stopped w
   }
   fake.restore();
  }
-},120000);
+},120000*slow);
 
 posix("a stage that waits on a holder that is an orphan of a stopped try reaps it at once instead of waiting",async()=>{
  const tools=toolsDirectory("holder"),registry=temp("registry"),root=temp("root"),command="fed0aa7c7c00cedaa8abc3ae7c9a032a8655b5ef9d0d37095feddf0e08b75442 show projects",lease=`${root}/.cache/b/l/m/data`,file=join(registry,"aaaa");

@@ -11,7 +11,20 @@
         "jobsFlags": ["-j", "--jobs"],
         "workspaceFlags": ["--workspace", "--all"],
         "workspaceClass": "workspace",
-        "partMaximumLength": 120
+        "partMaximumLength": 120,
+        "unitPeakClassesMegabytes": [2150, 1450],
+        "typicalUnitMegabytes": 1088,
+        "unitPeakSource": "ps rss of the largest process per rustc crate over every build of 2026-11-27 (ticket PREVENT-OUT-OF-APPLICATION-MEMORY-PAUSES-ON-LOW-RESOURCE-MACHINES, unit-peaks.md section 2.3): 2006 MB for the test crate kernel_event_receiving (class 2150 MB), 1445 MB for semio_framework_kernel (class 1450 MB), 33 to 1064 MB for the other 129 of 131 units (class 1088 MB)"
+      }
+    },
+    "MemoryCase": {
+      "type": "object",
+      "required": ["name", "megabytes", "units"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "megabytes": {"type": "integer", "minimum": 0},
+        "units": {"type": "integer", "minimum": 1}
       }
     },
     "Arguments": {

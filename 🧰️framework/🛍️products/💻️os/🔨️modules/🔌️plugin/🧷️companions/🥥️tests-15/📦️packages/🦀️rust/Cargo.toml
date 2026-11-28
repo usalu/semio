@@ -29,6 +29,11 @@ semio-os-command = { path = "../../../../../📡️spr/🎮️command/📦️pac
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin = { path = "../../../../📦️packages/🦀️rust", features = ["artifact-app-testing", "media-turn-testing", "reserved-producer-testing", "original-actor-context-testing"] }
+semio-framework-schema = { path = "../../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-os-store-test-support = { path = "../../../../../🏪️store/🧰️test-support/📦️packages/🦀️rust" }
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

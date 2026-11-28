@@ -17,7 +17,7 @@ export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"no
 export type ProcessTestTableV1=Readonly<{version:1;suites:readonly ProcessTestSuiteV1[];codeSuites:readonly string[];helpers:readonly string[]}>;
 const protocol=schema.definitions.Protocol.const,importers=protocol.importPatterns.map(pattern=>new RegExp(pattern,"u"));
 /** 📐️ The closed protocol of the route table: how test files are discovered and how much output one suite may carry. */
-export const processTestProtocolV1=protocol;
+export const processTestProtocolV1=Object.freeze({...protocol,output:Object.freeze({...protocol.output,overflow:protocol.output.overflow==="refuse"?"refuse" as const:"elide" as const})});
 /** 🏖️ Where the artifact directory of a suite lives: a per-run sandbox outside the checkout, the checkout's `.cache` sandbox or the declared test tree directory. */
 export type ProcessTestScratchV1="sandbox"|"checkout"|"checkout-test";
 /** 📍️ The checkout directory below which the per-run sandbox of a scratch kind is created, none for the sandbox outside the checkout. */

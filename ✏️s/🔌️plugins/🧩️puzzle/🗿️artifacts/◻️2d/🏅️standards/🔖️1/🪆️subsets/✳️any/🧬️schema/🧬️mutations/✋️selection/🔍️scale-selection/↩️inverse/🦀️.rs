@@ -29,6 +29,7 @@ pub fn inverse<Op: From<ScaleSelection> + From<MoveNode> + From<MoveTargetRegion
             steps.push(resize_target_region::resize_target_region::<Op>(region.id.clone(), region.width, region.height));
         }
     }
+    steps.reverse();
     Ok(steps)
 }
 //#endregion 🔖️Inverse

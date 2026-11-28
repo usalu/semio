@@ -287,6 +287,12 @@ pub(super) fn remove_named(name: &str, message: &str) -> Result<String, Fault> {
     if name.is_empty() { Err(fault(message)) } else { Ok(name.to_string()) }
 }
 
+/// 🛡️ Refuses a removal whose target does not exist, so a mistyped name is never a silent no-op.
+pub(super) fn existing_named(present: bool, name: &str, message: &str) -> Result<String, Fault> {
+    if present { remove_named(name, message) } else { Err(fault(format!("{message}: '{name}' does not exist"))) }
+}
+
+
 pub(super) fn edit_shading(snapshot: &PdfSnapshot, object: &PageObject, action: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
     let mut shading = snapshot.shadings.iter().find(|item| item.id == object.text).cloned().ok_or_else(|| fault(format!("pdf shading '{}' is gone", object.text)))?;
     let (dx, dy) = user_delta(object.ctm, x - object.x, y - object.y);

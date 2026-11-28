@@ -144,7 +144,7 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
   tls:certificate===undefined||key===undefined?undefined:{certificate:where(context.root,certificate),key:where(context.root,key)},
   validation:policy.actionResults as RemoteCacheValidationV1,
   maximumActionResultBytes:policy.maximumActionResultBytes,
-  maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,graph:policy.graph,
+  maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,blobRoom:policy.blobRoom,graph:policy.graph,
   staleness:{mode:modeAsked,workspace:context.root,recheckSeconds:policy.staleness.recheckSeconds,manifestNames:policy.staleness.manifestNames,examples:policy.staleness.examples,...toolchains===undefined?{}:{toolchains:()=>toolchains}},
   signal:context.signal,
   onEvent:event=>{
@@ -215,7 +215,11 @@ export async function remoteCacheStatusV1(args:readonly string[],context:RemoteC
  const contract=resolved.contract,token=resolved.token,probes:Probe[]=[],renderings:Record<string,RemoteCacheRenderingV1>={},call=remoteCacheFetchV1(resolved.environment,{root:context.root});
  for(const tool of tools){renderings[tool.tool]=tool.render(contract,resolved.environment);probes.push(await probeRemoteCacheV1(contract,tool,call,context.signal));}
  const {server,fault:serverFault}=await askServerV1(contract,call,context.signal),sum=(field:"hits"|"misses"):number|null=>server===null?null:Object.values(server.counters).reduce((total,row)=>total+row[field],0);
- const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,serverFault,store,
+ const divergenceHours=(server?.divergences?.hourly??[]).map(row=>{
+  const kinds=Object.entries(row.byKind).sort(([a],[b])=>a<b?-1:1).map(([name,count])=>`${name} ${count}`).join(", "),hour=new Date(row.hour).toISOString().slice(0,13)+":00Z";
+  return {hour:row.hour,count:row.count,byKind:row.byKind,text:Object.fromEntries(LANGUAGES.map(language=>[language,remoteCacheTextV1(language,"status.divergences.hour",{hour,count:row.count,kinds})]))};
+ });
+ const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,serverFault,divergenceHours,store,
   resolution:{endpointFrom:resolved.endpointFrom,tokenFrom:resolved.tokenFrom,instanceFrom:resolved.instanceFrom,instanceRefused:resolved.instanceRefused,factsGeneration:resolved.generation,factsState:found.refresh?.state??"none"},
   remote:{endpoint:contract.endpoint,reachable:probes.some(probe=>probe.reachable),authorised:probes.length>0&&probes.every(probe=>probe.authorized),entries:server?.entries??null,bytes:server?.bytes??null,maximumBytes:server?.maximumBytes??null,hits:sum("hits"),misses:sum("misses"),fleetGeneration:resolved.generation}};
  requireRemoteCacheShapeV1("Status",status,"Closed remote cache status required");return status;

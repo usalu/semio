@@ -36,8 +36,16 @@
       "de": "Keine TypeScript- oder Deklarationsquelle unterhalb von: {path}"
     },
     "compiler.missing": {
-      "en": "The TypeScript compiler is not installed at {script}; install the dependencies first (repo tools setup all)",
-      "de": "Der TypeScript-Compiler fehlt unter {script}; zuerst die Abhängigkeiten installieren (repo tools setup all)"
+      "en": "The TypeScript compiler is not installed at {script} and could not be restored; run repo dependencies ensure",
+      "de": "Der TypeScript-Compiler fehlt unter {script} und konnte nicht wiederhergestellt werden; repo dependencies ensure ausführen"
+    },
+    "compiler.ensuring": {
+      "en": "The TypeScript compiler is missing at {script}; restoring the dependencies (repo dependencies ensure)",
+      "de": "Der TypeScript-Compiler fehlt unter {script}; die Abhängigkeiten werden wiederhergestellt (repo dependencies ensure)"
+    },
+    "compiler.ensure-failed": {
+      "en": "Restoring the TypeScript compiler failed: {reason}; run repo dependencies ensure",
+      "de": "Die Wiederherstellung des TypeScript-Compilers schlug fehl: {reason}; repo dependencies ensure ausführen"
     },
     "compiler.timeout": {
       "en": "The type check exceeded {seconds} s and was stopped",

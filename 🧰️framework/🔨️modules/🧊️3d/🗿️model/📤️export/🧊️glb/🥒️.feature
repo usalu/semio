@@ -25,3 +25,17 @@ Feature: Compact GLB encoding shares and omits what no reader needs
     Given the same document
     When it is encoded without the compact option
     Then the NORMAL accessor is a FLOAT VEC3 without `byteStride` and no extension is required
+
+  Scenario: Colour factors and node transforms are the shortest decimals of their 32-bit floats
+    Given a material and a node whose factors have 17 significant digits
+    When it is encoded with the compact option
+    Then every written factor reads back as the same 32-bit float and has at most 10 characters
+    And the Khronos validator reports no error and no warning
+    And the default encoding keeps the 17 digits
+
+  Scenario: Vertices that differ only in an unread normal are welded inside a solid
+    Given an unlit primitive of two solids whose vertices repeat positions, and a lines primitive over the same vertices
+    When it is encoded with the compact option
+    Then equal positions inside one solid share one vertex and none is shared between solids
+    And every triangle and every line segment has the very corner positions of the source, in the source order, with the solid ranges unchanged
+    And the same primitive drawn by a lit material, or encoded without the compact option, keeps every vertex

@@ -1073,3 +1073,146 @@ CL-T2 rewrote gas-boiler at 2026-11-27 01:33
 CL-T2 rewrote height-adjustable-desk at 2026-11-27 01:33
 
 CL-T2 rewrote used-baby-grand-piano at 2026-11-27 01:34
+
+CL-T2 rewrote used-park-armchair at 2026-11-27 01:36
+
+CL-T2 rewrote used-pump-drinking-fountain at 2026-11-27 01:37
+
+CL-T2 rewrote used-recliner-chair at 2026-11-27 01:38
+
+CL-T2 rewrote used-tree-surround-bench at 2026-11-27 01:39
+
+CL-T2 rewrote used-upright-piano at 2026-11-27 01:40
+
+CL-T2 rewrote etics-brick-wall-12 at 2026-11-27 01:41
+
+CL-T2 rewrote etics-brick-wall-30 at 2026-11-27 01:41
+
+CL-T2 rewrote used-wall-unit at 2026-11-27 01:42
+
+CL-T2 rewrote used-bicycle-shelter at 2026-11-27 01:43
+
+CL-T1 rewrote running-child at 2026-11-27 01:46:37
+
+CL-T2 rewrote picnic-table at 2026-11-27 01:48
+
+## closing CL-T2 — the three geometry kinds of `🧊️model-catalog` reduced: none comes from the tessellator; the growing triangles have one shared cause (2026-11-27 01:50, measured with `🧰️matrix/CL-T2/reduce.ts`; for the coordinator and MZ)
+
+- **`box is not watertight: 0 boundary and N overlapped edges`** (also `extrude`, `capsule`): the kernel closes every copy; the oracle welds the copies of ONE solid and counts the edges of a shared face twice. Reduced: one box 0.4 x 0.1 x 1 m gives 12 triangles, 0 boundary, 0 overlapped; `repeat: { count: 2, translation: [0, 0.1, 0] }` (pitch = size) gives 0 boundary and 10 overlapped; count 6 gives 50 (the number of the wall); a pitch of 0.104 gives 0. The finding is the asset's: the copies of one solid share a face. Cured in the assets (copies that touch alternate as two solids, as the courses of the brick wall do at 1:100; spokes are rods through the axle instead of capsules that all begin in the axle point).
+- **`self-intersection at /solids/N/profile`**: the closing rule of the revolve (A4: an open profile is closed through the axis) applied to a loop whose first point is not repeated. Reduced: `[[0.011, 0.027], [0.0128, 0.0275], [0.0128, 0.0305], [0.011, 0.031]]` walks as `[[0.011, 0], [0.011, 0.027], …, [0.011, 0.031], [0.011, 0]]` (both drops on the same line) and is faulty; with the first point repeated it is simple. The validator is right, the profile was wrong (`shower-head` `face-zone-ring` 1:50, `gas-boiler` `th-hx` 1:200). `validateAsset` and the check CLI did not see either (0 issues before and after); only `validateModel` of the built model does.
+- **`structure triangles grow from 1:A to 1:B`**: in every one of the 23 assets the growth is the `mass` markers (in three also joint markers), never the glyphs and never the members (both fall in sum at the failing step). A marker is one feature in diameter at every scale (7.5, 15, 30, 75 mm), and `qualityOf` takes the chord as min(largest dimension / 3200, 2 % of the feature): the first term wins for an asset below 0.96 m at 1:100, 1.92 m at 1:200 and 4.8 m at 1:500; there the chord stays while the marker grows with the scale, and its ellipsoid gains triangles. Measured, ellipsoid of one feature at 1:50 / 1:100 / 1:200 / 1:500: asset of 0.6 m 120 / 210 / 360 / 960 triangles, 0.9 m 120 / 120 / 272 / 624, 1.7 m 120 / 120 / 120 / 342, 2.5 m 120 / 120 / 120 / 224, 10 m 120 / 120 / 120 / 120; a block of the same extents has 12 at every scale. Cured in the assets as the catalog already does elsewhere (`used-sewing-machine` 1:500: "the joints as 75 mm blocks … and six mass markers" as boxes; 122 box masses at 1:500): the markers of the growing scale are blocks with the centres and extents of their ellipsoids. NOT cured and for a decision of the owner of `🔨️modules/🧊️volume/⏱️job/🟦️.ts`: the catalog holds 1270 ellipsoid masses and 1004 ellipsoid joints at 1:500; every asset below 4.8 m carries this growth at 1:500 and passes only where its members and glyphs shrink faster. A rule that tessellates a marker (part `mass`, `joint`) at the chord of its own feature (2 % of the feature, without the 1/3200 term) would remove the cause; I changed no shared code.
+
+CL-T2 rewrote used-backrest-park-bench at 2026-11-27 01:48
+
+CL-T2 rewrote tilt-window at 2026-11-27 01:49
+
+CL-T2 rewrote used-bathtub at 2026-11-27 01:49
+
+CL-T2 rewrote used-washing-machine at 2026-11-27 01:50
+
+CL-T2 rewrote used-electric-guitar-and-combo at 2026-11-27 01:51
+
+CL-T1 rewrote runner-with-blade-prosthesis at 2026-11-27 01:53:17
+
+CL-T2 rewrote used-recycling-bin-cluster at 2026-11-27 01:53
+
+CL-T2 rewrote used-xylophone at 2026-11-27 01:54
+
+CL-T2 rewrote used-tv-sideboard at 2026-11-27 01:55
+
+CL-T2 rewrote room-thermostat at 2026-11-27 01:56
+
+CL-T2 rewrote used-extendable-dining-table at 2026-11-27 01:56
+
+CL-T1 rewrote rowan at 2026-11-27 02:01:48
+
+CL-T1 rewrote parent-with-stroller at 2026-11-27 02:07:23
+
+CL-T1 rewrote saucer-magnolia at 2026-11-27 02:18:26
+
+CL-T1 rewrote schoolchild-with-backpack at 2026-11-27 02:19:41
+
+CL-T1 rewrote snake-plant at 2026-11-27 02:23:13
+
+CL-T1 rewrote shrub-rose at 2026-11-27 02:26:14
+
+CL-T1 rewrote saguaro-cactus at 2026-11-27 02:33:26
+
+CL-T1 rewrote black-alder at 2026-11-27 02:56:40
+
+CL-T1 rewrote european-larch at 2026-11-27 03:05:50
+
+CL-T1 rewrote red-oak at 2026-11-27 03:23:07
+
+CL-T1 rewrote crab-apple at 2026-11-27 03:33:34
+
+CL-T1 rewrote norway-maple at 2026-11-27 03:47:30
+
+## closing CL-T3 — for CL-T1: pose GLB sizes of its human assets with the final writer of CX-GLB (2026-11-27 03:52)
+
+Measured 03:38 to 03:51 with `🧰️matrix/CL-T3/glb.ts` (`writeGlbDetailed` per named pose, budget 8 MB = 8,388,608 bytes) on the catalog files as they stood then; an asset rewritten later is not measured again here. All five are below the budget; none needs a cure for size.
+
+- `parent-with-stroller`: pushing-stroller 6.58, pausing-with-stroller 6.42, checking-child 6.60, kerb-tilt 6.56 MB (largest 6.60 MB)
+- `runner-with-blade-prosthesis`: standing-ready 5.03, hands-on-hips 4.99, left-forefoot-strike 5.19, blade-midstance 5.14, blade-push-off 5.15, flight 5.17 MB (largest 5.19 MB)
+- `running-child`: standing-ready 4.32, mid-stride 4.67, airborne 4.70, toe-off 4.68, crouch 4.78, jump-takeoff 4.69, jump-apex 4.64 MB (largest 4.78 MB)
+- `walking-toddler`: toddling-midstance 3.92, toddling-foot-lands 3.94, standing-wide 3.84, squatting 3.80 MB (largest 3.94 MB)
+- `person-with-umbrella`: umbrella-up-still 5.14, umbrella-tilted-to-wind 5.15, umbrella-furled 5.08 MB (largest 5.15 MB)
+
+CL-T1 rewrote hawthorn at 2026-11-27 03:58:11
+
+CL-T3 rewrote dairy-cow at 2026-11-27 04:21
+
+CL-T1 rewrote wisteria-pergola at 2026-11-27 04:23:58
+
+CL-T1 rewrote norway-spruce at 2026-11-27 04:40:11
+
+CL-T1 rewrote sycamore-maple at 2026-11-27 05:00:25
+
+CL-T3 rewrote parent-carrying-toddler at 2026-11-27 05:09
+
+CL-T3 rewrote tower-crane at 2026-11-27 05:20
+
+CL-T1 rewrote horse-chestnut at 2026-11-27 05:26:16
+
+CL-T1 rewrote tulip-tree at 2026-11-27 05:57:00
+
+CL-T1 rewrote ginkgo at 2026-11-27 06:01:49
+
+CL-T1 rewrote common-ash at 2026-11-27 06:18:13
+
+CL-T1 rewrote field-maple at 2026-11-27 06:34:01
+
+CL-T1 rewrote sweetgum at 2026-11-27 07:44:35
+
+CL-T1 rewrote black-locust at 2026-11-27 07:48:04
+
+CL-T1 rewrote honey-locust at 2026-11-27 08:04:53
+
+CL-T1 rewrote japanese-cherry at 2026-11-27 08:12:21
+
+## closing 2 CL-B — two bounds findings of `🧊️model-catalog`, both cured in shared code, no catalog file written (2026-11-27 10:30, measured; for the coordinator and MZ)
+
+- `external-venetian-blind` (186 % too wide): the kernel applied the `repeat` step of a weighted solid in model space instead of in the frame of its node (`🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🧱️solid/🟦️.ts`, `tessellateSolid`: `copy * extra * transform`, now `extra * copy * transform`). The blind is the only asset with weighted solids that repeat (424 solids, the second lift tape and ladder cord 0.8 m beside the first): their copies stood 0.8 m in front of the facade. The GLB, FBX, model JSON and the axonometric drawings of this one asset change; nothing else in the catalog does. New vector and case: `🧫️fixtures/🦴️skinning` (`repeated`), `🧪️tests/🦴️skinning`.
+- `leaning-person` (72 % / 9 % / 124 %): the oracle measured the wall the figure leans against (role `ground`, 0.38 x 1.9 x 1.2 m) with the figure. The 2D dimension rule leaves shapes of role `ground` out, and the figure alone measures 0.516 x 1.740 x 0.532 m against the declared 0.52 x 1.74 x 0.536 m. The bounds oracle now leaves out the solids of role `ground` (`🧪️tests/🧰️support/🧊️.ts` `sceneExtent`, `🧪️tests/🧊️model-catalog/🔍️oracles/🟦️.ts` `contactSurfaces`); tolerance and every other measure are unchanged. Assets with such solids in a body list: `leaning-person`, `laptop` (rubber feet), `ivy-on-trellis`.
+- For MZ: re-run `🧊️model-catalog` for `external-venetian-blind`, `leaning-person`, `laptop`, `ivy-on-trellis` and the matrix of `external-venetian-blind`. Report: `closing-CL-B.md`.
+- Seen, not mine: `🧰️framework/…/🗿️model/🧪️tests/🎞️scenes` fails its portable-math case on `✅️validation/🪨️polyhedron/🟦️.ts` and `📐️bounds/🪨️polyhedron/🟦️.ts` (an engine-dependent `Math` function), 10:12.
+
+CL-P rewrote pregnant-person at 2026-11-27 12:52:56
+
+## closing 2 CL-P — `pregnant-person` `uterine-wall` not watertight: cured in the asset, oracle widened by one clause (2026-11-27 13:28, measured; for the coordinator and MZ)
+
+- Cause: the structure loft `uterine-wall` (1:50, 1:100, 1:200) returns into itself (section 13 = section 1 with the same `rotation`) and was capped at both ends, so two caps lay back to back inside the ring: 4 overlapped edges per segment (104 / 96 / 52 for 26 / 24 / 13 segments). In the file since 11-22; not the chord rule of CX-Q (any segment count overlaps), not the loft tessellation.
+- Cure: `capStart` and `capEnd` off at the three scales (6 values), the form of the chain links of `playground-swing`. Light proof and post-write proof clean (matrix 252 cells, 0 fail); `🧊️model-catalog` with `pregnant-person` alone: 3 passed.
+- Oracle (`🧪️tests/🧊️model-catalog/🔍️oracles/🟦️.ts`): new `loopLoft`, `closedKind` now also expects an uncapped loft whose last section repeats the first (place, radii, exponent, explicit rotation) to be watertight. Widens the check; newly covers the links of `playground-swing` (0 findings; `🧊️model-catalog` with `playground-swing` alone: 3 passed).
+- For MZ: re-run `🧊️model-catalog` for `pregnant-person` and `playground-swing`. Report: `closing-CL-P.md`.
+
+CL-T4 rewrote european-beech at 2026-11-27 19:10:01
+
+CL-T4 rewrote person-with-guide-dog at 2026-11-27 20:56:15
+
+CL-T4 rewrote parent-with-child-on-shoulders at 2026-11-27 21:06:32
+CX-JSON changed the shared GLB writer (compact: shared buffer views, glTF defaults left out, byte indices, topology-sharing primitives); no catalog file written; horse-chestnut, sweetgum, small-leaved-lime used as measurement controls only, at 2026-11-27 22:57:23
+
+CL-T5 rewrote horse-chestnut at 2026-11-28 00:14:28
+
+CL-T5 rewrote sweetgum at 2026-11-28 01:18:19

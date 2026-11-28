@@ -26,8 +26,11 @@ pub fn recalculate_workbook(workbook: &XlsxWorkbook) -> Vec<XlsxRecalculatedCell
     for (sheet_index, sheet) in workbook.sheets.iter().enumerate() {
         for cell in &sheet.cells {
             let XlsxCellValue::Formula { expr, cached } = &cell.value else { continue };
-            let Ok(value) = calc.formula_value(sheet_index, cell.row, cell.col) else { continue };
-            let computed = value.into_cached();
+            let computed = match calc.formula_value(sheet_index, cell.row, cell.col) {
+                Ok(value) => value.into_cached(),
+                Err(Fail::Excel(error)) => XlsxCellValue::Error(error.into()),
+                Err(Fail::Unresolved) => continue,
+            };
             if !calc.same_cache(cached.as_deref(), &computed) {
                 changed.push(XlsxRecalculatedCell { sheet: sheet.name.clone(), row: cell.row, col: cell.col, expr: expr.clone(), cached: computed });
             }

@@ -1,4 +1,4 @@
-import{lstatSync,mkdirSync,readdirSync,renameSync,rmSync,writeFileSync}from"node:fs";
+import{lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,writeFileSync}from"node:fs";
 import{dirname,join,relative,sep}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -9,13 +9,16 @@ const P=schema.definitions.Policy.const;
 export const PARTITION_CENSUS_POLICY_V1=P;
 /** 🧾️ The census of one holder, one partition and the whole machine, as the schema names them. */
 export type PartitionHolderV1=Readonly<{path:string;files:number;bytes:number;allocatedBytes:number}>;
-export type PartitionCensusRowV1=Readonly<{name:string;files:number;directories:number;bytes:number;allocatedBytes:number;partial:boolean;top:readonly PartitionHolderV1[]}>;
+export type PartitionCensusRowV1=Readonly<{name:string;files:number;directories:number;bytes:number;allocatedBytes:number;capacityBytes?:number;partial:boolean;top:readonly PartitionHolderV1[]}>;
 export type PartitionCensusVolumeV1=Readonly<{freeBytes:number|null;totalBytes:number|null;freeInodes:number|null;totalInodes:number|null}>;
 export type PartitionCensusRecordV1=Readonly<{version:1;origin:string;platform:"darwin"|"linux"|"win32";atMs:number;elapsedMs:number;partitions:readonly PartitionCensusRowV1[];volume?:PartitionCensusVolumeV1}>;
 
+/** 📐️ The physical capacity a partition was born with (`maximumPhysicalBytes` of its `image.json`, the number the directory meter refuses against), so the record says how full each partition is and not only what it holds; undefined for a folder that is no partition. */
+export function capacityOfV1(directory:string):number|undefined{try{const value=(JSON.parse(readFileSync(join(directory,"image.json"),"utf8")) as {maximumPhysicalBytes?:unknown}).maximumPhysicalBytes;return typeof value==="number"&&Number.isSafeInteger(value)&&value>0?value:undefined;}catch{return undefined;}}
+
 const allocated=(bytes:number,cluster:number):number=>bytes===0?0:Math.ceil(bytes/cluster)*cluster;
 
-/** 📊️ Counts the files, bytes (logical, and rounded up to the allocation cluster, which is what a Windows partition is charged), directories and the biggest holders (the entries two levels below the root of a row) of every partition below `<root>/.cache/b` and, after them, of every other folder of `<root>/.cache` (`cache/<name>`) and of the checkout (`root/<name>`: where a disk grows outside the partitions, such as `target`, `node_modules` or the replica), links never followed. Every row has its own entry budget (a huge partition never starves the next ones) and a fair share of the one time budget (what a row leaves unused goes to the next); a row cut short says `partial`. It yields to the event loop every `yieldEvery` entries and stops on the signal. A read only; a folder that cannot be read is absent from the list. `volume` reports what the volume of the root has free and in total, bytes and inodes.
+/** 📊️ Counts the files, bytes (logical, and rounded up to the allocation cluster, which is what a Windows partition is charged), directories and the biggest holders (the folders up to `holderDepth` levels below the root of a row, so a ticket folder is named, not only `.🧬semio/🦑️repo`) of every partition below `<root>/.cache/b` and, after them, of every other folder of `<root>/.cache` (`cache/<name>`) and of the checkout (`root/<name>`: where a disk grows outside the partitions, such as `target`, `node_modules` or the replica), links never followed. Every row has its own entry budget (a huge partition never starves the next ones) and a fair share of the one time budget (what a row leaves unused goes to the next); a row cut short says `partial`. It yields to the event loop every `yieldEvery` entries and stops on the signal. A read only; a folder that cannot be read is absent from the list. `volume` reports what the volume of the root has free and in total, bytes and inodes.
  * @see ./🧪️tests/🟦️.ts */
 export async function partitionCensusV1(root:string,options:Readonly<{origin:string;platform?:"darwin"|"linux"|"win32";signal?:AbortSignal;now?:()=>number;entryBudget?:number;timeBudgetMilliseconds?:number;yieldEvery?:number;topHolders?:number;holderKeyLimit?:number;clusterBytes?:number;extraRows?:number;volume?:()=>PartitionCensusVolumeV1|null}>):Promise<PartitionCensusRecordV1>{
  const now=options.now??Date.now,started=now(),limit=started+(options.timeBudgetMilliseconds??P.timeBudgetMilliseconds),every=options.yieldEvery??P.yieldEvery,cluster=options.clusterBytes??P.clusterBytes,keys=options.holderKeyLimit??P.holderKeyLimit,top=options.topHolders??P.topHolders,perRow=options.entryBudget??P.entryBudget,extra=options.extraRows??P.extraRows;
@@ -40,11 +43,12 @@ export async function partitionCensusV1(root:string,options:Readonly<{origin:str
     let size=0;try{size=child.isSymbolicLink()?0:lstatSync(full).size;}catch{continue;}
     const rounded=allocated(size,cluster);
     files++;bytes+=size;allocatedBytes+=rounded;
-    const parts=relative(start,full).split(sep),wanted=parts.slice(0,2).join("/"),key=holders.has(wanted)||holders.size<keys?wanted:parts[0]!,holder=holders.get(key)??{files:0,bytes:0,allocatedBytes:0};
+    const parts=relative(start,full).split(sep),wanted=parts.slice(0,parts.length===1?1:Math.min(P.holderDepth,parts.length-1)).join("/"),key=holders.has(wanted)||holders.size<keys?wanted:parts[0]!,holder=holders.get(key)??{files:0,bytes:0,allocatedBytes:0};
     holder.files++;holder.bytes+=size;holder.allocatedBytes+=rounded;holders.set(key,holder);
    }
   }
-  rows.push(Object.freeze({name:target.name.slice(0,100),files,directories,bytes,allocatedBytes,partial,top:Object.freeze([...holders].map(([path,row])=>Object.freeze({path:path.slice(0,300),...row})).sort((first,second)=>second.allocatedBytes-first.allocatedBytes||second.files-first.files||(first.path<second.path?-1:1)).slice(0,top))}));
+  const capacity=capacityOfV1(start);
+  rows.push(Object.freeze({name:target.name.slice(0,100),files,directories,bytes,allocatedBytes,...capacity===undefined?{}:{capacityBytes:capacity},partial,top:Object.freeze([...holders].map(([path,row])=>Object.freeze({path:path.slice(0,300),...row})).sort((first,second)=>second.allocatedBytes-first.allocatedBytes||second.files-first.files||(first.path<second.path?-1:1)).slice(0,top))}));
  }
  const volume=options.volume?.()??null;
  return Object.freeze({version:1 as const,origin:options.origin,platform:options.platform??(process.platform as "darwin"|"linux"|"win32"),atMs:now(),elapsedMs:now()-started,partitions:Object.freeze(rows),...volume===null?{}:{volume}});

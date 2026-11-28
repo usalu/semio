@@ -87,6 +87,8 @@ pub trait BoundedJob {
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn cancel(&mut self);
     fn checkpoint(&self) -> Option<Vec<u8>>;
+    /// 📸️ Borrows the raw input this body owns until its close, so a checkpoint can replay the job without the registry copying the input on every step.
+    fn replay_input(&self)->Option<&[u8]>;
     fn terminal_drop_is_shallow(&self) -> bool;
 }
 
@@ -242,6 +244,7 @@ impl BoundedJob for AdmissionFailedJob {
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.reply.demands(copy)}
     fn cancel(&mut self){}
     fn checkpoint(&self)->Option<Vec<u8>>{None}
+    fn replay_input(&self)->Option<&[u8]>{None}
     fn terminal_drop_is_shallow(&self)->bool{self.reply.terminal_is_empty()}
 }
 
@@ -399,6 +402,23 @@ pub mod abi {
         let mut snapshot_callback=|_|!cancel.is_cancelled_now();let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
         semio_framework_async::poll::resolve_ready(step_job(job,&mut original,&mut snapshot,cx)).map(|step|match step{JobStep::Running(None)=>None,step=>Some(step)})
     }
+
+    /// 🪜️ Micro steps one guest crossing may run before it hands the slice back: the 8 ms interactive step ceiling at tens of microseconds per bounded copy page.
+    pub const COARSE_STEP_CAP:u32=256;
+    /// ⏩️ Items and fuel a crossing keeps back so the caller's own outcome receipt is always payable.
+    pub const COARSE_STEP_RESERVE:usize=2;
+
+    /// 🚀️ One crossing runs registry micro steps back to back (a reserved tool job needs one per 64 input bytes) until the job reports, the slice or the original grant is spent, cancellation is observed, a step stops making progress or the cap is reached. Every micro step is still paid and settled exactly as in [`step`]; only the host crossings and receipts between them are folded.
+    pub fn step_coarse(job:u64,cx:&mut StepContext<'_>)->Result<Option<JobStep>,OriginalTurnFailure>{
+        let mut taken=0u32;
+        loop{
+            let (progress,fuel)=(cx.retained_progress(),cx.fuel_remaining());
+            if let Some(step)=step(job,cx)?{return Ok(Some(step))}
+            taken+=1;
+            let grant=cx.retained_grant();
+            if taken>=COARSE_STEP_CAP||cx.should_yield()||cx.is_cancelled()||grant.maximum_items<=COARSE_STEP_RESERVE||grant.maximum_depth==0||cx.fuel_remaining()<=COARSE_STEP_RESERVE as u64||(cx.retained_progress()==progress&&cx.fuel_remaining()==fuel){return Ok(None)}
+        }
+    }
 }
 //#endregion
 
@@ -420,8 +440,8 @@ pub struct JobCheckpointEntry {
 pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
     JOBS.with(|jobs|jobs.borrow().iter().flatten().filter_map(|slot|{
         let source=slot.source.as_ref()?;
-        let checkpoint=match slot.body.as_ref(){Some(JobBody::Bounded(owner))=>owner.checkpoint(),_=>None};
-        Some(JobCheckpointEntry{job:slot.job,kind:source.kind.clone(),input:source.input.clone(),checkpoint})
+        let(checkpoint,replay)=match slot.body.as_ref(){Some(JobBody::Bounded(owner))=>(owner.checkpoint(),owner.replay_input()),_=>(None,None)};
+        Some(JobCheckpointEntry{job:slot.job,kind:source.kind.clone(),input:source.input.as_deref().or(replay).map(<[u8]>::to_vec),checkpoint})
     }).collect())
 }
 
@@ -570,6 +590,8 @@ impl BoundedJob for TwoPhaseBoundedJob {
     fn checkpoint(&self) -> Option<Vec<u8>> {
         matches!(self.state, TwoPhaseState::Execute).then(|| PHASE_DECODED.to_vec())
     }
+
+    fn replay_input(&self)->Option<&[u8]>{(self.close_payload.is_none()&&self.source_close.is_none()).then_some(self.input.as_slice())}
 
     fn terminal_drop_is_shallow(&self)->bool{self.input.capacity()==0&&self.restored.is_none()&&self.failure.is_none()&&self.aborted_output.is_none()&&self.close_payload.is_none()&&self.source_close.is_none()}
 }

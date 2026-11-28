@@ -198,5 +198,5 @@ fn process3d_mutation_envelope_bytes(mutation: &Process3dMutation) -> usize {
 
 /// 🏭️ The one cold preparation factory of the process3d document lane, bounded by the fixed document envelope; it serves publication and replay alike.
 pub fn process3d_document_preparation_factory() -> store::ColdMutationApplyFactory<Process3dSnapshot, Process3dMutation> {
-    store::ColdMutationApplyFactory::bounded(store::ColdPreparationBounds { maximum_bytes: PROCESS3D_DOCUMENT_MAXIMUM_BYTES, mutation_bytes: process3d_mutation_envelope_bytes, snapshot_bytes: process3d_snapshot_envelope_bytes })
+    store::ColdMutationApplyFactory::bounded(store::ColdPreparationBounds { maximum_bytes: PROCESS3D_DOCUMENT_MAXIMUM_BYTES, mutation_bytes: process3d_mutation_envelope_bytes, snapshot_bytes: process3d_snapshot_envelope_bytes, heap_quote: |snapshot, mutation| store::ColdHeapQuote::reference(process3d_snapshot_envelope_bytes(snapshot), process3d_mutation_envelope_bytes(mutation)) })
 }

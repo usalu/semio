@@ -161,6 +161,27 @@ test("a worker that is lost with the action fails the waiting client back within
  }finally{await cluster.stop();}
 });
 
+test("an operation that goes back to the queue after its worker dropped it and finds no other machine ends the wait within the requeue window, long before the deadline of the unit",async()=>{
+ const {server,endpoint}=await served({[`${NS}.Execution/Execute`]:async function*(){yield operation("EXECUTING");await Bun.sleep(60);yield operation("QUEUED");for(;;){yield operation("QUEUED");await Bun.sleep(40);}}});
+ try{
+  const started=Date.now(),outcome=await executeOffloadV1(input(endpoint,{deadlineMilliseconds:600000,requeueMilliseconds:300,silenceMilliseconds:5000,executeMilliseconds:600000}));
+  expect(outcome).toMatchObject({kind:"declined",reason:"infrastructure",detail:"requeue"});expect(Date.now()-started).toBeLessThan(4000);
+ }finally{await server.stop();}
+});
+
+test("an operation that another machine takes after its worker dropped it keeps its deadline and finishes: the requeue window only bounds the wait for a machine",async()=>{
+ const {server,endpoint}=await served({[`${NS}.Execution/Execute`]:async function*(){yield operation("EXECUTING");await Bun.sleep(50);yield operation("QUEUED");await Bun.sleep(100);yield operation("EXECUTING");await Bun.sleep(50);yield operation("COMPLETED",{status:{code:0,message:""},actionResult:encodeProtobufV1(REAPI_V1.actionResult,{exit_code:0}),cached:false,worker:"w2"});}});
+ try{
+  const outcome=await executeOffloadV1(input(endpoint,{deadlineMilliseconds:600000,requeueMilliseconds:2000,silenceMilliseconds:5000,executeMilliseconds:600000}));
+  expect(outcome).toMatchObject({kind:"done",origin:"w2"});
+ }finally{await server.stop();}
+});
+
+test("the deadline of a four-second unit is the floor of thirty seconds and the wait for a unit without a record is ninety seconds, never the old four minutes",()=>{
+ expect(offloadDeadlineMillisecondsV1(4000,false)).toBe(30000);expect(offloadDeadlineMillisecondsV1(undefined,false)).toBe(90000);
+ expect(OFFLOAD_POLICY_V1.deadline.requeueMilliseconds).toBeLessThan(OFFLOAD_POLICY_V1.deadline.unknownMilliseconds);
+});
+
 const removeBlobV1=(directory:string,hash:string):number=>{let removed=0;for(const name of readdirSync(directory,{recursive:true}) as string[])if(name.split("/").at(-1)===hash){rmSync(join(directory,name),{force:true});removed++;}return removed;};
 
 test("a blob the store collected between the existence check and the fetch is sent again and the same action runs once more: the unit is answered by the fleet, not compiled here",async()=>{

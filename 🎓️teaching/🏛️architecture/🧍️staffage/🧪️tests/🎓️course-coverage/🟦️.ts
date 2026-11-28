@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { STAFFAGE_ROOT, fixture } from "../🧰️support/🧰️.ts";
 
 type Data = Record<string, any>;
-type Entry = { category: string; row: Data | null; asset: Data };
+type Entry = { category: string; row: Data | null; asset: Data; id?: string };
 type Source = { path: string; text: string };
 const cases = fixture<Data>("🎓️course-coverage");
 const architecture = join(STAFFAGE_ROOT, "..");
@@ -20,11 +20,13 @@ const same = (a: unknown, b: unknown): boolean => isDeepStrictEqual(a, b);
 const read = (path: string): Data => JSON.parse(readFileSync(path, "utf8"));
 const children = (path: string): string[] => readdirSync(path, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 const manifest = (): Data => read(join(architecture, cases.manifest));
+let latest: { path: string; asset: Data } | undefined;
+const assetAt = (path: string): Data => (latest?.path === path ? latest.asset : (latest = { path, asset: read(path).asset }).asset);
 const catalog = (): Entry[] => {
   const root = join(architecture, cases.catalog), index = read(join(root, "🔣️.json"));
   return children(root).flatMap((category) => children(join(root, category)).map((name) => {
-    const asset = read(join(root, category, name, "🔣️.json")).asset;
-    return { category: category.replace(/^[^a-z0-9]+/u, ""), row: index.entries.find((row: Data) => row.id === asset.id) ?? null, asset };
+    const path = join(root, category, name, "🔣️.json");
+    return { category: category.replace(/^[^a-z0-9]+/u, ""), row: index.entries.find((row: Data) => row.id === name) ?? null, id: name, get asset() { return assetAt(path); } };
   }));
 };
 const presets = (): Set<string> => {
@@ -39,7 +41,7 @@ function issues(manifest: Data, entries: Entry[], environments: Set<string>): st
   if (manifest.version !== 1) issue("manifest-version");
   for (const cast of Object.values(manifest.casts) as Data[]) {
     for (const key of Object.keys(cast)) if (!cases.cast_fields.includes(key)) issue("field-unknown");
-    const matches = entries.filter(({ asset }) => asset.id === cast.asset);
+    const matches = entries.filter((entry) => (entry.id ?? entry.asset.id) === cast.asset);
     if (!matches.length) { issue("asset-unknown"); continue; }
     if (matches.length > 1) { issue("asset-ambiguous"); continue; }
     const { asset, row, category } = matches[0]!;

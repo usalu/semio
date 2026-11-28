@@ -540,3 +540,23 @@ fn refused_outcome_marker_closes_without_a_lent_payload() {
     assert_eq!(fixture["finallyEmpty"], desk.terminal_is_empty());
     caller.finish();
 }
+/// 🧹️ LAW: a close turn retires a whole run of trivially droppable scalars, so a 20 000-entry owner closes in a number of turns bounded by its page count plus its scalar runs, never one turn per scalar.
+#[test]
+fn closing_a_scalar_owner_retires_runs_of_scalars_per_turn() {
+    let entries = 20_000usize;
+    let mut owner = paged_from_values((0..entries).map(|index| index as f64));
+    let mut turns = 0usize;
+    let page_budget = owner.allocated_bytes() / 1024 + 1;
+    while turns < 1_000_000 {
+        turns += 1;
+        match close_paged_owner_step(&mut owner, usize::MAX) {
+            Ok(Some(_)) => {}
+            Ok(None) => break,
+            Err(()) => panic!("a populated scalar owner closes"),
+        }
+    }
+    assert!(owner.terminal_is_empty());
+    let bound = entries.div_ceil(CLOSE_SCALAR_RUN) + page_budget;
+    assert!(turns <= bound, "{turns} close turns for {entries} scalars exceed {bound}");
+    assert!(turns < entries / 8, "the close is no longer one turn per scalar: {turns}");
+}

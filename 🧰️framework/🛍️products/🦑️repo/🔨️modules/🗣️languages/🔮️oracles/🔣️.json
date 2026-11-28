@@ -75,12 +75,5 @@
       ],
       "coversMutations": false
     }
-  ],
-  "oracleHostPackages": [
-    {
-      "implementation": "typescript",
-      "package": "typescript",
-      "version": "5.9.3"
-    }
   ]
 }

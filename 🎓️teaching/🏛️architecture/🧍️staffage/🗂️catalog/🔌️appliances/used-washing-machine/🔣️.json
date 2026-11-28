@@ -5394,11 +5394,11 @@
       "tone": 0.2,
       "member": "pallet",
       "part": "mass",
-      "kind": "ellipsoid",
-      "radii": [
-       0.075,
-       0.075,
-       0.075
+      "kind": "box",
+      "size": [
+       0.15,
+       0.15,
+       0.15
       ],
       "transform": {
        "translation": [
@@ -5416,11 +5416,11 @@
       "tone": 0.2,
       "member": "cabinet",
       "part": "mass",
-      "kind": "ellipsoid",
-      "radii": [
-       0.075,
-       0.075,
-       0.075
+      "kind": "box",
+      "size": [
+       0.15,
+       0.15,
+       0.15
       ],
       "transform": {
        "translation": [
@@ -5438,11 +5438,11 @@
       "tone": 0.2,
       "member": "drum",
       "part": "mass",
-      "kind": "ellipsoid",
-      "radii": [
-       0.075,
-       0.075,
-       0.075
+      "kind": "box",
+      "size": [
+       0.15,
+       0.15,
+       0.15
       ],
       "transform": {
        "translation": [
@@ -5463,8 +5463,8 @@
       "de": "Thermisch: die Palette per Verweis, die Maschine als 75-mm-Regionskörper (Rückwand, Gehäuse, Gehäusefront, Blende, Arbeitsplatte), die Tür als 75-mm-Scheibe und die Schläuche als 75-mm-Block auf der Rückseite, ein 75-mm-Entlüftungsauslass."
      },
      {
-      "en": "Structure: slab, the machine block as member, drum and bearing, three mass markers.",
-      "de": "Tragwerk: Platte, der Maschinenblock als Glied, Trommel und Lager, drei Massenmarken."
+      "en": "Structure: slab, the machine block as member, drum and bearing, three mass markers. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Tragwerk: Platte, der Maschinenblock als Glied, Trommel und Lager, drei Massenmarken. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

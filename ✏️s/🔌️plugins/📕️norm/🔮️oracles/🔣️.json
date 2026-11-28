@@ -112,6 +112,7 @@
       "ecosystem": "python",
       "package": "blue-prints",
       "version": "0.8.0",
+      "module": "blueprints",
       "capabilities": [
         "norm-eurocode-concrete-clauses",
         "norm-eurocode-steel-clauses",
@@ -208,6 +209,7 @@
       "ecosystem": "python",
       "package": "PyNiteFEA",
       "version": "3.0.0",
+      "module": "Pynite",
       "capabilities": [
         "norm-eurocode-frame-analysis"
       ],

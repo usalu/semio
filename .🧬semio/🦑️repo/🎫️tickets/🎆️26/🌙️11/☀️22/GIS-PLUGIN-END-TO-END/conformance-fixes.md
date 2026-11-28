@@ -72,3 +72,9 @@ Needs an owner and a freeze of the other lanes touching `🔌️plugin`, `🛂�
 - Fix: both bridges now build the report with the production API (`ColdMutation::diff`/`inverse`, `protocol::apply_diff_cold`, `semio_framework_pack_json`), the same way `gis_map_mutation_report_json` already does. Files: GM `✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs`, GM `👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs`.
 - Checked every other GIS crate: remaining `semio_os_store_test_support` uses are in `🧪️tests` files and `[dev-dependencies]` only (gismap, gisterrain, gisterrain-editor).
 - Verification runs: see `gismap-lane-results.md` (runner `gismap2-run.sh`, logs `🗑️generated/gismap2-*.log`).
+
+### Verification attempts with lock6 and the fleet prefix (-j 6), after the pdf fix
+- GT (`-p …-gisterrain-editor -p …-gisterrain --tests`): attempt 1 failed with ENOSPC on the compiler image (retry was also full); attempt 2 failed with an infrastructure `EPERM` in the repo tool (`fstatat .reset.json` under `.cache/b/l`). No compiler error in any conformance-fix code was reported. Not green yet.
+- GM (`-p …-gis2d -p …-gismap -p …-gismap-gismap --tests`): attempt 1 failed with ENOSPC (syn, io-base64); attempt 2 has been running for about 50 minutes, stuck behind `cargo:build-entry … semio.compiler.host-capacity/v1` (log `🗑️generated/conformance-gm.log`, runner `conformance-run6.sh` under `compile.lock6`). Lock-free cargo errors: none seen.
+- Rust tests (`shell`, overlays value, GT `exaggeration`, `local_file`): not run, since they need a successful check first.
+- Result so far: PASS for the three TypeScript tests only; Rust check and tests UNVERIFIED (blocked by ENOSPC, EPERM and capacity waits, not by errors in the changed code).

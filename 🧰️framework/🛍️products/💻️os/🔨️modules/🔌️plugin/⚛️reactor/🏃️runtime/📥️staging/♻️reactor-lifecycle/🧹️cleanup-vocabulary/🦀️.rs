@@ -83,6 +83,22 @@ const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 18] = [
     RuntimeCleanupFaultVector { slug: "maintenance-poisoned", code: "plugin.internal.maintenance-poisoned", detail: "the maintenance pump lock was poisoned by a panicking turn" },
     RuntimeCleanupFaultVector { slug: "maintenance-not-drained", code: "plugin.internal.maintenance-not-drained", detail: "the maintenance pump still held terminal state at retirement" },
 ];
+/// 🪦️ Consecutive faulted or cancelled live cleanup jobs tolerated as ordinary terminals before the run itself is a fault: a cancelled or faulted prior outcome ends only its own job, the next turn starts a fresh one.
+#[doc(hidden)]
+pub const RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT: u32 = 8;
+/// 🪦️ The live pump's verdict on ONE finished cleanup job: a clean job clears the run, a faulted or cancelled one is a normal terminal (`Ready`) until [`RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT`] of them follow each other.
+#[doc(hidden)]
+pub fn runtime_live_prior_outcome_status(faulted: bool, consecutive: &std::sync::atomic::AtomicU32, pending: RuntimeMaintenanceStatus) -> RuntimeMaintenanceStatus {
+    if !faulted {
+        consecutive.store(0, std::sync::atomic::Ordering::SeqCst);
+        return pending;
+    }
+    if consecutive.fetch_add(1, std::sync::atomic::Ordering::SeqCst).saturating_add(1) >= RUNTIME_LIVE_PRIOR_OUTCOME_LIMIT {
+        RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::PriorOutcome)
+    } else {
+        RuntimeMaintenanceStatus::Ready
+    }
+}
 impl RuntimeCleanupFault {
     pub const fn vector(self) -> &'static RuntimeCleanupFaultVector {
         &RUNTIME_CLEANUP_FAULT_VECTORS[self as usize]

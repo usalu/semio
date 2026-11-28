@@ -21,8 +21,8 @@
         "floorMegabytes": 2048,
         "minimumMegabytes": 2048
       },
-      "en": "an earlier request is still waiting",
-      "de": "eine frühere Anfrage wartet noch"
+      "en": "an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first",
+      "de": "eine frühere Anfrage wartet noch und hält die nächste Reservierung; kleinere Anfragen, die daneben passen, laufen zuerst"
     },
     {
       "id": "gate-confirmed memory shortage",

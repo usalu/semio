@@ -1,0 +1,131 @@
+{
+  "quietMilliseconds": 90000,
+  "maximumDeferralMilliseconds": 600000,
+  "cases": [
+    {
+      "name": "no record asks for the wanted implementation",
+      "wanted": "h1",
+      "nowMs": 1000000,
+      "editedAtMs": 999000,
+      "answers": true,
+      "implementation": "h1",
+      "to": {
+        "settled": "h1"
+      }
+    },
+    {
+      "name": "an unmoved tree keeps asking for its implementation",
+      "wanted": "s",
+      "from": {
+        "settled": "s"
+      },
+      "nowMs": 1000000,
+      "editedAtMs": 999000,
+      "answers": true,
+      "implementation": "s",
+      "to": {
+        "settled": "s"
+      }
+    },
+    {
+      "name": "a fresh edit keeps the settled service and starts the deferral clock",
+      "wanted": "h2",
+      "from": {
+        "settled": "s"
+      },
+      "nowMs": 1000000,
+      "editedAtMs": 990000,
+      "answers": true,
+      "implementation": "s",
+      "to": {
+        "settled": "s",
+        "firstAt": 1000000
+      }
+    },
+    {
+      "name": "the next edit of the burst keeps the settled service and the clock",
+      "wanted": "h3",
+      "from": {
+        "settled": "s",
+        "firstAt": 1000000
+      },
+      "nowMs": 1030000,
+      "editedAtMs": 1029000,
+      "answers": true,
+      "implementation": "s",
+      "to": {
+        "settled": "s",
+        "firstAt": 1000000
+      }
+    },
+    {
+      "name": "a tree quiet for the quiet bound settles on the wanted implementation",
+      "wanted": "h3",
+      "from": {
+        "settled": "s",
+        "firstAt": 1000000
+      },
+      "nowMs": 1120000,
+      "editedAtMs": 1029000,
+      "answers": true,
+      "implementation": "h3",
+      "to": {
+        "settled": "h3"
+      }
+    },
+    {
+      "name": "a tree edited without a pause settles after the maximum deferral",
+      "wanted": "h9",
+      "from": {
+        "settled": "s",
+        "firstAt": 1000000
+      },
+      "nowMs": 1600000,
+      "editedAtMs": 1599000,
+      "answers": true,
+      "implementation": "h9",
+      "to": {
+        "settled": "h9"
+      }
+    },
+    {
+      "name": "a settled service that no longer answers is not asked for",
+      "wanted": "h2",
+      "from": {
+        "settled": "s"
+      },
+      "nowMs": 1000000,
+      "editedAtMs": 999000,
+      "answers": false,
+      "implementation": "h2",
+      "to": {
+        "settled": "h2"
+      }
+    },
+    {
+      "name": "an edit that was quiet before the first client looked settles at once",
+      "wanted": "h2",
+      "from": {
+        "settled": "s"
+      },
+      "nowMs": 1000000,
+      "editedAtMs": 100000,
+      "answers": true,
+      "implementation": "h2",
+      "to": {
+        "settled": "h2"
+      }
+    }
+  ],
+  "bursts": [
+    {
+      "name": "twelve clients over twelve edits of one burst ask for one implementation and the burst then makes one new one",
+      "settled": "s",
+      "edits": 12,
+      "everyMilliseconds": 5000,
+      "quietMilliseconds": 90000,
+      "generationsDuring": 0,
+      "generationsAfter": 1
+    }
+  ]
+}

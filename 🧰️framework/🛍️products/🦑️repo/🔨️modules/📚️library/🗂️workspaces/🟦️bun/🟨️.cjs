@@ -273,6 +273,7 @@ function* scopesPlan(owner, selection) {
     for (const pattern of admitted.members) bounded(owner.root, join(directory, sourcePrefix(pattern.replace(/^!/u, ""))));
     scopes.push({ directory, manifest: path, lock: directory === "." ? "bun.lock" : directory + "/bun.lock", declaration: admitted });
   }
+  if (scopes.length > limits.maximumScopes) throw edited("Bun installation scope capacity exceeded (" + scopes.length + " of " + limits.maximumScopes + "): " + scopes.map(scope => scope.directory).slice(0, 12).join(", ") + (scopes.length > 12 ? ", ..." : ""), "roster");
   owner.scopeDirectories = scopes.map(scope => scope.directory);
   return selection.kind === "closure" ? yield* closurePlan(owner, scopes, selection.roots) : scopes;
 }

@@ -18,7 +18,8 @@ import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦
 import { NATIVE_TOOLCHAINS_V1, pythonEnvironmentOfProjectV1, toolchainMessageV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import { toolPinValueV1 } from "../../../../🏗️build/🧰️tool-setup/🟦️.ts";
 import { pinnedCargoToolsEnvironmentV1, pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, provisionInterpretersV1 } from "../../🛠️tools/🧰️native/🟦️.ts";
-import { ownedNativeToolPortV1, systemNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import { systemNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import { ownedNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🎟️owned/🟦️.ts";
 import { runNativeDependencyToolV1, runPreparedCargoDependencyPairV1, type NativeDependencyToolRunnerV1 } from "../🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { fleetFetchContextV1 } from "../../🛰️fleet-fetch/🟦️.ts";

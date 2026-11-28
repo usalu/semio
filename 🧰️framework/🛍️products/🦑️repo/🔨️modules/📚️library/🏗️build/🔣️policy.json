@@ -43,6 +43,7 @@
       "maximumActionResultBytes": 4194304,
       "maintenanceSeconds": 300,
       "blobSharePercent": 50,
+      "blobRoom": { "headroomPercent": 8, "floorPercent": 5, "censusMaximumSeconds": 21600 },
       "graph": { "sharePercent": 10, "supersedeGraceSeconds": 1800 },
       "graceSeconds": 600,
       "staleness": {
@@ -240,11 +241,14 @@
       "rampIdleKeepBasisPoints": 15000,
       "settledAfterMilliseconds": 900000,
       "settledKeepBasisPoints": 15000,
+      "retainedKeepMegabytes": 256,
+      "retainedKeepBasisPoints": 12500,
+      "elastic": {"warmupMilliseconds": 60000, "convergeMilliseconds": 120000, "minimumObservations": 3, "marginMinimumMegabytes": 256, "deviationFactor": 3, "classKeepBasisPoints": 1500},
       "childStartMegabytes": 512, "interactiveReserveBasisPoints": 2500, "interactiveReserveMinimumMegabytes": 2048, "interactiveReserveMaximumMegabytes": 8192, "sessionCapBasisPoints": 4000
     },
     "swap": {
       "ceilingBasisPoints": 2500,
-      "activeBasisPointsPerSecond": 0.6,
+      "activeBasisPointsPerSecond": 10,
       "outBasisPointsPerSecond": 40,
       "shortBasisPoints": 2500
     },
@@ -276,12 +280,15 @@
       "maximumWaiters": 256,
       "bypassMilliseconds": 30000,
       "headOfLineMilliseconds": 60000,
+      "interactiveAhead": true,
       "maximumBypasses": 6,
       "agingMilliseconds": 300000,
       "lendAfterMilliseconds": 5000,
       "jitterBasisPoints": 2500,
       "deadlineInteractiveMilliseconds": 120000,
       "deadlineBatchMilliseconds": 300000,
+      "deadlockMilliseconds": 120000,
+      "unreachableMilliseconds": 180000,
       "starvedMilliseconds": 1800000
     },
     "kinds": {
@@ -378,7 +385,8 @@
         "shape": "fixed",
         "fixedMegabytes": 3584,
         "cpu": 2,
-        "priority": "batch",
+        "priority": "interactive",
+        "prerequisite": true,
         "minimumMegabytes": 2304
       },
       {
@@ -453,7 +461,8 @@
       "maximumRebuildSlots": 4,
       "quietReferenceMegabytes": 512,
       "quietMaximumMegabytes": 1024,
-      "quietFollowUpMilliseconds": 1800000
+      "quietFollowUpMilliseconds": 1800000,
+      "staleTrustBasisPoints": 7000
     }
   },
   "workers": {

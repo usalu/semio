@@ -8,9 +8,10 @@ import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {beginAdmissionWaitV1,liveChildPidsV1,onScriptProcessWaitEdgeV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
-import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,hostUnderPressureV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,hostWaitDeadlineMillisecondsV1,hostRequestNeverFitsV1,hostAncestorDeadlockV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
+import {hostEnvironmentPriorityV1,promoteStageWaitersV1,hostStageAncestryV1,decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,hostUnderPressureV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,hostWaitDeadlineMillisecondsV1,hostRequestNeverFitsV1,hostAncestorDeadlockV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1,type HostDecisionV1,unsatisfiableHostRequestV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
-import {retainsHostReservationV1} from "../📏️decision/🟦️.ts";
+import {describeForeignHostGrantV1,retainsHostReservationV1} from "../📏️decision/🟦️.ts";
+import {hostLeastMegabytesV1,hostPossibleMegabytesV1,hostRequestUnreachableV1,hostUnreachableSinceV1,resolveHostHoldAndWaitV1} from "../⛓️hold-and-wait/🟦️.ts";
 import type {HostReasonV1} from "../📏️decision/🟦️.ts";
 import {systemAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../../../🪪️agent-sessions/🧭️ancestry/🟦️.ts";
 import {hostDeclarationKeyV1} from "../🪞️profile/🟦️.ts";
@@ -27,7 +28,7 @@ const protocol=schema.definitions.Protocol.const,limits=schema.definitions.Limit
 export function newHostCapacityIdV1():string{return randomBytes(16).toString("base64url");}
 
 /** 🎟️ What an admitted operation holds and the environment its children inherit. */
-export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>;grow?:HostGrantGrowV1}>;
+export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>;grow?:HostGrantGrowV1;preempted?:AbortSignal}>;
 
 /** 🌿️ Grows the reservation of a held grant in place, in the fair queue and never as a second grant: `megabytes` is the memory asked on top of what the grant reserves now, `minimumMegabytes` the least extra that is worth taking (what the free memory covers at least is taken, as a reduced upgrade); answers the megabytes added, rejects when the signal aborts or the grant ended. Calls of one grant run one after the other. */
 export type HostGrantGrowV1=(ask:Readonly<{megabytes:number;minimumMegabytes?:number;signal?:AbortSignal;queuedSinceMs?:number}>)=>Promise<number>;
@@ -49,6 +50,14 @@ export function readLiveHostCapacityPlanV1(environment:Readonly<Record<string,st
  if(plan===undefined)return undefined;
  const row=readJson(grantPath(hostCapacityDirectoryV1(environment),plan.id));
  return isHostCapacityV1("Grant",row)?followHostGrantPlanV1(plan,row as HostGrantV1):plan;
+}
+
+/** 🧾️ The memory of the grant an enclosing run holds above its fixed block, as the ledger books it now (`reservedMegabytes` less the plan's `fixedMegabytes`, never below zero): what the jobs of the run may really hold, against which a build sizes its parallel compiler processes; undefined when the process runs under no grant, the row cannot be read or the grant is quiet (it holds a small placeholder until it grows). */
+export function readLiveHostCapacityJobMegabytesV1(environment:Readonly<Record<string,string|undefined>>):number|undefined{
+ const plan=readHostCapacityPlanV1(environment);
+ if(plan===undefined)return undefined;
+ const row=readJson(grantPath(hostCapacityDirectoryV1(environment),plan.id));
+ return isHostCapacityV1("Grant",row)&&(row as HostGrantV1).quiet!==true?Math.max(0,(row as HostGrantV1).reservedMegabytes-plan.fixedMegabytes):undefined;
 }
 
 /** 🔎️ Reads the grant row `id` as the live grant it is (its holder runs, it is of this boot and fresh), undefined when the id is malformed, the row is gone or stale: how a nested request finds the grant it runs in. */
@@ -74,6 +83,8 @@ export function attachHostCapacityProcessV1(environment:Readonly<Record<string,s
 /** 🗒️ The file a run leaves beside its grant to say that work has to run now (see `requestHostCapacityUpgradeV1`). */
 export const hostUpgradePathV1=(directory:string,id:string):string=>join(directory,"grants",`${id}${protocol.upgradeSuffix}`);
 /** 📣️ The file a run leaves beside its grant to say how much memory its work needs (see `declareHostCapacityNeedV1`). */
+/** ⛓️ The marker of a grant that was preempted to break a hold-and-wait: the gate that resolved it writes it next to the grant, the holder sees it, tells its body through `preempted` of its handle, and ends its child processes after `Protocol.preemptGraceMilliseconds` (itself after twice that) when the body is still running. */
+export const hostPreemptPathV1=(directory:string,id:string):string=>join(directory,"grants",`${id}${protocol.preemptSuffix}`);
 export const hostNeedPathV1=(directory:string,id:string):string=>join(directory,"grants",`${id}${protocol.needSuffix}`);
 const readNeed=(path:string):number|undefined=>{try{const value=Number(readFileSync(path,"utf8").trim());return Number.isSafeInteger(value)&&value>0?value:undefined;}catch{return undefined;}};
 /** 📣️ Lets any process of a run say how many megabytes its work needs, even when its grant holds less and the work is refused: the holder reads the largest declaration when the run ends and the learned estimates count it as what the class needs (`hostRunAfterNeedV1`); false when the environment carries no live grant. */
@@ -83,6 +94,12 @@ export function declareHostCapacityNeedV1(environment:Readonly<Record<string,str
  const path=hostNeedPathV1(hostCapacityDirectoryV1(environment),id);
  try{mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,String(Math.max(megabytes,readNeed(path)??0)));return true;}catch{return false;}
 }
+/** 🔖️ Writes a grant row with its format identity: `<id>.format` first, so no reader sees a current row without it, then the row. */
+export function writeGrantV1(directory:string,grant:HostGrantV1):void{
+ writeJson(formatPath(directory,grant.id),{format:protocol.grantFormat});writeJson(grantPath(directory,grant.id),grant);
+}
+const formatPath=(directory:string,id:string)=>join(directory,"grants",`${id}${protocol.formatSuffix}`);
+const statsPath=(directory:string,id:string)=>join(directory,"grants",`${id}.stats`);
 const phasesPath=(directory:string,id:string)=>join(directory,"grants",`${id}${protocol.phasesSuffix}`);
 /** 🚏️ Lets any process of a run say which phase the run enters (assembly, plan, rebuild, execution): one line `<phase> <milliseconds>` appended to the grant's phase file, which the holder reads within a second; false when the environment carries no live grant, the switch of a nested invocation is off (an inherited grant belongs to the invocation that holds it; the holder itself when it re-enters the gate and the process it re-executes itself into, its direct child, continue that very invocation and keeps the switch on, so the plan of a captured run is learned) or the phase is unknown. */
 export function markHostCapacityPhaseV1(environment:Readonly<Record<string,string|undefined>>,phase:HostPhaseV1,now:()=>number=Date.now):boolean{
@@ -177,6 +194,15 @@ export async function requestHostRebuildCapacityV1(environment:Readonly<Record<s
  }finally{try{if(!retained)release();}finally{leave();}}
 }
 /** 🪢️ The ids of the processes above `first` (its parent chain), read once; empty where the platform cannot tell. */
+const stageDescentV1=new Map<string,boolean>();
+/** 🧬️ Whether the process `pid` descends from a ready-supervisor stage (see `hostStageAncestryV1`), read once per process identity; false where the platform cannot tell. */
+const descendsFromStageV1=(pid:number,startMs:number|undefined):boolean=>{
+ const key=`${pid}:${startMs??""}`,known=stageDescentV1.get(key);
+ if(known!==undefined)return known;
+ let found=false;try{found=hostStageAncestryV1(systemAncestryV1(process.platform,pid,32).map(row=>row.command));}catch{}
+ if(stageDescentV1.size>=1024)stageDescentV1.clear();
+ stageDescentV1.set(key,found);return found;
+};
 const ancestorPidsV1=(first:number):ReadonlySet<number>=>{try{return new Set(systemAncestryV1(process.platform,first,32).map(row=>row.pid).concat(first));}catch{return new Set([first]);}};
 /** 🛌️ Publishes that THIS process waits (in a lease, claim, headroom or capacity queue) to the grant its environment carries: one marker file `<grant>.wait.<pid>` holding the start of the wait episode, removed `waitReleaseGapMilliseconds` after the wait ends so the polls of one queue do not flicker. The holder of the grant reads the markers to see that its whole process tree only waits and lends the reservation (see `holdHostGrantV1`): a run whose child sits at an inner gate no longer idles on memory other runs need. Returns the function that unbinds the process; false-y environment (no grant) binds nothing. */
 export function bindHostCapacityWaitMarkerV1(environment:Readonly<Record<string,string|undefined>>=process.env,pid:number=process.pid):()=>void{
@@ -284,6 +310,9 @@ async function sweepLeakedImagesV1(environment:Readonly<Record<string,string|und
  return sweepLeakedSandboxImagesV1({parents:root===undefined?[]:[machinePathV1(root,".cache","test-sandbox")]});
 }
 
+/** 🌐️ The memory the warden measured outside every grant (its fresh state; 0 without one): admission counts it against the floor besides the grants. */
+const foreignOf=(state:(()=>HostWardenStateV1|null)|undefined):number=>{try{return state?.()?.foreign?.megabytes??0;}catch{return 0;}};
+
 /** 🚧️ The state of the host warden when it holds the request back (the level is not calm and the request is heavy), else null: no new heavy work starts while the host memory is tight or critical. A state that cannot be read never holds. */
 function heldByWardenV1(read:()=>HostWardenStateV1|null,request:HostRequestV1,nowMs:number):HostWardenStateV1|null{
  try{
@@ -326,10 +355,12 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  if(offered!==undefined){const claimed=await(await import("./🤝️handover/🟦️.ts")).claimHostGrantHandoverV1(custody(),options,directory,offered,request,language,now,pid);if(claimed)return holdHostGrantV1(options,claimed,undefined,request,directory,pid,body);}
  if(names(directory,"queue",{retry:{signal:options.control.signal}}).length>=policy.wait.maximumWaiters
   &&readWaiters(directory,now(),policy,options.control.signal,false).length>=policy.wait.maximumWaiters)throw Error(schema.definitions.Messages.const[language].errors.queueFull);
+ const explicitBatch=hostEnvironmentPriorityV1(environment)==="batch",stageDescent=(other:number,start:number|undefined):boolean=>!(explicitBatch&&other===pid)&&(options.descends??descendsFromStageV1)(other,start);
  const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...holderStartV1(pid),...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
+ const announcedForeign=new Set<string>();
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity,continuation:(()=>Promise<T>)|undefined,lastWait:HostDecisionV1["reason"]|undefined;
- let sweptAtMs=-Infinity,split:string|undefined;
+ let sweptAtMs=-Infinity,split:string|undefined,unreachableSince:number|undefined,preemptNoticeAt=-Infinity;
  const endAdmissionWait=beginAdmissionWaitV1();
  let ancestry:ReadonlySet<number>|undefined;
  const ancestorsOf=(ledger:readonly HostGrantV1[])=>{
@@ -356,11 +387,21 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
    }else if(takeLock(directory,now(),policy,pid)){
     try{
      const at=now(),ledger=readGrants(directory,at,policy,undefined,options.control.signal),waiters=readWaiters(directory,at,policy,options.control.signal);
+     for(const row of ledger)if(row.foreign!==undefined&&announcedForeign.add(row.id))write(formatHostCapacityV1(language,"foreignGrant",{id:row.id,pid:row.pid>0?row.pid:"?",reserved:row.reservedMegabytes,...describeForeignHostGrantV1(language,row.foreign)}));
      if(!waiters.some(row=>row.request.id===request.id)){writeJson(waiterPath,record);waiters.push(record);}
-     const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger),ledger,waiters,at),found=evaluation.decisions.find(row=>row.id===request.id)!;
+     const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger,foreignOf(wardenState)),ledger,promoteStageWaitersV1(waiters,stageDescent),at),found=evaluation.decisions.find(row=>row.id===request.id)!;
      const drained=Math.min(host.availableMegabytes+ledger.reduce((sum,row)=>sum+(row.lentSinceMs===undefined?row.observedMegabytes??row.reservedMegabytes:0),0),host.totalMegabytes)-evaluation.floorMegabytes,asked=Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes));
      const lone=found.verdict==="wait"&&found.reason==="memory"&&evaluation.decisions.every(row=>row.verdict==="wait")&&evaluation.decisions[0]!.id===request.id&&unsatisfiableHostRequestV1(policy,{waitedMilliseconds:at-arrivedAtMs,roomMegabytes:evaluation.headroomMegabytes,drainedMegabytes:drained,needMegabytes:asked,minimumMegabytes:request.minimumMegabytes??0,admitted:0,replaced:false,quiet:request.quiet===true,elastic:request.elastic===true,pause:softHostReasonV1(policy,host)});
+     const stall=resolveHostHoldAndWaitV1(policy,{ledger,waiters,decisions:evaluation.decisions,spareMegabytes:evaluation.headroomMegabytes,nowMs:at});
      const mine:HostDecisionV1=lone?Object.freeze({id:request.id,verdict:"admit",jobs:request.minimumJobs,reservedMegabytes:Math.min(asked,Math.floor(evaluation.headroomMegabytes)),reason:"reduced"}):found;
+     if(stall.kind==="preempt"&&mine.verdict==="wait"){
+      const holders=stall.holders.join(", ");
+      for(const victim of stall.victims)if(!existsSync(hostPreemptPathV1(directory,victim)))writeJson(hostPreemptPathV1(directory,victim),{atMs:at,by:request.id,holders});
+      if(at-preemptNoticeAt>=policy.wait.progressMilliseconds){preemptNoticeAt=at;write(formatHostCapacityV1(language,"preempting",{count:stall.holders.length,seconds:Math.round(stall.waitedMilliseconds/1000),holders,victim:stall.victims.map(id=>ledger.find(row=>row.id===id)?.label??id).join(", "),released:stall.releasedMegabytes}));}
+     }
+     const reach=hostPossibleMegabytesV1(policy,host,ledger),least=hostLeastMegabytesV1(policy,request);
+     unreachableSince=request.quiet===true||request.elastic===true||options.upgrade!==undefined?undefined:hostUnreachableSinceV1(unreachableSince,{leastMegabytes:least,possibleMegabytes:reach.possibleMegabytes,nowMs:at});
+     if(mine.verdict==="wait"&&hostRequestUnreachableV1(policy,unreachableSince,at))throw hostCapacityErrorV1("memoryUnreachable",{operation:request.operation,minimum:least,possible:reach.possibleMegabytes,floor:reach.floorMegabytes,total:host.totalMegabytes,foreign:reach.foreignMegabytes,needed:least+reach.floorMegabytes,seconds:Math.round((at-unreachableSince!)/1000)},environment);
      if(mine.verdict==="wait"&&(mine.reason==="never"||mine.reason==="starved"||hostRequestNeverFitsV1(policy,host,request))){
       const total=host.totalMegabytes,floor=evaluation.floorMegabytes,minimum=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes;
       const held=mine.reason==="starved"&&ledger.some(row=>row.id!==request.id&&row.lentSinceMs===undefined);
@@ -377,8 +418,8 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
      const before=lastWait;if(mine.verdict==="wait")lastWait=mine.reason;
      if(mine.verdict==="admit"){
       if(!holdsLock(directory,pid))continue;
-      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,...holderStartV1(pid),bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.holder===undefined||mine.reason!=="lent"?{}:{holder:request.holder},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true,arrivedAtMs}:{},...request.retainReservation===true?{retainReservation:true}:{}});
-      writeJson(grantPath(directory,request.id),grant);remove(waiterPath);admittedHost=host;
+      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,...holderStartV1(pid),bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.holder===undefined||mine.reason!=="lent"?{}:{holder:request.holder},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true}:{},arrivedAtMs,...request.retainReservation===true?{retainReservation:true}:{},...request.priority==="lent"?{}:{priority:request.priority}});
+      writeGrantV1(directory,grant);remove(waiterPath);admittedHost=host;
       const seconds=Math.round((at-arrivedAtMs)/1000);
       if(lone)write(formatHostCapacityV1(language,"unsatisfiable",{operation:request.operation,seconds,reserved:mine.reservedMegabytes,asked,available:Math.max(0,drained),floor:evaluation.floorMegabytes}));
       else if(mine.reason==="override")write(formatHostCapacityV1(language,"override",{operation:request.operation,seconds,reason:describeHostReasonV1(language,softHostReasonV1(policy,host)??"load")}));
@@ -439,14 +480,14 @@ export async function tryHoldHostCapacityV1<T>(options:HostCapacityPortsV1&Pick<
   const grants=readGrants(directory,at,policy,undefined,control.signal),waiters=readWaiters(directory,at,policy,control.signal),reviewed=options.review?.(sample,grants,at)??{host:sample,grants};
   if(typeof reviewed==="string")return {admit:false,reason:reviewed};
   if(grants.some(row=>row.id===request.id)||waiters.some(row=>row.request.id===request.id))return {admit:false,reason:"queue-order"};
-  const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(reviewed.host,reviewed.grants),reviewed.grants,[...waiters,{request,arrivedAtMs:at,pid}],at);
+  const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(reviewed.host,reviewed.grants,foreignOf(options.warden)),reviewed.grants,promoteStageWaitersV1([...waiters,{request,arrivedAtMs:at,pid}],(other,start)=>!(hostEnvironmentPriorityV1(environment)==="batch"&&other===pid)&&(options.descends??descendsFromStageV1)(other,start)),at);
   const decision=evaluation.decisions.find(row=>row.id===request.id);
   if(decision?.verdict!=="admit")return {admit:false,reason:decision?.reason??"memory"};
   if(decision.reservedMegabytes<request.fixedMegabytes)return {admit:false,reason:"never"};
   checkResourceLeaseControl(control);
   if(!holdsLock(directory,pid))return {admit:false,reason:"queue-order"};
   grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:decision.jobs,cpu:decision.jobs*request.cpuPerJob,reservedMegabytes:decision.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,...holderStartV1(pid),bootAtMs:hostBootAtV1(directory,at),...request.label===undefined?{}:{label:request.label},retainReservation:true});
-  writeJson(grantPath(directory,request.id),grant);
+  writeGrantV1(directory,grant);
  }finally{releaseLock(directory,pid);}
  return {admit:true,finished:holdHostGrantV1(options,grant,sample,request,directory,pid,body)};
 }
@@ -457,9 +498,9 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
  const plan=adopted?carried?.id===held.id?carried:requireHostCapacityV1<HostPlanV1>("Plan",{version:1,id:held.id,jobs:held.jobs,cpu:held.cpu,memoryMegabytes:held.reservedMegabytes,fixedMegabytes:0,floorMegabytes:0}):planHostCapacityV1(policy,admittedHost!,held.quiet===true&&options.upgrade!==undefined?options.upgrade:request,held.quiet===true&&options.upgrade!==undefined?options.upgrade.preferredJobs:held.jobs);
  const full=options.upgrade,quiet=held.quiet===true&&full!==undefined,growable=full!==undefined&&!adopted&&full.perJobMegabytes>0,upgradeFile=hostUpgradePathV1(directory,held.id);
  const rebuildScope=options.resize===undefined?undefined:newHostCapacityIdV1(),rebuildFolder=rebuildScope===undefined?undefined:rebuildRequestsPath(directory,held.id,rebuildScope);
- let growing=false,outgrown=false,settled:HostGrowthSettleV1|undefined,upgrading=false,rebuilding=false,stopped=false,attempted=-Infinity,holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false,pressured=false,peak=0,lentTotal=0,failure:unknown,failed=false,marks:(readonly [number,number,HostPhaseV1|undefined])[]=[],phase:HostPhaseV1|undefined,deferredPhase:HostPhaseV1|undefined,transitions:HostPhaseTransitionV1[]=[],markLines=0,markBytes=0;
+ let count=0,mean=0,squares=0,growing=false,outgrown=false,settled:HostGrowthSettleV1|undefined,upgrading=false,rebuilding=false,stopped=false,attempted=-Infinity,holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false,pressured=false,peak=0,lentTotal=0,failure:unknown,failed=false,marks:(readonly [number,number,HostPhaseV1|undefined])[]=[],phase:HostPhaseV1|undefined,deferredPhase:HostPhaseV1|undefined,transitions:HostPhaseTransitionV1[]=[],markLines=0,markBytes=0;
  const startedAt=now();
- const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}try{unlinkSync(attachedPath(directory,held.id));}catch{}try{unlinkSync(phasesPath(directory,held.id));}catch{}try{unlinkSync(upgradeFile);}catch{}try{unlinkSync(hostNeedPathV1(directory,held.id));}catch{}if(rebuildFolder!==undefined)try{rmSync(rebuildFolder,{recursive:true,force:true});}catch{}try{const prefix=`${held.id}${protocol.waitSuffix}`;for(const name of readdirSync(join(directory,"grants")))if(name.startsWith(prefix))unlinkSync(join(directory,"grants",name));}catch{}};
+ const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}try{unlinkSync(attachedPath(directory,held.id));}catch{}try{unlinkSync(phasesPath(directory,held.id));}catch{}try{unlinkSync(statsPath(directory,held.id));}catch{}try{unlinkSync(formatPath(directory,held.id));}catch{}try{unlinkSync(upgradeFile);}catch{}try{unlinkSync(hostPreemptPathV1(directory,held.id));}catch{}try{unlinkSync(hostNeedPathV1(directory,held.id));}catch{}if(rebuildFolder!==undefined)try{rmSync(rebuildFolder,{recursive:true,force:true});}catch{}try{const prefix=`${held.id}${protocol.waitSuffix}`;for(const name of readdirSync(join(directory,"grants")))if(name.startsWith(prefix))unlinkSync(join(directory,"grants",name));}catch{}};
  process.once("exit",cleanup);
  const publish=(next:HostGrantV1):void=>{state=next;if(holding)writeJson(path,state);};
  if(rebuildScope!==undefined||held.rebuildScope!==undefined){const{rebuildScope:_,rebuildBookedAtMs:__,...original}=held;publish({...original,...rebuildScope===undefined?{}:{rebuildScope}});}
@@ -486,7 +527,7 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
   if(!holding)return;
   try{const time=new Date();utimesSync(path,time,time);}catch{}
   try{const cached=(readJson(join(directory,"sample.json")) as {host?:unknown}|undefined)?.host;if(isHostCapacityV1("Host",cached)&&now()-(cached as HostSampleV1).atMs<=2*policy.wait.heartbeatMilliseconds&&hostUnderPressureV1(policy,cached as HostSampleV1))pressured=true;}catch{}
-  void observeAll().then(observed=>{if(holding&&observed!==null){peak=Math.max(peak,observed);marks.push([activeAt(now()),observed,tag]);if(marks.length>protocol.maximumPeakMarks)marks=marks.filter((_,index)=>index%2===0||index===marks.length-1);publish({...state,observedMegabytes:observed});if(quiet&&options.quietUpgradeRequiresRequest!==true&&state.quiet===true&&observed>state.reservedMegabytes)outgrown=true;}}).catch(()=>undefined);
+  void observeAll().then(observed=>{if(holding&&observed!==null){peak=Math.max(peak,observed);count++;const step=observed-mean;mean+=step/count;squares+=step*(observed-mean);marks.push([activeAt(now()),observed,tag]);if(marks.length>protocol.maximumPeakMarks)marks=marks.filter((_,index)=>index%2===0||index===marks.length-1);publish({...state,observedMegabytes:observed});try{writeJson(statsPath(directory,held.id),{peakMegabytes:peak,observations:count,deviationMegabytes:count>1?Math.ceil(Math.sqrt(squares/(count-1))):0});}catch{}if(quiet&&options.quietUpgradeRequiresRequest!==true&&state.quiet===true&&observed>state.reservedMegabytes)outgrown=true;}}).catch(()=>undefined);
  };
  const enter=(next:HostPhaseV1):void=>{
   if(next!=="rebuild"&&state.rebuildBookedAtMs!==undefined&&rebuildRequests().length>0){deferredPhase=next;return;}
@@ -510,6 +551,19 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
  };
  const first=setTimeout(()=>heartbeat(),Math.min(limits.heartbeatFirstMilliseconds,policy.wait.heartbeatMilliseconds)),timer=setInterval(()=>heartbeat(),policy.wait.heartbeatMilliseconds);
  const watch=adopted?undefined:options.orphan??currentHostOrphanWatchV1(),orphaned=watch?setInterval(()=>{if(holding&&!stopped&&watch.lost())watch.stop();},policy.wait.heartbeatMilliseconds):undefined;orphaned?.unref();
+ const preemption=new AbortController(),preemptFile=hostPreemptPathV1(directory,held.id);let preemptedAtMs:number|undefined,preemptStage=0;
+ const preemptWatcher=adopted?undefined:setInterval(()=>{
+  if(!holding||stopped)return;
+  const at=now();
+  if(preemptedAtMs===undefined){
+   if(!existsSync(preemptFile))return;
+   preemptedAtMs=at;const marked=readJson(preemptFile) as {holders?:unknown}|undefined;
+   try{(options.write??(line=>process.stderr.write(line+"\n")))(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"preempted",{operation:held.label??held.operation,seconds:Math.round((at-held.admittedAtMs)/1000),holders:typeof marked?.holders==="string"?marked.holders:held.label??held.operation}));}catch{}
+   preemption.abort(hostCapacityErrorV1("capacityPreempted",{operation:held.label??held.operation},environment));return;
+  }
+  if(preemptStage===0&&at-preemptedAtMs>=protocol.preemptGraceMilliseconds){preemptStage=1;void import("../../../🪓️termination/🟦️.ts").then(module=>{for(const row of module.readProcessTableV1()??[])if(row.parent===pid)void module.terminateOwnedProcessTreeGracefullyV1(row.pid);}).catch(()=>undefined);}
+  else if(preemptStage===1&&at-preemptedAtMs>=2*protocol.preemptGraceMilliseconds){preemptStage=2;(options.orphan??currentHostOrphanWatchV1()).stop();}
+ },policy.wait.pollMilliseconds);preemptWatcher?.unref();
  let tableAt=-Infinity,tableRows:ReturnType<typeof processChildrenTableV1>;const treeTable=(at:number)=>{if(at-tableAt>=policy.wait.heartbeatMilliseconds||at<tableAt){tableAt=at;tableRows=(options.tree??processChildrenTableV1)(pid);}return tableRows;};
  const lender=setInterval(()=>{
   try{
@@ -575,13 +629,13 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
   const next=growsBefore.then(run,run);growsBefore=next.catch(()=>undefined);return next;
  };
  try{
-  return await body(Object.freeze({grow:growInPlace,id:held.id,jobs:quiet||growable?full!.preferredJobs:held.jobs,cpu:quiet||growable?full!.preferredJobs*full!.cpuPerJob:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,adopted,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan),[protocol.marksEnvironment]:"on"})}));
+  return await body(Object.freeze({grow:growInPlace,id:held.id,jobs:quiet||growable?full!.preferredJobs:held.jobs,cpu:quiet||growable?full!.preferredJobs*full!.cpuPerJob:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,adopted,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan),[protocol.marksEnvironment]:"on"}),preempted:preemption.signal}));
  }catch(error){
   failed=true;failure=error;
   try{parked=options.park!==undefined&&state.quiet!==true&&await options.park(error);}catch{parked=false;}
   throw error;
  }finally{
-  stopped=true;clearTimeout(first);clearInterval(timer);clearInterval(lender);clearInterval(watcher);clearInterval(grower);clearInterval(rebuildWatcher);clearInterval(orphaned);process.removeListener("exit",cleanup);
+  stopped=true;clearTimeout(first);clearInterval(timer);clearInterval(lender);clearInterval(watcher);clearInterval(grower);clearInterval(rebuildWatcher);clearInterval(orphaned);clearInterval(preemptWatcher);process.removeListener("exit",cleanup);
   if(options.learn&&!adopted&&!parked&&peak>0){const ended=now(),needed=readNeed(hostNeedPathV1(directory,held.id)),active=activeAt(ended),near=marks.find(([,megabytes])=>megabytes*10000>=peak*protocol.peakNearBasisPoints);readPhases();const phases=hostPhaseSegmentsV1(marks,transitions,active);try{await options.learn(Object.freeze({jobs:quiet&&state.quiet===true?full!.preferredJobs:state.jobs,peakMegabytes:peak,activeMilliseconds:active,peakAtMilliseconds:Math.min(near?.[0]??active,active),endedAtMs:ended,...phases.length===0?{}:{phases},...pressured?{pressured:true}:{},...needed===undefined?{}:{needMegabytes:needed},...full===undefined?{}:{executed:state.upgradedAtMs!==undefined||outgrown||existsSync(upgradeFile)},status:!failed?"ok" as const:cancelledV1(failure,options.control)?"cancelled" as const:"failed" as const}));}catch{}}
   if(parked)try{await(await import("./🤝️handover/🟦️.ts")).parkHostGrantV1(custody(),{options,path,state,plan,pid,now,cleanup,language:resolveHostCapacityLanguageV1(environment)});holding=false;}catch{cleanup();}else cleanup();
  }

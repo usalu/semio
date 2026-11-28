@@ -494,3 +494,39 @@ Largest single process seen by the 15 s `top` sampler across the runs: 2,164 MB 
 - `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/🔣️.json`, `🛂️.descriptor.semio` (settled).
 - `🧰️framework/…/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx` (`createTreeWindowContextV1`), `…/🗣️Interpreter/🪟️tree-windows/🟦️.ts` (`TreeWindowContextValue.subscribe`/`revision`), `…/🗣️Interpreter/🧱️node-tree/🟦️.tsx` (`TreeView`), `…/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/🟦️.tsx` (new law). Temporary `[DEBUG]` traces in the first and third file: added and removed.
 - Ticket: `pdf-pane-journey.ts`, `round6-chain.sh` (new), this section.
+
+## End-to-end verification, round 7 (2026-11-27)
+
+Evidence: `🗑️generated/pdf-journey-r7a/` (current TS, wasm of 2026-11-25: **36 of 36**), `pdf-journey-r7b/`, `pdf-journey-r7c/`, `rotation-de/`, `execute-cover/` (new page-operation step), `pdf-journey-r7final/` (wasm rebuilt from the current tree), probes `probe-oa.out`, `probe-open-action.png`. Third-party oracle: `journey-oracle.py` (pymupdf 1.26.7 + pypdf, plus an exact xref offset check), run over every saved PDF of a run.
+
+### New coverage
+- `ops-en`/`ops-de` in `pdf-pane-journey.ts`: a new document gets Insert Page (A4, page 2), Insert Rectangle (red), Insert Text on page 2 and Set Page Rotation (90), then Save and Reopen. The oracle checks 2 pages, the A4 box, `/Rotate 90`, the text in both readers, the red fill and the title. `act` is a real click only; a covered Execute fails the step.
+- The oracle validates every saved PDF of a run with pymupdf and pypdf and checks that every xref entry points at its `n 0 obj`.
+
+### Fixes (round 7)
+1. **Details title saved with quotes**: the journey's fault, not the product's. `setSnapshotValue.value` is raw unless `valueEncoding=json` (`🔤️details-value-encoding.md`).
+2. **Execute covered in German** (product): the Utilities chip row covered the staged form footer. Top-anchored panes reserve the chip row (`🧱️execute-footer-cover.md`).
+3. **Last Actions rows under the shell's bottom dock** (product, found after fix 2): in the bottom-left window the shell's own chip row ("Display", "Remote") lay over the pane, so "Open File…" was dead (the click hit "Remote: detached"). New `windowBottomDockReservePx` (`🖱️ui/🔨️modules/🪟️window-pane-exclusivity`, cases, schema, pixel oracle 8/8), wired into `Window` from the published shell chrome boxes; the Window component law still passes 17/17; after the fix the row is uncovered and the chooser opens.
+4. **Incremental Save fell back to compact** when a page edit used another page's font (`💾️incremental-save-regression.md`); native-save 15/15.
+5. **Retirement law read only the model facade** after the model crate split: it now uses `readSourceFamilySource`; `@semio-tech/stdio-pdf:test` passes.
+6. **Catalog verifier required a string label** although the bilingual label ticket (2026/11/27) changed the schema: `descriptor-pair/🟦️.ts` parses `manifest.label` with `parseLocalizedLabelV1`, and the `catalog-complete` fixture got a bilingual label (12/12).
+7. **Stage probe used the stale host shim**: `stage-pdf-component.ts` now writes `🟨️.js` before the `describe()` probes, since the guest now imports `actorExecutionClockUs`.
+
+### Gates
+`@semio-tech/stdio-pdf`: check, build and test pass. `@semio-tech/ui-react:lint` passes with dependencies excluded; its upstream Rust generators fail on the unfinished bilingual label migration of another ticket. Rust: native-save 15/15, page-editor-tests 71, authoring 20, editor-kit, editor-document, image-route and save-cause pass. Descriptor settled: the only drift was the bilingual label.
+
+### Open after the rebuild
+With the wasm rebuilt from today's tree, **Open File never completes**: the guest's media-in job livelocks (`continuation 25431/16, guest status more-work`) on a 963-byte PDF. Every reopen step fails. New document, edit, Save (oracle-valid), export and import, Details and page operations all pass (`pdf-journey-r7final`, 24 of 34). The Nov 25 wasm opened files, so the regression is in framework Rust changed since then; the job crates are being refactored concurrently. Investigation: `🔁️media-in-livelock.md`.
+
+## End-to-end verification, round 8 (2026-11-27, final): 42 of 42
+The wasm was rebuilt and staged from the tree of 16:51 (`round6-chain.sh r9x`; the descriptor was already current, the wasm build was green in one attempt, all three components passed their `describe()` probes). The full journey `pdf-journey-r9` passed **42 of 42** verdicts (en and de): new document → title and text → Save → reopen; open the real two-page PDF → edit → incremental Save (original bytes kept as a prefix) → reopen; export and import; Details pane; accessibility (headings, tree rows, keyboard moves); page operations (insert page, rectangle, text, rotation → Save → reopen). No console errors beyond known noise.
+
+The third-party oracle (`journey-oracle.py`, pymupdf 1.26.7 + pypdf) read all 8 saved PDFs, and every xref entry pointed at its object. Titles and text are preserved: en/de edited ("Hello World"/"Hello Welt"), en/de open-edited (2 xref sections, "Edited Original"/"Geändertes Original"), en/de Details titles without quotes, and en/de page operations (2 pages, A4, rotation 90, red rectangle, text on page 2).
+
+### Fixes that unblocked Open File (framework)
+1. `🔌️plugin/⚛️reactor/🔄️turn/⌨️command-ingress-turn`: `resume` settles the live ingress slot within the turn's slice (`step_until_slice`), so the command resumes every turn instead of one turn in three.
+2. `🔌️plugin/👷️job/🛬️receiving/🏗️steps`: `retired_native` quotes at most `NATIVE_RETIREMENT_STEP_WORK` (4096) work units. The pooled retirement scope declined the previous ~1M quote for a 1-byte close forever, which was the stall in `close_sources`.
+3. `🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/♻️retirement`: `retire_typed_operation_run` ends its publication window with the granted run. The run's receipt now carries the window's direct progress (the carry-over another agent added at 16:33), and no direct unit posts after the receipt. That fixed the `Retirement` receipt mismatch (receipt 5 items, posted 52).
+4. Law census: `reactor_turn_laws::last_turn_more_work_sources` is exported, and the media-in census names the armed sources and the full ingress cursor.
+
+Native laws: `media_in_of_a_small_pdf_*` 3 of 3 (interactive grant, shard budget, open-edit-save append), native-save 15 of 15, page-editor 71 of 71.

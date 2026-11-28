@@ -41,12 +41,20 @@ async function digest(stream) {
   return hash.digest("hex");
 }
 
+async function currentGeneration(directory) {
+  const head = await readFile(join(directory, "head.json"), "utf8").then(source => JSON.parse(source), error => {
+    if (error.code !== "ENOENT") throw error;
+  });
+  return head && /^[a-f0-9]{24}$/.test(head.generation) ? join(directory, head.generation) : undefined;
+}
+
 async function verifyDelivery(selected) {
-  const wrappers = join(prototype, "components");
+  const wrappers = join(prototype, "component-models");
   const wrapped = new Map();
   for (const entry of await readdir(wrappers, {withFileTypes:true})) {
     if (!entry.isDirectory()) continue;
-    const directory = join(wrappers, entry.name);
+    const directory = await currentGeneration(join(wrappers, entry.name));
+    if (!directory) continue;
     const receipt = await readFile(join(directory, "🧾️receipt.json")).catch(error => {
       if (error.code !== "ENOENT") throw error;
     });

@@ -473,7 +473,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 if let Some(page) = input.page(self.checkpoint_page_cursor) {
                     let source = page.get(self.checkpoint_page_offset..).ok_or_else(Self::unadmitted_input)?;
                     if self.checkpoint_byte_len.checked_add(source.len()).is_none_or(|length| length > self.checkpoint_bytes.len()) {
-                        if Self::metadata(cx)? { self.fault(b"retained command checkpoint exceeds capacity"); }
+                        if Self::metadata(cx)? { self.fault(crate::admission::static_fault!("interactive-job.command-checkpoint-capacity","retained command checkpoint exceeds capacity")); }
                         return Ok(None);
                     }
                     let bytes = source.len().min(cx.retained_grant().maximum_copy_bytes);
@@ -520,7 +520,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 if let Some(page) = input.page(self.raw_page_cursor) {
                     let source = page.get(self.raw_page_offset..).ok_or_else(Self::unadmitted_input)?;
                     if self.raw.len().checked_add(source.len()).is_none_or(|length| length > self.maximum_raw_bytes || length > self.raw.capacity()) {
-                        if Self::metadata(cx)? { self.fault(b"retained command exceeds original raw capacity"); }
+                        if Self::metadata(cx)? { self.fault(crate::admission::static_fault!("interactive-job.command-raw-capacity","retained command exceeds original raw capacity")); }
                         return Ok(None);
                     }
                     let bytes = source.len().min(cx.retained_grant().maximum_copy_bytes);
@@ -546,13 +546,13 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 cx.set_stage("retained-command-decode");
                 let demand=self.work.as_ref().ok_or_else(Self::unadmitted_input)?.original_wire_demands(&self.raw,cx.retained_grant().maximum_copy_bytes)?;
                 let decoded=if let Some(demand)=demand{
-                    if !cx.retained_work_can_enter(demand){if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand){self.fault(b"retained command decoding demand exceeds its original funding");}return Ok(None);}
+                    if !cx.retained_work_can_enter(demand){if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand){self.fault(crate::admission::static_fault!("interactive-job.command-decode-funding","retained command decoding demand exceeds its original funding"));}return Ok(None);}
                     let Some(command)=self.work.as_mut().ok_or_else(Self::unadmitted_input)?.receive_original_wire(&self.raw,cx)? else{return Ok(None);};command
                 }else{
                     if !Self::metadata(cx)? { return Ok(None); }
                     match <A::Command as protocol::OpBinary>::decode_op(&self.raw) {
                         Ok(command) => command,
-                        Err(error) => { self.decode_error=Some(error); self.fault(b"retained command wire payload is malformed"); return Ok(None); }
+                        Err(error) => { self.decode_error=Some(error); self.fault(crate::admission::static_fault!("interactive-job.command-malformed","retained command wire payload is malformed")); return Ok(None); }
                     }
                 };
                 let work = self.work.as_ref().ok_or_else(Self::unadmitted_input)?;
@@ -568,11 +568,11 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 if !Self::metadata(cx)? { return Ok(None); }
                 let (Some(command), Some(snapshot), Some(interaction), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.interaction_state.as_ref(), self.work.as_ref()) else { return Err(Self::unadmitted_input().into()); };
                 let Some(extent) = work.extent(command, snapshot, interaction, self.context.as_deref()) else {
-                    self.fault(b"retained command work refused the command before any capacity was measured");
+                    self.fault(crate::admission::static_fault!("interactive-job.command-unmeasurable","retained command work refused the command before any capacity was measured"));
                     return Ok(None);
                 };
                 if extent == 0 || extent > self.maximum_work_items {
-                    self.fault(b"retained command exceeds semantic work capacity");
+                    self.fault(crate::admission::static_fault!("interactive-job.command-work-capacity","retained command exceeds semantic work capacity"));
                     return Ok(None);
                 }
                 self.phase = ArtifactRetainedCommandPhase::Work;
@@ -604,7 +604,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 let input: ArtifactCommandInputs<'_,A> = ArtifactCommandInputs { command, snapshot:snapshot.as_ref(), snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:Some(&self.snapshot_read),operation,source:self.source_binding}, config:config.as_ref(), history, interaction, hover, context: self.context.as_deref(), operation };
                 let demand = work.work_demands(&input, cx.retained_grant().maximum_copy_bytes)?;
                 if !cx.retained_work_can_enter(demand) {
-                    if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand) { self.fault(b"retained command normal-work demand exceeds its original funding"); return Ok(None); }
+                    if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand) { self.fault(crate::admission::static_fault!("interactive-job.command-work-funding","retained command normal-work demand exceeds its original funding")); return Ok(None); }
                     cx.consume_fuel(1);
                     return Ok(None);
                 }
@@ -643,7 +643,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 }
                 if !Self::metadata(cx)? { return Ok(None); }
                 let completion = self.completion.as_ref().ok_or_else(Self::unadmitted_input)?;
-                if !completion.has_mounted_consumer() { self.fault(b"retained command completion consumer is absent"); return Ok(None); }
+                if !completion.has_mounted_consumer() { self.fault(crate::admission::static_fault!("interactive-job.command-consumer-absent","retained command completion consumer is absent")); return Ok(None); }
                 if let Some(download) = self.download.take() {
                     let Some(ephemeral) = self.ephemeral.take() else { self.download = Some(download); return Err(Self::unadmitted_input().into()); };
                     if let Err(rejected) = completion.complete_download(Ok(download), ephemeral) {
@@ -660,7 +660,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
             }
             ArtifactRetainedCommandPhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into),
             ArtifactRetainedCommandPhase::Fault => {
-                if Self::metadata(cx)? { self.fault(self.admission_refusal.map(ArtifactRetainedAdmissionRefusal::detail).unwrap_or(b"retained command remains faulted")); }
+                if Self::metadata(cx)? { self.fault(self.admission_refusal.map(ArtifactRetainedAdmissionRefusal::detail).unwrap_or(crate::admission::static_fault!("interactive-job.command-faulted","retained command remains faulted"))); }
             }
         }
         Ok(None)

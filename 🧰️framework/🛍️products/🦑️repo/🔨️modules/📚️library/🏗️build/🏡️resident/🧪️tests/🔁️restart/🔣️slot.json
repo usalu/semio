@@ -2,8 +2,8 @@
   "capacity": 1,
   "backoffMilliseconds": 400,
   "requests": [
-    {"name": "leader", "root": "/checkout/a", "arguments": ["leader"]},
-    {"name": "follower", "root": "/checkout/a", "arguments": ["follower"]},
-    {"name": "other", "root": "/checkout/b", "arguments": ["other"]}
+    {"name": "leader", "root": "/checkout/a", "arguments": ["run", "leader:test"]},
+    {"name": "follower", "root": "/checkout/a", "arguments": ["run", "follower:test"]},
+    {"name": "other", "root": "/checkout/b", "arguments": ["run", "other:test"]}
   ]
 }

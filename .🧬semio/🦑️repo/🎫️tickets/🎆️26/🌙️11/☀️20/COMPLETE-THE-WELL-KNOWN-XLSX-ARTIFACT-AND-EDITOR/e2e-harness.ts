@@ -5,9 +5,8 @@ import type {Download, FileChooser, Page} from "playwright";
 
 export const root = "/Users/ueli/Documents/semio";
 const osDev = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev");
-const {ensureRepositoryBrowserPathV1} = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"));
 export const matrix = await import(join(osDev, "🧪️tests/🧮️program-matrix/🟦️.ts"));
-ensureRepositoryBrowserPathV1(root, process.env);
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(root, ".🧬semio/🦑️repo/⚡️cache/tools/ms-playwright");
 const {chromium} = createRequire(join(osDev, "📦️packages/🟦️typescript/package.json"))("playwright") as typeof import("playwright");
 
 export type Verdict = {step: string; status: "pass" | "fail"; detail: string};
@@ -98,8 +97,7 @@ export async function session(locale: "en" | "de", serve: string, out: string) {
     await dismissIntroduction(page);
     await seatLocale(page, locale);
     await page.waitForTimeout(500);
-    if (await settingsOpen()) await page.locator('[id="framework.settings"]').first().click({timeout: 8_000}).catch(() => undefined);
-    await page.waitForTimeout(500);
+    for (let attempt = 0; attempt < 4 && (await settingsOpen()); attempt += 1) { await clickUncovered(page, '[id="framework.settings"]').catch(() => undefined); await page.waitForTimeout(1_000); }
     record("settings-closed", !(await settingsOpen()), "settings panel closed after seating the locale");
     const lang = await page.evaluate(() => document.documentElement.lang);
     record("locale", lang.startsWith(locale), `html.lang=${lang}`);

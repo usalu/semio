@@ -33,7 +33,7 @@ pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: 
 
 /// 🎥️ Writes the camera into one named window instance — the focused pane when a panel button, which carries no window of its own, asked.
 pub fn camera_in_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel, id: &str) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-    payload.camera.validate().map_err(|error| Fault::from(error.to_string()))?;
+    payload.camera.validate().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem3d.camera.orbit-invalid"), error.to_string()).with_param("reason", error.to_string()))?;
     let camera = payload.camera;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem3d.camera.window-stale"))?;
     let mutation = match kind {

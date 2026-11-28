@@ -3,8 +3,11 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️family/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️surfaces/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️base/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
@@ -13,6 +16,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️catalogue/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️catalogue/🔁️fatigue/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
@@ -53,15 +57,12 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️column-material-more/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️column-material/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️beam-design/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️slab-action-position/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️slab-action-rows/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️slab-fields/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️slab-sheeting/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️family/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️surfaces/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -317,6 +318,8 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️slab-action-position/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-norm-en1994-checks-catalogue]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️catalogue/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1994-checks-catalogue-fatigue]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️catalogue/🔁️fatigue/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1994-mutations-typescript]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust"

@@ -2,6 +2,24 @@
   "version": 1,
   "arguments": [
     {
+      "name": "fresh-lane-shared",
+      "argv": ["--fresh-lane", "--store=shared", "--configuration=prototype", "--", "check", "-p", "semio-framework-diagnostic"],
+      "environment": {},
+      "request": { "version": 1, "store": "shared", "configuration": "prototype", "parallelism": "planned", "kind": "compile", "freshLane": true, "cargo": ["check", "-p", "semio-framework-diagnostic"] }
+    },
+    {
+      "name": "fresh-lane-isolated-refused",
+      "argv": ["--store=isolated", "--configuration=prototype", "--fresh-lane", "--", "check"],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "fresh-lane-repeated-refused",
+      "argv": ["--fresh-lane", "--store=shared", "--configuration=prototype", "--fresh-lane", "--", "check"],
+      "environment": {},
+      "request": null
+    },
+    {
       "name": "shared-check",
       "argv": [
         "--store=shared",

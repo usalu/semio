@@ -3,14 +3,15 @@
   "emoji": "📕",
   "status": "open",
   "description": "Get pdf artifact editor working end to end. In parallel the shared work fleet mechanism is being developed; if it doesn't work fall back to native tools. Coordinate with Opus, dispatch Sonnet agents for implementation and Haiku agents for exploration/audits. Fix fundamental unrelated issues found along the way. Treat the goal end to end.",
-  "summary": "Round 4 (see 🌐️pdf-browser-journey.md, \"End-to-end verification, round 4\"): wasm build made reliable within memory (root cause -Z threads=0 parallel front end; hub crate 10.0 GB + SIGKILLed component before, 5.9/8.8 GB and linked after with threads=1 target override; FIFO cargo gate; quiet-tree waiter). Incremental Save cause corrected: MediaIn already fills custody (new native law through the real PluginRuntime passes); the PDF 1.7 editor never declared its artifact:native output port so the shell used the compact reference route — fixed (declare_native_save + law), then the native Save failed on a stale revision while the keep/attach archive load was still running — fixed by draining the attachment lane before Save. Shell: guest UI patch rejections now surface as a typed, localized boot/render error with code, rule and node (rejection.ts + fixture/schema/feature bun tests); refreshes no longer adopt and throw action refusals, so range and unknown-field notices are localized and announced. Final journey 18/24 (was 14/22); open: strip bound to the host instance after Open File, opened-file Save still compact in the browser after keep/reload.",
+  "summary": "Round 7–8 (2026-11-27): the PDF 1.7 editor works end to end in the browser on a wasm rebuilt from the current tree. The full journey passed 42/42 (en+de): new document → title and text → Save → reopen; open a real PDF → edit → incremental Save (original kept as a prefix) → reopen; export and import; Details pane; accessibility; page operations (insert page, rectangle, text, rotation → Save → reopen). The third-party oracle (pymupdf + pypdf, exact xref offsets) validated all 8 saved PDFs with the edits preserved.\n\nFixes:\n- Framework: command ingress settles its slot within the turn slice; `retired_native` quotes a bounded work amount (`NATIVE_RETIREMENT_STEP_WORK`), which ended the stall in `close_sources` that blocked Open File; `retire_typed_operation_run` ends its window with the granted run, so the receipt covers the whole window (Retirement receipt mismatch).\n- Native-save incremental save with resources bound from another page (resources bit cleared per graft round).\n- Shell: Execute footer and last Actions rows no longer covered by the Utilities chip row or the shell bottom dock (`windowBottomDockReservePx`, with cases, schema and pixel oracle).\n- Registry: catalog verifier accepts the bilingual manifest label (`parseLocalizedLabelV1`).\n- PDF snapshot retirement law reads the carved model source family.\n- Stage script writes the host shim before the describe probes.\n- Journey: Details value semantics corrected, strict real clicks, new page-operations step and oracle.\n\nGates:\n- `@semio-tech/stdio-pdf` check, build and test: green.\n- `@semio-tech/ui-react` lint: green with dependencies excluded (upstream Rust generators fail on another ticket's label migration).\n- Window vitest 17/17, catalog-complete 12/12, dock-reserve 8/8, inset 9/9.\n- Rust: native-save 15/15, page-editor 71/71, media-in laws 3/3.\n\nOpen, outside this ticket: the companion crate `semio-plugin-tests-03-2` does not compile (31 errors of pre-existing API drift); an expanded Utilities pane next to a tall Actions pane can still overlap. Details: `🌐️pdf-browser-journey.md` (rounds 7–8), `🔁️media-in-livelock.md`, `💾️incremental-save-regression.md`, `🧱️execute-footer-cover.md`.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2799"
   },
   "goal": "🎯runningpdf",
   "sessions": [
     "18f1aa4b-dca9-4d89-b552-8bd0b6a3f94a",
-    "a8f76b42-37b0-49a1-a847-7cc53a874845"
+    "a8f76b42-37b0-49a1-a847-7cc53a874845",
+    "71f3520c-596b-4ae0-a256-6eee67e75db3"
   ],
   "interactions": [
     {
@@ -66,6 +67,40 @@
       "prompt": "Continue the PDF editor end-to-end work: a subagent closed the ticket prematurely after browser journey round 4 (18 of 24 checks). Open items: page list after Open File bound to the wrong instance, append-only save of opened files in the browser, descriptor regeneration, instance retirement, image picker publication, real-world PDFs through the browser route.",
       "llm": "fable-5-2",
       "effort": "low"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-27 17:39:26",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "fa8a184f7cbd3f441e968a53d815f833fc4eea85",
+      "summary": "Round 7–8 (2026-11-27): the PDF 1.7 editor works end to end in the browser on a wasm rebuilt from the current tree. The full journey passed 42/42 (en+de): new document → title and text → Save → reopen; open a real PDF → edit → incremental Save (original kept as a prefix) → reopen; export and import; Details pane; accessibility; page operations (insert page, rectangle, text, rotation → Save → reopen). The third-party oracle (pymupdf + pypdf, exact xref offsets) validated all 8 saved PDFs with the edits preserved.\n\nFixes:\n- Framework: command ingress settles its slot within the turn slice; `retired_native` quotes a bounded work amount (`NATIVE_RETIREMENT_STEP_WORK`), which ended the stall in `close_sources` that blocked Open File; `retire_typed_operation_run` ends its window with the granted run, so the receipt covers the whole window (Retirement receipt mismatch).\n- Native-save incremental save with resources bound from another page (resources bit cleared per graft round).\n- Shell: Execute footer and last Actions rows no longer covered by the Utilities chip row or the shell bottom dock (`windowBottomDockReservePx`, with cases, schema and pixel oracle).\n- Registry: catalog verifier accepts the bilingual manifest label (`parseLocalizedLabelV1`).\n- PDF snapshot retirement law reads the carved model source family.\n- Stage script writes the host shim before the describe probes.\n- Journey: Details value semantics corrected, strict real clicks, new page-operations step and oracle.\n\nGates:\n- `@semio-tech/stdio-pdf` check, build and test: green.\n- `@semio-tech/ui-react` lint: green with dependencies excluded (upstream Rust generators fail on another ticket's label migration).\n- Window vitest 17/17, catalog-complete 12/12, dock-reserve 8/8, inset 9/9.\n- Rust: native-save 15/15, page-editor 71/71, media-in laws 3/3.\n\nOpen, outside this ticket: the companion crate `semio-plugin-tests-03-2` does not compile (31 errors of pre-existing API drift); an expanded Utilities pane next to a tall Actions pane can still overlap. Details: `🌐️pdf-browser-journey.md` (rounds 7–8), `🔁️media-in-livelock.md`, `💾️incremental-save-regression.md`, `🧱️execute-footer-cover.md`.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️⚛️reactor🗃️🔄️turn🗃️⌨️commandingressturn💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️👷️job🗃️🛬️receiving🗃️🏗️steps💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧾️typedoperations🗃️📥️staging🗃️♻️retirement💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-27 18:11:09",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get every feature of the PDF artifact editor working end to end: complete reconciled feature inventory (UI, actions, menus, shortcuts, routes, docs, tests), coverage matrix with reproducible end-to-end evidence through the real app, save/reopen persistence, independently validated exported PDFs, passing gates. Coordinate Opus with sonnet-worker/haiku-reader/haiku-worker agents; fall back to native tools when the fleet stalls.",
+      "llm": "opus-5-5",
+      "effort": "medium"
     }
   ]
 }

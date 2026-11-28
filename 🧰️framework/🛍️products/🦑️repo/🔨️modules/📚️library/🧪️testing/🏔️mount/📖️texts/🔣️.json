@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "mount",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "failure.refused": {
+      "en": "{app}: phase {phase} failed after {elapsed} ms (budget {budget} ms): {detail}",
+      "de": "{app}: Phase {phase} schlug nach {elapsed} ms fehl (Budget {budget} ms): {detail}"
+    },
+    "failure.deadline": {
+      "en": "{app}: phase {phase} did not finish within its budget of {budget} ms",
+      "de": "{app}: Phase {phase} endete nicht innerhalb ihres Budgets von {budget} ms"
+    },
+    "failure.deadline-detail": {
+      "en": "{app}: phase {phase} did not finish within its budget of {budget} ms; last: {detail}",
+      "de": "{app}: Phase {phase} endete nicht innerhalb ihres Budgets von {budget} ms; zuletzt: {detail}"
+    },
+    "failure.cancelled": {
+      "en": "{app}: the run was cancelled in phase {phase} after {elapsed} ms",
+      "de": "{app}: der Lauf wurde in Phase {phase} nach {elapsed} ms abgebrochen"
+    },
+    "plan.invalid": {
+      "en": "Invalid mount plan: {detail}",
+      "de": "Ungültiger Einbindungsplan: {detail}"
+    },
+    "plan.steps": {
+      "en": "The mount plan of {app} and its steps differ: phases {phases}, steps {steps}",
+      "de": "Der Einbindungsplan von {app} und seine Schritte weichen ab: Phasen {phases}, Schritte {steps}"
+    },
+    "plan.total": {
+      "en": "The phases of {app} add up to {total} ms, more than the {maximum} ms a mount may take",
+      "de": "Die Phasen von {app} ergeben zusammen {total} ms, mehr als die {maximum} ms, die eine Einbindung dauern darf"
+    },
+    "progress.phase": {
+      "en": "{app}: phase {index}/{count} {phase} {status} in {elapsed} ms",
+      "de": "{app}: Phase {index}/{count} {phase} {status} in {elapsed} ms"
+    }
+  }
+}

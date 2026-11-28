@@ -27,4 +27,4 @@ for(const wave of waves){
   outcomes.push("cancelled");
  }
 }
-process.stdout.write("[DEBUG] "+JSON.stringify({outcomes,trace})+"\n");
+process.stdout.write("[result] "+JSON.stringify({outcomes,trace})+"\n");

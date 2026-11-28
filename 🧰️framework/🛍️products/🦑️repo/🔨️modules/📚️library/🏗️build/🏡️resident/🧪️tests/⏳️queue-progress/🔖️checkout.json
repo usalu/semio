@@ -2,8 +2,8 @@
   "maximumWorkers": 2,
   "unrelatedLoads": 64,
   "requests": [
-    {"root": "/fixture/a", "name": "leader", "arguments": ["native"]},
-    {"root": "/fixture/a", "name": "follower", "arguments": ["workspace"]},
-    {"root": "/fixture/b", "name": "independent", "arguments": ["workspace"]}
+    {"root": "/fixture/a", "name": "leader", "arguments": ["exec", "--projects=native"]},
+    {"root": "/fixture/a", "name": "follower", "arguments": ["exec", "--projects=workspace"]},
+    {"root": "/fixture/b", "name": "independent", "arguments": ["exec", "--projects=workspace"]}
   ]
 }

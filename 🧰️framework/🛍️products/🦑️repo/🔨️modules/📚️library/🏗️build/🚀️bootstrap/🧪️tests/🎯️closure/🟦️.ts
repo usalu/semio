@@ -8,7 +8,7 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json" with {type:"json"};
 import policy from "../../../🔣️policy.json" with {type:"json"};
 import {javascriptInstallSchemaV1 as installSchema} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts";
-import {buildEnvironmentPlanV1,buildParserScopeV1,javascriptInstallModeV1,javascriptScopeOwnersV1} from "../../🟦️.ts";
+import {buildEnvironmentPlanV1,buildParserScopeV1,javascriptInstallModeV1,javascriptScopeOwnersV1,javascriptDeclaredScopesV1} from "../../🟦️.ts";
 import {parserTypescriptV1} from "../../📦️parsers/🟨️.mjs";
 
 const root=join(import.meta.dir,"../../../../../../../../..").replace(/[\\/]+$/u,"");
@@ -59,4 +59,17 @@ test("the store selection schema admits a distinct non-empty owner list and noth
 test("the parser accessor loads the TypeScript compiler of the parser package scope, resolving like the requiring file",()=>{
  const direct=createRequire(import.meta.url);
  expect(parserTypescriptV1().version).toBe(direct("typescript").version);
+});
+
+/** 🗂️ The declared scopes of the real checkout are the root and its top-level owners, never member packages: the projects of a task closure map onto at most that many owners, so a scoped sync stays within the Source-owner scope capacity. */
+test("declared scopes of the checkout are owners, not members, and project roots map onto them",()=>{
+ const declared=javascriptDeclaredScopesV1(root);
+ expect(declared).toContain(".");
+ expect(declared.length).toBeLessThanOrEqual(installSchema.$defs.SourceOwnerProtocol.const.maximumScopes);
+ expect(declared.every(scope=>scope==="."||!scope.includes("/"))).toBe(true);
+ const members=(JSON.parse(readFileSync(join(root,"package.json"),"utf8")) as {workspaces:string[]}).workspaces;
+ expect(members.length).toBeGreaterThan(declared.length);
+ const owners=javascriptScopeOwnersV1(declared,members);
+ expect(owners.length).toBeLessThanOrEqual(declared.length);
+ expect(owners.every(owner=>declared.includes(owner))).toBe(true);
 });

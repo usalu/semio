@@ -16,6 +16,7 @@ test("selected component libraries share one Cargo type identity", () => {
   const cargo = registeredToolExecutableV1("cargo", workspace);
   const environment = {
     ...process.env,
+    SEMIO_HOST_CAPACITY_DIRECTORY: join(root, "capacity"),
     CARGO_UNSTABLE_FEATURE_UNIFICATION: "true",
     CARGO_RESOLVER_FEATURE_UNIFICATION: NATIVE_BUILD_DRIVER_POLICY_V1.featureUnification,
   };

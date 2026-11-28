@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "matrix",
+  "languages": ["en", "de"],
+  "messages": {
+    "matrix.invalid": {"en": "Invalid interaction matrix: {detail}", "de": "Ungültige Interaktionsmatrix: {detail}"},
+    "matrix.row": {"en": "The matrix of {app} has no row {row}", "de": "Die Matrix von {app} hat keine Zeile {row}"},
+    "step.missing": {"en": "no visible element is {target}", "de": "kein sichtbares Element ist {target}"},
+    "step.ambiguous": {"en": "{count} visible elements are {target}", "de": "{count} sichtbare Elemente sind {target}"},
+    "step.disagree": {"en": "the in-repo resolver and Playwright getByRole found different elements for {target}", "de": "der eigene Auflöser und Playwright getByRole fanden verschiedene Elemente für {target}"},
+    "step.state": {"en": "{target} has {actual}, expected {expected}", "de": "{target} hat {actual}, erwartet {expected}"},
+    "step.faults": {"en": "the page reported faults: {faults}", "de": "die Seite meldete Fehler: {faults}"}
+  }
+}

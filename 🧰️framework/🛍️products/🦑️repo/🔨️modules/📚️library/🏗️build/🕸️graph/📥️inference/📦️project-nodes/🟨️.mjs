@@ -602,9 +602,15 @@ export function heavyRetryNamesV1(left, retried) { return retried ? [] : [...lef
 export function heavyProgressSignV1(names, taken) { return names.filter(name => taken.has(name)).length; }
 
 /** 🧱️ The most one owner may take while it runs alone on a machine that has a plan limit: the solo grant, but never more than the share `planShareBasisPoints` of what the plan guard allows the whole plan, and never less than the grant of an owner beside others, so the owner's own limit always stops it before the plan guard blames the plan. An unlimited plan leaves the solo grant. */
-export function hereLimitBytesV1({ limitBytes, soloBytes, planBytes, planShareBasisPoints = 9000 }) {
+export function hereLimitBytesV1({ limitBytes, soloBytes, planBytes, planShareBasisPoints = 9000, aloneBytes = 0 }) {
   const capped = Number.isFinite(planBytes) ? Math.min(soloBytes, Math.floor(planBytes * planShareBasisPoints / 10000)) : soloBytes;
-  return Math.max(limitBytes, capped);
+  return Math.max(limitBytes, capped, aloneBytes);
+}
+
+/** 🏔️ The managed bytes one owner may always take while it runs alone, derived from the HOST and never from the memory that happens to be free: what the farm lets a solo child reach (`farmAloneCapV1` of the host, a physical footprint) in managed bytes, never more than the grant the host's own memory gives one owner (`hostSoloBytes`). The momentary availability only raises the limit above this floor, so an owner is never stopped at a number that a busy moment of a 16 GB machine made smaller than the cap its own child process runs under (m06 2026-11-27: limit 4096 MB, child alone cap 4200 MB). A pure function. */
+export function aloneFloorBytesV1({ hostMegabytes, hostSoloBytes, factor }) {
+  const childBytes = Math.floor(farmAloneCapV1(hostMegabytes) * 1048576 / (factor > 0 ? factor : 1));
+  return Math.min(hostSoloBytes, childBytes);
 }
 
 /** 📏️ The peak a farm child reports (its physical footprint in bytes) in the unit of the cost table, the managed bytes: divided by the footprint factor, so `known` multiplies it back to the footprint once and not twice; undefined stays undefined, no factor leaves the bytes. */
@@ -628,6 +634,7 @@ export async function graphOwnerEnforcementV1(workspaceRoot, environment, budget
     const slow = names => { const owners = recorder.table().owners ?? {}; return names.filter(name => (owners[name]?.seconds ?? 0) >= OWNER_SLOW_SECONDS_V1); };
     if (!Number.isFinite(grant.managedMegabytes)) return { cost, recorder, limitBytes: undefined, slow };
     const limitBytes = Math.max(grant.managedMegabytes * 1048576, budgetBytes), available = availableBytes ?? sampling.hostAvailableBytesV1;
+    const aloneBytes = aloneFloorBytesV1({ hostMegabytes: host, hostSoloBytes: cost.soloGrantV1({ hostMegabytes: host }, wanted.wantedPolicyV1).managedMegabytes * 1048576, factor: cost.ownerCostPolicyV1.footprintFactor });
     const soloBytes = () => { const bytes = available(); return cost.soloGrantV1({ hostMegabytes: host, ...(bytes === undefined ? {} : { availableMegabytes: Math.floor(bytes / 1048576) }) }, wanted.wantedPolicyV1).managedMegabytes * 1048576; };
     const stoppedOf = name => { const entry = recorder.table().owners[name], stopped = entry === undefined ? [] : entry.samples.filter(sample => sample.stopped && sample.atMs >= STOPS_ATTRIBUTABLE_FROM_MS_V1); return stopped.length === 0 ? undefined : Math.round(cost.estimateOwnerCostV1({ ...recorder.table(), owners: { [name]: { ...entry, samples: stopped } } }, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }).megabytes * cost.ownerCostPolicyV1.footprintFactor); };
     return {
@@ -636,9 +643,9 @@ export async function graphOwnerEnforcementV1(workspaceRoot, environment, budget
       recordedBytes: name => { const row = cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return row.source === "recorded" ? row.megabytes * 1048576 : undefined; },
       stopped: stoppedOf,
       known: name => { const row = cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return cost.ownerCostPolicyV1.heavySources.includes(row.source) ? Math.round(row.megabytes * cost.ownerCostPolicyV1.footprintFactor) : undefined; },
-      neverHere: (names, childFootprintMegabytes) => { const here = hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment) }), table = ownHostTableV1(recorder.table(), context.hostMegabytes ?? host), estimate = (source, name) => cost.estimateOwnerCostV1(source, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return names.filter(name => { if (childFootprintMegabytes !== undefined) { const footprint = stoppedOf(name); return footprint !== undefined && footprint > childFootprintMegabytes; } const row = estimate(table, name); if (row.source !== "recorded") return false; return row.saturated === true || row.megabytes * 1048576 > here; }); },
+      neverHere: (names, childFootprintMegabytes) => { const here = hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment), aloneBytes }), table = ownHostTableV1(recorder.table(), context.hostMegabytes ?? host), estimate = (source, name) => cost.estimateOwnerCostV1(source, name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }); return names.filter(name => { if (childFootprintMegabytes !== undefined) { const footprint = stoppedOf(name); return footprint !== undefined && footprint > childFootprintMegabytes; } const row = estimate(table, name); if (row.source !== "recorded") return false; return row.saturated === true || row.megabytes * 1048576 > here; }); },
       heavy: names => cost.classifyOwnersV1(names, name => cost.estimateOwnerCostV1(recorder.table(), name, undefined, undefined, { ceilingMegabytes: context.ceilingMegabytes, nowMs: Date.now() }), grant).heavy.map(row => row.name),
-      soloLimitBytes: () => hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment) }),
+      soloLimitBytes: () => hereLimitBytesV1({ limitBytes, soloBytes: soloBytes(), planBytes: planStageLimitBytesV1(environment), aloneBytes }),
     };
   } catch { return {}; }
 }

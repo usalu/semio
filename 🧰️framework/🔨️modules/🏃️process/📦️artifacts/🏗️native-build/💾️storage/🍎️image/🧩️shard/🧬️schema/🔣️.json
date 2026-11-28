@@ -13,6 +13,7 @@
         "minimumImageBytes": 1073741824,
         "alignBytes": 1073741824,
         "birthAllocationBytes": 134217728,
+        "growAtPercent": 85,
         "maximumShards": 256,
         "pathBudgetCharacters": 256,
         "directory": "s",
@@ -69,6 +70,13 @@
               "detach",
               "-force",
               "<mountPoint>"
+            ],
+            "resizeProgram": "/usr/bin/hdiutil",
+            "resizeArguments": [
+              "resize",
+              "-size",
+              "<megabytes>m",
+              "<image>"
             ]
           },
           "linux": {
@@ -82,6 +90,10 @@
           "refused": {
             "en": "No image can be born for {key}: the host volume of {partition} has {free} free, a shard needs {need}.",
             "de": "Für {key} kann kein Image angelegt werden: das Hostvolume von {partition} hat {free} frei, ein Shard braucht {need}."
+          },
+          "overcommitted": {
+            "en": "No image can be born for {key}: the shards of {partition} already declare {committed} of the {budget} the machine budget allows, a shard needs {need}.",
+            "de": "Für {key} kann kein Image angelegt werden: die Shards von {partition} deklarieren bereits {committed} der vom Maschinenbudget erlaubten {budget}, ein Shard braucht {need}."
           },
           "partial": {
             "en": "{failed} of {total} shards of {partition} failed ({ids}); the others were served.",
@@ -226,6 +238,60 @@
               "minimum": 0
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "capacityBytes",
+            "atMs"
+          ],
+          "properties": {
+            "type": {
+              "const": "grown"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{1,12}$"
+            },
+            "capacityBytes": {
+              "type": "integer",
+              "minimum": 1073741824
+            },
+            "atMs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "capacityBytes",
+            "atMs"
+          ],
+          "properties": {
+            "type": {
+              "const": "shrunk"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{1,12}$"
+            },
+            "capacityBytes": {
+              "type": "integer",
+              "minimum": 1073741824
+            },
+            "atMs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       ]
     },
@@ -237,10 +303,13 @@
         "keys",
         "capacity",
         "selection",
+        "commitment",
         "aggregate",
         "admission",
         "paths",
-        "reclaim"
+        "reclaim",
+        "sizing",
+        "growth"
       ],
       "properties": {
         "$comment": {
@@ -382,6 +451,65 @@
             }
           }
         },
+        "commitment": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "path",
+              "hostFreeBytes",
+              "budgetBytes",
+              "live",
+              "decision"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "hostFreeBytes": {
+                "type": "integer"
+              },
+              "budgetBytes": {
+                "type": "integer"
+              },
+              "live": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "key",
+                    "root",
+                    "capacityBytes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "root": {
+                      "type": "integer"
+                    },
+                    "capacityBytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "decision": {
+                "type": "object"
+              }
+            }
+          }
+        },
         "aggregate": {
           "type": "array",
           "items": {
@@ -509,6 +637,96 @@
                 "items": {
                   "type": "boolean"
                 }
+              }
+            }
+          }
+        },
+        "sizing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "platform",
+              "need",
+              "measuredBytes",
+              "sizedBytes"
+            ],
+            "properties": {
+              "platform": {
+                "enum": [
+                  "darwin",
+                  "linux",
+                  "win32"
+                ]
+              },
+              "need": {
+                "type": "integer"
+              },
+              "measuredBytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "sizedBytes": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "growth": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "platform",
+              "capacityBytes",
+              "usedBytes",
+              "measuredBytes",
+              "hostFreeBytes",
+              "budgetRoomBytes",
+              "targetBytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "platform": {
+                "enum": [
+                  "darwin",
+                  "linux",
+                  "win32"
+                ]
+              },
+              "capacityBytes": {
+                "type": "integer"
+              },
+              "usedBytes": {
+                "type": "integer"
+              },
+              "measuredBytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "hostFreeBytes": {
+                "type": "integer"
+              },
+              "budgetRoomBytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "targetBytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
               }
             }
           }

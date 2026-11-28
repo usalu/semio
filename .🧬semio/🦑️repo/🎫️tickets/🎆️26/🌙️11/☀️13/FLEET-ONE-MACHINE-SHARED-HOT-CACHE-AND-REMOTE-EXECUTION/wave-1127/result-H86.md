@@ -1,0 +1,19 @@
+# H86: units test 22/4 and unit-cache `📋️manifest`
+
+## 1. `📋️manifest` miss (fixed, test fixture; product is right)
+- Measured the two lookup rows (A and B): every key component equal except `cargo` (and the diagnostic `roots`). Cause is not H81 (RUSTFLAGS/threads): it is H55's `cargo-identity-keyed` rule (08:00, key carries Cargo's `-C extra-filename`). The fixture gave every simulated machine its own `-C metadata/extra-filename` (`machine.hash`), so B was by design another key space.
+- Fix: all fixture machines share one Cargo identity (`CARGO_IDENTITY`), only paths/homes differ; new last row: a machine with another identity is a `miss` (the H55 contract). Contract text updated. Run: 1 pass, 28 expects (`repo test-file`, local). Oracle for the key stays the existing Python recomputation of `🔏️key` tests (not duplicated).
+
+## 2. Units test: 22/4 -> 23/3 (all edits in the test file, live)
+- `Rust unit output inventory differs ... undeclared file selected_leaf.*.rcgu.o`: reproduced by hand with `rustc -Csplit-debuginfo=unpacked -Cdebuginfo=2`: macOS dev default `unpacked` leaves the object files in the out dir. Real build modes force `split-debuginfo=off` (profile corpus); the 3 fixture manifests lacked it -> added `split-debuginfo="off"`. Error gone.
+- `Live Original resource control issuance required`: test bug. `held` reservations were retired after `withRepositoryCompilerStoreV1` returned, with the closed store control; retirement now runs in that scope's `finally`.
+- `Original reader control changed`: the product hands a refined child control; the check `originalControl.signal !== control.signal` replaced by the exported `requireIssuedResourceControlDescendantV1(control, originalControl)`. Renamed-dependency test passes.
+- Consumed-byte test: the refusal itself is correct and immediate; the test's cleanup called `storage.recheck()` on a reservation the product already retired and never reached `image.close()` (280 s to the deadline). Cleanup now asserts the refused workspace is retired and always closes the image; the invoke is expected to reject with an aggregate that contains the `consumed-byte` refusal (a failed accepted work makes the borrower close an AggregateError by design). Not verified green: in the last full run it failed in 17 ms with `private-repository-partition-has-readers`, a cascade of the failing producer test below leaving a reader open; the standalone run was not repeated after the final edit.
+
+## Still red (2 + cascade)
+1. `selected Rust graph producer persists original descriptors`: `Rust unit receipt differs from current compiler identity` in the unit-compile child. Which of 7 conditions is not known. Diagnostic staged (`repo land` stage `<scratch>/H86/stage`, file `📦️units/📤️receipt/🟦️.ts`: the error names the differing part). Not landed: coordinator's quiet window 14:40 (units: stage + check only). `land check`: debug-lines/dangling pass; the gate's receipt test run failed once from overlay `Live Original process issuance required` and passed on its rerun; typecheck then passed on the units test.
+2. `ordinary selected Nx ...`: `prepared.inputs` empty because the selected rows fall into the bounded Cargo fallback (`SEMIO_RUST_BUILD_FALLBACK`, adapters `effective-profile`); the profile projection is fine for all 3 units (probe), the unsupported reason (materialization stage) is unknown. The test now asserts "no fallback" first, so the decision is printed. Next: print `produced.unsupported[].reason` in `📥️descriptor/🎯️selection` (quiet window) or run the materialization with the exact selection flow.
+3. Cascade `(unnamed) private-repository-partition-has-readers` after the producer test.
+
+## Not done
+- No product landing. Nothing outstanding in `landing.*`. Scripts: none kept; stage dir in the scratchpad (`H86/stage`), probe logs `H86/units*.log`.

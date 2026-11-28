@@ -1,7 +1,7 @@
 /** 🔶️ The document services phase of useSpawnedSession. */
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { panelTabKindId, pendingWindowUiNode, type BuiltNode, type UiDirtyScope, type WindowEngagement, type WindowMeasure } from "@semio-tech/framework";
-import { focusedProgramKeyV1, programKeyedEntriesV1, withProgramEntriesV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedGuestWindowInstancesV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { focusedProgramKeyV1, programKeyedEntriesV1, withProgramEntriesV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, spawnedGuestWindowInstancesV1, treeWindowViewFieldsOfProgramV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
 import type { WindowLayoutNode } from "@semio-tech/ui-layout";
 import { sessionProgramsV1 } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
@@ -27,7 +27,7 @@ export function useDocumentServicesState({ core }: { readonly core: ShellCoreAft
     pluginSupervisorByIdRef, reportRefreshFault, documentServiceInventoryRef, ensureBackboneWorker,
     establishPrimaryWithShardRetry, panel, spawnedIdsRef, focusedProgram, focusedApp, focusedSpawnedId,
     activeUtilityByWindowIdRef, activeToolIdRef, writeToolRegister, activeWindowIdRef, shellStateRef,
-    injectActiveUtility, publishContributions, refreshUi
+    injectActiveUtility, publishContributions, refreshUi, treeWindowSchedulerRef
   } = core;
   /** 🔁️ The instance each spawned program id last finished a full refresh for: a different instance under the same id means the program was replaced in place. */
   const refreshedInstanceByProgramRef = useRef(new Map<string, number>());
@@ -62,6 +62,7 @@ export function useDocumentServicesState({ core }: { readonly core: ShellCoreAft
           windowId: guestActiveWindowId,
           windowInstances: windowKinds.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, spawned.id, spawnedIdsRef.current),
+          ...treeWindowViewFieldsOfProgramV1(treeWindowSchedulerRef.current!.viewStateFields(), spawned.id, spawnedIdsRef.current, (guestWindowId) => windowKinds.find((instance) => instance.id === guestWindowId)?.bodyKey),
         },
         spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
       );

@@ -68,6 +68,12 @@
       "test": true
     },
     {
+      "name": "semio-s-artifact-draw-drawing-editor-tests-3",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧁️companion-3/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
       "name": "semio-s-artifact-draw-drawing-editor-tests",
       "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
       "check": true,

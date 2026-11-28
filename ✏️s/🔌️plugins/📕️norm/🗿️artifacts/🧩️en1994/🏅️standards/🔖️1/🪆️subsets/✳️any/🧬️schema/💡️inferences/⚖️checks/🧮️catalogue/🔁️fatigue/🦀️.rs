@@ -1,6 +1,16 @@
 //! 🔁️ EN 1994-2 6.8 fatigue: the S–N curves of the three detail categories (steel detail, headed stud in shear, reinforcing steel), the endurance and the Palmgren–Miner damage of an equivalent constant stress range, and the distribution of the stud stress range over the stud rows. The curve constants stay unverified (`ndp.en1994.2.rebar-fatigue-range`); the independent oracle is `🧰️scripts/en1994-fatigue-oracle.py`.
 
-use super::constants::{gamma_s_fat, REBAR_FATIGUE_DELTA_SIGMA_RSK, REBAR_FATIGUE_K2, REBAR_FATIGUE_N_STAR};
+/// 🔁️ Δσ_Rsk of straight reinforcing bars at N* cycles [Pa] (EN 1992-1-1 Table 6.3N).
+const REBAR_FATIGUE_DELTA_SIGMA_RSK: f64 = 162.5e6;
+/// 🔁️ N*, the reference cycle count of the reinforcing-steel S-N line.
+const REBAR_FATIGUE_N_STAR: f64 = 1.0e6;
+/// 🔁️ k_2, the slope of the reinforcing-steel S-N line beyond N*.
+const REBAR_FATIGUE_K2: f64 = 9.0;
+
+/// ⚖️ γ_s,fat of the reinforcing steel, the registry row `ndp.en1992.gamma-s-fat` (equal in both annexes).
+fn gamma_s_fat() -> f64 {
+    semio_s_plugin_norm_compliance::ndp_common("ndp.en1992.gamma-s-fat")
+}
 
 /// 🔁️ One S–N line `Δ_R(N) = Δ_c·(N_ref/N)^(1/m)/γ` of a detail category.
 #[derive(Clone, Copy, Debug, PartialEq)]

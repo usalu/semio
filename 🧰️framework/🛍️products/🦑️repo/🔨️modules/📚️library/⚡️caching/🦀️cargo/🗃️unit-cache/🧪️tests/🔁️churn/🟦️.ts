@@ -26,7 +26,9 @@ test("the terminal width, the colour, the primary package and the lane do not sp
  for(const width of[["--diagnostic-width=80"],["--diagnostic-width=211"],["--diagnostic-width","97"]])expect(keyOf(cargoArguments(width),{CARGO_PKG_NAME:"dep"}),width.join(" ")).toBe(plain);
  expect(keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep",CARGO_PRIMARY_PACKAGE:"1"})).toBe(plain);
  expect(keyOf(cargoArguments([]).map(argument=>argument.replace("/lane/","/other/lane/")),{CARGO_PKG_NAME:"dep"},"/other/lane")).toBe(plain);
- expect(keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep",CARGO_ENCODED_RUSTFLAGS:"-Zthreads=4"}),"real rustflags are still inputs").not.toBe(plain);
+ expect(keyOf(cargoArguments([]),{CARGO_PKG_NAME:"dep",CARGO_ENCODED_RUSTFLAGS:"-Zthreads=4"}),"the front-end thread count is no input").toBe(plain);
+ expect(keyOf(cargoArguments(["-Z","threads=0","-Zthreads=3"]),{CARGO_PKG_NAME:"dep"}),"neither in the arguments").toBe(plain);
+ expect(keyOf(cargoArguments(["-C","target-cpu=native"]),{CARGO_PKG_NAME:"dep"}),"real rustflags are still inputs").not.toBe(plain);
  expect(keyOf(cargoArguments(["--cfg","feature=\"a\""]),{CARGO_PKG_NAME:"dep"}),"features are still inputs").not.toBe(plain);
  expect(keyOf(cargoArguments(["--color=always"]),{CARGO_PKG_NAME:"dep"}),"colour is a rendering of the messages, no input: the replayed text follows the machine that built the unit").toBe(plain);
 });
@@ -142,9 +144,9 @@ test("members that ask for different features are different units and the report
  build(cache,cas,{lane:"l1",checkout,arguments:["-p","leaf1"]});build(cache,cas,{lane:"l2",checkout,arguments:["-p","leaf2"]});
  const report=await manageV1(["churn","--root",cache]) as ReturnType<typeof churnReportV1>;
  const core=report.perCrate.find(row=>row.crate==="core")!;
- expect(core.keys).toBe(2);expect(core.differs).toEqual(["args.features"]);
+ expect(core.keys).toBe(2);expect(core.differs,"Cargo's own unit identity (`-C extra-filename`) follows the features").toEqual(["args.features","cargo"]);
  expect(core.samples["args.features"]!.sort()).toEqual(['--cfg=feature="fa"','--cfg=feature="fb"']);
- expect(report.causes.some(cause=>cause.components.join()==="args.features"&&cause.examples.includes("core"))).toBe(true);
+ expect(report.causes.some(cause=>cause.components.join()==="args.features,cargo"&&cause.examples.includes("core"))).toBe(true);
  expect(report.perCrate.find(row=>row.crate==="mac"),"the proc-macro is not split").toBeUndefined();
  const only=await manageV1(["churn","--root",cache,"--crate","core"]) as ReturnType<typeof churnReportV1>;
  expect(only.lookups).toBeLessThan(report.lookups);

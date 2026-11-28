@@ -182,7 +182,8 @@ impl Puzzle3dActionPrologue {
             effects.push(Effect::SetActiveTool { tool_id: semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.into() });
         }
         if !is_direct_utility_switch && !is_direct_tool_switch && !next_is_fill_tool && next_active_utility != active_utility_initial {
-            effects.push(Effect::SetActiveUtility { window_id: wid.clone(), utility_id: next_active_utility });
+            let target = semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_addressed_window_id(view_state, Some(wid.as_str()), None, &config.window_ids);
+            effects.push(Effect::SetActiveUtility { window_id: target.to_string(), utility_id: next_active_utility });
         }
         let shared_after = window_ownership::shared(&scene.runtime);
         let config_mutations = shared_before.mutations_to(&shared_after);

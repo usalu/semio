@@ -4,6 +4,7 @@ use semio_plugin::artifact_app_laws::{meta, OriginalFixtureCaller, settle_regist
 use semio_plugin::{ActionMeta, InvocationResult, MountedOwnerPolicyV1, ViewModel};
 use semio_s_artifact_sourcing_curation_harness_mount::{SourcingTestApp, SourcingApp};
 use semio_os_kernel as protocol;
+use semio_plugin::PluginApp;
 
 /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
 /// host does — a migrated command's document and config edits land only once it settles.

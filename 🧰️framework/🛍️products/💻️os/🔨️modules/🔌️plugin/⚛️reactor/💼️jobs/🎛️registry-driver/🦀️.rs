@@ -7,11 +7,11 @@ use semio_framework_value::{RetirementDemand, ValueError};
 
 const TURNS: usize = 100_000;
 
-fn widest(left: RetainedCloneGrant, right: RetainedCloneGrant) -> RetainedCloneGrant {
+pub(crate) fn widest(left: RetainedCloneGrant, right: RetainedCloneGrant) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: left.maximum_items.max(right.maximum_items), maximum_copy_bytes: left.maximum_copy_bytes.max(right.maximum_copy_bytes), maximum_capacity_bytes: left.maximum_capacity_bytes.max(right.maximum_capacity_bytes), maximum_release_bytes: left.maximum_release_bytes.max(right.maximum_release_bytes), maximum_depth: left.maximum_depth.max(right.maximum_depth) }
 }
 
-fn closing_grant(job: u64, policy: RetainedCloneGrant, force_close: bool, cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
+pub(crate) fn closing_grant(job: u64, policy: RetainedCloneGrant, force_close: bool, cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
     JOBS.with(|jobs| {
         let jobs = jobs.borrow();
         let Some(slot) = jobs.iter().flatten().find(|slot| slot.job == job) else { return Ok(policy) };
@@ -20,43 +20,60 @@ fn closing_grant(job: u64, policy: RetainedCloneGrant, force_close: bool, cx: &S
         if cancelling && !slot.cancellation_signalled {
             return Ok(policy);
         }
-        let closing = cancelling || slot.outcome.is_some();
-        let copy = policy.maximum_copy_bytes;
-        let mut grant = policy;
-        let mut fund = |demand: RetirementDemand| {
-            grant = widest(grant, RetainedCloneGrant {
-                maximum_items: 1,
-                maximum_copy_bytes: demand.copy_bytes,
-                maximum_capacity_bytes: demand.capacity_bytes,
-                maximum_release_bytes: demand.release_bytes,
-                maximum_depth: demand.depth,
-            });
-        };
-        if let Some(source) = &slot.source_close {
-            fund(source.selected_demand(copy)?);
-        }
-        if let Some(owner) = slot.failed_owner.as_ref().filter(|_| slot.cancellation_signalled) {
-            fund(owner.retirement_demands(copy)?);
-            fund(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
-        }
-        if closing {
-            if let Some(output) = &slot.rejected_output_close {
-                fund(output.selected_demand(copy)?);
-            }
-            if let Some(output) = &slot.outcome_close {
-                fund(output.selected_demand(copy)?);
-            }
-            match &slot.body {
-                Some(JobBody::Bounded(owner)) => {
-                    fund(owner.retirement_demands(copy)?);
-                    fund(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
-                }
-                Some(JobBody::Refused(_, Some(cause))) => fund(cause.selected_demand(copy)?),
-                _ => {}
-            }
-        }
-        Ok(grant)
+        slot_grant(slot, policy, cancelling || slot.outcome.is_some())
     })
+}
+
+/// 🎟️ `base` widened to exactly one quoted retirement demand.
+pub(crate) fn fund_demand(base: RetainedCloneGrant, demand: RetirementDemand) -> RetainedCloneGrant {
+    widest(base, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) })
+}
+
+/// 🎟️ `base` widened to the next close demand of one retained source: its cursor birth before the close began, its selected step after.
+pub(crate) fn source_grant<T: semio_framework_value::retirement::RetireOwned>(base: RetainedCloneGrant, source: &Option<T>, closing: &Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>) -> RetainedCloneGrant {
+    let demand = match closing {
+        Some(owner) => owner.selected_demand(base.maximum_copy_bytes),
+        None => semio_framework_value::retirement::retirement_cursor_birth_demand(source.as_ref().expect("a close without a cursor retains its source")),
+    };
+    fund_demand(base, demand.expect("retained source close demand"))
+}
+
+/// 🎟️ The one-turn grant that pays the next quoted demand of every owner a registry slot holds, so a driver never funds below what its owners publish.
+pub(crate) fn slot_grant(slot: &crate::JobSlot, policy: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneGrant, ValueError> {
+    let copy = policy.maximum_copy_bytes;
+    let mut grant = policy;
+    let mut fund = |demand: RetirementDemand| {
+        grant = widest(grant, RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: demand.depth,
+        });
+    };
+    if let Some(source) = &slot.source_close {
+        fund(source.selected_demand(copy)?);
+    }
+    if let Some(owner) = slot.failed_owner.as_ref().filter(|_| slot.cancellation_signalled) {
+        fund(owner.retirement_demands(copy)?);
+        fund(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
+    }
+    if closing {
+        if let Some(output) = &slot.rejected_output_close {
+            fund(output.selected_demand(copy)?);
+        }
+        if let Some(output) = &slot.outcome_close {
+            fund(output.selected_demand(copy)?);
+        }
+        if let Some(JobBody::Refused(_, Some(cause))) = &slot.body {
+            fund(cause.selected_demand(copy)?);
+        }
+    }
+    if let Some(JobBody::Bounded(owner)) = &slot.body {
+        fund(owner.retirement_demands(copy)?);
+        fund(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
+    }
+    Ok(grant)
 }
 
 fn funded<T>(job: u64, grant: RetainedCloneGrant, fuel: u64, run: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
@@ -108,6 +125,11 @@ impl RegistryJobDriver {
         Self::new(job, GENEROUS_GRANT)
     }
 
+    /// 🎟️ One funded original turn of this driver's caller, for laws that call the registry entry points themselves.
+    pub fn turn<R>(&mut self, grant: RetainedCloneGrant, fuel: u64, run: impl FnOnce(&mut StepContext<'_>) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
+        self.owned_turn(grant, fuel, run)
+    }
+
     fn owned_turn<R>(&mut self, grant: RetainedCloneGrant, fuel: u64, run: impl FnOnce(&mut StepContext<'_>) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
         let caller = self.caller.as_mut().expect("registry fixture owns its original caller");
         caller.refreshed_turn(grant, |cx| {
@@ -134,8 +156,30 @@ impl RegistryJobDriver {
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "registered job was never admitted by the reactor registry").into())
     }
 
+    /// 🧾️ Everything this job's caller has been charged so far.
+    pub fn receipt(&self) -> RetainedCloneProgress {
+        self.caller.as_ref().expect("registry fixture owns its original caller").cumulative_receipt()
+    }
+
+    /// 🚀️ One admission turn of the registry's actual request under `grant`; a refused turn leaves the whole source with the caller.
+    pub fn start_source(&mut self, source: &mut Option<OriginalJobAdmission>, grant: RetainedCloneGrant) -> Result<bool, OriginalTurnFailure> {
+        let admitted = self.owned_turn(grant, 1, |cx| Ok(abi::start(source, cx)?))?;
+        self.admitted |= admitted;
+        Ok(admitted)
+    }
+
     /// ▶️ Runs one funded registry turn through the same producer and caller as the guest ABI.
     pub fn step(&mut self) -> Result<JobStep, OriginalTurnFailure> {
+        self.step_with_fuel(WORK_UNITS_EXECUTE)
+    }
+
+    /// ▶️ [`Self::step`] with the registry turn funded by `fuel` logical work units.
+    pub fn step_with_fuel(&mut self, fuel: u64) -> Result<JobStep, OriginalTurnFailure> {
+        self.step_via(fuel, abi::step)
+    }
+
+    /// ▶️ [`Self::step_with_fuel`] through the given guest crossing, such as [`abi::step_coarse`].
+    pub fn step_via(&mut self, fuel: u64, crossing: fn(u64, &mut StepContext<'_>) -> Result<Option<JobStep>, OriginalTurnFailure>) -> Result<JobStep, OriginalTurnFailure> {
         let job = self.job;
         let policy = self.grant;
         let (admission, closure) = self.owned_turn(policy, 1, |cx| {
@@ -145,7 +189,7 @@ impl RegistryJobDriver {
             self.grant = widest(policy, admission);
         }
         let grant = widest(self.grant, closure);
-        let step = self.owned_turn(grant, WORK_UNITS_EXECUTE, |cx| abi::step(job, cx))?.unwrap_or(JobStep::Running(None));
+        let step = self.owned_turn(grant, fuel, |cx| crossing(job, cx))?.unwrap_or(JobStep::Running(None));
         if !matches!(step, JobStep::Running(_)) {
             self.admitted = false;
         }

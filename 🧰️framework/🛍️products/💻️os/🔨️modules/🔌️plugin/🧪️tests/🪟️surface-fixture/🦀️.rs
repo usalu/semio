@@ -1,4 +1,5 @@
 //! 🪟️ Private editor/viewer fixture owner; public surface is the committed mutation codec only.
+#![recursion_limit = "256"]
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as pack;

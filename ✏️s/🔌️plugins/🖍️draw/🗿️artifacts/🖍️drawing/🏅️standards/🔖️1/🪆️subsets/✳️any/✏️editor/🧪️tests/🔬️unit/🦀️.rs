@@ -1,161 +1,21 @@
-pub mod context {
-    use semio_s_artifact_draw_drawing::editor_manifest::create_drawing_app;
-    use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, drawing_active_utility};
-    use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
-use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
-    use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
-    use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
-    use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
-    use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
-    use semio_s_artifact_draw_drawing_editor::image_job::DrawingImageCommandJobFactory;
-    use semio_s_artifact_draw_drawing_editor::path_job::DrawingPathCommandJobFactory;
-    use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, replace_document, toggle_layer_visible};
-    use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
-    use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
-    use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
-    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_plugin::{ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
+//! 🔬️ Drawing editor unit laws of the shared unit context: gestures, canvas and panels, utilities and windows.
 
-    pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
+#[path = "🧬️prelude/🦀️.rs"]
+pub mod prelude;
+pub use prelude::context;
+use prelude::*;
 
-    /// 📐️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct DrawingAppFixture(pub DrawingApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
+#[path = "🧩️harness/🦀️.rs"]
+mod harness;
+use harness::*;
 
-    impl DrawingAppFixture {
-        /// 🎨️ Polls the mounted drawing under its original caller until preparation yields the pending effects.
-        pub async fn prepared_effects(&mut self, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-            use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, fixture_renew_turn};
-            let grant = self.1.cx().original_turn_ceiling().0;
-            for _ in 0..OriginalFixtureCaller::maximum_turns() {
-                let cx = self.1.cx();
-                fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant).expect("drawing preparation turn");
-                if let Some(effects) = self.0.pending_effects(view, cx).await.expect("drawing pending effects") {
-                    return effects;
-                }
-            }
-            panic!("drawing preparation exceeded its caller's turn bound")
-        }
-    }
-
-    impl std::ops::Deref for DrawingAppFixture {
-        type Target = DrawingApp;
-
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    impl std::ops::DerefMut for DrawingAppFixture {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-
-    impl Drop for DrawingAppFixture {
-        fn drop(&mut self) {
-            if std::thread::panicking() || self.0.close_terminal_is_empty() {
-                return;
-            }
-            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
-        }
-    }
-
-    /// ✏️ `DrawingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
-    /// `ArtifactApp` — `EditorApp<DrawingPlayApp>` (SDK adapter, contract §2.1) is the real
-    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<DrawingPlayApp>` builds it.
-
-    /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
-    pub async fn drawing_app() -> DrawingAppFixture {
-        static IO: std::sync::Once = std::sync::Once::new();
-        IO.call_once(|| semio_os_kernel::io::io_mechanism::io_register(semio_s_artifact_draw_drawing::io().entries).expect("register the Drawing serializers"));
-        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
-        app.bind_instance_id(meta("local").instance_id).await;
-        DrawingAppFixture(app, scope)
-    }
-
-    semio_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || App { definition: create_drawing_app(), examples: Vec::new() }, "../../../../../../../../..");
-
-    /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
-    pub fn meta_with_utility(utility: &str) -> ActionMeta {
-        let mut action_meta = meta("local");
-        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.into());
-        action_meta
-    }
-}
-
-use semio_s_artifact_draw_drawing::editor_manifest::create_drawing_app;
-use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, drawing_active_utility};
-use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
-use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
-use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
-use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
-use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
-use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
-use semio_s_artifact_draw_drawing_editor::image_job::DrawingImageCommandJobFactory;
-use semio_s_artifact_draw_drawing_editor::path_job::DrawingPathCommandJobFactory;
-use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, replace_document, toggle_layer_visible};
-use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
-use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
-use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
-#[path="../../📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs"]
-mod clipboard_runtime;
-use semio_s_artifact_draw_drawing_model::layer_id;
-use semio_s_artifact_draw_drawing_model::default_drawing_document;
-use semio_s_artifact_draw_drawing_examples::demo::semio_drawing_example_json;
-use semio_s_artifact_draw_drawing_model::{snapshot::DrawingSnapshot, DrawingLayerNode, DRAWING_DOCUMENT_SCHEMA};
-use semio_plugin::kernel::Effect;
-use semio_plugin::{artifact_app_laws as artifact_laws, ConfigView, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
-
-fn retire_owned_fixture_view(meta: semio_plugin::ActionMeta) {
-    let view = std::sync::Arc::try_unwrap(meta.view_state.expect("fixture view")).expect("the closed app returned all aliases of its fixture view");
-    semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(view);
-}
-use context::{drawing_app, meta_with_utility, DrawingApp, DrawingAppFixture};
-
-#[path = "✉️envelope-laws/🦀️.rs"]
-mod envelope_laws;
-use envelope_laws::*;
-
-#[path = "🖼️canvas-laws/🦀️.rs"]
-mod canvas_laws;
-use canvas_laws::*;
+semio_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || semio_plugin::App { definition: create_drawing_app(), examples: Vec::new() }, "../../../../../../../../..");
 
 #[path = "✋️gesture-laws/🦀️.rs"]
 mod gesture_laws;
-use gesture_laws::*;
-
+#[path = "🖼️canvas-laws/🦀️.rs"]
+mod canvas_laws;
 #[path = "🧰️utility-laws/🦀️.rs"]
 mod utility_laws;
-use utility_laws::*;
-
 #[path = "🪟️window-laws/🦀️.rs"]
 mod window_laws;
-
-#[path = "👆️pointer-laws/🦀️.rs"]
-mod pointer_laws;
-
-#[path = "⌨️command-laws/🦀️.rs"]
-mod command_laws;
-
-#[path = "🎛️selection-laws/🦀️.rs"]
-mod selection_laws;
-
-#[path = "🔷️node-laws/🦀️.rs"]
-mod node_laws;
-
-//#region 🔖️GesturePreview
-
-//#region 🧵️BatchedSamplesAndCancel
-
-//#endregion 🧵️BatchedSamplesAndCancel
-//#endregion 🔖️GesturePreview
-
-//#region 🔖️WireGuards
-
-//#endregion 🔖️WireGuards
-
-//#region 🔖️CommandSurface
-
-//#endregion 🔖️CommandSurface

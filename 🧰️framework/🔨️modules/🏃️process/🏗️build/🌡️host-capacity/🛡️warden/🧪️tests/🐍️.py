@@ -72,6 +72,16 @@ def swap_depth(policy, host):
     compressed = host.get("compressedMegabytes")
     growth = max(0, (host.get("swapVolumeFreeMegabytes") or 0) - policy["swapDiskReserveMegabytes"])
     capacity = used + free + growth if used is not None and free is not None else 0
+    allocated = used + free if used is not None and free is not None else 0
+    file = host.get("swapFileMegabytes", policy["swapFileDefaultMegabytes"])
+    if free is None or used is None or allocated == 0 or used * 10000 < allocated * policy["swapFreeMinimumUsedBasisPoints"]:
+        free_depth = 0
+    elif free * 10000 < file * policy["swapFreeDangerBasisPointsOfFile"]:
+        free_depth = 2
+    elif free * 10000 < file * policy["swapFreeGuardBasisPointsOfFile"]:
+        free_depth = 1
+    else:
+        free_depth = 0
 
     def depth_of(value, whole, guard_bp, danger_bp):
         if value is None:
@@ -80,14 +90,20 @@ def swap_depth(policy, host):
             return 2
         return 1 if value * 10000 >= whole * guard_bp else 0
 
+    guard_line = min(policy["guardMaximumMegabytes"], max(policy["guardMinimumMegabytes"], total * policy["guardBasisPoints"] // 10000))
+    out = host.get("swapOutMegabytesPerSecond")
+    live = host["pressure"] != "normal" or (out is not None and out >= policy["swapActiveMegabytesPerSecond"]) or free_depth > 0 or host["availableMegabytes"] < guard_line
     lines = [
         ("swap-used", depth_of(used, total, policy["swapUsedGuardBasisPoints"], policy["swapUsedDangerBasisPoints"])),
         ("swap-share", depth_of(used, capacity, policy["swapShareGuardBasisPoints"], policy["swapShareDangerBasisPoints"]) if capacity else 0),
-        ("compressed", depth_of(compressed, total, policy["compressedGuardBasisPoints"], policy["compressedDangerBasisPoints"])),
+        ("compressed", depth_of(compressed, total, policy["compressedGuardBasisPoints"], policy["compressedDangerBasisPoints"]) if live else 0),
+        ("swap-free", free_depth),
     ]
     depth = max(d for _, d in lines)
     source = next((n for n, d in lines if d == depth), None) if depth > 0 else None
-    return depth, source, lines[2][1]
+    exhaustion = max(lines[2][1], lines[3][1])
+    exhaustion_source = None if exhaustion == 0 else ("compressed" if lines[2][1] == exhaustion else "swap-free")
+    return depth, source, exhaustion, exhaustion_source
 
 
 def decide(policy, host, subjects, previous):
@@ -97,7 +113,11 @@ def decide(policy, host, subjects, previous):
     danger = min(policy["dangerMaximumMegabytes"], max(policy["dangerMinimumMegabytes"], total * policy["dangerBasisPoints"] // 10000))
     resume = max(guard, total * policy["resumeBasisPoints"] // 10000)
     swap = host["swapOutMegabytesPerSecond"]
-    swap_worked = swap is not None and swap >= policy["swapActiveMegabytesPerSecond"]
+    swap_busy = swap is not None and swap >= policy["swapActiveMegabytesPerSecond"]
+    sustained = policy["swapSustainedSeconds"] * 1000
+    elapsed = host.get("intervalMilliseconds", policy["tightMilliseconds"])
+    swap_ms = min(2 * sustained, max(0, previous.get("swapMilliseconds", 0) + (elapsed if swap_busy else -elapsed)))
+    swap_worked = swap_ms >= sustained
     head_guard = min(policy["headroomGuardMaximumMegabytes"], max(policy["headroomGuardMinimumMegabytes"], total * policy["headroomGuardBasisPoints"] // 10000))
     head_danger = min(policy["headroomDangerMaximumMegabytes"], max(policy["headroomDangerMinimumMegabytes"], total * policy["headroomDangerBasisPoints"] // 10000))
     swap_free = host.get("swapFreeMegabytes")
@@ -108,7 +128,7 @@ def decide(policy, host, subjects, previous):
         growable = max(0, (host.get("swapVolumeFreeMegabytes") or 0) - policy["swapDiskReserveMegabytes"])
         room = min(swap_free + growable, total * policy["swapRoomMaximumBasisPoints"] // 10000)
         headroom = avail + room
-    depth, source, comp = swap_depth(policy, host)
+    depth, source, comp, comp_source = swap_depth(policy, host)
     pressure = {"normal": 0, "warn": 1, "critical": 2}[host["pressure"]]
     cap_limit = total * policy["capMaximumBasisPoints"] // 10000
 
@@ -118,9 +138,18 @@ def decide(policy, host, subjects, previous):
     def over(s):
         return s.get("ceiling") is not None and s["canCancel"] and s["megabytes"] > s["ceiling"]["megabytes"]
 
-    crossed = [s for s in subjects if s["canCancel"] and (over(s) or (s.get("capMegabytes") is not None and s.get("capCritical") and s["megabytes"] > cap_of(s)))]
-    overage = sum(s["megabytes"] - (s["ceiling"]["megabytes"] if over(s) else cap_of(s)) for s in crossed)
-    acute = swap_worked and (comp == 2 or (pressure >= 1 and comp >= 1 and previous["level"] != "calm"))
+    def cap_crossed(s):
+        return s["canCancel"] and (over(s) or (s.get("capMegabytes") is not None and s.get("capCritical") and s["megabytes"] > cap_of(s)))
+
+    spare = avail >= resume and (headroom is None or headroom >= head_guard) and depth == 0 and pressure == 0
+
+    def grant_over(s):
+        return s["canCancel"] and s.get("grantMegabytes") is not None and not spare and excess(s) >= max(policy["grantOverMinimumMegabytes"], s["grantMegabytes"] * policy["grantOverBasisPoints"] // 10000)
+
+    crossed = [s for s in subjects if cap_crossed(s) or grant_over(s)]
+    crossed_ids = set(s["id"] for s in crossed)
+    overage = sum((s["megabytes"] - (s["ceiling"]["megabytes"] if over(s) else cap_of(s))) if cap_crossed(s) else excess(s) for s in crossed)
+    acute = swap_worked and pressure >= 1 and avail < resume
     severe = avail < danger or (headroom is not None and headroom < head_danger) or (depth == 2 and avail < guard) or acute
     if severe or pressure == 2 or comp == 2:
         level = "danger"
@@ -133,7 +162,7 @@ def decide(policy, host, subjects, previous):
         level = "guard"
     trigger = None
     if level != "calm" and base == "calm":
-        trigger = "cap"
+        trigger = "cap" if any(cap_crossed(s) for s in crossed) else "grant"
     elif level != "calm":
         line_guard, line_head = (danger, head_danger) if level == "danger" else (guard, head_guard)
         if avail < line_guard:
@@ -144,7 +173,7 @@ def decide(policy, host, subjects, previous):
             if depth == 2 and avail < guard:
                 trigger = source
             elif comp == 2:
-                trigger = "compressed"
+                trigger = comp_source
             elif pressure == 2:
                 trigger = "pressure"
             else:
@@ -152,7 +181,7 @@ def decide(policy, host, subjects, previous):
         elif pressure == 1:
             trigger = "pressure"
         elif comp >= 1:
-            trigger = "compressed"
+            trigger = comp_source
         elif depth >= 1 and avail < resume and source is not None:
             trigger = source
         else:
@@ -161,7 +190,7 @@ def decide(policy, host, subjects, previous):
     if level == "calm":
         calm_ticks = (previous["calmTicks"] if previous["level"] == "calm" or previous["calmTicks"] > 0 else 0) + 1
     else:
-        calm_ticks = previous["calmTicks"] + 1 if quiet and not crossed and avail >= resume else 0
+        calm_ticks = previous["calmTicks"] + 1 if quiet and avail >= resume else 0
     quiet_ready = quiet and calm_ticks >= policy["calmTicks"] and avail >= resume
     held = policy["pressureDeficitMegabytes"] if (acute or (not severe and (pressure >= 1 or comp >= 1))) else 0
     target = resume if depth >= 1 else guard
@@ -204,26 +233,55 @@ def decide(policy, host, subjects, previous):
     cancelled = []
     initial_room = avail - guard if quiet and avail >= resume else 0
     used_room = 0
+    recovered = quiet_ready or (level == "calm" and calm_ticks >= policy["calmTicks"] and avail >= resume)
+    settled = previous.get("resumedSeconds") is None or previous["resumedSeconds"] >= policy["resumeSettleSeconds"]
+    woken = 0
+
+    def kills(s):
+        return s["canCancel"] and not s.get("keepsProgress")
+
+    def stuck(s):
+        return s["suspended"] and s["suspendedSeconds"] >= policy["suspendHardMaximumSeconds"]
+
+    def resume_key(s):
+        from fractions import Fraction
+        return (0 if stuck(s) else 1, -(s["grantMegabytes"] if s.get("grantMegabytes") is not None else s["megabytes"]), -s["suspendedSeconds"], -(1 if s.get("capCritical") else 0), -(1 if heavy(s) else 0), -Fraction(s["elapsedSeconds"], max(1, s["megabytes"])), -s["rank"], s["pid"])
+
+    def may_wake(s):
+        return settled and woken == 0 if recovered else used_room + page_in(s) <= initial_room
     def page_in(s):
         measured = s.get("nonresidentMegabytes", 0)
         if measured is not None:
             return measured
-        return s.get("stoppedFootprintMegabytes", s["megabytes"]) if level == "calm" and pressure == 0 else float("inf")
+        return s.get("stoppedFootprintMegabytes", s["megabytes"]) if base == "calm" and pressure == 0 else float("inf")
 
     for s in overdue:
-        shortage = page_in(s) > initial_room
-        pressure_cancel = level != "calm" and not quiet and (not s.get("capCritical") or severe)
-        if s["canCancel"] and (not sheltered(s) or (level == "danger" and severe)) and (shortage or pressure_cancel) and count("cancel") < policy["maximumCancelsPerTick"]:
-            actions.append({"action": "cancel", "id": s["id"], "reason": "overdue"})
+        if stuck(s) and kills(s) and not recovered and count("cancel") < policy["maximumCancelsPerTick"]:
+            actions.append({"action": "cancel", "id": s["id"], "reason": "limit"})
             acted.add(s["id"])
             cancelled.append(s)
     for s in overdue:
+        if s["id"] in acted:
+            continue
+        shortage = page_in(s) > initial_room
+        pressure_cancel = level != "calm" and not quiet and (not s.get("capCritical") or severe)
+        if kills(s) and (not sheltered(s) or (level == "danger" and severe)) and (shortage or pressure_cancel) and count("cancel") < policy["maximumCancelsPerTick"]:
+            actions.append({"action": "cancel", "id": s["id"], "reason": "overdue"})
+            acted.add(s["id"])
+            cancelled.append(s)
+    for s in (sorted(overdue, key=resume_key) if recovered else overdue):
         cost = page_in(s)
-        fits = s["id"] not in acted and used_room + cost <= initial_room
-        if fits and (not quiet or quiet_ready or level == "calm") and (not s["canCancel"] or (level != "calm" and quiet) or (s.get("capCritical") and not severe)):
+        if s["id"] not in acted and may_wake(s) and (not quiet or quiet_ready or level == "calm") and (not kills(s) or (level != "calm" and quiet) or (s.get("capCritical") and not severe) or recovered):
             actions.append({"action": "resume", "id": s["id"], "reason": "overdue"})
             acted.add(s["id"])
             used_room += cost
+            woken += 1
+    for s in sorted([x for x in overdue if stuck(x)], key=resume_key):
+        if s["id"] not in acted and not kills(s) and woken == 0:
+            actions.append({"action": "resume", "id": s["id"], "reason": "overdue"})
+            acted.add(s["id"])
+            used_room += page_in(s)
+            woken += 1
 
     if level == "danger" and severe and not quiet:
         deficit = deficit_all
@@ -234,8 +292,8 @@ def decide(policy, host, subjects, previous):
         pausing_failed = all(paused(s) for s in subjects if s["canSuspend"] and s["canCancel"])
         def eligible(s):
             return not s.get("held") and (paused(s) if s["canSuspend"] else pausing_failed)
-        unsheltered_waiting = any(not sheltered(s) and s["canCancel"] and s["id"] not in acted and not eligible(s) for s in subjects)
-        candidates = [s for s in subjects if s["canCancel"] and s["id"] not in acted and eligible(s) and not (sheltered(s) and unsheltered_waiting)]
+        unsheltered_waiting = any(not sheltered(s) and kills(s) and s["id"] not in acted and not eligible(s) for s in subjects)
+        candidates = [s for s in subjects if kills(s) and s["id"] not in acted and eligible(s) and not (sheltered(s) and unsheltered_waiting)]
         candidates.sort(key=lambda s: (1 if s.get("lastResort") else 0, 1 if sheltered(s) else 0, -excess(s), 1 if heavy(s) else 0, -s["megabytes"], 0 if s["suspended"] else 1) + order_key(s))
         for s in candidates:
             if freed >= deficit or count("cancel") == policy["maximumCancelsPerTick"]:
@@ -246,9 +304,9 @@ def decide(policy, host, subjects, previous):
 
     if level in ("guard", "danger") and (not quiet or crossed):
         deficit = deficit_all
-        every_running = sorted([s for s in subjects if not s["suspended"] and not (quiet and s.get("capCritical"))], key=lambda s: (1 if s.get("capCritical") else 0, 1 if sheltered(s) else 0) + order_key(s))
+        every_running = sorted([s for s in subjects if not s["suspended"] and not (quiet and s.get("capCritical")) and (base != "calm" or s["id"] in crossed_ids)], key=lambda s: (0 if s["id"] in crossed_ids else 1, 1 if s.get("capCritical") else 0, 1 if sheltered(s) else 0) + order_key(s))
         keep = 0 if acute else policy["keepRunning"]
-        kept = set(s["id"] for s in every_running[len(every_running) - keep:]) if keep > 0 else set()
+        kept = set(s["id"] for s in [r for r in every_running if not grant_over(r)][-keep:]) if keep > 0 else set()
         covered = sum(s["megabytes"] for s in subjects if s["suspended"] and s["id"] not in acted)
         for s in [r for r in every_running if r["id"] not in acted]:
             if covered >= deficit or count("suspend") == policy["maximumSuspendsPerTick"]:
@@ -259,12 +317,14 @@ def decide(policy, host, subjects, previous):
             acted.add(s["id"])
             covered += s["megabytes"]
 
-    if (quiet_ready and not crossed) or (level == "calm" and calm_ticks >= policy["calmTicks"] and avail >= resume):
-        waiting = sorted([s for s in subjects if s["suspended"] and s["id"] not in acted and page_in(s) <= initial_room - used_room], key=order_key)
+    if recovered and settled and woken == 0:
+        waiting = sorted([s for s in subjects if s["suspended"] and s["id"] not in acted and s["id"] not in crossed_ids and page_in(s) <= initial_room - used_room], key=resume_key)
         if waiting:
-            actions.append({"action": "resume", "id": waiting[-1]["id"], "reason": "calm"})
+            actions.append({"action": "resume", "id": waiting[0]["id"], "reason": "calm"})
 
-    return {"level": level, "calmTicks": calm_ticks, "hold": level != "calm", "trigger": trigger, "guardMegabytes": guard, "dangerMegabytes": danger, "resumeMegabytes": resume, "swapRoomMegabytes": room, "headroomMegabytes": headroom, "headroomGuardMegabytes": head_guard, "headroomDangerMegabytes": head_danger, "actions": actions}
+    if not (avail < guard or swap_busy):
+        actions = [x for x in actions if not (x["action"] == "cancel" and x["reason"] in ("danger", "overdue", "limit"))]
+    return {"level": level, "calmTicks": calm_ticks, "swapMilliseconds": swap_ms, "hold": level != "calm", "trigger": trigger, "guardMegabytes": guard, "dangerMegabytes": danger, "resumeMegabytes": resume, "swapRoomMegabytes": room, "headroomMegabytes": headroom, "headroomGuardMegabytes": head_guard, "headroomDangerMegabytes": head_danger, "actions": actions}
 
 
 def owner_label(command, prefixes):
@@ -316,7 +376,9 @@ def parse_swap(platform, texts):
             columns = lines[-1].split()
             if len(columns) > 3 and columns[3].isdigit():
                 volume = int(columns[3]) // 1024
-        return {"swapFreeMegabytes": free, "swapVolumeFreeMegabytes": volume}
+        size = (texts.get("fileSize") or "").strip()
+        file = int(size) // 1048576 if size.isdigit() else 0
+        return {"swapFreeMegabytes": free, "swapVolumeFreeMegabytes": volume, **({"swapFileMegabytes": file} if file > 0 else {})}
     if platform == "linux":
         def kib(name):
             match = re.search(r"^" + name + r":\s+(\d+) kB", texts.get("meminfo") or "", re.M)
@@ -447,6 +509,65 @@ def others(rows, subjects, count, prefixes):
     return [{"pid": g["root"]["pid"], "megabytes": g["kb"] // 1024, "processes": g["n"], "command": owner_label(g["root"]["command"], prefixes)} for g in ranked]
 
 
+def granted(case):
+    by_pid = {r["pid"]: r for r in case["rows"]}
+    booked = {}
+    for grant in case["grants"]:
+        row = by_pid.get(grant["pid"])
+        if row is None or ("startMs" in grant and abs(case["nowMs"] - row["elapsedSeconds"] * 1000 - grant["startMs"]) > 5000):
+            continue
+        booked[grant["pid"]] = booked.get(grant["pid"], 0) + grant["reservedMegabytes"]
+    children = {}
+    for row in case["rows"]:
+        children.setdefault(row["parent"], []).append(row["pid"])
+
+    def tree(pid):
+        total, seen, stack = 0, set(), [pid]
+        while stack:
+            at = stack.pop()
+            if at in seen:
+                continue
+            seen.add(at)
+            if at in by_pid:
+                total += by_pid[at]["memoryKilobytes"]
+                stack.extend(children.get(at, []))
+        return total // 1024
+
+    present = set(s["pid"] for s in case["subjects"])
+    out = [dict(s, grantMegabytes=booked[s["pid"]]) if s["pid"] in booked and "grantMegabytes" not in s else s for s in case["subjects"]]
+    for pid in sorted(p for p in booked if p not in present):
+        row = by_pid[pid]
+        ident = "%d.%s" % (pid, hashlib.sha256(row["start"].encode("utf-8")).hexdigest()[:8])
+        since = case.get("suspendedSince", {}).get(ident)
+        out.append({"id": ident, "pid": pid, "parent": row["parent"], "kind": "granted", "rank": 70, "elapsedSeconds": row["elapsedSeconds"], "megabytes": tree(pid), "suspended": row["stopped"], "suspendedSeconds": max(0, (case["nowMs"] - since) // 1000) if row["stopped"] and since is not None else 0, "canSuspend": True, "canCancel": True, "keepsProgress": True, "start": row["start"], "owner": owner_label(row["command"], []), "scope": "tree", "signal": "SIGTERM", "lastResort": True, "grantMegabytes": booked[pid]})
+    return out
+
+
+def foreign(case):
+    by_pid = {r["pid"]: r for r in case["rows"]}
+    owned = set(s["pid"] for s in case["subjects"])
+    exclude = set(case.get("exclude", []))
+
+    def owns(row):
+        at, steps = row, 0
+        while at is not None and steps < 256:
+            if at["pid"] in owned:
+                return True
+            at = by_pid.get(at["parent"])
+            steps += 1
+        return False
+
+    kb = n = heavy = 0
+    for row in case["rows"]:
+        if row["pid"] <= 1 or row["pid"] in exclude or owns(row):
+            continue
+        kb += row["memoryKilobytes"]
+        n += 1
+        if row["memoryKilobytes"] >= case["heavyMegabytes"] * 1024:
+            heavy += 1
+    return {"megabytes": kb // 1024, "processes": n, "heavy": heavy}
+
+
 def smaps_footprint(text):
     values = {}
     for line in text.split("\n"):
@@ -478,7 +599,24 @@ def holds(case):
     if state is None:
         return False
     heavy = case["needMegabytes"] >= POLICY["holdMinimumMegabytes"] or case.get("operation") in POLICY["holdOperations"]
-    return bool(state["hold"]) and case["nowMs"] - state["atMs"] <= POLICY["staleMilliseconds"] and heavy
+    fits = state.get("level") == "guard" and state.get("host") is not None and state.get("guardMegabytes") is not None and state["host"]["availableMegabytes"] - case["needMegabytes"] >= state["guardMegabytes"]
+    return bool(state["hold"]) and not fits and case["nowMs"] - state["atMs"] <= POLICY["staleMilliseconds"] and heavy
+
+
+def paging(sample):
+    out = []
+    for case in sample["cases"]:
+        previous = {"level": "calm", "calmTicks": 0}
+        cancelled = False
+        for rate in case["swaps"]:
+            host = dict(case["host"], swapOutMegabytesPerSecond=rate, intervalMilliseconds=case["intervalMilliseconds"])
+            result = decide(POLICY, host, case["subjects"], previous)
+            previous = {"level": result["level"], "calmTicks": result["calmTicks"], "swapMilliseconds": result["swapMilliseconds"]}
+            cancelled = cancelled or any(a["action"] == "cancel" for a in result["actions"])
+        state = {"hold": result["hold"], "atMs": 1000, "level": result["level"], "guardMegabytes": result["guardMegabytes"], "host": {"availableMegabytes": host["availableMegabytes"]}}
+        admitted = not holds({"state": state, "nowMs": 1000, "needMegabytes": sample["unitMegabytes"], "operation": "cargo"})
+        out.append({"level": result["level"], "trigger": result["trigger"], "cancel": cancelled, "admitted": admitted})
+    return out
 
 
 def decisions(fixture):
@@ -512,9 +650,19 @@ def main():
     if mode in ("--acute", "--warning-churn"):
         sample = json.load(open(os.path.join(HERE, "🚨️swap-churn", "🔣️.json"), encoding="utf-8"))
         key, level = ("host", "danger") if mode == "--acute" else ("warningHost", "guard")
-        print(json.dumps(decide(POLICY, sample[key], sample["subjects"], {"level": level, "calmTicks": 0})))
+        previous = {"level": level, "calmTicks": 0}
+        if mode == "--warning-churn":
+            first = decide(POLICY, sample[key], sample["subjects"], {"level": "calm", "calmTicks": 0})
+            previous["swapMilliseconds"] = first["swapMilliseconds"]
+        print(json.dumps(decide(POLICY, sample[key], sample["subjects"], previous)))
+    elif mode == "--paging":
+        print(json.dumps(paging(json.load(open(os.path.join(HERE, "🧘️healthy-paging", "🔣️.json"), encoding="utf-8")))))
     elif mode == "--others":
         print(json.dumps([others(c["rows"], c["subjects"], c["count"], c.get("prefixes", [])) for c in fixture["others"]], ensure_ascii=False))
+    elif mode == "--granted":
+        print(json.dumps([granted(c) for c in fixture["granted"]], ensure_ascii=False))
+    elif mode == "--foreign":
+        print(json.dumps([foreign(c) for c in fixture["foreign"]]))
     elif mode == "--charge":
         print(json.dumps([charge(c) for c in fixture["charges"]]))
     elif mode == "--holds":
@@ -528,7 +676,7 @@ def main():
     elif mode == "--swap":
         print(json.dumps(swaps(fixture), ensure_ascii=False))
     elif mode in ("--write", "--check"):
-        extras = (("others", lambda f: [others(c["rows"], c["subjects"], c["count"], c.get("prefixes", [])) for c in f["others"]]), ("holds", lambda f: [holds(c) for c in f["holds"]]), ("charges", lambda f: [charge(c) for c in f["charges"]]))
+        extras = (("granted", lambda f: [granted(c) for c in f["granted"]]), ("foreign", lambda f: [foreign(c) for c in f["foreign"]]), ("others", lambda f: [others(c["rows"], c["subjects"], c["count"], c.get("prefixes", [])) for c in f["others"]]), ("holds", lambda f: [holds(c) for c in f["holds"]]), ("charges", lambda f: [charge(c) for c in f["charges"]]))
         for key, produce in (("discoveries", discoveries), ("swaps", swaps)) + extras:
             for case, expect in zip(fixture[key], produce(fixture)):
                 if mode == "--write":
@@ -550,7 +698,7 @@ def main():
                 json.dump(fixture, handle, ensure_ascii=False, indent=1)
                 handle.write("\n")
     else:
-        sys.exit("usage: 🐍️.py --acute|--warning-churn|--decide|--classify|--discover|--swap|--others|--holds|--charge|--write|--check")
+        sys.exit("usage: 🐍️.py --acute|--warning-churn|--paging|--decide|--classify|--discover|--swap|--others|--holds|--charge|--write|--check")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,6 @@
+# SnapshotReadLease Drop compile break
+
+- The peer had already added `SnapshotReadLease::disarm(self)` (ManuallyDrop + ptr::read of registry) and `SnapshotRead::return_original_lease` now does `return_now()` then `disarm().0`; `try_return_original_snapshot_read` also uses `disarm`. This resolves E0509 at store/read/retirement:49 (it only calls `read.return_original_lease()`). No further source change needed. Other sites constructing `SnapshotReadLease{..}` only clone the registry (no move-out); no other destructuring found workspace-wide.
+- Added test `a_lease_is_returned_exactly_once_whether_retired_or_dropped` in `framework/modules/value/snapshot/read/tests/terminal-vacancy/rs` (retired lease returns once, repeat retire is None, drop of settled read adds nothing, dropped lease returns once).
+- Verify: `cargo check --lib` of snapshot read crate: OK. wasm32-wasip2 check of semio-s-plugin-sourcing-windows-component: exit 0 (warnings only).
+- Open: `cargo test --lib` of the snapshot read crate does not compile (124 errors from peers' in-flight value-crate API changes: missing `finish_registry`, `with_effect`, `admit_shared_retirement`, `RetainedCloneGrant`, `retire_owned` signature). Unrelated to the lease; the new test is therefore not executed yet.

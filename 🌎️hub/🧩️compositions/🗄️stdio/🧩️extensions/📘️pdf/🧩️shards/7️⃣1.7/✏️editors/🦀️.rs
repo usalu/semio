@@ -20,7 +20,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🧩️ Builds the `semio-hub-stdio-pdf-1-7-editors` component of `stdio-pdf`: the plugin's identity with this shard's apps only.
 pub fn plugin() -> Result<Plugin<StdioPdf17EditorApps>, PluginAssemblyError> {
-    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioPdf17EditorApps>::new("stdio-pdf").label("Stdio PDF").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-pdf").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioPdf17EditorApps>::new("stdio-pdf").label(semio_plugin::LocalizedLabel::native("Stdio PDF", "Stdio PDF")).version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-pdf").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_pdf::declaration(semio_s_artifact_stdio_pdf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.component("semio-hub-stdio-pdf-1-7-editors");
     builder = builder.editor::<semio_s_artifact_stdio_pdf::editor::pdf17a::Pdf17AEditor>(semio_s_artifact_stdio_pdf::editor::pdf17a::create_pdf17_a_editor());

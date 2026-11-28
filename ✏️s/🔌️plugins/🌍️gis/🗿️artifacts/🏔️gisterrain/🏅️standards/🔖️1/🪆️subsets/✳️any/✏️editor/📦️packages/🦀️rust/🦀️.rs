@@ -101,15 +101,9 @@ pub mod editor {
                     #[path = "."]
                     pub mod terrain {
                         pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::windows::terrain::*;
-                        #[cfg(test)]
-                        #[path = "../../🎭️modes/👁️view/🪟️windows/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                         #[path = "."]
                         pub mod config {
                             pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::windows::terrain::config::*;
-                            #[cfg(test)]
-                            #[path = "../../🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
                         }
                     }
                 }

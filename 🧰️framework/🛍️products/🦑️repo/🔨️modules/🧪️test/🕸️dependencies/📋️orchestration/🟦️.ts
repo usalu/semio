@@ -5,7 +5,6 @@ import {
   type OracleEntry,
   classifyLegacyKind,
   dependencyEcosystemOfRegistryValue,
-  externalOracleHostPackages,
   isProductionClass,
   loadOracleRegistry,
   oracleLinkedPackages,
@@ -57,14 +56,6 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
         capabilities: [...new Set(linking.flatMap((entry) => entry.capabilities))].sort(),
       });
     }
-  }
-  for (const host of externalOracleHostPackages(registry)) {
-    const existing = classified.find((entry) => entry.ecosystem === host.ecosystem && entry.name === host.name);
-    if (existing !== undefined) {
-      classified[classified.indexOf(existing)] = { ...existing, users: [...new Set([...existing.users, ...host.users])] };
-      continue;
-    }
-    classified.push({ ecosystem: host.ecosystem, name: host.name, version: host.version, kinds: ["test-oracle"], users: host.users, productionReachable: false });
   }
   return classified.sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
 }

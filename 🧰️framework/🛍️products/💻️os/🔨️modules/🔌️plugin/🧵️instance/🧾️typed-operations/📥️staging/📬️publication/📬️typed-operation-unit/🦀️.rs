@@ -4,6 +4,11 @@ use super::*;
 use semio_plugin_retained_command_operation::typed_operation::note_publication_wait;
 use semio_plugin_retained_command_operation::typed_operation::pending_result_page::{PublicationPageIntent,PublicationPagePlan,PublicationRawReason};
 
+/// 🛑️ The fault of a rejected ephemeral (presence or transient) publication: a generation that moved since the operation captured it is the benign `interactive-job.stale`, any other rejection stays an SDK fault.
+fn ephemeral_rejection_fault(reason:String)->Fault{
+    if reason.ends_with("generation is stale"){Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.stale"),reason)}else{plugin_sdk_fault(reason)}
+}
+
 enum OriginalPublicationAdvanceFailure{Primary(semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary),Domain(store::VcsError)}
 
 /// 🛠️ Runs one effect-taking store step inside the turn's own performed-work effect and settles its actual work once; `None` means the Work quote was not admitted and nothing ran.
@@ -319,7 +324,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.presence.push(mutation);
-                            return Err(plugin_sdk_fault(reason).into());
+                            return Err(ephemeral_rejection_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.transient.pop() {
@@ -331,7 +336,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.transient.push(mutation);
-                            return Err(plugin_sdk_fault(reason).into());
+                            return Err(ephemeral_rejection_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.window_transient.pop() {
@@ -365,6 +370,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     if progress!=RetainedCloneProgress::default(){assert!(mounted.publication_ownership_progress.is_none(),"child preparation error cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));}return Err(fault.into());
                 }};
                 let progress=preparation.progress();
+                {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<60||n%1000==0{eprintln!("[DEBUG] child prep #{n}: pending={} refused={} progress={progress:?} fuel={}",matches!(preparation,ChildEmitPreparationStep::Pending(_)),matches!(preparation,ChildEmitPreparationStep::Refused(..)),cx.fuel_remaining())}}
                 if !progress.fits(retained){return Err(plugin_sdk_fault("original emitted child preparation exceeded mounted caller policy").into());}
                 if progress!=RetainedCloneProgress::default(){
                     assert!(mounted.publication_ownership_progress.is_none(),"child preparation cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));return Ok(());
@@ -481,6 +487,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 if !emit.config_mutations.is_empty() {
                     let revision=self.stores.config_store.content_revision_now();
+                    mounted.config_generation=self.stores.config_store.generation();
                     let mut transaction=None;
                     if let Some((publication,ownership))=self.stores.config_store.admit_apply_batch(mounted.operation.operation,mounted.config_generation,revision,&mut mounted.actor_capture,&mut emit.config_mutations,HistoryLane::Document,self.stores.config_one_item_factory.as_ref(),&mut transaction,Some(&mounted.verb),None,false,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         mounted.publication_ownership_progress=Some((retained,ownership));
@@ -512,7 +519,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.presence.push(mutation);
-                            return Err(plugin_sdk_fault(reason).into());
+                            return Err(ephemeral_rejection_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.transient.pop() {
@@ -524,7 +531,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.transient.push(mutation);
-                            return Err(plugin_sdk_fault(reason).into());
+                            return Err(ephemeral_rejection_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.window_transient.pop() {

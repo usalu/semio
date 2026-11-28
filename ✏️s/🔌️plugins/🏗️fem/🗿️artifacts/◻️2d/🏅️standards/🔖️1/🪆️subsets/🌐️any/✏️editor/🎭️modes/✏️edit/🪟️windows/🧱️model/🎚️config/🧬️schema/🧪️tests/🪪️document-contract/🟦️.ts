@@ -19,6 +19,9 @@ export function testFem2dModelWindowConfigContract(): void {
     if (row.kind === "camera-null") candidate.camera = null;
     if (row.kind === "camera-unknown") candidate.camera.extra = true;
     if (row.kind === "bad-mode") candidate.resultMode = "harmonic";
+    if (row.kind === "gumball-null") candidate.gumball = null;
+    if (row.kind === "gumball-unknown") candidate.gumball.extra = true;
+    if (row.kind === "gumball-text") candidate.gumball.rotate = "yes";
     assert(!validate(candidate), row.kind);
     assert.throws(() => parseFem2dModelWindowConfig(candidate), row.kind);
   }

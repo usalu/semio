@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "id": "stage4",
+ "lane": "H105",
+ "title": "Spool pins refill under backlog, spilled waiting uploads kept, overlay-bound test markers",
+ "bases": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts": "3c5d96ee3b1b425086e71dd5676d6f942a2b66e37d6f221783e9c83fdff91c91",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🟦️.ts": "da9e1c2cdae4dd9504757ad760d3ff3fe6805588dabebf6c91963cdd277bb829",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/💧️spill/🟦️.ts": "66e24cd28fc57fbbb79ce976b336cd71332ec306cad1a18ddd917f06199418b8",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚉️land/🔣️.json": "295a870555cef82d1fbee65232c6697fa4a77eeca84c16ee42c4301df5c71a9b"
+ },
+ "deletes": []
+}

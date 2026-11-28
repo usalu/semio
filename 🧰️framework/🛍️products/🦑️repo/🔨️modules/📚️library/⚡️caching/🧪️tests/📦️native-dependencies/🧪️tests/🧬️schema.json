@@ -10,9 +10,33 @@
     "receipts",
     "failures",
     "tooling",
-    "ownedTarget"
+    "ownedTarget",
+    "receivingBudget"
   ],
   "properties": {
+    "receivingBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocationMilliseconds",
+        "probeMilliseconds",
+        "testMilliseconds"
+      ],
+      "properties": {
+        "probeMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "invocationMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "testMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "version": {
       "const": 1
     },

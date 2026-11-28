@@ -86,7 +86,7 @@
         .await;
         assert_eq!(app.stores.test_snapshot().await.count, 1);
         let before = app.render_ctx().test_history().await;
-        assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
+        assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set count to 1")));
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
 
         let first = reserved_action(&mut app, "undo", None, &mut identity, cx).await;

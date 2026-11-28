@@ -25,20 +25,9 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Workbook", "Arbeitsmappe"), icon_id: "table-2".into(), ..semio_s_artifact_stdio_contract::stable_addressed_table_window_kind() }
 }
 
-fn grid_extent(sheet: &XlsxSheet) -> (usize, usize) {
-    let max_row = sheet.cells.iter().map(|cell| cell.row).max().unwrap_or(0);
-    let max_column = sheet.cells.iter().map(|cell| cell.col).max();
-    let rows = match max_row {
-        0 => 1,
-        XLSX_MAX_ROW => XLSX_MAX_ROW as usize,
-        row => row as usize + 1,
-    };
-    let columns = match max_column {
-        None => 1,
-        Some(XLSX_MAX_COLUMN) => XLSX_MAX_COLUMN as usize + 1,
-        Some(column) => column as usize + 2,
-    };
-    (rows, columns)
+/// 📐️ The whole worksheet is addressable: rows and columns beyond the used range stay reachable as vacancies through the row and column windows.
+const fn grid_extent() -> (usize, usize) {
+    (XLSX_MAX_ROW as usize, XLSX_MAX_COLUMN as usize + 1)
 }
 
 fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str, locale: Locale) -> semio_plugin::UiAssemblyResult<UiValue> {
@@ -69,7 +58,7 @@ fn render_sheet_grid(
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let cells: BTreeMap<(u32, u32), &XlsxCell> = sheet.cells.iter().map(|cell| ((cell.row, cell.col), cell)).collect();
     let worksheet = xlsx_worksheet_address(document, &sheet.name).map_err(|error| PluginAssemblyError::new("xlsx.worksheet-address", error))?;
-    let (row_total, column_total) = grid_extent(sheet);
+    let (row_total, column_total) = grid_extent();
     let table_id = format!("xlsx-sheet-{sheet_ordinal}-grid");
     let labels = xlsx_editor_labels(locale);
     TableWindowKit::render_indexed_matrix_with_id(

@@ -13,10 +13,6 @@ fn with_utility(meta: &semio_plugin::ActionMeta, utility: &str) -> semio_plugin:
     meta
 }
 
-pub(super) async fn selected_strokes(app: &DrawingAppFixture) -> Vec<String> {
-    app.interaction_state().await.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default()
-}
-
 #[semio_framework_async_macros::async_test]
 async fn marquee_select_covers_contained_layer_only() {
     // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never

@@ -36,6 +36,5 @@
       "rationale": "SHA-256 is hand-rolled inside every implementation of this module so the event chain carries no external runtime dependency. Node's `crypto` binding to OpenSSL is the FIPS 180-4 reference the hand-rolled digest is measured against."
     }
   ],
-  "noOracleDecisions": [],
-  "oracleHostPackages": [{ "implementation": "typescript", "package": "@modelcontextprotocol/sdk", "version": "1.30.0" }]
+  "noOracleDecisions": []
 }

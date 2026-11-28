@@ -1,6 +1,7 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {writeSync} from "node:fs";
 import {createRequire} from "node:module";
+import {diagnoseV1,diagnosticsV1} from "../🩺️diagnostics/🟨️.mjs";
 
 /** 🎛️ The environment variable that switches the phase profile on: `1` prints tab separated rows to stderr when the process exits, `json` prints one JSON document, `0`/`off`/unset print nothing. */
 export const REPO_PROFILE_VARIABLE_V1="SEMIO_REPO_PROFILE";
@@ -55,14 +56,14 @@ export function renderRepoProfileTableV1(summary,pid){
 }
 
 /** ⏱️ Creates one phase profile: `phase(name, body)` times a synchronous or asynchronous body and nests it under the surrounding phase of the same asynchronous context; disabled profiles return the body untouched. */
-export function createRepoProfileV1({mode="off",now=()=>performance.now(),pid=process.pid,write=text=>{try{writeSync(2,text);}catch{}}}={}){
- const enabled=mode!=="off",context=new AsyncLocalStorage(),records=[];let counter=0,flushed=false;
+export function createRepoProfileV1({mode="off",now=()=>performance.now(),pid=process.pid,write=text=>{try{writeSync(2,text);}catch{}},onPhase}={}){
+ const enabled=mode!=="off"||onPhase!==undefined,context=new AsyncLocalStorage(),records=[];let counter=0,flushed=false;
  const open=(phase,detail)=>{
   if(!REPO_PROFILE_PHASE_PATTERN_V1.test(phase))throw Error(`Expected a neutral profile phase name, got "${phase}" / Erwartet einen neutralen Profilphasennamen, erhalten "${phase}"`);
   const parent=context.getStore(),record={id:++counter,parent:parent?.id??0,depth:(parent?.depth??-1)+1,phase,start:now(),end:NaN,detail};
   records.push(record);return record;
  };
- const close=record=>{if(Number.isNaN(record.end))record.end=now();};
+ const close=record=>{if(Number.isNaN(record.end)){record.end=now();onPhase?.(record);}};
  const profile={
   enabled,mode,
   phase(phase,body,detail){
@@ -76,12 +77,12 @@ export function createRepoProfileV1({mode="off",now=()=>performance.now(),pid=pr
   },
   event(phase,durationMilliseconds,detail){
    if(!enabled)return;
-   const record=open(phase,detail),end=now();record.start=Math.max(0,end-durationMilliseconds);record.end=end;
+   const record=open(phase,detail),end=now();record.start=Math.max(0,end-durationMilliseconds);record.end=end;onPhase?.(record);
   },
   mark(phase,detail){profile.event(phase,0,detail);},
   summary(){const end=now();for(const record of records)if(Number.isNaN(record.end))record.end=end;return summarizeRepoProfileV1(records,end);},
   flush(){
-   if(!enabled||flushed)return;flushed=true;
+   if(!enabled||flushed||mode==="off")return;flushed=true;
    const summary=profile.summary();write(mode==="json"?JSON.stringify({pid,...summary})+"\n":renderRepoProfileTableV1(summary,pid));
   },
  };
@@ -89,11 +90,13 @@ export function createRepoProfileV1({mode="off",now=()=>performance.now(),pid=pr
 }
 
 let shared;
-/** 🌐️ Returns the process wide profile, created on first use from the environment and flushed when the process exits. */
+/** 🌐️ Returns the process wide profile, created on first use from the environment and flushed when the process exits; with `SEMIO_DIAGNOSTICS=timing` every finished phase is also printed at once as a `[diagnostic:timing]` line, so a long running service worker shows its phases while it works instead of only at exit.
+ * @see ../🩺️diagnostics/🧬️schema/🔣️.json */
 export function repoProfileV1(){
  if(shared===undefined){
-  shared=createRepoProfileV1({mode:readRepoProfileModeV1(process.env)});
-  if(shared.enabled){process.on("exit",()=>shared.flush());installRepoProfileSpawnCensusV1(shared);}
+  const mode=readRepoProfileModeV1(process.env),onPhase=diagnosticsV1().enabled("timing")?record=>diagnoseV1("timing",()=>({event:"phase",phase:record.phase,depth:record.depth,start:round(record.start),duration:round(record.end-record.start),...(record.detail===undefined?{}:{detail:record.detail})})):undefined;
+  shared=createRepoProfileV1({mode,onPhase});
+  if(shared.enabled){if(mode!=="off")process.on("exit",()=>shared.flush());installRepoProfileSpawnCensusV1(shared);}
  }
  return shared;
 }
@@ -104,6 +107,8 @@ let lastPhase,lastProgress;
 export function profilePhaseV1(phase,body,detail){lastPhase=phase;lastProgress=undefined;return repoProfileV1().phase(phase,body,detail);}
 /** 📍️ Records a zero length marker in the process wide profile. */
 export function profileMarkV1(phase,detail){lastPhase=phase;lastProgress=undefined;repoProfileV1().mark(phase,detail);}
+/** 🔁️ Counts one round trip of a kind (`graph-service`, `cache-lookup`) as a zero length `rt.<kind>` row of the process wide profile without touching the current phase name; free while the profile is off. */
+export function profileRoundTripV1(kind){repoProfileV1().mark("rt."+kind);}
 /** 📶️ Says what the phase started last is working on right now (a count, the path or lock it waits on); the next phase or marker clears it, and it is never part of the profile rows. */
 export function profileProgressV1(text){lastProgress=text;}
 /** 🧭️ The name of the phase or marker started last, followed by its progress in parentheses when it reported one, also while the profile is off; the front door names it when it says what it works on. */

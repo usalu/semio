@@ -16,6 +16,8 @@ import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
 import{createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1}from"./🧭️frontier/🟨️.mjs";
 import{mergeIntoHeadV1}from"./🔀️merge/🟨️.mjs";
+import{overlayResultV1}from"./🫧️overlay/🟨️.mjs";
+import{createSnapshotV1}from"./📸️snapshot/🟨️.mjs";
 import{createClosureSettlerV1,sharedClosureSettlerV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{createCasStoreV1}from"../../🗄️cas/🗃️store/🟦️.ts";
 import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
@@ -29,7 +31,7 @@ import{emptyFactIndexViewV1,patchFactIndexBytesV1}from"./🌊️stream-patch/�
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{BUILD_JOURNAL_V1,buildJournalKeyV1,createBuildJournalV1}from"./🔖️journal/🟨️.mjs";
 import{retireClosureRepairReceiptsV1}from"./🩹️closure-repair/🟨️.mjs";
-import{edgeHealPlanV1,edgeStaleSpecV1,requireEdgeEnvironmentV1}from"./🪡️edge-heal/🟨️.mjs";
+import{carryEdgeStampsV1,componentEdgesV1,edgeHealPlanV1,edgeStaleSpecV1,requireEdgeEnvironmentV1}from"./🪡️edge-heal/🟨️.mjs";
 import{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1}from"./📖️documents/🟨️.mjs";
 import{createNodeFilePortV1,createFileLeasePortV1,defaultSleep}from"./🗃️file-ports/🟨️.mjs";
 export{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1,createNodeFilePortV1,createFileLeasePortV1};
@@ -269,7 +271,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   }catch(error){if(carry.journalKey!==undefined&&diskFullFailureV1(error))await journal.clear(carry.journalKey).catch(()=>{});throw error;}
   finally{forgetCarry();await disposeSources(carry.disposers);}
  }
-  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim,repair,qualify},carry){
+  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim,repair,qualify,ephemeral=false},carry){
   const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};
   await profilePhaseV1("graph.build.prime",async()=>prime?.(signal));mark("prime");
   const current=await read(signal);
@@ -305,7 +307,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    const verdict=await plan({repairBase:manifest,identity,changes:refreshed.changes,verifyAll:true,signal,progress});
    return verdict.kind==="clean"&&!verdict.refresh?.size;
   }:undefined;
-  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,repair:resumeBinding,identity,implementation,found,signal,claim,qualify,verify:verifyResume,ordered,membership:live.digest,hold}):undefined;carry.tried=true;
+  const resumed=!hint?.wave&&!carry.tried&&!ephemeral?await journal.resume({key:journalKey,current,repair:resumeBinding,identity,implementation,found,signal,claim,qualify,verify:verifyResume,ordered,membership:live.digest,hold}):undefined;carry.tried=true;
   if(resumed?.superseded)return supersededRepair(await read(signal),identity,0);
   if(resumed?.result)return resumed.result;
   if(resumed?.carry)Object.assign(carry,resumed.carry);
@@ -332,13 +334,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   }
   const {env:{digest:envDigest,parts:computedParts},replaceTags,carried,inferred,phases:computePhases,global:globalPayload}=result;
   let {env:{rows:envRows},derived}=result;
+  const component=componentEdgesV1(P,process.env,computedParts);
   const owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
   for(const name of dropped)delete owners[name];
   for(const owner of result.owners){
    aborted(signal);
    if(owner.partial==="edges"){
     const old=owners[owner.name];if(!old)throw fail("Edge refresh requires a published owner","GENERATION_INCOMPLETE");
-    stored.push(async()=>{const fragment=await readFragment(old);if(!fragment)throw fail("Edge refresh requires the published fragment","GENERATION_INCOMPLETE");const saved=await store(P.fragments,{...fragment,edges:owner.edges??await result.reEdge(owner.name,fragment),edgesEnv:envDigest},".json.br",P.maximumFragmentBytes),{reads:_,...base}=old,reads=owner.reads??result.readsOf?.(owner.name);owners[owner.name]={...base,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,...(reads?{reads}:{})};});
+    stored.push(async()=>{const fragment=await readFragment(old);if(!fragment)throw fail("Edge refresh requires the published fragment","GENERATION_INCOMPLETE");const saved=await store(P.fragments,{...fragment,edges:owner.edges??await result.reEdge(owner.name,fragment),edgesEnv:envDigest},".json.br",P.maximumFragmentBytes),{reads:_,...base}=old,reads=owner.reads??result.readsOf?.(owner.name);owners[owner.name]={...base,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,...(reads?{reads}:{}),...component?.stamp(owner.name,{...base,reads})};});
     if(owner.rows?.length)append.set(owner.name,owner.rows);
     continue;
    }
@@ -346,7 +349,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    stored.push(async()=>{
     const body={version:1,name:owner.name,root:owner.root,kind:owner.kind,node:owner.node,edges:owner.edges,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{})};
     const saved=await store(P.fragments,body,".json.br",P.maximumFragmentBytes);
-    owners[owner.name]={root:owner.root,kind:owner.kind,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{})};
+    owners[owner.name]={root:owner.root,kind:owner.kind,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{}),...component?.stamp(owner.name,owner)};
    });
    upserts.set(owner.name,owner.rows??[]);
   }
@@ -369,10 +372,10 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const renamed=new Map();
   for(const name of returned){const row=owners[name];if(row&&!row.tag&&row.kind==="project")renamed.set(row.root,name);}
   for(const[name,row]of Object.entries(owners))if(!returned.has(name)&&!row.tag&&row.kind==="project"&&renamed.has(row.root)){delete owners[name];dropped.add(name);}
-  for(const name of carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
-  const{edges:healEdges,infer:healInfer}=edgeHealPlanV1({owners,environment:envDigest,cold,healed:carry.healed}),healing=healEdges.length+healInfer.length;
-  if(healing){carry.healed++;say?.("healing",{count:healing});}
-  if(!healing)requireEdgeEnvironmentV1({owners,environment:envDigest,fail,wave,returned,dropped,carried,cold,repair:!!repair,healed:carry.healed,resumed:!!resumed,before:owners0,previous:spec.previousEnv});
+  carryEdgeStampsV1({owners,carried,returned,environment:envDigest,component,cold,pending:rest,say});
+  const{edges:healEdges,infer:healInfer}=edgeHealPlanV1({owners,environment:envDigest,cold,healed:carry.healed,tried:carry.edgeTried,inferred:carry.healInferred,pending:rest}),healing=healEdges.length+healInfer.length;
+  if(healing){carry.healed++;for(const name of healEdges)(carry.edgeTried??=new Map).set(name,envDigest);for(const name of healInfer)(carry.healInferred??=new Map).set(name,envDigest);say?.("healing",{count:healing});}
+  if(!healing)requireEdgeEnvironmentV1({owners,environment:envDigest,fail,wave,returned,dropped,carried,cold,repair:!!repair,healed:carry.healed,resumed:!!resumed,before:owners0,previous:spec.previousEnv,spec,pending:rest});
   const later=healInfer.length?[...rest,...healInfer.filter(name=>!rest.includes(name))]:rest;
   if(later.length||healEdges.length){
    const{owners:_table,...envParts}=computedParts??{};
@@ -382,7 +385,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    for(const name of dropped)carry.dropped.add(name);
    for(const name of returned)carry.returned.add(name);
    carry.done=offset+wave.length;
-   await journal.wave({key:journalKey,current,repair:resumeBinding,identity,implementation,carry,steps,upserts,append,owners,env:{digest:envDigest,...computedParts?{parts:envParts}:{}}});carry.waves++;
+   if(!ephemeral)await journal.wave({key:journalKey,current,repair:resumeBinding,identity,implementation,carry,steps,upserts,append,owners,env:{digest:envDigest,...computedParts?{parts:envParts}:{}}});carry.waves++;
    if(claim&&typeof claim.settle==="function"){await claim.progress?.({phase:"owners",done:carry.done,total:offset+names.length}).catch(()=>{});await claim.settle(wave).catch(()=>false);}
    writePendingV1(process.env,current?.pointer.generation??-1,later,priority);
    return{current,built:true,published:false,more:true,plan:found,computed:computed,phases:{...marks,...Object.fromEntries(Object.entries(computePhases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:carried?.length??0,deferred:{generation:current?.pointer.generation??-1,live,atMs:now(),wave:{done:carry.done,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(later),edgeStale:healEdges,added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}};
@@ -392,13 +395,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of carry.dropped)dropped.add(name);
   for(const name of carry.returned)returned.add(name);
   for(const name of returned)dropped.delete(name);
+  if(ephemeral)return overlayResultV1({current,usable,identity,implementation,found,computed,carried,marks,computePhases,envDigest,computedParts,live,owners,returned,globalPayload,store,P,cold,repair});
     if(noisy)say?.("indexing",{count:Object.keys(owners).length});
     await progress?.({phase:"patching",done:1,total:1});
     let index=await profilePhaseV1("graph.build.patch",async()=>{
      const base=cold?emptyFactIndexViewV1():repair?await repairPatchIndex(usable.factIndex,signal):await readIndexView(usable.factIndex);
      return patchView(base,{drop:[...dropped],upserts,append},signal);
     });
-  
+
   if(cold){
    upserts.clear();append.clear();carry.upserts.clear();carry.append.clear();
    await disposeSources(carry.disposers);aborted(signal);
@@ -410,7 +414,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(noisy)say?.("sealing",{generation:(current?.pointer.generation??-1)+1});
   await progress?.({phase:"packing",done:1,total:1});
   const packedIndex=await profilePhaseV1("graph.build.pack",()=>packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes)),indexStored=await profilePhaseV1("graph.build.keep",()=>keep(P.indexes,packedIndex.bytes,".facts.br"));
-  
+
   mark("pack");
   const globalDigest=repair&&!cold&&globalPayload===undefined?usable.global:(await store(P.fragments,{version:1,name:"@global",value:globalPayload??null},".json.br",P.maximumFragmentBytes)).digest;
   const frontierStored=await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes);
@@ -425,7 +429,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   mark("publish");
   if(!done&&repair){await journal.clear(journalKey);return supersededRepair(await read(signal),identity,computed);}
   if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex:readIndexView,writeManifest,publish:input=>publish({...input,claim}),patch:(base,patch)=>patchView(base,patch,signal),pack:value=>packFactIndexBytesV1(value.document.buffer,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
-  
+
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:computed};
   indexCache.set("view:"+done.kept.digest,done.index);
   await journal.clear(journalKey);await markStep("sealing",indexStored.digest,manifestDigest);
@@ -449,7 +453,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds otherwise, inside `builder` (which hands the build its slice claim; see `./🔐️custody`) or the builder lease, where a holder that finds the work done by a peer returns that generation untouched and a build whose swap a peer won merges onto the peer's generation (see `./🔀️merge`). */
- async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,wave,planned,unchanged,repair,qualify}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,wave,planned,unchanged,repair,qualify,ephemeral}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const started=now(),first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
@@ -477,12 +481,12 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    if(verdict.kind==="delta")pending={structural:verdict.envStale||verdict.added.length>0||verdict.removed.length>0,generation:first.pointer.generation,dirty:[...verdict.dirty].sort(compareCodePointsV1),roots:Object.fromEntries([...verdict.dirty].filter(name=>first.manifest.owners[name]).map(name=>[name,first.manifest.owners[name].root]))};
    if(verdict.kind==="delta"&&previous.frontier){hint={generation:first.pointer.generation,plan:verdict,live,atMs:now(),...unchanged?{holds:()=>unchanged(live)}:{}};carried={key,plan:verdict,live};}
   }
-  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,hint,only:scope,observedAtMs:started,coverage,claim,qualify});
+  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,hint,only:scope,observedAtMs:started,coverage,claim,qualify,ephemeral});
   let resumedComputed;
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
    if(result.resumed){resumedComputed=(resumedComputed??0)+(result.computed??0);continue;}
-   if(result.published||!result.built)return{...result,...resumedComputed===undefined?{}:{published:true,computed:(result.computed??0)+resumedComputed},served:"built",...result.needsBuild&&carried?{planned:carried}:{}};
+   if(result.published||!result.built||result.ephemeral)return{...result,...resumedComputed===undefined?{}:{published:true,computed:(result.computed??0)+resumedComputed},served:"built",...result.needsBuild&&carried?{planned:carried}:{}};
   }
   throw fail("Generation keeps changing while it is built","GENERATION_CONFLICT");
  }
@@ -551,15 +555,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   return{projects,...await stream.finish()};
  }
 
- /** 📸️ Reads one complete graph without any lease: a fragment retired while the snapshot is read restarts it from the newest pointer, so the result is always the graph of one sealed generation. */
- async function snapshot({roots,neighbors,compare,signal,progress}={}){
-  for(let attempt=0;attempt<8;attempt++){
-   const current=await read(signal);if(!current?.manifest)throw fail("A sealed generation is required","GENERATION_EMPTY");
-   try{const names=roots?[...await closureOf(current,roots,{neighbors,signal})]:undefined;return{current,graph:await assemble(current,{names,compare,signal,progress})};}
-   catch(error){if(error?.code!=="GENERATION_INCOMPLETE")throw error;await sleep(5*(attempt+1),signal);}
-  }
-  throw fail("Generation fragments keep disappearing","GENERATION_UNREADABLE");
- }
+ const snapshot=createSnapshotV1({read,closureOf,assemble,sleep});
 
  /** 🎯️ Brings the caller to a generation that holds for the closure of `roots`: only the facts those projects consume are verified, so an edit elsewhere neither waits for a builder nor is refreshed for this caller. */
  async function refreshClosure({roots,neighbors,closure,...request}){

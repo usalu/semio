@@ -18,6 +18,7 @@ import {createGenerationFilesV1} from "../🗂️generation-files/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {buildGraphPathV1,planBuildGraphInvalidationV1} from "../📜️contract/🟦️.ts";
+import {graphReadCodeIdentityV1} from "../🪪️read-identity/🟦️.ts";
 
 
 /** 🔐️ Runs the part of a graph state change that must not interleave with another publisher or reader of the same publication (the staging cleanup and the rename of a published selected graph); a canonical state holds its publication lock for the whole change, so there it runs in place. */
@@ -45,25 +46,21 @@ export function generationCustodyV1(root:string,store:RepositoryCacheStoreV1,con
 }
 
 
-const runningCodeV1=new Map<string,string>();
-/** 🪪️ The code identity this process runs (fixed at the first queue of the process) and a reader of the identity the tree wants now; the reader answers undefined when the tree cannot be sealed at the moment. */
-async function codeIdentityV1(root:string):Promise<{digest:string;current:()=>Promise<string|undefined>}>{
-  try{
-    const{hostImplementationV1}=await import("../../🧭️invocation/🛰️plan/🟦️.ts"),{hostReloadIdentityV1}=await import("../../🧭️invocation/🔄️reload/🟦️.ts"),digest=runningCodeV1.get(root)??hostImplementationV1(root,process.env);
-    runningCodeV1.set(root,digest);const identify=hostReloadIdentityV1(root,process.env,digest);
-    return{digest,current:async()=>{const found=await identify();return found.blocked?undefined:found.implementation;}};
-  }catch{return{digest:"",current:async()=>undefined};}
-}
-
-
 /** 🧑‍🤝‍🧑️ Builds inside the shared cohort of the generation namespace (sweeps stay out) under a slice claim on the owners `request` writes (every owner when it is undefined or structural): refreshes of disjoint projects build at the same time, overlapping ones one after the other in ticket order. */
 export async function withGenerationCustodyV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,request:{readonly dirty:readonly string[];readonly structural:boolean}|undefined,body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>,peerWait?:(blocked:boolean)=>void):Promise<T> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   return withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
-    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",code=await codeIdentityV1(root),claim=await generationCustodyV1(root,store,control).hold({owners:request?.dirty??[],structural:request===undefined||request.structural,signal:control.signal,language,holder:currentHolderV1({digest:code.digest}),currentDigest:code.current,peerWait,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,language)+"\n");}});
+    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",code=await graphReadCodeIdentityV1(root),claim=await generationCustodyV1(root,store,control).hold({owners:request?.dirty??[],structural:request===undefined||request.structural,signal:control.signal,language,holder:currentHolderV1({digest:code.digest}),currentDigest:code.current,peerWait,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,language)+"\n");}});
     const stop=((await import("../🕰️generations/🔌️load/🟨️.mjs")) as unknown as {onGenerationProgressV1(listener:(event:{phase?:string;done?:number;total?:number})=>void):()=>void}).onGenerationProgressV1(event=>{void claim.progress(event).catch(()=>undefined);});
     try{checkResourceLeaseControl(control);return await body(store,control,claim);}finally{stop();await claim.release();}
   },{optionalCaches:false,shared:true});
+}
+
+
+/** 🫧️ Runs a private refresh beside a whole read: the generation namespace as a shared cohort (sweeps stay out while it runs) and no claim, so it never queues behind the custody and never publishes. */
+export async function withGenerationOverlayV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+  return withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{checkResourceLeaseControl(control);return body(store,control);},{optionalCaches:false,shared:true});
 }
 
 

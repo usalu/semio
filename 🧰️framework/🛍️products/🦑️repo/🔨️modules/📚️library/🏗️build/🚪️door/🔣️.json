@@ -10,7 +10,8 @@
     { "operation": "fleet", "export": "runFleetCliV1", "call": "root-args-environment" },
     { "operation": "scheduler", "export": "runSchedulerCliV1", "call": "root-args-environment" },
     { "operation": "test-file", "export": "runTestFileCliV1", "call": "root-args-environment" },
-    { "operation": "typecheck", "export": "runTypecheckCliV1", "call": "root-args-environment" }
+    { "operation": "typecheck", "export": "runTypecheckCliV1", "call": "root-args-environment" },
+    { "operation": "land", "export": "runLandCliV1", "call": "root-args-environment" }
   ],
   "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "fleet", "scheduler", "remote-execution"],
   "refusedExitCode": 2,

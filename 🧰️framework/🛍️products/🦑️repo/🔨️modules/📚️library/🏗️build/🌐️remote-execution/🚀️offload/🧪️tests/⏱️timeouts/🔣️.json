@@ -1,34 +1,35 @@
 {
  "policy": {
   "factor": 2,
-  "floorMilliseconds": 60000,
+  "floorMilliseconds": 30000,
   "capMilliseconds": 900000,
-  "unknownMilliseconds": 240000,
+  "unknownMilliseconds": 90000,
   "linkedCapMilliseconds": 1200000,
   "linkedUnknownMilliseconds": 1200000,
   "silenceMilliseconds": 20000,
-  "reattachMilliseconds": 10000
+  "reattachMilliseconds": 10000,
+  "requeueMilliseconds": 20000
  },
  "cases": [
   {
    "predicted": null,
    "linked": false,
-   "expected": 240000
+   "expected": 90000
   },
   {
    "predicted": 0,
    "linked": false,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 100,
    "linked": false,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 15000,
    "linked": false,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 100000,
@@ -53,17 +54,17 @@
   {
    "predicted": 0,
    "linked": true,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 100,
    "linked": true,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 15000,
    "linked": true,
-   "expected": 60000
+   "expected": 30000
   },
   {
    "predicted": 100000,

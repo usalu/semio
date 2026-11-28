@@ -225,7 +225,7 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   if let Some(frozen)=frozen{self.frozen=Some(frozen);self.stage=if matches!(frozen,GuestPollFrozenKind::Boot|GuestPollFrozenKind::CloseContext){9}else{10};}else if let Some(request)=request{self.request=Some(request);self.stage=1;}status
  }
  fn advance_native(&mut self,input:Option<&dyn JsonWriteSource>,cleanup:bool)->Option<GuestPollStatus>{
-  let mut returned_frame_demand=None;let mut guest_ledger:Option<[u64;20]>=None;let mut outside=(0u64,0u64);
+  let mut returned_frame_demand=None;let mut guest_ledger:Option<[u64;20]>=None;let mut outside=(0u64,0u64);let mut refusal:Option<String>=None;
   let producer=self.producer.as_mut().unwrap();let budget=self.guest.map(|loan|loan.budget());let mut status=None;let result=self.driver.dispatch_operation_step(true,cleanup,|cx|{let posted_before=cx.retained_progress();let booked_before=GuestRuntimes::booked_on_this_thread();let outcome=producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,_,poll,cx|{
    if poll.awaiting_input_budget{
     if cleanup&&poll.retire_interrupted_guest_step(runtime,instance,budget,cx)? { return Ok(()) }
@@ -249,6 +249,9 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
     let progress=match input{Some(input)=>poll.advance_step(runtime,instance,input,budget,None,cx)?,None=>poll.advance_retirement_step(runtime,instance,budget,None,cx)?};
     status=Some(progress);
    }
+   if !cleanup&&status==Some(GuestPollStatus::Refused)&&poll.input_failure().is_none(){
+    refusal=Some(poll.refusal_cause());
+   }
    if !cleanup&&status==Some(GuestPollStatus::Refused)&&poll.input_failure().is_some(){
     status=Some(GuestPollStatus::Pending);
    }
@@ -263,7 +266,9 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
    }
    Ok(progress)
   });
-  self.retain(result,cleanup);status
+  self.retain(result,cleanup);
+  if let Some(cause)=refusal.filter(|_|self.failure.is_none()&&self.cleanup_failure.is_none()){let fuel=self.driver.original_execution_spent().unwrap_or_default();let ledger=self.driver.original_guest_ledger().unwrap_or_default();self.retain(Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("guest actor refused its ordinary turn: {cause}; execution fuel spent={fuel}; {ledger}")).into()),false);}
+  status
  }
  /// ▶️ One bounded step finishes its Source callback and every actual VM receipt before returning.
  pub fn drive_step<S:JsonWriteSource+?Sized>(&mut self,input:std::pin::Pin<&GuestPollSessionInput<'_,S>>,receive:&mut impl FnMut(&T,&mut R,&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>)->GuestPollSessionStatus{

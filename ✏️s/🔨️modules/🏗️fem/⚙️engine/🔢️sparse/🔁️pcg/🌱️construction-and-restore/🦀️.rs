@@ -211,7 +211,7 @@ impl PcgJobConstruction {
                             x: std::mem::take(&mut self.x),
                             tol_rel: 1.0e-8,
                             max_iter: n.max(512),
-                            batch_units: if self.publishes { 1 } else { 256 },
+                            batch_units: if self.publishes { 1 } else { 1024 },
                             stage: PcgStage::InitializeDiagonal,
                             diag: std::mem::take(&mut self.diag),
                             r: std::mem::take(&mut self.r),

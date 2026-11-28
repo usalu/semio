@@ -44,6 +44,9 @@ def classes(args):
 
 def components(input, extra):
     rows = {"toolchain": part(input["toolchain"]), "source": input["sourceSha256"][:16]}
+    if not input["sourceSha256"].startswith("run:"):
+        rows["determinism"] = part(fixture["determinism"])
+        if input.get("cargoIdentity"): rows["cargo"] = part(input["cargoIdentity"])
     if "platform" in extra: rows["platform"] = part(extra["platform"])
     if "roots" in extra: rows["roots"] = part(extra["roots"])
     for row in input["externs"]: rows["extern:" + row["name"]] = row["sha256"][:16] if re.fullmatch(r"[0-9a-f]{16,}", row["sha256"]) else part(row["sha256"])

@@ -28,6 +28,7 @@ semio-framework-dsl-record-derive = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-s-artifact-fem-2d-editor-interaction = { workspace = true }
 semio-s-artifact-fem-2d-editor-model-window = { workspace = true }
@@ -41,6 +42,5 @@ serde = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-ui-contract = { workspace = true }
 semio-ui-scene = { workspace = true }
 serde_json = { workspace = true }

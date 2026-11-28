@@ -108,6 +108,7 @@ fn request(open: Option<bool>, offset: u32, rows: u32) -> semio_plugin::TreeWind
 /// `+N` row.
 #[test]
 fn the_inspector_ids_section_stamps_the_whole_selection() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
     let windows = TreeWindows::unhosted();
@@ -124,6 +125,7 @@ fn the_inspector_ids_section_stamps_the_whole_selection() {
 /// 🪟️ (b) A closed ids section stamps its total and materialises nothing.
 #[test]
 fn a_closed_inspector_ids_section_builds_no_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
     let view = semio_plugin::ViewModel { tree_windows: vec![request(Some(false), 0, 16)], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
@@ -139,6 +141,7 @@ fn a_closed_inspector_ids_section_builds_no_row() {
 /// 🪟️ (c) A host window materialises exactly `[offset, offset + rows)`, keyed by raw id.
 #[test]
 fn an_inspector_ids_window_materialises_exactly_its_slice() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
     let (offset, rows) = (33u32, 7u32);

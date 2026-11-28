@@ -42,6 +42,7 @@ use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn catalogue_tree_lists_all_four_kind_sections() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut app = app();
     let rendered = render_body(&mut app, BODY_KEY);
     for section in [PARTS_SECTION, GRIPS_SECTION, FASTENERS_SECTION, ROPES_SECTION] {
@@ -102,6 +103,7 @@ fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
 /// slice, and carries no `+N` row; the empty sections show their placeholder alone.
 #[test]
 fn the_catalogue_stamps_every_section_and_never_pages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let windows = TreeWindows::unhosted();
@@ -130,6 +132,7 @@ fn activation_of(row: &BuiltNode) -> Option<String> {
 /// `addPartKind` activation, because a catalogue row is not a pick target.
 #[test]
 fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (70u32, 8u32);
@@ -158,6 +161,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
 /// the grips section lists every grip kind, instead of four empty placeholders.
 #[test]
 fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = ["capsule", "core", "capsule"]
@@ -191,6 +195,7 @@ fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
 /// second-guessed by what its parts happen to carry.
 #[test]
 fn an_authored_catalogue_slice_wins_over_the_inference() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let mut scene = scaled_scene(3);
     scene.document.parts = vec![crate::editor::puzzle5d::entities::Puzzle5dPart {
@@ -215,6 +220,7 @@ fn an_authored_catalogue_slice_wins_over_the_inference() {
 /// the ghost in that pane alone.
 #[test]
 fn a_catalogue_row_payload_is_admitted_by_the_board_and_the_world_ghost() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let rows: Vec<Value> = [json!({ "id": "plain", "name": "Plain" }), json!({ "id": "disc", "name": "Disc", "shape": "circle", "radius": 12.0 }), json!({ "id": "slab", "name": "Slab", "shape": "rectangle", "width": 30.0, "height": 10.0 })].into();
     let mut document = crate::editor::puzzle5d::entities::empty_document();

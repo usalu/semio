@@ -1,4 +1,5 @@
 import { diskFullOfV1, isDiskFullV1, type DiskFullV1 } from "../../🆓️free-space/💽️disk-full/🟦️.ts";
+import { NativeImageFullErrorV1, NativeImageHostCriticalErrorV1, NATIVE_IMAGE_RELIEF_V1 } from "../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts";
 import { PROCESS_TEXTS_V1, refuseProcessV1 } from "../../📖️texts/🟦️.ts";
 import { handleTextV1 } from "../🗣️language/📖️catalog/🟦️.ts";
 import type { RepoErrorV1 } from "../🗣️language/🚨️error/🟦️.ts";
@@ -22,6 +23,10 @@ export const refuseDiskFullFactsV1 = (facts: DiskFullV1, cause?: unknown): RepoE
 
 /** 💽️ Turns a full-disk failure (`ENOSPC`, `EDQUOT`, `database or disk is full`) into the typed refusal; any other error answers `undefined`. */
 export function refuseDiskFullV1(error: unknown, options: Parameters<typeof diskFullOfV1>[1] = {}): RepoErrorV1 | undefined {
+  const image = [error, (error as { cause?: unknown } | null)?.cause].find((row): row is NativeImageFullErrorV1 => row instanceof NativeImageFullErrorV1);
+  if (image !== undefined) return refuseImageFullV1(image);
+  const critical = [error, (error as { cause?: unknown } | null)?.cause].find((row): row is NativeImageHostCriticalErrorV1 => row instanceof NativeImageHostCriticalErrorV1);
+  if (critical !== undefined) return refuseProcessV1("refused", "disk.host-critical", { partition: critical.partition, free: formatDiskBytesV1(critical.freeBytes), critical: formatDiskBytesV1(NATIVE_IMAGE_RELIEF_V1.criticalHostFreeBytes), command: DISK_RECLAIM_COMMAND_V1 }, { cause: error });
   const facts = isDiskFullV1(error) ? diskFullOfV1(error, options) : undefined;
   return facts === undefined ? undefined : refuseDiskFullFactsV1(facts, error);
 }
@@ -64,3 +69,6 @@ export const refuseDiskAdmissionV1 = (facts: DiskAdmissionV1): RepoErrorV1 => {
   const need = diskAdmissionNeedBytesV1(facts);
   return refuseProcessV1("refused", "disk.admission-insufficient", { partition: facts.partition, free: formatDiskBytesV1(facts.hostFreeBytes), need: formatDiskBytesV1(need.needBytes), plan: formatDiskBytesV1(need.planBytes), credit: formatDiskBytesV1(need.creditBytes), reserve: formatDiskBytesV1(facts.reserveBytes), missing: formatDiskBytesV1(diskAdmissionShortfallBytesV1(facts)), command: DISK_RECLAIM_COMMAND_V1 });
 };
+
+/** 🈵️ The refusal of a cache image that stayed full after every relief attempt: it names the image, what is usable, what is free inside and on the host, what was reclaimed and the command that frees space, in both languages. @see ../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪫️relief/🟦️.ts */
+export const refuseImageFullV1 = (error: NativeImageFullErrorV1): RepoErrorV1 => refuseProcessV1("failed", "disk.image-full", { image: error.facts.image, partition: error.facts.partition, available: formatDiskBytesV1(error.facts.availableBytes), capacity: formatDiskBytesV1(error.facts.capacityBytes), inner: formatDiskBytesV1(error.facts.innerFreeBytes), host: formatDiskBytesV1(error.facts.hostFreeBytes), reclaimed: formatDiskBytesV1(error.facts.reclaimedBytes), attempts: error.facts.attempts, command: DISK_RECLAIM_COMMAND_V1 }, { cause: error });

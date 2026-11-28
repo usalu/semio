@@ -69,7 +69,7 @@ test("budgets resolve exactly: explicit bytes, a share of the partition, and the
  expect(bytes("nx-artifacts")).toBe(3*1024**3);
  expect(bytes("bazel-actions")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*4000/10000));
  expect(bytes("fleet-cache-index")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*1000/10000));
- expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-31*1024**3);
+ expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-32*1024**3);
  expect(bytes("rust")).toBe(Math.min(budgetPolicy.partitions.rust.capacityBytes,budgetPolicy.partitions.rust.maximumLogicalBytes));
  expect(bytes("control")).toBeNull();
  const loose=ledger.areas.filter(area=>area.root==="repository"&&area.kind==="tree").reduce((sum,area)=>sum+(bytes(area.id)??0),0);

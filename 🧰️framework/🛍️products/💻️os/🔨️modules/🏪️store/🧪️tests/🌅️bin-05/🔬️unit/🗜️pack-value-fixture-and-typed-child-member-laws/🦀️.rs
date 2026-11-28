@@ -116,7 +116,7 @@ async fn pack_wire_value_fixture_corpus_hex_dump() {
     }
 }
 
-/// 🧱️ `TAG_BYTES` over the shared, language-neutral `semio.pack.dynamic-bytes/v1` corpus, whose wire hex a third-party Python oracle framed independently; the TypeScript Pack codec pins the same bytes.
+/// 🧱️ `TAG_BYTES` over the shared, language-neutral `semio.pack.dynamic-bytes/v1` corpus, whose wire hex a third-party Python oracle framed independently; the TypeScript Pack codec pins the same bytes. Intrinsic Objects keep their exact entry order on the wire, so the keyed fixture lists `archive` before `kind` as the corpus frames them.
 #[semio_framework_async_macros::async_test]
 async fn pack_wire_value_carries_bytes_exactly_as_the_neutral_corpus_frames_them() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🎒️pack-dynamic-bytes-v1/🔣️.json")).expect("dynamic bytes corpus parses");
@@ -127,7 +127,7 @@ async fn pack_wire_value_carries_bytes_exactly_as_the_neutral_corpus_frames_them
         let top = pack_rt::encode_wire_value(&DslValue::Bytes(payload.clone()));
         assert_eq!(top, hex(row["topLevelWireHex"].as_str().unwrap()), "{id}");
         assert!(matches!(pack_rt::decode_wire_value(&top).expect(id), DslValue::Bytes(decoded) if decoded == payload), "{id}");
-        let keyed = DslValue::object([("kind".into(), DslValue::String("x".into())), ("archive".into(), DslValue::Bytes(payload.clone()))]);
+        let keyed = DslValue::object([("archive".into(), DslValue::Bytes(payload.clone())), ("kind".into(), DslValue::String("x".into()))]);
         assert_eq!(pack_rt::encode_wire_value(&keyed), hex(row["keyedWireHex"].as_str().unwrap()), "{id}");
     }
 }
@@ -262,17 +262,15 @@ async fn artifact_refs_defaults_to_empty_for_a_leaf_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let dialect = demo_child_dialect();
 
     let mut child = create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("create");
     assert!(child.owners.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
     assert!(child.owned_disposer_installed(), "generated member creation must install the exact whole-store bounded disposer before returning ownership");
-    child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
-    child.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
-    child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 11 })], transaction: None }, &mut identity).await.expect("re-apply");
+    child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut *identity).await.expect("apply");
+    child.dispatch(ArtifactCommand::Undo, &mut *identity).await.expect("undo");
+    child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 11 })], transaction: None }, &mut *identity).await.expect("re-apply");
 
     let files = print_document_pack(child.envelope()).await.expect("print");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
@@ -286,8 +284,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     assert_eq!(reopened.snapshot().expect("head snapshot"), DemoSnapshot { n: Some(11) }, "reopen restored the wrong cursor position");
     close_member_dialect_fixture(&mut reopened);
     close_member_dialect_fixture(&mut child);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🌱️ A derivable child's genesis envelope is minted from bytes alone and opens exactly like a
@@ -370,28 +367,23 @@ async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_
 
 #[semio_framework_async_macros::async_test]
 async fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply");
-    let checkpoint = ReferenceSpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new(), &mut identity).await.expect("checkpoint");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply after checkpoint");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut *identity).await.expect("apply");
+    let checkpoint = ReferenceSpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new(), &mut *identity).await.expect("checkpoint");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut *identity).await.expect("apply after checkpoint");
 
     let historical = DemoSnapshot::decode_pack(&store.pack_at_checkpoint(&checkpoint).await.expect("pack at checkpoint")).expect("decode");
     let live = DemoSnapshot::decode_pack(&store.document_pack_bytes().await.expect("head pack")).expect("decode");
     assert_eq!(historical, DemoSnapshot { n: Some(2) }, "checkpoint read did not return the pinned content");
     assert_eq!(live, DemoSnapshot { n: Some(3) }, "reading a checkpoint moved the live cursor");
     assert!(matches!(store.pack_at_checkpoint("no-such-checkpoint").await, Err(VcsError::UnknownChange(_))));
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     struct FixtureDirectory {
         member: ArtifactStore<DemoSnapshot, DemoMutation>,
     }
@@ -405,9 +397,9 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
     }
 
     let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], transaction: None }, &mut identity).await.expect("apply");
-    let pinned = ReferenceSpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new(), &mut identity).await.expect("checkpoint");
-    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], transaction: None }, &mut identity).await.expect("apply after pin");
+    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], transaction: None }, &mut *identity).await.expect("apply");
+    let pinned = ReferenceSpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new(), &mut *identity).await.expect("checkpoint");
+    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], transaction: None }, &mut *identity).await.expect("apply after pin");
 
     let resolver = MemberLinkResolver::new(FixtureDirectory { member }).await;
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect() };
@@ -426,8 +418,7 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
 
     let absent = ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
     assert_eq!(resolver.resolve(&absent).await.unwrap(), LinkState::Missing);
-    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]

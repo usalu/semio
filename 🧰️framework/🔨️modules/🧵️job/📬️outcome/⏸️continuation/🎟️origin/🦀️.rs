@@ -32,7 +32,7 @@ impl OriginalJobReturnOrigin{
  }
 
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.receiver.closing||cx.is_cancelled()||cx.should_yield(){return Ok(false)}
+  if self.receiver.closing||cx.should_yield(){return Ok(false)}
   if self.source.parent.is_none(){
    if self.source.returning.is_some(){return Ok(false)}
    if self.source.pending.is_none(){if cx.original_return_budget_is_borrowed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone original return requires its genuine durable payer or a scoped parent relend").into())}cx.original_source_parent()?.admit_loan(&mut self.source.pending,cx)?;return Ok(false)}
@@ -59,6 +59,7 @@ impl OriginalJobReturnOrigin{
 }
 impl Drop for OriginalJobReturnOrigin{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original receiving owner requires same-source funded close");}}
 
+fn dbg_prepare(reason:[u8;7]){use std::sync::atomic::{AtomicU64,Ordering::Relaxed};static N:AtomicU64=AtomicU64::new(0);let n=N.fetch_add(1,Relaxed)+1;if n%100_000==1{eprintln!("[DEBUG] return prepare false n={n} closing,continuation,outcome,credit_unused_missing,cancelled,yield,admit_origin={reason:?}")}}
 /// 📬️ See `README.md`.
 pub struct OriginalJobReturnReceiver{source_ready:bool,source:Option<OriginIdentity>,closing:bool,frame:Option<Box<OriginalReturnFrame>>,credit:Option<OriginalReturnClaimCredit>,witness:Option<OriginalReturnWitness>,continuation:Option<OriginalJobContinuation>,outcome:Option<JobOutcomeDescriptor>}
 impl OriginalJobReturnReceiver{
@@ -67,11 +68,11 @@ impl OriginalJobReturnReceiver{
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&!self.source_ready&&!self.closing&&self.resources_empty()}
  fn validate_source(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;let actual=parent.source_identity()?;if self.source.is_none_or(|(source,clock,now,deadline)|source!=actual||clock!=cx.original_clock_binding()||!std::ptr::fn_addr_eq(now,cx.clock_source())||deadline!=cx.original_absolute_deadline_us()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original return receiver requires its actual admitting source").into())}Ok(())}
  pub fn prepare(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate_source(cx)?;if self.closing||self.continuation.is_some()||self.outcome.is_some()||self.credit.as_ref().is_some_and(|credit|!credit.has_unused_capture())||cx.is_cancelled()||cx.should_yield(){return Ok(false)}if cx.original_return_budget_is_borrowed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone original receiver requires its actual durable payer").into())}
-  if !cx.admit_original_return_origin()?{return Ok(false)}
+  self.validate_source(cx)?;if self.closing||self.continuation.is_some()||self.outcome.is_some()||self.credit.as_ref().is_some_and(|credit|!credit.has_unused_capture())||cx.should_yield(){dbg_prepare([self.closing as u8,self.continuation.is_some() as u8,self.outcome.is_some() as u8,self.credit.as_ref().is_some_and(|credit|!credit.has_unused_capture()) as u8,cx.is_cancelled() as u8,cx.should_yield() as u8,0]);return Ok(false)}if cx.original_return_budget_is_borrowed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone original receiver requires its actual durable payer").into())}
+  if !cx.admit_original_return_origin()?{dbg_prepare([0,0,0,0,0,0,1]);{use std::sync::atomic::{AtomicU64,Ordering::Relaxed};static M:AtomicU64=AtomicU64::new(0);if M.fetch_add(1,Relaxed)%200_000==0{eprintln!("[DEBUG] admit_origin false: total_grant={:?} turn_grant={:?} total_fuel={} fuel={} spent_work={}",cx.original_total_retained_grant(),cx.retained_grant(),cx.original_total_fuel_remaining(),cx.fuel_remaining(),cx.original_work_units_spent())}}return Ok(false)}
   if self.frame.is_none(){let demand=RetirementDemand{capacity_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()};if !cx.retained_work_can_enter(demand){return Ok(false)}let layout=std::alloc::Layout::new::<OriginalReturnFrame>();let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<OriginalReturnFrame>());cx.consume_fuel(1);let Some(pointer)=pointer else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original return frame allocation refused").into())};self.frame=Some(unsafe{pointer.as_ptr().write(OriginalReturnFrame::empty());Box::from_raw(pointer.as_ptr())});self.source_ready=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})?;return Ok(false)}claim_original_sized_return(cx,&mut self.credit,self.frame.as_ref().ok_or_else(||ValueError::invariant("return frame absent"))?.as_ref() as *const _ as usize,0,0)
  }
- pub fn enter_body<'claim>(&'claim mut self,cx:&StepContext<'_>)->Result<Option<OriginalJobReturnClaim<'claim>>,OriginalTurnFailure>{self.validate_source(cx)?;if self.closing||cx.is_cancelled()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0||!self.credit.as_ref().is_some_and(OriginalReturnClaimCredit::has_unused_capture)||!self.frame.as_ref().is_some_and(|frame|frame.owner.original().is_some_and(|payload|payload.callback.is_none()&&payload.qualification.is_none()&&payload.receipt_qualification.is_none())){return Ok(None)}Ok(Some(OriginalJobReturnClaim{receiver:self,identity:OriginalReturnBodyIdentity::capture(cx)}))}
+ pub fn enter_body<'claim>(&'claim mut self,cx:&StepContext<'_>)->Result<Option<OriginalJobReturnClaim<'claim>>,OriginalTurnFailure>{self.validate_source(cx)?;if self.closing||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0||!self.credit.as_ref().is_some_and(OriginalReturnClaimCredit::has_unused_capture)||!self.frame.as_ref().is_some_and(|frame|frame.owner.original().is_some_and(|payload|payload.callback.is_none()&&payload.qualification.is_none()&&payload.receipt_qualification.is_none())){return Ok(None)}Ok(Some(OriginalJobReturnClaim{receiver:self,identity:OriginalReturnBodyIdentity::capture(cx)}))}
  pub fn continuation(&self)->Option<&OriginalJobContinuation>{self.continuation.as_ref()}
  pub fn outcome(&self)->Option<&JobOutcomeDescriptor>{self.outcome.as_ref()}
  pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -92,7 +93,7 @@ impl OriginalJobReturnReceiver{
   if let Some(capsule)=self.continuation.as_ref(){return if capsule.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{capsule.retirement_demands(copy)}}
   if let Some(outcome)=self.outcome.as_ref(){return Ok(RetirementDemand{depth:if outcome.is_acknowledged(){1}else{2},..Default::default()})}
   if self.credit.as_ref().is_some_and(|credit|!credit.has_unused_capture())&&!self.witness.as_ref().is_some_and(OriginalReturnWitness::releases_unused_capture){return Ok(Default::default())}
-  if self.credit.is_some()||self.witness.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+  if self.credit.is_some()||self.witness.is_some(){let copy_bytes=match(self.witness.as_ref(),self.credit.as_ref()){(Some(witness),_)=>witness.progress.copied_bytes,(None,Some(credit))=>credit.witness_copy_bytes(false)?,(None,None)=>0};return Ok(RetirementDemand{copy_bytes,depth:1,..Default::default()})}
   if let Some(frame)=self.frame.as_ref(){return if frame.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()})}else{frame.demand(copy)}}
   Ok(Default::default())
  }

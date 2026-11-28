@@ -132,8 +132,13 @@ fn poll_fault(poll: &NativePoll, status: GuestPollSessionStatus) -> Fault {
         match value.kind {
             ValueRefusalKind::WorkLimit | ValueRefusalKind::OwnershipLimit => return Fault { message: format!("guest poll: {}", value.message), ..PluginArtifactChannel::budget_fault("guest poll") },
             ValueRefusalKind::Canceled => return Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: format!("guest poll: {}", value.message) },
-            kind => return PluginArtifactChannel::not_wired("guest poll", format!("{status:?}: {kind:?}: {}", value.message)),
+            kind => return guest_refused(format!("{status:?}: {kind:?}: {}", value.message)),
         }
     }
-    PluginArtifactChannel::not_wired("guest poll", format!("{status:?}: {failure:?}"))
+    guest_refused(format!("{status:?} with {failure:?}; {}", poll.pending_diagnostic()))
+}
+
+/// 🧱️ A guest refusal as its typed [`GUEST_REFUSED_FAULT_CODE`] fault, never an unnamed internal error.
+fn guest_refused(detail: String) -> Fault {
+    Fault { code: GUEST_REFUSED_FAULT_CODE.to_string(), message: format!("guest poll: {detail}") }
 }

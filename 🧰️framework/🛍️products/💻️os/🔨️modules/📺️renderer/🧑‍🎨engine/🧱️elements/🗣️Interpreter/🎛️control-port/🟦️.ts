@@ -11,6 +11,7 @@ export interface UiControlPort {
   readonly identity: object;
   surface(): SurfaceId;
   read(id: UiNodeId): UiNodeRecord | undefined;
+  find?(predicate: (record: UiNodeRecord) => boolean): UiNodeRecord | undefined;
   subscribe(listener: () => void): () => void;
   disabled(record: UiNodeRecord): boolean;
   value(record: UiNodeRecord): string | undefined;
@@ -35,6 +36,7 @@ export interface UiControlField {
 export interface UiControlDocument {
   getState(): { readonly surface: SurfaceId; readonly revision: UiIntent["revision"] };
   getNodeSnapshot(id: UiNodeId): UiNodeRecord | undefined;
+  findNode?(predicate: (record: UiNodeRecord) => boolean): UiNodeRecord | undefined;
   subscribeRevision(listener: () => void): () => void;
   buildIntent(record: UiNodeRecord, binding: ActionBinding, input?: UiValue): UiIntent;
 }
@@ -64,6 +66,7 @@ export function documentControlContext(context: { readonly store: UiControlDocum
       identity: source,
       surface: () => source.getState().surface,
       read,
+      find: (predicate) => source.findNode?.(predicate),
       subscribe: (listener) => source.subscribeRevision(listener),
       disabled,
       value,

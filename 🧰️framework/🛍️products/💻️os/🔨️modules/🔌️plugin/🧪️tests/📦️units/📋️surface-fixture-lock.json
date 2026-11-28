@@ -42,6 +42,7 @@
         "semio-plugin-retained-command-operation",
         "semio-plugin-store-lifecycle",
         "semio-plugin-testing-caller",
+        "semio-plugin-testing-instance-laws",
         "semio-plugin-testing-laws",
         "semio-plugin-window-transient",
         "semio-ui-contract",

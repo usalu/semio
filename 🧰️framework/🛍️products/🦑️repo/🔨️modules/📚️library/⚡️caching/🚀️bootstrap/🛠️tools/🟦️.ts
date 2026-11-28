@@ -39,8 +39,8 @@ import{nxSdkDerivativeDispositionV1}from"./📦️sdk/📥️source/🔗️deriv
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync,lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import {toolPatchReceipt,assertToolingPatchV1,toolPatchAdditions,applyToolingPatchImagesV1} from "./🩹️patch/🟦️.ts";
-import {captureNxAuthorizerSourcesV1,nxAuthorizerSourcesHoldV1} from "./🔏️authorizers/🟦️.ts";
-import {concurrentEditV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {captureNxAuthorizerSourcesV1,nxAuthorizerSourcesMovedV1} from "./🔏️authorizers/🟦️.ts";
+import {concurrentEditV1,retryOnConcurrentEditV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "./🔏️authorizers/📦️snapshot/🟦️.ts";
 import {nxAuthorizerDigestManifestPolicyV1,nxAuthorizerReceiptHoldsV1} from "./🔏️authorizers/📤️receipt/🟦️.ts";
 import {nxAuthorizerBundleHoldsV1,nxAuthorizerBundlePolicyV1,touchNxAuthorizerBundleV1} from "./🔏️authorizers/📦️bundle/🟦️.ts";
@@ -147,6 +147,15 @@ export function nxToolingInstallFilesV1(recipe: Parameters<typeof nxToolingInsta
 }
 
 /** 📸️ Captures the same detached installation images for read-only planning and the eventual issued publication. */
+/** 📥️ Captures the runtime and the compiler source closure of the Nx authorizers and the digest manifests that name them: one consistent pair, taken again whenever a peer edit moved a source while a bundle was built. */
+export async function captureNxAuthorizerPairV1(root:string,packageManager:string,signal:AbortSignal){
+  const authorizerFiles=new Map<string,Buffer>(),authorizer=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📦️runtime/🟦️.ts",signal);
+  authorizerFiles.set(".semio-authorizer-source.json",Buffer.from(JSON.stringify(authorizer.manifest)+"\n"));
+  const compiler=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📜️script.ts",signal);
+  authorizerFiles.set(".semio-authorizer-compiler.json",Buffer.from(JSON.stringify({version:1,mode:"release",bun:packageManager,physicalSourceRoot:root,entryRole:"program",runtimeEntryRole:"module",resolutions:compiler.manifest.resolutions,sources:compiler.manifest.sources})+"\n"));
+  for(const name of nxAuthorizerDigestManifestPolicyV1.names)if(authorizerFiles.get(name)!.byteLength>nxAuthorizerDigestManifestPolicyV1.maximumBytes)throw Error("Bounded SDK authorizer digest manifest required: "+name);
+  return{authorizerFiles,authorizer,compiler};
+}
 export async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
   const root = realpathSync(workspace), recipe = join(root, RECIPE), files = new Map<string, Buffer>();
   for (const name of ["package.json", javascriptLockV1]) files.set(name, readFileSync(join(recipe, name)));
@@ -161,11 +170,7 @@ export async function captureNxToolingInputsV1(workspace:string,signal:AbortSign
   }
   const capturedLock=runtimeParseJsoncV1(files.get(javascriptLockV1)!.toString()),installFiles=nxToolingInstallFilesV1(manifest,capturedLock,files),dependencyFiles=nxDependencyInstallFilesV1(manifest,capturedLock);
   files.clear();for(const [path,bytes] of installFiles)files.set(path,bytes);
-  const authorizerFiles=new Map<string,Buffer>(),authorizer=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📦️runtime/🟦️.ts",signal);
-  authorizerFiles.set(".semio-authorizer-source.json",Buffer.from(JSON.stringify(authorizer.manifest)+"\n"));
-  const compiler=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📜️script.ts",signal);
-  authorizerFiles.set(".semio-authorizer-compiler.json",Buffer.from(JSON.stringify({version:1,mode:"release",bun:manifest.packageManager,physicalSourceRoot:root,entryRole:"program",runtimeEntryRole:"module",resolutions:compiler.manifest.resolutions,sources:compiler.manifest.sources})+"\n"));
-  for(const name of nxAuthorizerDigestManifestPolicyV1.names)if(authorizerFiles.get(name)!.byteLength>nxAuthorizerDigestManifestPolicyV1.maximumBytes)throw Error("Bounded SDK authorizer digest manifest required: "+name);
+  const{authorizerFiles,authorizer,compiler}=await captureNxAuthorizerPairV1(root,manifest.packageManager,signal);
   const libc = process.platform === "linux" ? linuxHostLibcV1() : "";
   const environment={platform:process.platform,architecture:process.arch,libc},sdkDigest=nxSdkSnapshotIdentityV1(environment,dependencyFiles);
   return{root,files,authorizerFiles,manifest,dependencyFiles,authorizer,compiler,environment,sdkDigest};
@@ -205,7 +210,7 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
   let present = true;
   try { lstatSync(destination); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; present = false; }
-  const ready=async(generation:NxToolingGenerationV1|ToolingHeadroomRefusalV1):Promise<NxTooling|ToolingHeadroomRefusalV1>=>{if(isToolingHeadroomRefusalV1(generation))return generation;const bundle=await ensureNxAuthorizerBundleV1(root,store,publisher,control,bun,digest,authorizer,compiler,authorizerFiles);return isToolingHeadroomRefusalV1(bundle)?bundle:{...generation,authorizer:bundle};};
+  const ready=async(generation:NxToolingGenerationV1|ToolingHeadroomRefusalV1):Promise<NxTooling|ToolingHeadroomRefusalV1>=>{if(isToolingHeadroomRefusalV1(generation))return generation;const bundle=await retryOnConcurrentEditV1("build",async attempt=>{const pair=attempt===1?{authorizerFiles,authorizer,compiler}:await captureNxAuthorizerPairV1(root,manifest.packageManager,signal);return ensureNxAuthorizerBundleV1(root,store,publisher,control,bun,digest,pair.authorizer,pair.compiler,pair.authorizerFiles);},{signal});return isToolingHeadroomRefusalV1(bundle)?bundle:{...generation,authorizer:bundle};};
   if (present) return ready(await withResourceLeases({directory:machinePathV1(root,".cache/b/l/m/data"),resources:[{resource:"nx-tooling:"+digest,mode:"shared"}],control,signal},()=>installed(destination)));
   const publish=async(quote:NxSdkClonePublicationV1):Promise<NxToolingGenerationV1|ToolingHeadroomRefusalV1>=>{
   return publisher(async()=>{
@@ -244,7 +249,7 @@ async function authorizerBundleFailureV1(root:string,sources:readonly(readonly[A
   const message=String((error as Error)?.message??error);
   if(!/Bundle failed|compilation refused/u.test(message)||signal.aborted)return error;
   try{
-    for(const[captured,name]of sources)if(!await nxAuthorizerSourcesHoldV1(root,captured,signal))return concurrentEditV1("bytes",captured.manifest.entry,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");
+    for(const[captured,name]of sources){const moved=await nxAuthorizerSourcesMovedV1(root,captured,signal);if(moved!==undefined)return concurrentEditV1("bytes",moved,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");}
     const known=new Map(sources.flatMap(([captured])=>captured.manifest.sources.map(row=>[row.path,row.sha256] as const)));
     const evidence=authorizerBundleEvidenceV1(message,root,known,path=>{try{return createHash("sha256").update(readFileSync(join(root,path))).digest("hex");}catch{return null;}});
     return evidence===""?error:new Error(message+" [captured against disk: "+evidence+"]",{cause:error});
@@ -270,7 +275,7 @@ async function ensureNxAuthorizerBundleV1(root:string,store:RepositoryToolingSto
     writeFileSync(join(staging,policy.marker),JSON.stringify({version:1,digest:identity,deps:dependencies,authorizers:receipt}),{flag:"wx",mode:0o444});
     if(!nxAuthorizerReceiptHoldsV1(staging,receipt))throw new Error("Nx immutable authorizer receipt changed");
     await preflightNxAuthorizersV1(staging,control,store.environment);await store.recheck();
-    for(const[sources,name]of[[authorizer,"authorizer"],[compiler,"compiler"]]as const)if(!await nxAuthorizerSourcesHoldV1(root,sources,signal))throw concurrentEditV1("bytes",sources.manifest.entry,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");
+    for(const[sources,name]of[[authorizer,"authorizer"],[compiler,"compiler"]]as const){const moved=await nxAuthorizerSourcesMovedV1(root,sources,signal);if(moved!==undefined)throw concurrentEditV1("bytes",moved,"Authorizer sources changed while the "+name+" bundle was built, it is not published","build");}
     try { renameSync(staging, destination); }
     catch (error) { if (!["EEXIST", "ENOTEMPTY", "EPERM"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error; }
     return await withResourceLeases({directory:leases,resources:[{resource:policy.lease+identity,mode:"shared"}],control,signal},()=>verified(destination));

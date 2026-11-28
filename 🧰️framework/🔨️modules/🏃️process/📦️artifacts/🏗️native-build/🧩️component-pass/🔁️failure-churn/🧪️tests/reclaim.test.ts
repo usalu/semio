@@ -4,9 +4,16 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { join, resolve } from "node:path";
 import { CargoProvenanceSessionV1, cargoProvenancePhysicalControlV1, sharedProvenanceCustodyV1 } from "../../../🟦️.ts";
 import { failedPassConcurrentEditV1 } from "../🟦️.ts";
+import { churnProtocolV1, type ConcurrentEditReasonV1 } from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import fixture from "./reclaim.json" with { type: "json" };
 
-for (const row of fixture.cases) test(row.name, async () => {
+const checkedReasonV1 = (reason: string | null): ConcurrentEditReasonV1 | null => {
+  if (reason === null) return null;
+  if (!Object.hasOwn(churnProtocolV1().reasons.en!, reason)) throw Error("Unknown concurrent edit reason: " + reason);
+  return reason as ConcurrentEditReasonV1;
+};
+
+for (const row of fixture.cases.map(row => ({ ...row, reason: checkedReasonV1(row.reason) }))) test(row.name, async () => {
   const root = mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!), "reclaim-"));
   const db = new Database(":memory:");
   try {

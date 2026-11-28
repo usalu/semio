@@ -1,0 +1,36 @@
+{
+  "note": "Language-neutral vectors for the history key route: which verb a keydown asks for under the user overrides, and whether the focused element keeps the chord for itself. A twin in another shell reads this file verbatim.",
+  "defaults": { "undo": "mod+z", "redo": "mod+shift+z,mod+y" },
+  "chords": [
+    { "id": "ctrl-z", "key": "z", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": {}, "expected": "undo" },
+    { "id": "meta-z", "key": "z", "ctrl": false, "meta": true, "shift": false, "alt": false, "overrides": {}, "expected": "undo" },
+    { "id": "ctrl-shift-z", "key": "Z", "ctrl": true, "meta": false, "shift": true, "alt": false, "overrides": {}, "expected": "redo" },
+    { "id": "ctrl-y", "key": "y", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": {}, "expected": "redo" },
+    { "id": "ctrl-shift-y", "key": "Y", "ctrl": true, "meta": false, "shift": true, "alt": false, "overrides": {}, "expected": null },
+    { "id": "ctrl-alt-z", "key": "z", "ctrl": true, "meta": false, "shift": false, "alt": true, "overrides": {}, "expected": null },
+    { "id": "bare-z", "key": "z", "ctrl": false, "meta": false, "shift": false, "alt": false, "overrides": {}, "expected": null },
+    { "id": "override-undo-moves-the-chord", "key": "u", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "undo": "mod+u" }, "expected": "undo" },
+    { "id": "override-undo-frees-the-default", "key": "z", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "undo": "mod+u" }, "expected": null },
+    { "id": "override-redo-keeps-undo", "key": "z", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "redo": "mod+r" }, "expected": "undo" },
+    { "id": "override-redo-drops-both-defaults", "key": "y", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "redo": "mod+r" }, "expected": null },
+    { "id": "override-redo-new-chord", "key": "r", "ctrl": false, "meta": true, "shift": false, "alt": false, "overrides": { "redo": "mod+r" }, "expected": "redo" },
+    { "id": "empty-override-unbinds", "key": "z", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "undo": "" }, "expected": null },
+    { "id": "alternatives-in-an-override", "key": "q", "ctrl": true, "meta": false, "shift": false, "alt": false, "overrides": { "undo": "mod+z, mod+q" }, "expected": "undo" }
+  ],
+  "focus": [
+    { "id": "canvas", "target": "canvas", "ownsChord": false },
+    { "id": "body", "target": "body", "ownsChord": false },
+    { "id": "button", "target": "button", "ownsChord": false },
+    { "id": "tree-row", "target": "treeitem", "ownsChord": false },
+    { "id": "select-left-by-an-edit", "target": "select", "ownsChord": false },
+    { "id": "checkbox", "target": "checkbox", "ownsChord": false },
+    { "id": "slider", "target": "range", "ownsChord": false },
+    { "id": "clean-interpreter-field", "target": "interpreter-clean", "ownsChord": false },
+    { "id": "dirty-interpreter-field", "target": "interpreter-dirty", "ownsChord": true },
+    { "id": "text-input", "target": "text", "ownsChord": true },
+    { "id": "number-input", "target": "number", "ownsChord": true },
+    { "id": "textarea", "target": "textarea", "ownsChord": true },
+    { "id": "contenteditable", "target": "contenteditable", "ownsChord": true },
+    { "id": "textbox-role", "target": "textbox", "ownsChord": true }
+  ]
+}

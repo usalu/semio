@@ -4679,15 +4679,15 @@
      },
      {
       "id": "mass-top-left",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "top-left",
       "material": "beech-frame",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4701,15 +4701,15 @@
      },
      {
       "id": "mass-top-right",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "top-right",
       "material": "beech-frame",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4723,15 +4723,15 @@
      },
      {
       "id": "mass-leg-rr",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leg-rr",
       "material": "beech-frame",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4745,15 +4745,15 @@
      },
      {
       "id": "mass-leaf-a",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leaf-a",
       "material": "beech-frame",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4767,15 +4767,15 @@
      },
      {
       "id": "mass-leaf-b",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "leaf-b",
       "material": "beech-frame",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4789,15 +4789,15 @@
      },
      {
       "id": "mass-frame",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "frame",
       "material": "steel-zinc",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4811,15 +4811,15 @@
      },
      {
       "id": "mass-shim",
-      "kind": "ellipsoid",
+      "kind": "box",
       "bone": "shim",
       "material": "cardboard",
       "role": "detail",
       "tone": 0.3,
-      "radii": [
-       0.0375,
-       0.0375,
-       0.0375
+      "size": [
+       0.075,
+       0.075,
+       0.075
       ],
       "transform": {
        "translation": [
@@ -4838,8 +4838,8 @@
       "de": "Körper für 75 mm: 30-mm-Plattenscheiben, Einlagehälften, Zargen und Keil wie gezeichnet (der dünnste 2D-Streifen jedes Knochens), die Beine auf 75 mm im Quadrat verdickt und bis unter die Scheiben geführt, sodass sie die Scheiben ohne Fugenklötze tragen, die Stege 30 x 55 mm; alles andere zusammengefasst."
      },
      {
-      "en": "Thermal: every body surface is the surface of its region (references); structure: the boards, legs, rails, bars, leaf panels and shim are members, the gap blocks joints, one mass marker per loaded bone at its centre.",
-      "de": "Thermik: jede Körperoberfläche ist die Oberfläche ihrer Region (Verweise); Tragwerk: Bretter, Beine, Schienen, Stege, Einlagehälften und Keil sind Stäbe, die Fugenklötze Knoten, je belastetem Knochen eine Massenmarke in seinem Schwerpunkt."
+      "en": "Thermal: every body surface is the surface of its region (references); structure: the boards, legs, rails, bars, leaf panels and shim are members, the gap blocks joints, one mass marker per loaded bone at its centre. The mass markers are blocks, not ellipsoids as at 1:200, so that the structure list has fewer triangles than at 1:200.",
+      "de": "Thermik: jede Körperoberfläche ist die Oberfläche ihrer Region (Verweise); Tragwerk: Bretter, Beine, Schienen, Stege, Einlagehälften und Keil sind Stäbe, die Fugenklötze Knoten, je belastetem Knochen eine Massenmarke in seinem Schwerpunkt. Die Massenmarken sind Blöcke, nicht Ellipsoide wie bei 1:200, damit die Tragwerksliste weniger Dreiecke hat als bei 1:200."
      }
     ]
    }

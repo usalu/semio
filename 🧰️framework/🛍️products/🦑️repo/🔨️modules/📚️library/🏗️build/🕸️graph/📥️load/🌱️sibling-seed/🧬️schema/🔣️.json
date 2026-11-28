@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sibling memo seeding limits / Grenzen der Nachbar-Memo-Aussaat",
+  "description": "A selected read that has no usable admission memo of its own lends the owner facts of the newest admission memos of other selections (every owner revalidates its own rows before use) / Ein ausgewähltes Lesen ohne eigenes brauchbares Zulassungs-Memo leiht sich die Eigentümerfakten der neuesten Zulassungs-Memos anderer Auswahlen (jeder Eigentümer prüft vor der Nutzung seine eigenen Zeilen).",
+  "$defs": {
+    "Limits": {
+      "const": {
+        "maximumMemos": 3,
+        "maximumAttempts": 8,
+        "maximumMemoBytes": 134217728
+      }
+    }
+  }
+}

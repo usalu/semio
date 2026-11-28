@@ -1,0 +1,34 @@
+[
+ {
+  "name": "wait",
+  "js": "(async()=>{const h=window.__h;return 'w'})()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "workshop groups",
+  "js": "(async()=>{const h=window.__h;h.click('Workshop');await h.wait(1500);const out=[];for(const g of ['METAL','CONCRETE','ROBOTIC']){const b=h.find(g);out.push(g+':'+(b?b.outerHTML.slice(0,300):'none'));b&&b.click();await h.wait(800)}return out.join('\\n')+'\\n'+document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2000)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "workshop machine html",
+  "js": "(async()=>{const h=window.__h;const b=h.find('Table Saw');return b.outerHTML.slice(0,800)+'\\nPARENT '+b.parentElement.outerHTML.slice(0,1200)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "catalogue after",
+  "js": "(async()=>{const h=window.__h;h.click('Catalogue');await h.wait(1500);return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "artifact row html",
+  "js": "(async()=>{const h=window.__h;h.click('Artifact');await h.wait(1500);const b=h.find('Cut Lap Joint');return b.outerHTML.slice(0,600)+'\\nPARENT '+b.parentElement.outerHTML.replace(/style=\"[^\"]*\"/g,'').slice(0,2500)})()",
+  "settleMs": 300
+ },
+ {
+  "name": "select row + inspection",
+  "js": "(async()=>{const h=window.__h;h.click('Cut Lap Joint');await h.wait(1500);h.click('Inspection');await h.wait(2000);const chrome=new Set(['Artifact','Catalogue','Workshop','Inspection','Chat','Fullscreen','Editor|⌘️⌥️E','Viewer|⌘️⌥️V','Display','Remote: detached','Command','Settings','Marketplace','History','Tasks','Workpiece','Projection','Window Options','Search','Utilities','⋯','Close','Example']);const el=[...document.querySelectorAll('button,input,select,textarea,[role=switch],[role=checkbox],[role=combobox],[role=slider],[role=option],[role=menuitem]')].map(e=>(e.tagName[0]+(e.getAttribute('role')?'/'+e.getAttribute('role'):'')+(e.type&&e.tagName=='INPUT'?'/'+e.type:'')+':'+(e.getAttribute('aria-label')||'')+'~'+(e.value!==undefined&&e.tagName!='BUTTON'?'='+e.value+'~':'')+e.innerText.trim().replace(/\\n/g,'/'))).filter(s=>!chrome.has(s.split(':')[1]?.split('~').pop()));return document.body.innerText.split('Tasks').pop().replace(/\\n/g,'|').slice(0,2500)+'\\n@@'+el.join(' ; ')})()",
+  "settleMs": 300
+ }
+]

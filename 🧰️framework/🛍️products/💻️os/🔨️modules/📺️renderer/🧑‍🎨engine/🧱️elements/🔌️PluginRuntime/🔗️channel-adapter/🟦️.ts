@@ -1,5 +1,5 @@
 import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
-import { operationDiagnosticFanouts, operationFaultFanouts, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
+import { operationDiagnosticFanouts, operationFaultFanouts, operationFaultSettlers, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
 /** 🔗️ `adaptPluginHandle`, the `AppChannelClient` adapter over the kernel handle, with the bounded history-read retry and the shell actor identity.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -349,7 +349,17 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
             catch (error) { console.error("operation-completion subscriber failed", error); }
           }
         });
-        fanout = { listeners, dispose };
+        const settleFault = (operation: bigint, fault: SemioFaultError): void => {
+          const published: PluginOperationCompletion = { instanceId, operation, revision: 0n, uiScope: undefined, historyPatch: undefined, requestedEffects: [], terminalOutput: undefined, fault };
+          for (const subscriber of [...listeners]) {
+            try { subscriber(published); }
+            catch (error) { console.error("operation-completion subscriber failed", error); }
+          }
+        };
+        const settlers = operationFaultSettlers.get(instanceId) ?? new Set();
+        settlers.add(settleFault);
+        operationFaultSettlers.set(instanceId, settlers);
+        fanout = { listeners, dispose: () => { dispose(); settlers.delete(settleFault); if (settlers.size === 0 && operationFaultSettlers.get(instanceId) === settlers) operationFaultSettlers.delete(instanceId); } };
         completionFanouts.set(instanceId, fanout);
       }
       const bound = fanout;

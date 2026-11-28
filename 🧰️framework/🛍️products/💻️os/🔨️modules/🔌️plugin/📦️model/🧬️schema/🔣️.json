@@ -9,6 +9,27 @@
         "receipt": "🧾️receipt.json"
       }
     },
+    "Layout": {
+      "const": {
+        "directory": "component-models",
+        "head": "head.json",
+        "generationLength": 24,
+        "maximumHeadBytes": 2048,
+        "maximumPrevious": 16,
+        "maximumPathUnits": 224,
+        "writerTimeoutMilliseconds": 30000
+      }
+    },
+    "Head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "previous"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "type": "string", "pattern": "^[a-f0-9]{24}$" },
+        "previous": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-f0-9]{24}$" } }
+      }
+    },
     "ActorPreparation": {
       "const": {
         "image": "📦️actor.semio",

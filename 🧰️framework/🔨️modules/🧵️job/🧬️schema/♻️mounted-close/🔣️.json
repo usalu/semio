@@ -11,7 +11,8 @@
     "profiles",
     "authority",
     "deniedFaultReleaseBytes",
-    "faultPlusDomainReleaseBytes"
+    "faultPlusDomainReleaseBytes",
+    "faultPageBytes"
   ],
   "properties": {
     "contract": {
@@ -29,11 +30,10 @@
     "phases": {
       "const": [
         "BeginClose",
-        "PreadmittedFault",
+        "Payload",
         "Job",
         "JobRelease",
         "ParamsRelease",
-        "PayloadLedger",
         "AuthorityRelease",
         "SessionArc",
         "RetirementSlot",
@@ -60,8 +60,8 @@
           },
           "turns": {
             "type": "array",
-            "minItems": 14,
-            "maxItems": 14,
+            "minItems": 25,
+            "maxItems": 25,
             "items": {
               "type": "object",
               "additionalProperties": false,
@@ -75,11 +75,10 @@
                 "phase": {
                   "enum": [
                     "BeginClose",
-                    "PreadmittedFault",
+                    "Payload",
                     "Job",
                     "JobRelease",
                     "ParamsRelease",
-                    "PayloadLedger",
                     "AuthorityRelease",
                     "SessionArc",
                     "RetirementSlot",
@@ -89,11 +88,10 @@
                 "next": {
                   "enum": [
                     "BeginClose",
-                    "PreadmittedFault",
+                    "Payload",
                     "Job",
                     "JobRelease",
                     "ParamsRelease",
-                    "PayloadLedger",
                     "AuthorityRelease",
                     "SessionArc",
                     "RetirementSlot",
@@ -176,6 +174,9 @@
     },
     "faultPlusDomainReleaseBytes": {
       "const": 16385
+    },
+    "faultPageBytes": {
+      "const": 16384
     }
   }
 }

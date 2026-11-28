@@ -91,7 +91,7 @@ pub mod import_model_file {
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
             Ok(snapshot) => Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
-            Err(error) => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("process3d.import-model"), error.to_string())),
+            Err(error) => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("process3d.media.import"), error.to_string())),
         }
     }
 }

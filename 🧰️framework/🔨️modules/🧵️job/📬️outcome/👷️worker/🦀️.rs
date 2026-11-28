@@ -23,15 +23,6 @@ impl OriginalWorkerPageReservation{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker preparation requires its actual admitting source").into())}Ok(())}
  /// 🌱️ Every admitted turn performs at most one real child action under the same current and lifetime currencies.
  pub fn admit_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  thread_local!{static DEBUG_ZERO_RUN:std::cell::Cell<u64>=const{std::cell::Cell::new(0)};}
-  let before=cx.retained_progress();let result=self.admit_step_inner(cx);
-  if result.as_ref().is_ok()&&cx.retained_progress()==before{
-   let run=DEBUG_ZERO_RUN.with(|run|{run.set(run.get()+1);run.get()});
-   if run%64==1{let grant=cx.retained_grant();eprintln!("[DEBUG] worker page reservation zero run={run} pending_return={} body_ready={} fault={} fault_init={:?} pages={:?} staged={:?} published={} binding={} grant={grant:?} should_yield={} cancelled={}",self.has_pending_return(),self.origin.body_ready(),self.fault.is_some(),self.fault.as_ref().map(|builder|builder.is_initialized()),self.fault.as_ref().and_then(|builder|builder.original().map(|original|original.page_count())),self.fault.as_ref().and_then(|builder|builder.staged_page_len()),self.fault.as_ref().is_some_and(|builder|builder.published().is_some()),self.binding.is_some(),cx.should_yield(),cx.is_cancelled());}
-  }else{DEBUG_ZERO_RUN.with(|run|run.set(0));}
-  result
- }
- fn admit_step_inner(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker preparation is already closing").into())}if self.has_pending_return(){return Ok(false)}
   let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.validate(cx)?;
   if !self.origin.body_ready(){self.origin.admit(cx)?;return Ok(false)}

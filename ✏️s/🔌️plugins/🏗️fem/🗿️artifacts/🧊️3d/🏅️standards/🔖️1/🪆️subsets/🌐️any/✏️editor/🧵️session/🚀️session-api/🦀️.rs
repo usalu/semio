@@ -95,6 +95,22 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3d
     prepare_snapshot_admission(render, snapshot, grant)
 }
 
+/// 🔏️ Re-binds every finished generation whose physics fingerprint equals the render's to the render's revision, so a display-only edit neither spawns a solve nor marks the fields stale.
+fn rebind_display_only(registry: &mut Registry, render: AppRenderOperationContext, snapshot: &Fem3dSnapshot) {
+    let mut fingerprint = registry.fingerprint_memo.filter(|(revision, _)| *revision == render.canonical_base_revision).map(|(_, fingerprint)| fingerprint);
+    for index in 0..ACTIVE_CAPACITY {
+        let Some(current) = registry.current[index].filter(|current| current.app_instance_id == render.app_instance_id && !current.matches(render)) else { continue };
+        let validated = registry.requests.at(index).and_then(|(owner, _, _)| registry.requests.terminal(owner, identity_version(current.identity))).is_some_and(|receipt| receipt.job == current.identity.job && receipt.kind == semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated);
+        let finished = validated && registry.shells[current.shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.done && state.numerical_done && state.solver.as_ref().is_some_and(Fem3dSolverView::ready)));
+        if !finished { continue }
+        let fingerprint = *fingerprint.get_or_insert_with(|| snapshot.physics_fingerprint());
+        registry.fingerprint_memo = Some((render.canonical_base_revision, fingerprint));
+        if !rebinds_generation(finished, current.fingerprint, fingerprint) { continue }
+        registry.pending[index] = None;
+        registry.current[index] = Some(Current { bound: RevisionBinding::of_render(render), ..current });
+    }
+}
+
 pub(super) fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, grant: RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
     let mut progress = RetainedCloneProgress::default();
     if render.app_instance_id == 0 || snapshot.solids.len() > MAXIMUM_REGIONS || snapshot.nodes.len() > MAXIMUM_NODES || snapshot.elements.len() > MAXIMUM_ELEMENTS || snapshot.supports.len() > MAXIMUM_SUPPORTS {
@@ -102,6 +118,7 @@ pub(super) fn prepare_snapshot_admission(render: AppRenderOperationContext, snap
     }
     let ready = MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
+        rebind_display_only(&mut registry, render, snapshot);
         let mut selected = None;
         for _ in 0..ACTIVE_CAPACITY {
             let index = registry.request_cursor; registry.request_cursor = (index + 1) % ACTIVE_CAPACITY;
@@ -121,7 +138,7 @@ pub(super) fn prepare_snapshot_admission(render: AppRenderOperationContext, snap
             };
             let request = Fem3dResultRequest { source, mode: (spec.family == 1).then_some(spec.index), buckling: (spec.family == 2).then_some(spec.index) };
             if registry.requested[index] != Some((scope, request)) { let bytes = size_of::<Option<(u32, Fem3dResultRequest)>>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 { return false; } registry.requested[index] = Some((scope, request)); progress = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }; return false; }
-            let settled = registry.current[index].is_some_and(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision));
+            let settled = registry.current[index].is_some_and(|current| current.matches(render));
             if !settled { selected = Some(index); break; }
         }
         let Some(slot) = selected else { return false };
@@ -130,7 +147,7 @@ pub(super) fn prepare_snapshot_admission(render: AppRenderOperationContext, snap
         }
         let request = registry.requested[slot].filter(|(instance, _)| *instance == render.app_instance_id).map_or(Fem3dResultRequest::default(), |(_, request)| request);
         let source_current = registry.current[slot].and_then(|current| registry.shells[current.shell as usize].try_borrow().ok().map(|state| state.as_ref().and_then(|state| state.numerical.as_ref()).is_some_and(|child| child.request == request))).unwrap_or(false);
-        if source_current && registry.current[slot].is_some_and(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision)) {
+        if source_current && registry.current[slot].is_some_and(|current| current.matches(render)) {
             return false;
         }
         let matches = |pending: PendingSnapshot| {
@@ -207,6 +224,7 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem3dSnapshot>) -> 
                 return Vec::new();
             }
         };
+        let fingerprint = registry.fingerprint_memo.filter(|(revision, _)| *revision == render.canonical_base_revision).map_or_else(|| snapshot.physics_fingerprint(), |(_, fingerprint)| fingerprint);
         registry.next_job = counter;
         registry.pending[slot] = None;
         let job = JOB_TAG | counter;
@@ -249,7 +267,7 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem3dSnapshot>) -> 
         if let Some(child) = state.numerical.as_mut() { child.request = request; }
         *registry.shells[shell as usize].borrow_mut() = Some(state);
         registry.shell_request[shell as usize] = Some(request_owner);
-        registry.current[slot] = Some(Current { app_instance_id: render.app_instance_id, shell, identity });
+        registry.current[slot] = Some(Current { app_instance_id: render.app_instance_id, shell, identity, bound: RevisionBinding::of_identity(identity), fingerprint });
         let mut effects = Vec::with_capacity(2);
         if let Some(previous) = previous {
             effects.push(Effect::CancelJob { job: previous.identity.job });
@@ -263,8 +281,8 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     let Some(render) = render else { return build(None) };
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let current = registry.current.iter().flatten().find(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision))?;
-        if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) {
+        let current = registry.current.iter().flatten().find(|current| current.matches(render))?;
+        if !current.matches(render) {
             return None;
         }
         Some(registry.shells[current.shell as usize].clone())
@@ -328,7 +346,7 @@ pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapsho
         let request_owner = registry.requests.live_binding(render.app_instance_id, authority.map_or(ConsumerKey::Model, ConsumerKey::Window))?;
         let slot = request_owner.index();
         let ready = |current: Current, require_revision: bool| {
-            if current.app_instance_id != render.app_instance_id || (require_revision && !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision)) { return None; }
+            if current.app_instance_id != render.app_instance_id || (require_revision && !current.matches(render)) { return None; }
             let owner = registry.shells[current.shell as usize].try_borrow().ok()?;
             let state = owner.as_ref()?;
             let _child = state.numerical.as_ref()?;
@@ -337,14 +355,14 @@ pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapsho
         };
         let current = registry.current[slot].and_then(|current| ready(current, true));
         let retained = registry.current[slot].and_then(|current| ready(current, false)).or_else(|| registry.retained_results[slot].and_then(|retained| ready(retained, false)));
-        select_result_shell(current, retained).map(|shell| registry.shells[shell as usize].clone())
+        select_result_shell(current, retained).map(|shell| (registry.shells[shell as usize].clone(), current.is_some()))
     });
-    let Some(shell) = shell else { return read(None) };
+    let Some((shell, current_revision)) = shell else { return read(None) };
     let Ok(owner) = shell.try_borrow() else { return read(None) };
     let Some(state) = owner.as_ref() else { return read(None) };
     let (Some(solver), Some(child), Some(snapshot)) = (state.solver.as_ref(), state.numerical.as_ref(), state.snapshot.as_ref()) else { return read(None) };
     if (request.mode.is_some() || request.buckling.is_some()) && (child.request.mode != request.mode || child.request.buckling != request.buckling) { return read(None) }
-    read(Some(Fem3dResultBorrow { solver, child, snapshot, current_revision: render.matches_revision(state.identity.app_instance_id, state.identity.base_revision, state.identity.generation, &state.identity.canonical_base_revision) }))
+    read(Some(Fem3dResultBorrow { solver, child, snapshot, current_revision }))
 }
 
 /// 🏷️ Lends the addressed original numerical stage also published through StepContext's shared trace port.
@@ -356,7 +374,7 @@ pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option
         let slot = request_owner.index();
         if let Some((owner, _, _)) = registry.requests.at(slot) { if let Some(terminal) = registry.requests.terminal(owner, source_version(render)) { match terminal.kind { semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Faulted => return Some("fem3d.failed"), semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled => return Some("fem3d.cancelled"), _ => {} } } }
         let current = registry.current[slot]?;
-        if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) { return None; }
+        if !current.matches(render) { return None; }
         let owner = registry.shells[current.shell as usize].try_borrow().ok()?;
         let state = owner.as_ref()?;
         Some(if state.cancel.is_cancelled_now() { "fem3d.cancelled" } else if state.done { "fem3d.validated" } else if state.numerical_done { "fem3d.visual" } else { state.numerical.as_ref()?.stage.progress_stage() })
@@ -367,8 +385,8 @@ pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option
 pub fn publish_solver_scalar(render: AppRenderOperationContext, index: usize, scalar: Fem3dSolverScalar) -> Result<(), Fem3dSolverScalar> {
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let current = registry.current.iter().flatten().find(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision))?;
-        render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision).then(|| registry.shells[current.shell as usize].clone())
+        let current = registry.current.iter().flatten().find(|current| current.matches(render))?;
+        current.matches(render).then(|| registry.shells[current.shell as usize].clone())
     });
     let Some(shell) = shell else { return Err(scalar) };
     let Ok(mut owner) = shell.try_borrow_mut() else { return Err(scalar) };
@@ -381,8 +399,8 @@ pub fn publish_solver_scalar(render: AppRenderOperationContext, index: usize, sc
 pub fn publish_solver_progress(render: AppRenderOperationContext, state_value: Fem3dVisualState, residual_norm: f64, tolerance: f64, completed: usize, total: usize) -> bool {
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let current = registry.current.iter().flatten().find(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision))?;
-        render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision).then(|| registry.shells[current.shell as usize].clone())
+        let current = registry.current.iter().flatten().find(|current| current.matches(render))?;
+        current.matches(render).then(|| registry.shells[current.shell as usize].clone())
     });
     let Some(shell) = shell else { return false };
     let Ok(mut owner) = shell.try_borrow_mut() else { return false };

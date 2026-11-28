@@ -59,3 +59,4 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }
+semio-plugin = { workspace = true }

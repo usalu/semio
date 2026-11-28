@@ -121,13 +121,13 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
 
 /** 🗄️ Applies host-wide collection after workspace owners finish. The shared store and graph memos age out and are cut oldest-first; workspace source inventories and fixed images count toward the host cap. */
 async function collectHostStoreV1(context:CacheCommandContextV1,ledger:CacheLedgerV1,language:CacheLanguageV1,parsed:CacheArgumentsV1,ports:CacheRunnerPortsV1,sizeUpdates:Readonly<Record<string,CacheSizeRecordV1|null>>):Promise<{line:string;result:unknown}|undefined>{
- const{collectCasV1,formatCasCollectionV1}=await import("../../🗄️cas/🧹️collector/🟦️.ts"),{adoptCasV1,casPlacesOfWorkspaceV1}=await import("../../🗄️cas/🧲️adopt/🟦️.ts"),{casHomeOfV1,formatCasAdoptionV1}=await import("../../🗄️cas/⌨️command/🟦️.ts"),{casAreasOfWorkspaceV1}=await import("../../🗄️cas/📂️areas/🟦️.ts"),{measureCasPartitionV1}=await import("../../🗄️cas/🌡️partition/🟦️.ts"),{CAS_POLICY_V1}=await import("../../🗄️cas/🧬️schema/🟦️.ts"),{casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),home=casHomeOfV1(context.environment);
+ const{collectCasV1,formatCasCollectionV1}=await import("../../🗄️cas/🧹️collector/🟦️.ts"),{adoptCasV1,casPlacesOfWorkspaceV1}=await import("../../🗄️cas/🧲️adopt/🟦️.ts"),{casHomeOfV1,casJudgementV1,formatCasAdoptionV1}=await import("../../🗄️cas/⌨️command/🟦️.ts"),{casAreasOfWorkspaceV1}=await import("../../🗄️cas/📂️areas/🟦️.ts"),{measureCasPartitionV1}=await import("../../🗄️cas/🌡️partition/🟦️.ts"),{casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),home=casHomeOfV1(context.environment);
  if(home===undefined)return undefined;
  const sizes=await loadCacheSizesV1(context.workspace,ledger),records={...sizes.records};
  for(const [id,record] of Object.entries(sizeUpdates)){if(record===null)delete records[id];else records[id]=record;}
  const external=cacheSizeChargeV1(ledger,{...sizes,records});
- const root=casRootV1(context.environment,process.platform,home),adoption=await adoptCasV1({root,places:casPlacesOfWorkspaceV1(context.workspace),signal:ports.signal,dryRun:parsed.dryRun}),result=await collectCasV1({root,policy:CAS_POLICY_V1,areas:await casAreasOfWorkspaceV1(context.workspace,home),externalBytes:external,partition:measureCasPartitionV1(root),signal:ports.signal,dryRun:parsed.dryRun});
- return{line:formatCasAdoptionV1(adoption,language)+"\n"+formatCasCollectionV1(result,CAS_POLICY_V1,language),result:{adoption,collection:result}};
+ const root=casRootV1(context.environment,process.platform,home),adoption=await adoptCasV1({root,places:casPlacesOfWorkspaceV1(context.workspace),signal:ports.signal,dryRun:parsed.dryRun}),partition=measureCasPartitionV1(root),{policy}=await casJudgementV1(root,partition),result=await collectCasV1({root,policy,areas:await casAreasOfWorkspaceV1(context.workspace,home),externalBytes:external,partition,signal:ports.signal,dryRun:parsed.dryRun});
+ return{line:formatCasAdoptionV1(adoption,language)+"\n"+formatCasCollectionV1(result,policy,language),result:{adoption,collection:result}};
 }
 
 /** 🧺️ Applies the in-process bounds of the machine after the host store: the owner-pool waves, the footprint logs, the read verdicts, the staging and temporary directories of gone owners and the files the replica overwrote, each by its declared age and count; a dry run only reports what would go. A bound that fails is skipped, never the command. @see ../../🌡️host-capacity/🧹️disk-recovery/🧺️bounds/🟦️.ts */
@@ -264,7 +264,15 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
  const idleOnly=args.includes("--idle"),reclaimImages=async(order:readonly RepositoryCachePartitionIdV1[])=>{
   const reclaimDue=(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1,{createHash}=await import("node:crypto"),{tmpdir}=await import("node:os"),{mkdirSync,readFileSync,writeFileSync}=await import("node:fs"),{compactOnIdleV1}=await import("../🛌️idle/🟦️.ts");
   const stamps=join(tmpdir(),"semio-idle-compaction-"+createHash("sha256").update(root).digest("hex").slice(0,16));
-  if(args.includes("--dry-run")){for(const partition of order)if(reclaimDue(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);return;}
+  const budgetModule=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),oversize=(partition:RepositoryCachePartitionIdV1)=>["graph","rust","products","dependencies"].includes(partition)&&budgetModule.repositoryPartitionOversizeV1(root,partition);
+  if(args.includes("--dry-run")){for(const partition of order){if(oversize(partition))writeResultLineV1("Would retire the oversize image "+partition+" whole and birth it again within the 32 GiB unmap limit / Image "+partition+" über dem 32-GiB-Rückgabelimit würde ganz entfernt und darunter neu angelegt");if(reclaimDue(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);}return;}
+  for(const partition of order){
+   if(!oversize(partition))continue;
+   const dismantled=await partitions.dismantleRepositoryPartitionShardsIfQuiescentV1(invocation,phaseControl,partition);
+   if(dismantled.status==="busy"||dismantled.status==="partial"){writeResultLineV1("Oversize image "+partition+" kept ("+dismantled.status+"): its shards are in use and retire at the next quiescent moment / Image "+partition+" über dem Limit behalten ("+dismantled.status+"): seine Shards sind in Gebrauch und werden beim nächsten ruhigen Moment entfernt");continue;}
+   const outcome=await partitions.regrowElasticImageOutcomeV1(invocation,phaseControl,partition as "graph"|"rust"|"products"|"dependencies");
+   writeResultLineV1(outcome==="retired"?"Retired the oversize image "+partition+"; the next opener births it within the 32 GiB unmap limit / Image "+partition+" über dem 32-GiB-Rückgabelimit entfernt; der nächste Öffner legt es darunter neu an":"Oversize image "+partition+" kept ("+outcome+"): it retires at the next quiescent moment / Image "+partition+" über dem Limit behalten ("+outcome+"): es wird beim nächsten ruhigen Moment entfernt");
+  }
   const{refreshStaleImageIfQuiescentV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🔄️refresh/🟦️.ts"),{repositoryCacheBudgetV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts");
   for(const partition of order){
    const declared=repositoryCacheBudgetV1(root).partitions[partition];if(declared===undefined)continue;

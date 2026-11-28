@@ -3,7 +3,7 @@ import{spawnSync}from"node:child_process";
 import{mkdtempSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import{argumentClassesV1,differingComponentsV1,unitKeyComponentsV1,unitKeyV1}from"../../🟦️.ts";
+import{argumentClassesV1,differingComponentsV1,unitKeyComponentsV1,unitKeyV1,UNIT_CACHE_POLICY_V1}from"../../🟦️.ts";
 import Ajv from"ajv";
 import schema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🔣️.json"with{type:"json"};
@@ -43,7 +43,7 @@ test("the component record is a valid Lookup of the closed schema",()=>{
 
 test("Python computes the same component digests",()=>{
  expect(python,"an independent Python is required").toBeTruthy();
- const directory=mkdtempSync(join(tmpdir(),"rf-components-")),file=join(directory,"fixture.json");writeFileSync(file,JSON.stringify(fixture));
+ const directory=mkdtempSync(join(tmpdir(),"rf-components-")),file=join(directory,"fixture.json");writeFileSync(file,JSON.stringify({...fixture,determinism:UNIT_CACHE_POLICY_V1.key.outputDeterminism.version}));
  const out=spawnSync(python!,["-I",join(import.meta.dir,"🐍️.py"),file],{encoding:"utf8"});rmSync(directory,{recursive:true,force:true});
  expect(out.status,out.stderr).toBe(0);
  expect(JSON.parse(out.stdout)).toEqual({base:named(input,fixture.extra),variants:fixture.variants.map(row=>named(variantOf(row),("extra"in row?row.extra:fixture.extra) as Record<string,string>))});

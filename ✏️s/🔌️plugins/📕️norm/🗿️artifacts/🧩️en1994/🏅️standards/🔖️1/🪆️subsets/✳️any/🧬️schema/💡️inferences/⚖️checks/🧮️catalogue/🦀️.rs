@@ -35,14 +35,7 @@ pub mod constants {
     pub const BOARD_C: f64 = 1000.0;
     pub const BOARD_RHO: f64 = 800.0;
     pub const FIRE_STEP_S: f64 = 1.0;
-    pub const REBAR_FATIGUE_DELTA_SIGMA_RSK: f64 = 162.5e6;
-    pub const REBAR_FATIGUE_N_STAR: f64 = 1.0e6;
-    pub const REBAR_FATIGUE_K2: f64 = 9.0;
     pub const PATCH_BEARING_LENGTH_M: f64 = 0.1;
-    /// ⚖️ γ_s,fat of the reinforcing steel, the registry row `ndp.en1992.gamma-s-fat` (equal in both annexes).
-    pub fn gamma_s_fat() -> f64 {
-        semio_s_plugin_norm_compliance::ndp_common("ndp.en1992.gamma-s-fat")
-    }
 }
 use constants::*;
 //#endregion 🔖️Constants
@@ -1075,8 +1068,7 @@ pub mod column_fire;
 pub mod beam_fire_tables;
 #[path = "🔥️beam-fire/🦀️.rs"]
 pub mod beam_fire;
-#[path = "🔁️fatigue/🦀️.rs"]
-pub mod fatigue;
+use semio_s_artifact_norm_en1994_checks_catalogue_fatigue as fatigue;
 #[path = "🌉️bridge/🦀️.rs"]
 pub mod bridge;
 #[path = "📏️crack-width/🦀️.rs"]

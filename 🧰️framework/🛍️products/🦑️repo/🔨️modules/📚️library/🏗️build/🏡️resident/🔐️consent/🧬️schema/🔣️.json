@@ -89,7 +89,7 @@
    }
   },
   "LaunchdRefusal": {
-   "description": "Remembered for one boot: the launchd route of the resident service was refused for this checkout (a volume or entry the launcher job may not read although the caller may). The next services start directly under the caller. Valid only for the same launcher bytes, written after the machine booted, at most a day old. File `launchd-refused.json` next to the receipts.",
+   "description": "Remembered for one boot: the launchd route of the resident service was refused for this checkout (a volume or entry the launcher job may not read although the caller may). The next services start directly under the caller. Valid only for the same launcher bytes, written after the machine booted, at most ten minutes old (afterwards the route is probed again). File `launchd-refused.json` next to the receipts.",
    "type": "object",
    "additionalProperties": false,
    "required": [

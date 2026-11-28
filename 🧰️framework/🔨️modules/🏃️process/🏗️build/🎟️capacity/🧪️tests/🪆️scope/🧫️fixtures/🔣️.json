@@ -79,7 +79,8 @@
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🎟️stage/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🎟️stage/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
-    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🎭️stub/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🦀️real/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
@@ -112,8 +113,8 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts"
   ],
   "census": {
-    "files": 52,
-    "literalCalls": 100,
+    "files": 53,
+    "literalCalls": 101,
     "rows": [
       {
         "path": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
@@ -231,7 +232,12 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🎭️stub/🟦️.ts",
+        "literalCalls": 1,
+        "forwarded": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🦀️real/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },

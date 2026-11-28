@@ -105,7 +105,7 @@ async fn one_drag_is_one_edit_one_row_and_one_transaction() {
     close(&mut app);
 }
 
-/// 🌊️ LAW: a gesture streamed over several dispatches is ONE transaction — previewed by the model window while it is
+/// 🌊️ LAW: a gesture streamed over several dispatches (every tick CUMULATIVE from the grab) is ONE transaction — previewed by the model window while it is
 /// open, never history — and its commit publishes the net leaf as one edit; undo restores the node exactly.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_gesture_is_one_transaction_with_a_preview() {
@@ -113,11 +113,11 @@ async fn a_streamed_gesture_is_one_transaction_with_a_preview() {
     let before = node_position(&app, "n20_l1");
     let idle = render(&mut app, model::FEM3D_BODY_MODEL);
     assert!(dispatch_rows(&mut app, translate(0.25, Some("stream"))).await.is_empty(), "a stream tick is no history");
-    assert!(dispatch_rows(&mut app, translate(0.5, Some("stream"))).await.is_empty());
+    assert!(dispatch_rows(&mut app, translate(0.75, Some("stream"))).await.is_empty());
     assert_eq!(node_position(&app, "n20_l1"), before, "the committed document never moves mid-gesture");
     let previewed = render(&mut app, model::FEM3D_BODY_MODEL);
     assert_ne!(previewed, idle, "the model window paints the open gesture's preview");
-    let rows = dispatch_rows(&mut app, translate(0.0, Some("commit"))).await;
+    let rows = dispatch_rows(&mut app, translate(0.75, Some("commit"))).await;
     assert_eq!(rows.len(), 1, "the commit is one row: {rows:?}");
     assert_eq!(english(&rows[0]), "Move 1 node by (0.75, 0, 0)", "the row holds the NET leaf");
     assert_eq!(node_position(&app, "n20_l1")[0], before[0] + 0.75);
@@ -161,36 +161,48 @@ async fn gumball_flags_are_model_window_config() {
     close(&mut app);
 }
 
-/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json`): every
-/// verb dispatch the host owes for a scripted gesture, decoded from its wire args exactly as the host sends them (the
-/// targets swapped for one fem3d node), publishes exactly the fixture's guest edits and moves the node by its offset — a
-/// streamed gesture is ONE edit, an aborted one leaves zero trace, a gesture that never moved publishes nothing.
+/// 🛠️ LAW — the World3d CUMULATIVE live-consumer API end to end (`🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-cumulative-protocol.json`,
+/// the vector the TS host algebra is validated against): every verb dispatch the host owes for a scripted gesture, decoded
+/// from its wire args exactly as the host sends them (the targets swapped for one fem3d node), publishes exactly the
+/// fixture's guest edits and moves the node by its offset — and so does the same gesture with any single stream dispatch
+/// dropped (a tick refused as stale is never retried) and with every stream dispatch dropped (the commit alone carries
+/// the whole gesture). An aborted gesture leaves zero trace.
 #[semio_framework_async_macros::async_test]
-async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
-    let cases = fixture["cases"].as_array().expect("cases");
+async fn the_world3d_cumulative_gumball_protocol_lands_as_its_guest_edits_whatever_ticks_are_dropped() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-cumulative-protocol.json")).expect("the protocol fixture parses");
     let mut consumed = 0;
-    for case in cases.iter().filter(|case| case.get("guest").is_some()) {
+    for case in fixture["cases"].as_array().expect("cases").iter().filter(|case| case.get("guest").is_some()) {
         let name = case["name"].as_str().expect("name");
-        let mut app = fem3d_demo_app().await;
-        let before = node_position(&app, "n20_l1");
-        let mut edits = 0;
-        for dispatch in case["steps"].as_array().expect("steps").iter().map(|step| &step["dispatch"]).filter(|dispatch| !dispatch.is_null()) {
-            let mut args = dispatch["args"].clone();
-            args["ids"] = serde_json::json!([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").expect("canonical node target")]);
-            let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
-            let action = dispatch["action"].as_str().expect("action");
-            let command = <EditorApp<Fem3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action(action, &mut Some(args), &mut None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
-            edits += dispatch_rows(&mut app, command).await.len();
+        let dispatches: Vec<&serde_json::Value> = case["steps"].as_array().expect("steps").iter().map(|step| &step["dispatch"]).filter(|dispatch| !dispatch.is_null()).collect();
+        let phase = |dispatch: &serde_json::Value| dispatch["args"]["phase"].as_str().unwrap_or_default().to_string();
+        let streams: Vec<usize> = (0..dispatches.len()).filter(|index| phase(dispatches[*index]) == "stream").collect();
+        let aborts = dispatches.iter().any(|dispatch| phase(dispatch) == "abort");
+        let mut variants: Vec<Vec<usize>> = vec![Vec::new()];
+        if !aborts {
+            variants.extend(streams.iter().map(|index| vec![*index]));
+            variants.push(streams.clone());
         }
-        let after = node_position(&app, "n20_l1");
-        let offset: Vec<f64> = case["guest"]["offset"].as_array().expect("offset").iter().map(|value| value.as_f64().expect("number")).collect();
-        assert_eq!(edits as u64, case["guest"]["edits"].as_u64().expect("edits"), "{name}: the published edits");
-        assert_eq!([after[0] - before[0], after[1] - before[1], after[2] - before[2]], [offset[0], offset[1], offset[2]], "{name}: the node's offset");
-        close(&mut app);
+        for dropped in variants {
+            let mut app = fem3d_demo_app().await;
+            let before = node_position(&app, "n20_l1");
+            let mut edits = 0;
+            for (index, dispatch) in dispatches.iter().enumerate().filter(|(index, _)| !dropped.contains(index)) {
+                let mut args = dispatch["args"].clone();
+                args["ids"] = serde_json::json!([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").expect("canonical node target")]);
+                let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
+                let action = dispatch["action"].as_str().expect("action");
+                let command = <EditorApp<Fem3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action(action, &mut Some(args), &mut None).await.unwrap_or_else(|fault| panic!("{name}: dispatch {index} {action} decodes from the host's wire args: {}", fault.message));
+                edits += dispatch_rows(&mut app, command).await.len();
+            }
+            let after = node_position(&app, "n20_l1");
+            let offset: Vec<f64> = case["guest"]["offset"].as_array().expect("offset").iter().map(|value| value.as_f64().expect("number")).collect();
+            assert_eq!(edits as u64, case["guest"]["edits"].as_u64().expect("edits"), "{name}: the published edits with stream dispatches {dropped:?} dropped");
+            assert_eq!([after[0] - before[0], after[1] - before[1], after[2] - before[2]], [offset[0], offset[1], offset[2]], "{name}: the node's offset with stream dispatches {dropped:?} dropped");
+            close(&mut app);
+        }
         consumed += 1;
     }
-    assert!(consumed >= 7, "every guest case of the protocol fixture is consumed: {consumed}");
+    assert!(consumed >= 3, "every guest case of the cumulative protocol fixture is consumed: {consumed}");
 }
 
 /// 🌀️ LAW (F2): a ring turn of the slab `sol1` never makes it vanish or breaks the analysis. About the extrusion axis
@@ -202,7 +214,7 @@ fn a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive() {
     let sol = semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("solid", "sol1").unwrap();
     let before = doc.solids.iter().find(|s| s.id == "sol1").map(|s| (s.outline.clone(), s.base_z, s.height)).expect("sol1");
     for (axis, follows) in [([0.0, 0.0, 1.0], true), ([1e-7, -2e-7, 1.0], true), ([0.0, 0.0, -1.0], true), ([1.0, 0.0, 0.0], false), ([0.0, 1.0, 0.0], false)] {
-        for angle in [0.3, 1.0, 1.5707963267948966, 2.5, 6.0] {
+        for angle in [0.3, 0.7853981633974483, 0.7766715171374767, 0.7941248096574199, 1.0, 1.5707963267948966, 2.356194490192345, 2.5, 3.9269908169872414, 5.497787143782138, 6.0] {
             let tick = fem3d_gumball_tick(&doc, std::slice::from_ref(&sol), Fem3dGumballMotion::Rotate { axis, angle }).expect("tick");
             let moved = crate::context::applied(&doc, &Fem3dMutation::MoveSelection(tick));
             let after = moved.solids.iter().find(|s| s.id == "sol1").map(|s| (s.outline.clone(), s.base_z, s.height)).unwrap_or_else(|| panic!("axis {axis:?} angle {angle}: the slab vanished"));
@@ -215,4 +227,26 @@ fn a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive() {
             semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve(&moved, "dead").unwrap_or_else(|fault| panic!("axis {axis:?} angle {angle}: the analysis solves: {fault:?}"));
         }
     }
+}
+
+/// 🌊️ LAW (T1 accuracy): stream ticks admitted faster than they publish (a fast pointer) never wedge the app, and a tick
+/// that went stale terminates as its own refusal WITHOUT costing the gesture anything: the host sends every tick and the
+/// commit cumulative from the grab, so whichever ticks survive, the commit moves the node by exactly the full gesture
+/// (0.875) as one edit, and undo restores it.
+#[semio_framework_async_macros::async_test]
+async fn stream_ticks_in_flight_together_never_lose_the_gesture() {
+    let mut app = fem3d_demo_app().await;
+    let before = node_position(&app, "n20_l1");
+    crate::context::dispatch_unsettled(&mut app, translate(0.25, Some("stream"))).await;
+    crate::context::dispatch_unsettled(&mut app, translate(0.75, Some("stream"))).await;
+    crate::context::dispatch_unsettled(&mut app, translate(0.875, Some("stream"))).await;
+    let settled = crate::context::settle_pending(&mut app).await;
+    assert!(settled.as_ref().err().is_none_or(|refusal| refusal.contains("interactive-job.stale")), "only the benign interactive-job.stale refusal may end an overlapping tick: {settled:?}");
+    assert_eq!(node_position(&app, "n20_l1"), before, "the committed document never moves mid-gesture");
+    let rows = dispatch_rows(&mut app, translate(0.875, Some("commit"))).await;
+    assert_eq!(rows.len(), 1, "the commit is one row: {rows:?}");
+    assert_eq!(node_position(&app, "n20_l1")[0], before[0] + 0.875, "the committed gesture moved the node by exactly the full offset");
+    history_verb(&mut app, "undo").await;
+    assert_eq!(node_position(&app, "n20_l1"), before, "and undo restores it exactly");
+    close(&mut app);
 }

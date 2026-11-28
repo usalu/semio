@@ -1,0 +1,71 @@
+--- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts	2026-11-27 11:35:30
++++ /private/tmp/claude-501/-Users-ueli--claude-spares-spare-fuDDx3/098f233d-9be4-4a1a-b4a8-48924f807f61/scratchpad/H88/stage2b/tree/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts	2026-11-27 16:13:36
+@@ -6,8 +6,8 @@
+ import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../📥️source/🎟️admission/🟦️.ts";
+ import { compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../🏗️build/🎟️capacity/🟦️.ts";
+ import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, requireMaterializedPathV1 } from "../../../🔒️leases/🟦️.ts";
+-import { spawn } from "node:child_process";
+-import { randomBytes } from "node:crypto";
++import type { ChildProcess } from "node:child_process";
++import { createHash, randomBytes } from "node:crypto";
+ import { existsSync, rmSync } from "node:fs";
+ import { mkdir, open, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
+ import { createServer, type Socket } from "node:net";
+@@ -17,7 +17,8 @@
+ import { fileURLToPath } from "node:url";
+ import { captureSchedulerReceiptV1, readSchedulerReceiptV1, schedulerIdentityV1, schedulerReceiptFileV1, schedulerReceiptHoldsV1, writeSchedulerReceiptV1 } from "./🔖️scheduler/🟦️.ts";
+ import { acquireQueuedResourceLease } from "../../../🔒️leases/🟦️.ts";
+-import { terminateOwnedChildTree } from "../../../🪓️termination/🟦️.ts";
++import { spawnSharedChildV1 } from "../../../🪓️termination/🤝️shared-child/🟦️.ts";
++import { createSharedBuildsV1 } from "./🤝️shared-build/🟦️.ts";
+ import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+ import { hostAvailableBytesV1 } from "../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+ import { readHostCapacityPlanV1, readLiveHostCapacityReservationV1 } from "../../../🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
+@@ -934,6 +935,20 @@
+  const {manifest}=schedulerCargoSelectionV1();return schedulerReceiptHoldsV1(readSchedulerReceiptV1(join(targetDirectory,schedulerReceiptFileV1())),schedulerIdentityV1(toolchain,environment),manifest);
+ }
+ 
++/** 🤝️ The scheduler builds in flight of this process: requesters of the same build share one cargo. */
++const schedulerBuildsV1 = createSharedBuildsV1();
++let schedulerRequesterV1 = 0;
++
++/** 📖️ Reads one cargo build: the executables of its compiler artifacts by target name, its diagnostics and its status. */
++function collectCargoExecutablesV1(child: ChildProcess): Promise<Readonly<{ status: number; executables: Map<string, string>; diagnostics: string[] }>> {
++  const executables = new Map<string, string>(), diagnostics: string[] = [];
++  return Promise.all([
++    new Promise<number>((accept) => { child.once("error", () => accept(1)); child.once("close", (code) => accept(code ?? 1)); }),
++    (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { try { const message = JSON.parse(line); if (message.reason === "compiler-artifact" && typeof message.executable === "string") executables.set(message.target.name, message.executable); } catch { diagnostics.push(line); } } })(),
++    (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) if (diagnostics.length < 200) diagnostics.push(line); })(),
++  ]).then(([status]) => ({ status, executables, diagnostics }));
++}
++
+ /** 🛠️ Compiles the scheduler crate for its admitted host profile and returns its executables by name, examples included on request. */
+ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; arguments?:readonly string[]; toolchain?: string; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
+   requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();for(const path of [options.targetDirectory,options.buildDirectory,...["CARGO_HOME","TMPDIR","TMP","TEMP"].map(name=>{const path=options.environment[name];if(!path)throw Error("Bounded scheduler environment required: "+name);return path;})])requireNativeStoragePathV1(options.storage.backing.root,path);
+@@ -941,17 +956,17 @@
+   const selection=schedulerCargoSelectionV1(options.examples),manifest=selection.manifest,args=options.arguments??selection.args;
+   const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
+   const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args,environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
+-  const child = spawn(registeredToolExecutableV1("cargo"), [...args,"--message-format=json-render-diagnostics"], {windowsHide:true, cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_UNSTABLE_MTIME_ON_USE: "true", CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+-  const cancel = (): void => terminateOwnedChildTree(child);
++  const environment = { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_UNSTABLE_MTIME_ON_USE: "true", CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" };
++  const key = createHash("sha256").update(JSON.stringify([options.cwd, options.targetDirectory, options.buildDirectory, args, Object.entries(environment).sort(([left], [right]) => left < right ? -1 : 1)])).digest("hex");
++  const leave = new AbortController(), cancel = (): void => leave.abort(new Error("Build scheduler compilation cancelled"));
+   const stopDeadline = watchResourceLeaseControlDeadlineV1(options.control, () => cancel());
+-  signal.addEventListener("abort", cancel, { once: true });
+-  const executables = new Map<string, string>(), diagnostics: string[] = [];
++  if (signal.aborted) cancel(); else signal.addEventListener("abort", cancel, { once: true });
+   try {
+-    const [status] = await Promise.all([
+-      new Promise<number>((accept) => { child.once("error", () => accept(1)); child.once("close", (code) => accept(code ?? 1)); }),
+-      (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { try { const message = JSON.parse(line); if (message.reason === "compiler-artifact" && typeof message.executable === "string") executables.set(message.target.name, message.executable); } catch { diagnostics.push(line); } } })(),
+-      (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) if (diagnostics.length < 200) diagnostics.push(line); })(),
+-    ]);
++    const { status, executables, diagnostics } = await schedulerBuildsV1.run({
++      key, requester: `${process.pid}:${++schedulerRequesterV1}`, signal: leave.signal,
++      start: () => spawnSharedChildV1(registeredToolExecutableV1("cargo"), [...args, "--message-format=json-render-diagnostics"], { windowsHide: true, cwd: options.cwd, env: environment, stdio: ["ignore", "pipe", "pipe"] }),
++      collect: collectCargoExecutablesV1,
++    }).catch((error) => { checkResourceLeaseControl(options.control); throw error; });
+     checkResourceLeaseControl(options.control);
+     if (status !== 0 || !executables.has("semio-build-scheduler")) throw Error(`Build scheduler compilation failed (${status}):\n${diagnostics.join("\n")}`);
+     if (identity) { const receipt = captureSchedulerReceiptV1(identity, manifest, executables); if (receipt) writeSchedulerReceiptV1(receiptFile, receipt); }

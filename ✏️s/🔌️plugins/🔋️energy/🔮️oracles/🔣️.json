@@ -12,12 +12,6 @@
       "path": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution",
       "version": "0.1.0",
       "module": "🐍️"
-    },
-    {
-      "implementation": "python",
-      "package": "jsonschema",
-      "version": "4.26.0",
-      "module": "jsonschema"
     }
   ]
 }

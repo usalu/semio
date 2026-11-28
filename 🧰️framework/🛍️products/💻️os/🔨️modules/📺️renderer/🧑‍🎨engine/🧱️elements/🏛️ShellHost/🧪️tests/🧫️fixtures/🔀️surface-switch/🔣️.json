@@ -94,10 +94,10 @@
       "id": "empty-search-with-no-env-boots-the-editor",
       "manifest": "procedural",
       "search": "",
-      "envRole": "editor",
+      "envRole": null,
       "defaultAppId": "s.procedural.generation3d@1/*#editor",
       "pinnedAppId": null,
-      "expectedRole": "editor",
+      "expectedRole": null,
       "expectedAppId": "s.procedural.generation3d@1/*#editor"
     },
     {
@@ -149,6 +149,66 @@
       "pinnedAppId": "s.procedural.nowhere@1/*#editor",
       "expectedRole": "viewer",
       "expectedAppId": null
+    },
+    {
+      "id": "a-pinned-viewer-app-boots-the-viewer-without-a-role",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d",
+      "envRole": null,
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.generation3d@1/*#viewer",
+      "expectedRole": null,
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "a-viewer-default-app-boots-the-viewer-without-a-role",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d",
+      "envRole": null,
+      "defaultAppId": "s.procedural.generation3d@1/*#viewer",
+      "pinnedAppId": null,
+      "expectedRole": null,
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "a-pinned-editor-app-boots-the-editor-without-a-role",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d",
+      "envRole": null,
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.generation3d@1/*#editor",
+      "expectedRole": null,
+      "expectedAppId": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "an-explicit-editor-role-projects-a-pinned-viewer-app",
+      "manifest": "procedural",
+      "search": "?role=editor",
+      "envRole": null,
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.generation3d@1/*#viewer",
+      "expectedRole": "editor",
+      "expectedAppId": "s.procedural.generation3d@1/*#editor"
+    },
+    {
+      "id": "an-explicit-env-viewer-role-keeps-a-pinned-viewer-app",
+      "manifest": "procedural",
+      "search": "?plugin=generation3d",
+      "envRole": "viewer",
+      "defaultAppId": null,
+      "pinnedAppId": "s.procedural.generation3d@1/*#viewer",
+      "expectedRole": "viewer",
+      "expectedAppId": "s.procedural.generation3d@1/*#viewer"
+    },
+    {
+      "id": "no-anchor-and-no-role-prefers-the-editor-surface",
+      "manifest": "procedural",
+      "search": "",
+      "envRole": null,
+      "defaultAppId": null,
+      "pinnedAppId": null,
+      "expectedRole": null,
+      "expectedAppId": "s.procedural.generation2d@1/*#editor"
     }
   ],
   "group": [

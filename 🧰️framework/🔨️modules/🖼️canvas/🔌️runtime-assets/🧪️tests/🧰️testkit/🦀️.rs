@@ -2,13 +2,14 @@
 //! process, the way a host would at boot. Enabled by the `testkit` feature (and in this crate's own tests).
 
 use super::{install_runtime_assets, RuntimeAssets, RuntimeAssetsInstallError};
-use semio_framework_test_fixtures::fixture_path;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-/// 📂️ The repository root, found from this crate's manifest directory.
+/// 📂️ The repository root, found from this crate's own manifest directory at compile time, so it is the same for every test binary that links the testkit, whatever package executes it.
+///
+/// @see <https://doc.rust-lang.org/std/macro.env.html>
 pub fn repository_root() -> PathBuf {
-    fixture_path!("../../../../../..")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../..")
 }
 
 /// 🔌️ Reads the seven assets from the repository once per process and installs them; a process that already installed

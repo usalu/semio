@@ -11,10 +11,9 @@ import { evaluate, restShapeDepth, sampleOf, shapeDepth } from "../../🔨️mod
 import { solveChain } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import { respirationOffsets, respirationState } from "../../🔨️modules/💨️transport/🫁️respiration/🟦️.ts";
 import { depthOrder } from "../../🔨️modules/🎨️depiction/🧊️depth/🟦️.ts";
-import { catalog, extentOf } from "../🧊️three-views/🧰️.ts";
+import { catalog, catalogIds, extentOf } from "../🧊️three-views/🧰️.ts";
 
-const assets = catalog();
-const find = (id: string): Asset => assets.find((asset) => asset.id === id)!;
+const find = (id: string): Asset => catalog([id]).find((asset) => asset.id === id)!;
 const select = (denominator: number) => ({ kind: "scale", scale: { denominator } }) as const;
 
 type Placed = { id: string; parent: string | null; z?: number; abductionDeg?: number; twistDeg?: number };
@@ -139,7 +138,9 @@ describe("🧊️ scrubbing equals playing", () => {
 describe("🧊️ breathing never vanishes", () => {
   it("adds the respiration offset to every driven bone, keyed in the pose or not", () => {
     const checked: string[] = [];
-    for (const asset of assets.filter((candidate) => candidate.thermal.respiration !== undefined)) {
+    for (const id of catalogIds()) {
+      const asset = find(id);
+      if (asset.thermal.respiration === undefined) continue;
       const pose = asset.presentation.defaultPose;
       const base = samplePose(asset, asset.poses.find((p) => p.id === pose)!);
       for (const timeS of [0.3, 0.9, 1.7, 2.6]) {

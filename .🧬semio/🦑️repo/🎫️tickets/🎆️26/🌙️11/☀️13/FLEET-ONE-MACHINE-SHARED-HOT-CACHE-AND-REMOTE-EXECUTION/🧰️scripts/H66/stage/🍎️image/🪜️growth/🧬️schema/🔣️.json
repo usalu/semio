@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native image growth and lane sizing",
+  "description": "How an existing image grows and how a new lane image is sized. Measured on macOS 27 (2026-11-27): `hdiutil resize` of an attached image fails with status 35 (UDRW, SPARSE) and `diskutil image resize` answers `Resource busy` (UDRW, ASIF), so no image can be stretched while it is attached; the platform stretches the backing only detached. A grow therefore runs under one exclusive nonwaiting lease of the image and is `wait` while any build holds it; what runs while builds hold the image is sizing (a new image is born as large as the measured working set needs, and as large as the host allows up to the preferred size) and the birth of further lane images. A Linux loop device is stretched online (backing truncated, loop capacity re-read, filesystem grown), a Windows VHDX only dismounted.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "modes": {"darwin": "detached", "linux": "online", "windows": "detached"},
+        "growAtPercent": 85,
+        "hostKeepBytes": 3221225472,
+        "hostKeepMaximumBytes": 8589934592,
+        "initialBytes": 67108864,
+        "laneSizing": {"percentileBasisPoints": 9500, "floorBytes": 4294967296, "headroomPercent": 50},
+        "online": {
+          "linux": {
+            "setCapacity": {"program": "/usr/sbin/losetup", "arguments": ["--set-capacity", "<device>"]},
+            "growFilesystem": {"program": "/usr/sbin/resize2fs", "arguments": ["<device>"]},
+            "findDevice": {"program": "/usr/sbin/losetup", "arguments": ["--associated", "<image>", "--noheadings", "--output", "NAME"]}
+          }
+        },
+        "messages": {
+          "grown": {"en": "Image {image} grew from {from} MiB to {to} MiB while the host kept {free} MiB free.", "de": "Image {image} ist von {from} MiB auf {to} MiB gewachsen, der Host behält {free} MiB frei."},
+          "wait": {"en": "Image {image} is in use and grows to {to} MiB at its next quiet moment; no image can be stretched while a build holds it.", "de": "Image {image} wird benutzt und wächst im nächsten ruhigen Moment auf {to} MiB; ein Image lässt sich nicht strecken, solange ein Build es hält."},
+          "hostShort": {"en": "Image {image} cannot grow: the host has {free} MiB free and must keep {keep} MiB.", "de": "Image {image} kann nicht wachsen: der Host hat {free} MiB frei und muss {keep} MiB behalten."},
+          "unsupported": {"en": "Image {image} cannot grow on this platform.", "de": "Image {image} kann auf dieser Plattform nicht wachsen."}
+        }
+      }
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "capacityBytes", "usedBytes", "hostFreeBytes", "held"],
+      "properties": {
+        "platform": {"type": "string"},
+        "capacityBytes": {"type": "integer", "minimum": 1},
+        "usedBytes": {"type": "integer", "minimum": 0},
+        "measuredBytes": {"type": "integer", "minimum": 0},
+        "hostFreeBytes": {"type": "integer", "minimum": 0},
+        "hostKeepBytes": {"type": "integer", "minimum": 0},
+        "budgetRoomBytes": {"type": "integer"},
+        "held": {"type": "boolean"}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "growth", "lane"],
+      "properties": {
+        "rule": {"type": "object"},
+        "growth": {"type": "array", "items": {"type": "object"}},
+        "lane": {"type": "array", "items": {"type": "object"}}
+      }
+    }
+  }
+}

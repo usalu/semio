@@ -162,7 +162,7 @@ impl MountedState {
                 };
                 cx.consume_retained(progress)?;
                 eigen.second = Some(second);
-                eigen.factor = Some(LdltJob::new(operation, stiffness));
+                eigen.factor = Some(LdltJob::new(operation, stiffness).without_publication());
                 eigen.phase = Phase::Factor;
             }
             Phase::Factor => {
@@ -183,7 +183,8 @@ impl MountedState {
                 };
                 cx.consume_retained(progress)?;
                 let second = eigen.second.take().expect("second matrix retained");
-                eigen.subspace = Some(SubspaceIterationJob::new(operation, factor, second, order, count, 30));
+                let job = SubspaceIterationJob::new(operation, factor, second, order, count, 30).without_publication();
+                eigen.subspace = Some(if self.family == ResultMode::Buckling { job } else { job.with_positive_semidefinite_right() });
                 eigen.phase = Phase::Iterate;
             }
             Phase::Iterate => {

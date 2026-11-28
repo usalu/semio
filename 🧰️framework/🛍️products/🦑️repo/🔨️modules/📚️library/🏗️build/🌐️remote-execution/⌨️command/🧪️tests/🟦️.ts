@@ -12,7 +12,7 @@ import {connectGrpcV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
 import {encodeProtobufV1,decodeProtobufV1,REAPI_V1} from "../../📡️wire/📦️protobuf/🟦️.ts";
 import texts from "../../📖️texts/🔣️.json";
 import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../../🟦️.ts";
-import {eventuallyV1,startClusterV1} from "../../🧪️tests/🧰️cluster/🟦️.ts";
+import {eventuallyV1,startClusterV1,writeHostViewV1} from "../../🧪️tests/🧰️cluster/🟦️.ts";
 import {parseRemoteExecutionArgumentsV1,REMOTE_EXECUTION_OPTIONS_V1,remoteExecutionStatusV1,remoteExecutionTextV1,runRemoteExecutionCommandV1,type RemoteExecutionCommandContextV1} from "../🟦️.ts";
 process.env.SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS="any";process.env.SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY="I-ACCEPT-THE-RISK";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -100,7 +100,7 @@ test("serve starts the store, the service and a worker process, prints what a cl
  try{
   const running=runRemoteExecutionCommandV1(["serve","--grpc-port","0","--worker-port","0","--local-workers","1","--sandbox","isolated-root","--concurrency","2","--lang","de"],{
    root,environment:{PATH:process.env.PATH},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>{lines.push(line);},
-   spawnWorker:(args,environment)=>{const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,...args],{cwd:root,env:{...process.env,...environment,SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS:"any",SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY:"I-ACCEPT-THE-RISK"},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
+   spawnWorker:(args,environment)=>{const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,...args],{cwd:root,env:{...process.env,...environment,SEMIO_REMOTE_EXECUTION_HOST_VIEW:writeHostViewV1(root+"/view.json"),SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS:"any",SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY:"I-ACCEPT-THE-RISK"},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
   });
   await eventuallyV1(()=>lines.some(line=>line.includes("Beitritt")||line.includes("tritt")||line.includes("repo remote-execution workers --join")),30000,"serve must print how to join");
   const endpoint=/^\[remote-execution\] listening (grpc:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1],join=/--join (http:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1];

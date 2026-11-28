@@ -252,7 +252,7 @@ fn live_handles(document: &Din16798Snapshot, selection: &[semio_s_plugin_norm_st
 
 semio_s_plugin_norm_app_surface::norm_live_editor!(Din16798PlayApp, Din16798Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_din16798_mutations::resolve_edit, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
 #[cfg(test)]
-semio_s_plugin_norm_app_surface::norm_live_acceptance!(Din16798PlayApp, entities = live_entities);
+semio_s_plugin_norm_app_surface::norm_live_acceptance!(Din16798PlayApp, entities = live_entities, layout = derived);
 #[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_latency_bench!(Din16798PlayApp, variant = "din16798", seed = semio_s_artifact_norm_din16798_model::Din16798Snapshot::default(), scene = viewport::scene_of, full = viewport::full_scene_of);
 //#endregion 🫧️LiveEditor

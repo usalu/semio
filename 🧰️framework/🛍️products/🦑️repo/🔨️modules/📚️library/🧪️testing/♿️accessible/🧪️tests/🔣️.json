@@ -1,0 +1,245 @@
+{
+  "description": "♿️ Language-neutral vectors of locating by role and accessible name: an HTML snippet, queries (role, name, exact, within) and the `data-v` ids each query must return in document order. English and German names alike; no selector appears in any query. A case with `oracle: false` names why the third-party library cannot judge it.",
+  "cases": [
+    {
+      "name": "button names from content, aria-label wins",
+      "html": "<button data-v='a'>Next</button><button data-v='b' aria-label='Weiter'>→</button><div role='button' data-v='c'> Submit  </div>",
+      "queries": [
+        {
+          "role": "button",
+          "name": "Next",
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Weiter",
+          "ids": [
+            "b"
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Submit",
+          "ids": [
+            "c"
+          ]
+        },
+        {
+          "role": "button",
+          "name": "→",
+          "ids": []
+        }
+      ]
+    },
+    {
+      "name": "labelledby beats aria-label and joins in order",
+      "html": "<span id='x'>Flow</span><span id='y'>Dokument</span><div role='textbox' data-v='a' aria-label='ignored' aria-labelledby='x y'></div>",
+      "queries": [
+        {
+          "role": "textbox",
+          "name": "Flow Dokument",
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "textbox",
+          "name": "ignored",
+          "ids": []
+        }
+      ]
+    },
+    {
+      "name": "native labels name inputs",
+      "html": "<label for='t'>Title</label><input id='t' data-v='a'><label>Titel <input data-v='b' type='text'></label><input type='checkbox' aria-label='Required' data-v='c'><input type='range' aria-label='Column Height' data-v='d'><input type='number' aria-label='Länge' data-v='e'>",
+      "queries": [
+        {
+          "role": "textbox",
+          "name": "Title",
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "textbox",
+          "name": "Titel",
+          "ids": [
+            "b"
+          ]
+        },
+        {
+          "role": "checkbox",
+          "name": "Required",
+          "ids": [
+            "c"
+          ]
+        },
+        {
+          "role": "slider",
+          "name": "Column Height",
+          "ids": [
+            "d"
+          ]
+        },
+        {
+          "role": "spinbutton",
+          "name": "Länge",
+          "ids": [
+            "e"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hidden elements are never found",
+      "html": "<button data-v='a'>Save</button><button hidden>Save</button><div aria-hidden='true'><button>Save</button></div><div style='display:none'><button>Save</button></div>",
+      "queries": [
+        {
+          "role": "button",
+          "name": "Save",
+          "ids": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inert content is hidden (browsers drop it from the accessibility tree; dom-accessibility-api 0.6 does not implement inert, so no oracle row)",
+      "oracle": false,
+      "html": "<button data-v='a'>Save</button><div inert><button>Save</button></div>",
+      "queries": [
+        {
+          "role": "button",
+          "name": "Save",
+          "ids": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "within scopes the query to a named landmark",
+      "html": "<nav aria-label='semio Play'><a href='#a' data-v='a'>Forms</a></nav><main><a href='#b' data-v='b'>Forms</a></main>",
+      "queries": [
+        {
+          "role": "link",
+          "name": "Forms",
+          "ids": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "role": "link",
+          "name": "Forms",
+          "within": {
+            "role": "navigation",
+            "name": "semio Play"
+          },
+          "ids": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "contains matching ignores case",
+      "html": "<button data-v='a'>Delete: Name</button><button data-v='b'>Löschen: Name</button>",
+      "queries": [
+        {
+          "role": "button",
+          "name": "delete:",
+          "exact": false,
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Delete:",
+          "ids": []
+        }
+      ]
+    },
+    {
+      "name": "options, tabs, headings, regions",
+      "html": "<div role='listbox' aria-label='Examples'><div role='option' data-v='a' aria-selected='true'>Browser Form</div><div role='option' data-v='b'>Empty</div></div><div role='tablist'><div role='tab' data-v='c'>Design</div></div><h2 data-v='d'>Antworten</h2><section aria-label='Checks' data-v='e'></section><section data-v='f'></section>",
+      "queries": [
+        {
+          "role": "option",
+          "name": "Browser Form",
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "tab",
+          "name": "Design",
+          "ids": [
+            "c"
+          ]
+        },
+        {
+          "role": "heading",
+          "name": "Antworten",
+          "ids": [
+            "d"
+          ]
+        },
+        {
+          "role": "region",
+          "name": "Checks",
+          "ids": [
+            "e"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "embedded control values join the name of the container",
+      "html": "<label data-v='a' role='group' aria-labelledby='l'><span id='l'>Columns <input type='text' value='3' aria-label='count'></span></label>",
+      "queries": [
+        {
+          "role": "group",
+          "name": "Columns 3",
+          "ids": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "images, alt and presentation",
+      "html": "<img alt='Logo' data-v='a' src='x.png'><img alt='' src='y.png'>",
+      "queries": [
+        {
+          "role": "img",
+          "name": "Logo",
+          "ids": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "title is the last resort",
+      "html": "<button data-v='a' title='Close'></button><button title='Hint'>Open</button>",
+      "queries": [
+        {
+          "role": "button",
+          "name": "Close",
+          "ids": [
+            "a"
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Hint",
+          "ids": []
+        }
+      ]
+    }
+  ]
+}

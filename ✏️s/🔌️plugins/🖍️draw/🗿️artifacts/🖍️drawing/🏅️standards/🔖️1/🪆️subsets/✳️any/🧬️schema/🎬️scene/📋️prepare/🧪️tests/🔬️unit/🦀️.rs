@@ -220,6 +220,21 @@ async fn vector_retirement_retains_genuine_read_until_all_child_owners_are_empty
  }}
 }
 
+#[semio_framework_async_macros::async_test]
+async fn vector_retirement_releases_the_read_early_only_through_the_scoped_mounted_hand_back(){
+ let rows:Vec<Value>=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json")).unwrap();let row=rows.last().unwrap();
+ let document:DrawingSnapshot=serde_json::from_value(row["document"].clone()).unwrap();let before=serde_json::to_value(&document).unwrap();
+ let mut store=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","vector-early-release",document,None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+ store.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
+ let read=store.snapshot_read().unwrap();let pointer=read.get()as*const DrawingSnapshot;let mut job=DocumentVectorJob::from_snapshot_read(read,limits(&row["limits"]),resolution_limits());
+ let mut turns_wallet=scene_test_work();let mut reached=false;for _ in 0..100000{if scene_turn!(job,1,turns_wallet).unwrap().phase=="algorithms"{reached=true;break;}}assert!(reached);job.cancel();
+ let(mut close,plan)=job.into_retirement();assert!(plan.is_none());assert!(!close.private_is_empty(),"the scenario must hold private owners");
+ assert!(close.take_snapshot_read().is_none(),"the strict hand-back used by export waits for the private owners");assert!(close.source_pending());
+ let read=close.release_snapshot_read().unwrap();assert_eq!(read.get()as*const DrawingSnapshot,pointer);assert_eq!(serde_json::to_value(read.get()).unwrap(),before);assert!(!close.private_is_empty(),"the private owners are still draining after the read left");assert!(!close.source_pending());assert!(close.release_snapshot_read().is_none());
+ let mut turns=0;while !close.private_is_empty(){semio_s_artifact_draw_drawing_scene::draw_scene_physical_turn!(close,1);turns+=1;assert!(turns<2_000_000);}assert!(close.terminal_is_empty());
+ let returned=read.return_to_registry_witness().unwrap();drop(close);close_store(&mut store,returned);assert!(store::SpaceMember::close_owned_terminal_is_empty(&store));
+}
+
 #[test]
 fn mounted_vector_selection_relations_preserve_group_handles_without_unlocking_children(){
  let rows:Vec<Value>=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️selection/🔣️.json")).unwrap();

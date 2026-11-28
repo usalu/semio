@@ -30,7 +30,7 @@ test("every message renders in both languages with exactly its placeholders and 
 });
 
 test("every message is used by the code it belongs to and every key the code names exists", () => {
-  const code = [...sources(owner), ...sources(join(import.meta.dir, "..", "..", "..", "..", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🏃️process")), ...sources(join(import.meta.dir, "..", "..", "..", "..", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "⚡️caching", "🚀️bootstrap", "📦️dependencies"))].map((path) => readFileSync(path, "utf8")).join("\n");
+  const code = [...sources(owner), ...sources(join(import.meta.dir, "..", "..", "..", "..", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🏃️process")), ...sources(join(import.meta.dir, "..", "..", "..", "..", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "⚡️caching", "🚀️bootstrap"))].map((path) => readFileSync(path, "utf8")).join("\n");
   const keys = Object.keys(catalog.messages);
   for (const key of keys) expect(code.includes(JSON.stringify(key)), `${key} is unused`).toBe(true);
   for (const match of code.matchAll(/\b(?:refuseProcessV1)\(\s*(?:"(?:usage|invalid|missing|refused|failed|breach|stale|unsupported|cancelled|stalled|timeout|terminated)"\s*,\s*)?("(?:[^"\\]|\\.)*")/gu)) expect(keys, match[1]).toContain(JSON.parse(match[1]!));

@@ -331,3 +331,34 @@ fn close_releases_the_witness_after_snapshot_handback() {
     job.request.take();
     caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
 }
+
+#[test]
+fn a_cancelled_step_returns_cancelled_before_it_settles_or_drives_a_staged_publication() {
+    let operation = operation();
+    let mut caller = layout_export_fixture_caller(operation, operation.generation);
+    let witness = request(LayoutExportKind::Svg);
+    let mut job = fixture_export_job(operation, witness.clone());
+    job.slot.publication = Some(LayoutExportJob::fault_publication("layout-export-staged"));
+    caller.cancel().cancel_now();
+    assert_eq!(next_outcome(&mut caller, &mut job), LayoutExportObserved::Cancelled);
+    assert!(job.slot.publication.is_some() && !job.slot.delivered, "the cancelled step leaves the staged publication untouched for the close ladder");
+    close_job(job, &mut caller);
+    drop(witness);
+    caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
+}
+
+#[test]
+fn a_job_cancelled_mid_run_cancels_at_the_next_step_without_advancing_its_stage() {
+    let operation = operation();
+    let mut caller = layout_export_fixture_caller(operation, operation.generation);
+    let witness = request(LayoutExportKind::Svg);
+    let mut job = fixture_export_job(operation, witness.clone());
+    assert_eq!(step_one_unit(&mut caller, &mut job), None, "a live first step only advances the frontier");
+    let stage = job.stage;
+    caller.cancel().cancel_now();
+    assert_eq!(next_outcome(&mut caller, &mut job), LayoutExportObserved::Cancelled);
+    assert_eq!(job.stage, stage);
+    close_job(job, &mut caller);
+    drop(witness);
+    caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
+}

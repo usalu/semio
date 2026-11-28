@@ -15,5 +15,16 @@
   {"args":["--","--skip-cache"],"executes":false},
   {"args":["--dry-run"],"executes":true},
   {"args":["--","--dry-run"],"executes":false}
+ ],
+ "planOnly":[
+  {"args":["run", "app:build", "--lang=en", "--dry-run"],"planOnly":true},
+  {"args":["run", "--dry-run", "app:build", "--lang=en"],"planOnly":true},
+  {"args":["run", "--lang", "en", "--dry-run", "app:build"],"planOnly":true},
+  {"args":["run", "app:build", "--graph"],"planOnly":true},
+  {"args":["run", "app:build", "--graph=plan.json"],"planOnly":true},
+  {"args":["run", "app:build", "--dry-run=true"],"planOnly":true},
+  {"args":["run", "app:build", "--lang=en"],"planOnly":false},
+  {"args":["run", "app:build", "--dry-run=false"],"planOnly":false},
+  {"args":["run", "app:build", "--", "--dry-run"],"planOnly":false}
  ]
 }

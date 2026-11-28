@@ -1,1 +1,11 @@
-{"schema":"puzzle.5d","domain":"architecture","label":"Empty batch","meta":{},"kindCompatibility":[],"parts":[],"fasteners":[]}
+{
+  "schema": "puzzle.5d",
+  "domain": "architecture",
+  "label": "Empty batch",
+  "meta": {
+    "description": ""
+  },
+  "kindCompatibility": [],
+  "parts": [],
+  "fasteners": []
+}

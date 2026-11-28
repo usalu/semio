@@ -4,7 +4,7 @@ cargo-features = ["trim-paths"]
 name = "semio-native-transpile"
 version = "0.1.0"
 edition = "2021"
-description = "Native component-to-JS transpile identical to the vendored jco bindgen, without its wasm32 address-space limits"
+description = "Native component-to-JS transpile identical to the vendored jco bindgen, without its wasm32 address-space limits, and the split link of plugin components"
 publish = false
 
 [[bin]]
@@ -14,5 +14,12 @@ path = "🦀️.rs"
 [dependencies]
 js-component-bindgen = "=2.16.0"
 anyhow = "1"
+serde_json = "1"
+wasmparser = "=0.259.0"
+wasm-encoder = { version = "=0.259.0", features = ["wasmparser"] }
+wit-component = "=0.259.0"
+
+[dev-dependencies]
+wat = "=1.263.0"
 
 [workspace]

@@ -1,0 +1,478 @@
+{
+ "observe": [
+  {
+   "name": "one process, every group, a stranger and two round trips",
+   "wall": 9000,
+   "documents": [
+    {
+     "pid": 1,
+     "total": 8800,
+     "rows": [
+      {
+       "phase": "boot.main",
+       "self": 0
+      },
+      {
+       "phase": "door.script",
+       "self": 100.25
+      },
+      {
+       "phase": "cli.run",
+       "self": 12
+      },
+      {
+       "phase": "graph.load",
+       "self": 2000
+      },
+      {
+       "phase": "graph.plan.facts",
+       "self": 300.5
+      },
+      {
+       "phase": "tool.nx",
+       "self": 5000
+      },
+      {
+       "phase": "spawn.git",
+       "self": 40
+      },
+      {
+       "phase": "spawn.git",
+       "self": 41.5
+      },
+      {
+       "phase": "spawn.bun",
+       "self": 3
+      },
+      {
+       "phase": "leases.open",
+       "self": 50
+      },
+      {
+       "phase": "receipts.tasks",
+       "self": 10
+      },
+      {
+       "phase": "unknown.thing",
+       "self": 7
+      },
+      {
+       "phase": "rt.graph-service",
+       "self": 0
+      },
+      {
+       "phase": "rt.graph-service",
+       "self": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "two processes add up and the gap is what no phase covers",
+   "wall": 20000,
+   "documents": [
+    {
+     "pid": 1,
+     "rows": [
+      {
+       "phase": "door.load",
+       "self": 4000
+      },
+      {
+       "phase": "graph.load",
+       "self": 1000
+      }
+     ]
+    },
+    {
+     "pid": 2,
+     "rows": [
+      {
+       "phase": "graph.build.compute",
+       "self": 6000
+      },
+      {
+       "phase": "rt.graph-service",
+       "self": 0
+      },
+      {
+       "phase": "dependencies.verify",
+       "self": 2000
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "groups cover more than the wall (concurrent processes): no negative gap",
+   "wall": 1000,
+   "documents": [
+    {
+     "pid": 1,
+     "rows": [
+      {
+       "phase": "graph.load",
+       "self": 900
+      }
+     ]
+    },
+    {
+     "pid": 2,
+     "rows": [
+      {
+       "phase": "graph.load",
+       "self": 900
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "no profile at all",
+   "wall": 1234,
+   "documents": []
+  },
+  {
+   "name": "a prefix is not a substring",
+   "wall": 500,
+   "documents": [
+    {
+     "pid": 1,
+     "rows": [
+      {
+       "phase": "xgraph.load",
+       "self": 10
+      },
+      {
+       "phase": "graph",
+       "self": 20
+      },
+      {
+       "phase": "rtx.other",
+       "self": 5
+      },
+      {
+       "phase": "spawnish.x",
+       "self": 6
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "judge": [
+  {
+   "name": "within every budget",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 30000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 10000,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 2,
+     "cacheLookup": null,
+     "spawn": 10
+    }
+   }
+  },
+  {
+   "name": "wall exactly at limit plus tolerance is ok",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 60250,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "one millisecond more warns",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 60251,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "twice the limit plus tolerance still warns",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 120250,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "one millisecond more breaches",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 120251,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "a slow machine lengthens limits",
+   "command": "inputs",
+   "factor": 2.83,
+   "observation": {
+    "wallMs": 169950,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 84900,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "a fast machine never shortens limits",
+   "command": "inputs",
+   "factor": 0.5,
+   "observation": {
+    "wallMs": 60250,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 30250,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": null,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "round trip counts are exact",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 1000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 3,
+     "cacheLookup": null,
+     "spawn": 40
+    }
+   }
+  },
+  {
+   "name": "one round trip over warns",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 1000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 4,
+     "cacheLookup": null,
+     "spawn": 41
+    }
+   }
+  },
+  {
+   "name": "over twice the round trips breaches",
+   "command": "inputs",
+   "factor": 1,
+   "observation": {
+    "wallMs": 1000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 7,
+     "cacheLookup": null,
+     "spawn": 81
+    }
+   }
+  },
+  {
+   "name": "zero budget: one more is a breach",
+   "command": "fleet-status",
+   "factor": 1,
+   "observation": {
+    "wallMs": 1000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 1,
+     "cacheLookup": 1,
+     "spawn": 15
+    }
+   }
+  },
+  {
+   "name": "a counted cache lookup is judged",
+   "command": "run",
+   "factor": 1,
+   "observation": {
+    "wallMs": 1000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 0,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 0,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 0,
+     "cacheLookup": 31,
+     "spawn": 0
+    }
+   }
+  },
+  {
+   "name": "typecheck mixes statuses",
+   "command": "typecheck",
+   "factor": 1,
+   "observation": {
+    "wallMs": 31000,
+    "processes": 1,
+    "phases": {
+     "door": 0,
+     "graph": 30000,
+     "source": 0,
+     "tools": 0,
+     "leases": 0,
+     "children": 1000,
+     "other": 0,
+     "uncovered": 0
+    },
+    "trips": {
+     "graphService": 2,
+     "cacheLookup": null,
+     "spawn": 21
+    }
+   }
+  }
+ ]
+}

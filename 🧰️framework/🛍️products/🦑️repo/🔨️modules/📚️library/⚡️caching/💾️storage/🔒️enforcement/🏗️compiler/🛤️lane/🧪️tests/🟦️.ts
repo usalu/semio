@@ -42,18 +42,23 @@ const exactQuota=(totalBytes:number,capacityBytes:number):number=>{
  expect(run.status,run.stderr).toBe(0);return Number(run.stdout.trim());
 };
 
-test("the pool quota is the lane share of the store's quota of the machine budget, from the environment, the machine file and the default",async()=>{
+const hostCap=(path:string):number=>{
+ const run=spawnSync(python,["-I","-c","import os,sys\ns=os.statvfs(sys.argv[1])\nvolume=s.f_blocks*s.f_frsize\nalign=int(sys.argv[3])\nprint(max(align,volume*int(sys.argv[2])//100//align*align))",path,String(machinePolicy.hostSharePercent),String(machinePolicy.alignBytes)],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);return Number(run.stdout.trim());
+};
+
+test("the pool quota is the lane share of the store's quota of the machine budget (bounded by the host share of the volume), from the environment, the machine file and the default",async()=>{
  const host=mkdtempSync(join(base,"lq-"));
  try{
   expect(UNIT_CACHE_POLICY_V1.gc.laneShare).toBeGreaterThan(0);expect(UNIT_CACHE_POLICY_V1.gc.laneShare).toBeLessThan(0.25);
   const capacity=40*GIB;
-  expect(await compilerLaneQuotaBytesV1(host,{},capacity)).toBe(exactQuota(machinePolicy.defaultTotalBytes,capacity));
-  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:String(20*GIB)},capacity)).toBe(exactQuota(20*GIB,capacity));
-  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:"100GiB"},30*GIB)).toBe(exactQuota(100*GIB,30*GIB));
+  expect(await compilerLaneQuotaBytesV1(host,{},capacity)).toBe(exactQuota(Math.min(machinePolicy.defaultTotalBytes,hostCap(host)),capacity));
+  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:String(20*GIB)},capacity)).toBe(exactQuota(Math.min(20*GIB,hostCap(host)),capacity));
+  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:"100GiB"},30*GIB)).toBe(exactQuota(Math.min(100*GIB,hostCap(host)),30*GIB));
   const directory=cacheRootDirectoryV1(host,cacheLedgerV1(),"repository");mkdirSync(directory,{recursive:true});
   writeFileSync(join(directory,machinePolicy.file),JSON.stringify({version:1,totalBytes:"60GiB"}));
-  expect(await compilerLaneQuotaBytesV1(host,{},capacity)).toBe(exactQuota(60*GIB,capacity));
-  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:String(20*GIB)},capacity)).toBe(exactQuota(20*GIB,capacity));
+  expect(await compilerLaneQuotaBytesV1(host,{},capacity)).toBe(exactQuota(Math.min(60*GIB,hostCap(host)),capacity));
+  expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:String(20*GIB)},capacity)).toBe(exactQuota(Math.min(20*GIB,hostCap(host)),capacity));
   expect(await compilerLaneQuotaBytesV1(host,{SEMIO_CACHE_BUDGET_BYTES:"1KiB"},capacity)).toBe(Math.floor(capacity*UNIT_CACHE_POLICY_V1.gc.laneShare));
  }finally{rmSync(host,{recursive:true,force:true});}
 });

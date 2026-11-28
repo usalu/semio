@@ -140,6 +140,7 @@ fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
 
 #[test]
 fn empty_selection_renders_the_document_summary() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut app = app();
     assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-inspector.empty"));
 }
@@ -147,6 +148,7 @@ fn empty_selection_renders_the_document_summary() {
 /// 🔍️ A selected PART renders its own editable field group and both flag rows, never the summary.
 #[test]
 fn a_selected_part_renders_its_field_group_with_both_flag_rows() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
     scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["part-0".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
@@ -162,6 +164,7 @@ fn a_selected_part_renders_its_field_group_with_both_flag_rows() {
 /// 🔍️ A selected GRIP wins over its owning part and renders the grip field group.
 #[test]
 fn a_selected_grip_renders_the_grip_field_group() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
     scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_GRIP.into(), selected: vec![puzzle5d_grip_full_id("part-1", "g0")], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
@@ -176,6 +179,7 @@ fn a_selected_grip_renders_the_grip_field_group() {
 /// 🔍️ A selected FASTENER renders every joint scalar as its own patch row.
 #[test]
 fn a_selected_fastener_renders_every_joint_scalar() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
     scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), selected: vec!["fastener-0".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
@@ -191,6 +195,7 @@ fn a_selected_fastener_renders_every_joint_scalar() {
 /// the summary — the browser-shaped snapshot a host hands back after a reload.
 #[test]
 fn a_granularity_less_selection_falls_through_to_the_part_group() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
     scene.interaction = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: vec!["part-1".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
@@ -205,6 +210,7 @@ fn a_granularity_less_selection_falls_through_to_the_part_group() {
 /// only the host's slice, keyed by the raw id.
 #[test]
 fn a_wide_selection_stamps_every_id_and_materialises_only_its_window() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let ids: Vec<String> = (0..120).map(|index| format!("part-{index}")).collect();
     let mut scene = scene(&ids);
     scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: ids.clone(), hovered: Vec::new(), referenced: Vec::new() };

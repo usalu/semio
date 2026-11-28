@@ -1,0 +1,218 @@
+{
+  "ceiling": [
+    {
+      "hostCapacityBytes": 244813135872,
+      "hostFreeBytes": 44023414784,
+      "allocatedBytes": 85899345920,
+      "reserveBytes": 20401094656,
+      "ceilingBytes": 156766306304
+    },
+    {
+      "hostCapacityBytes": 244813135872,
+      "hostFreeBytes": 15032385536,
+      "allocatedBytes": 85899345920,
+      "reserveBytes": 20401094656,
+      "ceilingBytes": 85899345920
+    },
+    {
+      "hostCapacityBytes": 244813135872,
+      "hostFreeBytes": 200000000000,
+      "allocatedBytes": 10737418240,
+      "reserveBytes": 20401094656,
+      "ceilingBytes": 224412041216
+    },
+    {
+      "hostCapacityBytes": 107374182400,
+      "hostFreeBytes": 53687091200,
+      "allocatedBytes": 0,
+      "reserveBytes": 17179869184,
+      "ceilingBytes": 90194313216
+    },
+    {
+      "hostCapacityBytes": 10737418240,
+      "hostFreeBytes": 5368709120,
+      "allocatedBytes": 1073741824,
+      "reserveBytes": 17179869184,
+      "ceilingBytes": 0
+    }
+  ],
+  "admission": [
+    {
+      "ceilingBytes": 156766306304,
+      "committedBytes": 120259084288,
+      "requestBytes": 17179869184,
+      "admitted": true,
+      "roomBytes": 36507222016,
+      "shortfallBytes": 0
+    },
+    {
+      "ceilingBytes": 156766306304,
+      "committedBytes": 150323855360,
+      "requestBytes": 17179869184,
+      "admitted": false,
+      "roomBytes": 6442450944,
+      "shortfallBytes": 10737418240
+    },
+    {
+      "ceilingBytes": 85899345920,
+      "committedBytes": 107374182400,
+      "requestBytes": 1073741824,
+      "admitted": false,
+      "roomBytes": 0,
+      "shortfallBytes": 22548578304
+    },
+    {
+      "ceilingBytes": 85899345920,
+      "committedBytes": 85899345920,
+      "requestBytes": 0,
+      "admitted": true,
+      "roomBytes": 0,
+      "shortfallBytes": 0
+    }
+  ],
+  "layout": [
+    {
+      "platform": "darwin",
+      "capacityBytes": 34359738368,
+      "fits": true
+    },
+    {
+      "platform": "darwin",
+      "capacityBytes": 34359738369,
+      "fits": false
+    },
+    {
+      "platform": "darwin",
+      "capacityBytes": 38653698048,
+      "fits": false
+    },
+    {
+      "platform": "darwin",
+      "capacityBytes": 103079256064,
+      "fits": false
+    },
+    {
+      "platform": "linux",
+      "capacityBytes": 103079256064,
+      "fits": true
+    },
+    {
+      "platform": "win32",
+      "capacityBytes": 103079256064,
+      "fits": false
+    }
+  ],
+  "sum": [
+    {
+      "rows": [
+        {
+          "capacityBytes": 34359738368,
+          "allocatedBytes": 21474836480
+        },
+        {
+          "capacityBytes": 17179869184,
+          "allocatedBytes": 1073741824
+        },
+        {
+          "capacityBytes": 34359738368,
+          "allocatedBytes": 20401094656
+        }
+      ],
+      "committedBytes": 55834574848
+    },
+    {
+      "rows": [
+        {
+          "capacityBytes": 31138512896,
+          "allocatedBytes": 19327352832
+        },
+        {
+          "capacityBytes": 11811160064,
+          "allocatedBytes": 2147483648
+        },
+        {
+          "capacityBytes": 34359738368,
+          "allocatedBytes": 11811160064
+        },
+        {
+          "capacityBytes": 32212254720,
+          "allocatedBytes": 2147483648
+        },
+        {
+          "capacityBytes": 32212254720,
+          "allocatedBytes": 13958643712
+        },
+        {
+          "capacityBytes": 27917287424,
+          "allocatedBytes": 1073741824
+        },
+        {
+          "capacityBytes": 17179869184,
+          "allocatedBytes": 17179869184
+        },
+        {
+          "capacityBytes": 11811160064,
+          "allocatedBytes": 0
+        }
+      ],
+      "committedBytes": 97710505984
+    },
+    {
+      "rows": [
+        {
+          "capacityBytes": 8589934592,
+          "allocatedBytes": 0
+        }
+      ],
+      "committedBytes": 4294967296
+    }
+  ],
+  "cost": [
+    {
+      "declaredBytes": 1073741824,
+      "costBytes": 1073741824
+    },
+    {
+      "declaredBytes": 3221225472,
+      "costBytes": 3221225472
+    },
+    {
+      "declaredBytes": 4294967296,
+      "costBytes": 4294967296
+    },
+    {
+      "declaredBytes": 17179869184,
+      "costBytes": 4294967296
+    },
+    {
+      "declaredBytes": 34359738368,
+      "costBytes": 4294967296
+    }
+  ],
+  "declarable": [
+    {
+      "roomBytes": 0,
+      "declarableBytes": 0
+    },
+    {
+      "roomBytes": 536870912,
+      "declarableBytes": 0
+    },
+    {
+      "roomBytes": 2147483655,
+      "declarableBytes": 2147483648
+    },
+    {
+      "roomBytes": 3221225472,
+      "declarableBytes": 3221225472
+    },
+    {
+      "roomBytes": 4294967296,
+      "declarableBytes": null
+    },
+    {
+      "roomBytes": 38654705664,
+      "declarableBytes": null
+    }
+  ]
+}

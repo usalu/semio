@@ -2340,6 +2340,13 @@
       "accepted": false
     },
     {
+      "name": "NUL unnamed descriptor keeps an empty name field",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000aw\u0000tKQUEUE\u0000n\u0000\n",
+      "guardPaths": [],
+      "accepted": true
+    },
+    {
       "name": "NUL missing name refuses incomplete file",
       "format": "nul-pcfatn",
       "stdout": "p71\u0000cproducer\u0000\nf3\u0000ar\u0000tREG\u0000\n",
@@ -2650,6 +2657,11 @@
       },
       "admitted": false
     }
+  ],
+  "orphanRetirements": [
+    {"name": "dirty-writer-died-before-charge", "state": "dirty", "digest": null, "identity": false, "accepted": true},
+    {"name": "clean-slot-owns-storage", "state": "clean", "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "identity": false, "accepted": false},
+    {"name": "retiring-slot-owns-storage", "state": "retiring", "digest": null, "identity": true, "accepted": false}
   ],
   "childRetirements": [
     {

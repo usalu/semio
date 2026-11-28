@@ -90,7 +90,7 @@ test("restart backoff frees the worker slot for the next waiting load of any che
  const [leader,follower,other]=slots.requests as [typeof slots.requests[number],typeof slots.requests[number],typeof slots.requests[number]];
  const db=new Database(":memory:"),started:string[]=[],finished=new Map<string,()=>void>();
  const controller=new AbortController(),pending:Promise<unknown>[]=[],backingOff=Promise.withResolvers<void>(),retried=Promise.withResolvers<void>();
- const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:slots.capacity,heartbeatMilliseconds:15,
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:slots.capacity,heartbeatMilliseconds:15,coalesce:{gatherMilliseconds:0,maximumTasks:HOST_POLICY_V1.sliceCoalesce.maximumTasks},
   restartPolicy:{backoffMilliseconds:[slots.backoffMilliseconds],settleMilliseconds:5000,progressMilliseconds:100,totalMaximum:3},
   reaper:{reap:async()=>0,killNow:()=>undefined},
   createWorker:(_url:URL,data)=>{const request={name:String(data.name)};

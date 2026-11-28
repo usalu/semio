@@ -2,6 +2,7 @@ import {openSync,writeSync,closeSync,readFileSync} from "node:fs";
 import {spawn} from "node:child_process";
 import {settleOwnedChildV1} from "../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import {terminateOwnedProcessTree} from "../🪓️termination/🟦️.ts";
+import {reapWithParentV1} from "../🪓️termination/🧹️reaper/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🧭️routing/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policySchema from "./📋️policy/🧬️schema/🔣️.json" with { type: "json" };
@@ -68,6 +69,7 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     let count = 0;
     let finished = false;
     const child = spawn(command, execution.args, { cwd: execution.cwd, env: execution.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
+    const unreap = reapWithParentV1(child.pid);
     const terminate = (cause: NonNullable<OwnedProcessCaptureResult["reason"]>): void => {
       if (reason !== "exit") return;
       reason = cause;
@@ -106,6 +108,7 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     void settleOwnedChildV1(child, command).then(({code: status, signal}) => {
       if (finished) return;
       finished = true;
+      unreap();
       clearTimeout(timer);
       clearInterval(progress);
       originalSignal.removeEventListener("abort", originalAbort);

@@ -14,7 +14,7 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 test("the host-store tick calls the volume relief when the partition is below the relief level of the hard reserve",async()=>{
  resetCasGuardsV1();
  const base=mkdtempSync(join(tmpdir(),"rcache-relief-"));scratch.push(base);
- const policy={...CAS_POLICY_V1,enforceTickMilliseconds:200,sizing:{...CAS_POLICY_V1.sizing,roles:CAS_POLICY_V1.sizing.roles.map(role=>({...role,reserveFloorBytes:2**50}))}};
+ const policy={...CAS_POLICY_V1,enforceTickMilliseconds:200,sizing:{...CAS_POLICY_V1.sizing,roles:CAS_POLICY_V1.sizing.roles.map(role=>({...role,reservePercent:50}))}};
  const requests:Array<{root:string;targetFreeBytes:number;freeBytes:number}>=[];
  const server=await startRemoteCacheServerV1({directory:join(base,"dir"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"t"},validation:"off",hostStore:createCasStoreV1({root:join(base,"cas"),policy}),relieveVolume:async request=>{requests.push({root:request.root,targetFreeBytes:request.targetFreeBytes,freeBytes:request.freeBytes});},startupScan:"background"});
  try{

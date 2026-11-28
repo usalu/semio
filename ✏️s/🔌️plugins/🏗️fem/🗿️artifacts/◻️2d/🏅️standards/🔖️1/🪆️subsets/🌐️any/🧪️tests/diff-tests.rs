@@ -1,7 +1,7 @@
 //! 🧪️ Unit laws of the fem2d diff algebra: `absorb` coalesces same-key rows, `inverse` is the negative delta, and the absorbed diff applies exactly like its parts in sequence.
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::*;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::*;
 use semio_s_fem_node::planar::FemNodeValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;

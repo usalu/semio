@@ -1,0 +1,4 @@
+/** 🔌️ Types the plain-JavaScript manager accessor for TypeScript consumers that must not import the registry (and with it the whole dependency bootstrap). */
+export interface ManagerSummaryV1{readonly id:string;readonly label:string;readonly ecosystem:string;readonly primaryLockName:string;readonly lockFileNames:readonly string[];readonly manifestFileNames:readonly string[];readonly scopeConfigName:string|null;configurationNames(role:"scope"|"home"|"config"):readonly string[];readonly generationDirectory:string;readonly hostEnvironment:readonly string[];readonly graphComponent:string;readonly ownedModules:readonly string[]}
+declare const accessor:{managerV1(id:string):ManagerSummaryV1;selectedManagerV1(ecosystem:string,environment?:Readonly<Record<string,string|undefined>>):ManagerSummaryV1;allManagersV1():readonly ManagerSummaryV1[];sourceFilesV1():readonly string[]};
+export=accessor;

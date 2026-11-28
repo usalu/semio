@@ -13,6 +13,7 @@ import {uncoveredOutputsV1} from "../✅️complete/🟦️.ts";
 import {declareV1,workspaceRowsV1} from "../../../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
 import {type DeclarationV1} from "../../../../🏗️build/🪢️slots/🟦️.ts";
 import buildPolicy from "../../../../🏗️build/🔣️policy.json" with {type:"json"};
+import {pruneSpillV1,touchSpillObjectV1,type SpillPruneV1} from "./🧽️spill-bound/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout;
 type Definitions=typeof schema.definitions;
@@ -153,8 +154,10 @@ export function putSpillObjectV1(root:string,bytes:Uint8Array|string):string{
 }
 /** 💧️ Reads a spilled object, `undefined` when absent or when its bytes do not hash to its name. */
 export function readSpillObjectV1(root:string,sha:string):Buffer|undefined{
- try{const data=readFileSync(join(spillDirectory(root),sha));return createHash("sha256").update(data).digest("hex")===sha?data:undefined;}catch{return undefined;}
+ try{const path=join(spillDirectory(root),sha),data=readFileSync(path);if(createHash("sha256").update(data).digest("hex")!==sha)return undefined;touchSpillObjectV1(path);return data;}catch{return undefined;}
 }
+/** 🧽️ Bounds the spill folder of a cache root to what its volume can spare, least recently used entries first, keeping whatever a build or upload used lately ({@link pruneSpillV1}); `incomingBytes` is what the caller is about to write. */
+export function pruneSpillObjectsV1(root:string,options:Readonly<{nowMs?:number;incomingBytes?:number;boundBytes?:number}>={}):SpillPruneV1{return pruneSpillV1(spillDirectory(root),options);}
 const spilledEntryPath=(root:string,key:string)=>join(spillDirectory(root),"entries",key+".json");
 /** 💧️ Removes the spilled objects of an entry, and its spilled entry file, once its upload is over, whatever the outcome. */
 export function dropSpillObjectsV1(root:string,entry:Readonly<{key?:string;outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):void{
@@ -234,6 +237,7 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
  if(info.dependencies.length>policy.key.maximumDependencyFiles)return undefined;
  const extra=input.extra??"",neutral=(text:string)=>extraNeutralV1(laneNeutralV1(generatedNeutralV1(text.split(input.outDir).join(policy.key.outputToken),input.generated),input.laneRoot),extra);
  let total=0;const outputs:UnitEntryV1["outputs"]=[];
+ if(input.spill===true){let incoming=0;for(const path of input.outputs)try{incoming+=statSync(path).size;}catch{return undefined;}if(incoming>pruneSpillObjectsV1(root,{incomingBytes:incoming}).boundBytes)return undefined;}
  for(const path of input.outputs){
   const stat=statSync(path);total+=stat.size;if(total>policy.key.maximumOutputBytes)return undefined;
   const template=path===depInfoPath,bytes=template?Buffer.from(neutral(readFileSync(path,"utf8"))):readFileSync(path),sha=putObject(root,bytes);

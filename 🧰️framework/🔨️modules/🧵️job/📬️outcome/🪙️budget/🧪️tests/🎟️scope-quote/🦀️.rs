@@ -16,9 +16,10 @@ impl OriginalReturnOrigin for Origin{
 }
 fn grant(items:usize,copy:usize,capacity:usize,release:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:8}}
 fn held(items:u64,copy:u64,work:u64,release:u64,capacity:u64)->Amounts{Amounts{items,copy_bytes:copy,work,release_bytes:release,capacity_bytes:capacity}}
-fn plan(existing:Amounts,quantum:RetainedCloneGrant,quantum_work:u64,loaned:bool)->Option<OriginalReturnScopePlan>{
- OriginalReturnScopePlan::quote::<Origin>(grant(64,1<<20,1<<16,1<<16),quantum,10_000,quantum_work,existing,loaned,0,false,false,false,RetainedCloneProgress::default(),0).unwrap()
+fn plan_with_floor(existing:Amounts,quantum:RetainedCloneGrant,quantum_work:u64,loaned:bool,floor:RetainedCloneGrant)->Option<OriginalReturnScopePlan>{
+ OriginalReturnScopePlan::quote::<Origin>(grant(64,1<<20,1<<16,1<<16),quantum,10_000,quantum_work,existing,loaned,0,false,false,false,RetainedCloneProgress::default(),0,floor).unwrap()
 }
+fn plan(existing:Amounts,quantum:RetainedCloneGrant,quantum_work:u64,loaned:bool)->Option<OriginalReturnScopePlan>{plan_with_floor(existing,quantum,quantum_work,loaned,RetainedCloneGrant::default())}
 #[test]
 fn a_loaned_scope_clamps_work_capacity_and_release_to_its_stock_instead_of_topping_up(){
  let existing=held(50,100_000,4_967,1_900,2_000);
@@ -41,4 +42,12 @@ fn an_unclaimed_scope_still_pays_its_setup() {
  let plan=plan(Amounts::default(),grant(1,100,2_048,2_048),5_000,false).expect("fresh stock funds the first claim");
  assert_eq!(plan.setup.copied_items,2);
  assert!(plan.setup_work>0);
+}
+#[test]
+fn a_loaned_scope_never_clamps_a_quote_below_its_indivisible_floor() {
+ let existing=held(50,100_000,9_000,4_096,3_000);
+ let floor=RetainedCloneGrant{maximum_capacity_bytes:28_672,..Default::default()};
+ let plan=plan_with_floor(existing,grant(1,100,28_672,2_048),5_000,true,floor).expect("fresh stock tops the held scope up to the floor");
+ assert!(plan.ready&&plan.quantum.maximum_capacity_bytes>=28_672,"the floor survives the quote: {}",plan.quantum.maximum_capacity_bytes);
+ assert!(plan.wanted.capacity_bytes>existing.capacity_bytes,"the capacity shortfall is billed as a top-up, not served short");
 }

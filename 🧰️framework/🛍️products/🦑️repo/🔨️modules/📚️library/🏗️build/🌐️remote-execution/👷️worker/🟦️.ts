@@ -12,6 +12,9 @@ import {placeRemoteExecutionLinkV1,remoteExecutionLinkEscapesV1,selectRemoteExec
 import {expandRemoteExecutionRootV1,remoteExecutionCommandProgramV1,remoteExecutionNativePathV1,remoteExecutionToolOfProgramV1,validateRemoteExecutionCommandActionV1,validateRemoteExecutionRustcActionV1,type RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
 import {COMMAND_POLICY_V1,commandTextV1,commandToolKeyV1,commandToolSourceV1,parseCommandProgramV1} from "../🚀️offload/🧰️command/📐️policy/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadCrateTypesOfV1} from "../🚀️offload/📐️policy/🟦️.ts";
+import {CHECKOUT_TEST_POLICY_V1,checkoutTestBothV1,checkoutTestChunkKeyV1,checkoutTestProgramIsV1,encodeCheckoutTestChunkV1,validateCheckoutTestActionV1} from "../🚀️offload/🔬️checkout-test/📐️policy/🟦️.ts";
+import {createCheckoutTestChunkWriterV1} from "../🚀️offload/🔬️checkout-test/👷️worker/🟦️.ts";
+import type {CheckoutTestBeginV1,RemoteExecutionCheckoutTestsV1} from "../🚀️offload/🔬️checkout-test/👷️worker/🟦️.ts";
 import {createRemoteExecutionMeterV1,remoteExecutionProcessTableV1} from "./📏️task-memory/🟦️.ts";
 import {remoteExecutionCodegenArgumentsV1,remoteExecutionCodegenSerialRequestedV1,withRemoteExecutionCodegenPoolV1} from "./🧵️codegen/🟦️.ts";
 import type {RemoteExecutionAdmissionV1,RemoteExecutionHeldUnitV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
@@ -19,6 +22,7 @@ import {remoteExecutionPeakEntryV1,remoteExecutionThreadsEntryV1,readRemoteExecu
 import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 import {runtimeIdentityV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
+import {workerRustSourceRemapV1} from "../🚀️offload/🧰️toolchain/🟦️.ts";
 import {casObjectPathV1,casRootV1} from "../../🗄️cas/🗃️store/🟦️.ts";
 import {casReserveBytesV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1} from "../../🗄️cas/🧬️schema/🟦️.ts";
@@ -43,7 +47,7 @@ export type RemoteExecutionReserveV1=(task:Readonly<{megabytes:number;observedMe
 export type RemoteExecutionWorkerOptionsV1=Readonly<{
  scheduler:string;token?:string|undefined;cacheToken?:string|undefined;fetch?:typeof fetch|undefined;cacheFetch?:typeof fetch|undefined;actions?:RemoteExecutionActionPolicyV1;unconfinedForTests?:boolean;name?:string;concurrency:number;directory:string;sandbox:"auto"|RemoteExecutionSandboxV1;materialize:"clone"|"copy";maximumBlobBytes:number;inlineOutputBytes:number;
  properties?:readonly RemoteExecutionPropertyV1[];platform?:string;signal:AbortSignal;onEvent?:(event:RemoteExecutionWorkerEventV1)=>void;content?:RemoteExecutionContentV1;keepWork?:boolean;
- origin?:string;capacity?:Readonly<{cores:number;memoryMegabytes:number}>;network?:"deny"|"allow";tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionToolsV1;confinement?:"required"|"best-effort";admit?:(running:number,unit:RemoteExecutionUnitAskV1)=>Promise<RemoteExecutionAdmissionV1>;reserve?:RemoteExecutionReserveV1;observe?:(state:RemoteExecutionWorkerStateV1)=>void;admitRetryMilliseconds?:number;threads?:(ask:RemoteExecutionThreadsAskV1)=>Promise<number>;
+ origin?:string;capacity?:Readonly<{cores:number;memoryMegabytes:number}>;network?:"deny"|"allow";tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionToolsV1;checkoutTests?:RemoteExecutionCheckoutTestsV1;confinement?:"required"|"best-effort";admit?:(running:number,unit:RemoteExecutionUnitAskV1)=>Promise<RemoteExecutionAdmissionV1>;reserve?:RemoteExecutionReserveV1;observe?:(state:RemoteExecutionWorkerStateV1)=>void;admitRetryMilliseconds?:number;threads?:(ask:RemoteExecutionThreadsAskV1)=>Promise<number>;
 }>;
 
 /** 🛠️ The tools a worker owns by name: an action whose program is `@tool:<name>` runs the tool of that name, and its confined process may read the listed directories. The toolchain itself is never shipped, a worker that lacks the tool refuses the action with a precondition failure. */
@@ -54,7 +58,7 @@ export type RemoteExecutionCommandToolsV1=RemoteExecutionToolsV1;
 
 /** 🎬️ What executing one action needs besides the store. */
 export type RemoteExecutionExecutionV1=Readonly<{
- properties?:readonly RemoteExecutionPropertyV1[];instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;content:RemoteExecutionContentV1;directory:string;work?:string;workerName:string;sandbox:RemoteExecutionSandboxStrategyV1;materialize:"clone"|"copy";inlineOutputBytes:number;signal:AbortSignal;keepWork?:boolean;blobs?:RemoteExecutionBlobCacheV1;network?:boolean;tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionCommandToolsV1;actions?:RemoteExecutionActionPolicyV1;meter?:Readonly<{attach(pid:number):void;peak():number|undefined}>;threads?:()=>Promise<number>;wardenCancels?:(sinceMs:number)=>Promise<readonly Readonly<{pid:number;command:string}>[]>;
+ properties?:readonly RemoteExecutionPropertyV1[];instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;content:RemoteExecutionContentV1;directory:string;work?:string;workerName:string;sandbox:RemoteExecutionSandboxStrategyV1;materialize:"clone"|"copy";inlineOutputBytes:number;signal:AbortSignal;keepWork?:boolean;blobs?:RemoteExecutionBlobCacheV1;network?:boolean;tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionCommandToolsV1;checkoutTests?:RemoteExecutionCheckoutTestsV1;actions?:RemoteExecutionActionPolicyV1;meter?:Readonly<{attach(pid:number):void;peak():number|undefined}>;threads?:()=>Promise<number>;wardenCancels?:(sinceMs:number)=>Promise<readonly Readonly<{pid:number;command:string}>[]>;
 }>;
 
 /** 🏁️ How executing one action ended. */
@@ -267,7 +271,7 @@ function resolveExecutable(first:string,env:Readonly<Record<string,string>>,root
 type Collected={exitCode:number;stdout:Uint8Array;stderr:Uint8Array;timedOut:boolean;cancelled:boolean};
 const LIMIT=64*1048576;
 
-function execute(argv:readonly string[],env:Readonly<Record<string,string>>,cwd:string,timeoutMilliseconds:number,signal:AbortSignal,onSpawn?:(pid:number)=>void):Promise<Collected>{
+function execute(argv:readonly string[],env:Readonly<Record<string,string>>,cwd:string,timeoutMilliseconds:number,signal:AbortSignal,onSpawn?:(pid:number)=>void,onStderr?:(chunk:Buffer)=>void):Promise<Collected>{
  return new Promise(resolve=>{
   const out:Buffer[]=[],err:Buffer[]=[];let outSize=0,errSize=0,timedOut=false,cancelled=false,settled=false;
   const finish=(exitCode:number,extra?:string):void=>{
@@ -282,7 +286,7 @@ function execute(argv:readonly string[],env:Readonly<Record<string,string>>,cwd:
   const abort=():void=>{cancelled=true;killTree(child.pid);},timer=setTimeout(()=>{timedOut=true;killTree(child.pid);},timeoutMilliseconds);
   signal.addEventListener("abort",abort,{once:true});
   child.stdout.on("data",(chunk:Buffer)=>{if(outSize<LIMIT){out.push(chunk);outSize+=chunk.length;}});
-  child.stderr.on("data",(chunk:Buffer)=>{if(errSize<LIMIT){err.push(chunk);errSize+=chunk.length;}});
+  child.stderr.on("data",(chunk:Buffer)=>{if(errSize<LIMIT){err.push(chunk);errSize+=chunk.length;}onStderr?.(chunk);});
   child.on("error",error=>{finish(127,`Cannot start ${argv[0]}: ${error.message}\n`);});
   child.on("close",(code,received)=>{killTree(child.pid);finish(code??(received?128+((({SIGHUP:1,SIGINT:2,SIGQUIT:3,SIGABRT:6,SIGKILL:9,SIGSEGV:11,SIGPIPE:13,SIGTERM:15}) as Record<string,number>)[received]??0):1));});
   if(signal.aborted)abort();
@@ -366,7 +370,10 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
    const wanted=remoteExecutionMatchPropertiesV1((action.platform?.properties?.length?action.platform.properties:(command as {platform?:{properties?:readonly RemoteExecutionPropertyV1[]}}).platform?.properties)??[]),lacking=wanted.filter(row=>!remoteExecutionPlatformMatchesV1([row],run.properties!));
    if(lacking.length>0)return fail(9,`No worker offers the platform ${lacking.map(row=>`${row.name}=${row.value}`).join(";")}: this worker (${run.workerName}) does not advertise it`);
   }
-  if(remoteExecutionCommandProgramV1(command.arguments[0]!)){
+  if(checkoutTestProgramIsV1(command.arguments[0])){
+   const refusal=run.actions==="none"?"this worker runs no actions":run.checkoutTests===undefined?checkoutTestBothV1("refusal.disabled"):validateCheckoutTestActionV1(command);
+   if(refusal!==undefined)return fail(9,`${OFFLOAD_REFUSAL_PREFIX_V1}: ${refusal}`);
+  }else if(remoteExecutionCommandProgramV1(command.arguments[0]!)){
    const refusal=run.actions==="none"?"this worker runs no actions":run.commands===undefined?"this worker offers no command actions":validateRemoteExecutionCommandActionV1(command,{tools:run.commands,confined:run.sandbox.name!=="isolated-root",network:run.network===true});
    if(refusal!==undefined)return fail(9,`${OFFLOAD_REFUSAL_PREFIX_V1}: ${refusal}`);
   }else if(run.actions!=="any"){
@@ -406,15 +413,25 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
    const tool=run.tools?.[toolName];
    if(!tool)return fail(9,`This worker does not offer the tool ${toolName}`);
    args[0]=tool.path;readable.push(...tool.readable);
+   if(toolName==="rustc")args.push(...workerRustSourceRemapV1(tool.path,args.slice(1)));
   }
-  const first=args[0]!,executable=resolveExecutable(first,env,root,cwd),executionStart=Date.now();
+  let checkoutRun:Extract<CheckoutTestBeginV1,{kind:"run"}>|undefined;
+  if(checkoutTestProgramIsV1(command.arguments[0])){
+   const begun=await run.checkoutTests!.begin(await readFile(join(root,...CHECKOUT_TEST_POLICY_V1.request.path.split("/"))).catch(()=>new Uint8Array()),run.signal);
+   if(begun.kind==="refuse")return {outcome:"refused",status:{code:8,message:begun.message},actionResult:null,refusal:begun.reason};
+   if(begun.kind==="fail")return fail(begun.code,begun.message);
+   checkoutRun=begun;
+  }
+  const first=args[0]!,executable=checkoutRun===undefined?resolveExecutable(first,env,root,cwd):undefined,executionStart=Date.now();
   const linked=executable!==undefined&&toolName==="rustc"&&offloadCrateTypesOfV1(args).includes("cdylib"),asked=linked&&!remoteExecutionCodegenSerialRequestedV1(args)?Math.max(1,Math.floor(await run.threads?.().catch(()=>1)??1)):1;
   let granted=1,taskPid:number|undefined;
-  const collected:Collected=executable===undefined?{exitCode:127,stdout:new Uint8Array(0),stderr:new TextEncoder().encode(`Executable not found: ${first}\n`),timedOut:false,cancelled:false}:await withRemoteExecutionCodegenPoolV1(linked?asked:1,scratch,async pool=>{
+  const chunks=checkoutRun===undefined?undefined:createCheckoutTestChunkWriterV1({nonce:checkoutRun.nonce,origin:checkoutRun.origin,write:(index,chunk)=>run.content.writeActionResult(run.instance,checkoutTestChunkKeyV1(chunk.nonce,index),encodeProtobufV1(REAPI_V1.actionResult,{stderr_raw:encodeCheckoutTestChunkV1(chunk),exit_code:0}),run.signal)});
+  const collected:Collected=checkoutRun!==undefined?await execute([...checkoutRun.argv],checkoutRun.env,checkoutRun.cwd,run.timeoutSeconds*1000,run.signal,pid=>{taskPid=pid;run.meter?.attach(pid);},chunks===undefined?undefined:chunk=>{chunks.push(chunk);}).then(async raw=>raw.cancelled||raw.timedOut?raw:{...raw,...await checkoutRun!.finish(raw)}):executable===undefined?{exitCode:127,stdout:new Uint8Array(0),stderr:new TextEncoder().encode(`Executable not found: ${first}\n`),timedOut:false,cancelled:false}:await withRemoteExecutionCodegenPoolV1(linked?asked:1,scratch,async pool=>{
    granted=pool===undefined?1:asked;
    const wrapped=run.sandbox.wrap({argv:[executable,...(linked?remoteExecutionCodegenArgumentsV1(args.slice(1),granted):args.slice(1))],env:pool===undefined?env:{...env,...pool},cwd,root,network:run.network===true,...(readable.length>0?{readable}:{})});
    return execute(wrapped.argv,wrapped.env,wrapped.cwd,run.timeoutSeconds*1000,run.signal,pid=>{taskPid=pid;run.meter?.attach(pid);});
   }),executionEnd=Date.now();
+  await chunks?.close();
   if(collected.cancelled||run.signal.aborted)return {outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null};
   if(collected.timedOut)return fail(4,`Action exceeded its timeout of ${run.timeoutSeconds}s`);
   if(collected.exitCode===137&&remoteExecutionWardenCancelledV1({exitCode:collected.exitCode,cancels:await(run.wardenCancels??wardenCancelsV1)(executionStart).catch(()=>[]),work,...taskPid===undefined?{}:{pid:taskPid}}))return {outcome:"refused",status:{code:8,message:`${commandTextV1("en","refusal.warden-cancelled")} / ${commandTextV1("de","refusal.warden-cancelled")}`},actionResult:null,refusal:"warden-cancelled"};
@@ -569,7 +586,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
   ensureWardenV1();
   say("started",`${task.id} ${task.action.hash.slice(0,12)}`);
   const limit=setTimeout(()=>{controller.abort();},(task.timeoutSeconds+readRemoteExecutionPolicyV1().server.cancelGraceSeconds)*1000);
-   const result=await executeRemoteExecutionActionV1({properties,instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:heldUnits(others),...reservation===undefined?{}:{reservation}});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
+   const result=await executeRemoteExecutionActionV1({properties,instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:heldUnits(others),...reservation===undefined?{}:{reservation}});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),...(options.checkoutTests?{checkoutTests:options.checkoutTests}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
   const report:RemoteExecutionTaskResultV1={version:1,outcome:result.outcome,status:result.status,actionResult:result.actionResult?Buffer.from(result.actionResult).toString("base64"):null,...result.outcome==="refused"?{refusal:result.refusal??"warden-cancelled"}:{}};
   await send(task.id,report);
   say(result.outcome==="cancelled"?"cancelled":result.outcome==="refused"?"refused":"finished",`${task.id} ${result.outcome} ${result.status.code}`);

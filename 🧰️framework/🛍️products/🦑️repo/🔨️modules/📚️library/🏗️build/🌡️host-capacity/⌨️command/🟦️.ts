@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {formatHostCapacityV1,hostCapacityErrorV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import {describeForeignHostGrantV1,formatHostCapacityV1,hostCapacityErrorV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,hostEnvironmentPriorityV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import type {HostCapacityPortsV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import {readHostEstimateStoreV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts";
@@ -21,6 +21,9 @@ const positive=(value:string|undefined,name:string):number|undefined=>{
  return parsed;
 };
 
+/** ⛓️ The exit code of a run that was preempted to break a memory hold-and-wait (`EX_TEMPFAIL`): the command was stopped gracefully, its memory is released and the same command may be run again at once. */
+export const PREEMPTED_EXIT_V1=75;
+
 /** 📋️ Prints the machine's capacity: the sample, the floor, every running grant and every waiter, as lines or as one JSON document. */
 async function status(head:readonly string[],context:CapacityCommandContextV1,policy:HostCapacityPolicyV1,directory:string):Promise<number>{
  const {agentSessionCapacityRowsV1,agentSessionRegistryRootV1,renderAgentSessionCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
@@ -34,7 +37,8 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
   if(host.counters==="partial")context.write(formatHostCapacityV1(language,"countersPartial",{platform:host.platform,reason:language==="de"?"Probe fehlgeschlagen":"probe failed"}));
   for(const line of formatHostWardenStatusV1(language,warden))context.write(line);
-  for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,grant.lentSinceMs!==undefined?"grantLent":grant.quiet===true?"grantQuiet":"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)})+(grant.phase===undefined?"":` [${grant.phase}]`));
+  for(const grant of snapshot.grants){if(grant.foreign!==undefined)context.write(formatHostCapacityV1(language,"grantForeign",{id:grant.id,pid:grant.pid>0?grant.pid:"?",reserved:grant.reservedMegabytes,seconds:Math.round((now()-grant.admittedAtMs)/1000),...describeForeignHostGrantV1(language,grant.foreign)}));
+  else context.write(formatHostCapacityV1(language,grant.lentSinceMs!==undefined?"grantLent":grant.quiet===true?"grantQuiet":"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)})+(grant.phase===undefined?"":` [${grant.phase}]`));}
   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,waiter.upgrade===true?"waiterUpgrade":"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
   for(const line of unitWaitLinesV1(language,unitWaits,now()))context.write(line);
   for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
@@ -48,7 +52,7 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
  const {agentSessionAddressV1,currentAgentSessionV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
  const {newHostCapacityIdV1,readLiveHostCapacityReservationV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
  const memory=positive(flag(head,"memory"),"memory"),cpu=positive(flag(head,"cpu"),"cpu"),jobs=positive(flag(head,"jobs"),"jobs"),operation=flag(head,"operation")??"command";
- const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,minimumMegabytes:memory,perJobMegabytes:memory,cpuPerJob:cpu??1,retainReservation:true}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
+ const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:hostEnvironmentPriorityV1(context.environment)??"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,minimumMegabytes:memory,perJobMegabytes:memory,cpuPerJob:cpu??1,retainReservation:true}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,environment:context.environment,...jobs!==undefined?{preferredJobs:jobs}:{}});
  if(!sized)throw Error(`Unknown capacity operation: ${operation}`);
  const waiting=createCapacityControlV1();
  try{
@@ -64,6 +68,8 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
    waiting.dispose();
    const child=spawn(command[0]!,command.slice(1),{windowsHide:true,stdio:"inherit",env:environment});
    let stopping:Readonly<{signal:"SIGINT"|"SIGTERM";done:Promise<void>}>|undefined;
+   let preempted=false;
+   handle.preempted?.addEventListener("abort",()=>{preempted=true;stopping??={signal:"SIGTERM",done:terminateOwnedChildTreeGracefullyV1(child,{initialSignal:"SIGTERM"})};},{once:true});
    const handlers=(["SIGINT","SIGTERM"] as const).map(signal=>[signal,()=>{
     stopping??={signal,done:terminateOwnedChildTreeGracefullyV1(child,{initialSignal:signal})};
    }] as const);
@@ -73,7 +79,7 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
      child.once("error",reject);
      child.once("exit",(code,signal)=>{
       const interrupt=signal==="SIGINT"||signal==="SIGKILL"&&stopping?.signal==="SIGINT";
-      resolve(code??(signal===null?1:interrupt?130:143));
+      resolve(preempted?PREEMPTED_EXIT_V1:code??(signal===null?1:interrupt?130:143));
      });
     });
    }finally{

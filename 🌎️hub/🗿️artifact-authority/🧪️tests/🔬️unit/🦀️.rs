@@ -184,7 +184,7 @@ fn fixture_artifact_codec() -> ArtifactCodec {
 fn fixture_manifest() -> semio_framework::PluginManifest {
     semio_framework::PluginManifest {
         plugin_id: "fixture.authority".to_string(),
-        label: "Fixture Authority".to_string(),
+        label: semio_plugin::LocalizedLabel::native("Fixture Authority", "Fixture-Autorität"),
         version: "1.2.3".to_string(),
         apps: Vec::new(),
         examples: Vec::new(),

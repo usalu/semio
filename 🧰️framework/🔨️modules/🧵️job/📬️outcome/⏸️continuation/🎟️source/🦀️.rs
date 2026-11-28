@@ -77,7 +77,7 @@ pub fn claim_reason()->&'static str{CLAIM_REASON.with(|reason|reason.get())}
 fn claim_why(reason:&'static str)->Result<bool,OriginalTurnFailure>{CLAIM_REASON.with(|slot|slot.set(reason));Ok(false)}
 pub fn claim_original_return(cx:&mut StepContext<'_>,output:&mut Option<OriginalReturnClaimCredit>)->Result<bool,OriginalTurnFailure>{let destination=output as *mut _ as usize;claim_original_sized_return(cx,output,destination,0,0)}
 fn claim_stop_reason(cx:&StepContext<'_>)->Option<&'static str>{
- if cx.original_retirement_active(){if cx.retirement_should_yield(){return Some("retirement_should_yield")}}else{if cx.is_cancelled(){return Some("cancelled")}if cx.should_yield(){return Some("should_yield")}}
+ if cx.original_retirement_active(){if cx.retirement_should_yield(){return Some("retirement_should_yield")}}else{if cx.should_yield(){return Some("should_yield")}}
  if !cx.retained_recipient_is_admitted(){return Some("recipient_not_admitted")}
  if cx.retained_grant().maximum_items==0{return Some("items0")}
  if cx.retained_grant().maximum_depth==0{return Some("depth0")}

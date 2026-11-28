@@ -254,7 +254,7 @@ fn live_handles(document: &Din4108Snapshot, selection: &[semio_s_plugin_norm_str
 
 semio_s_plugin_norm_app_surface::norm_live_editor!(Din4108PlayApp, Din4108Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_din4108_mutations::resolve, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
 #[cfg(test)]
-semio_s_plugin_norm_app_surface::norm_live_acceptance!(Din4108PlayApp, entities = live_entities);
+semio_s_plugin_norm_app_surface::norm_live_acceptance!(Din4108PlayApp, entities = live_entities, layout = derived);
 #[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_latency_bench!(Din4108PlayApp, variant = "din4108", seed = semio_s_artifact_norm_din4108_model::Din4108Snapshot::default(), scene = viewport::scene_of, full = viewport::full_scene_of);
 //#endregion 🫧️LiveEditor

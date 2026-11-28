@@ -44,6 +44,7 @@ pub struct AddSupport {
 }
 
 pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    super::add_nodal_load::require(doc.snapshot.nodes.iter().any(|node| node.id.as_str() == payload.node_id), "fem2d.reference.node-unknown", &payload.node_id)?;
     let id = doc.operation()?.entity_id("sup", "supports")?;
     Ok(Emit::mutations(vec![Fem2dMutation::CreateSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() }, index: None })]))
 }

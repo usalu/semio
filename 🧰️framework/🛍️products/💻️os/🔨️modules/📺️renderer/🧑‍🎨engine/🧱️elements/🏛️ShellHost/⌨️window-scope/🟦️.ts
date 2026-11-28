@@ -136,3 +136,21 @@ export function keybindingUnownedTextV1(locale: string, chord: string, label: st
   return `${chord} · ${label} — ${localizedLabelTextV1(KEYBINDING_UNOWNED_LABEL, locale)}`;
 }
 //#endregion 🗣️UnownedHint
+
+//#region ⏪️HistoryChords
+/** ⏪️ The chords of the two history verbs when an app declares none of its own (`mod` is ctrl or meta, as everywhere). */
+export const HISTORY_VERB_CHORDS_V1 = { undo: "mod+z", redo: "mod+shift+z,mod+y" } as const;
+
+/** ⌨️ The chords one control currently answers to: the user's override of its control id (Settings ▸ Hotkeys writes it under the action id) wins over the declared default; both are comma-separated alternatives, compared lower-cased. An override of `""` unbinds the control. */
+export function effectiveChordsV1(declared: string, controlId: string, overrides: Readonly<Record<string, string>> = {}): readonly string[] {
+  return (overrides[controlId] ?? declared).split(",").map((key) => key.trim().toLowerCase()).filter(Boolean);
+}
+
+/** ⏪️ The history verb a keydown asks for under the user's overrides, or `null`; `matches` is the shell's chord matcher. */
+export function historyVerbForChordV1<E>(event: E, overrides: Readonly<Record<string, string>>, matches: (event: E, chord: string) => boolean): "undo" | "redo" | null {
+  for (const verb of ["undo", "redo"] as const) {
+    if (effectiveChordsV1(HISTORY_VERB_CHORDS_V1[verb], verb, overrides).some((chord) => matches(event, chord))) return verb;
+  }
+  return null;
+}
+//#endregion ⏪️HistoryChords

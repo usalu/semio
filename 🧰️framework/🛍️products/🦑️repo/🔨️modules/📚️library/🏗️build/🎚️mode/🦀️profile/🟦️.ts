@@ -3,6 +3,8 @@ import{createHash}from"node:crypto";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{BROWSER_CANVAS_HOT_CRATES}from"../../../../../../../🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
 import{cargoProfileConstraintsForOwnerV1,CARGO_PROFILE_CONSTRAINT_SOURCE_V1}from"./📋️constraints/🟦️.ts";
+/** 📚️ The checkout-relative paths of the Sources every profile policy declares (constraints, then schema); a private repository adopts exactly these so the policy capture reads them back below its own root. */
+export const CARGO_PROFILE_POLICY_SOURCE_PATHS_V1:readonly [string,string]=Object.freeze([CARGO_PROFILE_CONSTRAINT_SOURCE_V1.path,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json"] as const);
 import sourceSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 export interface CargoProfilePolicyRequestV1{readonly version:1;readonly mode:"prototype"|"release";readonly target:string;readonly producer:"artifact"|"descriptor-emitter"|"wasm-component"|"browser-canvas"|"browser-module";readonly operation:"build"|"check"|"test"|"doc"|"run"|"bench"|"clippy"|"rustc"|"rustdoc";readonly compositions?:readonly string[]}
@@ -45,7 +47,7 @@ export function planCargoProfilePolicyV1(value:unknown,input:unknown):CargoProfi
  const lean=role==="component"&&compositions!==undefined&&(request.mode==="release"||compositions.length===1)&&compositions.every(name=>leanPackages.includes(name));
  const targetKey=lean?"component-lean":(request.mode+"-"+targetRole)as keyof typeof protocol.settings,hostKey=(request.mode+"-host")as keyof typeof protocol.settings,target=protocol.settings[targetKey],host=protocol.settings[hostKey];
  if(validateJsonSchemaSubset(schema.definitions.Settings,target,schema).length||validateJsonSchemaSubset(schema.definitions.HostSettings,host,schema).length)throw Error("Closed authored target and host settings required");
- const sources:Readonly<{owner:string;path:string;digest:string}>[]=[Object.freeze({owner:workspaceOwner,...CARGO_PROFILE_CONSTRAINT_SOURCE_V1}),Object.freeze({owner:"profile-schema",path:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json",digest:hash(JSON.stringify(schema))})];if(request.producer==="browser-canvas")sources.push(Object.freeze({owner:"browser-canvas",path:"🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🔣️.json",digest:hash(JSON.stringify({version:1,hotPackages:browser}))}));
+ const sources:Readonly<{owner:string;path:string;digest:string}>[]=[Object.freeze({owner:workspaceOwner,...CARGO_PROFILE_CONSTRAINT_SOURCE_V1}),Object.freeze({owner:"profile-schema",path:CARGO_PROFILE_POLICY_SOURCE_PATHS_V1[1],digest:hash(JSON.stringify(schema))})];if(request.producer==="browser-canvas")sources.push(Object.freeze({owner:"browser-canvas",path:"🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🔣️.json",digest:hash(JSON.stringify({version:1,hotPackages:browser}))}));
  const content={version:1 as const,request,workspaceOwner,workspaceKind,profile:request.mode,role,target:Object.freeze({...target})as CargoProfileSettingsV1,host:Object.freeze({...host})as CargoProfileHostSettingsV1,authoredConstraints:authored,packageOverrides:Object.freeze([...overrides.values()].sort((a,b)=>compare(a.package,b.package))),sources:Object.freeze(sources),preserved:Object.freeze([...protocol.preserved]),requiresConsumedView:true as const};return Object.freeze({...content,digest:hash(JSON.stringify({protocol,content}))});
 }
 

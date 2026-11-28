@@ -1,0 +1,12 @@
+{
+  "schema": "window-bottom-dock-reserve/v1",
+  "cases": [
+    { "name": "no dock reserves nothing", "body": { "left": 0, "right": 192, "top": 82, "bottom": 976 }, "docks": [], "reservePx": 0 },
+    { "name": "the shell's bottom chip row over the window's lower edge reserves up to its top", "body": { "left": 0, "right": 192, "top": 82, "bottom": 976 }, "docks": [{ "left": 0, "right": 210, "top": 944, "bottom": 968 }], "reservePx": 32 },
+    { "name": "the highest of several bottom docks wins", "body": { "left": 0, "right": 400, "top": 100, "bottom": 900 }, "docks": [{ "left": 0, "right": 120, "top": 870, "bottom": 894 }, { "left": 200, "right": 300, "top": 840, "bottom": 900 }], "reservePx": 60 },
+    { "name": "a dock beside the window reserves nothing", "body": { "left": 200, "right": 600, "top": 100, "bottom": 900 }, "docks": [{ "left": 0, "right": 200, "top": 860, "bottom": 900 }], "reservePx": 0 },
+    { "name": "a dock below the window reserves nothing", "body": { "left": 0, "right": 400, "top": 100, "bottom": 900 }, "docks": [{ "left": 0, "right": 400, "top": 900, "bottom": 930 }], "reservePx": 0 },
+    { "name": "a tall side panel reaching into the upper half claims the side, not the bottom", "body": { "left": 0, "right": 800, "top": 100, "bottom": 900 }, "docks": [{ "left": 600, "right": 800, "top": 120, "bottom": 900 }], "reservePx": 0 },
+    { "name": "an empty dock box reserves nothing", "body": { "left": 0, "right": 400, "top": 100, "bottom": 900 }, "docks": [{ "left": 0, "right": 400, "top": 880, "bottom": 880 }], "reservePx": 0 }
+  ]
+}

@@ -12,6 +12,7 @@ import {startRemoteExecutionServerV1} from "../🖥️server/🟦️.ts";
 import {runRemoteExecutionAgentV1} from "../🛰️agent/🟦️.ts";
 import {detectWorkerRustcV1} from "../🚀️offload/🧰️toolchain/🟦️.ts";
 import {detectWorkerCommandsV1} from "../🚀️offload/🧰️command/🛠️worker-tools/🟦️.ts";
+import {detectWorkerCheckoutTestsV1} from "../🚀️offload/🔬️checkout-test/👷️worker/🟦️.ts";
 import type {RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import {readRemoteExecutionPolicyV1,remoteExecutionPropertiesV1,requireRemoteExecutionShapeV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
@@ -175,11 +176,11 @@ export async function runRemoteExecutionWorkersV1(args:readonly string[],context
  say("workers.start",{name,url:scheduler,concurrency,platform:remoteExecutionPlatformIdV1()});
  const label=(event:{stage:string;detail:string}):void=>{say(`workers.${event.stage}`,event.stage==="sandbox"?{sandbox:event.detail}:{detail:event.detail});};
  const actions=(optional(context.environment,"SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS")??policy.worker.actions) as RemoteExecutionActionPolicyV1;
- const rustc=detectWorkerRustcV1(context.root,context.environment),commands=await detectWorkerCommandsV1(context.root,context.environment);
+ const rustc=detectWorkerRustcV1(context.root,context.environment),commands=await detectWorkerCommandsV1(context.root,context.environment),checkoutTests=await detectWorkerCheckoutTestsV1(context.root,context.environment);
  await runRemoteExecutionAgentV1({
   root:context.root,environment:context.environment,scheduler,token:optional(context.environment,names.workerToken),cacheToken:optional(context.environment,cachePolicy.defaults.tokenEnvironment),name,...flags["--origin"]?{origin:flags["--origin"]}:{},concurrency,
   directory:where(context.root,flags["--work-directory"]??policy.worker.directory),sandbox:sandboxOf(flags["--sandbox"],policy.worker.sandbox),materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
-   network:policy.worker.network as "deny"|"allow",confinement:policy.worker.confinement as "required"|"best-effort",actions,unconfinedForTests:optional(context.environment,"SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY")==="I-ACCEPT-THE-RISK",loadIntervalSeconds:flags["--load-interval"]===undefined?policy.worker.loadIntervalSeconds:whole("--load-interval",flags["--load-interval"],1,300),extraProperties:[...properties,...rustc?.properties??[],...commands.properties],...rustc?{tools:rustc.tools}:{},commands:commands.tools,signal:context.signal,onEvent:event=>{label(event);},
+   network:policy.worker.network as "deny"|"allow",confinement:policy.worker.confinement as "required"|"best-effort",actions,unconfinedForTests:optional(context.environment,"SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY")==="I-ACCEPT-THE-RISK",loadIntervalSeconds:flags["--load-interval"]===undefined?policy.worker.loadIntervalSeconds:whole("--load-interval",flags["--load-interval"],1,300),extraProperties:[...properties,...rustc?.properties??[],...commands.properties,...checkoutTests?.properties??[]],...rustc?{tools:rustc.tools}:{},commands:commands.tools,...checkoutTests?{checkoutTests}:{},signal:context.signal,onEvent:event=>{label(event);},
  }).catch(error=>{
   if(/Sandbox strategy not available/u.test((error as Error).message))throw Error(both("error.sandbox",{sandbox:flags["--sandbox"]??policy.worker.sandbox}));
   if(/^Confinement required/u.test((error as Error).message))throw Error(both("error.confinement"));

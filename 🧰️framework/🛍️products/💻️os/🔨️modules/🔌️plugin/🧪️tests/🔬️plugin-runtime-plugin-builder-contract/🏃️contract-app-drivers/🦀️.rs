@@ -76,6 +76,14 @@ pub async fn settle_contract_app(app: &mut ContractApp,identity:&mut semio_os_ke
         artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await.expect("registered fixture settles its addressed dispatch");
     }
 
+    /// 🪜️ The policy a contract app is mounted under: the requested one raised, axis by axis, to the interactive component floor that every driver here dispatches and settles under. A mounted app granted fewer items than one tool-job construction quotes can never build its producer, so the requested grant may only widen.
+    #[doc(hidden)]
+pub fn contract_mounted_policy(requested: semio_plugin_mounted_owner::MountedOwnerPolicyV1) -> semio_plugin_mounted_owner::MountedOwnerPolicyV1 {
+        let floor = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
+        let raise = |requested: RetainedCloneGrant, floor: RetainedCloneGrant| RetainedCloneGrant { maximum_items: requested.maximum_items.max(floor.maximum_items), maximum_copy_bytes: requested.maximum_copy_bytes.max(floor.maximum_copy_bytes), maximum_capacity_bytes: requested.maximum_capacity_bytes.max(floor.maximum_capacity_bytes), maximum_release_bytes: requested.maximum_release_bytes.max(floor.maximum_release_bytes), maximum_depth: requested.maximum_depth.max(floor.maximum_depth) };
+        semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: raise(requested.preparation, floor.preparation), maintenance: raise(requested.maintenance, floor.maintenance), close: raise(requested.close, floor.close) }
+    }
+
     #[doc(hidden)]
 pub async fn contract_app_under_test(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         contract_app_with(migrated_contract_registry().await, mounted_policy, identity).await
@@ -85,6 +93,7 @@ pub async fn contract_app_under_test(mounted_policy: semio_plugin_mounted_owner:
     /// fixtures declare their own manifests but need the same mounted shape with explicit original paid closure.
     #[doc(hidden)]
 pub async fn contract_app_with(registry: AppActionRegistry, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+        let mounted_policy = contract_mounted_policy(mounted_policy);
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
         semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
@@ -105,6 +114,7 @@ pub async fn contract_app(mounted_policy: semio_plugin_mounted_owner::MountedOwn
     /// themselves, exactly as they did before.
     #[doc(hidden)]
 pub async fn contract_app_raw(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
+        let mounted_policy = contract_mounted_policy(mounted_policy);
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
         semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
@@ -114,6 +124,7 @@ pub async fn contract_app_raw(mounted_policy: semio_plugin_mounted_owner::Mounte
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
     #[doc(hidden)]
 pub async fn contract_composed_app_raw(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
+        let mounted_policy = contract_mounted_policy(mounted_policy);
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
         semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
@@ -216,6 +227,7 @@ pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_plugi
 
     #[doc(hidden)]
 pub async fn contract_composed_app(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
+        let mounted_policy = contract_mounted_policy(mounted_policy);
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
         semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;

@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { closeSync, constants, mkdirSync, openSync, readSync, rmSync, writeSync } from "node:fs";
+import { closeSync, constants, lstatSync, mkdirSync, openSync, readSync, rmSync, unlinkSync, writeSync } from "node:fs";
 import { join } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -83,7 +83,7 @@ interface TokenChannelV1 {
 function fifoChannel(directory: string, name: string, published: number): TokenChannelV1 {
   mkdirSync(directory, { recursive: true });
   const endpoint = join(directory, name);
-  rmSync(endpoint, { force: true });
+  removeJobserverPathV1(endpoint, false);
   const made = spawnSync("mkfifo", ["-m", "600", endpoint], { encoding: "utf8" });
   if (made.status !== 0) throw Error(`mkfifo refused ${endpoint}: ${made.stderr || made.error?.message}`);
   const descriptor = openSync(endpoint, constants.O_RDWR | constants.O_NONBLOCK);
@@ -96,7 +96,7 @@ function fifoChannel(directory: string, name: string, published: number): TokenC
       catch (error) { if ((error as NodeJS.ErrnoException).code === "EAGAIN") return false; throw error; }
     },
     release: () => { if (writeSync(descriptor, token) !== 1) throw Error("Jobserver fifo refused a returned token"); },
-    close: () => { closeSync(descriptor); rmSync(endpoint, { force: true }); },
+    close: () => { try { closeSync(descriptor); } finally { removeJobserverPathV1(endpoint, false); } },
   };
 }
 
@@ -119,6 +119,34 @@ function semaphoreChannel(published: number, maximum: number): TokenChannelV1 {
     release: () => { if (!kernel.symbols.ReleaseSemaphore(handle, 1, null)) throw Error("Jobserver semaphore refused a returned token"); },
     close: () => { kernel.symbols.CloseHandle(handle); kernel.close(); },
   };
+}
+
+/** 🧹️ Removes a jobserver path so that a path already gone counts as removed: a fifo is unlinked directly (it may still be open elsewhere), a directory is removed recursively. A refused removal is retried with backoff and then handed to the system `rm`; only a path that still exists afterwards raises the last error. */
+export function removeJobserverPathV1(path: string, directory: boolean): void {
+  const delays = [0, 10, 40, 160];
+  let last: unknown;
+  for (const delay of delays) {
+    if (delay) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay);
+    try { if (directory) rmSync(path, { recursive: true, force: true }); else unlinkSync(path); return; }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return; last = error; }
+  }
+  if (process.platform !== "win32") spawnSync("rm", ["-rf", path], { stdio: "ignore" });
+  try { lstatSync(path); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return; }
+  throw last;
+}
+
+/** ⚠️ A pool that could not be retired completely; the build it served is unaffected. */
+export type JobserverRetirementWarningV1 = Readonly<{ kind: "jobserver-retirement-failed"; path: string; reason: string }>;
+
+/** 🛑️ Closes a pool and removes its directory without ever throwing: every failure becomes a typed warning so a completed build keeps its own exit status. Retiring twice, or after the fifo vanished, yields no warning. */
+export function retireJobserverV1(jobserver: JobserverV1, directory: string): readonly JobserverRetirementWarningV1[] {
+  const warnings: JobserverRetirementWarningV1[] = [];
+  const attempt = (path: string, run: () => void): void => {
+    try { run(); } catch (error) { warnings.push(Object.freeze({ kind: "jobserver-retirement-failed", path, reason: error instanceof Error ? error.message : String(error) })); }
+  };
+  attempt(jobserver.endpoint, () => jobserver.close());
+  attempt(directory, () => removeJobserverPathV1(directory, true));
+  return warnings;
 }
 
 /** 🆕️ Creates a pool of `config.tokens` job slots: the driver keeps one implicit slot and publishes the rest, exactly as a top-level GNU make does.

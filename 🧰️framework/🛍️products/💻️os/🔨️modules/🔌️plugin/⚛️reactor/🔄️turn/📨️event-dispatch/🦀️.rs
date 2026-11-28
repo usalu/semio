@@ -15,7 +15,8 @@ pub(super) fn select_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, even
         None
     } else if events.is_some() {
         let grant=cx.retained_grant();
-        if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0 { None } else {
+        let waits=events.as_ref().is_some_and(|event|semio_plugin_runtime_ops::ops_surface_render::surface_mutation_waits(event,|instance|semio_plugin_runtime_ops::ops_surface_render::plugin_surface_capture_held(runtime,instance)));
+        if waits||cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0 { None } else {
             let copy_bytes = if matches!(events.as_ref(), Some(Event::InstanceOpen { purpose: semio_framework::kernel::ActorInstanceOpenPurpose::NaturalSource { .. }, .. })) {
                 size_of::<(String, String, semio_framework::kernel::ActorInstanceOpenPurpose)>()
             } else { 0 };

@@ -201,7 +201,7 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
       const metadata = JSON.parse(text);
       if (metadata.name !== packageName) continue;
       const root = dirname(physical);
-      resolved = declarations ? undefined : directStylesheetExportV1(metadata, packageName, specifier, root, host);
+      resolved = directStylesheetExportV1(metadata, packageName, specifier, root, host);
       if (resolved) break;
       const { reason, target } = exportDiagnosisV1(metadata, packageName, specifier, root);
       throw Object.assign(

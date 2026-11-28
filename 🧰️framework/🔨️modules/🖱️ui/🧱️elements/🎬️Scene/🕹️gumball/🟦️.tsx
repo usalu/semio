@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
 import { reactHostPort, sceneHostPort } from "../../🔌️Ports/🟦️.tsx";
-import { type GumballConfig, type GumballHandleKind, type GumballPose, type GumballVec3, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballDragEndPointerState, gumballEyeFromPivot, gumballHighlightKind, gumballHandleEnabled, gumballLen, gumballPoseFromObject3D, gumballProjectRayOntoAxis, gumballRayPlanePoint, gumballResolveDragSnaps, gumballSnapScalar, gumballSub, gumballV3, resolveGumballConfig } from "../🧿️gumball-model/🟦️.ts";
+import { type GumballConfig, type GumballHandleKind, type GumballPose, type GumballVec3, gumballAxisRotateAngle, gumballAxisScaleFactor, GUMBALL_DRAG_END_EVENTS, gumballConfigVisible, gumballDragEndPointerState, gumballEyeFromPivot, gumballHighlightKind, gumballHandleEnabled, gumballLen, gumballPoseFromObject3D, gumballProjectRayOntoAxis, gumballRayPlanePoint, gumballResolveDragSnaps, gumballSnapScalar, gumballSub, gumballV3, resolveGumballConfig } from "../🧿️gumball-model/🟦️.ts";
 import { type GumballHandleVisualState, GumballInteractionPreview, type GumballVisualPalette, gumballBaseColorForKind, gumballHandleVisualState, gumballResolveHandleVisual, gumballWorldAxis, useGumballVisualPalette } from "../🎨️gumball-visual/🟦️.tsx";
 import { gumballBindHandleRaycast, gumballNdcFromPointer, gumballPointerConsumesCanvasEventRef, gumballPressTarget, gumballRayFromNdc, gumballRaycastKindAtClientPoint, gumballRaycastOwnedAtClientPoint } from "../🎯️gumball-pick/🟦️.ts";
 import { GUMBALL_ARROW_HEAD, GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_RADIUS, GUMBALL_AXIS_BY_KIND, GUMBALL_HANDLE_LENGTH, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, GUMBALL_SCALE_PICK, GUMBALL_SCALE_RENDER_ORDER, GUMBALL_UNIFORM_BOX, GumballPlaneScaleLHandle, type GumballPreviewAxis, GumballScaleAxisHandle, type GumballScalePlane, gumballPlaneScaleFactors, gumballScalePlaneAxisIndices, gumballWorldPointToLocalOffset } from "../🔩️gumball-handles/🟦️.tsx";
@@ -359,7 +359,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
     setActiveKind(settled.active);
     setHovered(settled.hovered);
     window.removeEventListener("pointermove", onWindowMoveRef.current);
-    window.removeEventListener("pointerup", onWindowUpRef.current);
+    for (const type of GUMBALL_DRAG_END_EVENTS) window.removeEventListener(type, onWindowUpRef.current);
     window.removeEventListener("keydown", onWindowKeyRef.current, true);
     window.removeEventListener("keyup", onWindowKeyRef.current, true);
     if (controls) controls.enabled = true;
@@ -404,7 +404,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   reactHostPort.useEffect(
     () => () => {
       window.removeEventListener("pointermove", onWindowMoveRef.current);
-      window.removeEventListener("pointerup", onWindowUpRef.current);
+      for (const type of GUMBALL_DRAG_END_EVENTS) window.removeEventListener(type, onWindowUpRef.current);
       window.removeEventListener("keydown", onWindowKeyRef.current, true);
       window.removeEventListener("keyup", onWindowKeyRef.current, true);
     },
@@ -459,7 +459,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       props.onDraggingChanged?.(true);
       props.onDragStart?.(kind, before);
       window.addEventListener("pointermove", onWindowMove);
-      window.addEventListener("pointerup", onWindowUp);
+      for (const type of GUMBALL_DRAG_END_EVENTS) window.addEventListener(type, onWindowUp);
       window.addEventListener("keydown", onWindowKey, true);
       window.addEventListener("keyup", onWindowKey, true);
     },

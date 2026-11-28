@@ -5,6 +5,9 @@ use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_process_process3d_kit::Process3dDispatchCtx;
 use semio_s_artifact_process_process3d_kit::Process3dInteractionSnapshot;
 
+/// 📤️ The export formats the manifest's `exportModel` select declares and the exporter implements.
+pub const PROCESS3D_EXPORT_FORMATS: &[&str] = &["step", "obj", "stl", "glb"];
+
 /// 🧱️ Every window/panel body of the process3d editor, rendered against one already-resolved
 /// `"geometry"` selection — shared by `render` (empty selection) and `render_with_request_context`
 /// (the live selection) so there is exactly one body-key match in the app.
@@ -46,10 +49,13 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_ui_locale::LocalizedLabel;
-        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 2]> = std::sync::LazyLock::new(|| {
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
             [
             ("process3d.action.invalid", LocalizedLabel::native("This action's arguments are not valid.", "Die Argumente dieser Aktion sind ungültig.")),
             ("process3d.media.export", LocalizedLabel::native("The model cannot be exported.", "Das Modell lässt sich nicht exportieren.")),
+            ("process3d.capability.stock-limit", LocalizedLabel::native("This stock does not satisfy the machine's limits for this operation.", "Das Rohteil erfüllt die Grenzen der Maschine für diese Operation nicht.")),
+            ("process3d.stock.display-only", LocalizedLabel::native("This stock is a display-only mesh; load a closed solid to add process steps.", "Dieses Rohteil ist nur ein Anzeigenetz; für Prozessschritte ein geschlossenes Volumenmodell laden.")),
+            ("process3d.media.import", LocalizedLabel::native("The model file cannot be imported.", "Die Modelldatei lässt sich nicht importieren.")),
             ]
         });
         &*NOTICES
@@ -276,13 +282,16 @@ impl ArtifactEditor for Process3dPlayApp {
             }
             Some([values[0].as_f64()?, values[1].as_f64()?])
         };
+        let required_text = |keys: &[&str]| keys.iter().find_map(|key| string_field(key)).filter(|value| !value.is_empty()).ok_or_else(|| process3d_action_fault(action, format!("requires the non-empty '{}'", keys[0])));
+        let required_number = |key: &str| number_field(key).filter(|value| value.is_finite()).ok_or_else(|| process3d_action_fault(action, format!("requires the finite number '{key}'")));
+        let required_vec3 = |keys: &[&str]| keys.iter().find_map(|key| vec3_field(key)).filter(|value| value.iter().all(|coordinate| coordinate.is_finite())).ok_or_else(|| process3d_action_fault(action, format!("requires the three finite coordinates '{}'", keys[0])));
         let position = || vec3_field("position").filter(|value| value.iter().all(|coordinate| coordinate.is_finite())).ok_or_else(|| process3d_action_fault(action, "requires three finite position coordinates"));
         match action {
             "setSnapshot" => {
-                let json = string_field("json").or_else(|| field("document").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
+                let json = string_field("json").or_else(|| field("document").map(semio_framework_pack_json::to_json_string)).filter(|json| !json.is_empty()).ok_or_else(|| process3d_action_fault(action, "requires 'json' or 'document'"))?;
                 Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
             }
-            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("example_id")).or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
+            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("example_id")).or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_DEMO.into()) })),
             "addStep" => Ok(Process3dCommand::AddStep(add_step::AddStep {
                 measure: string_field("measure"),
                 machine_id: string_field("machineId").or_else(|| string_field("machine_id")),
@@ -290,45 +299,45 @@ impl ArtifactEditor for Process3dPlayApp {
                 position: vec3_field("position"),
             })),
             "addWorkshopMachine" => Ok(Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine {
-                catalog_id: string_field("catalogId").or_else(|| string_field("catalog_id")).unwrap_or_default(),
-                machine_id: string_field("machineId").or_else(|| string_field("machine_id")).unwrap_or_default(),
+                catalog_id: required_text(&["catalogId", "catalog_id"])?,
+                machine_id: required_text(&["machineId", "machine_id"])?,
             })),
-            "removeWorkshopMachine" => Ok(Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: string_field("id").unwrap_or_default() })),
+            "removeWorkshopMachine" => Ok(Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: required_text(&["id"])? })),
             "updateWorkshopMachine" => Ok(Process3dCommand::UpdateWorkshopMachine(update_workshop_machine::UpdateWorkshopMachine {
-                machine: args
-                    .and_then(|value| value.get("machine"))
+                machine: field("machine")
                     .cloned()
-                    .map(<WorkshopMachine as semio_framework_value::FromValue>::from_value)
-                    .transpose()
-                    .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
-                    .unwrap_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
+                    .ok_or_else(|| process3d_action_fault(action, "requires 'machine'"))
+                    .and_then(|machine| <WorkshopMachine as semio_framework_value::FromValue>::from_value(machine).map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}"))))?,
             })),
-            "removeStep" => Ok(Process3dCommand::RemoveStep(remove_step::RemoveStep { id: string_field("id").unwrap_or_default() })),
+            "removeStep" => Ok(Process3dCommand::RemoveStep(remove_step::RemoveStep { id: required_text(&["id"])? })),
             "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
-            "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: string_field("id").unwrap_or_default(), index: unsigned_field("index").unwrap_or_default() as usize })),
+            "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: required_text(&["id"])?, index: unsigned_field("index").ok_or_else(|| process3d_action_fault(action, "requires the non-negative number 'index'"))? as usize })),
             "dropStep" => Ok(Process3dCommand::DropStep(drop_step::DropStep {
-                document_id: string_field("documentId").unwrap_or_default(),
-                step_id: string_field("stepId").unwrap_or_default(),
-                target_id: string_field("targetId").unwrap_or_default(),
-                drop_position: string_field("dropPosition").unwrap_or_default(),
+                document_id: required_text(&["documentId"])?,
+                step_id: required_text(&["stepId"])?,
+                target_id: required_text(&["targetId"])?,
+                drop_position: required_text(&["dropPosition"])?,
             })),
             "updateStep" => {
-                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
+                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_pack_json::to_json_string)).filter(|json| !json.is_empty()).ok_or_else(|| process3d_action_fault(action, "requires 'stepJson' or 'step'"))?;
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
             }
             "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled {
-                id: string_field("id").unwrap_or_default(),
+                id: required_text(&["id"])?,
                 enabled: field("enabled").and_then(DslValue::as_bool).ok_or_else(|| process3d_action_fault(action, "requires the boolean 'enabled' it sets"))?,
             })),
             "setStock" => Ok(Process3dCommand::SetStock(set_stock::SetStock { kind: string_field("kind").or_else(|| string_field("value")).unwrap_or_else(|| "box".into()) })),
             "patchInspector" => Ok(Process3dCommand::PatchInspector(patch_inspector::PatchInspector {
-                target: string_field("target").unwrap_or_default(),
-                field: string_field("field").unwrap_or_default(),
+                target: required_text(&["target"])?,
+                field: required_text(&["field"])?,
                 number: number_field("number").or_else(|| number_field("value")),
                 text: string_field("text").or_else(|| string_field("value")),
-            })),
+            })).and_then(|command| match &command {
+                Process3dCommand::PatchInspector(patch) if patch.number.is_none() && patch.text.is_none() => Err(process3d_action_fault(action, "requires a 'number', 'text' or 'value'")),
+                _ => Ok(command),
+            }),
             "setCursor" => Ok(Process3dCommand::SetCursor(set_cursor::SetCursor { value: unsigned_field("value") })),
-            "stepCursor" => Ok(Process3dCommand::StepCursor(step_cursor::StepCursor { delta: signed_field("delta").unwrap_or_default() })),
+            "stepCursor" => Ok(Process3dCommand::StepCursor(step_cursor::StepCursor { delta: signed_field("delta").ok_or_else(|| process3d_action_fault(action, "requires the finite number 'delta'"))? })),
             "stepCursorBack" => Ok(Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {})),
             "stepCursorForward" => Ok(Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {})),
             "engagementSubmit" => Ok(Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {})),
@@ -339,29 +348,35 @@ impl ArtifactEditor for Process3dPlayApp {
             "worldPointerDown" => Ok(Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: position()? })),
             "worldPointerMove" => Ok(Process3dCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { position: position()? })),
             "worldFaceDragEnd" => Ok(Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd {
-                normal: vec3_field("normal").unwrap_or([0.0, 0.0, 1.0]),
-                start_point: vec3_field("startPoint").or_else(|| vec3_field("start_point")).unwrap_or_default(),
-                distance: number_field("distance").unwrap_or_default(),
+                normal: required_vec3(&["normal"])?,
+                start_point: required_vec3(&["startPoint", "start_point"])?,
+                distance: required_number("distance")?,
                 face_extent: vec2_field("faceExtent").or_else(|| vec2_field("face_extent")),
             })),
             "importModelFile" => {
                 use semio_s_artifact_process_process3d_io::{PROCESS3D_MODEL_DATA_URL_BYTES, Process3dImportError};
-                let name = string_field("name").unwrap_or_default();
-                let payload = string_field("payload").unwrap_or_default();
+                let name = required_text(&["name"])?;
+                let payload = required_text(&["payload"])?;
                 if payload.len() > PROCESS3D_MODEL_DATA_URL_BYTES {
                     return Err(process3d_action_fault(action, Process3dImportError::InputTooLarge.to_string()));
                 }
                 Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name, payload }))
             },
-            "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
+            "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").ok_or_else(|| process3d_action_fault(action, "requires the text 'value'"))? })),
             "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
             "setCamera" => field("camera").and_then(set_camera::SetCamera::from_viewport).map(Process3dCommand::SetCamera).ok_or_else(|| process3d_action_fault(action, "requires a camera with finite three-dimensional position and target")),
             "toggleSun" => Ok(Process3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
-            "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: number_field("value").unwrap_or_default() })),
-            "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: number_field("value").unwrap_or_default() })),
-            "setSunIntensity" => Ok(Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: number_field("value").unwrap_or_default() })),
-            "setContributions" => Ok(Process3dCommand::SetContributions(set_contributions::SetContributions { json: string_field("json").unwrap_or_else(|| "[]".into()) })),
-            "exportModel" => Ok(Process3dCommand::ExportModel(export_model::ExportModel { format: string_field("format").unwrap_or_else(|| "step".into()) })),
+            "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: required_number("value")? })),
+            "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: required_number("value")? })),
+            "setSunIntensity" => Ok(Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: required_number("value")? })),
+            "setContributions" => Ok(Process3dCommand::SetContributions(set_contributions::SetContributions { json: required_text(&["json"])? })),
+            "exportModel" => {
+                let format = string_field("format").unwrap_or_else(|| "step".into());
+                if !PROCESS3D_EXPORT_FORMATS.contains(&format.as_str()) {
+                    return Err(process3d_action_fault(action, format!("unknown export format '{format}', expected one of {}", PROCESS3D_EXPORT_FORMATS.join(", "))));
+                }
+                Ok(Process3dCommand::ExportModel(export_model::ExportModel { format }))
+            }
             "loadModelRequest" => Ok(Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {})),
             other => Err(process3d_action_fault(other, "not declared by the process app's typed command vocabulary")),
         }

@@ -35,13 +35,13 @@ export const BOOT_QUERY_CAPACITY = 8192;
 /** 🔗️ Resolves the boot-time {@link AppRole} from a raw `location.search`.
  *
  * `"viewer"` and `"editor"` are the only accepted spellings; an absent OR unrecognized `?role=` falls
- * back to `fallback` (the React entry passes the `VITE_SEMIO_APP_ROLE` env default, which is itself
- * `"editor"` when unset — so with no env the behaviour is byte-identical to the wgpu boot's
- * `params.get("role") === "viewer" ? "viewer" : "editor"`). Throws on an oversized query rather than
+ * back to `fallback` (the React entry passes the `VITE_SEMIO_APP_ROLE` env axis, `undefined` when unset). A role nobody
+ * stated stays `undefined`: the pinned or default app id then names its own role, so a `…#viewer` app id boots
+ * the viewer without a second variable. Throws on an oversized query rather than
  * silently parsing it.
  *
  * @see 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts */
-export function resolveBootQueryAppRole(search: string, fallback: AppRole): AppRole {
+export function resolveBootQueryAppRole(search: string, fallback: AppRole | undefined): AppRole | undefined {
   if (search.length > BOOT_QUERY_CAPACITY) throw new Error(`boot-query-overflow: search exceeds ${BOOT_QUERY_CAPACITY} code units`);
   const raw = new URLSearchParams(search).get(BOOT_QUERY_APP_ROLE_PARAM);
   if (raw === "viewer") return "viewer";

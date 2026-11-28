@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-node`: one-field edit of a node (`x`, `y`) → `ChangeNode`.
 
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodePatch;
+use semio_s_artifact_fem_2d_diff::standards::v1::subsets::any::schema::diff::Fem2dNodePatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;

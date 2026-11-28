@@ -82,6 +82,7 @@ fn bindings(node: &BuiltNode, out: &mut Vec<String>) {
 /// one dispatches the verb that field is stored under.
 #[test]
 fn the_settings_panel_authors_every_stepper_and_its_verb() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain();
     let node = render(&scene(), labels(), Some("window-0")).expect("settings body");
     let mut rows = Vec::new();
@@ -102,6 +103,7 @@ fn the_settings_panel_authors_every_stepper_and_its_verb() {
 /// the host mounts none — an empty `windowId` would be refused as an unknown window instance.
 #[test]
 fn the_panel_addresses_the_focused_pane_and_none_without_one() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     assert_eq!(panel_window_id(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), None);
     let focused = ViewModel { focused_window_id: Some("pane-2".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert_eq!(panel_window_id(&focused), Some("pane-2"));
@@ -113,6 +115,7 @@ fn the_panel_addresses_the_focused_pane_and_none_without_one() {
 /// renders the "Unknown body" placeholder instead.
 #[test]
 fn the_registered_app_renders_the_settings_body() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut app = app();
     let rendered = render_body(&mut app, BODY_KEY);
     assert!(rendered.contains("puzzle5d-play-settings"), "the app must serve the settings body: {rendered:.400}");

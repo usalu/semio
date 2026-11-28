@@ -61,28 +61,6 @@ export function dependencyEcosystemOfRegistryValue(ecosystem: string): Dependenc
 }
 
 /**
- * 🖥️ Every EXTERNAL distribution the contributed test hosts must provision — a contributed host
- * package that carries no `path`. A Rust host reaches its reference libraries through a local crate
- * whose own manifest is already classified, but a Python or npm host names the distribution
- * directly, so without this the declaration would put a third-party library on a host's import path
- * while the ratchet never saw it. Only owner contributions are walked: the framework's own core
- * manifest is domain-neutral and contributes no host package at all.
- */
-export function externalOracleHostPackages(registry: OracleRegistry): { ecosystem: DependencyEcosystem; name: string; version: string; users: string[] }[] {
-  const byKey = new Map<string, { ecosystem: DependencyEcosystem; name: string; version: string; users: string[] }>();
-  for (const contribution of registry.contributions) {
-    for (const entry of contribution.oracleHostPackages) {
-      if (entry.path !== undefined) continue;
-      const ecosystem = dependencyEcosystemOf(entry.implementation);
-      const existing = byKey.get(`${ecosystem}:${entry.package}`);
-      if (existing === undefined) byKey.set(`${ecosystem}:${entry.package}`, { ecosystem, name: entry.package, version: entry.version ?? "*", users: [contribution.manifestPath] });
-      else if (!existing.users.includes(contribution.manifestPath)) existing.users.push(contribution.manifestPath);
-    }
-  }
-  return [...byKey.values()].sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
-}
-
-/**
  * 🚫️ How one ecosystem spells "this source file reaches that package", and which files can spell it
  * at all. Kept as a table because a single regular expression pretending to be five languages at
  * once either misses a form — Python's `import x` was invisible to the purity gate — or matches a

@@ -179,7 +179,7 @@
     "load": 1,
     "pressure": "normal",
     "swapUsedMegabytes": 6000,
-    "swapOutMegabytesPerSecond": 5,
+    "swapOutMegabytesPerSecond": 30,
     "openFiles": 100,
     "openFilesMaximum": 1000000,
     "attachedImages": 0

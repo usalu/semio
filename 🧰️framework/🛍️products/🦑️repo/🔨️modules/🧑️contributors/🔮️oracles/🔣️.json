@@ -36,6 +36,5 @@
       "substitutes": ["specification-vectors", "independent-implementations"],
       "coversMutations": false
     }
-  ],
-  "oracleHostPackages": [{ "implementation": "typescript", "package": "ajv", "version": "8.20.0" }]
+  ]
 }

@@ -15,6 +15,10 @@
     "level": { "enum": ["info", "warn", "error"] }
   },
   "definitions": {
+    "FaultDetail": {
+      "description": "A stage of the ready supervisor sets `environment` to `enabled`: every internal fault at the CLI boundary then also writes one line `prefix` + reference + the JSON of its cause chain (name, message and the first `maximumStackLines` stack frames of each of at most `maximumErrors` faults, cut at `maximumCharacters`) before the internal-error line, so the failed-stage log in the fleet store names the throwing frame. A terminal run without the variable never prints a stack.",
+      "const": {"environment": "SEMIO_FAULT_DETAIL", "enabled": "1", "prefix": "[DATA] Fault detail / Fehlerdetail ", "maximumErrors": 8, "maximumStackLines": 10, "maximumCharacters": 3600}
+    },
     "TypedRefusals": {
       "description": "The closed list of typed refusal classes a CLI boundary renders as themselves, without the internal-error prefix, besides the refusals of the process catalog (`RepoError`), failed child commands, disk-full faults, expired resource loans and cancellations. `text` `texts`: the fault carries both languages in `texts`; `text` `message`: the message of the fault is the final text. A fault matches by its `name` or by its `code`; `exit` is the exit status.",
       "const": [

@@ -6,6 +6,7 @@ import { spawnOwnedBunCommandV1 } from "../📥️auxiliary/🟦️.ts";
 import {routeRegisteredCommandV1} from "../../🧰️tools/🔌️funnel/🟦️.ts";
 import {StringDecoder} from "node:string_decoder";
 import {terminateOwnedChildTree} from "../../🪓️termination/🟦️.ts";
+import {reapWithParentV1} from "../../🪓️termination/🧹️reaper/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
 /** 🏁️ Admits a child that already terminated on its own: only cancellation still refuses it, because the deadline is enforced while the child runs and an expired loan must not discard a finished command (a 41 minute cargo build that exited 0 was refused after the fact). */
 export function requireCompletedCaptureAuthorityV1(control:ResourceLeaseControl|undefined,signal?:AbortSignal):void{control?.signal.throwIfAborted();signal?.throwIfAborted();}
@@ -108,6 +109,7 @@ async function captureOwnedCommandLiveV1(command:string,args:readonly string[],c
  const child=nativeInput
   ?spawnOwnedBunCommandV1(routed.command,routed.arguments,cwd,routed.environment,{input,output:true})
   :spawn(routed.command,[...routed.arguments],{cwd,env:routed.environment as NodeJS.ProcessEnv,shell:false,detached:process.platform!=="win32",stdio:[input||conversation?"pipe":"ignore","pipe","pipe"],windowsHide:true});
+ const unreap=reapWithParentV1(child.pid);
  let failed=false,stopped:unknown,closed=false,channel:ChannelOwner|undefined;const stop=(cause:unknown)=>{if(!failed){failed=true;stopped=cause;}if(channel){channel.accepting=false;channelEnd(channel,{error:stopped});}if(!closed)terminateOwnedChildTree(child);};
  const release=options.onSpawn!==undefined&&child.pid!==undefined?options.onSpawn(child.pid,()=>{if(!closed)terminateOwnedChildTree(child);}):undefined;
  const terminal=new Promise<OwnedCommandTerminalV1>(accept=>{child.once("error",stop);void settleOwnedChildV1(child,command).then(row=>{closed=true;if(row.kind==="lost")stop(ownedChildLostErrorV1(command,child.pid));if(channel)channelEnd(channel,failed?{error:stopped}:undefined);accept(Object.freeze({status:row.code,signal:row.signal}));});});
@@ -129,7 +131,7 @@ async function captureOwnedCommandLiveV1(command:string,args:readonly string[],c
   if(input&&!nativeInput){const stdin=child.stdin;if(!stdin)throw Error("Actual child input channel required");inputPublication=new Promise<void>((accept,reject)=>{let settled=false;const failure=(error:unknown)=>{if(!settled){settled=true;reject(error);}};stdin.once("error",failure);stdin.once("close",()=>{if(!settled)failure(Error("Owned child input closed before publication"));});stdin.end(input,()=>{if(!settled){settled=true;accept();}});});void inputPublication.catch(stop);}
   if(options.control){const remaining=checkResourceLeaseControl(options.control);timer=setTimeout(()=>{publication=progress();},Math.min(remaining??1000,1000));}if(conversation){try{conversation.value=await conversation.body(channelToken!);}catch(error){stop(error);}finally{await channel!.close();if(!failed&&channel!.failures.length)stop(channel!.failures[0]);}}result=await terminal;
  }catch(error){stop(error);result=await terminal;}
- finally{if(release)release();clearTimeout(timer);signal?.removeEventListener("abort",abort);try{await inputPublication;}catch(error){stop(error);}if(channel){await channel.close();channel.accepting=false;channel.live=false;}await publication;}
+ finally{unreap();if(release)release();clearTimeout(timer);signal?.removeEventListener("abort",abort);try{await inputPublication;}catch(error){stop(error);}if(channel){await channel.close();channel.accepting=false;channel.live=false;}await publication;}
  if(failed)throw stopped;requireCompletedCaptureAuthorityV1(options.control,signal);if(!result)throw Error("Actual child terminal required");if(elide)for(const stream of ["stdout","stderr"]as const){const row=kept[stream];streams[stream]=row.head+(row.dropped>0?`\n[… ${row.dropped} characters elided / ${row.dropped} Zeichen ausgelassen …]\n`:"")+row.tail;}return{result:readOwnedCommandCaptureV1({version:1,...streams,...result}),tail};
  }finally{input?.fill(0);}
 }

@@ -443,6 +443,115 @@
     "admit": false,
     "reason": "available"
    }
+  },
+  {
+   "id": "granted-unit-starts-without-host-spare",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "calm",
+    "cancelled": false,
+    "granted": true
+   },
+   "expected": {
+    "admit": true,
+    "reason": "granted"
+   }
+  },
+  {
+   "id": "granted-unit-starts-under-warden-danger",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "danger",
+    "cancelled": false,
+    "granted": true
+   },
+   "expected": {
+    "admit": true,
+    "reason": "granted"
+   }
+  },
+  {
+   "id": "granted-unit-starts-under-warden-guard-with-unknown-spare",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": null,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "guard",
+    "cancelled": false,
+    "granted": true
+   },
+   "expected": {
+    "admit": true,
+    "reason": "granted"
+   }
+  },
+  {
+   "id": "granted-unit-yields-to-active-swap",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "calm",
+    "cancelled": false,
+    "granted": true,
+    "swapOutBytesPerSecond": 67108865
+   },
+   "expected": {
+    "admit": false,
+    "reason": "swap"
+   }
+  },
+  {
+   "id": "granted-flag-is-void-while-a-unit-runs",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 1,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "danger",
+    "cancelled": false,
+    "granted": true
+   },
+   "expected": {
+    "admit": false,
+    "reason": "warden"
+   }
+  },
+  {
+   "id": "ungranted-unit-still-waits-for-host-spare",
+   "input": {
+    "predictedBytes": 268435456,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "calm",
+    "cancelled": false,
+    "granted": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
   }
  ]
 }

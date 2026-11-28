@@ -19,9 +19,12 @@ export const OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1:number=contract.definitio
 /** 🧮️ Bounds actual file concurrency and both per-child and complete-cohort output. */
 export interface OwnedBunFilesPolicyV1{readonly version:1;readonly maximumParallelFiles:number;readonly maximumFileOutputBytes:number;readonly maximumFileOutputLines:number;readonly overflow?:"refuse"|"elide";readonly maximumTotalOutputBytes:number}
 /** 📋️ Selects explicit test files beneath one caller's working directory and live Original phase; `timeoutMilliseconds` bounds every test of a file and `capabilities` are authored string grants every child birth receives beside the caller's own. */
-export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly launches?:readonly(readonly string[])[];readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly memory?:TestFileMemoryV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}
+export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly launches?:readonly(readonly string[])[];readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly memory?:TestFileMemoryV1;readonly remote?:OwnedBunFilesRemoteV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}
 /** 📬️ Returns terminal child DATA in authored file order without escaping a process owner. */
 export interface OwnedBunFileResultV1{readonly file:string;readonly capture:OwnedCommandCaptureV1;readonly memory?:Readonly<{peakMegabytes:number;ceilingMegabytes:number;exceeded:boolean}>}
+
+/** 🌐️ Hands files to other machines while the local lanes run the rest: `width` files are offered at once (each by its own lane), `take` answers the terminal result of a file that ran elsewhere or `undefined` when it must run here, and `measure` hears how long a file took here. A file `take` keeps here goes to the local lanes, which never wait for a file that is still out. */
+export interface OwnedBunFilesRemoteV1{readonly width:number;readonly take:(file:string,index:number,signal:AbortSignal)=>Promise<OwnedBunFileResultV1|undefined>;readonly measure?:(file:string,seconds:number)=>void|Promise<void>}
 
 /** 🔐️ Captures closed primitive policy fields before any deferred child work. */
 export function readOwnedBunFilesPolicyV1(value:unknown):OwnedBunFilesPolicyV1{
@@ -50,9 +53,16 @@ export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<reado
   return withIssuedResourceOperationV1(control,async()=>{
    for(const file of files){checkResourceLeaseControl(control);const stat=lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>contract.definitions.Protocol.const.maximumSourceBytes)throw Error("Bounded regular Bun source file required");}
    const cancellation=new AbortController();return withRequestedIssuedResourceControlV1(control,0,async phase=>{
-    const results=new Array<OwnedBunFileResultV1>(files.length),started=performance.now();const granted=childCapabilitiesV1(invocation.capabilities,selection);let next=0,total=0,failed=false,failure:unknown;
-    const worker=async()=>{while(!failed&&next<files.length){const index=next++,file=files[index];try{if(file===undefined)throw Error("Exact admitted Bun file required");
-     checkResourceLeaseControl(phase);const run=(onSpawn?:OwnedCommandSpawnHookV1)=>captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:granted===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:granted},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines,overflow:policy.overflow??"refuse"},...(onSpawn?{onSpawn}:{})});
+    const results=new Array<OwnedBunFileResultV1>(files.length),started=performance.now(),remote=options.remote;const granted=childCapabilitiesV1(invocation.capabilities,selection);let next=0,total=0,failed=false,failure:unknown,remoteLanes=0;
+    if(remote!==undefined&&(!Number.isInteger(remote.width)||remote.width<1||typeof remote.take!=="function"))throw Error("Actual owned Bun remote port required");
+    const retry:number[]=[],waiting:(()=>void)[]=[],wake=():void=>{for(const resume of waiting.splice(0))resume();},fail=(error:unknown):void=>{if(!failed){failed=true;failure=error;cancellation.abort(error);}wake();};
+    const settle=async(index:number,result:OwnedBunFileResultV1):Promise<void>=>{
+     total+=Buffer.byteLength(result.capture.stdout)+Buffer.byteLength(result.capture.stderr);if(total>policy.maximumTotalOutputBytes)throw Error("Owned Bun cohort output limit exceeded");results[index]=result;
+     await withRequestedIssuedResourceControlV1(phase,0,actual=>onFileResult(result,index,actual));
+     await phase.publish({resource:"bun:test:file:"+index,mode:"shared",elapsedMs:performance.now()-started});await phase.yieldContinuation();checkResourceLeaseControl(phase);
+    };
+    const local=async(index:number):Promise<void>=>{const file=files[index];if(file===undefined)throw Error("Exact admitted Bun file required");
+     checkResourceLeaseControl(phase);const began=performance.now(),run=(onSpawn?:OwnedCommandSpawnHookV1)=>captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:granted===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:granted},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines,overflow:policy.overflow??"refuse"},...(onSpawn?{onSpawn}:{})});
      let capture:OwnedCommandCaptureV1,memory:OwnedBunFileResultV1["memory"];
      if(!options.memory)capture=await run();
      else{
@@ -62,11 +72,23 @@ export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<reado
       if(hit>0)capture=Object.freeze({...capture,stderr:capture.stderr+describeTestFileExceededV1(relative(cwd,file).split(sep).join("/"),hit,limits,options.memory.environment)+"\n",status:capture.status===0?null:capture.status,signal:capture.signal??"SIGKILL"});
       memory=Object.freeze({peakMegabytes:Math.max(peak,hit),ceilingMegabytes:limits.ceilingMegabytes,exceeded:hit>0});
      }
-     total+=Buffer.byteLength(capture.stdout)+Buffer.byteLength(capture.stderr);if(total>policy.maximumTotalOutputBytes)throw Error("Owned Bun cohort output limit exceeded");const result=Object.freeze({file,capture,...(memory?{memory}:{})});results[index]=result;
-     await withRequestedIssuedResourceControlV1(phase,0,actual=>onFileResult(result,index,actual));
-     await phase.publish({resource:"bun:test:file:"+index,mode:"shared",elapsedMs:performance.now()-started});await phase.yieldContinuation();checkResourceLeaseControl(phase);
-    }catch(error){if(!failed){failed=true;failure=error;cancellation.abort(error);}}}};
-    await Promise.all(Array.from({length:Math.min(files.length,availableParallelism(),policy.maximumParallelFiles)},worker));if(failed)throw failure;return Object.freeze(results);
+     if(remote?.measure!==undefined)void Promise.resolve().then(()=>remote.measure!(file,Math.round((performance.now()-began)/100)/10)).catch(()=>undefined);
+     await settle(index,Object.freeze({file,capture,...(memory?{memory}:{})}));
+    };
+    const worker=async():Promise<void>=>{for(;;){
+     if(failed)return;let index:number|undefined;
+     if(remote===undefined)index=next<files.length?next++:undefined;
+     else{index=retry.shift();if(index===undefined){if(remoteLanes===0)return;await new Promise<void>(resume=>{waiting.push(resume);});continue;}}
+     if(index===undefined)return;
+     try{await local(index);}catch(error){fail(error);}
+    }};
+    const lane=async():Promise<void>=>{try{for(;;){
+     if(failed)return;const index=next++,file=files[index];if(file===undefined)return;let result:OwnedBunFileResultV1|undefined;
+     try{checkResourceLeaseControl(phase);result=await remote!.take(file,index,cancellation.signal);}catch{if(failed||cancellation.signal.aborted)return;result=undefined;}
+     try{if(result===undefined||result.file!==file){retry.push(index);wake();}else await settle(index,Object.freeze({...result}));}catch(error){fail(error);}
+    }}finally{remoteLanes--;wake();}};
+    remoteLanes=remote===undefined?0:Math.min(remote.width,files.length);const lanes=remoteLanes;
+    await Promise.all([...Array.from({length:Math.min(files.length,availableParallelism(),policy.maximumParallelFiles)},worker),...Array.from({length:lanes},lane)]);if(failed)throw failure;return Object.freeze(results);
    },cancellation.signal);
   });
  }catch(error){const failure=Promise.reject(error);void failure.catch(()=>{});return failure;}

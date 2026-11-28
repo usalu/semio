@@ -28,7 +28,7 @@ impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     }
     /// 📖️ Borrows the projected field for the lifetime of this actual owning alias.
     pub fn borrow(&self) -> Result<RetainedCloneRef<'_, T>, ValueError> {
-        let lease = self.binding.as_ref().and_then(|binding|binding.lease.as_ref()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "owned projection is closed"))?;
+        let lease = self.binding.as_ref().and_then(|binding|binding.lease()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "owned projection is closed"))?;
         Ok(RetainedCloneRef { value: unsafe { self.value.as_ref() }, lease, projection: self.projection })
     }
 

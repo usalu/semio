@@ -26,7 +26,7 @@ let presets: ReadonlyMap<string, EnvironmentPreset>;
 const scratchTools = { run: async (): Promise<string> => "" };
 
 beforeAll(async () => {
-  const catalog = await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT);
+  const catalog = await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT, undefined, new Set(["solar-thermal-collector", "tealight"]));
   collector = catalog.assets.find((asset) => asset.id === "solar-thermal-collector")!;
   tealight = catalog.assets.find((asset) => asset.id === "tealight")!;
   presets = new Map(((await loadEnvironments(DEFAULT_CATALOG_ROOT))?.presets ?? []).map((preset) => [preset.id, preset]));

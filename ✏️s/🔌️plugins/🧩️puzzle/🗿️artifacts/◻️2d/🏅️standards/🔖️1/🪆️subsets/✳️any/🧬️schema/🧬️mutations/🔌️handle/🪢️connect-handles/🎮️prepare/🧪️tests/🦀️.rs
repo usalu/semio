@@ -33,7 +33,6 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
     let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
-    let grant = RetainedCloneGrant::one_payload_turn(96,64);
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
         snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|wire| { let mut node: crate::standards::v1::subsets::any::schema::records::Puzzle2dNode = serde_json::from_value(wire.clone()).unwrap(); for (index, handle) in wire["handles"].as_array().unwrap().iter().enumerate() { node.handles.get_mut(index).unwrap().id = text(&handle["id"]); } node }).collect();
@@ -50,6 +49,7 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
         let bits = [payload.gap.to_bits(), payload.shift.to_bits(), payload.rise.to_bits(), payload.rotation.to_bits(), payload.turn.to_bits(), payload.tilt.to_bits(), payload.x.to_bits(), payload.y.to_bits(), payload.tolerance.map(f64::to_bits).unwrap_or(0)];
         let mut source = test_source_custody::admit();
         let mut mutation = test_source_custody::admit();
+        let grant = RetainedCloneGrant::one_payload_turn(source.borrow(&snapshot).binding_copy_bytes().max(96),64);
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dConnectHandlesPreparationCursor::default);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)));
@@ -78,9 +78,9 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
             for turn in 0..pause { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};if matches!(test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(), Puzzle2dConnectHandlesPreparationStep::Complete { .. }) { break; } }
             close(&mut cancelled); assert_eq!(cancelled.take(), None);
         }
-        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); for _ in 0..2 { test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(); }
         let swapped = payload.clone(); assert!(test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&swapped), effect)).is_err()); close(&mut fenced);
-        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); for _ in 0..2 { test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(); }
         let swapped = snapshot.clone(); assert!(test_source_custody::run(grant, |effect| fenced.advance(source.borrow(&swapped), mutation.borrow(&payload), effect)).is_err()); close(&mut fenced);
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }

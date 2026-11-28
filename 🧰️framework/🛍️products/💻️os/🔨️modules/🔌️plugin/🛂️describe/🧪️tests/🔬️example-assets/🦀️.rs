@@ -15,7 +15,7 @@ const DESCRIPTOR_MAX_BYTES: usize = 4 * 1024 * 1024;
 fn manifest_with_example(body: String) -> PluginManifest {
     PluginManifest {
         plugin_id: "example-bound".to_string(),
-        label: "Example Bound".to_string(),
+        label: semio_ui_locale::LocalizedLabel::native("Example Bound", "Beispielgrenze"),
         version: "0.1.0".to_string(),
         apps: Vec::new(),
         examples: vec![semio_framework::ExampleDefinition {

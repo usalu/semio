@@ -6,6 +6,7 @@ import type {RemoteExecutionPropertyV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../📐️policy/🟦️.ts";
 import {parseRustcIdentityV1,type OffloadToolchainV1} from "../📜️action/🟦️.ts";
 import {sdkIdentityV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
+import {rustSourceRemapArgumentsV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
 
 const policy=OFFLOAD_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -103,4 +104,18 @@ export function rustcVersionTextV1(root:string,inner:readonly string[],environme
  if(result.status!==0||!result.stdout)return undefined;
  try{mkdirSync(root,{recursive:true});const temporary=path+"."+process.pid;writeFileSync(temporary,JSON.stringify({atMs:now,inner:identity,text:result.stdout}));renameSync(temporary,path);}catch{}
  return result.stdout;
+}
+
+const sourceRemapMemo=new Map<string,Readonly<{sysroot:string;commit:string}>>();
+/** 🦀️ The remap that makes a worker's compile independent of where its own compiler lives: with the `rust-src` component installed rustc names the inlined code of `core` by its real path below ITS sysroot, without it by `/rustc/<commit>`, and the remap the requester sent names the requester's sysroot, which on a worker is another directory (a rustup home, a managed toolchain of another checkout), so the same unit gave other object code on workers whose sysroot is spelled differently. The compiler behind `tool` is asked once (`--print sysroot`, `-vV`); `[]` when it does not answer or `args` already remap that directory. Appended by the worker after the requester's arguments (the last matching remap wins), it is no part of the action or the key.
+ * @see https://doc.rust-lang.org/rustc/command-line-arguments.html#--remap-path-prefix-remap-source-names-in-output */
+export function workerRustSourceRemapV1(tool:string,args:readonly string[],environment:Environment=process.env):readonly string[]{
+ let known=sourceRemapMemo.get(tool);
+ if(known===undefined){
+  const ask=(flags:readonly string[]):string=>{try{const result=spawnSync(tool,[...flags],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000});return result.status===0?result.stdout:"";}catch{return"";}};
+  const sysroot=ask(["--print","sysroot"]).trim(),commit=/^commit-hash: ([0-9a-f]{40})$/mu.exec(ask(["-vV"]))?.[1];
+  if(sysroot===""||commit===undefined)return[];
+  known=Object.freeze({sysroot,commit});sourceRemapMemo.set(tool,known);
+ }
+ return rustSourceRemapArgumentsV1(args,known.sysroot,known.commit);
 }

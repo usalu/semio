@@ -12,7 +12,7 @@ def bounded(args, tokens):
             if arg == name and i + 1 < len(args):
                 return args[i + 1]
         return ""
-    bounded_decoder = (option("--crate-name"), option("--target")) == ("semio_plugin_actor_input_decoder", "wasm32-wasip2")
+    bounded_decoder = option("--crate-name") in ("semio_plugin_actor_input_decoder", "semio_plugin_actor_input_wire")
     final = "cdylib" in option("--crate-type").split(",")
     single = final or bounded_decoder
     serial = granted and tokens == 1 or single and (granted or any(value.startswith("-Z") for value in args))

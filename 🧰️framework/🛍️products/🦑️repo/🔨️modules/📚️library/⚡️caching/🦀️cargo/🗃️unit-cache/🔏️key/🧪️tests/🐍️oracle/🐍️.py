@@ -112,6 +112,12 @@ def normalize(args, digests, root, policy):
         if argument.startswith("-Ldependency="):
             index += 1
             continue
+        if argument == "-Z" and following.startswith("threads="):
+            index += 2
+            continue
+        if argument.startswith("-Zthreads="):
+            index += 1
+            continue
         if argument == "--diagnostic-width":
             index += 2
             continue
@@ -217,7 +223,11 @@ elif op == "depinfo":
 elif op == "directives":
     print(json.dumps([directives(t) for t in request["rows"]]))
 elif op == "keys":
-    print(json.dumps([hashlib.sha256(dumps([policy["namespace"], k["toolchain"], k["normalized"], k["sourceSha256"], [[e["name"], e["sha256"]] for e in k["externs"]], k["environment"]]).encode("utf8")).hexdigest() for k in request["rows"]]))
+    def contract(k):
+        if k["sourceSha256"].startswith("run:"):
+            return []
+        return [["determinism", policy["key"]["outputDeterminism"]["version"]]] + ([["cargo", k["cargoIdentity"]]] if k.get("cargoIdentity") else [])
+    print(json.dumps([hashlib.sha256(dumps([policy["namespace"], k["toolchain"], k["normalized"], k["sourceSha256"], [[e["name"], e["sha256"]] for e in k["externs"]], k["environment"]] + contract(k)).encode("utf8")).hexdigest() for k in request["rows"]]))
 elif op == "hashes":
     print(json.dumps([hashlib.sha256(t.encode("utf8")).hexdigest() for t in request["rows"]]))
 elif op == "responses":

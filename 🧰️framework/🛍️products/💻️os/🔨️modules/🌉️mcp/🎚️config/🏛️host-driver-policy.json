@@ -21,8 +21,8 @@
     "maximumDepth": 64
   },
   "operation": {
-    "maximumItems": 48000000,
-    "maximumCopyBytes": 3000000000,
+    "maximumItems": 480000000,
+    "maximumCopyBytes": 30000000000,
     "maximumCapacityBytes": 2147483648,
     "maximumReleaseBytes": 2147483648,
     "maximumDepth": 64
@@ -31,7 +31,7 @@
     "operation": 71,
     "generation": 3,
     "turnFuel": 262144,
-    "operationFuel": 4000000000,
+    "operationFuel": 40000000000,
     "maximumTurnMicroseconds": 2000000,
     "turnExecutionFuel": 1000000,
     "operationExecutionFuel": 500000000000,

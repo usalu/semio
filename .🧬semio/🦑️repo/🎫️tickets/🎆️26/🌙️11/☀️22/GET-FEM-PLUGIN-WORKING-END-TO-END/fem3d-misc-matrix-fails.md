@@ -1,0 +1,35 @@
+# FEM 3D matrix: miscellaneous failures (io, clipboard, role, windows, view, example)
+
+Ticket `26/11/22/GET-FEM-PLUGIN-WORKING-END-TO-END`. Each row was run alone on a fresh session: `node matrix-v3/run.mjs 3d --only <id> --out C:\t\mx\<dir>` (`--only` matches the exact id, an id prefix ending in `.`, an area name such as `import-export`, or an inventory id). The 2D twins ran through the same shared check code on 6086. Probe scripts (kept): `matrix-v3/mm-probe.mjs`, `mm-probe2.mjs` (example sequences), `mm-probe3.mjs`, `mm-clip.mjs`, `mm-win*.mjs`.
+
+## Verdict
+
+All nine rows are HARNESS defects (stale assumptions or races). No product change was needed and none was made, so there is no Rust to publish. Every change is in `matrix-v3/` and is live immediately (no vite restart, no wasm publish).
+
+| Row | Class | Root cause | Fix | Now |
+|---|---|---|---|---|
+| `3d.example.no-example-then-demo` | harness | NOT data corruption. The check waited a fixed 4 s and read counts; the product applies an example switch 6 to 13 s later (the Example combobox changes first, the tree and model follow). `Nodes 20 / Elements 20` was Concrete Forest still on screen, `63 nodes / 0 elements / 8 solids / 3 materials / 63 supports` is the real House example (solids only, no beams), caught while it was still replacing the previous model. Demo is 16 nodes / 16 elements / 1 solid. | polls until counts reach 0 (cleared), then until the counts equal the Demo counts read at the start, then waits for the Results caption; `fresh: true` | PASS (cleared in 14 s, restored, `Case: dead`) |
+| `3d.io.export` | harness (state) | Failed only after the vcs read-slot leak in the full run | none | PASS on a fresh session (`fem3d-….semio-archive`, 1295 bytes) |
+| `3d.io.import-probe-json` | harness | Import Document is not a form: the palette entry opens a native chooser through a dynamically created `<input type=file>` (`requestFileSelectionV1`), so no input exists in the DOM | new `Ctx.importFile()` waits for Playwright's `filechooser` event while clicking the entry; the refusal is asserted as the `role=alert` notice ("... is not a document archive.") plus the logged `import-unreadable` warning and unchanged counts | PASS |
+| `3d.io.import-archive` | harness | same, plus dependency on export | uses `importFile()` | PASS (counts equal, edit works) |
+| `3d.clip.copy-paste`, `3d.clip.cut-paste` | harness (load) | Pass on a fresh quiet session (copy 1.5 s, paste 2.4 s, cut 6 s). The failed runs were taken while ~36 cargo processes loaded the machine; paste took more than the 40 s verify timeout. The paste form args (`anchor`, `position`) default correctly and the clipboard works headless with no permission grant (the fragment round trip is internal) | verify timeouts 40 s to 120 s, check timeouts 420 s | PASS both |
+| `3d.role.viewer-editor` | harness (stale assertion) | Asserted no `Actions` and no `Utilities` in the Viewer role. By design (`fem-viewer-fixes.md` item 2) the viewer keeps the framework's read-only verbs (Copy, Export Document, Import Document) and a DISABLED Utilities. `editorDisabled=false` is correct (E3D-159 / F8 is fixed). The first rewrite also read the Artifact dock's treeitems as palette entries, and the switch back to Editor took longer than 4 s under load | asserts: Results tab 0, Inspection 0, Utilities not enabled, the Model palette contains only Copy / Export / Import (EN and DE spellings), Editor enabled and re-pressed (polled up to 60 s) | PASS |
+| `3d.win.reopen-display` | harness | The Display "Windows" tree lists window kinds as collapsed sections (`Results Reorder` is the section header); the draggable item is the child leaf `Results`, and the drop must land in a dock zone (right half of Model; centre drops are ignored). The old check dragged the header to the centre, and used `x.drag`, whose hover calls `canvasLayout()` and closes the Display panel | expands the section, drags the leaf with a raw drag (`Ctx.rawDrag`) to x 1500, retries up to 3 times, polls for the Results tab | PASS |
+| `3d.view.per-window-state` | harness (race) | Passes alone; in the full run the Results image was still moving (solve/animation) and the layout changed between hashes | `fresh`, `canvasLayout()`, waits for solved caption and `stable()` hashes before and after | PASS |
+
+2D twins (same shared checks on 6086, one fresh session): PASS `io.export`, `io.import-probe-json`, `clip.copy-paste`, `clip.cut-paste`, `win.reopen-display`, `example.no-example-then-demo` (cleared in 5.8 s, Demo restored in 3.2 s, `Converged`). FAIL only through the fatal console line of observation 3: `io.import-archive` (counts equal, edit works, then the fatal) and `role.viewer-editor` (viewer and editor assertions all green, then the fatal).
+
+## Observations that are NOT in my rows (product or framework, for the owners)
+
+1. Example switching waits behind a running solve. Measured with `mm-probe2.mjs House "No example"`: after House the combobox shows "No example" immediately but the model stays the House model (63 nodes) for more than 100 s, caption empty, until the 260 s analysis ends. Switching away from a heavy example should cancel the in-flight analysis (CLAUDE.md: progress and cancellation for expensive operations). Even the small switches lag 6 to 13 s after the combobox changed. Owner: `res.*` / resolve agent.
+2. A consistently failing first drag: dragging the Results leaf from the Display Windows tree onto the right dock zone ignores the first drop in 2D and 3D (`drag attempts=2` in both, the highlighted drop zone shows during the drag, the second identical drag works). Could be a Chromium/Playwright HTML5 drag quirk or a framework drop handler that only arms after the first drag; not investigated further.
+3. Under load, 2D `io.import-archive` and `role.viewer-editor` end with a fatal console line `[actor] original-turn.semantic plugin.internal.zero-progress: runtime close cleanup faulted for instance 1: the cleanup pump made no progress for its whole stall credit (elapsed ~33000us, ceiling 8000us)` when the previous runtime instance is closed after an import or role switch. The 8 ms ceiling is a wall-clock budget, so it trips on a loaded machine. The 3D run of the same rows had no such line. Framework cleanup pumps (`⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps`), owner: the hang agent.
+4. Import Document opens the archive as a NEW document of the focused program (framework design, `📤️document-transfer-tabs`), the focused one stays; the matrix counts equal because the archive is the same Demo.
+
+## Files
+
+Harness only: `matrix-v3/lib.mjs` (`importFile`, `rawDrag`), `matrix-v3/checks-core.mjs` (`example.no-example-then-demo`, `io.import-probe-json`, `io.import-archive`, `clip.*` timeouts, `role.viewer-editor`, `win.reopen-display`, `view.per-window-state`). No product file touched; no law added because no product behaviour changed (the import refusal notice and the viewer palette already have framework laws).
+
+## Cleanup
+
+`C:\t\mx*` deleted; no cargo was run; no vite or 6086-6089 process was started or stopped.

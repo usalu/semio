@@ -56,9 +56,9 @@ test("Waiting reports progress lines in English and German and publishes to the 
  const second=withHostCapacityV1(options(directory,{control:waiting.value,write:line=>english.push(line),environment:{LANG:"en_US.UTF-8"}}),async()=>undefined);
  const third=withHostCapacityV1(options(directory,{write:line=>german.push(line),environment:{LANG:"de_DE.UTF-8"}}),async()=>undefined);
  await sleep(150);release();await Promise.all([first,second,third]);
- expect(english.some(line=>/^\[capacity\] waiting \d+s for run: (?:an earlier request is still waiting|not enough free memory)/u.test(line))).toBe(true);
+ expect(english.some(line=>/^\[capacity\] waiting \d+s for run: (?:an earlier request is still waiting and holds the next reservation; smaller requests that fit beside it run first|not enough free memory)/u.test(line))).toBe(true);
  expect(english.at(-1)).toMatch(/^\[capacity\] admitted run: 1 job\(s\), 8000 MB reserved/u);
- expect(german.some(line=>/^\[capacity\] wartet seit \d+ s auf run: (?:eine frühere Anfrage wartet noch|nicht genug freier Speicher)/u.test(line))).toBe(true);
+ expect(german.some(line=>/^\[capacity\] wartet seit \d+ s auf run: (?:eine frühere Anfrage wartet noch und hält die nächste Reservierung; kleinere Anfragen, die daneben passen, laufen zuerst|nicht genug freier Speicher)/u.test(line))).toBe(true);
  expect(german.at(-1)).toMatch(/^\[capacity\] zugelassen run: 1 Job\(s\), 8000 MB reserviert/u);
  expect(waiting.published.length).toBeGreaterThan(0);
  expect(waiting.published[0]).toMatchObject({resource:"semio.host.capacity/v1",mode:"shared"});
@@ -74,7 +74,7 @@ test("Cancelling a waiting request removes it from the queue, rejects with the c
  controller.abort(Error("stop waiting"));
  await expect(waiting).rejects.toThrow("stop waiting");
  expect(readdirSync(join(directory,"queue")).length).toBe(0);
- expect(readdirSync(join(directory,"grants")).length).toBe(1);
+ expect(readdirSync(join(directory,"grants")).filter(name=>name.endsWith(".json")).length).toBe(1);
  release();await first;
  expect(readdirSync(join(directory,"grants"))).toEqual([]);
 },30000);
@@ -99,7 +99,7 @@ test("A grant of a dead process is reclaimed instead of blocking the machine",as
  const directory=fresh(),dead=spawnSync(process.execPath,["--eval","process.exit(0)"]),id=newHostCapacityIdV1();
  mkdirSync(join(directory,"grants"),{recursive:true});
  const bootAt=Math.round((Date.now()-require("node:os").uptime()*1000)/1000)*1000;
- writeFileSync(join(directory,"grants",`${id}.json`),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:Date.now(),observedMegabytes:null,pid:dead.pid,bootAtMs:bootAt}));
+ writeFileSync(join(directory,"grants",`${id}.format`),'{"format":1}');writeFileSync(join(directory,"grants",`${id}.json`),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:Date.now(),observedMegabytes:null,pid:dead.pid,bootAtMs:bootAt}));
  const started=Date.now();
  await withHostCapacityV1(options(directory),async()=>undefined);
  expect(Date.now()-started).toBeLessThan(2000);
@@ -109,7 +109,7 @@ test("A grant of a dead process is reclaimed instead of blocking the machine",as
 test("A grant from before a reboot is reclaimed even when its pid is alive again",async()=>{
  const directory=fresh(),id=newHostCapacityIdV1();
  mkdirSync(join(directory,"grants"),{recursive:true});
- writeFileSync(join(directory,"grants",`${id}.json`),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:1,observedMegabytes:null,pid:process.pid,bootAtMs:1000}));
+ writeFileSync(join(directory,"grants",`${id}.format`),'{"format":1}');writeFileSync(join(directory,"grants",`${id}.json`),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:1,observedMegabytes:null,pid:process.pid,bootAtMs:1000}));
  await withHostCapacityV1(options(directory),async()=>undefined);
  expect(existsSync(join(directory,"grants",`${id}.json`))).toBe(false);
 });

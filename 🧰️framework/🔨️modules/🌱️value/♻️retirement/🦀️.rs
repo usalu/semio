@@ -50,6 +50,10 @@ pub trait RetireOwned: Send + 'static {
     /// 🌱️ Builds only inline state after defining allocation admission; this producer must not allocate, release, call out or unwind.
     fn retirement_seed(self)->Self::RetirementCursor;
     fn retirement_birth_bytes(&self)->Option<usize>{self.retirement_ready().then_some(size_of::<Self::RetirementCursor>())}
+    /// ❄️ Quotes the heap bytes released when this owner is dropped cold, without any ladder step; `None` when it needs retirement steps. Plain inline owners release no heap.
+    fn retirement_cold_bytes(&self)->Option<usize> where Self:Sized{(!std::mem::needs_drop::<Self>()&&(Self::retirement_element_copy_bytes()!=0||size_of::<Self>()==0)).then_some(0)}
+    /// ❄️ Drops a cold owner at once and returns the exact bytes its quote declared; any other owner comes back unchanged.
+    fn retirement_cold_release(self)->Result<usize,Self> where Self:Sized{match self.retirement_cold_bytes(){Some(bytes)=>{drop(self);Ok(bytes)},None=>Err(self)}}
     /// 🏡️ Quotes a native cursor that drains this same initialized shared allocation in place.
     fn shared_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized+Sync{Ok(None)}
     /// 🪙️ Quotes the actual authored in-place shared cursor constructor.

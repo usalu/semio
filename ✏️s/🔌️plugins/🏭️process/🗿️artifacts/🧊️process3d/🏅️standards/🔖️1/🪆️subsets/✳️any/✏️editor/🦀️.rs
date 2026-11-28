@@ -35,7 +35,7 @@ use semio_s_artifact_process_process3d_modes as edit;
 use semio_s_artifact_process_process3d_modes::windows::workpiece;
 use semio_s_artifact_process_process3d_panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use semio_s_artifact_process_process3d_presence::{Process3dPresence, Process3dPresenceMutation};
-use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_labels, internal_action, process3d_action_fault, process3d_interaction_definition, installable_contributions, reset_process3d_document_effect, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS3D_INTERACTION_DOMAIN};
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_labels, internal_action, process3d_action_fault, process3d_interaction_definition, installable_contributions, reset_process3d_document_effect, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_DEMO, PROCESS3D_INTERACTION_DOMAIN};
 use semio_s_artifact_process_process3d_kit::Process3dDispatchCtx;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
@@ -364,8 +364,6 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_args("setCamera", vec![ActionArgDef::object("camera", LocalizedLabel::native("Camera", "Kamera"), vec![
                 ActionArgDef::vector("position", LocalizedLabel::native("Position", "Position"), 3).required(),
                 ActionArgDef::vector("target", LocalizedLabel::native("Target", "Ziel"), 3).required(),
-                ActionArgDef::vector("up", LocalizedLabel::native("Up", "Oben"), 3),
-                ActionArgDef::number("zoom", LocalizedLabel::native("Zoom", "Zoom")),
                 ActionArgDef::number("fov", LocalizedLabel::native("Field of View", "Sichtfeld")),
             ]).required()])
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun") })
@@ -392,11 +390,28 @@ pub fn create_process3d_app() -> AppDefinition {
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung")),
+                    ActionArgOption::new(PROCESS3D_EXAMPLE_DEMO, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung")),
                     ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte")),
                     ActionArgOption::new(PROCESS3D_EXAMPLE_CONCRETE_FOREST, LocalizedLabel::native("Concrete Forest", "Betonwald")),
-                ]).required().default_value(&PROCESS3D_EXAMPLE_TIMBER),
+                ]).required().default_value(&PROCESS3D_EXAMPLE_DEMO),
             ])
+            .action_args("setSnapshot", vec![ActionArgDef::json_text("json", LocalizedLabel::native("Document", "Dokument")).required()])
+            .action_args("addWorkshopMachine", vec![ActionArgDef::text("catalogId", LocalizedLabel::native("Catalogue Entry", "Katalogeintrag")).required(), ActionArgDef::text("machineId", LocalizedLabel::native("Machine", "Maschine")).required()])
+            .action_args("removeWorkshopMachine", vec![ActionArgDef::text("id", LocalizedLabel::native("Machine", "Maschine")).required()])
+            .action_args("updateWorkshopMachine", vec![ActionArgDef::object("machine", LocalizedLabel::native("Machine", "Maschine"), vec![ActionArgDef::text("id", LocalizedLabel::native("Id", "Id")).required(), ActionArgDef::text("label", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::text("iconId", LocalizedLabel::native("Icon", "Symbol")).required()]).required()])
+            .action_args("removeStep", vec![ActionArgDef::text("id", LocalizedLabel::native("Step", "Schritt")).required()])
+            .action_args("moveStep", vec![ActionArgDef::text("id", LocalizedLabel::native("Step", "Schritt")).required(), ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required()])
+            .action_args("dropStep", vec![ActionArgDef::text("documentId", LocalizedLabel::native("Document", "Dokument")).required(), ActionArgDef::text("stepId", LocalizedLabel::native("Step", "Schritt")).required(), ActionArgDef::text("targetId", LocalizedLabel::native("Target", "Ziel")).required(), ActionArgDef::text("dropPosition", LocalizedLabel::native("Drop Position", "Ablageposition")).required()])
+            .action_args("updateStep", vec![ActionArgDef::json_text("stepJson", LocalizedLabel::native("Step", "Schritt")).required()])
+            .action_args("patchInspector", vec![ActionArgDef::text("target", LocalizedLabel::native("Target", "Ziel")).required(), ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")).required(), ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required()])
+            .action_args("stepCursor", vec![ActionArgDef::number("delta", LocalizedLabel::native("Delta", "Differenz")).required()])
+            .action_args("worldFaceDragEnd", vec![ActionArgDef::vector("normal", LocalizedLabel::native("Normal", "Normale"), 3).required(), ActionArgDef::vector("startPoint", LocalizedLabel::native("Start Point", "Startpunkt"), 3).required(), ActionArgDef::number("distance", LocalizedLabel::native("Distance", "Distanz")).required()])
+            .action_args("importModelFile", vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::text("payload", LocalizedLabel::native("Payload", "Inhalt")).required()])
+            .action_args("engagementInput", vec![ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required()])
+            .action_args("setSunAzimuth", vec![ActionArgDef::number("value", LocalizedLabel::native("Azimuth", "Azimut")).required()])
+            .action_args("setSunElevation", vec![ActionArgDef::number("value", LocalizedLabel::native("Elevation", "Höhe")).required()])
+            .action_args("setSunIntensity", vec![ActionArgDef::number("value", LocalizedLabel::native("Intensity", "Intensität")).required()])
+            .action_args("setContributions", vec![ActionArgDef::json_text("json", LocalizedLabel::native("Contributions", "Beiträge")).required()])
             .action_args("exportModel", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
                     ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")),
@@ -414,8 +429,8 @@ pub fn create_process3d_app() -> AppDefinition {
             .window_kind_interactions(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new(PROCESS3D_INTERACTION_DOMAIN)])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .keybinding("bracketleft", "stepCursorBack")
-            .keybinding("bracketright", "stepCursorForward")
+            .keybinding("[", "stepCursorBack")
+            .keybinding("]", "stepCursorForward")
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep")

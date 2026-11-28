@@ -21,13 +21,14 @@ function readViteAppRoleEnv(): string | undefined {
 }
 
 /** 👁️✏️ Resolves the boot-time {@link AppRole}: an explicit `options.appRole` wins, otherwise
- * {@link readViteAppRoleEnv}, otherwise `"editor"`. */
-export function resolveBootAppRole(explicit?: AppRole): AppRole {
+ * {@link readViteAppRoleEnv}, otherwise `undefined` — an unstated role never overrides the role the pinned app id
+ * already names (`resolveBootPrimaryAppV1`). */
+export function resolveBootAppRole(explicit?: AppRole): AppRole | undefined {
   if (explicit === "viewer" || explicit === "editor") return explicit;
   const raw = readViteAppRoleEnv();
   if (raw === "viewer" || raw === "editor") return raw;
-  if (raw !== undefined && raw !== "") console.warn(`[os] invalid VITE_SEMIO_APP_ROLE ${JSON.stringify(raw)}, falling back to "editor"`);
-  return "editor";
+  if (raw !== undefined && raw !== "") console.warn(`[os] invalid VITE_SEMIO_APP_ROLE ${JSON.stringify(raw)}, ignoring it`);
+  return undefined;
 }
 
 //#endregion 👁️✏️BootAppRole

@@ -15,6 +15,7 @@
         "yieldEvery": 1000,
         "topHolders": 6,
         "holderKeyLimit": 20000,
+        "holderDepth": 7,
         "clusterBytes": 4096
       }
     },
@@ -30,6 +31,7 @@
         "directories": {"type": "integer", "minimum": 0},
         "bytes": {"type": "integer", "minimum": 0},
         "allocatedBytes": {"type": "integer", "minimum": 0},
+        "capacityBytes": {"type": "integer", "minimum": 1, "description": "EN: The physical capacity the partition was born with (`maximumPhysicalBytes` of its image.json); the directory meter refuses at it. DE: Die physische Kapazität, mit der die Partition geboren wurde; der Verzeichniszähler lehnt dort ab."},
         "partial": {"type": "boolean"},
         "top": {"type": "array", "maxItems": 16, "items": {"$ref": "#/definitions/Holder"}}
       }

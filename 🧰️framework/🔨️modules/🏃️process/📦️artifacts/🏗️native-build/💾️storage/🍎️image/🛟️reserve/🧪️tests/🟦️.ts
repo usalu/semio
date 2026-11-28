@@ -13,7 +13,7 @@ const policy=imageSchema.definitions.ImageProtocol.const.reclaim.availability.re
 const scratch=()=>mkdtempSync(join(testScratchRootV1("reserve"),"r-"));
 const oracle=(row:typeof fixture.creation[number]):string=>{
  const python=testPythonV1();
- if(python===undefined)throw Error("Python required by the reserve oracle");
+ if(python===null)throw Error("Python required by the reserve oracle");
  const program="import sys\na,b,m,e=map(int,sys.argv[1:5])\nprint('present' if e>=b else ('created' if a>=b*m else 'skipped'))";
  const result=spawnSync(python,["-I","-c",program,String(row.availableBytes),String(row.bytes),String(row.multiplier),String(row.existing)],{encoding:"utf8"});
  if(result.status!==0)throw result.error??Error(result.stderr);
@@ -29,7 +29,7 @@ for(const row of fixture.creation)test("creation corpus: "+row.name,()=>{
   const path=join(directory,"reserve");
   if(row.existing>0)writeFileSync(path,Buffer.alloc(row.existing,1));
   const result=ensureNativeImageReserveFileV1(path,row.bytes,row.multiplier,()=>({availableBytes:row.availableBytes}));
-  expect(result).toBe(row.expected);expect(oracle(row)).toBe(row.expected);
+  expect<unknown>(result).toBe(row.expected);expect(oracle(row)).toBe(row.expected);
   if(row.expected==="created")expect(statSync(path).size).toBe(row.bytes);
   expect(readdirSync(directory).filter(name=>name.endsWith(".tmp"))).toEqual([]);
  }finally{rmSync(directory,{recursive:true,force:true});}

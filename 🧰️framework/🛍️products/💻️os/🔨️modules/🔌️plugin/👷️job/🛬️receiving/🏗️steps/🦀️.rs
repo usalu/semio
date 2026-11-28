@@ -46,10 +46,12 @@ pub fn scoped<E:Into<OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:Retire
  let turn=covering_child(cx,turn);let overrun=performed>turn.work;let step=receive_original_receiving_work(cx,turn)?;
  if overrun{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original effect performed more work than it settled").into())}Ok(Some(step))
 }
+/// ⚖️ Work one native-bound cleanup step quotes: a close step is incremental and answers `Pending` for the rest, so a bounded quote stays admissible inside the decoder's pooled retirement scope.
+pub const NATIVE_RETIREMENT_STEP_WORK:u64=4096;
 /// ♻️ Retires one native-bound owner inside the decoder's persistent retirement scope, the same Work scope its forward steps ran in.
 pub fn retired_native(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->Result<(),OriginalTurnFailure>{
  if cx.retirement_should_yield()||!retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(())}
- let units=receiving_units(cx.fuel_remaining());let(mut scope,mut ran)=(None,None);
+ let units=receiving_units(cx.fuel_remaining()).min(NATIVE_RETIREMENT_STEP_WORK);let(mut scope,mut ran)=(None,None);
  cx.with_native_retirement_receiving(&mut scope,{let(grant,work)=StepContext::native_retirement_quote(demand,units);semio_framework_value::invocation_extent(grant,work)?},|native,_|{ran=native.with_original_effect(demand,units,|effect|{let poll=advance(effect);(poll,effect.performed_work())})?;Ok(())})?;
  if let Some(scope)=&scope{scope_refusal(scope)?}
  let Some((poll,performed))=ran else{return Ok(())};

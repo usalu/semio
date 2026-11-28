@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { world3dLeftPressOrbits, world3dLeftReleaseIsDrag } from "../../🔗️instance-selection/🟦️.ts";
+import { world3dLeftPressOrbits, world3dLeftReleaseIsDrag, world3dMarqueeCommitsMerge } from "../../🔗️instance-selection/🟦️.ts";
 
 const plain = { shiftKey: false, ctrlKey: false, metaKey: false };
 
@@ -20,5 +20,16 @@ describe("world left press", () => {
   test("a release more than the drag threshold away is an orbit drag, not a pick", () => {
     expect(world3dLeftReleaseIsDrag(10, 10, 12, 11)).toBe(false);
     expect(world3dLeftReleaseIsDrag(10, 10, 20, 10)).toBe(true);
+  });
+});
+
+describe("world marquee commit", () => {
+  test("a merge that empties the selection commits, an unchanged or absent merge does not", () => {
+    expect(world3dMarqueeCommitsMerge([], ["a", "b"])).toBe(true);
+    expect(world3dMarqueeCommitsMerge(["a"], ["a", "b"])).toBe(true);
+    expect(world3dMarqueeCommitsMerge(["b", "a"], ["a", "b"])).toBe(false);
+    expect(world3dMarqueeCommitsMerge([], undefined)).toBe(false);
+    expect(world3dMarqueeCommitsMerge(null, ["a"])).toBe(false);
+    expect(world3dMarqueeCommitsMerge([1, 2], [2])).toBe(true);
   });
 });

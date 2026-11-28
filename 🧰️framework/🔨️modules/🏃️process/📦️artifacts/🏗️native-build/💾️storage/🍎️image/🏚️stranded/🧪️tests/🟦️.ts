@@ -9,7 +9,7 @@ import fixture from"./🔣️.json"with{type:"json"};
 import{nativeImageStrandedMountV1,recoverNativeImageStrandedV1}from"../🟦️.ts";
 const oracle=()=>{
  const python=testPythonV1();
- if(python===undefined)throw Error("Python required by the stranded oracle");
+ if(python===null)throw Error("Python required by the stranded oracle");
  const result=spawnSync(python,["-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"🔣️.json")],{encoding:"utf8"});
  if(result.status!==0)throw result.error??Error(result.stderr);
  return JSON.parse(result.stdout) as unknown[];
